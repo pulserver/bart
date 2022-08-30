@@ -22,6 +22,7 @@
 #include "linops/someops.h"
 
 #include "nlops/zexp.h"
+#include "nlops/ztrigon.h"
 #include "nlops/someops.h"
 #include "nlops/tenmul.h"
 #include "nlops/nlop.h"
@@ -845,7 +846,7 @@ static bool test_stack_multiple(void)
 
 	for (int i = 0; i < 3; i++)
 		nlops[i] = nlop_tenmul_create(N, odims_2, idims1_2, idims2_2);
-	
+
 	const struct nlop_s* nlop1 = nlop_stack_multiple_F(3, nlops, 2, (int[2]){ 2, -1}, 1, (int[1]){ 2 }, false, false);
 	const struct nlop_s* nlop2 = nlop_tenmul_create(N, odims_1, idims1_1, idims2_1);
 
@@ -874,7 +875,7 @@ static bool test_stack_multiple2(void)
 
 	for (int i = 0; i < 5; i++)
 		nlops[i] = nlop_tenmul_create(N, odims_2, idims1_2, idims2_2);
-	
+
 	const struct nlop_s* nlop1 = nlop_stack_multiple_F(5, nlops, 2, (int[2]){ 1, -1}, 1, (int[1]){ 1 }, false, false);
 	const struct nlop_s* nlop2 = nlop_tenmul_create(N, odims_1, idims1_1, idims2_1);
 
@@ -903,7 +904,7 @@ static bool test_stack_multiple_container(void)
 
 	for (int i = 0; i < 3; i++)
 		nlops[i] = nlop_tenmul_create(N, odims_2, idims1_2, idims2_2);
-	
+
 	const struct nlop_s* nlop1 = nlop_stack_multiple_F(3, nlops, 2, (int[2]){ 2, -1}, 1, (int[1]){ 2 }, true, false);
 	const struct nlop_s* nlop2 = nlop_tenmul_create(N, odims_1, idims1_1, idims2_1);
 
@@ -932,7 +933,7 @@ static bool test_stack_multiple_container2(void)
 
 	for (int i = 0; i < 5; i++)
 		nlops[i] = nlop_tenmul_create(N, odims_2, idims1_2, idims2_2);
-	
+
 	const struct nlop_s* nlop1 = nlop_stack_multiple_F(5, nlops, 2, (int[2]){ 1, -1}, 1, (int[1]){ 1 }, true, false);
 	const struct nlop_s* nlop2 = nlop_tenmul_create(N, odims_1, idims1_1, idims2_1);
 
@@ -962,7 +963,7 @@ static bool test_stack_multiple_container_flatten(void)
 
 	for (int i = 0; i < 3; i++)
 		nlops[i] = nlop_tenmul_create(N, odims_2, idims1_2, idims2_2);
-	
+
 	const struct nlop_s* nlop1 = nlop_stack_multiple_F(3, nlops, 2, (int[2]){ 2, -1}, 1, (int[1]){ 2 }, true, false);
 	const struct nlop_s* nlop2 = nlop_tenmul_create(N, odims_1, idims1_1, idims2_1);
 
@@ -994,7 +995,7 @@ static bool test_stack_multiple_container_flatten2(void)
 
 	for (int i = 0; i < 5; i++)
 		nlops[i] = nlop_tenmul_create(N, odims_2, idims1_2, idims2_2);
-	
+
 	const struct nlop_s* nlop1 = nlop_stack_multiple_F(5, nlops, 2, (int[2]){ 1, -1}, 1, (int[1]){ 1 }, true, false);
 	const struct nlop_s* nlop2 = nlop_tenmul_create(N, odims_1, idims1_1, idims2_1);
 
@@ -1453,4 +1454,50 @@ static bool test_mriop_normalinv(void)
 
 
 UT_REGISTER_TEST(test_mriop_normalinv);
+
+
+static bool test_nlop_zacos(void)
+{
+	enum { N = 3 };
+	long dims[N] = { 10, 7, 3 };
+
+	complex float tmp[md_calc_size(N, dims)];
+	md_gaussian_rand(N, dims, tmp);
+	md_zcos(N, dims, tmp, tmp);
+	md_zsmul(N, dims, tmp, tmp, 0.8); // keep test values away from branch cut
+
+	const struct nlop_s* zacos = nlop_zacos_create(N, dims);
+
+	double err = nlop_test_derivative_at(zacos, tmp);
+
+	nlop_free(zacos);
+
+	UT_RETURN_ASSERT(err < 3.E-2);
+}
+
+
+UT_REGISTER_TEST(test_nlop_zacos);
+
+
+static bool test_nlop_zasin(void)
+{
+	enum { N = 3 };
+	long dims[N] = { 10, 7, 3 };
+
+	complex float tmp[md_calc_size(N, dims)];
+	md_gaussian_rand(N, dims, tmp);
+	md_zcos(N, dims, tmp, tmp);
+	md_zsmul(N, dims, tmp, tmp, 0.8); // keep test values away from branch cut
+
+	const struct nlop_s* zasin = nlop_zasin_create(N, dims);
+
+	double err = nlop_test_derivative_at(zasin, tmp);
+
+	nlop_free(zasin);
+
+	UT_RETURN_ASSERT(err < 3.E-2);
+}
+
+
+UT_REGISTER_TEST(test_nlop_zasin);
 
