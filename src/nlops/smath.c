@@ -97,6 +97,26 @@ arg_t snlop_sin_F(arg_t arg)
 	return snlop_diag_append(arg, nlop_zsin_create, false);
 }
 
+arg_t snlop_acos(arg_t arg)
+{
+	return snlop_diag_append(arg, nlop_zacos_create, true);
+}
+
+arg_t snlop_acos_F(arg_t arg)
+{
+	return snlop_diag_append(arg, nlop_zacos_create, false);
+}
+
+arg_t snlop_asin(arg_t arg)
+{
+	return snlop_diag_append(arg, nlop_zasin_create, true);
+}
+
+arg_t snlop_asin_F(arg_t arg)
+{
+	return snlop_diag_append(arg, nlop_zasin_create, false);
+}
+
 
 arg_t snlop_cosh(arg_t arg)
 {
@@ -453,3 +473,4 @@ arg_t snlop_dump(arg_t arg, const char* name, bool frw, bool der, bool adj)
 
 	return snlop_append_nlop_F(arg, dump, true);
 }
+
