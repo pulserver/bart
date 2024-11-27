@@ -395,13 +395,10 @@ static void opt_reg_IRLL_configure(int N, const long dims[N], struct opt_reg_s* 
 	long img_dims[DIMS];
 	md_select_dims(DIMS, ~COIL_FLAG, img_dims, dims);
 
-	long x_dims[DIMS];
-	md_copy_dims(DIMS, x_dims, img_dims);
-	x_dims[COEFF_DIM] = img_dims[COEFF_DIM] + dims[COIL_DIM]; //FIXME
-
 	long coil_dims[DIMS];
-	md_copy_dims(DIMS, coil_dims, x_dims);
-	coil_dims[COEFF_DIM] = dims[COIL_DIM];
+	md_select_dims(DIMS, ~COEFF_FLAG, coil_dims, dims);
+
+	long x_dims[1] = { md_calc_size(DIMS, img_dims) + md_calc_size(DIMS, coil_dims) };
 
 	long map_dims[DIMS];
 	md_copy_dims(DIMS, map_dims, img_dims);
@@ -413,7 +410,6 @@ static void opt_reg_IRLL_configure(int N, const long dims[N], struct opt_reg_s* 
 
 	debug_print_dims(DP_INFO, DIMS, img_dims);
 	debug_print_dims(DP_INFO, DIMS, coil_dims);
-	debug_print_dims(DP_INFO, DIMS, x_dims);
 	debug_print_dims(DP_INFO, DIMS, map_dims);
 	debug_print_dims(DP_INFO, DIMS, map2_dims);
 
@@ -446,7 +442,7 @@ static void opt_reg_IRLL_configure(int N, const long dims[N], struct opt_reg_s* 
 			auto l1Wav_prox = create_wav_prox(img_dims, regs[nr].xflags, regs[nr].jflags, regs[nr].lambda);
 			auto zero_prox = prox_zero_create(DIMS, coil_dims);
 
-			trafos[nr] = linop_identity_create(DIMS, x_dims);
+			trafos[nr] = linop_identity_create(1, x_dims);
 			prox_ops[nr] = operator_p_stack_FF(0, 0, operator_p_flatten_F(l1Wav_prox), operator_p_flatten_F(zero_prox));
 
 			break;
@@ -455,7 +451,7 @@ static void opt_reg_IRLL_configure(int N, const long dims[N], struct opt_reg_s* 
 
 			debug_printf(DP_INFO, "TV regularization: %f\n", regs[nr].lambda);
 
-			auto extract = linop_extract_create(1, MD_DIMS(0), MD_DIMS(md_calc_size(DIMS, img_dims)), MD_DIMS(md_calc_size(DIMS, x_dims)));
+			auto extract = linop_extract_create(1, MD_DIMS(0), MD_DIMS(md_calc_size(DIMS, img_dims)), MD_DIMS(md_calc_size(DIMS, img_dims) + md_calc_size(DIMS, coil_dims)));
 			extract = linop_reshape_out_F(extract, DIMS, img_dims);
 
 			auto grad = linop_grad_create(DIMS, img_dims, DIMS, regs[nr].xflags);
@@ -490,7 +486,7 @@ static void opt_reg_IRLL_configure(int N, const long dims[N], struct opt_reg_s* 
 
 			auto stack0 = operator_p_stack_FF(COEFF_DIM, COEFF_DIM, zero_prox1, zsmax_prox);
 
-			trafos[nr] = linop_identity_create(DIMS, x_dims);;
+			trafos[nr] = linop_identity_create(1, x_dims);
 			prox_ops[nr] = operator_p_stack_FF(0, 0, operator_p_flatten_F(stack0),
 							operator_p_flatten_F(prox_zero_create(DIMS, coil_dims)));
 
@@ -498,9 +494,10 @@ static void opt_reg_IRLL_configure(int N, const long dims[N], struct opt_reg_s* 
 
 		case L2IMG:
 
+			//FIXME: This is actually l1 regularization as it is not l2-squares!
 			debug_printf(DP_INFO, "l2 regularization: %f\n", regs[nr].lambda);
 
-			trafos[nr] = linop_identity_create(DIMS, x_dims);;
+			trafos[nr] = linop_identity_create(1, x_dims);
 			prox_ops[nr] = operator_p_stack_FF(0, 0,
 						operator_p_flatten_F(prox_zero_create(DIMS, img_dims)),
 						operator_p_flatten_F(prox_l2norm_create(DIMS, coil_dims, regs[nr].lambda)));
