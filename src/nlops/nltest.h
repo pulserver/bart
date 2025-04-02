@@ -9,3 +9,5 @@ extern _Bool nlop_test_derivatives_reduce(const struct nlop_s* op, int iter_max,
 
 extern _Bool compare_nlops(const struct nlop_s* nlop1, const struct nlop_s* nlop2, _Bool shape, _Bool der, _Bool adj, float tol);
 
+extern float nlop_test_affine_at(const struct nlop_s* op, const _Complex float* in);
+extern float nlop_test_affine(const struct nlop_s* op);

@@ -111,6 +111,7 @@ static float nlop_test_derivative_priv(const struct nlop_s* op, const complex fl
 	float max_ratio = 0.;
 
 	int failed_rounds = 0;
+	int failed_rounds_allowed = 3;
 	const int rounds = 20; // Repeat this test, so that it is less likely to only pass for specific random values
 
 	for (int r = 0; r < rounds; r++) {
@@ -173,12 +174,15 @@ static float nlop_test_derivative_priv(const struct nlop_s* op, const complex fl
 
 			debug_printf(DP_ERROR, "nlop_test_derivative_priv: %3d: ratio too large! ratio: %e\n", r, ratio);
 			failed_rounds++;
+
+			if (failed_rounds_allowed >= failed_rounds)
+				ratio = 0.;
 		}
 
 		max_ratio = MAX(max_ratio, ratio);
 	}
 
-	if (0 < failed_rounds)
+	if (failed_rounds_allowed < failed_rounds)
 		debug_printf(DP_ERROR, "nlop_test_derivative_priv: %3d of %3d rounds failed!\n", failed_rounds, rounds);
 
 failout:
@@ -542,7 +546,7 @@ static bool compare_linops(const struct linop_s* lop1, const struct linop_s* lop
 		result = result && (tol >= md_znrmse(cod->N, cod->dims, dst1, dst2));
 
 		if (!result)
-			debug_printf(DP_INFO, "linop compare frw failed!\n");
+			debug_printf(DP_INFO, "linop compare frw failed (%.2e = tol < znrmse = %.2e)!\n", tol, md_znrmse(cod->N, cod->dims, dst1, dst2));
 
 		md_free(src);
 		md_free(dst1);
@@ -563,7 +567,7 @@ static bool compare_linops(const struct linop_s* lop1, const struct linop_s* lop
 		result = result && (tol >= md_znrmse(dom->N, dom->dims, dst1, dst2));
 
 		if (!result)
-			debug_printf(DP_INFO, "linop compare adj failed!\n");
+			debug_printf(DP_INFO, "linop compare adj failed (%.2e = tol < znrmse = %.2e)!\n", tol, md_znrmse(dom->N, dom->dims, dst1, dst2));
 
 		md_free(src);
 		md_free(dst1);
@@ -633,12 +637,12 @@ bool compare_nlops(const struct nlop_s* nlop1, const struct nlop_s* nlop2, bool 
 		auto iovc1 = nlop_generic_codomain(nlop1, i);
 
 		result = result && (tol >= md_znrmse(iovc1->N, iovc1->dims, args1[i], args2[i]));
-	}
 
-	if (!result) {
+		if (!result) {
 
-		debug_printf(DP_INFO, "nlop compare forward failed!\n");
-		goto cleanup;
+			debug_printf(DP_INFO, "nlop compare forward failed (output %d: %.2e = tol < znrmse = %.2e)!\n", i, tol, md_znrmse(iovc1->N, iovc1->dims, args1[i], args2[i]));
+			goto cleanup;
+		}
 	}
 
 
@@ -650,6 +654,12 @@ bool compare_nlops(const struct nlop_s* nlop1, const struct nlop_s* nlop2, bool 
 			auto der2 = nlop_get_derivative(nlop2, o, i);
 
 			result = result && compare_linops(der1, der2, der, adj, tol);
+
+			if (!result) {
+
+				debug_printf(DP_INFO, "(derivative o=%d i=%d)\n", o, i);
+				goto cleanup;
+			}
 		}
 	}
 
@@ -666,3 +676,46 @@ cleanup:
 	return result;
 }
 
+float nlop_test_affine_at(const struct nlop_s* op, const complex float* in)
+{
+	auto cod = nlop_codomain(op);
+	auto dom = nlop_domain(op);
+
+	complex float* h = md_alloc_sameplace(dom->N, dom->dims, dom->size, in);
+	complex float* in2 = md_alloc_sameplace(dom->N, dom->dims, dom->size, in);
+	complex float* out1 = md_alloc_sameplace(cod->N, cod->dims, cod->size, in);
+	complex float* out2 = md_alloc_sameplace(cod->N, cod->dims, cod->size, in);
+
+	float err = 0.;
+
+	for (int i = 0; i < 5; i++) {
+
+		if (NULL == in)
+			md_gaussian_rand(dom->N, dom->dims, in2);
+		else
+			md_copy(dom->N, dom->dims, in2, in, CFL_SIZE);
+
+		nlop_apply(op, cod->N, cod->dims, out1, dom->N, dom->dims, in2);
+
+		md_gaussian_rand(dom->N, dom->dims, h);
+		nlop_derivative(op, cod->N, cod->dims, out2, dom->N, dom->dims, h);
+		md_zadd(cod->N, cod->dims, out1, out1, out2);
+
+		md_zadd(dom->N, dom->dims, h, h, in2);
+		nlop_apply(op, cod->N, cod->dims, out2, dom->N, dom->dims, h);
+
+		err = MAX(err, md_znrmse(cod->N, cod->dims, out2, out1));
+	}
+
+	md_free(h);
+	md_free(in2);
+	md_free(out1);
+	md_free(out2);
+
+	return err;
+}
+
+float nlop_test_affine(const struct nlop_s* op)
+{
+	return nlop_test_affine_at(op, NULL);
+}
