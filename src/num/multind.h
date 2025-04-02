@@ -242,6 +242,7 @@ extern int md_min_idx(unsigned long flags);
 
 
 #define MD_ACCESS(N, strs, pos, x)	(*({ auto _x = (x); &((_x)[md_calc_offset((N), (strs), (pos)) / (long)sizeof((_x)[0])]); }))
+#define MD_ACCESS_PTR(N, strs, pos, x)	((NULL == (x) ? NULL : &MD_ACCESS(N, strs, pos, x)))
 
 #define MD_STRIDES(N, dims, elsize)	(md_calc_strides((N), alloca((unsigned long)(N) * sizeof(long)), (dims), (elsize)))
 
