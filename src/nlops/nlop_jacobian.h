@@ -59,3 +59,9 @@ extern void linop_compute_matrix_zrblock_diag(const struct linop_s* lop, int N, 
 
 extern struct nlop_s* nlop_zprecomp_jacobian_F(const struct nlop_s* nlop);
 extern struct nlop_s* nlop_zrprecomp_jacobian_F(const struct nlop_s* nlop);
+
+extern _Bool nlop_is_zblock_diag(const struct nlop_s* nlop);
+extern const struct nlop_data_s* nlop_zblock_diag_get_data(const struct nlop_s* nlop);
+extern void nlop_zblock_diag_get_dims(const struct nlop_s* nlop, int N, int OO, long odims[OO][N], int II, long idims[II][N], long ddims[OO][II][N]);
+extern void nlop_zblock_diag_apply(const struct nlop_s* nlop, int N, int OO, const long odims[OO][N], _Complex float* dst[OO], int II, const long idims[II][N], const _Complex float* src[II], const long ddims[OO][II][N], _Complex float* jac[OO][II]);
+
