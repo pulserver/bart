@@ -102,6 +102,13 @@ void bloch_b1_pdp(float out[3][3], const float in[3], float r1, float r2, const 
 	out[2][2] = -cimagf(b1) * in[0] - crealf(b1) * in[1];
 }
 
+void bloch_b1b0_pdp(float out[4][3], const float in[3], float r1, float r2, const float gb[3], complex float b1)
+{
+	bloch_b1_pdp(out, in, r1, r2, gb, b1);
+
+	vec3_rot(out[3], in, (float[3]){ 0., 0., 1. });
+}
+
 
 void bloch_relaxation(float out[3], float t, const float in[3], float r1, float r2, const float gb[3])
 {
@@ -422,7 +429,7 @@ void bloch_mcc_matrix_ode_sa2(int P, float matrix[15 * P * P + 1][15 * P * P + 1
 			m[2 * Ns + 3 * Np + Ns * p + d][d + (p + 1) * 3] = m0[0];
 			m[2 * Ns + 3 * Np + Ns * p + d + 3][d] = m0[p + 1];
 			m[2 * Ns + 3 * Np + Ns * p + d + 3][d + (p + 1) * 3] = -m0[0];
-		} 
+		}
 
 		// Om
 		m[2 * Ns + 3 * Np + Np2 + Ns * p + 3][4 + p * 3] = 1.;

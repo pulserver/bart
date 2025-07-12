@@ -37,6 +37,7 @@ extern void bloch_matrix_int_sa2(float matrix[13][13], float t, float r1, float 
 extern void bloch_pdy(float out[3][3], const float in[3], float r1, float r2, const float gb[3]);
 extern void bloch_pdp(float out[2][3], const float in[3], float r1, float r2, const float gb[3]);
 extern void bloch_b1_pdp(float out[3][3], const float in[3], float r1, float r2, const float gb[3], complex float b1);
+extern void bloch_b1b0_pdp(float out[4][3], const float in[3], float r1, float r2, const float gb[3], complex float b1);
 
 extern void bloch_mcconnel_matrix_ode(int P, float matrix[1 + P * 3][1 + P * 3], const float r1[P], const float r2[P], const float k[P - 1], const float m0[P], const float Om[P], const float gb[3]);
 extern void bloch_mcconnell_ode(int P, float out[P * 3], const float in[P  *3] , float r1[P], float r2[P], float k[P - 1], float m0[P], float Om[P], float gb[3]);
