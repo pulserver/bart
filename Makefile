@@ -749,7 +749,7 @@ lib/lib$(1).a: lib$(1).a($$($(1)objs))
 
 endef
 
-ALIBS = misc num grecon sense noir iter linops wavelet lowrank noncart calib simu sake nlops moba lapacke box geom networks nn motion stl seq
+ALIBS = misc num grecon sense noir nsimu iter linops wavelet lowrank noncart calib simu sake nlops moba lapacke box geom networks nn motion stl seq
 
 ifeq ($(ISMRMRD),1)
 ALIBS += ismrm
@@ -908,6 +908,12 @@ MODULES_test_score += -lnetworks -lnn -lnlops -llinops -liter
 
 UTARGETS += test_snlop
 MODULES_test_snlop+= -lnlops -llinops
+
+UTARGETS += test_nlop_seq
+MODULES_test_nlop_seq+= -lnsimu -lnlops -lseq -lnoncart -lseq -llinops -lsimu -lnlops -llinops -liter
+
+UTARGETS_GPU += test_cuda_nlop_seq
+MODULES_test_cuda_nlop_seq+= -lnsimu -lnlops -lseq -lnoncart -lseq -llinops -lsimu -lnlops -llinops -liter
 
 
 .gitignore: .gitignore.main Makefile*
