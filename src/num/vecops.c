@@ -424,6 +424,18 @@ static void zcos(long N, complex float* dst, const complex float* src)
 		dst[i] = ccosf(src[i]);
 }
 
+static void zasin(long N, complex float* dst, const complex float* src)
+{
+	for (long i = 0; i < N; i++)
+		dst[i] = casinf(src[i]);
+}
+
+static void zacos(long N, complex float* dst, const complex float* src)
+{
+	for (long i = 0; i < N; i++)
+		dst[i] = cacosf(src[i]);
+}
+
 static void zsinh(long N, complex float* dst, const complex float* src)
 {
 	for (long i = 0; i < N; i++)
@@ -879,6 +891,8 @@ const struct vec_ops cpu_ops = {
 
 	.zsin = zsin,
 	.zcos = zcos,
+	.zasin = zasin,
+	.zacos = zacos,
 	.zacosr = zacosr,
 
 	.zsinh = zsinh,

@@ -2646,6 +2646,50 @@ void md_zcos(int D, const long dims[D], complex float* optr, const complex float
 }
 
 
+/**
+ * Complex arcsinus
+ *
+ * optr = zasin(iptr)
+ */
+void md_zasin2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+{
+	MAKE_Z2OP(zasin, D, dims, ostr, optr, istr, iptr);
+}
+
+
+/**
+ * Complex arcsinus
+ *
+ * optr = zasin(iptr)
+ */
+void md_zasin(int D, const long dims[D], complex float* optr, const complex float* iptr)
+{
+	make_z2op_simple(md_zasin2, D, dims, optr, iptr);
+}
+
+
+/**
+ * Complex arccosinus
+ *
+ * optr = zacos(iptr)
+ */
+void md_zacos2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+{
+	MAKE_Z2OP(zacos, D, dims, ostr, optr, istr, iptr);
+}
+
+
+/**
+ * Complex arccosinus
+ *
+ * optr = zacos(iptr)
+ */
+void md_zacos(int D, const long dims[D], complex float* optr, const complex float* iptr)
+{
+	make_z2op_simple(md_zacos2, D, dims, optr, iptr);
+}
+
+
 
 /**
  * Complex hyperbolic sine

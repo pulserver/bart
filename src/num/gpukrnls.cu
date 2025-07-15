@@ -871,6 +871,17 @@ extern "C" void cuda_zcos(long N, _Complex float* dst, const _Complex float* src
 	CUDA_KERNEL_ERROR;
 }
 
+
+extern "C" void cuda_zasin(long N, _Complex float* dst, const _Complex float* src)
+{
+	error("zasin not implemented in CUDA\n");
+}
+
+extern "C" void cuda_zacos(long N, _Complex float* dst, const _Complex float* src)
+{
+	error("zacos not implemented in CUDA\n");
+}
+
 __global__ void kern_zsinh(long N, cuFloatComplex* dst, const cuFloatComplex* src)
 {
 	int start = threadIdx.x + blockDim.x * blockIdx.x;

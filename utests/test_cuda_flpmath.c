@@ -205,6 +205,12 @@ UT_GPU_REGISTER_TEST(test_md_zsinh2);
 static bool test_md_zcosh2(void) { UT_RETURN_ASSERT(test_md_z2op(md_zcosh2));}
 UT_GPU_REGISTER_TEST(test_md_zcosh2);
 
+static bool test_md_zacos2(void) { UT_RETURN_ASSERT(test_md_z2op(md_zacos2));}
+UT_UNUSED_TEST(test_md_zacos2);
+
+static bool test_md_zasin2(void) { UT_RETURN_ASSERT(test_md_z2op(md_zasin2));}
+UT_UNUSED_TEST(test_md_zasin2);
+
 
 
 

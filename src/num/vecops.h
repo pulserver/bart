@@ -62,6 +62,8 @@ struct vec_ops {
 
 	void (*zsin)(long N, _Complex float* dst, const _Complex float* src);
 	void (*zcos)(long N, _Complex float* dst, const _Complex float* src);
+	void (*zasin)(long N, _Complex float* dst, const _Complex float* src);
+	void (*zacos)(long N, _Complex float* dst, const _Complex float* src);
 	void (*zacosr)(long N, _Complex float* dst, const _Complex float* src);
 
 	void (*zsinh)(long N, _Complex float* dst, const _Complex float* src);

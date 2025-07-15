@@ -326,7 +326,7 @@ static bool test_md_complex_real_conversion(void)
 
 	md_zcmpl(N, dims, dst1, real, imag);
 	err += md_znrmse(N, dims, src_comp, dst1);
-	
+
 	md_free(src_comp);
 	md_free(real);
 	md_free(imag);
@@ -389,6 +389,38 @@ print("};")
 	UT_RETURN_ASSERT(UT_TOL > md_znrmse(2, dim, x, y));
 }
 
+static bool test_md_zcos(void)
+{
+	const long dim[] = { 8, 8 };
+	complex float x[64];
+	complex float y[64];
+
+	md_uniform_rand(2, dim, x);
+	md_uniform_rand(2, dim, y);
+	md_zaxpy(2, dim, x, 1.i, y);
+
+	md_zcos(2, dim, y, x);
+	md_zacos(2, dim, y, y);
+
+	UT_RETURN_ASSERT(UT_TOL > md_znrmse(2, dim, x, y));
+}
+
+static bool test_md_zsin(void)
+{
+	const long dim[] = { 8, 8 };
+	complex float x[64];
+	complex float y[64];
+
+	md_uniform_rand(2, dim, x);
+	md_uniform_rand(2, dim, y);
+	md_zaxpy(2, dim, x, 1.i, y);
+
+	md_zsin(2, dim, y, x);
+	md_zasin(2, dim, y, y);
+
+	UT_RETURN_ASSERT(UT_TOL > md_znrmse(2, dim, x, y));
+}
+
 
 
 UT_REGISTER_TEST(test_md_zfmacc2);
@@ -402,4 +434,6 @@ UT_REGISTER_TEST(test_md_zstd);
 UT_REGISTER_TEST(test_md_zconv);
 UT_REGISTER_TEST(test_md_complex_real_conversion);
 UT_REGISTER_TEST(test_md_zgausspdf);
+UT_REGISTER_TEST(test_md_zcos);
+UT_REGISTER_TEST(test_md_zsin);
 
