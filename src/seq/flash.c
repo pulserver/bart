@@ -213,6 +213,56 @@ static double end_last_ro(int rampdown, const struct seq_config* seq)
 }
 
 
+static int prep_grad_ro_reph(struct grad_trapezoid* grad, const struct seq_config* seq)
+{
+	*grad = (struct grad_trapezoid){ 0 };
+
+	if (SEQ_CONTRAST_RF_SPOILED != seq->phys.contrast)
+		return 1;
+
+	struct grad_limits lim = seq->sys.grad;
+	lim.inv_slew_rate = seq->sys.grad.inv_slew_rate * 2;
+
+	if (!grad_soft(grad, seq->phys.tr - end_last_ro(1, seq),
+			- ro_momentum_after_echo(seq->loop_dims[TE_DIM] - 1, seq), lim))
+		return 0;
+
+	return 1;
+}
+
+static int prep_grad_spoiler_read(struct grad_trapezoid* grad, const struct seq_config* seq)
+{
+	*grad = (struct grad_trapezoid){ 0 };
+
+	if (SEQ_CONTRAST_RF_SPOILED != seq->phys.contrast)
+		return 1;
+
+	struct grad_limits lim = seq->sys.grad;
+	lim.inv_slew_rate = seq->sys.grad.inv_slew_rate * 2;
+
+	if (!grad_soft(grad, seq->phys.tr - end_last_ro(1, seq),
+			ro_momentum(seq->loop_dims[TE_DIM] - 1, seq), lim))
+		return 0;
+
+	return 1;
+}
+
+static int prep_grad_spoiler_slice(struct grad_trapezoid* grad, const struct seq_config* seq)
+{
+	*grad = (struct grad_trapezoid){ 0 };
+
+	if (SEQ_CONTRAST_RF_SPOILED != seq->phys.contrast)
+		return 1;
+
+	struct grad_limits lim = seq->sys.grad;
+	lim.inv_slew_rate = seq->sys.grad.inv_slew_rate * 2;
+
+	if (!grad_soft(grad, seq->phys.tr - end_last_ro(0, seq), slice_momentum_to_rephase(seq), lim))
+		return 0;
+
+	return 1;
+}
+
 static int prep_grad_sli(struct grad_trapezoid* grad, const struct seq_config* seq)
 {
 	*grad = (struct grad_trapezoid){ 0 };
@@ -331,6 +381,9 @@ struct flash_timing {
 	double readout_blip; // actually MAX_NO_ECHOES
 	double readout[SEQ_MAX_NO_ECHOES];
 	double adc[SEQ_MAX_NO_ECHOES];
+	double readout_rephaser;
+	double spoiler_read;
+	double spoiler_slice;
 };
 
 
@@ -353,6 +406,10 @@ static struct flash_timing flash_compute_timing(const struct seq_config *seq)
 		timing.adc[i] = start_adc(i, seq);
 	}
 
+	timing.spoiler_slice = end_last_ro(0, seq);
+	timing.readout_rephaser = end_last_ro(1, seq);
+	timing.spoiler_read = end_last_ro(1, seq);
+
 	return timing;
 }
 
@@ -365,6 +422,7 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 
 	double rf_spoil_phase = rf_spoiling(DIMS, seq_state->pos, seq);
 
+	double projREAD[3] = { 1. , 0. , 0. };
 	double projSLICE[3] = { 0. , 0. , 1. };
 
 
@@ -387,6 +445,8 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 		return ERROR_SLI_TIMING;
 
 	i += seq_grad_to_event(ev + i, timing.slice_rephaser, &slice_rephaser, projSLICE);
+
+	struct grad_trapezoid ro_reph;
 
 	do {
 		double proj_angle = get_rot_angle(seq_state->pos, seq);
@@ -441,7 +501,37 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 
 		i += prep_adc(ev + i, timing.adc[seq_state->pos[TE_DIM]], rf_spoil_phase, seq_state, seq);
 
+		if (seq_state->pos[TE_DIM] == seq->loop_dims[TE_DIM] - 1) {
+
+			if (!prep_grad_ro_reph(&ro_reph, seq))
+				return ERROR_PREP_GRAD_RO_REPH;
+
+			i += seq_grad_to_event(ev + i, timing.readout_rephaser, &ro_reph, projX);
+			i += seq_grad_to_event(ev + i, timing.readout_rephaser, &ro_reph, projY);
+		}
+
 	} while (md_next(DIMS, seq->loop_dims, TE_FLAG, seq_state->pos));
+
+	struct grad_trapezoid spoiler_read;
+
+	if (!prep_grad_spoiler_read(&spoiler_read, seq))
+		return ERROR_PREP_GRAD_SP_READ;
+
+	i += seq_grad_to_event(ev + i, timing.spoiler_read, &spoiler_read, projREAD); // don't project spoiler gradients, we need constant direction
+
+	struct grad_trapezoid spoiler_slice;
+
+	if (!prep_grad_spoiler_slice(&spoiler_slice, seq))
+		return ERROR_PREP_GRAD_SP_SLICE;
+
+	double ampl_read = fabs(ro_reph.ampl) + fabs(spoiler_read.ampl);
+	if (seq->sys.grad.max_amplitude < ampl_read)
+		return ERROR_MAX_GRAD_SPOILER_READ;
+
+	if (powf(seq->sys.grad.max_amplitude, 2.) < powf(ampl_read, 2.) + powf(spoiler_slice.ampl, 2.))
+		return ERROR_MAX_GRAD_SPOILER;
+
+	i += seq_grad_to_event(ev + i, timing.spoiler_slice, &spoiler_slice, projSLICE);
 
 	if (seq_block_end_flat(i, ev, seq->sys.raster_grad) - 1E-9 > seq->phys.tr)
 		return ERROR_END_FLAT_KERNEL;
