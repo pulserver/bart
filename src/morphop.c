@@ -47,7 +47,7 @@ int main_morphop(int argc, char* argv[argc])
 	};
 
 
-	enum morph_type { EROSION, DILATION, OPENING, CLOSING, LABEL } morph_type = EROSION;
+	enum morph_type { EROSION, DILATION, OPENING, CLOSING, SKELETON, LABEL } morph_type = EROSION;
 
 	enum mask_type { HLINE, VLINE, CROSS, BLOCK, BALL } mask_type = BLOCK;
 
@@ -58,6 +58,7 @@ int main_morphop(int argc, char* argv[argc])
 		OPT_SELECT('d', enum morph_type, &morph_type, DILATION, "DILATION"),
 		OPT_SELECT('o', enum morph_type, &morph_type, OPENING, "OPENING"),
 		OPT_SELECT('c', enum morph_type, &morph_type, CLOSING, "CLOSING"),
+		OPT_SELECT('s', enum morph_type, &morph_type, SKELETON, "SKELETON"),
 		OPT_SELECT('l', enum morph_type, &morph_type, LABEL, "LABEL"),
 
 		OPT_SELECT('B', enum mask_type, &mask_type, BALL, "use BALL structuring element"),
@@ -143,6 +144,10 @@ int main_morphop(int argc, char* argv[argc])
 
 	case CLOSING:
 		md_closing(N, mask_dims, mask, dims, out, in, CONV_CYCLIC);
+		break;
+
+	case SKELETON:
+		md_thinning_3D(N, dims, out, in, NULL);
 		break;
 
 	case LABEL:

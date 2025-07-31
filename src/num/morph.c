@@ -4,11 +4,21 @@
  *
  * Authors:
  * 2025 Moritz Blumenthal
+ *
+ * References:
+ *
+ * Lee T.-C., Kashyap R.L. and Chu C.-N., Building skeleton models
+ * via 3-D medial surface/axis thinning algorithms.
+ * Computer Vision, Graphics, and Image Processing, 56(6):462-478, 1994.
+ *
+ *
  */
 
 #include <assert.h>
 #include <complex.h>
 #include <math.h>
+
+#include "misc/misc.h"
 
 #include "num/multind.h"
 #include "num/flpmath.h"
@@ -314,3 +324,232 @@ void md_center_of_mass(int N_labels, int N, float com[N_labels][N], const long d
 	if (NULL != wgh_cpu)
 		md_free(wgh_cpu);
 }
+
+static void extract_neighborhood(bool neighbor[3][3][3], long strs[3], complex float* src)
+{
+	for (int p = -1; p < 2; p++)
+		for (int r = -1; r < 2; r++)
+			for (int c = -1; c < 2; c++)
+				neighbor[p + 1][c + 1][r + 1] = (0. != src[(c * strs[0] + r * strs[1] + p * strs[2]) / (long)sizeof(*src)]) ? true : false;
+}
+
+static int euler[256] = {
+	0,  1, 0, -1, 0, -1, 0, 1, 0, -3, 0, -1, 0, -1, 0, 1, 0, -1, 0, 1, 0, 1, 0, -1, 0, 3, 0, 1, 0, 1, 0, -1,
+	0, -3, 0, -1, 0,  3, 0, 1, 0,  1, 0, -1, 0,  3, 0, 1, 0, -1, 0, 1, 0, 1, 0, -1, 0, 3, 0, 1, 0, 1, 0, -1,
+	0, -3, 0,  3, 0, -1, 0, 1, 0,  1, 0,  3, 0, -1, 0, 1, 0, -1, 0, 1, 0, 1, 0, -1, 0, 3, 0, 1, 0, 1, 0, -1,
+	0,  1, 0,  3, 0,  3, 0, 1, 0,  5, 0,  3, 0,  3, 0, 1, 0, -1, 0, 1, 0, 1, 0, -1, 0, 3, 0, 1, 0, 1, 0, -1,
+	0, -7, 0, -1, 0, -1, 0, 1, 0, -3, 0, -1, 0, -1, 0, 1, 0, -1, 0, 1, 0, 1, 0, -1, 0, 3, 0, 1, 0, 1, 0, -1,
+	0, -3, 0, -1, 0,  3, 0, 1, 0,  1, 0, -1, 0,  3, 0, 1, 0, -1, 0, 1, 0, 1, 0, -1, 0, 3, 0, 1, 0, 1, 0, -1,
+	0, -3, 0,  3, 0, -1, 0, 1, 0,  1, 0,  3, 0, -1, 0, 1, 0, -1, 0, 1, 0, 1, 0, -1, 0, 3, 0, 1, 0, 1, 0, -1,
+	0,  1, 0,  3, 0,  3, 0, 1, 0,  5, 0,  3, 0,  3, 0, 1, 0, -1, 0, 1, 0, 1, 0, -1, 0, 3, 0, 1, 0, 1, 0, -1
+};
+
+static int oct_idx[8][7] = {
+	{  2,  1, 11, 10,  5,  4, 14 }, //NEB
+	{  0,  9,  3, 12,  1, 10,  4 }, //NWB
+	{  8,  7, 17, 16,  5,  4, 14 }, //SEB
+	{  6, 15,  7, 16,  3, 12,  4 }, //SWB
+	{ 20, 23, 19, 22, 11, 14, 10 }, //NEU
+	{ 18, 21,  9, 12, 19, 22, 10 }, //NWU
+	{ 26, 23, 17, 14, 25, 22, 16 }, //SEU
+	{ 24, 25, 15, 16, 21, 22, 12 }, //SWU
+};
+
+static bool is_euler_invariant(bool neighbors[3][3][3])
+{
+	int ret = 0;
+
+	for (int o = 0; o < 8; o++) {
+
+		unsigned int idx = 1;
+
+		for (int j = 0; j < 7; j++) {
+
+			if ((&(neighbors[0][0][0]))[oct_idx[o][j]])
+				idx |= 1u << (7 - j);
+		}
+
+		ret += euler[idx];
+	}
+
+	return 0 == ret;
+}
+
+static int count_neighbors(bool neighbors[3][3][3])
+{
+	int count = 0;
+	for (int i = 0; i < 3; i++)
+		for (int j = 0; j < 3; j++)
+			for (int k = 0; k < 3; k++)
+				count += (neighbors[i][j][k] ? 1 : 0);
+
+	return count - 1;
+}
+
+static bool extend_local_label(int labels[3][3][3], const bool neighbors[3][3][3], int i, int j, int k, int label)
+{
+	if (!neighbors[i][j][k])
+		return false;
+
+	if (0 != labels[i][j][k])
+		return false;
+
+	labels[i][j][k] = label;
+
+	for (int ip = MAX(0, i - 1); ip < MIN(3, i + 2); ip++)
+		for (int jp = MAX(0, j - 1); jp < MIN(3, j + 2); jp++)
+			for (int kp = MAX(0, k - 1); kp < MIN(3, k + 2); kp++)
+				extend_local_label(labels, neighbors, ip, jp, kp, label);
+
+	return true;
+}
+
+static int local_label(const bool neighbors[3][3][3])
+{
+	int labels[3][3][3];
+
+	for (int i = 0; i < 3; i++)
+		for (int j = 0; j < 3; j++)
+			for (int k = 0; k < 3; k++)
+				labels[i][j][k] = 0;
+
+	int label = 1;
+
+	for (int i = 0; i < 3; i++)
+		for (int j = 0; j < 3; j++)
+			for (int k = 0; k < 3; k++)
+				if (extend_local_label(labels, neighbors, i, j, k, label))
+					label++;
+
+	return label - 1;
+}
+
+
+static bool is_simple(bool neighbors[3][3][3])
+{
+	neighbors[1][1][1] = false;
+	int labels = local_label(neighbors);
+	neighbors[1][1][1] = true;
+	return (1 == labels);
+
+}
+
+
+static bool is_border(int type, bool neighbors[3][3][3])
+{
+	switch (type) {
+
+		case 0: return !neighbors[1][1][0];
+		case 1: return !neighbors[1][1][2];
+		case 2: return !neighbors[1][0][1];
+		case 3: return !neighbors[1][2][1];
+		case 4: return !neighbors[0][1][1];
+		case 5: return !neighbors[2][1][1];
+		default: assert(false); return false;
+	};
+}
+
+static void thinning_3D(const long dims[3], complex float* dst, const complex float* keep)
+{
+	long count = 0;
+	long size = md_calc_size(3, dims);
+	for (long i = 0; i < size; i++)
+		if (0. != dst[i])
+			count++;
+
+	long pos[6][count?:1][3];
+
+	long strs[3];
+	md_calc_strides(3, strs, dims, CFL_SIZE);
+
+	bool redo = true;
+
+	while (redo) {
+
+		redo = false;
+
+		long count_boarders[6] = { 0, 0, 0, 0, 0, 0 };
+
+		for (long i = 0; i < size; i++) {
+
+			if (0. == dst[i])
+				continue;
+
+			if (NULL != keep && 0. != crealf(keep[i]))
+				continue;
+
+			bool neighbors[3][3][3];
+
+			extract_neighborhood(neighbors, strs, dst + i);
+
+			if (1 == count_neighbors(neighbors))
+				continue;
+
+			if (!is_simple(neighbors))
+				continue;
+
+			if (!is_euler_invariant(neighbors))
+				continue;
+
+			for (int j = 0; j < 6; j++) {
+
+				if (!is_border(j, neighbors))
+					continue;
+
+				int idx = count_boarders[j]++;
+				md_unravel_index(3, pos[j][idx], 7UL, dims, i);
+			}
+		}
+
+		for (int j = 0; j < 6; j++) {
+
+			bool neighbors[3][3][3];
+
+			for (long i = 0; i < count_boarders[j]; i++) {
+
+				extract_neighborhood(neighbors, strs, &MD_ACCESS(3, strs, pos[j][i], dst));
+
+				if (is_simple(neighbors) && is_euler_invariant(neighbors)) {
+
+					redo = true;
+					MD_ACCESS(3, strs, pos[j][i], dst) = 0.;
+				}
+			}
+		}
+	}
+}
+
+void md_thinning_3D(int N, const long dims[N], complex float* dst, const complex float* src, const complex float* keep)
+{
+	assert(3 >= bitcount(md_nontriv_dims(N, dims)));
+
+	long rdims[3] = { 1, 1, 1 };
+	long ndims[3] = { 1, 1, 1 };
+
+	for (int i =0, ip = 0; i < N; i++)
+		if (1 < dims[i])
+			rdims[ip++] = dims[i];
+
+	for (int i = 0; i < 3; i++)
+		ndims[i] = rdims[i] + 2;
+
+	complex float* tmp = md_alloc(3, ndims, CFL_SIZE);
+	md_resize_center(3, ndims, tmp, rdims, src, CFL_SIZE);
+
+	complex float* tmp_keep = NULL;
+
+	if (NULL != keep) {
+		tmp_keep = md_alloc(3, ndims, CFL_SIZE);
+		md_resize_center(3, ndims, tmp_keep, rdims, keep, CFL_SIZE);
+	}
+
+	thinning_3D(ndims, tmp, tmp_keep);
+
+	if (NULL != tmp_keep)
+		md_free(tmp_keep);
+
+	md_resize_center(3, rdims, dst, ndims, tmp, CFL_SIZE);
+	md_free(tmp);
+}
+
+

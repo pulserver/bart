@@ -14,3 +14,5 @@ extern _Complex float* md_label_simple_connection(int N, long dims[N], float rad
 extern long md_label(int N, const long dims[N], _Complex float* labels, const _Complex float* src, const long sdims[N], const _Complex float* structure);
 
 void md_center_of_mass(int N_labels, int N, float com[N_labels][N], const long dims[N], const _Complex float* labels, const _Complex float* wgh);
+
+void md_thinning_3D(int N, const long dims[N], _Complex float* dst, const _Complex float* src, const _Complex float* keep);
