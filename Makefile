@@ -904,6 +904,7 @@ UTARGETS += test_ode test_nlmeans test_rand test_matexp test_delayed
 UTARGETS += test_blas test_mdfft test_ops test_ops_p test_flpmath2 test_convcorr test_specfun test_qform test_fft test_gaussians test_md_gaussians
 UTARGETS += test_lapack
 UTARGETS += test_morph
+UTARGETS += test_lineseg
 UTARGETS += test_linalg_rand
 UTARGETS += test_laplace
 MODULES_test_linalg_rand += -llinops
