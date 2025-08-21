@@ -6,6 +6,7 @@
  * 2025 Moritz Blumenthal
  */
 
+#include <assert.h>
 #include <complex.h>
 #include <math.h>
 
@@ -13,11 +14,18 @@
 #include "misc/misc.h"
 #include "misc/debug.h"
 
+#include "num/lineseg.h"
 #include "num/multind.h"
 #include "num/morph.h"
 #include "num/flpmath.h"
 #include "num/loop.h"
+#include "num/rand.h"
 #include "num/vec3.h"
+#include "num/ode.h"
+
+#ifdef USE_CUDA
+#include "num/gpuops.h"
+#endif
 
 #include "pole.h"
 
@@ -30,6 +38,8 @@ struct pole_config_s pole_config_default = {
 	.avg_flag = COIL_FLAG,
 	.normal = -1,
 	.espirit = false,
+	.tol = 1.e-4,
+	.osx = 1.,
 };
 
 static void get_circle_coords(struct pole_config_s* conf, long pos[3], int index, int normal, int diameter, bool twoD)
@@ -54,6 +64,31 @@ static void get_circle_coords(struct pole_config_s* conf, long pos[3], int index
 		pos[normal] = 0;
 }
 
+static int get_diameter(struct pole_config_s conf, int normal, const long dims[3], bool print)
+{
+	if (conf.espirit) {
+
+		debug_printf(DP_DEBUG1, "Circle diameter set to 1pixel (ESPIRiT mode).\n");
+		return 1;
+	}
+
+	long tdims[3];
+	for (int i = 0; i < 3; i++)
+		tdims[i] = dims[i];
+
+	tdims[0] = lroundf(tdims[0] / conf.osx);
+
+	if (print && (tdims[(normal + 1) % 3] != tdims[(normal + 2) % 3]))
+		debug_printf(DP_DEBUG1, "Non-square dimensions detected (%ld, %ld, %ld): ", tdims[0], tdims[1], tdims[2]);
+
+	int diameter = roundf(ceil(conf.diameter * MAX(tdims[(normal + 1) % 3], tdims[(normal + 2) % 3])));
+
+	if (print)
+		debug_printf(DP_DEBUG1, "Circle diameter set to %d (%.3f * %ld).\n", diameter, conf.diameter,  MAX(tdims[(normal + 1) % 3], tdims[(normal + 2) % 3]));
+
+	return diameter;
+}
+
 static void compute_curl_map_normal(struct pole_config_s conf, int N, const long dims[N], complex float* curl_map, const complex float* sens, int normal)
 {
 	assert(2 <= bitcount(md_nontriv_dims(MIN(N, 3), dims)));
@@ -66,21 +101,7 @@ static void compute_curl_map_normal(struct pole_config_s conf, int N, const long
 	md_set_dims(N, pos1, 0);
 	md_set_dims(N, pos2, 0);
 
-	if (dims[(normal + 1) % 3] != dims[(normal + 2) % 3])
-		debug_printf(DP_DEBUG1, "Non-square dimensions detected (%ld, %ld, %ld): ", dims[0], dims[1], dims[2]);
-
-	int diameter;
-
-	if (conf.espirit) {
-
-		diameter = 1;
-		debug_printf(DP_DEBUG1, "Circle diameter set to 1pixel (ESPIRiT mode).\n");
-
-	} else {
-
-		diameter = roundf(ceil(conf.diameter * MAX(dims[(normal + 1) % 3], dims[(normal + 2) % 3])));
-		debug_printf(DP_DEBUG1, "Circle diameter set to %d (%.3f * %ld).\n", diameter, conf.diameter,  MAX(dims[(normal + 1) % 3], dims[(normal + 2) % 3]));
-	}
+	int diameter = get_diameter(conf, normal, dims, true);
 
 	bool twoD = false;
 
@@ -460,7 +481,10 @@ bool phase_pole_correction(struct pole_config_s conf, int N, const long pmap_dim
 		if (1 == curl_dims[i])
 			normal = i;
 
-	assert((0 <= normal) && (3 > normal));
+	assert((-1 <= normal) && (3 > normal));
+
+	if (-1 == normal)
+		curl_dims[ITER_DIM] = 3;
 
 	complex float* curl_map = md_alloc_sameplace(N, curl_dims, CFL_SIZE, sens);
 	complex float* curl_wgh = md_alloc_sameplace(N, curl_dims, CFL_SIZE, sens);
@@ -476,12 +500,21 @@ bool phase_pole_correction(struct pole_config_s conf, int N, const long pmap_dim
 	complex float* red_curl_map = md_alloc_sameplace(N, rcurl_map_dims, CFL_SIZE, sens);
 	average_curl_map(N, rcurl_map_dims, red_curl_map, curl_dims, ITER_DIM, curl_map, curl_wgh);
 
-	struct lseg_s pos = extract_phase_poles_2D(conf, N, rcurl_map_dims, red_curl_map);
+	struct lseg_s pos;
+	if (3 == curl_dims[ITER_DIM])
+		pos = extract_phase_poles_3D(conf, N, rcurl_map_dims, red_curl_map, sens_dims, sens);
+	else
+		pos = extract_phase_poles_2D(conf, N, rcurl_map_dims, red_curl_map);
 
 	md_zfill(N, pmap_dims, phase, 1.);
 
-	if (0 < pos.N)
-		sample_phase_pole_2D(N, pmap_dims, phase, pos.N, pos.pos);
+	if (0 < pos.N) {
+
+		if (3 == curl_dims[ITER_DIM])
+			sample_phase_pole_3D(N, pmap_dims, phase, pos.N, pos.pos, conf.tol);
+		else
+			sample_phase_pole_2D(N, pmap_dims, phase, pos.N, pos.pos);
+	}
 
 	xfree(pos.pos);
 
@@ -545,3 +578,486 @@ void phase_pole_normalize(int N, const long pdims[N], complex float* phase, cons
 	md_free(dot);
 }
 
+
+
+static float get_min_dist(const vec3_t pos, int N, const vec3_t r[N][2])
+{
+	assert(1 <= N);
+
+	float dist = dist_to_lineseg(pos, r[0]);
+
+	for (int i = 1; i < N; i++)
+		dist = MIN(dist, dist_to_lineseg(pos, r[i]));
+
+	return dist;
+}
+
+/**
+*	(1 / sqrt(1 + r2 / d2) - 1) / r2
+*	define y = r2 / d2
+*	1 / d2 * (1 / sqrt(1 + y) - 1) / y
+**/
+static float taylor(float r2, float d2)
+{
+	float y = r2 / d2;
+
+	if (y > 1.e-4)
+		return (1. / sqrtf(1. + r2 / d2) - 1) / r2;
+	else
+		return (-0.5 + 3. / 8. * y - 5. / 16. * y * y) / d2;
+}
+
+
+//https://books.physics.oregonstate.edu/GSF/wire.html
+//compute phase due to a line segment from (0, 0, -L) to (0, 0, L)
+// computes -1 / (2r^2) * ((z-L)/sqrt(r^2 + (z-L)^2) - (z+L)/sqrt(r^2 + (z+L)^2))
+static float get_grad_wire_zaxis(float r, float z, float L)
+{
+	float r2 = powf(r, 2);
+	float dp = powf(z + L, 2);
+	float dm = powf(z - L, 2);
+
+	if (z >= -L && z <= L) {
+
+		float t1 = (z + L) / sqrtf(r2 + dp) / (2. * r2);
+		float t2 = (z - L) / sqrtf(r2 + dm) / (2. * r2);
+
+		return t1 - t2;
+	} else {
+
+		float sgn =  z > L ? 1 : -1;
+
+		// we use taylor expansion for r << 1 as the zero order term cancels
+		float t1 = sgn * 0.5 * taylor(r2, dp);
+		float t2 = sgn * 0.5 * taylor(r2, dm);
+
+		return t1 - t2;
+	}
+}
+
+static void get_grad_line(vec3_t grad, const vec3_t pos, const vec3_t r2, const vec3_t r1)
+{
+	vec3_t cen;
+	vec3_add(cen, r1, r2);
+	vec3_smul(cen, cen, 0.5);
+
+	vec3_t Lvec;
+	vec3_sub(Lvec, r2, cen);
+
+	float L = vec3_norm(Lvec);
+
+	vec3_t ez;
+	vec3_smul(ez, Lvec, 1. / L);
+
+	vec3_t rer;	//r*\hat{e}_r; don't devide by r as r might be 0
+	vec3_sub(rer, pos, cen);
+
+	float z = vec3_sdot(rer, ez);
+
+	vec3_saxpy(rer, rer, -z, ez);
+
+	float r = vec3_norm(rer);
+
+	vec3_rot(grad, ez, rer); //grad = r*\hat{e}_\phi; don't devide by r as r might be 0
+
+	vec3_smul(grad, grad, get_grad_wire_zaxis(r, z, L));
+}
+
+static void get_grad(vec3_t grad, const vec3_t pos, int N, const vec3_t r[N][2])
+{
+	grad[0] = 0.;
+	grad[1] = 0.;
+	grad[2] = 0.;
+
+	for (int i = 0; i < N; i++) {
+
+		vec3_t tgrad;
+		get_grad_line(tgrad, pos, r[i][0], r[i][1]);
+
+		vec3_add(grad, grad, tgrad);
+	}
+}
+
+float integrate_phase(int M, const float pos[M][3], int N, const float r[N][2][3], float tol)
+{
+	const float* ptr_pos = &pos[0][0];
+	const float* ptr_r = &r[0][0][0];
+
+	NESTED(void, eval, (float out[1], float t, const float /*in*/[1]))
+	{
+		vec3_t cpos;
+		vec3_t dcpos;
+		vec3_t grad;
+
+		int index = (int)(t * (M - 1));
+		float t_index = t * (M - 1) - index;
+
+		vec3_sub(dcpos, ptr_pos + 3 * (MIN(M - 1, index + 1)), ptr_pos + 3 * index);
+		vec3_saxpy(cpos, ptr_pos + 3 * index, t_index, dcpos);
+		vec3_smul(dcpos, dcpos, (M - 1));
+
+		get_grad(grad, cpos, N, (const float(*)[2][3])ptr_r);
+
+		out[0] = vec3_sdot(grad, dcpos);
+	};
+
+	float phi[] = { 0. };
+	ode_interval(0.5 / (M - 1), -1., tol, 1, phi, 0., 1., eval);
+
+	return phi[0];
+}
+
+
+static void search_start(long pos[3], const long dims[3], int D, const float r[D][2][3])
+{
+	for (int i = 0; i < 3; i++)
+		pos[i] = dims[i] / 2;
+
+	float fpos[3];
+	for (int i = 0; i < 3; i++)
+		fpos[i] = pos[i];
+
+	struct bart_rand_state* rstate = rand_state_create(123);
+
+	while (2. > get_min_dist(fpos, D, r)) {
+
+		md_unravel_index(3, pos, 7ul, dims, rand_range_state(rstate, md_calc_size(3, dims)));
+		for (int i = 0; i < 3; i++)
+			fpos[i] = pos[i];
+	}
+}
+
+static long get_integration_order(const long dims[3], long* sint, long* eint, complex float* visited, long start_idx, int D, const float r[D][2][3])
+{
+	double time = -timestamp();
+	debug_printf(DP_DEBUG1, "Start finding integration path ... ");
+
+	long qmax = 0; // queue of points to be processed
+	long qmin = 0;
+
+	md_clear(3, dims, visited, CFL_SIZE);
+
+	long idx = start_idx;
+	visited[idx] = 1.;
+
+	do {
+		long pos[3];
+		md_unravel_index(3, pos, ~0UL, dims, idx);
+
+		for (int i = 0; i < 6; i++) {
+
+			long pos2[3];
+			md_copy_dims(3, pos2, pos);
+
+			pos2[i / 2] += (0 == i % 2) ? 1 : -1;
+
+			if ((0 > pos2[i / 2]) || (dims[i / 2] == pos2[i / 2]))
+				continue;
+
+			long idx2 = md_ravel_index(3, pos2, ~0UL, dims);
+
+			if (0. != visited[idx2])
+				continue;
+
+			vec3_t path[2];
+			for(int i = 0; i < 3; i++) {
+
+				path[0][i] = pos[i];
+				path[1][i] = pos2[i];
+			}
+
+			bool stop = false;
+
+			for (int i = 0; i < D; i++)
+				stop = stop || (dist_of_linesegs_smaller(path, r[i], 0.3));
+
+			if (stop)
+				continue;
+
+			visited[idx2] = 1.;
+
+			sint[qmax] = idx;
+ 			eint[qmax++] = idx2;
+		}
+
+		if (qmin == qmax)
+			break;
+		else
+			idx = eint[qmin++];
+
+	} while (true);
+
+	debug_printf(DP_DEBUG1, "done (took %es)\n", timestamp() + time);
+
+	return qmax;
+}
+
+static void integrate_path(long qmax, const long dims[3], float* dphi, const long* sint, const long* eint, int D, const float r[D][2][3], float tol)
+{
+	debug_printf(DP_DEBUG1, "Start integrating phases ... ");
+	double time = -timestamp();
+
+#pragma omp parallel for
+	for (long i = 0; i < qmax; i++) {
+
+		long idx = sint[i];
+		long idx2 = eint[i];
+
+		long pos[3];
+		long pos2[3];
+
+		md_unravel_index(3, pos, ~0UL, dims, idx);
+		md_unravel_index(3, pos2, ~0UL, dims, idx2);
+
+		float fpos[2][3];
+
+		for (int i = 0; i < 3; i++) {
+
+			fpos[0][i] = pos[i];
+			fpos[1][i] = pos2[i];
+		}
+
+		dphi[i] = integrate_phase(2, fpos, D, r, tol);
+
+		if (!safe_isfinite(dphi[i]))
+			dphi[i] = 0.;
+	}
+
+	debug_printf(DP_DEBUG1, "done (%ld paths, took %es)\n", qmax, timestamp() + time);
+}
+
+
+static void grid_to_fov(const long dims[3], vec3_t pos)
+{
+	for (int i = 0; i < 3; i++)
+		pos[i] = (pos[i] - dims[i] / 2) / (float)dims[i];
+}
+
+static void fov_to_grid(const long dims[3], vec3_t pos)
+{
+	for (int i = 0; i < 3; i++)
+		pos[i] = pos[i] * dims[i] + dims[i] / 2;
+}
+
+
+void sample_phase_pole_3D(int N, const long dims[N], complex float* dst, int D, const float r_fov[D][2][3], float tol)
+{
+#ifdef USE_CUDA
+	if (cuda_ondevice(dst)) {
+
+		complex float* tmp = md_alloc(N, dims, CFL_SIZE);
+		sample_phase_pole_3D(N, dims, tmp, D, r_fov, tol);
+		md_copy(N, dims, dst, tmp, CFL_SIZE);
+		return;
+	}
+#endif
+
+	assert(3 <= N);
+	assert(1 == md_calc_size(N - 3, dims + 3));
+
+	long* eint = md_alloc(1, MD_DIMS(md_calc_size(3, dims)), sizeof(long));
+	long* sint = md_alloc(1, MD_DIMS(md_calc_size(3, dims)), sizeof(long));
+	md_clear(N, dims, eint, sizeof(long));
+	md_clear(N, dims, sint, sizeof(long));
+
+	float r[D][2][3];
+
+	for (int i = 0; i < D; i++) {
+
+		vec3_copy(r[i][0], r_fov[i][0]);
+		vec3_copy(r[i][1], r_fov[i][1]);
+
+		fov_to_grid(dims, r[i][0]);
+		fov_to_grid(dims, r[i][1]);
+	}
+
+	// we don't want to integrate through singularities
+	// so we start with a point away from singularities
+	long pos[3];
+	search_start(pos, dims, D, r);
+
+	debug_printf(DP_DEBUG1, "Found start position for integraion: (%ld, %ld, %ld)\n", pos[0], pos[1], pos[2]);
+
+	long idx = md_ravel_index(3, pos, ~0UL, dims);
+	long qmax = get_integration_order(dims, sint, eint, dst, idx, D, r);
+
+	float* dphi = md_alloc(1, MD_DIMS(qmax), FL_SIZE);
+
+	integrate_path(qmax, dims, dphi, sint, eint, D, r, tol);
+
+	md_clear(N, dims, dst, CFL_SIZE);
+
+	dst[sint[0]] = 1.;
+
+	for (long i = 0; i < qmax; i++)
+		dst[eint[i]] = cexpf(-1.I * dphi[i]) * dst[sint[i]];
+
+	md_free(eint);
+	md_free(sint);
+	md_free(dphi);
+}
+
+
+
+
+
+static float phase_pole_3D_estimate_polarity(int N, const long dims[N], const complex float* col, float r[2][3], float radius, int segments)
+{
+	vec3_t cen;
+	vec3_add(cen, r[0], r[1]);
+	vec3_smul(cen, cen, 0.5);
+
+	vec3_t r1;
+	vec3_t r2;
+
+	for (int i = 0; i < 3; i++) {
+
+		r1[i] = r[0][i];
+		r2[i] = r[1][i];
+	}
+
+	vec3_t evec[3];
+	get_coord_transform(evec, r2, r1);
+
+	vec3_t evecT[3];
+	for (int i = 0; i < 3; i++)
+		for (int j = 0; j < 3; j++)
+			evecT[i][j] = evec[j][i];
+
+	long pos1[N];
+	long pos2[N];
+
+	md_set_dims(N, pos1, 0);
+	md_set_dims(N, pos2, 0);
+
+	long sdims[N];
+	md_select_dims(N, ~7UL, sdims, dims);
+
+	complex float* tmp1 = md_alloc(N, sdims, CFL_SIZE);
+	complex float* tmp2 = md_alloc(N, sdims, CFL_SIZE);
+	complex float* dst = md_alloc(N, sdims, CFL_SIZE);
+
+	md_clear(N, sdims, dst, CFL_SIZE);
+
+	int M = segments;
+	for (int i = 0; i < M; i++) {
+
+		vec3_t pos_seg1 = { radius * cos (2. * M_PI * ((i + 0) % M) / M), radius * sin(2. * M_PI * ((i + 0) % M) / M), 0. };
+		vec3_t pos_seg2 = { radius * cos (2. * M_PI * ((i + 1) % M) / M), radius * sin(2. * M_PI * ((i + 1) % M) / M), 0. };
+
+		for (int j = 0; j < 3; j++) {
+
+			pos1[j] = MAX(MIN(dims[j] - 1, lroundf(vec3_sdot(pos_seg1, evecT[j]) + cen[j])), 0);
+			pos2[j] = MAX(MIN(dims[j] - 1, lroundf(vec3_sdot(pos_seg2, evecT[j]) + cen[j])), 0);
+		}
+
+		if (md_check_equal_dims(3, pos1, pos2, 7UL))
+			continue;
+
+		md_slice(N, 7UL, pos1, dims, tmp1, col, CFL_SIZE);
+		md_slice(N, 7UL, pos2, dims, tmp2, col, CFL_SIZE);
+
+		md_zmulc(N, sdims, tmp1, tmp1, tmp2);
+		md_zphsr(N, sdims, tmp1, tmp1); // to handle 0.+0.i case
+		md_zarg(N, sdims, tmp1, tmp1);
+		md_zadd(N, sdims, dst, dst, tmp1);
+	}
+
+	md_free(tmp1);
+	md_free(tmp2);
+
+	bool okay = true;
+	int ret = 0;
+
+	for (int i = 0; i < md_calc_size(N, sdims); i++) {
+
+		int tmp = lroundf(dst[i] / (2. * M_PI));
+
+		if (0 == tmp)
+			continue;
+
+		if (0 == ret)
+			ret = tmp;
+		else
+			okay = okay && (ret == tmp);
+	}
+
+	md_free(dst);
+
+	if (!okay) {
+
+		debug_printf(DP_DEBUG1, "Phase pole polarity is not consistent across coils!\n");
+		return 0.;
+	}
+
+	return (float)ret;
+}
+
+static void phase_pole_3D_fix_polarity(int N, const long dims[N], const complex float* col, struct lseg_s* seg, float radius, int segments)
+{
+	line_segments_sort(seg);
+
+	for (int i = 0; i < seg->N; i++) {
+
+		fov_to_grid(dims, seg->pos[i][0]);
+		fov_to_grid(dims, seg->pos[i][1]);
+	}
+
+	int i = 0;
+	int D = 0;
+	float sum = 0.;
+
+	while (i < seg->N) {
+
+		while ((0 == D) || ((i + D < seg->N) && (0. == vec3_dist(seg->pos[i + D][0], seg->pos[i + D - 1][1])))) {
+
+			float tmp = phase_pole_3D_estimate_polarity(N, dims, col, seg->pos[i + D], radius, segments);
+
+			if (tmp * sum < -0.5)
+				debug_printf(DP_DEBUG1, "Phase pole polarity is not consistent across segments\n");
+
+			sum += tmp;
+			D++;
+		}
+
+		if (0 > sum) {
+
+			debug_printf(DP_DEBUG1, "Phase pole polarity (%e) is negative, flipping ...\n", sum / D);
+			line_segments_revert(D, seg->pos + i);
+		} else {
+
+			debug_printf(DP_DEBUG1, "Phase pole polarity (%e) is positive, nothing to do ...\n", sum / D);
+		}
+
+		i += D;
+		D = 0;
+		sum = 0.;
+	}
+
+	for (int i = 0; i < seg->N; i++) {
+
+		grid_to_fov(dims, seg->pos[i][0]);
+		grid_to_fov(dims, seg->pos[i][1]);
+	}
+}
+
+
+struct lseg_s extract_phase_poles_3D(struct pole_config_s conf, int N, const long dims[N], const _Complex float* curl_map, const long sens_dims[N], const _Complex float* sens)
+{
+	complex float* tmp = md_alloc_sameplace(N, dims, CFL_SIZE, curl_map);
+
+	md_zabs(N, dims, tmp, curl_map);
+	md_zsgreatequal(N, dims, tmp, tmp, conf.thresh);
+
+	float radius = MAX(get_diameter(conf, 0, dims, false), get_diameter(conf, 1, dims, false)) / 2.;
+
+	struct lseg_s ret = md_trace_binary_mask(3, dims, tmp, radius);
+
+	md_free(tmp);
+
+	phase_pole_3D_fix_polarity(N, sens_dims, sens, &ret, radius, conf.segments);
+	line_segments_connect(&ret);
+	line_segments_extend_bounds(&ret);
+
+	return ret;
+}

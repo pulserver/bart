@@ -143,7 +143,10 @@ int main_phasepole(int argc, char* argv[argc])
 
 		unmap_cfl(DIMS, curl_dims, curl_map);
 
-		pos = extract_phase_poles_2D(conf, DIMS, pmap_dims, acurl_map);
+		if (3 == curl_dims[ITER_DIM])
+			pos = extract_phase_poles_3D(conf, DIMS, pmap_dims, acurl_map, sens_dims, sens);
+		else
+			pos = extract_phase_poles_2D(conf, DIMS, pmap_dims, acurl_map);
 
 		unmap_cfl(DIMS, sens_dims, sens);
 		unmap_cfl(DIMS, pmap_dims, acurl_map);
@@ -170,7 +173,13 @@ int main_phasepole(int argc, char* argv[argc])
 
 		} else {
 
-			sample_phase_pole_2D(3, dims, out, pos.N, pos.pos);
+			if ((-1 != conf.normal) || (2 == bitcount(md_nontriv_dims(3, dims)))) {
+
+				sample_phase_pole_2D(3, dims, out, pos.N, pos.pos);
+			}  else {
+
+				sample_phase_pole_3D(3, dims, out, pos.N, pos.pos, conf.tol);
+			}
 		}
 
 		unmap_cfl(DIMS, dims, out);
