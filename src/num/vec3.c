@@ -54,6 +54,13 @@ float vec3_norm(const vec3_t x)
 	return sqrtf(vec3_sdot(x, x));
 }
 
+float vec3_dist(const vec3_t a, const vec3_t b)
+{
+	vec3_t dif;
+	vec3_sub(dif, a, b);
+	return vec3_norm(dif);
+}
+
 void vec3_rot(vec3_t dst, const vec3_t src1, const vec3_t src2)
 {
 	vec3_t tmp;
