@@ -325,7 +325,7 @@ static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in
 	if (seq->enc.is3D) {
 
 		seq->loop_dims[PHS2_DIM] = in_dims[PHS2_DIM];
-		seq->loop_dims[SLICE_DIM] = 1;
+		seq->loop_dims[SLICE_DIM] = in_dims[SLICE_DIM];
 		seq->geom.mb_factor = 1;
 
 	} else {
