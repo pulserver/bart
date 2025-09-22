@@ -18,12 +18,12 @@ const int seq_loop_order_avg_inner[DIMS] = {
 	TIME2_DIM,
 	TIME_DIM,
 	BATCH_DIM,
+	CSHIFT_DIM,
 
 	READ_DIM,
 	COIL_DIM,
 	MAPS_DIM,
 	ITER_DIM,
-	CSHIFT_DIM,
 	LEVEL_DIM
 };
 
@@ -39,12 +39,12 @@ const int seq_loop_order_avg_outer[DIMS] = {
 	TIME2_DIM,
 	TIME_DIM,
 	BATCH_DIM,
+	CSHIFT_DIM,
 
 	READ_DIM,
 	COIL_DIM,
 	MAPS_DIM,
 	ITER_DIM,
-	CSHIFT_DIM,
 	LEVEL_DIM
 };
 
@@ -58,13 +58,13 @@ const int seq_loop_order_multislice[DIMS] = {
 	TIME2_DIM,
 	TIME_DIM,
 	BATCH_DIM,
+	CSHIFT_DIM,
 
 	SLICE_DIM,
 	READ_DIM,
 	COIL_DIM,
 	MAPS_DIM,
 	ITER_DIM,
-	CSHIFT_DIM,
 	LEVEL_DIM
 };
 

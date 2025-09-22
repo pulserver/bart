@@ -22,6 +22,7 @@
 #include "seq/pulse.h"
 #include "seq/flash.h"
 #include "seq/mag_prep.h"
+#include "seq/cest.h"
 
 #include "seq.h"
 
@@ -380,9 +381,8 @@ static int check_settings(const struct seq_state* seq_state, const struct seq_co
 	if (SEQ_MAX_SLICES < get_slices(seq))
 		return ERROR_SETTING_DIM;
 
-	if (   (0 < seq->magn.prep_scans)
-	    && (SEQ_PREP_OFF != seq->magn.mag_prep))
-		return ERROR_PREP_SCANS;
+	if ((SEQ_TRIGGER_OFF != seq->trigger.type) && (SEQ_CEST_NONE != seq->cest.sat_type))
+		return ERROR_CEST_TRIGGER;
 
 	if (   (SEQ_PREP_SR_SELECTIVE == seq->magn.mag_prep)
 	    || (SEQ_PREP_SR_NONSELECTIVE == seq->magn.mag_prep)
@@ -468,7 +468,22 @@ int seq_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 				}
 			}
 
-			if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~(BATCH_FLAG | msm_flag | COEFF2_FLAG))) {
+			if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~(BATCH_FLAG | msm_flag | COEFF2_FLAG | CSHIFT_FLAG))) {
+
+
+				if ((SEQ_CEST_NONE != seq->cest.sat_type) && md_check_equal_dims(DIMS, zeros, seq_state->pos, ~(COEFF2_FLAG | CSHIFT_FLAG))) {
+
+					int cest_with_inversion = 0;
+
+					if (0 != mag_prep(ev, seq))
+						cest_with_inversion = 1;
+
+					seq_state->mode = SEQ_BLOCK_PRE;
+
+					if (   (seq_state->pos[COEFF2_DIM] > 1)
+					    && (seq_state->pos[COEFF2_DIM] < (seq->loop_dims[COEFF2_DIM] - (1 + cest_with_inversion))))
+							return cest_block(ev, seq_state, seq);
+				}
 
 				if ((2 == seq_state->pos[COEFF2_DIM]) && (SEQ_TRIGGER_OFF != seq->trigger.type)) {
 
@@ -479,7 +494,7 @@ int seq_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 					return 1;
 				}
 				
-				if (2 < seq_state->pos[COEFF2_DIM]) {
+				if (seq->loop_dims[COEFF2_DIM] - 1  == seq_state->pos[COEFF2_DIM]) {
 
 					seq_state->mode = SEQ_BLOCK_PRE;
 					return mag_prep(ev, seq);
@@ -487,6 +502,7 @@ int seq_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 
 				return 0;
 			}
+
 		} else if (0 < seq_state->pos[PHS1_DIM]) {
 
 			md_max_dims(DIMS, (COEFF2_FLAG | PHS2_FLAG) &  ~msm_flag, seq_state->pos, seq_state->pos, last_idx);
