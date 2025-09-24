@@ -182,6 +182,63 @@ int seq_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq_confi
 		idx++;
 	}
 
+	if (SEQ_CEST_GAUSS == seq->cest.sat_type) {
+
+		struct pulse_gauss pg = pulse_gauss_defaults;
+
+		pulse_gauss_init(&pg, seq->cest.gauss_pulse_duration, seq->cest.gauss_pulse_fa, 0., pulse_gauss_defaults.bwtp, pulse_gauss_defaults.alpha);
+
+		pulse[idx].max = pg.A;
+		pulse[idx].integral = pulse_gauss_integral(&pg);
+
+		struct pulse* pp = CAST_UP(&pg);
+
+		pulse[idx].sar_calls = seq->cest.sat_pulses * seq->loop_dims[CSHIFT_DIM];
+		pulse[idx].sar_dur = seq->cest.gauss_pulse_duration;
+		pulse[idx].fa_prep = seq->cest.gauss_pulse_fa;
+
+		pulse[idx].samples = lround(1E4 * pulse[idx].sar_dur);
+
+		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
+			return -1;
+
+		double dwell = pp->duration / pulse[idx].samples;
+
+		for (int j = 0; j < pulse[idx].samples; j++)
+			pulse[idx].shape[j] = pulse_eval(pp, j * dwell);
+
+		idx++;
+	}
+	else if (SEQ_CEST_OC == seq->cest.sat_type) {
+
+		pulse[idx].sar_calls = seq->cest.sat_pulses * seq->loop_dims[CSHIFT_DIM];
+
+		struct pulse_arb arb = pulse_arb_oc_cest_sat_defaults;
+		pulse_arb_init(&arb, seq->sys.gamma);
+		struct pulse* pp = CAST_UP(&arb);
+
+		pulse[idx].sar_dur = pp->duration;
+
+		float scaling = seq->cest.oc_pulse_b1_scaling * sqrt( 1 + seq->cest.sat_pulse_pause / pulse[idx].sar_dur);
+		pulse[idx].fa_prep = arb.super.flipangle / scaling;
+
+		pulse[idx].integral = pulse_arb_integral(&arb);
+
+		pulse[idx].samples = arb.samples;
+
+		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
+			return -1;
+
+		double dwell = pp->duration / pulse[idx].samples;
+
+		for (int j = 0; j < pulse[idx].samples; j++)
+			pulse[idx].shape[j] = pulse_eval(pp, j * dwell);
+
+		pulse[idx].max = arb.A; // default in oc_pulse{[]
+
+		idx++;
+	}
+
 	return idx;
 }
 

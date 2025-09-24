@@ -190,3 +190,140 @@ static bool test_sms(void)
 
 UT_REGISTER_TEST(test_sms);
 
+
+
+static bool test_oc(void)
+{
+	struct seq_config seq = seq_config_defaults;
+	seq.cest.sat_type = SEQ_CEST_OC;
+
+	// for fa_prep
+	seq.cest.oc_pulse_b1_scaling = 1.2;
+	seq.cest.sat_pulse_pause = 5 * 1.E-3;
+
+	struct rf_shape rf_shape[10];
+
+	int rfs = seq_sample_rf_shapes(10, rf_shape, &seq);
+
+	float shape_mag[SEQ_MAX_RF_SAMPLES];
+	float shape_pha[SEQ_MAX_RF_SAMPLES];
+
+	for (int i = 0; i < rf_shape[1].samples; i++)
+		seq_cfl_to_sample(&rf_shape[1], i, &shape_mag[i], &shape_pha[i]);
+
+	if (rfs != 2)
+		return false;
+
+	if (rf_shape[1].samples != 1000)
+		return false;
+
+	// expected in reference implementation
+	const double good_norm = 693.290598;
+	const double good_fa = 1482.658888;
+	const double good_fa_prep = 1205.773438;
+	// expected in reference implementation
+	int idx[5] = { 10, 270, 499, 881, 965 };
+	double good[5] = { 0.110344, 0.735732, 0.814455, 1., 0.334938 };
+
+	double s = seq_pulse_scaling(&rf_shape[1]);
+	double n = seq_pulse_norm_sum(&rf_shape[1]);
+
+	if (fabs(s - good_fa) > 1E-6)
+		return false;
+
+	if (fabs(n - good_norm) > 1e-6)
+		return false;
+
+	if (fabs(rf_shape[1].fa_prep - good_fa_prep) > 1E-6)
+		return false;
+
+	if (   (fabs(good[0] - shape_mag[idx[0]]) > 1e-5)
+	    || (fabs(good[1] - shape_mag[idx[1]]) > 1e-5)
+	    || (fabs(good[2] - shape_mag[idx[2]]) > 1e-5)
+	    || (fabs(good[3] - shape_mag[idx[3]]) > 1e-5)
+	    || (fabs(good[4] - shape_mag[idx[4]]) > 1e-5))
+			return false;
+
+	float sum_abs_pha = 0.;
+
+	for (int i = 0; i < rf_shape[1].samples; i++)
+		sum_abs_pha += fabsf(shape_pha[i]);
+
+	// oc pulse is real
+	if (0. > sum_abs_pha)
+		return false;
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_oc);
+
+
+static bool test_gauss(void)
+{
+	struct seq_config seq = seq_config_defaults;
+	seq.cest.sat_type = SEQ_CEST_GAUSS;
+
+	// for fa_prep
+	seq.cest.gauss_pulse_duration = 25000 * 1E-6;
+	seq.cest.gauss_pulse_fa = 344.;
+
+	struct rf_shape rf_shape[10];
+
+	int rfs = seq_sample_rf_shapes(10, rf_shape, &seq);
+
+	float shape_mag[SEQ_MAX_RF_SAMPLES];
+	float shape_pha[SEQ_MAX_RF_SAMPLES];
+
+	for (int i = 0; i < rf_shape[1].samples; i++)
+		seq_cfl_to_sample(&rf_shape[1], i, &shape_mag[i], &shape_pha[i]);
+
+	if (rfs != 2)
+		return false;
+
+	if (rf_shape[1].samples != 250)
+		return false;
+
+	// expected in reference implementation
+	const double good_norm = 60039.327957;
+	const double good_fa = 165906.056424;
+	int idx[5] = { 50, 100, 125, 150, 200 };
+	double good[5] = { 0.341606, 0.903373, 1.000000, 0.903373, 0.341606 };
+
+	double s = seq_pulse_scaling(&rf_shape[1]);
+	double n = seq_pulse_norm_sum(&rf_shape[1]);
+
+
+
+	if (fabs(s - good_fa) > 1E-6)
+		return false;
+
+	if (fabs(n - good_norm) > 1e-6)
+		return false;
+
+	if (fabs(rf_shape[1].fa_prep - seq.cest.gauss_pulse_fa) > 1E-6)
+		return false;
+
+
+	if (   (fabs(good[0] - shape_mag[idx[0]]) > 1e-5)
+	    || (fabs(good[1] - shape_mag[idx[1]]) > 1e-5)
+	    || (fabs(good[2] - shape_mag[idx[2]]) > 1e-5)
+	    || (fabs(good[3] - shape_mag[idx[3]]) > 1e-5)
+	    || (fabs(good[4] - shape_mag[idx[4]]) > 1e-5))
+			return false;
+
+
+	float sum_abs_pha = 0.;
+
+	for (int i = 0; i < rf_shape[1].samples; i++)
+		sum_abs_pha += fabsf(shape_pha[i]);
+
+	// oc pulse is real
+	if (0. > sum_abs_pha)
+		return false;
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_gauss);
+
