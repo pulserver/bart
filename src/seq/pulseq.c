@@ -165,6 +165,7 @@ void pulseq_init(struct pulseq *ps, const struct seq_config* seq)
 		.total_duration = 0.,
 		.label_flags = ((md_nontriv_dims(DIMS, seq->loop_dims) | PHS1_FLAG) // single-spoke acquistion
 			& (SEQ_FLAGS | TE_FLAG) & ~(COEFF_FLAG | COEFF2_FLAG| ITER_FLAG)), // MDH dimension to write
+		.trigger_count = 0,
 	};
 }
 
@@ -442,7 +443,7 @@ static int ext_to_pulseq(struct pulseq *ps, int i_adc, int N, const struct seq_e
 
 			.id = ext_id + i,
 			.type = es_type,
-			.ref = ext_id + i,
+			.ref = ext_id + i - ps->trigger_count, //FIXME
 			.next = ((i + 1) == labels) ? 0 : ext_id + i + 1,
 		};
 
@@ -516,6 +517,34 @@ static int rf_to_pulseq(struct pulseq *ps, int M, const struct rf_shape rf_shape
 
 void events_to_pulseq(struct pulseq *ps, enum seq_block mode, double tr, struct seq_sys sys, int M, const struct rf_shape rf_shapes[M], int N, const struct seq_event ev[N])
 {
+	int ext_id = 0;
+
+	if (0 < events_counter(SEQ_EVENT_TRIGGER, N, ev)) {
+		
+		if (0 < ps->trigger_count)
+			error("Multiple triggers not supported\n");
+
+		struct extension_spec es = { "TRIGGERS", 1, NULL };
+		VEC_ADD(ps->extension_spec, es);
+
+		ext_id = VEC_LEN(ps->extensions) + 1;
+
+		struct extension e = {
+
+			.id = ext_id,
+			.type = 1, // FIXME
+			.ref = 1, // FIXME
+			.next = 0,
+		};
+
+		struct ext ext = { 2, (int)ev[0].end - 10 };
+		VEC_ADD(ps->extension_spec->data[0].values, ext);
+
+		VEC_ADD(ps->extensions, e);
+		ps->trigger_count += 1;
+
+	}
+
 	int n_blocks = MAX(1, events_counter(SEQ_EVENT_ADC, N, ev));
 
 	if (1 < events_counter(SEQ_EVENT_PULSE, N, ev))
@@ -543,7 +572,6 @@ void events_to_pulseq(struct pulseq *ps, enum seq_block mode, double tr, struct 
 		else
 			dur_split = dur - grad_start;
 
-		int ext_id = 0;
 		if (adc_id)
 			ext_id = ext_to_pulseq(ps, i, N, ev);
 
@@ -566,6 +594,8 @@ void events_to_pulseq(struct pulseq *ps, enum seq_block mode, double tr, struct 
 			.adc = adc_id,
 			.ext = ext_id
 		};
+
+		ext_id = 0;
 
 		VEC_ADD(ps->ps_blocks, b);
 	}
@@ -612,13 +642,20 @@ void pulseq_writef(FILE *fp, struct pulseq *ps)
 			fprintf(fp, EXTENSIONS_FORMAT "\n" EXTENSIONS_ACCESS(ACCESS));
 #undef	ACCESS
 
-		fprintf(fp, "\n#id set labelstring");
+		for (int i = 0; i < VEC_LEN(ps->extension_spec); i++) {
 
-		struct extension_spec es = ps->extension_spec->data[0];
-		fprintf(fp, "\nextension %s %d\n", es.string_id, es.type);
+			struct extension_spec es = ps->extension_spec->data[i];
+			fprintf(fp, "\nextension %s %d\n", es.string_id, es.type);
 
-		for (int j = 0; j < VEC_LEN(es.values); j++)
-			fprintf(fp, "%d %d %s\n", j + 1, es.values->data[j].val, dim_to_string(es.values->data[j].dim));
+			if (0 == strcmp("TRIGGERS", es.string_id))
+				for (int j = 0; j < VEC_LEN(es.values); j++)
+					fprintf(fp, "1 %d 1 10 %d\n", es.values->data[j].val, es.values->data[j].dim); //400 ms delay
+			else if (0 == strcmp("LABELSET", es.string_id))
+				for (int j = 0; j < VEC_LEN(es.values); j++)
+					fprintf(fp, "%d %d %s\n", j + 1, es.values->data[j].val, dim_to_string(es.values->data[j].dim));
+			else
+				error("Unknown extension spec '%s'\n", es.string_id);
+		}
 	}
 
 

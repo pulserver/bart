@@ -101,6 +101,7 @@ struct pulseq {
 	double total_duration;
 
 	unsigned long label_flags;
+	int trigger_count;
 
 	VEC(struct ps_block) *ps_blocks;
 	VEC(struct gradient) *gradients;
