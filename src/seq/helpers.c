@@ -17,6 +17,7 @@
 #include "seq/anglecalc.h"
 #include "seq/adc_rf.h"
 #include "seq/flash.h"
+#include "seq/cest.h"
 #include "seq/misc.h"
 #include "seq/mag_prep.h"
 #include "seq/opts.h"
@@ -50,7 +51,7 @@ void seq_minimum_te(const struct seq_config* seq, double* min_te, double* fill_t
 static long kernels_per_measurement(const long loop_dims[DIMS])
 {
 	long dims[DIMS];
-	md_select_dims(DIMS, PHS1_FLAG|TIME2_FLAG|AVG_FLAG|SLICE_FLAG|PHS2_FLAG, dims, loop_dims);
+	md_select_dims(DIMS, (PHS1_FLAG|TIME2_FLAG|AVG_FLAG|SLICE_FLAG|PHS2_FLAG|CSHIFT_FLAG), dims, loop_dims);
 
 	return md_calc_size(DIMS, dims);
 }
@@ -72,6 +73,21 @@ double seq_total_measure_time(const struct seq_config* seq)
 	double prep_pulse_duration = seq_block_end(e, ev, SEQ_BLOCK_PRE, seq->phys.tr, seq->sys.raster_grad);
 	prep_pulse_duration += seq->magn.inv_delay_time;
 	// prep_pulse_duration *= inv_calls(seq);
+	if (SEQ_CEST_NONE != seq->cest.sat_type) {
+
+		double sat_time = (SEQ_CEST_GAUSS == seq->cest.sat_type) ? seq->cest.gauss_pulse_duration : 0.1;
+		sat_time += seq->cest.sat_pulse_pause;
+		sat_time += seq->sys.coil_control_lead * 2;
+		sat_time *= seq->cest.sat_pulses;
+		
+		if (0 == mag_prep(ev, seq)) // spoiler after last pulse only if no inversion
+			sat_time += 10.E-3; 
+		prep_pulse_duration += sat_time;
+		prep_pulse_duration *= cest_offsets(seq);
+		prep_pulse_duration += seq->cest.offset_pause * (cest_offsets(seq) - 1);
+
+	}
+
 
 	long img_calls = flash_ex_calls(seq) * seq->geom.mb_factor;
 	double imaging_duration = seq->phys.tr * img_calls;
@@ -81,9 +97,8 @@ double seq_total_measure_time(const struct seq_config* seq)
 		imaging_duration = 1. * (seq->trigger.delay_time + seq->phys.tr) * img_calls * (seq->trigger.pulses - 1);
 	}
 
-	return pre_duration + prep_pulse_duration + imaging_duration;
+	return pre_duration  + imaging_duration + prep_pulse_duration;
 }
-
 
 
 static void custom_params_to_config(struct seq_config* seq, int nl, const long custom_long[__VLA(nl)], int nd, const double custom_double[__VLA(nd)])
@@ -329,8 +344,15 @@ static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in
 	seq->loop_dims[AVG_DIM] = in_dims[AVG_DIM];
 	seq->loop_dims[PHS1_DIM] = radial_views;
 	seq->loop_dims[TE_DIM] = in_dims[TE_DIM];
+	seq->loop_dims[CSHIFT_DIM] = cest_offsets(seq);
 
-	seq->loop_dims[COEFF2_DIM] = MAX(1, seq->magn.prep_scans) + 3; // 3 additional calls for delay_meas + noise_scan + ecg trigger
+	int pre_calls = 3; // 3 additional calls for delay_meas + noise_scan + ecg trigger
+	if (SEQ_CEST_NONE != seq->cest.sat_type) 
+		seq->loop_dims[COEFF2_DIM] = seq->cest.sat_pulses + MAX(1, seq->magn.prep_scans) + pre_calls; // no trigger for CEST, but spoiler or mag_prep
+	else
+		seq->loop_dims[COEFF2_DIM] = MAX(1, seq->magn.prep_scans) + pre_calls;
+
+
 	seq->loop_dims[COEFF_DIM] = 3; // pre-/post- and actual kernel calls
 }
 
@@ -468,6 +490,17 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 	for (int i = 0; i < slices; i++)
 		ctr += snprintf(info + ctr, (size_t)(N - ctr), "\t[%d]:\t%+.4f\t%+.4f\t%+.4f\n",
 				i, seq->geom.shift[i][0], seq->geom.shift[i][1], seq->geom.shift[i][2]);
+
+	ctr += snprintf(info + ctr, (size_t)(N - ctr),
+		"\nCEST sat\t\ttype=%d \t n=%ld \t\t\t (pause: %.4f)",
+		seq->cest.sat_type, seq->cest.sat_pulses, seq->cest.sat_pulse_pause);
+	ctr += snprintf(info + ctr, (size_t)(N - ctr),
+		"\nCEST gauss\t\tdur %f\t fa %.2f \t (OC_B1: %.2f)",
+		seq->cest.gauss_pulse_duration, seq->cest.gauss_pulse_fa, seq->cest.oc_pulse_b1_scaling);
+	ctr += snprintf(info + ctr, (size_t)(N - ctr),
+		"\nCEST offsets\t\ttype=%d \t %.2f / %.2f / %.2f \t (pause: %.2f)",
+		seq->cest.offset_type, seq->cest.offset_first, seq->cest.offset_last, seq->cest.offset_increment,
+		seq->cest.offset_pause);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n\nCrowthers no. of radial Spokes =\t%.2f\n\n", M_PI * seq->geom.baseres);
 
