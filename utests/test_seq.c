@@ -15,6 +15,7 @@
 #include "seq/seq.h"
 #include "seq/helpers.h"
 #include "seq/custom_ui.h"
+#include "seq/seq_asl.h"
 
 #include "utest.h"
 
@@ -572,3 +573,440 @@ static bool test_block_cest_OC_non_equidistant(void)
 }
 
 UT_REGISTER_TEST(test_block_cest_OC_non_equidistant);
+
+
+static bool test_block_asl(void)
+{
+	const int asl_events = 5;
+	const int num_blocks_pre = 9;
+	const int coeff2_dim_offset = 3;
+
+	int seq_block_count = 0;
+	const int expected_seq_block_count = 57;
+
+	const enum seq_block blocks[57] = {
+	    SEQ_BLOCK_KERNEL_NOISE,
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,							// M0 Image
+	    SEQ_BLOCK_POST,														// Inversion delay
+	    SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,	// Label condition
+	    SEQ_BLOCK_PRE, 														// PLD
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,							// Label image
+	    SEQ_BLOCK_POST,														// Inversion delay
+	    SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,	// Control condition
+	    SEQ_BLOCK_PRE, 														// PLD
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,							// Control image
+	    SEQ_BLOCK_POST,														// Inversion delay
+	    SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,	// Label condition
+	    SEQ_BLOCK_PRE, 														// PLD
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,							// Label image
+	    SEQ_BLOCK_POST,														// Inversion delay
+	    SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,	// Control condition
+	    SEQ_BLOCK_PRE, 														// PLD
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,							// Control image
+	    SEQ_BLOCK_POST,														// Inversion delay
+	};
+
+	struct bart_seq* seq = bart_seq_alloc("");
+	bart_seq_defaults(seq);
+
+	seq->conf->enc.order = SEQ_ORDER_SEQ_ASL;
+	seq->conf->magn.inv_delay_time = 4;
+	seq->conf->asl.label_type = SEQ_ASL_PCASL;
+	seq->conf->asl.ld = 0.01;
+	seq->conf->asl.pld = 1.3;
+	seq->conf->asl.label_slice_index = 1;
+	seq->conf->asl.pulse_spacing = 1.15E-3;
+	seq->conf->enc.pe_mode = SEQ_PEMODE_RAGA;
+
+	seq->conf->loop_dims[PHS1_DIM] = 3;  // radial views
+	seq->conf->loop_dims[PHS2_DIM] = 1;  // partitions
+	seq->conf->loop_dims[SLICE_DIM] = 2; // slices
+	seq->conf->loop_dims[TIME_DIM] = 3;  // RAGA: total number of spokes (3 / 3 = 1 frame)
+	seq->conf->loop_dims[TE_DIM] = 1;    // echos
+	seq->conf->loop_dims[AVG_DIM] = 2;   // averages
+	seq_ui_interface_loop_dims(0, seq->conf, DIMS, seq->conf->loop_dims);
+
+	int i = 0;
+
+	do {
+
+		int E = seq_block(seq->N, seq->event, seq->state, seq->conf);
+
+		if (0 > E)
+			return false;
+
+		if (0 == E)
+			continue;
+
+		seq_block_count++;
+
+		if (blocks[i] != seq->state->mode) {
+
+			debug_printf(DP_INFO, "Block mismatch at i=%d: expected %d, got %d\n", i, blocks[i], seq->state->mode);
+			return false;
+		}
+
+		int expected_flash_ev = FLASH_EVENTS + trigger_event_count(seq->conf, seq->state);
+		if ((SEQ_BLOCK_KERNEL_IMAGE == seq->state->mode) && (expected_flash_ev != E)) {
+
+			debug_printf(DP_INFO, "FLASH event count mismatch at i=%d: expected %d, got %d\n", i, expected_flash_ev, E);
+			return false;
+		}
+
+		if (seq->state->pos[COEFF2_DIM] - coeff2_dim_offset < num_blocks_pre - 1) {
+
+			if ((SEQ_BLOCK_PRE == seq->state->mode) && (asl_events != E)
+			    && (seq->conf->asl.pulse_spacing != seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad))) {
+
+				debug_printf(DP_INFO, "ASL event or pulse spacing mismatch at i=%d: expected events=%d, got=%d; expected pulse_spacing=%f, got=%f\n",
+					     i, asl_events, E, seq->conf->asl.pulse_spacing, seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad));
+				return false;
+			}
+		}
+		else {
+
+			// assert correct pld in post block
+			if ((SEQ_BLOCK_PRE == seq->state->mode) && (1 != E)
+			    && (seq->conf->asl.pld != seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad))) {
+
+				debug_printf(DP_INFO, "PLD mismatch at i=%d: expected PLD=%f, got=%f\n",
+					     i, seq->conf->asl.pld, seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad));
+				return false;
+			}
+		}
+
+		// assert correct inv_delay in post block
+		if ((SEQ_BLOCK_POST == seq->state->mode)
+		    && (seq->conf->magn.inv_delay_time != seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad))) {
+
+			debug_printf(DP_INFO, "Inversion delay mismatch at i=%d: expected=%f, got=%lf\n",
+				     i, seq->conf->magn.inv_delay_time, seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad));
+			return false;
+		}
+
+		i++;
+
+	} while (seq_continue(seq->state, seq->conf));
+
+	double expected_duration = 25.286560;
+	if (1.E-3 < fabs(expected_duration - seq_total_measure_time(seq->conf))) {
+
+		debug_printf(DP_WARN, "Calculation of sequence duration invalid! Actual duration: %.3f s (expected: %.3f)\n",
+			     seq_total_measure_time(seq->conf), expected_duration);
+	}
+
+	if (seq_block_count != expected_seq_block_count) {
+
+		debug_printf(DP_WARN, "Sequence block count mismatch! Expected: %d, got %d\n", expected_seq_block_count, seq_block_count);
+		return false;
+	}
+
+	bart_seq_free(seq);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_block_asl);
+
+static bool test_block_asl_cont(void)
+{
+	const int asl_events = 5;
+	const int num_blocks_pre = 9;
+	const int coeff2_dim_offset = 3;
+
+	int seq_block_count = 0;
+	const int expected_seq_block_count = 132;
+
+	const enum seq_block blocks[132] = {
+	    SEQ_BLOCK_KERNEL_NOISE,
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,	// M0 Image
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_POST,														// Inversion delay
+	    SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,	// Label condition
+	    SEQ_BLOCK_PRE, 														// PLD
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,	// Label image
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_POST,														// Inversion delay
+	    SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,	// Control condition
+	    SEQ_BLOCK_PRE, 														// PLD
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,	// Control image
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_POST,														// Inversion delay
+	    SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,	// Label condition
+	    SEQ_BLOCK_PRE, 														// PLD
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,	// Label image
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_POST,														// Inversion delay
+	    SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,	// Control condition
+	    SEQ_BLOCK_PRE, 														// PLD
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,	// Control image
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_POST,														// Inversion delay
+	    SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,	// Label condition
+	    SEQ_BLOCK_PRE, 														// PLD
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,	// Label image
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_POST,														// Inversion delay
+	    SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,	// Control condition
+	    SEQ_BLOCK_PRE, 														// PLD
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,	// Control image
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_POST,														// Inversion delay
+	};
+
+	struct bart_seq* seq = bart_seq_alloc("");
+	bart_seq_defaults(seq);
+
+	seq->conf->enc.order = SEQ_ORDER_SEQ_ASL;
+	seq->conf->magn.inv_delay_time = 4;
+	seq->conf->asl.label_type = SEQ_ASL_PCASL;
+	seq->conf->asl.ld = 0.01;
+	seq->conf->asl.pld = 1.3;
+	seq->conf->asl.label_slice_index = 1;
+	seq->conf->asl.pulse_spacing = 1.15E-3;
+	seq->conf->enc.pe_mode = SEQ_PEMODE_RAGA;
+
+	seq->conf->loop_dims[PHS1_DIM] = 5;  // radial views (per frame)
+	seq->conf->loop_dims[PHS2_DIM] = 1;  // partitions
+	seq->conf->loop_dims[SLICE_DIM] = 2; // slices
+	seq->conf->loop_dims[TIME_DIM] = 10; // RAGA: total number of spokes (10 / 5 = 2 frames)
+	seq->conf->loop_dims[TE_DIM] = 1;    // echos
+	seq->conf->loop_dims[AVG_DIM] = 3;   // averages (3 control/label pairs + 1 M0)
+	seq_ui_interface_loop_dims(0, seq->conf, DIMS, seq->conf->loop_dims);
+
+	int i = 0;
+
+	do {
+
+		int E = seq_block(seq->N, seq->event, seq->state, seq->conf);
+
+		if (0 > E)
+			return false;
+
+		if (0 == E)
+			continue;
+
+		seq_block_count++;
+
+		if (blocks[i] != seq->state->mode) {
+
+			debug_printf(DP_INFO, "Block mismatch at i=%d: expected %d, got %d\n", i, blocks[i], seq->state->mode);
+			return false;
+		}
+
+		int expected_flash_ev = FLASH_EVENTS + trigger_event_count(seq->conf, seq->state);
+		if ((SEQ_BLOCK_KERNEL_IMAGE == seq->state->mode) && (expected_flash_ev != E)) {
+
+			debug_printf(DP_INFO, "FLASH event count mismatch at i=%d: expected %d, got %d\n", i, expected_flash_ev, E);
+			return false;
+		}
+
+		if (seq->state->pos[COEFF2_DIM] - coeff2_dim_offset < num_blocks_pre - 1) {
+
+			if ((SEQ_BLOCK_PRE == seq->state->mode) && (asl_events != E)
+			    && (seq->conf->asl.pulse_spacing != seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad))) {
+
+				debug_printf(DP_INFO, "ASL event or pulse spacing mismatch at i=%d: expected events=%d, got=%d; expected pulse_spacing=%f, got=%f\n",
+					     i, asl_events, E, seq->conf->asl.pulse_spacing, seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad));
+				return false;
+			}
+		}
+		else {
+
+			// assert correct pld in post block
+			if ((SEQ_BLOCK_PRE == seq->state->mode) && (1 != E)
+			    && (seq->conf->asl.pld != seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad))) {
+
+				debug_printf(DP_INFO, "PLD mismatch at i=%d: expected PLD=%f, got=%f\n",
+					     i, seq->conf->asl.pld, seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad));
+				return false;
+			}
+		}
+
+		// assert correct inv_delay in post block
+		if ((SEQ_BLOCK_POST == seq->state->mode)
+		    && (seq->conf->magn.inv_delay_time != seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad))) {
+
+			debug_printf(DP_INFO, "Inversion delay mismatch at i=%d: expected=%f, got=%lf\n",
+				     i, seq->conf->magn.inv_delay_time, seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad));
+			return false;
+		}
+
+		i++;
+
+	} while (seq_continue(seq->state, seq->conf));
+
+	double expected_duration = 36.076010;
+	if (1.E-3 < fabs(expected_duration - seq_total_measure_time(seq->conf))) {
+
+		debug_printf(DP_WARN, "Calculation of sequence duration invalid! Actual duration: %.3f s (expected: %.3f)\n",
+			     seq_total_measure_time(seq->conf), expected_duration);
+	}
+
+	if (seq_block_count != expected_seq_block_count) {
+
+		debug_printf(DP_WARN, "Sequence block count mismatch! Expected: %d, got %d\n", expected_seq_block_count, seq_block_count);
+		return false;
+	}
+
+	bart_seq_free(seq);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_block_asl_cont);
+
+static bool test_block_asl_multi_slice(void)
+{
+	const int asl_events = 5;
+	const int num_blocks_pre = 9;
+	const int coeff2_dim_offset = 3;
+
+	int seq_block_count = 0;
+	const int expected_seq_block_count = 167;
+
+	const enum seq_block blocks[167] = {
+	    SEQ_BLOCK_KERNEL_NOISE,
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,	// M0 Image
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_POST,														// Inversion delay
+	    SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,	// Label condition
+	    SEQ_BLOCK_PRE, 														// PLD
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,	// Label image
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_POST,														// Inversion delay
+	    SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,	// Control condition
+	    SEQ_BLOCK_PRE, 														// PLD
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,	// Control image
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_POST,														// Inversion delay
+	    SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,	// Label condition
+	    SEQ_BLOCK_PRE, 														// PLD
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,	// Label image
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_POST,														// Inversion delay
+	    SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,	// Control condition
+	    SEQ_BLOCK_PRE, 														// PLD
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,	// Control image
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_POST,														// Inversion delay
+	    SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,	// Label condition
+	    SEQ_BLOCK_PRE, 														// PLD
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,	// Label image
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_POST,														// Inversion delay
+	    SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,	// Control condition
+	    SEQ_BLOCK_PRE, 														// PLD
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,	// Control image
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+	    SEQ_BLOCK_POST,														// Inversion delay
+	};
+
+	struct bart_seq* seq = bart_seq_alloc("");
+	bart_seq_defaults(seq);
+
+	seq->conf->enc.order = SEQ_ORDER_SEQ_ASL;
+	seq->conf->magn.inv_delay_time = 4;
+	seq->conf->asl.label_type = SEQ_ASL_PCASL;
+	seq->conf->asl.ld = 0.01;
+	seq->conf->asl.pld = 1.3;
+	seq->conf->asl.label_slice_index = 1;
+	seq->conf->asl.pulse_spacing = 1.15E-3;
+	seq->conf->enc.pe_mode = SEQ_PEMODE_RAGA;
+
+	seq->conf->loop_dims[PHS1_DIM] = 5;  // radial views (per frame)
+	seq->conf->loop_dims[PHS2_DIM] = 1;  // partitions
+	seq->conf->loop_dims[SLICE_DIM] = 4; // slices (1 label slice + 3 image slices)
+	seq->conf->loop_dims[TIME_DIM] = 5;  // RAGA: total number of spokes (5 / 5 = 1 frame)
+	seq->conf->loop_dims[TE_DIM] = 1;    // echos
+	seq->conf->loop_dims[AVG_DIM] = 3;   // averages (3 control/label pairs + 1 M0)
+	seq_ui_interface_loop_dims(0, seq->conf, DIMS, seq->conf->loop_dims);
+
+	int i = 0;
+
+	do {
+
+		int E = seq_block(seq->N, seq->event, seq->state, seq->conf);
+
+		if (0 > E)
+			return false;
+
+		if (0 == E)
+			continue;
+
+		seq_block_count++;
+
+		if (blocks[i] != seq->state->mode) {
+
+			debug_printf(DP_INFO, "Block mismatch at i=%d: expected %d, got %d\n", i, blocks[i], seq->state->mode);
+			return false;
+		}
+
+		int expected_flash_ev = FLASH_EVENTS + trigger_event_count(seq->conf, seq->state);
+		if ((SEQ_BLOCK_KERNEL_IMAGE == seq->state->mode) && (expected_flash_ev != E)) {
+
+			debug_printf(DP_INFO, "FLASH event count mismatch at i=%d: expected %d, got %d\n", i, expected_flash_ev, E);
+			return false;
+		}
+
+		if (seq->state->pos[COEFF2_DIM] - coeff2_dim_offset < num_blocks_pre - 1) {
+
+			if ((SEQ_BLOCK_PRE == seq->state->mode) && (asl_events != E)
+			    && (seq->conf->asl.pulse_spacing != seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad))) {
+
+				debug_printf(DP_INFO, "ASL event or pulse spacing mismatch at i=%d: expected events=%d, got=%d; expected pulse_spacing=%f, got=%f\n",
+					     i, asl_events, E, seq->conf->asl.pulse_spacing, seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad));
+				return false;
+			}
+		}
+		else {
+
+			// assert correct pld in post block
+			if ((SEQ_BLOCK_PRE == seq->state->mode) && (1 != E)
+			    && (seq->conf->asl.pld != seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad))) {
+
+				debug_printf(DP_INFO, "PLD mismatch at i=%d: expected PLD=%f, got=%f\n",
+					     i, seq->conf->asl.pld, seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad));
+				return false;
+			}
+		}
+
+		// assert correct inv_delay in post block
+		if ((SEQ_BLOCK_POST == seq->state->mode)
+		    && (seq->conf->magn.inv_delay_time != seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad))) {
+
+			debug_printf(DP_INFO, "Inversion delay mismatch at i=%d: expected=%f, got=%lf\n",
+				     i, seq->conf->magn.inv_delay_time, seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad));
+			return false;
+		}
+
+		i++;
+
+	} while (seq_continue(seq->state, seq->conf));
+
+	double expected_duration = 36.184860;
+	if (1.E-3 < fabs(expected_duration - seq_total_measure_time(seq->conf))) {
+
+		debug_printf(DP_WARN, "Calculation of sequence duration invalid! Actual duration: %.3f s (expected: %.3f)\n",
+			     seq_total_measure_time(seq->conf), expected_duration);
+	}
+
+	if (seq_block_count != expected_seq_block_count) {
+
+		debug_printf(DP_WARN, "Sequence block count mismatch! Expected: %d, got %d\n", expected_seq_block_count, seq_block_count);
+		return false;
+	}
+
+	bart_seq_free(seq);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_block_asl_multi_slice);

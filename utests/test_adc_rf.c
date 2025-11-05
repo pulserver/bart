@@ -327,3 +327,61 @@ static bool test_gauss(void)
 
 UT_REGISTER_TEST(test_gauss);
 
+
+static bool test_hanning(void)
+{
+	struct seq_config seq = seq_config_defaults;
+	seq.asl.label_type = SEQ_ASL_PCASL;
+	
+	struct rf_shape rf_shape[10];
+	int rfs = seq_sample_rf_shapes(10, rf_shape, &seq); 
+
+	float shape_mag[SEQ_MAX_RF_SAMPLES];
+	float shape_pha[SEQ_MAX_RF_SAMPLES];
+
+	for (int i =0; i < rf_shape[1].samples; i++)
+		seq_cfl_to_sample(&rf_shape[1], i, &shape_mag[i], &shape_pha[i]);
+
+	if (rfs != 2) // first shape: excitation pulse, second shape: hanning pulse
+		return false;
+
+	if (rf_shape[1].samples != 1E6 * seq.asl.hanning.rf_duration)
+		return false;
+
+	// expected in reference implementation
+	const double good_norm = 133.126998;
+	int idx[8] = { 50, 100, 150, 200, 250, 300, 350, 400};
+	double good[8] = { 0.019957, 0.041074, 0.187652, 0.704462, 1, 0.704462, 0.187653, 0.041074};
+
+	double s = seq_pulse_scaling(&rf_shape[1]);
+	double n = seq_pulse_norm_sum(&rf_shape[1]);
+	
+	if (fabs(s - seq.asl.hanning.flip_angle) > 1E-5)
+		return false;
+
+	if (fabs(n - good_norm) > 1e-6)
+		return false;
+
+	if (   (fabs(good[0] - shape_mag[idx[0]]) > 1e-5)
+	    || (fabs(good[1] - shape_mag[idx[1]]) > 1e-5)
+	    || (fabs(good[2] - shape_mag[idx[2]]) > 1e-5)
+	    || (fabs(good[3] - shape_mag[idx[3]]) > 1e-5)
+	    || (fabs(good[4] - shape_mag[idx[4]]) > 1e-5)
+	    || (fabs(good[5] - shape_mag[idx[5]]) > 1e-5)
+	    || (fabs(good[6] - shape_mag[idx[6]]) > 1e-5)
+	    || (fabs(good[7] - shape_mag[idx[7]]) > 1e-5))
+			return false;
+
+	for (int i = 0; i < rf_shape[1].samples; i++) {
+
+		if (((i < 119) || (i > 381)) && (fabs(shape_pha[i] - M_PI) > 1e-4))
+			return false;
+
+		if ((i > 118) && (i < 382) && (fabs(shape_pha[i]) > 1e-5))
+			return  false;
+	}
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_hanning);
