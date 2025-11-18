@@ -439,3 +439,136 @@ static bool test_block_prep(void)
 }
 
 UT_REGISTER_TEST(test_block_prep);
+
+
+static bool test_block_cest(void)
+{
+	const enum seq_block blocks[22] = {
+		SEQ_BLOCK_KERNEL_NOISE,
+		SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,
+		SEQ_BLOCK_KERNEL_IMAGE,
+		SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,
+		SEQ_BLOCK_KERNEL_IMAGE,
+		SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,
+		SEQ_BLOCK_KERNEL_IMAGE,
+
+	};
+	struct bart_seq* seq = bart_seq_alloc("");
+	bart_seq_defaults(seq);
+
+	seq->conf->magn.prep_scans = 0;
+	seq->conf->cest.sat_pulses = 5;
+	seq->conf->cest.gauss_pulse_duration = 50;
+	seq->conf->cest.gauss_pulse_fa = 360;
+	seq->conf->cest.offset_type = SEQ_CEST_OFFSET_EQUIDISTANT;
+	seq->conf->cest.offset_first = -1;
+	seq->conf->cest.offset_last = 1;
+	seq->conf->cest.offset_increment = 1;
+	seq->conf->cest.sat_type = SEQ_CEST_GAUSS;
+	seq->conf->cest.sat_pulse_pause = 1;
+
+	seq_ui_interface_loop_dims(0, seq->conf, DIMS, seq->conf->loop_dims);
+
+	int i = 0;
+
+	do
+	{
+		int E = seq_block(seq->N, seq->event, seq->state, seq->conf);
+
+		if (0 > E)
+			return false;
+
+		if (0 == E)
+			continue;
+
+		if (blocks[i] != seq->state->mode)
+			return false;
+
+		if ((SEQ_BLOCK_KERNEL_IMAGE == seq->state->mode) && (FLASH_EVENTS + trigger_event_count(seq->conf, seq->state) != E))
+			return false;
+
+		// check pulse duration
+		if ((SEQ_BLOCK_PRE == seq->state->mode) && (1 == E)  && (1 == i) && (1.e6 * seq->conf->cest.gauss_pulse_duration != seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad)))
+			return false;
+
+		i++;
+
+	} while (seq_continue(seq->state, seq->conf));
+
+	bart_seq_free(seq);
+
+	if (22 != i)
+		return false;
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_block_cest);
+
+
+static bool test_block_cest_OC_non_equidistant(void)
+{
+	const enum seq_block blocks[8] = {
+		SEQ_BLOCK_KERNEL_NOISE,
+		SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,
+		SEQ_BLOCK_KERNEL_IMAGE,
+	};
+
+	long expected_offsets = 58;
+
+	struct bart_seq* seq = bart_seq_alloc("");
+	bart_seq_defaults(seq);
+
+	seq->conf->magn.prep_scans = 0;
+	seq->conf->cest.sat_pulses = 5;
+	seq->conf->cest.offset_type = SEQ_CEST_OFFSET_PHANTOM;
+	seq->conf->cest.sat_type = SEQ_CEST_OC;
+	seq->conf->cest.sat_pulse_pause = 1;
+	seq_ui_interface_loop_dims(0, seq->conf, DIMS, seq->conf->loop_dims);
+
+	int i = 0;
+	int offsets = 0;
+
+	do
+	{
+		int E = seq_block(seq->N, seq->event, seq->state, seq->conf);
+
+		if (0 > E)
+			return false;
+
+		if (0 == E)
+			continue;
+
+		if (blocks[i] != seq->state->mode)
+			return false;
+
+		if ((SEQ_BLOCK_KERNEL_IMAGE == seq->state->mode)
+		    && (FLASH_EVENTS + trigger_event_count(seq->conf, seq->state) != E))
+			return false;
+
+		// check pulse duration
+		if ((SEQ_BLOCK_PRE == seq->state->mode) && (1 == E)  && (1 == i) && (100.e3 != seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad)))
+			return false;
+
+		// we reset counter and repeat for each offset, but skip the noise scan (only done once)
+		if (7 == i) {
+
+			i = 1;
+			offsets++;
+		} else {
+
+			i++;
+		}
+
+
+	} while (seq_continue(seq->state, seq->conf));
+
+	if (expected_offsets != offsets)
+		return false;
+
+	bart_seq_free(seq);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_block_cest_OC_non_equidistant);
