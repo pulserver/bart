@@ -99,6 +99,12 @@ void vecf_saxpy(int N, float dst[N], float alpha, const float b[N])
 		dst[i] += alpha * b[i];
 }
 
+void vecf_axpbz(long N, float* dst, const float alpha, const float* src1, const float beta, const float* src2)
+{
+	for (long i = 0; i < N; i++)
+		dst[i] = alpha * src1[i] + beta * src2[i];
+}
+
 float vecf_sdot(int N, const float a[N], const float b[N])
 {
 	float ret = 0.;

@@ -59,6 +59,7 @@ extern complex float vec_dot(int N, const complex float x[N], const complex floa
 extern void vec_saxpy(int N, complex float x[N], complex float alpha, const complex float y[N]);
 extern void vecf_sxpay(int N, float beta, float x[N], const float y[N]);
 extern void vecf_saxpy(int N, float x[N], float alpha, const float y[N]);
+extern void vecf_axpbz(long N, float* dst, const float alpha, const float* src1, const float beta, const float* src2);
 extern void gram_matrix(int N, complex float cov[N][N], int L, const complex float data[N][L]);
 extern void gram_schmidt(int M, int N, float val[M], complex float vecs[M][N]);
 extern void gram_matrix2(int N, complex float cov[N * (N + 1) / 2], int L, const complex float data[N][L]);
