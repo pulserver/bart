@@ -75,6 +75,12 @@ void vec_copy(int N, complex float x[N], const complex float y[N])
 		x[i] = y[i];
 }
 
+void vecf_zero(int N, float x[N])
+{
+	for (int i = 0; i < N; i++)
+		x[i] = 0.;
+}
+
 void vecf_copy(int N, float x[N], const float y[N])
 {
 	for (int i = 0; i < N; i++)
