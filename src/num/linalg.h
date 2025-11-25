@@ -57,6 +57,7 @@ extern double vec3d_angle(const double* x, const double* y);
 // extern complex double vec_dot(int N, const complex float x[N], const complex float y[N]);
 extern complex float vec_dot(int N, const complex float x[N], const complex float y[N]);
 extern void vec_saxpy(int N, complex float x[N], complex float alpha, const complex float y[N]);
+extern void vecf_sxpay(int N, float beta, float x[N], const float y[N]);
 extern void vecf_saxpy(int N, float x[N], float alpha, const float y[N]);
 extern void gram_matrix(int N, complex float cov[N][N], int L, const complex float data[N][L]);
 extern void gram_schmidt(int M, int N, float val[M], complex float vecs[M][N]);
