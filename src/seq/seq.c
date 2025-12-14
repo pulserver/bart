@@ -63,7 +63,10 @@ int bart_seq_prepare(struct bart_seq* seq)
 	num_rand_init(0ULL); // initialize here since once called before actual sequence start
 
 	seq->state->mode = SEQ_BLOCK_KERNEL_PREPARE;
-	
+
+	if (SEQ_PEMODE_CARTESIAN == seq->conf->enc.pe_mode)
+		seq->state->pos[PHS1_DIM] = seq->conf->loop_dims[PHS1_DIM] - 1;
+
 	int N = seq_block(seq->N, seq->event, seq->state, seq->conf);
 
 	if (0 > N)
@@ -331,6 +334,9 @@ static int check_settings(const struct seq_state* seq_state, const struct seq_co
 
 
 	if (SEQ_CONTEXT_BINARY != seq_state->context) {
+
+		if (SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode)
+			return 1;
 
 		if ((SEQ_PEMODE_RAGA == seq->enc.pe_mode)
 		    && !check_gen_fib(seq->loop_dims[PHS1_DIM], seq->enc.tiny))

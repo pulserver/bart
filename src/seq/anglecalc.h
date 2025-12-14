@@ -15,6 +15,7 @@ extern double get_rot_angle(const long pos[DIMS], const struct seq_config* seq);
 extern void traj_conf_from_seq(struct traj_conf *conf, const struct seq_config* seq);
 
 extern int check_gen_fib(int spokes, int tiny_ga);
+extern long cartesian_line(const long pos[DIMS], const struct seq_config* seq);
 
 #include "misc/cppwrap.h"
 

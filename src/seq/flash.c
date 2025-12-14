@@ -157,6 +157,34 @@ static int prep_grad_ro_deph(struct grad_trapezoid* grad, const struct seq_confi
 	return 1;
 }
 
+static int prep_grad_phs1_encoding(struct grad_trapezoid* grad, int rew, const long pos[DIMS], const struct seq_config* seq)
+{
+	*grad = (struct grad_trapezoid){ 0 };
+
+	if (SEQ_PEMODE_CARTESIAN != seq->enc.pe_mode)
+		return 1;
+
+	if (rew && (SEQ_CONTRAST_RF_SPOILED != seq->phys.contrast))
+		return 1;
+
+	struct grad_limits limits = seq->sys.grad;
+	limits.max_amplitude *= SCALE_GRAD;
+
+	long center = 0.5 * seq->loop_dims[PHS1_DIM];
+
+	double moment = (cartesian_line(pos, seq) - center) / (seq->sys.gamma * seq->geom.fov);
+
+	if (rew)
+		moment = -1. * moment;
+
+	if (!grad_soft(grad, available_time_RF_SLI(1, seq), moment, limits))
+		return 0;
+
+	// FIXME maybe similar to GSTF with fixed timing
+
+	return 1;
+}
+
 
 static int prep_grad_ro_blip(struct grad_trapezoid* grad, long echo, const struct seq_config* seq)
 {
@@ -433,6 +461,7 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 
 	double rf_spoil_phase = rf_spoiling(DIMS, seq_state->pos, seq);
 
+	double projPHASE[3] = { 0. , 1. , 0 };
 	double projREAD[3] = { 1. , 0. , 0. };
 	double projSLICE[3] = { 0. , 0. , 1. };
 
@@ -466,18 +495,26 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 		double projY[3] = { sin(proj_angle), 0., 0. };
 
 		struct grad_trapezoid readout_dephaser;
+		struct grad_trapezoid phs1_encoding;
 
 		if (seq_state->pos[TE_DIM] == 0) {
 
 			if (!prep_grad_ro_deph(&readout_dephaser, seq))
 				return ERROR_PREP_GRAD_RO_DEPH;
 
+			if (!prep_grad_phs1_encoding(&phs1_encoding, 0, seq_state->pos, seq))
+				return ERROR_PREP_GRAD_RO_DEPH;
+
 			//check for overlapping gradients!
-			if (powf(seq->sys.grad.max_amplitude, 2.) < powf(slice_rephaser.ampl, 2.) + powf(readout_dephaser.ampl, 2.))
+			if (powf(seq->sys.grad.max_amplitude, 2.) < (  powf(slice_rephaser.ampl, 2.)
+								     + powf(readout_dephaser.ampl, 2.)
+								     + powf(phs1_encoding.ampl, 2.)))
 				return ERROR_MAX_GRAD_RO_SLI;
 
 			i += seq_grad_to_event(ev + i, timing.readout_dephaser, &readout_dephaser, projX);
 			i += seq_grad_to_event(ev + i, timing.readout_dephaser, &readout_dephaser, projY);
+
+			i += seq_grad_to_event(ev + i, timing.readout_dephaser, &phs1_encoding, projPHASE);
 		}
 
 
@@ -507,6 +544,9 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 		if ((seq_state->pos[TE_DIM] == 0) && (timing.readout_dephaser + grad_total_time(&readout_dephaser) - 1.E-9) > timing.readout[seq_state->pos[TE_DIM]])
 			return ERROR_RO_TIMING;
 
+		if ((seq_state->pos[TE_DIM] == 0) && (timing.readout_dephaser + grad_total_time(&phs1_encoding) - 1.e-3) > timing.readout[seq_state->pos[TE_DIM]])
+			return ERROR_RO_TIMING;
+
 		i += seq_grad_to_event(ev + i, timing.readout[seq_state->pos[TE_DIM]], &readout, projX);
 		i += seq_grad_to_event(ev + i, timing.readout[seq_state->pos[TE_DIM]], &readout, projY);
 
@@ -522,6 +562,13 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 		}
 
 	} while (md_next(DIMS, seq->loop_dims, TE_FLAG, seq_state->pos));
+
+	struct grad_trapezoid phase_rewinder;
+
+	if (!prep_grad_phs1_encoding(&phase_rewinder, 1, seq_state->pos, seq))
+		return ERROR_PREP_GRAD_SP_READ;
+
+	i += seq_grad_to_event(ev + i, timing.readout_rephaser, &phase_rewinder, projPHASE);
 
 	struct grad_trapezoid spoiler_read;
 

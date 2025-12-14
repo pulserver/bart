@@ -89,6 +89,7 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 		OPTL_SELECT(0, "turn", enum pe_mode, &conf->enc.pe_mode, SEQ_PEMODE_TURN, "turn-based PE (default: RAGA)"),
 		OPTL_SELECT(0, "mems", enum pe_mode, &conf->enc.pe_mode, SEQ_PEMODE_MEMS_HYB, "multi-echo/multi-spoke PE (default: RAGA)"),
 		OPTL_SELECT(0, "raga", enum pe_mode, &conf->enc.pe_mode, SEQ_PEMODE_RAGA, "RAGA PE"),
+		OPTL_SELECT(0, "cartesian", enum pe_mode, &conf->enc.pe_mode, SEQ_PEMODE_CARTESIAN, "Cartesian center-out PE (default: RAGA)"),
 		OPTL_ULONG(0, "raga_flags", &conf->enc.aligned_flags, "raga_aligned_flags", "RAGA aligned flags (by bitmask)"),
 
 		OPTL_SET(0, "chrono", &seq_opts->chrono, "save gradients/moments/sampling in chronological order (RAGA)"),
@@ -156,7 +157,8 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 
 	seq_opts->dt = (0 > seq_opts->dt) ? conf->phys.tr / seq_opts->samples : ceil(seq_opts->dt * 1.E6) / 1.E6;
 
-	if (SEQ_PEMODE_RAGA != conf->enc.pe_mode)
+	if (   (SEQ_PEMODE_RAGA != conf->enc.pe_mode)
+	    && (SEQ_PEMODE_CARTESIAN != conf->enc.pe_mode))
 		seq_opts->chrono = true;
 
 	// FIXME, this should be moved in system configurations

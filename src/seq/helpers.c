@@ -458,10 +458,18 @@ void seq_print_info_radial_views(int N, char* info, const struct seq_config* seq
 {
 	(void) N;
 
+	int ctr = 0;
+
+	if (SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode) {
+
+		ctr += snprintf(info + ctr, (size_t)(N - ctr), 
+			"Cartesian sequence\nRadial Views = Phase encoding lines\nMeasurements = frames.");
+		return;
+	}
+
 	if (SEQ_PEMODE_RAGA != seq->enc.pe_mode)
 		return;
 
-	int ctr = 0;
 
 	struct traj_conf conf;
 	traj_conf_from_seq(&conf, seq);

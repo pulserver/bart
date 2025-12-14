@@ -45,5 +45,25 @@ static bool test_get_rot_angle(void)
 UT_REGISTER_TEST(test_get_rot_angle);
 
 
+static bool test_cartesian_line(void)
+{
+	struct seq_config seq = seq_config_defaults;
+	long pos[DIMS] = { 0 };
+
+	seq.enc.pe_mode = SEQ_PEMODE_CARTESIAN;
+
+	seq.loop_dims[PHS1_DIM] = 8;
+	const long good[8] = { 4, 3, 5, 2, 6, 1, 7, 0};
+
+	int i = 0;
+	do {
+		if (good[i++] != cartesian_line(pos, &seq))
+			return false;
+
+	} while (md_next(DIMS, seq.loop_dims, PHS1_FLAG, pos));
 
 
+	return true;
+}
+
+UT_REGISTER_TEST(test_cartesian_line);

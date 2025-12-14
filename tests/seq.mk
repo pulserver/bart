@@ -95,6 +95,50 @@ tests/test-seq-offcenter: seq traj extract scale phantom fovshift fmac nrmse
 TESTS += tests/test-seq-offcenter
 
 
+tests/test-seq-cartesian: seq traj extract nrmse 
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)				;\
+	$(TOOLDIR)/traj -x 256 -o 2. -y 256 -c trj_ref.ra 			;\
+	$(TOOLDIR)/seq -r 256 --cartesian --TE 2.2E-3 --TR 4E-3 samples.ra 	;\
+	$(TOOLDIR)/extract 0 0 3 samples.ra trj_seq.ra				;\
+	$(TOOLDIR)/nrmse -t 1e-6 trj_ref.ra trj_seq.ra			;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
+
+TESTS +=  tests/test-seq-cartesian
+
+
+tests/test-seq-offcenter-cart-ro: seq traj extract phantom fovshift fmac nrmse
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)			;\
+	$(TOOLDIR)/seq -S 0.05:0:0 -r 256 --cartesian --TE 2.2E-3 --TR 4E-3 --no-spoiling samples.ra 	;\
+	$(TOOLDIR)/extract 0 0 3 samples.ra trj_seq.ra			;\
+	$(TOOLDIR)/extract 0 4 5 samples.ra adc_phase.ra		;\
+	$(TOOLDIR)/phantom -t trj_seq.ra -k ksp.ra			;\
+	$(TOOLDIR)/fovshift -s 0.:0.025:0 ksp.ra ksp_ref.ra		;\
+	$(TOOLDIR)/fmac adc_phase.ra ksp.ra ksp_seq.ra			;\
+	$(TOOLDIR)/nrmse -S -t 1.5e-6 ksp_ref.ra ksp_seq.ra		;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
+
+TESTS +=  tests/test-seq-offcenter-cart-ro
+
+tests/test-seq-offcenter-cart-pe: seq traj extract phantom fovshift fmac nrmse
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)			;\
+	$(TOOLDIR)/seq -S 0:0.1:0 -r 256 --cartesian --TE 2.2E-3 --TR 4E-3 --no-spoiling samples.ra 	;\
+	$(TOOLDIR)/extract 0 0 3 samples.ra trj_seq.ra			;\
+	$(TOOLDIR)/extract 0 4 5 samples.ra adc_phase.ra		;\
+	$(TOOLDIR)/phantom -t trj_seq.ra -k ksp.ra			;\
+	$(TOOLDIR)/fovshift -t trj_seq.ra -s 0:0.1:0 ksp.ra ksp_ref.ra	;\
+	$(TOOLDIR)/fmac adc_phase.ra ksp.ra ksp_seq.ra			;\
+	$(TOOLDIR)/nrmse -t 2e-6 ksp_ref.ra ksp_seq.ra			;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
+
+TESTS +=  tests/test-seq-offcenter-cart-pe
+
+
 tests/test-seq-relative-fovshift: seq traj extract scale phantom fovshift fmac nrmse
 	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
 	$(TOOLDIR)/seq -s 0.0256:0.0128:0	-r 377 --no-spoiling samples_abs.ra	;\
