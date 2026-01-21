@@ -65,6 +65,7 @@ struct sim_config_s sim_config_default_cpu = {
 	.voxel_size = { 0., 0., 0. },
 
 	.tol = 1.e-5,
+	.hard_pulse_sim = true,
 };
 
 struct sim_config_s sim_config_default_gpu = {
@@ -80,6 +81,7 @@ struct sim_config_s sim_config_default_gpu = {
 	.voxel_size = { 0., 0., 0. },
 
 	.tol = 1.e-5,
+	.hard_pulse_sim = true,
 };
 
 void sim_config_set_dims(struct sim_config_s* sim, int N, const long dims[N], int Nspins)

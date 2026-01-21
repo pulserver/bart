@@ -29,6 +29,7 @@ struct sim_config_s {
 	float voxel_size[3];
 
 	float tol;
+	bool hard_pulse_sim;
 };
 
 extern void sim_config_set_dims(struct sim_config_s* sim, int N, const long dims[N], int Nspins);
