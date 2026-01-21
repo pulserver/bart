@@ -18,6 +18,7 @@
 
 #include "ismrmrd/ismrmrd.h"
 #include "ismrmrd/dataset.h"
+#include "ismrmrd/meta.h"
 #include "ismrmrd/serialization.h"
 #include "ismrmrd/serialization_iostream.h"
 #include "ismrmrd/xml.h"
@@ -114,29 +115,50 @@ struct ismrm_cpp_state {
 	std::istream* is;
 	ISMRMRD::IStreamView* rs;
 	ISMRMRD::ProtocolDeserializer* deserializer;
+
+	std::ostream* os;
+	ISMRMRD::OStreamView* ws;
+	ISMRMRD::ProtocolSerializer* serializer;
 };
 
-extern "C" struct ismrm_cpp_state* ismrm_stream_open(const char* file)
+extern "C" struct ismrm_cpp_state* ismrm_stream_open(const char* file, bool write)
 {
 	struct ismrm_cpp_state* ret = (struct ismrm_cpp_state*) malloc(sizeof *ret);
 	ret->deserializer = NULL;
+	ret->serializer = NULL;
 	ret->rs = NULL;
+	ret->ws = NULL;
 	ret->is = NULL;
 
-	std::istream* is;
+	if (write) {
 
-	if (0 != strcmp("-", file)) {
+		std::ostream* os;
+		if (0 != strcmp("-", file)) {
 
-		ret->is = new std::ifstream(file, std::ifstream::binary | std::ios::binary);
-		is = ret->is;
+			ret->os = new std::ofstream(file, std::ifstream::binary | std::ios::binary);
+			os = ret->os;
+		} else {
 
+			os = &std::cout;
+		}
+
+		ret->ws = new ISMRMRD::OStreamView(*os);
+		ret->serializer = new ISMRMRD::ProtocolSerializer(*ret->ws);
 	} else {
 
-		is = &std::cin;
-	}
+		std::istream* is;
+		if (0 != strcmp("-", file)) {
 
-	ret->rs = new ISMRMRD::IStreamView(*is);
-	ret->deserializer = new ISMRMRD::ProtocolDeserializer(*ret->rs);
+			ret->is = new std::ifstream(file, std::ifstream::binary | std::ios::binary);
+			is = ret->is;
+		} else {
+
+			is = &std::cin;
+		}
+
+		ret->rs = new ISMRMRD::IStreamView(*is);
+		ret->deserializer = new ISMRMRD::ProtocolDeserializer(*ret->rs);
+	}
 
 	return ret;
 }
@@ -151,6 +173,17 @@ extern "C" void ismrm_stream_close(struct ismrm_cpp_state* s)
 		delete s->rs;
 	if (NULL != s->is)
 		delete s->is;
+
+	if (NULL != s->serializer) {
+
+		s->serializer->close();
+		delete s->serializer;
+	}
+
+	if (NULL != s->ws)
+		delete s->ws;
+	if (NULL != s->os)
+		delete s->os;
 }
 
 
@@ -199,6 +232,63 @@ extern "C" void ismrm_stream_read_meta(struct isrmrm_config_s* config)
 	}
 }
 
+static bool ignore_next_message(struct isrmrm_config_s* config)
+{
+	struct ismrm_cpp_state* s = config->ismrm_cpp_state;
+	auto d = s->deserializer;
+
+#define ismrm_l1types(m)\
+	m(ISMRMRD::Acquisition, ISMRMRD::ISMRMRD_MESSAGE_ACQUISITION)			\
+	m(ISMRMRD::Waveform,	ISMRMRD::ISMRMRD_MESSAGE_WAVEFORM)			\
+	m(ISMRMRD::TextMessage,	ISMRMRD::ISMRMRD_MESSAGE_TEXT)
+
+#define ismrm_img_types(m)\
+	m(ISMRMRD::Image<unsigned short>,		ISMRMRD::ISMRMRD_USHORT)	\
+	m(ISMRMRD::Image<short>,			ISMRMRD::ISMRMRD_SHORT)		\
+	m(ISMRMRD::Image<unsigned int>,			ISMRMRD::ISMRMRD_UINT)		\
+	m(ISMRMRD::Image<int>,				ISMRMRD::ISMRMRD_INT)		\
+	m(ISMRMRD::Image<float>,			ISMRMRD::ISMRMRD_INT)		\
+	m(ISMRMRD::Image<double>,			ISMRMRD::ISMRMRD_DOUBLE)	\
+	m(ISMRMRD::Image<std::complex<float> >,		ISMRMRD::ISMRMRD_CXFLOAT)	\
+	m(ISMRMRD::Image<std::complex<double> >,	ISMRMRD::ISMRMRD_CXDOUBLE)	\
+
+#define ismrm_array_types(m)\
+	m(ISMRMRD::NDArray<unsigned short>,		ISMRMRD::ISMRMRD_USHORT)	\
+	m(ISMRMRD::NDArray<short>,			ISMRMRD::ISMRMRD_SHORT)		\
+	m(ISMRMRD::NDArray<unsigned int>,		ISMRMRD::ISMRMRD_UINT)		\
+	m(ISMRMRD::NDArray<int>,			ISMRMRD::ISMRMRD_INT)		\
+	m(ISMRMRD::NDArray<float>,			ISMRMRD::ISMRMRD_INT)		\
+	m(ISMRMRD::NDArray<double>,			ISMRMRD::ISMRMRD_DOUBLE)	\
+	m(ISMRMRD::NDArray<std::complex<float> >,	ISMRMRD::ISMRMRD_CXFLOAT)	\
+	m(ISMRMRD::NDArray<std::complex<double> >,	ISMRMRD::ISMRMRD_CXDOUBLE)	\
+
+#define handle(type, type_no)	\
+	if (type_id == type_no) {	\
+		type x;			\
+		d->deserialize(x);	\
+		return true;		\
+	}
+
+	{
+		//enum ISMRMRD::ISMRMRD_MESSAGE_ID
+		uint16_t type_id = d->peek();
+		ismrm_l1types(handle)
+	}
+
+	if (d->peek() == ISMRMRD::ISMRMRD_MESSAGE_IMAGE) {
+
+		int type_id = d->peek_image_data_type();
+		ismrm_img_types(handle)
+	}
+
+	if (d->peek() == ISMRMRD::ISMRMRD_MESSAGE_NDARRAY) {
+
+		int type_id = d->peek_image_data_type();
+		ismrm_img_types(handle)
+	}
+
+	return false;
+}
 
 extern "C" long ismrm_stream_read_acquisition(struct isrmrm_config_s* config, ISMRMRD::ISMRMRD_Acquisition* c_acq)
 {
@@ -221,7 +311,8 @@ extern "C" long ismrm_stream_read_acquisition(struct isrmrm_config_s* config, IS
 				continue;
 			}
 
-			error("BART ISMRMRD Wrapper: Unexpected Non-Acquisition message.\n");
+			if(!ignore_next_message(config))
+				error("BART ISMRMRD Wrapper: Unexpected Non-Acquisition message.\n");
 		}
 
 		assert(ISMRMRD::ISMRMRD_MESSAGE_ACQUISITION == type);
@@ -245,3 +336,96 @@ extern "C" long ismrm_stream_read_acquisition(struct isrmrm_config_s* config, IS
 	}
 }
 
+template<typename T>
+static void ismrm_set_metadata(ISMRMRD::Image<T>& img)
+{
+	//FIXME
+	float fov[3] = { 200, 200, 5 };
+	float pos[3] = { 0, 0, 0 };
+	float table_pos[3] = { 0, 0, -1591 };
+	float read_dir[3] = { -1, 0, 0 };
+	float phase_dir[3] = { 0, 1, 0 };
+	float slice_dir[3] = { 0, 0, 1 };
+
+	img.setSlice(0);
+	img.setFieldOfView(fov[0], fov[1], fov[2]);
+	img.setPosition(pos[0], pos[1], pos[2]);
+	img.setPatientTablePosition(table_pos[0], table_pos[1], table_pos[2]);
+	img.setReadDirection(read_dir[0], read_dir[1], read_dir[2]);
+	img.setPhaseDirection(phase_dir[0], phase_dir[1], phase_dir[2]);
+	img.setSliceDirection(slice_dir[0], slice_dir[1], slice_dir[2]);
+
+	ISMRMRD::MetaContainer meta;
+
+	meta.append("ImageRowDir", read_dir[0]);
+	meta.append("ImageRowDir", read_dir[1]);
+	meta.append("ImageRowDir", read_dir[2]);
+
+	meta.append("ImageColumnDir", phase_dir[0]);
+	meta.append("ImageColumnDir", phase_dir[1]);
+	meta.append("ImageColumnDir", phase_dir[2]);
+	meta.append("Keep_image_geometry", "0");
+
+	try {
+
+		std::stringstream meta_string_stream;
+		ISMRMRD::serialize(meta, meta_string_stream);
+
+		img.setAttributeString(meta_string_stream.str().c_str());
+
+	} catch(std::runtime_error& e) {
+
+		error("BART ISMRMRD Wrapper: Exception thrown: %s\n", e.what());
+	}
+}
+
+template<typename T>
+static void ismrm_send_img(const ISMRMRD::Image<T> &img, const struct isrmrm_config_s* config)
+{
+	try {
+
+		config->ismrm_cpp_state->serializer->serialize(img);
+	} catch(std::runtime_error& e) {
+
+		error("BART ISMRMRD Wrapper: Exception thrown: %s\n", e.what());
+	}
+}
+
+extern "C" void ismrm_stream_write_cfl_image(struct isrmrm_config_s* config, long size0, long size1, _Complex float* buf)
+{
+	ISMRMRD::Image<std::complex<float> > img(size0, size1);
+
+	std::complex<float>* ptr = img.getDataPtr();
+	memcpy(ptr, buf, size0 * size1 * sizeof(float) * 2);
+
+	img.setImageType(ISMRMRD::ISMRMRD_IMTYPE_COMPLEX);
+
+	ismrm_set_metadata(img);
+	ismrm_send_img(img, config);
+}
+
+extern "C" void ismrm_stream_write_mag_image(struct isrmrm_config_s* config, long size0, long size1, unsigned short* buf)
+{
+	ISMRMRD::Image<unsigned short> img(size0, size1);
+
+	unsigned short* ptr = img.getDataPtr();
+	memcpy(ptr, buf, size0 * size1 * sizeof(unsigned short));
+
+	img.setImageType(ISMRMRD::ISMRMRD_IMTYPE_IMAG);
+
+	ismrm_set_metadata(img);
+	ismrm_send_img(img, config);
+}
+
+extern "C" void ismrm_stream_write_text(struct isrmrm_config_s* config, const char* text)
+{
+	try {
+		ISMRMRD::TextMessage tm;
+		tm.message = text;
+		config->ismrm_cpp_state->serializer->serialize(tm);
+	}
+	catch(std::runtime_error& e) {
+		error("BART ISMRMRD Wrapper: Exception thrown: %s\n", e.what());
+	}
+
+}
