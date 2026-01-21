@@ -8,6 +8,7 @@
 
 struct pulse;
 struct nlop_s;
+struct rf_shape;
 
 #define R1_IDX 0
 #define R2_IDX 1
@@ -37,6 +38,7 @@ extern struct sim_config_s sim_config_default_cpu;
 extern struct sim_config_s sim_config_default_gpu;
 
 extern const struct nlop_s* nlop_pulse_create(struct sim_config_s sim, const struct pulse* pulse, float phase, float grad[3]);
+extern const struct nlop_s* nlop_pulse_shape_create(struct sim_config_s sim, struct rf_shape* shape, float phase, float grad[3]);
 extern const struct nlop_s* nlop_relax_create(struct sim_config_s sim, float t, float grad[3]);
 extern const struct nlop_s* nlop_spoile_create(struct sim_config_s sim);
 extern const struct nlop_s* nlop_adc_create(struct sim_config_s sim, long index, unsigned long sflags, float phase);

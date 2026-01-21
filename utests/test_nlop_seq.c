@@ -460,5 +460,192 @@ static bool test_nlop_pulse_order(void)
 
 UT_REGISTER_TEST(test_nlop_pulse_order);
 
+static bool test_nlop_pulse_shape_create(void)
+{
+	struct seq_config seq = seq_config_defaults;
+	seq.phys.rf_duration = 0.001;
+	seq.phys.flip_angle = 90.;
+	struct rf_shape rf_shapes[1];
+	seq_sample_rf_shapes(1, rf_shapes, &seq);
 
+	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	int N = ARRAY_SIZE(dims);
 
+	struct sim_config_s sim = sim_config_default_cpu;
+	sim_config_set_dims(&sim, N, dims, 1);
+
+	float r1 = 1.;
+	float r2 = 0.;
+	float b1 = 1.;
+	float b0 = 0.;
+
+	complex float mag[] = { 0., 0., 1. };
+	complex float par[] = { r1, r2, b1, b0 };
+
+	const struct nlop_s* nlop = nlop_pulse_shape_create(sim, &rf_shapes[0], 0., (float[3]) { 0., 0., 0. });
+	
+	nlop = nlop_set_input_real(nlop, 0);
+	nlop = nlop_set_input_real(nlop, 1);
+	nlop = nlop_set_input_const_F(nlop, 1, N, sim.pdims, false, par);
+
+	complex float out[3];
+	nlop_generic_apply_unchecked(nlop, 2, (void*[2]) { out, mag });
+	nlop_free(nlop);
+
+	complex float ref[] = { 0., 1., 0. };
+
+	UT_RETURN_ASSERT_TOL(md_zrmse(N, sim.mdims, ref, out), 1.e-3);
+}
+
+UT_REGISTER_TEST(test_nlop_pulse_shape_create);
+
+static bool test_nlop_pulse_shape_create2(void)
+{
+	struct seq_config seq = seq_config_defaults;
+	struct rf_shape rf_shapes[1];
+	seq_sample_rf_shapes(1, rf_shapes, &seq);
+
+	struct pulse_sms ps = pulse_sms_defaults;
+	pulse_sms_init(&ps, seq.phys.rf_duration, seq.phys.flip_angle, 0., seq.phys.bwtp, 0.5, seq.geom.mb_factor, 0, seq.geom.sms_distance, seq.geom.slice_thickness);
+
+	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	int N = ARRAY_SIZE(dims);
+
+	struct sim_config_s sim = sim_config_default_cpu;
+	sim_config_set_dims(&sim, N, dims, 1);
+
+	float r1 = 1.;
+	float r2 = 0.;
+	float b1 = 1.;
+	float b0 = 0.;
+
+	complex float par[] = { r1, r2, b1, b0 };
+
+	float grad[3] = { 0. };
+
+	const struct nlop_s* nlop1 = nlop_pulse_create(sim, CAST_UP(&ps), 0., grad);
+	const struct nlop_s* nlop2 = nlop_pulse_shape_create(sim, &rf_shapes[0], 0., grad);
+
+	nlop1 = nlop_set_input_real(nlop1, 0);
+	nlop1 = nlop_set_input_const_F(nlop1, 1, N, sim.pdims, false, par);
+
+	nlop2 = nlop_set_input_real(nlop2, 0);
+	nlop2 = nlop_set_input_const_F(nlop2, 1, N, sim.pdims, false, par);
+
+	bool ok = true;
+
+	for (int i = 0; i < 10; i++)
+		ok = ok && compare_nlops(nlop1, nlop2, true, true, true, 1.e-3);
+
+	nlop_free(nlop1);
+	nlop_free(nlop2);
+
+	UT_RETURN_ASSERT(ok);
+}
+
+UT_REGISTER_TEST(test_nlop_pulse_shape_create2);
+
+static bool test_nlop_pulse_shape_create3(void)
+{
+	struct seq_config seq = seq_config_defaults;
+	struct rf_shape rf_shapes[1];
+	seq_sample_rf_shapes(1, rf_shapes, &seq);
+
+	struct pulse_sms ps = pulse_sms_defaults;
+	pulse_sms_init(&ps, seq.phys.rf_duration, seq.phys.flip_angle, 0., seq.phys.bwtp, 0.5, seq.geom.mb_factor, 0, seq.geom.sms_distance, seq.geom.slice_thickness);
+
+	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	int N = ARRAY_SIZE(dims);
+
+	struct sim_config_s sim = sim_config_default_cpu;
+	sim_config_set_dims(&sim, N, dims, 1);
+
+	float r1 = 0.;
+	float r2 = 0.;
+	float b1 = 1.25;
+	float b0 = 0.;
+
+	complex float par[] = { r1, r2, b1, b0 };
+
+	const struct nlop_s* nlop1 = nlop_pulse_create(sim, CAST_UP(&ps), 0, (float[3]) { 0., 0., 0. });
+	const struct nlop_s* nlop2 = nlop_pulse_shape_create(sim, &rf_shapes[0], 0., (float[3]) { 0., 0., 0. });
+	nlop1 = sim_nlop_set_init(sim, nlop1);
+	nlop2 = sim_nlop_set_init(sim, nlop2);
+
+	complex float omag[3];
+
+	nlop_generic_apply_unchecked(nlop1, 2, (void* [2]) { omag, par });
+	nlop_generic_apply_unchecked(nlop2, 2, (void* [2]) { omag, par });
+
+	complex float dpar[] = { 0, 0, 1, 0 };
+
+	complex float dmag1[3];
+	complex float dmag2[3];
+
+	linop_forward_unchecked(nlop_get_derivative(nlop1, 0, 0), dmag1, dpar);
+	linop_forward_unchecked(nlop_get_derivative(nlop2, 0, 0), dmag2, dpar);
+
+	nlop_free(nlop1);
+	nlop_free(nlop2);
+
+	float tol = 1.e-3;
+	UT_RETURN_ON_FAILURE_TOL(cabsf(dmag1[0] - dmag2[0]), tol);
+	UT_RETURN_ON_FAILURE_TOL(cabsf(dmag1[1] - dmag2[1]), tol);
+	UT_RETURN_ON_FAILURE_TOL(cabsf(dmag1[2] - dmag2[2]), tol);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_nlop_pulse_shape_create3);
+
+static bool test_pulse_shape_create_inv_pulse(void)
+{
+	struct seq_config seq = seq_config_defaults;
+	seq.magn.mag_prep = SEQ_PREP_IR_NONSELECTIVE;
+	struct rf_shape rf_shapes[2];
+	seq_sample_rf_shapes(2, rf_shapes, &seq);
+
+	struct pulse_hypsec ps = pulse_hypsec_defaults;
+	pulse_hypsec_init(GYRO, &ps);
+
+	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	int N = ARRAY_SIZE(dims);
+
+	struct sim_config_s sim = sim_config_default_cpu;
+	sim_config_set_dims(&sim, N, dims, 1);
+
+	float r1 = 0.;
+	float r2 = 0.;
+	float b1 = 1.;
+	float b0 = 0.;
+
+	complex float mag[] = { 0., 0., 1. };
+	complex float par[] = { r1, r2, b1, b0 };
+
+	const struct nlop_s* nlop1 = nlop_pulse_shape_create(sim, &rf_shapes[1], 0., (float[3]) { 0., 0., 0. });
+	const struct nlop_s* nlop2 = nlop_pulse_create(sim, CAST_UP(&ps), 0., (float[3]) { 0., 0., 0. });
+
+	nlop1 = nlop_set_input_real(nlop1, 0);
+	nlop1 = nlop_set_input_real(nlop1, 1);
+	nlop1 = nlop_set_input_const_F(nlop1, 1, N, sim.pdims, false, par);
+
+	nlop2 = nlop_set_input_real(nlop2, 0);
+	nlop2 = nlop_set_input_real(nlop2, 1);
+	nlop2 = nlop_set_input_const_F(nlop2, 1, N, sim.pdims, false, par);
+
+	complex float out1[3];
+	complex float out2[3];
+
+	nlop_generic_apply_unchecked(nlop1, 2, (void*[2]) { out1, mag });
+	nlop_generic_apply_unchecked(nlop2, 2, (void*[2]) { out2, mag });
+
+	nlop_free(nlop1);
+	nlop_free(nlop2);
+
+	// Only check magnetization in z-direction (since magnetization in xy-plane will be spoiled for inversion pulse)
+	UT_RETURN_ASSERT_TOL(cabsf(out1[2] - out2[2]), 1.e-4);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_pulse_shape_create_inv_pulse);

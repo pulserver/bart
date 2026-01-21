@@ -24,6 +24,7 @@
 #include "num/loop.h"
 
 #include "seq/pulse.h"
+#include "seq/event.h"
 
 #include "simu/bloch.h"
 #include "simu/simulation.h"
@@ -392,6 +393,7 @@ struct pulse_s {
 
 	struct pulse* pulse;
 	float phase;
+	struct rf_shape* shape;
 
 	float grad[3];
 
@@ -400,12 +402,43 @@ struct pulse_s {
 
 DEF_TYPEID(pulse_s);
 
-static void simulate(float h, float tol, float r1, float r2, float B0, float B1, bool dini, bool dpars, int P, float state[1 + P][3], const struct pulse* ps, float phase)
+static complex float lerp_pulse_shape(const struct rf_shape* shape, float t)
+{
+	// Normalize time to [0, 1]
+	float t_norm = t / shape->sar_dur;
+
+	// Convert to continuous index in [0, samples-1]
+	float x = t_norm * (shape->samples - 1);
+
+	// Get neighboring integer indices and clamp to valid range
+	int x0 = (int)floorf(x);
+	int x1 = x0 + 1;
+	
+	x0 = MAX(0, MIN(shape->samples - 1, x0));
+	x1 = MAX(0, MIN(shape->samples - 1, x1));
+	
+	// Linear interpolation weight (fractional part)
+	float alpha = x - (float)x0;
+	
+	complex float y0 = shape->shape[x0];
+	complex float y1 = shape->shape[x1];
+
+	// Linear interpolation
+	return (1. - alpha) * y0 + alpha * y1;
+}
+
+static void simulate(float h, float tol, float r1, float r2, float B0, float B1, bool dini, bool dpars, int P, float state[1 + P][3], const struct pulse* ps, const struct rf_shape* shape, float phase)
 {
 	NESTED(void, call_fun, (float* out, float t, const float* in))
 	{
-		complex float p = cexpf(1.i * phase) * pulse_eval(ps, t);
-		p = conjf(p); // Neccassary, as it does not work without it (not sure why)
+		complex float pulse_sample = 0.;
+		if (ps != NULL)
+			pulse_sample = pulse_eval(ps, t);
+		else if (shape != NULL)
+			pulse_sample = lerp_pulse_shape(shape, t);
+		
+		complex float p = cexpf(1.i * phase) * pulse_sample;
+		p = conjf(p);
 		float gb[3] = { B1 * crealf(p), B1 * cimagf(p), B0 };
 
 		bloch_ode(out, in, r1, r2, gb);
@@ -413,7 +446,13 @@ static void simulate(float h, float tol, float r1, float r2, float B0, float B1,
 
 	NESTED(void, call_pdy2, (float* out, float t, const float* in))
 	{
-		complex float p = cexpf(1.i * phase) * pulse_eval(ps, t);
+		complex float pulse_sample = 0.;
+		if (ps != NULL)
+			pulse_sample = pulse_eval(ps, t);
+		else if (shape != NULL)
+			pulse_sample = lerp_pulse_shape(shape, t);
+		
+		complex float p = cexpf(1.i * phase) * pulse_sample;
 		p = conjf(p);
 		float gb[3] = { B1 * crealf(p), B1 * cimagf(p), B0 };
 
@@ -422,7 +461,13 @@ static void simulate(float h, float tol, float r1, float r2, float B0, float B1,
 
 	NESTED(void, call_pdp2, (float* out, float t, const float* in))
 	{
-		complex float p = cexpf(1.i * phase) * pulse_eval(ps, t);
+		complex float pulse_sample = 0.;
+		if (ps != NULL)
+			pulse_sample = pulse_eval(ps, t);
+		else if (shape != NULL)
+			pulse_sample = lerp_pulse_shape(shape, t);
+		
+		complex float p = cexpf(1.i * phase) * pulse_sample;
 		p = conjf(p);
 		float gb[3] = { B1 * crealf(p), B1 * cimagf(p), B0 };
 
@@ -434,12 +479,14 @@ static void simulate(float h, float tol, float r1, float r2, float B0, float B1,
 			bloch_b1b0_pdp((float(*)[3])out + (dini ? 3 : 0), in, r1, r2, gb, conj(p));
 	};
 
+	float dur = ps ? ps->duration : shape->sar_dur;
+
 	if (dini || dpars)
 		// Solve with sensitivity analysis
-		ode_direct_sa(h, tol, 3, P, state, 0, ps->duration, call_fun, call_pdy2, call_pdp2);
+		ode_direct_sa(h, tol, 3, P, state, 0, dur, call_fun, call_pdy2, call_pdp2);
 	else
 		// Solve without sensitivity analysis (only bloch equation)
-		ode_interval(h, tol, 3, state[0], 0, ps->duration, call_fun);
+		ode_interval(h, tol, 3, state[0], 0, dur, call_fun);
 }
 
 static void seq_check_dims(struct sim_config_s* conf, int N, int OO, const long odims[OO][N], int II, const long idims[II][N], const long /*ddims*/[OO][II][N])
@@ -495,7 +542,7 @@ static void pulse_sim_vec(const long mdims[3], const long mstrs[3], complex floa
 			  const long pdims[3], const long pstrs[3], const complex float* par,
 			  const long dmdims[3], const long dmstrs[3], complex float* dmag,
 			  const long dpdims[3], const long dpstrs[3], complex float* dpar,
-			  struct pulse* pulse, float phase, float h, float tol)
+			  struct pulse* pulse, struct rf_shape* shape, float phase, float h, float tol)
 {
 	assert(1 == mdims[1]);
 	assert(1 == pdims[0]);
@@ -517,20 +564,43 @@ static void pulse_sim_vec(const long mdims[3], const long mstrs[3], complex floa
 #ifdef USE_CUDA
 	if (cuda_ondevice(mag)) {
 
-		long Np = 100000;
-		complex float* dpulse = md_alloc_sameplace(1, MD_DIMS(Np), CFL_SIZE, mag);
-		pulse_discretize(pulse, Np - 1, dpulse);
+		complex float* dpulse = NULL;
+		long Np;
+		float duration;
+
+		if (NULL != shape) {
+
+			Np = shape->samples;
+			duration = shape->sar_dur;
+
+			dpulse = md_alloc_sameplace(1, MD_DIMS(Np), CFL_SIZE, mag);
+			md_copy(1, MD_DIMS(Np), dpulse, shape->shape, CFL_SIZE);
+		}
+		else if (NULL != pulse) {
+
+			Np = 100000;
+			duration = pulse->duration;
+
+			dpulse = md_alloc_sameplace(1, MD_DIMS(Np), CFL_SIZE, mag);
+			pulse_discretize(pulse, Np - 1, dpulse);
+		}
+		else
+			error("Either pulse or shape must be provided for GPU simulation\n");
+
 		md_zsmul(1, MD_DIMS(Np), dpulse, dpulse, cexpf(1.i * phase));
 
 		assert(dmstrs[1] == dmstrs[0] * dmdims[0]);
 		assert(dpstrs[1] == dpstrs[0] * dpdims[0]);
 
-		cuda_ode_interval_bloch_sa(M, mstrs[0] / (long)CFL_SIZE, mstrs[2] / (long)CFL_SIZE, mag, dmstrs[0] / (long)CFL_SIZE, dmstrs[2] / (long)CFL_SIZE, dmag,
-					      dpstrs[0] / (long)CFL_SIZE, dpstrs[2] / (long)CFL_SIZE, dpar, pstrs[1] / (long)CFL_SIZE, pstrs[2] / (long)CFL_SIZE, par,
-					      Np, pulse->duration, dpulse, h, tol, 0, pulse->duration);
+		cuda_ode_interval_bloch_sa(M, mstrs[0] / (long)CFL_SIZE, mstrs[2] / (long)CFL_SIZE, mag,
+					   dmstrs[0] / (long)CFL_SIZE, dmstrs[2] / (long)CFL_SIZE, dmag,
+					   dpstrs[0] / (long)CFL_SIZE, dpstrs[2] / (long)CFL_SIZE, dpar,
+					   pstrs[1] / (long)CFL_SIZE, pstrs[2] / (long)CFL_SIZE, par,
+					   Np, duration, dpulse, h, tol, 0, duration);
 
 		md_free(dpulse);
-	} else
+	}
+	else
 #endif
 	{
 		int P = 0;
@@ -577,7 +647,7 @@ static void pulse_sim_vec(const long mdims[3], const long mstrs[3], complex floa
 			}
 
 
-			simulate(h, tol, r1, r2, B0, B1, dmag != NULL, dpar!= NULL, P, state, pulse, phase);
+			simulate(h, tol, r1, r2, B0, B1, dmag != NULL, dpar!= NULL, P, state, pulse, shape, phase);
 
 
 			for (int j = 0; j < mdims[0]; j++)
@@ -697,7 +767,7 @@ static void pulse_fun(const struct nlop_seq_data_s* data, int N,
 
 		pulse_sim_vec(rmdims, rmstrs, tmag, rpdims, rpstrs, tpar,
 			dmdims, dmstrs, tdmag, dpdims, dpstrs, tdpar,
-			d->pulse, d->phase, d->h, data->sim.tol);
+			d->pulse, d->shape, d->phase, d->h, data->sim.tol);
 
 
 	} while (md_next(N, modims, lflags, pos));
@@ -715,7 +785,8 @@ static void nlop_pulse_free(const struct nlop_seq_data_s* _data)
 {
 	auto data = CAST_DOWN(pulse_s, _data);
 
-	pulse_free(data->pulse);
+	if(data->pulse != NULL)
+		pulse_free(data->pulse);
 	xfree(data);
 }
 
@@ -726,6 +797,7 @@ const struct nlop_s* nlop_pulse_create(struct sim_config_s sim, const struct pul
 
 	data->pulse = pulse_clone(pulse);
 	data->phase = phase;
+	data->shape = NULL;
 	data->h = pulse->duration / 100.;
 
 	for (int i = 0; i < 3; i++)
@@ -733,6 +805,23 @@ const struct nlop_s* nlop_pulse_create(struct sim_config_s sim, const struct pul
 
 	return nlop_seq_create(&sim, CAST_UP(PTR_PASS(data)), pulse_fun, nlop_pulse_free);
 }
+
+const struct nlop_s* nlop_pulse_shape_create(struct sim_config_s sim, struct rf_shape* shape, float phase, float grad[3])
+{
+	PTR_ALLOC(struct pulse_s, data);
+	SET_TYPEID(pulse_s, data);
+
+	data->pulse = NULL;
+	data->phase = phase;
+	data->shape = shape;
+	data->h = shape->sar_dur / 100.;
+
+	for (int i = 0; i < 3; i++)
+		data->grad[i] = grad[i];
+
+	return nlop_seq_create(&sim, CAST_UP(PTR_PASS(data)), pulse_fun, nlop_pulse_free);
+}
+
 
 const struct nlop_s* nlop_phase_wrap_F(struct sim_config_s sim, const struct nlop_s* nlop, float phase)
 {
