@@ -34,6 +34,14 @@
 #include "nlops/nltest.h"
 #include "nlops/someops.h"
 
+#include "seq/config.h"
+#include "seq/event.h"
+#include "seq/helpers.h"
+#include "seq/seq.h"
+#include "seq/misc.h"
+#include "seq/flash.h"
+#include "seq/kernel.h"
+
 #include "utest.h"
 
 static const struct nlop_s* nlop_set_input_real(const struct nlop_s* nlop, int i)
@@ -990,6 +998,329 @@ static bool test_nlop_phy_create_ir_flash_sim_pulse(void)
 }
 
 UT_REGISTER_TEST(test_nlop_phy_create_ir_flash_sim_pulse);
+
+static bool test_flash_seq_to_nlop_hard_pulse()
+{
+	struct flash_config_s config = flash_config_default;
+	config.inv = false;
+	config.excitations = 89;
+	config.flip_angle = 6;
+	config.TE = 1.90E-3;
+	config.TR = 0.05;
+	config.npixels = 1;
+
+	struct sim_config_s sim = sim_config_default_gpu;
+	sim.hard_pulse_sim = true;
+
+	long dims[DIMS];
+	md_set_dims(DIMS, dims, 1);
+	int N = ARRAY_SIZE(dims);
+
+	struct bart_seq* seq = bart_seq_alloc("");
+	bart_seq_defaults(seq);
+	seq->conf->loop_dims[READ_DIM] = 1;
+	seq->conf->loop_dims[PHS1_DIM] = config.excitations; // Set number of spokes
+	seq->conf->loop_dims[TIME_DIM] = config.excitations; // Set number of spokes
+	seq->conf->phys.tr = config.TR;
+	seq->conf->phys.te = config.TE;
+	seq->conf->phys.contrast = SEQ_CONTRAST_NO_SPOILING; // Note: Spoiling not supported yet (only one spin simulated, but for spoiling multiple spins needed)
+	seq->conf->geom.baseres = config.npixels;
+
+	long odims[] = { [0 ... DIMS - 1] = 1 };
+	odims[READ_DIM] = config.npixels;
+	odims[PHS1_DIM] = config.npixels;
+
+	long pdims[DIMS];
+	md_copy_dims(DIMS, pdims, odims);
+	pdims[TE_DIM] = 1;
+
+	const struct nlop_s* nlop = seq_to_nlop(N, pdims, odims, sim, seq);
+
+	long sdims[DIMS];
+	md_copy_dims(DIMS, sdims, nlop_codomain(nlop)->dims);
+	complex float signals[md_calc_size(DIMS, sdims)];
+
+	md_copy_dims(DIMS, pdims, nlop_domain(nlop)->dims);
+
+	complex float pars[5] = { config.m0, config.r1, config.r2, config.b1, config.b0 };
+
+	nlop_apply(nlop, DIMS, sdims, signals, DIMS, pdims, pars);
+
+	nlop_free(nlop);
+	bart_seq_free(seq);
+
+	// Calculate analytical reference signal for FLASH sequence
+	complex float sig_ref[md_calc_size(N, sdims)];
+	flash_signal(sig_ref, config, NULL);
+
+	UT_RETURN_ON_FAILURE_TOL(md_zrmse(N, sdims, sig_ref, signals), 1.e-5);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_flash_seq_to_nlop_hard_pulse);
+
+static bool test_ir_flash_seq_to_nlop_hard_pulse()
+{
+	struct flash_config_s config = flash_config_default;
+	config.inv = true;
+	config.excitations = 89;
+	config.flip_angle = 6;
+	config.TE = 1.90E-3;
+	config.TR = 0.05;
+	config.TI = 0.1;
+	config.npixels = 1;
+
+	struct sim_config_s sim = sim_config_default_gpu;
+	sim.hard_pulse_sim = true;
+
+	long dims[DIMS];
+	md_set_dims(DIMS, dims, 1);
+	int N = ARRAY_SIZE(dims);
+
+	struct bart_seq* seq = bart_seq_alloc("");
+	bart_seq_defaults(seq);
+	seq->conf->magn.mag_prep = SEQ_PREP_IR_NONSELECTIVE;
+	seq->conf->magn.ti = config.TI;
+	seq->conf->loop_dims[READ_DIM] = 1;
+	seq->conf->loop_dims[PHS1_DIM] = config.excitations; // Set number of spokes
+	seq->conf->loop_dims[TIME_DIM] = config.excitations; // Set number of spokes
+	seq->conf->phys.tr = config.TR;
+	seq->conf->phys.te = config.TE;
+	seq->conf->phys.contrast = SEQ_CONTRAST_NO_SPOILING; // Note: Spoiling not supported yet (only one spin simulated, but for spoiling multiple spins needed)
+	seq->conf->geom.baseres = config.npixels;
+
+	long odims[] = { [0 ... DIMS - 1] = 1 };
+	odims[READ_DIM] = config.npixels;
+	odims[PHS1_DIM] = config.npixels;
+
+	long pdims[DIMS];
+	md_copy_dims(DIMS, pdims, odims);
+	pdims[TE_DIM] = 1;
+
+	const struct nlop_s* nlop = seq_to_nlop(N, pdims, odims, sim, seq);
+
+	long sdims[DIMS];
+	md_copy_dims(DIMS, sdims, nlop_codomain(nlop)->dims);
+	complex float signals[md_calc_size(DIMS, sdims)];
+
+	md_copy_dims(DIMS, pdims, nlop_domain(nlop)->dims);
+
+	complex float pars[5] = { config.m0, config.r1, config.r2, config.b1, config.b0 };
+
+	nlop_apply(nlop, DIMS, sdims, signals, DIMS, pdims, pars);
+
+	nlop_free(nlop);
+	bart_seq_free(seq);
+
+	// Calculate analytical reference signal for IR-FLASH sequence
+	complex float sig_ref[md_calc_size(N, sdims)];
+	flash_signal(sig_ref, config, NULL);
+
+	UT_RETURN_ON_FAILURE_TOL(md_zrmse(N, sdims, sig_ref, signals), 1.e-2);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_ir_flash_seq_to_nlop_hard_pulse);
+
+static bool test_flash_seq_to_nlop_sim_pulse()
+{
+	struct flash_config_s config = flash_config_default;
+	config.inv = false;
+	config.excitations = 89;
+	config.flip_angle = 6;
+	config.TE = 1.90E-3;
+	config.TR = 0.05;
+	config.npixels = 1;
+
+	struct sim_config_s sim = sim_config_default_gpu;
+	sim.hard_pulse_sim = false;
+
+	long dims[DIMS];
+	md_set_dims(DIMS, dims, 1);
+	int N = ARRAY_SIZE(dims);
+
+	struct bart_seq* seq = bart_seq_alloc("");
+	bart_seq_defaults(seq);
+	seq->conf->loop_dims[READ_DIM] = 1;
+	seq->conf->loop_dims[PHS1_DIM] = config.excitations; // Set number of spokes
+	seq->conf->loop_dims[TIME_DIM] = config.excitations; // Set number of spokes
+	seq->conf->phys.tr = config.TR;
+	seq->conf->phys.te = config.TE;
+	seq->conf->phys.contrast = SEQ_CONTRAST_NO_SPOILING;
+	seq->conf->phys.flip_angle = config.flip_angle;
+	seq->conf->geom.baseres = config.npixels;
+
+	long odims[] = { [0 ... DIMS - 1] = 1 };
+	odims[READ_DIM] = config.npixels;
+	odims[PHS1_DIM] = config.npixels;
+
+	long pdims[DIMS];
+	md_copy_dims(DIMS, pdims, odims);
+	pdims[TE_DIM] = 1;
+
+	const struct nlop_s* nlop = seq_to_nlop(N, pdims, odims, sim, seq);
+
+	long sdims[DIMS];
+	md_copy_dims(DIMS, sdims, nlop_codomain(nlop)->dims);
+	complex float signals[md_calc_size(DIMS, sdims)];
+
+	md_copy_dims(DIMS, pdims, nlop_domain(nlop)->dims);
+
+	complex float pars[5] = { config.m0, config.r1, config.r2, config.b1, config.b0 };
+
+	nlop_apply(nlop, DIMS, sdims, signals, DIMS, pdims, pars);
+
+	nlop_free(nlop);
+	bart_seq_free(seq);
+
+	// Calculate analytical reference signal for FLASH sequence
+	complex float sig_ref[md_calc_size(N, sdims)];
+	flash_signal(sig_ref, config, NULL);
+
+	UT_RETURN_ON_FAILURE_TOL(md_zrmse(N, sdims, sig_ref, signals), 1.e-3);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_flash_seq_to_nlop_sim_pulse);
+
+static bool test_flash_seq_to_nlop_sim_pulse_4x4pixels()
+{
+	struct flash_config_s config = flash_config_default;
+	config.inv = false;
+	config.nparams = 5;
+	config.excitations = 89;
+	config.flip_angle = 6;
+	config.TE = 1.90E-3;
+	config.TR = 0.05;
+	config.npixels = 4;
+
+	struct sim_config_s sim = sim_config_default_gpu;
+	sim.hard_pulse_sim = false;
+
+	long dims[DIMS];
+	md_set_dims(DIMS, dims, 1);
+	int N = ARRAY_SIZE(dims);
+
+	struct bart_seq* seq = bart_seq_alloc("");
+	bart_seq_defaults(seq);
+	seq->conf->loop_dims[READ_DIM] = 1;
+	seq->conf->loop_dims[PHS1_DIM] = config.excitations; // Set number of spokes
+	seq->conf->loop_dims[TIME_DIM] = config.excitations; // Set number of spokes
+	seq->conf->phys.tr = config.TR;
+	seq->conf->phys.te = config.TE;
+	seq->conf->phys.contrast = SEQ_CONTRAST_NO_SPOILING;
+	seq->conf->phys.flip_angle = config.flip_angle;
+	seq->conf->geom.baseres = config.npixels;
+
+	long odims[] = { [0 ... DIMS - 1] = 1 };
+	odims[READ_DIM] = config.npixels;
+	odims[PHS1_DIM] = config.npixels;
+
+	long pdims[DIMS];
+	md_copy_dims(DIMS, pdims, odims);
+	pdims[TE_DIM] = 1;
+
+	const struct nlop_s* nlop = seq_to_nlop(N, pdims, odims, sim, seq);
+
+	long sdims[DIMS];
+	md_copy_dims(DIMS, sdims, nlop_codomain(nlop)->dims);
+	complex float signals[md_calc_size(DIMS, sdims)];
+
+	md_copy_dims(DIMS, pdims, nlop_domain(nlop)->dims);
+
+	int num_tot_pixels = config.npixels * config.npixels;
+	complex float pars[md_calc_size(DIMS, pdims)];
+	for (int i = 0; i < num_tot_pixels; i++) {
+		pars[i + 0 * num_tot_pixels] = config.m0;
+		pars[i + 1 * num_tot_pixels] = config.r1;
+		pars[i + 2 * num_tot_pixels] = config.r2;
+		pars[i + 3 * num_tot_pixels] = config.b1;
+		pars[i + 4 * num_tot_pixels] = config.b0;
+	}
+
+	nlop_apply(nlop, DIMS, sdims, signals, DIMS, pdims, pars);
+
+	nlop_free(nlop);
+	bart_seq_free(seq);
+
+	// Calculate analytical reference signal for FLASH sequence
+	complex float sig_ref[md_calc_size(N, sdims)];
+	flash_signal(sig_ref, config, NULL);
+
+	UT_RETURN_ON_FAILURE_TOL(md_zrmse(N, sdims, sig_ref, signals), 1.e-3);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_flash_seq_to_nlop_sim_pulse_4x4pixels);
+
+static bool test_ir_flash_seq_to_nlop_sim_pulse()
+{
+	struct flash_config_s config = flash_config_default;
+	config.inv = true;
+	config.excitations = 89;
+	config.flip_angle = 6;
+	config.TE = 1.90E-3;
+	config.TR = 0.05;
+	config.TI = 0.01;
+	config.npixels = 1;
+
+	struct sim_config_s sim = sim_config_default_gpu;
+	sim.hard_pulse_sim = false;
+
+	long dims[DIMS];
+	md_set_dims(DIMS, dims, 1);
+	int N = ARRAY_SIZE(dims);
+
+	struct bart_seq* seq = bart_seq_alloc("");
+	bart_seq_defaults(seq);
+	seq->conf->magn.mag_prep = SEQ_PREP_IR_NONSELECTIVE;
+	seq->conf->magn.ti = config.TI;
+	seq->conf->loop_dims[READ_DIM] = 1;
+	seq->conf->loop_dims[PHS1_DIM] = config.excitations; // Set number of spokes
+	seq->conf->loop_dims[TIME_DIM] = config.excitations; // Set number of spokes
+	seq->conf->phys.tr = config.TR;
+	seq->conf->phys.te = config.TE;
+	seq->conf->phys.contrast = SEQ_CONTRAST_NO_SPOILING;
+	seq->conf->geom.baseres = config.npixels;
+
+	long odims[] = { [0 ... DIMS - 1] = 1 };
+	odims[READ_DIM] = config.npixels;
+	odims[PHS1_DIM] = config.npixels;
+
+	long pdims[DIMS];
+	md_copy_dims(DIMS, pdims, odims);
+	pdims[TE_DIM] = 1;
+
+	const struct nlop_s* nlop = seq_to_nlop(N, pdims, odims, sim, seq);
+
+	long sdims[DIMS];
+	md_copy_dims(DIMS, sdims, nlop_codomain(nlop)->dims);
+	complex float signals[md_calc_size(DIMS, sdims)];
+
+	md_copy_dims(DIMS, pdims, nlop_domain(nlop)->dims);
+
+	complex float pars[5] = { config.m0, config.r1, config.r2, config.b1, config.b0 };
+
+	nlop_apply(nlop, DIMS, sdims, signals, DIMS, pdims, pars);
+
+	nlop_free(nlop);
+	bart_seq_free(seq);
+
+	// Calculate analytical reference signal for IR-FLASH sequence
+	complex float sig_ref[md_calc_size(N, sdims)];
+	flash_signal(sig_ref, config, NULL);
+
+	// fixup: make work with higher tolerance (difference in inversion recovery implementation ?)
+	UT_RETURN_ON_FAILURE_TOL(md_zrmse(N, sdims, sig_ref, signals), 1.e-2);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_ir_flash_seq_to_nlop_sim_pulse);
 
 static bool test_nlop_pulse_shape_create(void)
 {

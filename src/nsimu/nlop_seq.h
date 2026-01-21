@@ -9,6 +9,7 @@
 struct pulse;
 struct nlop_s;
 struct rf_shape;
+struct bart_seq;
 
 #define R1_IDX 0
 #define R2_IDX 1
@@ -64,5 +65,7 @@ extern void stm_free(struct stm_s* x);
 extern struct nlop_s* nlop_stm_create(struct stm_s* x);
 
 extern const struct nlop_s* nlop_simu_stack_create(struct sim_config_s sim, const struct nlop_s* nlop, int stack_dim);
+
+extern const struct nlop_s* seq_to_nlop(int N, const long pdims[N], long odims[N], struct sim_config_s sim, struct bart_seq* seq);
 
 #endif

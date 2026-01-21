@@ -44,6 +44,13 @@
 #include "nlops/stack.h"
 #include "nlops/nlop_jacobian.h"
 
+#include "seq/config.h"
+#include "seq/event.h"
+#include "seq/helpers.h"
+#include "seq/seq.h"
+#include "seq/misc.h"
+#include "seq/flash.h"
+#include "seq/kernel.h"
 
 #ifdef USE_CUDA
 #include "num/gpuops.h"
@@ -2092,3 +2099,285 @@ const struct nlop_s* sim_nlop_set_init(struct sim_config_s sim, const struct nlo
 	return nlop_set_input_const_F2(nlop, 0, dom->N, dom->dims, MD_STRIDES(dom->N, idims, CFL_SIZE), true, init);
 }
 
+static void grad_moment(int N, struct seq_event ev[N], float start, float end, float dt, float grad[3])
+{
+	double m0s[3];
+	double m0e[3];
+
+	moment_sum(m0s, start, N, ev);
+	moment_sum(m0e, end, N, ev);
+
+	grad[0] = GAMMA_H1 * 1.e-9 * (m0e[0] - m0s[0]) / dt;
+	grad[1] = GAMMA_H1 * 1.e-9 * (m0e[1] - m0s[1]) / dt;
+	grad[2] = GAMMA_H1 * 1.e-9 * (m0e[2] - m0s[2]) / dt;
+}	
+
+const struct nlop_s* seq_to_nlop(int N, const long pdims[N], long odims[N], struct sim_config_s sim, struct bart_seq* seq)
+{
+	sim_config_set_dims(&sim, N, pdims, 1);
+
+	long pos[DIMS];
+	md_set_dims(DIMS, pos, 0);
+
+	seq->conf->enc.order = SEQ_ORDER_AVG_OUTER;
+	seq_ui_interface_loop_dims(0, seq->conf, DIMS, seq->conf->loop_dims);
+
+	debug_print_dims(DP_DEBUG2, DIMS, seq->conf->loop_dims);
+
+	// Define input/output dimensions
+	sim.pdims[0] = seq->conf->geom.baseres;
+	sim.pdims[1] = seq->conf->geom.baseres;
+	sim.mdims[0] = seq->conf->geom.baseres;
+	sim.mdims[1] = seq->conf->geom.baseres;
+
+	long idims[N];
+	md_copy_dims(N, idims, pdims);
+	idims[COEFF_DIM] = 5; // Parameter maps (M0, R1, R2, B1, B0)
+
+	odims[TE_DIM] = seq->conf->loop_dims[PHS1_DIM];
+	odims[SLICE_DIM] = sim.mdims[md_max_idx(sim.spatial_flags)];
+
+	debug_printf(DP_DEBUG2, "idims:");
+	debug_print_dims(DP_DEBUG2, DIMS, idims);
+	debug_printf(DP_DEBUG2, "odims:");
+	debug_print_dims(DP_DEBUG2, DIMS, odims);
+	debug_printf(DP_DEBUG2, "pdims:");
+	debug_print_dims(DP_DEBUG2, DIMS, pdims);
+
+	list_t ret = list_create(); // list for storing nlop seq blocks
+
+	int rfs = seq_sample_rf_shapes(32, seq->rf_shape, seq->conf);
+	debug_printf(DP_DEBUG3, "Nr. of RF shapes: %d\n", rfs);
+
+	int E = 0;
+	double t = 0;
+
+	do {
+
+		E = seq_block(seq->N, seq->event, seq->state, seq->conf);
+		debug_printf(DP_DEBUG2, "Seq block mode: %d ; Nr. of seq->eventents: %d \n", seq->state->mode, E);
+
+		if (0 > E)
+			error("Sequence not possible! - check seq_config, %d] \n", E);
+
+		if (0 == E)
+			continue;
+
+		if (0 < E)
+			debug_printf(DP_DEBUG3, "block mode: %d ; E: %d \n", seq->state->mode, E);
+
+		if (SEQ_BLOCK_KERNEL_IMAGE != seq->state->mode &&
+		    SEQ_BLOCK_PRE != seq->state->mode &&
+		    SEQ_BLOCK_POST != seq->state->mode)
+			continue;
+		t = 0.;
+
+		// Create NLOP for each seq event
+		for (int i = 0; i < E; i++) {
+
+			debug_printf(DP_DEBUG3, "seq->event[%d]:\t%.8f\t\t%.8f\t\t%.8f\t\t", i,
+				     seq->event[i].start, seq->event[i].mid, seq->event[i].end);
+
+			if (SEQ_EVENT_GRADIENT == seq->event[i].type)
+				debug_printf(DP_DEBUG3, "||\t%.8f\t\t%.8f\t\t%.8f", seq->event[i].grad.ampl[0], seq->event[i].grad.ampl[1], seq->event[i].grad.ampl[2]);
+
+			if (SEQ_EVENT_PULSE == seq->event[i].type)
+				debug_printf(DP_DEBUG3, "||PULSE");
+
+			if (SEQ_EVENT_ADC == seq->event[i].type)
+				debug_printf(DP_DEBUG3, "||ADC");
+
+			if (SEQ_EVENT_WAIT == seq->event[i].type)
+				debug_printf(DP_DEBUG3, "||WAIT");
+
+			debug_printf(DP_DEBUG3, "\n");
+
+			// Create pulse NLOP from seq pulse event
+			if (SEQ_EVENT_PULSE == seq->event[i].type) {
+
+				assert(seq->event[i].start >= t); // Pulse must start at or after current time
+
+				// If there is a gap between current time and start of pulse -> add relaxation until start of pulse
+				if (t < seq->event[i].start) {
+
+					double dt = sim.hard_pulse_sim ? seq->event[i].mid - t : seq->event[i].start - t;
+
+					// Compute gradient moment during gap
+					float grad[3] = { 0. };
+					grad_moment(E, seq->event, t, seq->event[i].start, dt, grad);
+
+					list_append(ret, (struct nlop_s*)nlop_relax_create(sim, dt, grad));
+
+					t = sim.hard_pulse_sim ? seq->event[i].mid : seq->event[i].start; // If we have a hard pulse simulation update time to pulse midpoint as a hard pulse is instantaneous
+				}
+
+				if (sim.hard_pulse_sim) {
+
+					assert(t == seq->event[i].mid);
+
+					debug_printf(DP_DEBUG3, "Add hard pulse event to NLOP sequence \n");
+					list_append(ret, (struct nlop_s*)nlop_hard_pulse_create(sim, true, DEG2RAD(seq->event[i].pulse.fa), 0));
+
+					t = seq->event[i].mid;
+				}
+				else {
+
+					assert(t == seq->event[i].start);
+
+					double dt = seq->event[i].end - seq->event[i].mid;
+
+					// Compute gradient moment during pulse (from start/mid to end of pulse -> makes no difference, because we calculate the moment over a const. gradient)
+					float grad[3] = { 0. };
+					grad_moment(E, seq->event, seq->event[i].mid, seq->event[i].end, dt, grad);
+
+					// Note: no additional relaxation during pulse necessary, as bloch simulation already includes relaxation effects during pulse
+
+					debug_printf(DP_DEBUG3, "Add bloch pulse event to NLOP sequence (pulse phase = %f) \n", seq->event[i].pulse.phase);
+					list_append(ret, (struct nlop_s*)nlop_pulse_shape_create(sim, &seq->rf_shape[seq->event[i].pulse.shape_id], seq->event[i].pulse.phase, grad));
+					
+					// Check if we need to spoil residual transverse magnetization after adiabatic inversion pulse
+					if (seq->event[i].pulse.fa == 180)
+						list_append(ret, (struct nlop_s*)nlop_spoile_create(sim));
+					
+					t = seq->event[i].end;
+				}
+			}
+
+			// Create ADC NLOP from seq ADC event
+			if (SEQ_EVENT_ADC == seq->event[i].type) {
+
+				assert(seq->event[i].start >= t); // ADC must start at or after current time
+
+				float dt = seq->event[i].mid - t;
+
+				// Compute gradient moment
+				float grad[3] = { 0. };
+				grad_moment(E, seq->event, t, seq->event[i].mid, dt, grad);
+
+				list_append(ret, (struct nlop_s*)nlop_relax_create(sim, dt, grad)); // Add relaxation between current time and start of ADC
+
+				// TODO: simulate T2 relaxation during ADC
+				debug_printf(DP_DEBUG3, "Add ADC event to NLOP sequence (ADC phase = %f) \n", seq->event[i].adc.phase);
+				list_append(ret, (struct nlop_s*)nlop_adc_create(sim, md_ravel_index(DIMS, seq->event[i].adc.pos, ~0UL, seq->conf->loop_dims), MD_BIT(sim.MO_DIM), seq->event[i].adc.phase));
+
+				t = seq->event[i].mid; // Update time to ADC midpoint as the ADC samples the signal at its center (midpoint), not at start or end
+			}
+
+			// Add relaxation NLOP during seq wait event
+			if(SEQ_EVENT_WAIT == seq->event[i].type) {
+
+				assert(seq->event[i].start >= t); // WAIT must start at or after current time
+
+				float dt = seq->event[i].end - t;
+
+				// Compute gradient moment during wait
+				float grad[3] = { 0. };
+				grad_moment(E, seq->event, t, seq->event[i].end, dt, grad);
+
+				debug_printf(DP_DEBUG3, "Add wait event to NLOP sequence \n");
+				list_append(ret, (struct nlop_s*)nlop_relax_create(sim, dt, grad));
+
+				t = seq->event[i].end;
+			}
+		}
+
+		// Add relaxation for remaining time during imaging block until TR
+		if (SEQ_BLOCK_KERNEL_IMAGE == seq->state->mode) {
+
+			if (t < seq->conf->phys.tr) {
+
+				float dt = seq->conf->phys.tr - t; // Time from last event to TR
+
+				// Compute gradient moment during gap
+				float grad[3] = { 0. };
+				grad_moment(E, seq->event, t, seq->conf->phys.tr, dt, grad);
+
+				list_append(ret, (struct nlop_s*)nlop_relax_create(sim, dt, grad));
+
+				t = seq->conf->phys.tr;
+			}
+
+			assert(t == seq->conf->phys.tr);
+
+			// Spoil transverse magnetization at the end of the block
+			debug_printf(DP_DEBUG3, "Add spoiling event to NLOP sequence \n");
+			list_append(ret, (struct nlop_s*)nlop_spoile_create(sim));
+		}
+
+	} while (seq_continue(seq->state, seq->conf));
+
+	/* 
+	For GPU config
+	inputs: 2
+	[ 16  16   1   1   1   1   1   1   1   1   1   1   1   1   1   3 ] -> Input magnetization: Mx, My, Mz
+	[ 16  16   1   1   1   1   1   1   1   1   1   1   1   1   1   4 ] -> Input parameters: R1, R2, B1, B0
+	outputs: 2
+	[ 16  16   1   1   1   1   1   1   1   1   1   1   1   1   3   1 ] -> Output magnetization: Mx, My, Mz
+	[ 16  16   1   1   1  10   1   1   1   1   1   1   1   1   1   1 ] -> Output signal for NR (= 10) excitations
+	*/
+	const struct nlop_s* nlop = nlop_seq_from_blocks_jac_create_F(sim, ret);
+	nlop_debug(DP_DEBUG2, nlop);
+
+	/*
+	Remove input magnetization (=> set to (0 0 1)), only keep input parameters
+	inputs: 1
+	[ 16  16   1   1   1   1   1   1   1   1   1   1   1   1   1   4 ]
+	outputs: 2
+	[ 16  16   1   1   1   1   1   1   1   1   1   1   1   1   3   1 ]
+	[ 16  16   1   1   1  10   1   1   1   1   1   1   1   1   1   1 ]
+	*/
+	nlop = sim_nlop_set_init(sim, nlop);
+	nlop_debug(DP_DEBUG2, nlop);
+
+	// Prepend real-valued parameters
+	const struct iovec_s* dom = nlop_generic_domain(nlop, 0);
+	nlop = nlop_prepend_FF(nlop_from_linop_F(linop_zreal_create(dom->N, dom->dims)), nlop, 0);
+
+	/*
+	Remove output magnetization, we are only interested in the output signal
+	inputs: 1
+	[ 16  16   1   1   1   1   1   1   1   1   1   1   1   1   1   4 ]
+	outputs: 1
+	[ 16  16   1   1   1  10   1   1   1   1   1   1   1   1   1   1 ]
+	*/
+	nlop = nlop_del_out_F(nlop, 0);
+	nlop_debug(DP_DEBUG2, nlop);
+
+	assert(md_check_equal_dims(MAX(DIMS, nlop_codomain(nlop)->N), odims, nlop_codomain(nlop)->dims, ~0UL));
+
+	/*
+	Add additional parameter for M0 map
+	in: pars (R1, R1, B1 B0), M0; out: sig * M0
+	inputs: 2
+	[  1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   4 ]
+	[  1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1 ]
+	outputs: 1
+	[  1   1   1   1   1  89   1   1   1   1   1   1   1   1   1   1 ]
+	*/
+	nlop = nlop_prepend_FF(nlop, nlop_tenmul_create(N, odims, odims, pdims), 0); 
+	nlop_debug(DP_DEBUG2, nlop);
+ 
+	/* 
+	Stack M0 and parameters (R1, R2, B1, B0) into single input
+	inputs: 1
+	[  1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   5 ]
+	outputs: 1
+	[  1   1   1   1   1  89   1   1   1   1   1   1   1   1   1   1 ]
+	*/
+	nlop = nlop_stack_inputs_F(nlop, 1, 0, sim.PI_DIM);
+	nlop_debug(DP_DEBUG2, nlop);
+
+	// Transpose, so that parameters are in COEFF_DIM
+	/*
+	inputs: 1
+	[ 16  16   1   1   1   1   4   1   1   1   1   1   1   1   1   1 ]
+	outputs: 1
+	[ 16  16   1   1   1  10   1   1   1   1   1   1   1   1   1   1 ]
+	*/
+	nlop = nlop_chain_FF(nlop_from_linop_F(linop_transpose_create(N, sim.PI_DIM, COEFF_DIM, idims)), nlop);
+	nlop_debug(DP_DEBUG2, nlop);
+
+	assert(md_check_equal_dims(N, idims, nlop_domain(nlop)->dims, ~0UL));
+
+	return nlop;
+}
