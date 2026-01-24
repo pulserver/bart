@@ -17,6 +17,7 @@
 #include "num/filter.h"
 #include "num/ops.h"
 #include "num/rand.h"
+#include "num/vptr.h"
 
 #include "misc/mri.h"
 #include "misc/mri2.h"
@@ -307,8 +308,18 @@ int main_moba(int argc, char* argv[argc])
 	long ksp_dims[DIMS];
 	complex float* kspace_data = load_cfl(ksp_file, DIMS, ksp_dims);
 
+	struct vptr_hint_s* hint = NULL;
+
+	if (((0 != bart_mpi_split_flags) || bart_delayed_computations))
+		hint = vptr_hint_create(bart_mpi_split_flags, DIMS, ksp_dims, bart_delayed_loop_flags);
+
+	if (NULL != hint)
+		kspace_data = vptr_wrap_cfl(DIMS, ksp_dims, CFL_SIZE, kspace_data, hint, true, false);
+
+	vptr_hint_free(hint);
+
 	long TI_dims[DIMS];
-	complex float* TI = load_cfl(TI_file, DIMS, TI_dims);
+	complex float* TI = load_cfl_sameplace(TI_file, DIMS, TI_dims, kspace_data);
 
 	if (t2_old_flag)
 		md_zsmul(DIMS, TI_dims, TI, TI, 10.);
@@ -327,9 +338,9 @@ int main_moba(int argc, char* argv[argc])
 
 	if (NULL != psf_file) {
 
-		complex float* tmp_psf = load_cfl(psf_file, DIMS, pat_dims);
+		complex float* tmp_psf = load_cfl_sameplace(psf_file, DIMS, pat_dims, kspace_data);
 
-		pattern = anon_cfl("", DIMS, pat_dims);
+		pattern = anon_cfl_sameplace("", DIMS, pat_dims, kspace_data);
 
 		md_copy(DIMS, pat_dims, pattern, tmp_psf, CFL_SIZE);
 
@@ -352,7 +363,7 @@ int main_moba(int argc, char* argv[argc])
 	} else if (NULL != traj_file) {
 
 		long traj_dims[DIMS];
-		complex float* traj = load_cfl(traj_file, DIMS, traj_dims);
+		complex float* traj = load_cfl_sameplace(traj_file, DIMS, traj_dims, kspace_data);
 
 		md_zsmul(DIMS, traj_dims, traj, traj, oversampling);
 
@@ -428,8 +439,6 @@ int main_moba(int argc, char* argv[argc])
 
 		md_zsmul(DIMS, traj_dims, traj, traj, scl_trj);
 
-		pattern = anon_cfl("", DIMS, pat_dims);
-
 		// Gridding sampling pattern
 
 		complex float* psf = NULL;
@@ -437,7 +446,7 @@ int main_moba(int argc, char* argv[argc])
 		long wgh_dims[DIMS];
 		md_select_dims(DIMS, ~COIL_FLAG, wgh_dims, ksp_dims);
 
-		complex float* wgh = md_alloc(DIMS, wgh_dims, CFL_SIZE);
+		complex float* wgh = md_alloc_sameplace(DIMS, wgh_dims, CFL_SIZE, kspace_data);
 
 		estimate_pattern(DIMS, ksp_dims, COIL_FLAG, wgh, kspace_data);
 
@@ -448,19 +457,21 @@ int main_moba(int argc, char* argv[argc])
 
 		md_zsmul(DIMS, pat_dims, psf, psf, scl_psf);
 		fftuc(DIMS, pat_dims, FFT_FLAGS, psf, psf);
+
+		pattern = anon_cfl_sameplace("", DIMS, pat_dims, kspace_data);
 		md_copy(DIMS, pat_dims, pattern, psf, CFL_SIZE);
 
 		md_free(wgh);
 		md_free(psf);
 
 		unmap_cfl(DIMS, ksp_dims, kspace_data);
-		unmap_cfl(DIMS, traj_dims, traj);
+		unmap_cfl(DIMS, traj_dims, traj_cfl);
 
 	} else {
 
 		md_select_dims(DIMS, ~COIL_FLAG, pat_dims, grid_dims);
 
-		pattern = anon_cfl("", DIMS, pat_dims);
+		pattern = anon_cfl_sameplace("", DIMS, pat_dims, kspace_data);
 
 		estimate_pattern(DIMS, ksp_dims, COIL_FLAG, pattern, kspace_data);
 
@@ -495,7 +506,7 @@ int main_moba(int argc, char* argv[argc])
 	long img_strs[DIMS];
 	md_calc_strides(DIMS, img_strs, img_dims, CFL_SIZE);
 
-	complex float* img = create_cfl(out_file, DIMS, img_dims);
+	complex float* img = create_cfl_sameplace(out_file, DIMS, img_dims, cim);
 	md_zfill(DIMS, img_dims, img, 1.);
 
 	long dims[DIMS];
@@ -512,7 +523,7 @@ int main_moba(int argc, char* argv[argc])
 
 		long tmp_dims[DIMS];
 
-		sens = load_cfl(fixed_sens, DIMS, tmp_dims);
+		sens = load_cfl_sameplace(fixed_sens, DIMS, tmp_dims, cim);
 
 		assert(md_check_equal_dims(DIMS, tmp_dims, coil_dims, ~0UL));
 		assert(NULL == sens_file);
@@ -531,11 +542,11 @@ int main_moba(int argc, char* argv[argc])
 
 	} else if (NULL != input_sens) {
 
-		sens = ((NULL != sens_file) ? create_cfl : anon_cfl)(sens_file, DIMS, coil_dims);
+		sens = ((NULL != sens_file) ? create_cfl_sameplace : anon_cfl_sameplace)(sens_file, DIMS, coil_dims, cim);
 
 		long in_sens_dims[DIMS];
 
-		const complex float* in_sens = load_cfl(input_sens, DIMS, in_sens_dims);
+		const complex float* in_sens = load_cfl_sameplace(input_sens, DIMS, in_sens_dims, cim);
 
 		assert(md_check_equal_dims(DIMS, coil_dims, in_sens_dims, ~0UL));
 
@@ -545,7 +556,7 @@ int main_moba(int argc, char* argv[argc])
 
 	} else {
 
-		sens = ((NULL != sens_file) ? create_cfl : anon_cfl)(sens_file, DIMS, coil_dims);
+		sens = ((NULL != sens_file) ? create_cfl_sameplace : anon_cfl_sameplace)(sens_file, DIMS, coil_dims, cim);
 
 		md_clear(DIMS, coil_dims, sens, CFL_SIZE);
 	}
@@ -562,7 +573,7 @@ int main_moba(int argc, char* argv[argc])
 		long pat_strs[DIMS];
 		md_calc_strides(DIMS, pat_strs, pat_dims, CFL_SIZE);
 
-		complex float* filter = md_alloc(DIMS, map_dims, CFL_SIZE);
+		complex float* filter = md_alloc_sameplace(DIMS, map_dims, CFL_SIZE, pattern);
 
 		switch (conf.k_filter_type) {
 
@@ -587,7 +598,7 @@ int main_moba(int argc, char* argv[argc])
 
 	if (NULL != init_file) {
 
-		init = load_cfl(init_file, DIMS, init_dims);
+		init = load_cfl_sameplace(init_file, DIMS, init_dims, cim);
 
 		for (int i = 0; i < (int)ARRAY_SIZE(data.other.initval); i++)
 			if (1. != data.other.initval[i])
@@ -604,7 +615,7 @@ int main_moba(int argc, char* argv[argc])
 
 	if (NULL != input_b1) {
 
-		b1 = load_cfl(input_b1, DIMS, b1_dims);
+		b1 = load_cfl_sameplace(input_b1, DIMS, b1_dims, cim);
 
 		assert(md_check_compat(DIMS, ~FFT_FLAGS, grid_dims, b1_dims));
 	}
@@ -616,7 +627,7 @@ int main_moba(int argc, char* argv[argc])
 
 	if (NULL != input_b0) {
 
-		b0 = load_cfl(input_b0, DIMS, b0_dims);
+		b0 = load_cfl_sameplace(input_b0, DIMS, b0_dims, cim);
 
 		assert(md_check_compat(DIMS, ~FFT_FLAGS, grid_dims, b0_dims));
 	}
@@ -627,7 +638,7 @@ int main_moba(int argc, char* argv[argc])
 	long TE_IR_MGRE_dims[DIMS];
 
 	if (MDB_IR_MGRE == conf.mode)
-		TE_IR_MGRE = load_cfl(input_TE, DIMS, TE_IR_MGRE_dims);
+		TE_IR_MGRE = load_cfl_sameplace(input_TE, DIMS, TE_IR_MGRE_dims, cim);
 
 	// scaling
 
@@ -664,7 +675,10 @@ int main_moba(int argc, char* argv[argc])
 		long msk_dims[DIMS];
 		md_select_dims(DIMS, FFT_FLAGS, msk_dims, img_dims);
 
-		complex float* mask = compute_mask(DIMS, msk_dims, restrict_dims);
+		complex float* mask_cpu = compute_mask(DIMS, msk_dims, restrict_dims);
+		complex float* mask = md_alloc_sameplace(DIMS, msk_dims, CFL_SIZE, cim);
+		md_copy(DIMS, msk_dims, mask, mask_cpu, CFL_SIZE);
+		md_free(mask_cpu);
 
 		data.other.fov_reduction_factor = restrict_fov;
 
@@ -681,7 +695,7 @@ int main_moba(int argc, char* argv[argc])
 	long tmp_dims[DIMS];
 	md_select_dims(DIMS, FFT_FLAGS|MAPS_FLAG|TIME_FLAG|SLICE_FLAG|TIME2_FLAG, tmp_dims, grid_dims);
 
-	complex float* tmp = md_alloc(DIMS, tmp_dims, CFL_SIZE);
+	complex float* tmp = md_alloc_sameplace(DIMS, tmp_dims, CFL_SIZE, cim);
 
 	long pos[DIMS] = { [0 ... DIMS - 1] = 0 };
 

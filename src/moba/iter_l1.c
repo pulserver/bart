@@ -88,6 +88,9 @@ static void normal(iter_op_data* _data, float* _dst, const float* _src)
 	complex float* dst = (complex float*)_dst;
 	const complex float* src = (const complex float*)_src;
 
+	if (is_vptr(src))
+		vptr_set_dims_sameplace(dst, src);
+
 	linop_normal_unchecked(nlop_get_derivative(data->nlop, 0, 0), dst, src);
 
 // We do not enforce this for now, for backwards compatibility
@@ -207,6 +210,10 @@ static void inverse_fista(iter_op_data* _data, float alpha, float* dst, const fl
 	const struct vec_iter_s* vops = select_vecops(dst);
 
 	void* x = vops->allocate(data->size_x);
+
+	if (is_vptr(src))
+		vptr_set_dims_sameplace(x, src);
+
 	vops->rand(data->size_x, x);
 
 	maxeigen += power(20, data->size_x, vops, (struct iter_op_s){ normal, CAST_UP(data) }, x, NULL);

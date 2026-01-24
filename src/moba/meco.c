@@ -203,14 +203,22 @@ static void calc_fat_modu(int N, const long dims[N], complex float* dst, const c
 	assert(1 == bitcount(md_nontriv_dims(N, dims)));
 	md_clear(N, dims, dst, CFL_SIZE);
 
+	complex float tmp_TE[md_calc_size(N, dims)];
+	complex float tmp_dst[md_calc_size(N, dims)];
+
+	md_copy(N, dims, tmp_TE, TE, CFL_SIZE);
+
 	for (int i = 0; i < md_calc_size(N, dims); i++) {
 
-		assert(0. == cimagf(TE[i]));
+		assert(0. == cimagf(tmp_TE[i]));
 
 		float scl = use_compat_to_version("v1.0.00") ? 1.E-3 : 1.;
 
-		dst[i] = calc_fat_modulation(3.0, crealf(TE[i]) * scl, fat_spec); // FIXME: TE in SI units instead ms
+		tmp_dst[i] = calc_fat_modulation(3.0, crealf(tmp_TE[i]) * scl, fat_spec); // FIXME: TE in SI units instead ms
 	}
+
+	md_copy(N, dims, dst, tmp_dst, CFL_SIZE);
+
 }
 
 
