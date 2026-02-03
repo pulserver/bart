@@ -12,12 +12,16 @@ enum pulse_t { PULSE_SINC, PULSE_SINC_SMS, PULSE_HS, PULSE_REC, PULSE_ARB, PULSE
 struct pulse {
 
 	TYPEID* TYPEID;
+	size_t size;
 
 	float flipangle;
 	float duration;		/* pulse duration */
 
 	_Complex float (*eval)(const struct pulse *p, float t);
 };
+
+extern struct pulse* pulse_clone(const struct pulse* ps);
+extern void pulse_free(const struct pulse* ps);
 
 struct pulse_sinc {
 
@@ -119,6 +123,8 @@ extern const struct pulse_gauss pulse_gauss_defaults;
 
 extern void pulse_gauss_init(struct pulse_gauss* pg, float duration, float angle /*[deg]*/, float phase, float bwtp, float alpha);
 extern float pulse_gauss_integral(const struct pulse_gauss* pg);
+
+extern void pulse_discretize(struct pulse* ps, int N, complex float pulse[N + 1]);
 
 #endif		// _PULSE_H
 

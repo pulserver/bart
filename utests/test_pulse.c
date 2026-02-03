@@ -251,3 +251,102 @@ static bool test_hypsec_rf_pulse_ode(void)
 
 UT_REGISTER_TEST(test_hypsec_rf_pulse_ode);
 
+
+
+static bool test_pulse_clone(void)
+{
+	struct pulse_sinc ps = pulse_sinc_defaults;
+	pulse_sinc_init(&ps, 0.001, 60., 0., 4., 0.46);
+
+	struct pulse_rect pr = pulse_rect_defaults;
+	pulse_rect_init(&pr, 0.001, 60., 0.);
+
+	struct pulse_hypsec ph = pulse_hypsec_defaults;
+	pulse_hypsec_init(GYRO, &ph);
+
+	struct pulse_sms pm = pulse_sms_defaults;
+	pulse_sms_init(&pm, 0.001, 60., 0., 4., 0.46, 3, 0, 27.e-3, 6.e-3);
+
+	struct pulse_arb pa = pulse_arb_oc_cest_sat_defaults;
+	pulse_arb_init(&pa, GYRO);
+
+	struct pulse_gauss pg = pulse_gauss_defaults;
+	pulse_gauss_init(&pg, 0.001, 60., 0., 4., 0.46);
+
+	struct pulse* clones[6] = {
+		pulse_clone(CAST_UP(&ps)),
+		pulse_clone(CAST_UP(&pr)),
+		pulse_clone(CAST_UP(&ph)),
+		pulse_clone(CAST_UP(&pm)),
+		pulse_clone(CAST_UP(&pa)),
+		pulse_clone(CAST_UP(&pg)),
+	};
+
+	UT_RETURN_ON_FAILURE(NULL != CAST_MAYBE(pulse_sinc, clones[0]));
+	UT_RETURN_ON_FAILURE(NULL != CAST_MAYBE(pulse_rect, clones[1]));
+	UT_RETURN_ON_FAILURE(NULL != CAST_MAYBE(pulse_hypsec, clones[2]));
+	UT_RETURN_ON_FAILURE(NULL != CAST_MAYBE(pulse_sms, clones[3]));
+	UT_RETURN_ON_FAILURE(NULL != CAST_MAYBE(pulse_arb, clones[4]));
+	UT_RETURN_ON_FAILURE(NULL != CAST_MAYBE(pulse_gauss, clones[5]));
+
+	for (int i = 0; i < 6; i++) {
+
+		UT_RETURN_ON_FAILURE(NULL != clones[i]);
+		pulse_free(clones[i]);
+	}
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_pulse_clone);
+
+
+static bool test_rect_pulse_discretize(void)
+{
+	struct pulse_rect pr = pulse_rect_defaults;
+	pulse_rect_init(&pr, 0.02, 30., 0.);
+
+	struct pulse* ps = CAST_UP(&pr);
+
+	enum { N = 16 };
+	complex float samples[N + 1];
+
+	pulse_discretize(ps, N, samples);
+
+	for (int i = 0; i < N + 1; i++)
+		UT_RETURN_ON_FAILURE_TOL(cabsf(samples[i] - pr.A), UT_TOL);
+
+	UT_RETURN_ON_FAILURE_TOL(cabsf(samples[0] - pulse_eval(ps, 0.)), UT_TOL);
+	UT_RETURN_ON_FAILURE_TOL(cabsf(samples[N] - pulse_eval(ps, ps->duration)), UT_TOL);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_rect_pulse_discretize);
+
+
+static bool test_sinc_pulse_discretize(void)
+{
+	struct pulse_sinc ps_sinc = pulse_sinc_defaults;
+	pulse_sinc_init(&ps_sinc, 0.004, 20., 0., 4., 0.46);
+
+	struct pulse* ps = CAST_UP(&ps_sinc);
+
+	enum { N = 40 };
+	complex float samples[N + 1];
+
+	pulse_discretize(ps, N, samples);
+
+	for (int i = 0; i < N + 1; i++) {
+
+		float t = i * ps->duration / N;
+		UT_RETURN_ON_FAILURE_TOL(cabsf(samples[i] - pulse_eval(ps, t)), UT_TOL);
+	}
+
+	UT_RETURN_ON_FAILURE_TOL(cabsf(samples[0] - pulse_eval(ps, 0.)), UT_TOL);
+	UT_RETURN_ON_FAILURE_TOL(cabsf(samples[N] - pulse_eval(ps, ps->duration)), UT_TOL);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_sinc_pulse_discretize);

@@ -11,7 +11,11 @@
 #include "misc/mri.h"
 #include "misc/types.h"
 
+#include "num/multind.h"
 #include "num/specfun.h"
+#ifdef USE_CUDA
+#include "num/gpuops.h"
+#endif
 
 #include "seq/pulse_library.h"
 
@@ -77,6 +81,7 @@ static complex float pulse_sinc_eval(const struct pulse* _ps, float t)
 
 const struct pulse_sinc pulse_sinc_defaults = {
 
+	.super.size = sizeof(struct pulse_sinc),
 	.super.duration = 0.001,
 	.super.flipangle = 1.,
 	.super.eval = pulse_sinc_eval,
@@ -93,6 +98,7 @@ const struct pulse_sinc pulse_sinc_defaults = {
 // 	- Ensure windowed sinc leads to 90 deg rotation if its integral is pi/2
 void pulse_sinc_init(struct pulse_sinc* ps, float duration, float angle /*[deg]*/, float phase, float bwtp, float alpha)
 {
+	ps->super.size = sizeof(struct pulse_sinc);
 	ps->super.duration = duration;
 	ps->super.flipangle = angle;
 	ps->super.eval = pulse_sinc_eval;
@@ -166,6 +172,7 @@ static complex float pulse_sms_eval(const struct pulse* _ps, float t)
 
 const struct pulse_sms pulse_sms_defaults = {
 
+	.super.size = sizeof(struct pulse_sms),
 	.super.duration = 0.001,
 	.super.flipangle = 1.,
 	.super.eval = pulse_sms_eval,
@@ -185,6 +192,7 @@ const struct pulse_sms pulse_sms_defaults = {
 void pulse_sms_init(struct pulse_sms* ps, float duration, float angle /*[deg]*/, float /* phase */, float bwtp, float alpha, 
 			int mb, int part, float dist, float th)
 {
+	ps->super.size = sizeof(struct pulse_sms);
 	ps->super.duration = duration;
 	ps->super.flipangle = angle;
 	ps->super.eval = pulse_sms_eval;
@@ -205,6 +213,7 @@ void pulse_sms_init(struct pulse_sms* ps, float duration, float angle /*[deg]*/,
 
 void pulse_rect_init(struct pulse_rect* pr, float duration, float angle /*[deg]*/, float phase)
 {
+	pr->super.size = sizeof(struct pulse_rect);
 	pr->super.duration = duration;
 	pr->super.flipangle = angle;
 
@@ -229,6 +238,7 @@ static complex float pulse_rect_eval(const struct pulse* _pr, float t)
 
 const struct pulse_rect pulse_rect_defaults = {
 
+	.super.size = sizeof(struct pulse_rect),
 	.super.duration = 0.001,
 	.super.flipangle = 1.,
 	.super.eval = pulse_rect_eval,
@@ -284,6 +294,7 @@ static complex float pulse_hypsec_eval(const struct pulse* _pr, float t)
 
 const struct pulse_hypsec pulse_hypsec_defaults = {
 
+	.super.size = sizeof(struct pulse_hypsec),
 	.super.duration = 0.01,
 	.super.flipangle = 180.,
 	.super.eval = pulse_hypsec_eval,
@@ -300,6 +311,7 @@ const struct pulse_hypsec pulse_hypsec_defaults = {
 
 void pulse_hypsec_init(float gamma, struct pulse_hypsec* pr)
 {
+	pr->super.size = sizeof(struct pulse_hypsec);
 	pr->gamma = gamma;
 	pr->A = pr->a0 * 2 * M_PI * pr->gamma;
 }
@@ -327,6 +339,7 @@ static complex float pulse_arb_eval(const struct pulse* _pa, float t)
 
 const struct pulse_arb pulse_arb_oc_cest_sat_defaults = {
 
+	.super.size = sizeof(struct pulse_arb),
 	.super.duration = 0.1,
 	.super.flipangle = 1482.66, // B1rms = 1uT for oc_cest_sat_pulse
 	.super.eval = pulse_arb_eval,
@@ -341,6 +354,7 @@ const struct pulse_arb pulse_arb_oc_cest_sat_defaults = {
 
 void pulse_arb_init(struct pulse_arb* pa, float gamma)
 {
+	pa->super.size = sizeof(struct pulse_arb);
 	pa->gamma = gamma;
 	pa->A = DEG2RAD(pa->super.flipangle) / pulse_arb_integral(pa);
 
@@ -397,6 +411,7 @@ static complex float pulse_gauss_eval(const struct pulse* _ps, float t)
 
 const struct pulse_gauss pulse_gauss_defaults = {
 
+	.super.size = sizeof(struct pulse_gauss),
 	.super.duration = 0.025,
 	.super.flipangle = 360.,
 	.super.eval = pulse_gauss_eval,
@@ -411,6 +426,7 @@ const struct pulse_gauss pulse_gauss_defaults = {
 
 void pulse_gauss_init(struct pulse_gauss* pg, float duration, float angle /*[deg]*/, float phase, float bwtp, float alpha)
 {
+	pg->super.size = sizeof(struct pulse_gauss);
 	pg->super.duration = duration;
 	pg->super.flipangle = angle;
 	pg->super.eval = pulse_gauss_eval;
@@ -421,5 +437,41 @@ void pulse_gauss_init(struct pulse_gauss* pg, float duration, float angle /*[deg
 	pg->A = 1.;
 
 	pg->A = DEG2RAD(angle) / pulse_gauss_integral(pg);
+}
+
+
+struct pulse* pulse_clone(const struct pulse* ps)
+{
+	assert(NULL != ps);
+	assert(0 < ps->size);
+
+	struct pulse* x = xmalloc(ps->size);
+	memcpy(x, ps, ps->size);
+	return x;
+}
+
+void pulse_free(const struct pulse* ps)
+{
+	assert(NULL != ps);
+
+	xfree((void*)ps);
+}
+
+
+void pulse_discretize(struct pulse* ps, int N, complex float pulse[N + 1])
+{
+#ifdef USE_CUDA
+	if (cuda_ondevice(pulse)) {
+
+		complex float tmp_pulse[N + 1];
+		pulse_discretize(ps, N, tmp_pulse);
+		md_copy(1, MD_DIMS(N + 1), pulse, tmp_pulse, sizeof(complex float));
+
+		return;
+	}
+#endif
+
+	for (int i = 0; i < N + 1; i++)
+		pulse[i] = pulse_eval(ps, i * ps->duration / N);
 }
 
