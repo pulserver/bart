@@ -297,8 +297,19 @@ static int prep_grad_sli_reph(struct grad_trapezoid* grad, const struct seq_conf
 
 static double gradient_time_after_RO(const struct seq_config* seq)
 {
-	(void)seq;
-	return 0.;
+	if (SEQ_CONTRAST_RF_SPOILED != seq->phys.contrast)
+		return 0.;
+
+
+	double mom_read = ro_momentum(seq->loop_dims[TE_DIM] - 1, seq) 
+			+ ro_momentum_after_echo(seq->loop_dims[TE_DIM] - 1, seq);
+	double mom_slice = slice_momentum_to_rephase(seq);
+
+
+	struct grad_trapezoid grad;
+	grad_hard(&grad, mom_read + mom_slice, seq->sys.grad);
+
+	return grad_total_time(&grad); // FIXME: only approximately valid
 }
 
 double min_tr_flash(const struct seq_config* seq)
@@ -315,7 +326,7 @@ double min_tr_flash(const struct seq_config* seq)
 	double last_ro_start = start_rf(seq) + seq->phys.rf_duration + available_time_RF_SLI(1, seq)
 				+ (seq->loop_dims[TE_DIM] - 1) * seq->phys.te_delta;
 
-	return round_up_raster(last_ro_start + grad_duration(&last_ro) + add_time_ro_rf, seq->sys.raster_grad);
+	return round_up_raster(last_ro_start + grad_duration(&last_ro) + gradient_time_after_RO(seq) + add_time_ro_rf, seq->sys.raster_grad);
 }
 
 
