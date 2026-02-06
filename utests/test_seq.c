@@ -291,3 +291,76 @@ static bool test_fov_shift3x3(void)
 }
 
 UT_REGISTER_TEST(test_fov_shift3x3);
+
+
+static bool test_block_ecg(void)
+{
+	const enum seq_block blocks[17] = {
+		SEQ_BLOCK_KERNEL_NOISE, SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,
+		SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+		SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+		SEQ_BLOCK_PRE, SEQ_BLOCK_PRE,
+		SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+		SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE
+	};
+
+	struct bart_seq* seq = bart_seq_alloc("");
+	bart_seq_defaults(seq);
+
+	seq->conf->magn.mag_prep = SEQ_PREP_IR_NONSELECTIVE;
+	seq->conf->trigger.type = SEQ_TRIGGER_ECG;
+	seq->conf->trigger.delay_time = 421.E-3;
+
+	seq->conf->loop_dims[BATCH_DIM] = 2;
+	seq->conf->loop_dims[SLICE_DIM] = 2;
+	seq->conf->loop_dims[PHS1_DIM] = 3;
+	seq->conf->loop_dims[TIME_DIM] = 3;
+	seq_ui_interface_loop_dims(0, seq->conf, DIMS, seq->conf->loop_dims);
+
+	int i = 0;
+	int trigger_count = 0;
+	do {
+
+		int E = seq_block(seq->N, seq->event, seq->state, seq->conf);
+
+		if (0 > E)
+			return false;
+
+		if (0 == E)
+			continue;
+
+		if (blocks[i] != seq->state->mode)
+			return false;
+
+		if ((SEQ_BLOCK_KERNEL_IMAGE == seq->state->mode) && (FLASH_EVENTS + trigger_event_count(seq->conf, seq->state) != E))
+			return false;
+
+		int trigger_idx = -1;
+		if (SEQ_EVENT_TRIGGER == seq->event[0].type)
+			trigger_idx = 0;
+
+		if (-1 < trigger_idx) {
+			
+			if ((SEQ_BLOCK_PRE != seq->state->mode)
+				|| (421.E-3 != seq->event[trigger_idx].end))
+					return false;
+			trigger_count++;
+		}
+
+		i++;
+
+	} while (seq_continue(seq->state, seq->conf));
+
+	if (2 != trigger_count)
+		return false;
+
+	if (17 != i)
+		return false;
+
+	bart_seq_free(seq);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_block_ecg);
+

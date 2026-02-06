@@ -376,17 +376,27 @@ int seq_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 
 			if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~(BATCH_FLAG | msm_flag | COEFF2_FLAG))) {
 
-				seq_state->mode = SEQ_BLOCK_PRE;
+				if ((2 == seq_state->pos[COEFF2_DIM]) && (SEQ_TRIGGER_OFF != seq->trigger.type)) {
 
-				return mag_prep(ev, seq);
+					seq_state->mode = SEQ_BLOCK_PRE;
+
+					ev[0] = (struct seq_event){ .start = 0., .mid = 0., .end = seq->trigger.delay_time, .type = SEQ_EVENT_TRIGGER };
+
+					return 1;
+				}
+				
+				if (2 < seq_state->pos[COEFF2_DIM]) {
+
+					seq_state->mode = SEQ_BLOCK_PRE;
+					return mag_prep(ev, seq);
+				}
+
+				return 0;
 			}
-
 		} else if (0 < seq_state->pos[PHS1_DIM]) {
 
 			md_max_dims(DIMS, (COEFF2_FLAG | PHS2_FLAG) &  ~msm_flag, seq_state->pos, seq_state->pos, last_idx);
 		}
-
-		return 0;
 	}
 
 	if (1 == seq_state->pos[COEFF_DIM]) {

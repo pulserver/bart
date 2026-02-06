@@ -296,7 +296,7 @@ static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in
 	seq->loop_dims[PHS1_DIM] = radial_views;
 	seq->loop_dims[TE_DIM] = in_dims[TE_DIM];
 
-	seq->loop_dims[COEFF2_DIM] = 3; // 2 additional calls for delay_meas + noise_scan
+	seq->loop_dims[COEFF2_DIM] = 4; // 3 additional calls for delay_meas + noise_scan + ecg trigger
 	seq->loop_dims[COEFF_DIM] = 3; // pre-/post- and actual kernel calls
 }
 

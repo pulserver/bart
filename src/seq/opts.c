@@ -120,6 +120,10 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 		OPTL_SELECT(0, "gradient-normal", enum gradient_mode, &seq_opts->gradient_mode, GRAD_NORMAL, "Gradient normal mode (default: fast)"),
 		OPTL_SELECT(0, "gradient-whisper", enum gradient_mode, &seq_opts->gradient_mode, GRAD_WHISPER, "Gradient whispher mode (default: fast)"),
 
+		//trigger
+		OPTL_SELECT(0, "trigger", enum trigger_type, &conf->trigger.type, SEQ_TRIGGER_ECG, "Triggering (ECG)"),
+		OPTL_DOUBLE(0, "trigger-delay", &conf->trigger.delay_time, "trigger.delay_time", "Trigger delay"),
+
 		OPTL_SET(0, "support", &seq_opts->support, "save support points of gradient"),
 
 		OPTL_VECN(0, "CUSTOM_LONG", seq_opts->custom_params_long, "custom long parameters"),
