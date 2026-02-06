@@ -51,14 +51,14 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 	long map_dims[DIMS];
 	long out_dims[DIMS];
 	long in_dims[DIMS];
-        long TI_dims[DIMS];
+	long TI_dims[DIMS];
 	long TE_dims[DIMS];
 
 	md_select_dims(DIMS, conf->fft_flags|TE_FLAG|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, der_dims, dims);
 	md_select_dims(DIMS, conf->fft_flags|TIME_FLAG|TIME2_FLAG, map_dims, dims);
 	md_select_dims(DIMS, conf->fft_flags|TE_FLAG|CSHIFT_FLAG|TIME_FLAG|TIME2_FLAG, out_dims, dims);
 	md_select_dims(DIMS, conf->fft_flags|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, in_dims, dims);
-        md_select_dims(DIMS, TE_FLAG|TIME_FLAG|TIME2_FLAG, TI_dims, dims);
+	md_select_dims(DIMS, TE_FLAG|TIME_FLAG|TIME2_FLAG, TI_dims, dims);
 	md_select_dims(DIMS, CSHIFT_FLAG|TIME_FLAG|TIME2_FLAG, TE_dims, dims);
 
 	struct nlop_s* model = NULL;
@@ -66,11 +66,21 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 	switch (data->model) {
 
 	case MDB_T1:
-	case MDB_T2:
 	case MDB_MGRE:
 
 		// FIXME: Integrate other models here
 		assert(0);
+		break;
+		
+	case MDB_T2:
+
+		complex float* enc = md_alloc(DIMS, TI_dims, CFL_SIZE);
+
+		md_zsmul(DIMS, TI_dims, enc, TI, -1.);
+		model = nlop_exp_create(DIMS, out_dims, enc);
+
+		xfree(enc);
+
 		break;
 
 	case MDB_T1_PHY:
@@ -91,7 +101,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 		for (int i = 0; i < 4; i++)
 			debug_printf(DP_DEBUG2, "FP Scale[%d]=%f\n", i, crealf(data->other.scale[i]));
 
-                // Turn off matching of T2 for IR FLASH
+		// Turn off matching of T2 for IR FLASH
 
 		if (SEQ_IRFLASH == data->sim.seq.seq_type)
 			data->other.scale[2] = 0.;

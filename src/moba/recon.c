@@ -24,7 +24,6 @@
 #include "noir/recon.h"
 
 #include "moba/model_T1.h"
-#include "moba/model_T2.h"
 #include "moba/model_moba.h"
 #include "moba/blochfun.h"
 #include "moba/T1phyfun.h"
@@ -226,45 +225,6 @@ static void set_bloch_conf(enum mdb_t mode, struct mdb_irgnm_l1_conf* conf2, con
 }
 
 
-
-static struct mobamod exp_create(const long dims[DIMS], const complex float* mask, const complex float* TE, const complex float* psf, const struct noir_model_conf_s* conf)
-{
-	long data_dims[DIMS];
-	md_select_dims(DIMS, ~COEFF_FLAG, data_dims, dims);
-
-	struct noir_s nlinv = noir_create(data_dims, mask, psf, conf);
-	struct mobamod ret;
-
-	assert(2 == dims[COEFF_DIM]);
-
-	long edims[DIMS];
-	md_select_dims(DIMS, TE_FLAG, edims, dims);
-
-	complex float* TE2 = md_alloc(DIMS, edims, CFL_SIZE);
-
-	md_zsmul(DIMS, edims, TE2, TE, -1.);
-
-
-	// chain T2 model
-	struct nlop_s* a = nlop_exp_create(DIMS, data_dims, TE2);
-
-
-	const struct nlop_s* b = nlinv.nlop;
-	const struct nlop_s* c = nlop_chain2_FF(a, 0, b, 0);
-
-
-	nlinv.nlop = nlop_permute_inputs_F(c, 3, (const int[3]){ 1, 2, 0 });
-
-	ret.nlop = nlop_flatten(nlop_attach(nlinv.nlop, TE2, md_free));
-	ret.linop = nlinv.linop;
-
-	nlop_free(nlinv.nlop);
-
-	return ret;
-}
-
-
-
 static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
                 const long dims[DIMS],
 		const long imgs_dims[DIMS], complex float* img,
@@ -303,21 +263,11 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 		nl = T1_create(dims, mask, TI, pattern, conf->scaling_M0, conf->scaling_R1s, &mconf, data->other.fov_reduction_factor);
 		break;
 
-	case MDB_T2:
-
-#if 0
-		// slower
-		nl = exp_create(dims, mask, TI, pattern, &mconf);
-#else
-		(void)exp_create;
-		nl = T2_create(dims, mask, TI, pattern, &mconf);
-#endif
-		break;
-
 	case MDB_MGRE:
 
-		assert(0);
+		assert(0); // done in meco_recon (recon_meco.c)
 
+	case MDB_T2:
 	case MDB_T1_PHY:
 	case MDB_BLOCH:
 	case MDB_IR_MGRE:
