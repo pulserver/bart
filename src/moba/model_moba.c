@@ -124,13 +124,14 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 	ret.linop = nlinv.linop;
 
 	if (MDB_BLOCH == data->model)
-                ret.linop_alpha = bloch_get_alpha_trafo(model);
-        else if (MDB_T1_PHY == data->model)
-                ret.linop_alpha = T1_get_alpha_trafo(model);
+		ret.linop_alpha = linop_clone(bloch_get_alpha_trafo(model));
+	else if (MDB_T1_PHY == data->model)
+		ret.linop_alpha = linop_clone(T1_get_alpha_trafo(model));
 	else if (MDB_IR_MGRE == data->model)
-		ret.linop_alpha = ir_meco_get_fB0_trafo(model);
+		ret.linop_alpha = linop_clone(ir_meco_get_fB0_trafo(model));
 
 	nlop_free(nlinv.nlop);
+	nlop_free(model);
 
 	return ret;
 }
