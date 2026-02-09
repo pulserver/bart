@@ -49,6 +49,8 @@ struct noir2_model_conf_s noir2_model_conf_defaults = {
 
 	.fft_flags = FFT_FLAGS,
 	.wght_flags = FFT_FLAGS,
+	.cfft_flags = FFT_FLAGS,
+	.ufft_flags = FFT_FLAGS,
 
 	.rvc = false,
 	.sos = false,
@@ -223,9 +225,43 @@ struct noir2_s noir2_noncart_create(int N,
 	else
 		md_copy_dims(N, mod_wgh_dims, ret.pat_dims);
 
-	ret.lop_fft = nufft_create2(N, ret.ksp_dims, ret.cim_dims, ret.trj_dims, traj, mod_wgh_dims, weights, basis ? ret.bas_dims : NULL, basis, nufft_conf);
+	long fftmod_dims[N];
+	complex float* fftmod_diag = NULL;
+
+	complex float* mod_wgh = NULL;
+
+	if (0 != (conf->cfft_flags & ~FFT_FLAGS) || 0 != (conf->ufft_flags & ~FFT_FLAGS)) {
+
+		long ufft_dims[N];
+		md_select_dims(N, (conf->ufft_flags & ~FFT_FLAGS), ufft_dims, ksp_dims);
+		float scale = 1. / sqrtf(sqrtf((float)md_calc_size(N, ufft_dims)));
+
+		md_select_dims(N, (conf->cfft_flags & ~FFT_FLAGS), fftmod_dims, ksp_dims);
+		fftmod_diag = md_alloc_sameplace(N, fftmod_dims, CFL_SIZE, weights ?: traj);
+		md_zfill(N, fftmod_dims, fftmod_diag, scale);
+		fftmod(N, fftmod_dims, conf->cfft_flags & ~FFT_FLAGS, fftmod_diag, fftmod_diag);
+
+		long mod_wgh_dims2[N];
+		md_max_dims(N, ~0UL, mod_wgh_dims2, mod_wgh_dims, fftmod_dims);
+		mod_wgh = md_alloc_sameplace(N, mod_wgh_dims2, CFL_SIZE, weights ?: traj);
+
+		if (NULL != weights)
+			md_ztenmul(N, mod_wgh_dims2, mod_wgh, mod_wgh_dims, weights, fftmod_dims, fftmod_diag);
+		else
+			md_copy(N, fftmod_dims, mod_wgh, fftmod_diag, CFL_SIZE);
+
+		md_copy_dims(N, mod_wgh_dims, mod_wgh_dims2);
+	}
+
+	ret.lop_fft = nufft_create2(N, ret.ksp_dims, ret.cim_dims, ret.trj_dims, traj, mod_wgh_dims, mod_wgh, basis ? ret.bas_dims : NULL, basis, nufft_conf);
 
 	ret.lop_nufft = linop_clone(ret.lop_fft);
+
+	if (NULL != fftmod_diag)
+		ret.lop_fft = linop_chain_FF(linop_cdiag_create(N, ret.cim_dims, conf->cfft_flags & ~FFT_FLAGS , fftmod_diag), ret.lop_fft);
+
+	md_free(fftmod_diag);
+	md_free(mod_wgh);
 
 	debug_printf(DP_DEBUG1, "\nModel created (non Cartesian, nufft-based):\n");
 	debug_printf(DP_DEBUG1, "kspace:     ");
@@ -294,8 +330,8 @@ struct noir2_s noir2_cart_create(int N,
 	if (!use_compat_to_version("v0.9.00")) {
 
 		ret.lop_fft = linop_fft_generic_create(N, ret.cim_dims, conf->fft_flags,
-						conf->fft_flags & FFT_FLAGS,
-						conf->fft_flags & FFT_FLAGS, 0, NULL, 0, NULL);
+						conf->fft_flags & conf->cfft_flags,
+						conf->fft_flags & conf->ufft_flags, 0, NULL, 0, NULL);
 
 	} else {
 
@@ -866,7 +902,40 @@ void noir2_noncart_update(struct noir2_s* model, int N,
 {
 	assert(NULL != model->lop_nufft);
 
-	nufft_update_traj(model->lop_nufft, N, trj_dims, traj, wgh_dims, weights, bas_dims, basis);
+	long mod_wgh_dims[N];
+	md_copy_dims(N, mod_wgh_dims, wgh_dims);
+	complex float* mod_wgh = NULL;
+
+	if (0 != (model->model_conf.cfft_flags & ~FFT_FLAGS) || 0 != (model->model_conf.ufft_flags & ~FFT_FLAGS)) {
+
+		long ufft_dims[N];
+		md_select_dims(N, (model->model_conf.ufft_flags & ~FFT_FLAGS), ufft_dims, model->ksp_dims);
+		float scale = 1. / sqrtf(sqrtf((float)md_calc_size(N, ufft_dims)));
+
+		long fftmod_dims[N];
+		complex float* fftmod_diag = NULL;
+
+		md_select_dims(N, (model->model_conf.cfft_flags & ~FFT_FLAGS), fftmod_dims, model->ksp_dims);
+		fftmod_diag = md_alloc_sameplace(N, fftmod_dims, CFL_SIZE, weights ?: traj);
+		md_zfill(N, fftmod_dims, fftmod_diag, scale);
+		fftmod(N, fftmod_dims, model->model_conf.cfft_flags & ~FFT_FLAGS, fftmod_diag, fftmod_diag);
+
+		if (NULL != weights) {
+
+			md_max_dims(N, ~0UL, mod_wgh_dims, wgh_dims, fftmod_dims);
+			mod_wgh = md_alloc_sameplace(N, mod_wgh_dims, CFL_SIZE, weights ?: traj);
+
+			md_ztenmul(N, mod_wgh_dims, mod_wgh, wgh_dims, weights, fftmod_dims, fftmod_diag);
+			md_free(fftmod_diag);
+		} else {
+
+			md_copy_dims(N, mod_wgh_dims, fftmod_dims);
+			mod_wgh = fftmod_diag;
+		}
+	}
+
+
+	nufft_update_traj(model->lop_nufft, N, trj_dims, traj, mod_wgh_dims, mod_wgh ?: weights, bas_dims, basis);
 
 	if ((NULL != nlop_get_data(model->model)) && (NULL != CAST_MAYBE(noir2_opt_s, nlop_get_data(model->model)))) {
 
@@ -878,7 +947,7 @@ void noir2_noncart_update(struct noir2_s* model, int N,
 		long psf_dims[N];
 		md_select_dims(N, FFT_FLAGS, psf_dims, d->cim_dims_os);
 
-		complex float* psf = compute_psf(N, psf_dims, trj_dims, ttraj, MD_SINGLETON_DIMS(N), NULL, wgh_dims, weights, true, false);
+		complex float* psf = compute_psf(N, psf_dims, trj_dims, ttraj, MD_SINGLETON_DIMS(N), NULL, mod_wgh_dims, mod_wgh ?: weights, true, false);
 		md_free(ttraj);
 
 		fftuc(N, psf_dims, FFT_FLAGS, psf, psf);

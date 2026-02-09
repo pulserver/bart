@@ -103,6 +103,9 @@ int main_ncalib(int argc, char* argv[argc])
 		OPT_FLOAT('w', &scaling, "", "(inverse scaling of the data)"),
 		OPT_SET('o', &conf.ret_os_coils, "return oversampled coils"),
 
+		OPTL_SET(0, "sms", &conf.sms, "sms reconstruction (FFT in slice dimension)"),
+		OPTL_SET(0, "sos", &conf.sos, "sos reconstruction (ucFFT and Sobolev regularization in slice dimension)"),
+
 		OPT_SET('N', &normalize, "Normalize coil sensitivities"),
 		OPT_PINT('m', &maps, "nmaps", "Number of ENLIVE maps to use in reconstruction"),
 		OPTL_VEC3('x', "dims", &my_sens_dims, "x:y:z", "Explicitly specify sens dimensions"),
@@ -126,12 +129,6 @@ int main_ncalib(int argc, char* argv[argc])
 	// The only multimap we understand with is the one we do ourselves, where
 	// we allow multiple images and sensitivities during the reconstruction
 	assert(1 == ksp_dims[MAPS_DIM]);
-
-	if (1 != ksp_dims[SLICE_DIM]) {
-
-		debug_printf(DP_INFO, "SMS-NLINV reconstruction. Multiband factor: %ld\n", ksp_dims[SLICE_DIM]);
-		conf.sms = true;
-	}
 
 	complex float* pattern = NULL;
 	long pat_dims[DIMS];

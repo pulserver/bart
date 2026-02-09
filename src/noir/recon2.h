@@ -17,9 +17,14 @@ struct noir2_conf_s {
 	float oversampling_coils;
 	_Bool ret_os_coils;
 
+	unsigned long fft_flags;
+	unsigned long ucfft_flags;
+	unsigned long wgh_flags;
+
 	int phasepoles;
 
 	_Bool sms;
+	_Bool sos;
 
 	float scaling;
 	_Bool undo_scaling;

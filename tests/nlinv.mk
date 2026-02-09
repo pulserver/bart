@@ -295,6 +295,18 @@ tests/test-ncalib-scale2: repmat copy ncalib nrmse bitmask $(TESTS_OUT)/shepplog
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
+tests/test-ncalib-sos: ncalib traj phantom transpose nrmse reshape bitmask
+	set -e ; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)				;\
+	$(TOOLDIR)/traj -x 16 -y16 -z16 t3.ra					;\
+	$(TOOLDIR)/phantom -3 -t t3.ra -k -s2 k.ra				;\
+	$(TOOLDIR)/ncalib -a5 -w1 -i4 -t t3.ra k.ra c.ra			;\
+	$(TOOLDIR)/traj -x 16 -y16 t2.ra					;\
+	$(TOOLDIR)/reshape $$($(TOOLDIR)/bitmask 2 13) 16 16 k.ra ksos.ra	;\
+	$(TOOLDIR)/ncalib -a5 -w1 -i4 --sos -t t2.ra ksos.ra c2.ra		;\
+	$(TOOLDIR)/transpose 2 13 c2.ra c2.ra					;\
+	$(TOOLDIR)/nrmse -t 0.005 c2.ra c.ra					;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
 
 
 tests/test-nlinv-pf-vcc: nlinv conj nrmse zeros ones join flip circshift fmac $(TESTS_OUT)/shepplogan_ksp.ra

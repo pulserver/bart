@@ -8,6 +8,8 @@ struct noir2_model_conf_s {
 	_Bool noncart;
 
 	unsigned long fft_flags;
+	unsigned long cfft_flags;
+	unsigned long ufft_flags;
 	unsigned long wght_flags;
 
 	_Bool rvc;
@@ -31,7 +33,7 @@ struct noir2_s {
 
 	struct noir2_model_conf_s model_conf;
 
-	const struct nlop_s* model;		// nlop holding the model 
+	const struct nlop_s* model;		// nlop holding the model
 	const struct linop_s* lop_asym;		// for asymmetric reconstruction
 						// use adjoint to grid data
 
@@ -42,7 +44,7 @@ struct noir2_s {
 
 
 	const struct linop_s* lop_coil2;	// kspace coils to img-coils for postptocessing
-	
+
 	// references to linops to update model parameters
 	const struct linop_s* lop_nufft;	// for retrospectively changing trajectory
 	const struct linop_s* lop_pattern;	// for retrospectively changing pattern

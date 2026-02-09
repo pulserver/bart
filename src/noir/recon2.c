@@ -175,6 +175,7 @@ const struct noir2_conf_s noir2_defaults = {
 
 	.oversampling_coils = 1.,
 	.sms = false,
+	.sos = false,
 	.scaling = -100,
 	.undo_scaling = false,
 	.normalize_lowres = false,
@@ -547,7 +548,7 @@ void noir2_recon(const struct noir2_conf_s* conf, struct noir2_s* noir_ops,
 		md_free(tmp);
 		md_free(tmp_kcol);
 
-		if (1 != col_dims[SLICE_DIM])
+		if (conf->sms)
 			fftmod(DIMS, col_dims, SLICE_FLAG, sens, sens);
 	}
 
@@ -605,8 +606,19 @@ void noir2_recon_noncart(
 
 	struct noir2_model_conf_s mconf = noir2_model_conf_defaults;
 
-	mconf.fft_flags = (conf->sms) ? SLICE_FLAG | FFT_FLAGS : FFT_FLAGS;
+	mconf.fft_flags = FFT_FLAGS;
 	mconf.wght_flags = FFT_FLAGS;
+
+	if (conf->sms)
+		mconf.fft_flags |= SLICE_FLAG;
+
+	if (conf->sos) {
+
+		mconf.cfft_flags |= SLICE_FLAG;
+		mconf.ufft_flags |= SLICE_FLAG;
+		mconf.fft_flags |= SLICE_FLAG;
+		mconf.wght_flags |= SLICE_FLAG;
+	}
 
 	mconf.rvc = conf->rvc;
 	mconf.a = conf->a;
