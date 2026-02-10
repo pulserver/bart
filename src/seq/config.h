@@ -37,6 +37,20 @@ enum pe_mode {
 };
 
 
+enum cest_saturation_type {
+
+	SEQ_CEST_NONE,
+	SEQ_CEST_GAUSS,
+	SEQ_CEST_OC
+};
+
+
+enum cest_offset_type {
+
+	SEQ_CEST_OFFSET_EQUIDISTANT,
+	SEQ_CEST_OFFSET_PHANTOM,
+	SEQ_CEST_OFFSET_INVIVO
+};
 
 struct seq_phys {
 
@@ -108,6 +122,21 @@ struct seq_trigger {
 };
 
 
+struct seq_cest {
+
+	enum cest_saturation_type sat_type;
+	long sat_pulses;
+	double sat_pulse_pause;
+	double gauss_pulse_duration;
+	double gauss_pulse_fa;
+	double oc_pulse_b1_scaling;
+	enum cest_offset_type offset_type;
+	double offset_first;
+	double offset_last;
+	double offset_increment;
+	double offset_pause;
+};
+
 
 struct seq_config {
 
@@ -116,6 +145,7 @@ struct seq_config {
 	struct seq_enc enc;
 	struct seq_magn magn;
 	struct seq_trigger trigger;
+	struct seq_cest cest;
 	struct seq_sys sys; 
 
 	int order[DIMS];

@@ -135,6 +135,20 @@ const struct seq_config seq_config_defaults = {
 		.trigger_out = 1,
 	},
 
+	.cest = {
+		.sat_type = SEQ_CEST_NONE,
+		.sat_pulses = 15,
+		.sat_pulse_pause = 0.005,
+		.gauss_pulse_duration = 0.025,
+		.gauss_pulse_fa = 360.,
+		.oc_pulse_b1_scaling = 1.,
+		.offset_type = SEQ_CEST_OFFSET_EQUIDISTANT,
+		.offset_first = -5.,
+		.offset_last = 5.,
+		.offset_increment = 0.2,
+		.offset_pause = 3.5,
+	},
+
 	.sys = {
 		.gamma = 42.575575E6,
 		.b0 = 2.893620,
