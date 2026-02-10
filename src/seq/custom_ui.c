@@ -67,6 +67,7 @@ static const struct seq_ui_long custom_longarr_defaults[] = {
 	{ "", SEQ_UI_IDX_LONG_CEST_SATURATION, "CESTSaturation", { 0, 2, 1, 0 }, "0: off\n1: gauss\n2: OC", ""},
 	{ "", SEQ_UI_IDX_LONG_CEST_OFFSET_TYPE, "OffsetType", { 0, 2, 1, 0 }, " 0: equidistant\n 1: custom phantom\n 2: custom invivo", ""},
 	{ "", SEQ_UI_IDX_LONG_CEST_SAT_PULSES, "SaturationPulses", { 0, 1000, 1, 40 }, "Number of CEST saturation pulses", ""},
+	{ "", SEQ_UI_IDX_LONG_ASL_MODE, "ASL", { 0, 1, 1, 0 }, "0: OFF\n1: PCASL", ""} ,
 };
 
 
@@ -87,6 +88,8 @@ static const struct seq_ui_double custom_doublearr_defaults[] = {
 	{ "", SEQ_UI_IDX_DOUBLE_CEST_OFFSET_FIRST_PPM, "FirstOffset", { -10., 0., 0.01, -5. }, "First CEST offset.", "ppm" },
 	{ "", SEQ_UI_IDX_DOUBLE_CEST_OFFSET_LAST_PPM, "LastOffset", { 0., 10., 0.01, 5. }, "Last CEST offset.", "ppm" },
 	{ "", SEQ_UI_IDX_DOUBLE_CEST_OFFSET_INCREMENT_PPM, "OffsetIncrement", { 0.01, 1., 0.01, 1. }, "CEST offset increment.", "ppm" },
+	{ "", SEQ_UI_IDX_DOUBLE_ASL_LD, "LD", { 0., 10000., 0.01, 0. }, "PCASL labeling duration in ms.", "" },
+	{ "", SEQ_UI_IDX_DOUBLE_ASL_PLD, "PLD", { 0., 10000., 0.01, 0. }, "ASL post-labeling delay in ms.", "" },
 };
 
 

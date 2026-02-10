@@ -22,6 +22,7 @@
 	M(CEST_SATURATION)		\
 	M(CEST_OFFSET_TYPE)		\
 	M(CEST_SAT_PULSES)		\
+	M(ASL_MODE)
 
 enum custom_idx_long {
 #define enum_entry(name) SEQ_UI_IDX_LONG_##name,
@@ -42,6 +43,8 @@ SEQ_CUSTOM_UI_IDX_LONG(enum_entry)
 	M(CEST_OFFSET_FIRST_PPM)	\
 	M(CEST_OFFSET_LAST_PPM)		\
 	M(CEST_OFFSET_INCREMENT_PPM)	\
+	M(ASL_LD)			\
+	M(ASL_PLD)
 
 enum custom_idx_double {
 #define enum_entry(name) SEQ_UI_IDX_DOUBLE_##name,
