@@ -63,7 +63,10 @@ static const struct seq_ui_long custom_longarr_defaults[] = {
 	{ "", SEQ_UI_IDX_LONG_INVERSIONS, "Inversions", { 0, 1000, 1, 1 }, "Number of IR experiments.", ""},
 	{ "", SEQ_UI_IDX_LONG_INV_DELAY, "Inversion Delay", { 0, 2000, 1, 0 }, "Delay between inversions.", "s"},
 	{ "", SEQ_UI_IDX_LONG_MB_FACTOR, "Multiband factor (SMS)", { 1, 5, 1, 1 }, "SMS Multiband factor", ""},
-	{ "", SEQ_UI_IDX_LONG_RAGA_ALIGNED_FLAGS, "RAGA aligned flags", { 0, 65535, 1, 0 }, "Bitmask from dimension to align in RAGA sampling", ""}
+	{ "", SEQ_UI_IDX_LONG_RAGA_ALIGNED_FLAGS, "RAGA aligned flags", { 0, 65535, 1, 0 }, "Bitmask from dimension to align in RAGA sampling", ""},
+	{ "", SEQ_UI_IDX_LONG_CEST_SATURATION, "CESTSaturation", { 0, 2, 1, 0 }, "0: off\n1: gauss\n2: OC", ""},
+	{ "", SEQ_UI_IDX_LONG_CEST_OFFSET_TYPE, "OffsetType", { 0, 2, 1, 0 }, " 0: equidistant\n 1: custom phantom\n 2: custom invivo", ""},
+	{ "", SEQ_UI_IDX_LONG_CEST_SAT_PULSES, "SaturationPulses", { 0, 1000, 1, 40 }, "Number of CEST saturation pulses", ""},
 };
 
 
@@ -76,7 +79,14 @@ static const struct seq_ui_double custom_doublearr_defaults[] = {
 
 	{ "", SEQ_UI_IDX_DOUBLE_BWTP, "BWTP", { 0., 200., 0.1, 1.6 }, "RF bandwidth-time-product.", "" },
 	{ "", SEQ_UI_IDX_DOUBLE_ASYM_ECHO, "Asymmetric Echo", { 0.1, 0.5, 0.01, 0.5 }, "asymmetric echo (0.5 means full echo)", "" },
-
+	{ "", SEQ_UI_IDX_DOUBLE_CEST_OFFSET_PAUSE_S, "PauseOffsets", { 0., 10., 0.1, 2.0 }, "Pause between CEST offsets.", "s" },
+	{ "", SEQ_UI_IDX_DOUBLE_CEST_SAT_PULSE_PAUSE_MS, "PauseSaturationPulses", { 1., 100., 0.1, 5. }, "Pause between CEST saturation pulses.", "ms" },
+	{ "", SEQ_UI_IDX_DOUBLE_CEST_GAUSS_duration_MS, "SaturationPulseDurationGauss", { 5., 100., 0.1, 25. }, "Duration of one Gauss saturation pulse.", "ms" },
+	{ "", SEQ_UI_IDX_DOUBLE_CEST_GAUSS_FA, "SaturationPulseFlipAngleGauss", { 90., 10000., 0.1, 360. }, "Flip Angle of one Gauss saturation pulse.", "" },
+	{ "", SEQ_UI_IDX_DOUBLE_CEST_OC_B1_SCALING, "SaturationScalingOC", { 0.8, 2., 0.01, 1. }, "B1rms for OC saturation pulse.", "uT" },
+	{ "", SEQ_UI_IDX_DOUBLE_CEST_OFFSET_FIRST_PPM, "FirstOffset", { -10., 0., 0.01, -5. }, "First CEST offset.", "ppm" },
+	{ "", SEQ_UI_IDX_DOUBLE_CEST_OFFSET_LAST_PPM, "LastOffset", { 0., 10., 0.01, 5. }, "Last CEST offset.", "ppm" },
+	{ "", SEQ_UI_IDX_DOUBLE_CEST_OFFSET_INCREMENT_PPM, "OffsetIncrement", { 0.01, 1., 0.01, 1. }, "CEST offset increment.", "ppm" },
 };
 
 
