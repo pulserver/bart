@@ -547,7 +547,8 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 	if (seq_block_end_flat(i, ev, seq->sys.raster_grad) - 1E-9 > seq->phys.tr)
 		return ERROR_END_FLAT_KERNEL;
 
-	if (   (SEQ_PEMODE_RAGA == seq->enc.pe_mode)
+	if (   (SEQ_BLOCK_KERNEL_IMAGE == seq_state->mode)
+	    && (SEQ_PEMODE_RAGA == seq->enc.pe_mode)
 	    && ((seq->loop_dims[TIME_DIM] - 1) == seq_state->pos[TIME_DIM])
 	    && ((seq->loop_dims[ITER_DIM] - 1) == seq_state->pos[PHS1_DIM]))
 			seq_state->pos[PHS1_DIM] = seq->loop_dims[PHS1_DIM] - 1;

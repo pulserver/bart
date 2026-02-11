@@ -12,6 +12,7 @@
 	/* long */			\
 	/* long array */		\
 	M(TINY)				\
+	M(PREP_SCANS)			\
 	M(RF_DURATION_US)		\
 	M(INIT_DELAY)			\
 	M(INVERSIONS)			\

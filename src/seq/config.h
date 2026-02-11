@@ -76,6 +76,7 @@ struct seq_magn {
 
 	enum mag_prep mag_prep;
 	double ti;
+	long prep_scans;
 	double init_delay;
 	double inv_delay_time;
 };

@@ -123,6 +123,7 @@ const struct seq_config seq_config_defaults = {
 	.magn = {
 		.mag_prep = SEQ_PREP_OFF,
 		.ti = 0.,
+		.prep_scans = 0,
 		.init_delay = 0.,
 		.inv_delay_time = 0.,
 	},

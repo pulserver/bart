@@ -319,6 +319,10 @@ static int check_settings(const struct seq_state* seq_state, const struct seq_co
 	if (SEQ_MAX_SLICES < get_slices(seq))
 		return ERROR_SETTING_DIM;
 
+	if (   (0 < seq->magn.prep_scans)
+	    && (SEQ_PREP_OFF != seq->magn.mag_prep))
+		return ERROR_PREP_SCANS;
+
 	if (SEQ_CONTEXT_BINARY != seq_state->context) {
 
 		if ((SEQ_PEMODE_RAGA == seq->enc.pe_mode)
@@ -382,6 +386,16 @@ int seq_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 		}
 
 		if (1 < seq_state->pos[COEFF2_DIM]) {
+
+			if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~(BATCH_FLAG | COEFF2_FLAG | SLICE_FLAG | PHS2_FLAG))) {
+
+				if ((0 < seq->magn.prep_scans) && (2 < seq_state->pos[COEFF2_DIM])) {
+
+					seq_state->mode = SEQ_BLOCK_KERNEL_DUMMY;
+					seq_state->seq_ut = 1;
+					return flash(N, ev, seq_state, seq);
+				}
+			}
 
 			if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~(BATCH_FLAG | msm_flag | COEFF2_FLAG))) {
 

@@ -64,6 +64,8 @@ double seq_total_measure_time(const struct seq_config* seq)
 {
 	double pre_duration = seq->magn.init_delay +  seq->phys.tr; // noise scan
 
+	pre_duration += seq->phys.tr * (seq->magn.prep_scans * seq->loop_dims[SLICE_DIM] * seq->loop_dims[PHS2_DIM]);
+
 	struct seq_event ev[6];
 	int e = mag_prep(ev, seq);
 
@@ -97,6 +99,7 @@ static void custom_params_to_config(struct seq_config* seq, int nl, const long c
 	seq->phys.os = 2.;
 
 	seq->enc.tiny = custom_long[SEQ_UI_IDX_LONG_TINY];
+	seq->magn.prep_scans = custom_long[SEQ_UI_IDX_LONG_PREP_SCANS];
 	seq->phys.rf_duration = 1E-6 * custom_long[SEQ_UI_IDX_LONG_RF_DURATION_US];
 	seq->magn.init_delay = custom_long[SEQ_UI_IDX_LONG_INIT_DELAY];
 	seq->loop_dims[BATCH_DIM] = custom_long[SEQ_UI_IDX_LONG_INVERSIONS];
@@ -120,6 +123,7 @@ static void config_to_custom_params(int nl, long custom_long[__VLA(nl)], int nd,
 	custom_long[SEQ_UI_IDX_LONG_MB_FACTOR] = seq->geom.mb_factor;
 
 	custom_long[SEQ_UI_IDX_LONG_TINY] = seq->enc.tiny;
+	custom_long[SEQ_UI_IDX_LONG_PREP_SCANS] = seq->magn.prep_scans;
 	custom_long[SEQ_UI_IDX_LONG_RF_DURATION_US] = lround(1.E6 * seq->phys.rf_duration);
 	custom_long[SEQ_UI_IDX_LONG_INIT_DELAY] = seq->magn.init_delay;
 	custom_long[SEQ_UI_IDX_LONG_INVERSIONS] = seq->loop_dims[BATCH_DIM];
@@ -295,7 +299,7 @@ static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in
 	seq->loop_dims[PHS1_DIM] = radial_views;
 	seq->loop_dims[TE_DIM] = in_dims[TE_DIM];
 
-	seq->loop_dims[COEFF2_DIM] = 4; // 3 additional calls for delay_meas + noise_scan + ecg trigger
+	seq->loop_dims[COEFF2_DIM] = MAX(1, seq->magn.prep_scans) + 3; // 3 additional calls for delay_meas + noise_scan + ecg trigger
 	seq->loop_dims[COEFF_DIM] = 3; // pre-/post- and actual kernel calls
 }
 

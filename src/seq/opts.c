@@ -118,6 +118,7 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 		OPTL_DOUBLE(0, "TI", &conf->magn.ti, "TI", "Inversion time"),
 		OPTL_DOUBLE(0, "init_delay", &conf->magn.init_delay, "init_delay", "Initial delay of measurement"),
 		OPTL_DOUBLE(0, "inv_delay", &conf->magn.inv_delay_time, "inv_delay_time", "Inversion delay time"),
+		OPTL_LONG(0, "prep_scans", &conf->magn.prep_scans, "prep_scans", "Preparation scans"),
 
 		// gradient mode
 		OPTL_SELECT(0, "gradient-normal", enum gradient_mode, &seq_opts->gradient_mode, GRAD_NORMAL, "Gradient normal mode (default: fast)"),

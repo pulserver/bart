@@ -370,3 +370,69 @@ static bool test_block_ecg(void)
 
 UT_REGISTER_TEST(test_block_ecg);
 
+
+static bool test_block_prep(void)
+{
+	const enum seq_block blocks[23] = {
+		SEQ_BLOCK_KERNEL_NOISE,
+		SEQ_BLOCK_KERNEL_DUMMY, SEQ_BLOCK_KERNEL_DUMMY,
+		SEQ_BLOCK_KERNEL_DUMMY, SEQ_BLOCK_KERNEL_DUMMY,
+		SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+		SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+		SEQ_BLOCK_POST,
+		SEQ_BLOCK_KERNEL_DUMMY, SEQ_BLOCK_KERNEL_DUMMY,
+		SEQ_BLOCK_KERNEL_DUMMY, SEQ_BLOCK_KERNEL_DUMMY,
+		SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+		SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE, SEQ_BLOCK_KERNEL_IMAGE,
+		SEQ_BLOCK_POST
+	};
+
+	struct bart_seq* seq = bart_seq_alloc("");
+	bart_seq_defaults(seq);
+
+	seq->conf->enc.order = SEQ_ORDER_AVG_OUTER;
+	seq->conf->magn.prep_scans = 2;
+	seq->conf->magn.inv_delay_time = 100.E-3;
+
+	seq->conf->loop_dims[BATCH_DIM] = 2;
+	seq->conf->loop_dims[SLICE_DIM] = 2;
+	seq->conf->loop_dims[PHS1_DIM] = 3;
+	seq->conf->loop_dims[TIME_DIM] = 3;
+	seq_ui_interface_loop_dims(0, seq->conf, DIMS, seq->conf->loop_dims);
+
+	int i = 0;
+
+	do {
+
+		int E = seq_block(seq->N, seq->event, seq->state, seq->conf);
+
+		if (0 > E)
+			return false;
+
+		if (0 == E)
+			continue;
+
+		if (blocks[i] != seq->state->mode)
+			return false;
+
+		if ((SEQ_BLOCK_KERNEL_IMAGE == seq->state->mode) && (FLASH_EVENTS + trigger_event_count(seq->conf, seq->state) != E))
+			return false;
+
+		// correct delay_meas_time
+		if ((SEQ_BLOCK_PRE == seq->state->mode) && (1 == E) && (seq->conf->magn.init_delay != seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad)))
+			return false;
+
+		// correct inv_delay in post block
+		if ((SEQ_BLOCK_POST == seq->state->mode) && (1.E-4 * UT_TOL < fabs(seq->conf->magn.inv_delay_time - seq_block_end(E, seq->event, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad))))
+			return false;
+
+		i++;
+
+	} while (seq_continue(seq->state, seq->conf));
+
+	bart_seq_free(seq);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_block_prep);

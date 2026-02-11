@@ -140,7 +140,8 @@ long flash_ex_calls(const struct seq_config* seq)
 	if (SEQ_ORDER_SEQ_MS == seq->enc.order)
 		incomplete_raga_spks *= dims[SLICE_DIM];
 
-	return md_calc_size(DIMS, dims) - incomplete_raga_spks;
+	return md_calc_size(DIMS, dims) - incomplete_raga_spks
+		+ dims[PHS2_DIM] * dims[SLICE_DIM] * seq->magn.prep_scans;
 }
 
 static long cols_to_echo(long echo, const struct seq_config* seq)
