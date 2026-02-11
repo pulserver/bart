@@ -121,6 +121,29 @@ int prep_rf_inversion(struct seq_event* rf_ev, double start, const struct seq_co
 	return 1;
 }
 
+int prep_rf_hanning(struct seq_event* rf_ev, double start, double phase_shift, const struct seq_config* seq)
+{
+	if (SEQ_ASL_NONE == seq->asl.label_type)
+		return 0;
+
+	rf_ev->type = SEQ_EVENT_PULSE;
+
+	rf_ev->start = start;
+	rf_ev->end = rf_ev->start + seq->asl.hanning.rf_duration;
+
+	const double asym_pulse = 0.5;
+
+	rf_ev->mid = rf_ev->start + (rf_ev->end - rf_ev->start) * asym_pulse;
+
+	rf_ev->pulse.shape_id = seq->geom.mb_factor;	
+
+	rf_ev->pulse.type = SEQ_RF_EXCITATION;
+	rf_ev->pulse.fa = seq->asl.hanning.flip_angle;
+	rf_ev->pulse.freq = seq->sys.gamma * seq->geom.shift[seq->asl.label_slice_index][2] * seq->asl.ampl_grad_sli;
+	rf_ev->pulse.phase = phase_clamp(phase_shift);
+
+	return 1;
+}
 
 long flash_ex_calls(const struct seq_config* seq)
 {
@@ -135,6 +158,10 @@ long flash_ex_calls(const struct seq_config* seq)
 
 		dims[SLICE_DIM] = 1;
 		incomplete_raga_spks *= dims[PHS2_DIM];
+
+	} else {
+
+		dims[SLICE_DIM] = (SEQ_ASL_NONE != seq->asl.label_type) ? seq->loop_dims[SLICE_DIM] - 1 : seq->loop_dims[SLICE_DIM];
 	}
 	
 	if (SEQ_ORDER_SEQ_MS == seq->enc.order)
