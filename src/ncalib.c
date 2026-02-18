@@ -368,10 +368,7 @@ int main_ncalib(int argc, char* argv[argc])
 	md_free(ksens);
 
 	unmap_cfl(DIMS, ksp_dims, kspace);
-
-	if (NULL != traj)
-		unmap_cfl(DIMS, trj_dims, traj);
-
+	unmap_cfl(DIMS, trj_dims, traj);
 	unmap_cfl(DIMS, pat_dims, pattern);
 
 	long nrm_dims[DIMS];
@@ -397,9 +394,7 @@ int main_ncalib(int argc, char* argv[argc])
 
 	unmap_cfl(DIMS, img_dims, img);
 	unmap_cfl(DIMS, sens_dims, sens);
-
-	if (NULL != basis)
-		unmap_cfl(DIMS, bas_dims, basis);
+	unmap_cfl(DIMS, bas_dims, basis);
 
 	double recosecs = timestamp() - start_time;
 

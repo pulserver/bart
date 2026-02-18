@@ -312,18 +312,10 @@ int main_nufft(int argc, char* argv[argc])
 	}
 
 	unmap_cfl(DIMS, traj_dims, traj);
-
-	if (NULL != basis)
-		unmap_cfl(DIMS, basis_dims, basis);
-
-	if (NULL != pattern)
-		unmap_cfl(DIMS, pattern_dims, pattern);
-
-	if (NULL != timemap)
-		unmap_cfl(DIMS, timemap_dims, timemap);
-
-	if (NULL != fieldmap)
-		unmap_cfl(DIMS, fieldmap_dims, fieldmap);
+	unmap_cfl(DIMS, basis_dims, basis);
+	unmap_cfl(DIMS, pattern_dims, pattern);
+	unmap_cfl(DIMS, timemap_dims, timemap);
+	unmap_cfl(DIMS, fieldmap_dims, fieldmap);
 
 	debug_printf(DP_DEBUG1, "Done.\n");
 

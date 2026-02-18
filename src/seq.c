@@ -490,24 +490,20 @@ debug_print_events:
 	if (1.E-3 < fabs(seq->state->start_block - seq_total_measure_time(seq->conf)))
 		debug_printf(DP_WARN, "Calculation of sequence duration invalid!\n");
 
-	if (NULL != grad_file)
-		unmap_cfl(DIMS, mdims, out_grad);
-
-	if (NULL != mom_file)
-		unmap_cfl(DIMS, mdims, out_mom);
-
-	if (NULL != adc_file)
-		unmap_cfl(DIMS, adims, out_adc);
-
-	if (NULL != raga_file)
-		unmap_cfl(DIMS, ind_dims, out_raga);
+	unmap_cfl(DIMS, mdims, out_grad);
+	unmap_cfl(DIMS, mdims, out_mom);
+	unmap_cfl(DIMS, adims, out_adc);
+	unmap_cfl(DIMS, ind_dims, out_raga);
 
 	if (NULL != seq_file) {
 
 		FILE *fp = fopen(seq_file, "w+");
+
 		if (NULL == fp)
 			error("Opening file for .seq");
+
 		pulseq_writef(fp, &ps);
+
 		fclose(fp);
 	}
 

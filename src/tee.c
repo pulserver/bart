@@ -179,8 +179,7 @@ int main_tee(int argc, char* argv[argc])
 
 	unmap_cfl(DIMS, dims, in_data);
 
-	if (out_files)
-		xfree(out_files);
+	xfree(out_files);
 
 	return 0;
 }

@@ -174,6 +174,7 @@ int main_phasepole(int argc, char* argv[argc])
 		}
 
 		unmap_cfl(DIMS, dims, out);
+
 	} else {
 
 		if (0 == pos.N) {
@@ -190,8 +191,7 @@ int main_phasepole(int argc, char* argv[argc])
 		}
 	}
 
-	if (NULL != pos.pos)
-		xfree(pos.pos);
+	xfree(pos.pos);
 
 	return 0;
 }
