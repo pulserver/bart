@@ -23,6 +23,7 @@
 #include "seq/flash.h"
 #include "seq/mag_prep.h"
 #include "seq/cest.h"
+#include "seq/seq_asl.h"
 
 #include "seq.h"
 
@@ -240,6 +241,36 @@ int seq_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq_confi
 		idx++;
 	}
 
+	if (SEQ_ASL_NONE != seq->asl.label_type) {
+
+		pulse[idx].sar_calls = calc_total_num_asl_pulses(seq);
+		pulse[idx].sar_dur = seq->asl.hanning.rf_duration;
+		pulse[idx].fa_prep = seq->asl.hanning.flip_angle;
+
+		const float alpha = 0.5;
+
+		pulse[idx].samples = lround(1.E6 * seq->asl.hanning.rf_duration);
+
+		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
+			return -1;
+
+		double dwell = seq->asl.hanning.rf_duration / pulse[idx].samples;
+
+		struct pulse_sinc ps = pulse_sinc_defaults;
+
+		pulse_sinc_init(&ps, seq->asl.hanning.rf_duration, seq->asl.hanning.flip_angle, 0., seq->phys.bwtp, alpha);
+
+		pulse[idx].max = ps.A; // this is scaled by fa / fa_prep
+		pulse[idx].integral = pulse_sinc_integral(&ps);
+
+		struct pulse* pp = CAST_UP(&ps);
+
+		for (int j = 0; j < pulse[idx].samples; j++)
+			pulse[idx].shape[j] = pulse_eval(pp, j * dwell);
+
+		idx++;
+	}
+
 	return idx;
 }
 
@@ -367,6 +398,9 @@ double seq_block_rdt(int N, const struct seq_event ev[N], double raster)
 
 static long get_chrono_slice(const struct seq_state* seq_state, const struct seq_config* seq)
 {
+	if ((SEQ_ASL_NONE != seq->asl.label_type) && (0 == seq_state->pos[COEFF_DIM]))
+		return seq->asl.label_slice_index;
+
 	if (1 < seq->geom.mb_factor)
 		return seq_state->pos[PHS2_DIM] + seq_state->pos[SLICE_DIM] * seq->loop_dims[PHS2_DIM];
 
@@ -388,6 +422,22 @@ static int check_settings(const struct seq_state* seq_state, const struct seq_co
 	    || (SEQ_PREP_SR_NONSELECTIVE == seq->magn.mag_prep)
 	    || (SEQ_PREP_SR_ADIABATIC == seq->magn.mag_prep))
 		return ERROR_MAG_PREP;
+
+	if (   (0 < seq->magn.prep_scans)
+	    && ((SEQ_PREP_OFF != seq->magn.mag_prep) || (SEQ_ASL_NONE != seq->asl.label_type)))
+		return ERROR_PREP_SCANS;
+
+	if (SEQ_ASL_NONE != seq->asl.label_type) {
+
+		if (seq->loop_dims[SLICE_DIM] < 2)
+			return ERROR_SETTING_ASL;
+
+		if (SEQ_PREP_OFF != seq->magn.mag_prep)
+			return ERROR_SETTING_ASL;
+
+		if (SEQ_CEST_NONE != seq->cest.sat_type)
+			return ERROR_SETTING_ASL;
+	}
 
 
 	if (SEQ_CONTEXT_BINARY != seq_state->context) {
@@ -435,8 +485,14 @@ int seq_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 	// changed beahvior for sequential multislice
 	unsigned long msm_flag = 0UL;
 
+	// changed behavior for ASL
+	unsigned long asl_flag = 0UL;
+
 	if (md_check_equal_order(DIMS, seq->order, seq_loop_order_multislice, SEQ_FLAGS))
 	       msm_flag = SLICE_FLAG ;
+	
+	if (SEQ_ASL_NONE != seq->asl.label_type)
+		asl_flag = AVG_FLAG;
 
 	if (0 == seq_state->pos[COEFF_DIM]) {
 
@@ -458,6 +514,11 @@ int seq_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 
 		if (1 < seq_state->pos[COEFF2_DIM]) {
 
+			// Skip spoke iterations for ASL
+			if (   (SEQ_ASL_NONE != seq->asl.label_type)
+			    && ((seq_state->pos[BATCH_DIM] == 0) || (seq_state->pos[PHS1_DIM] > 0) || (seq_state->pos[TIME_DIM] > 0)))
+				md_max_dims(DIMS, COEFF2_FLAG, seq_state->pos, seq_state->pos, last_idx);
+
 			if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~(BATCH_FLAG | COEFF2_FLAG | SLICE_FLAG | PHS2_FLAG))) {
 
 				if ((0 < seq->magn.prep_scans) && (2 < seq_state->pos[COEFF2_DIM])) {
@@ -468,7 +529,7 @@ int seq_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 				}
 			}
 
-			if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~(BATCH_FLAG | msm_flag | COEFF2_FLAG | CSHIFT_FLAG))) {
+			if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~(BATCH_FLAG | msm_flag | COEFF2_FLAG | asl_flag | CSHIFT_FLAG))) {
 
 
 				if ((SEQ_CEST_NONE != seq->cest.sat_type) && md_check_equal_dims(DIMS, zeros, seq_state->pos, ~(COEFF2_FLAG | CSHIFT_FLAG))) {
@@ -493,7 +554,13 @@ int seq_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 
 					return 1;
 				}
-				
+
+				if ((2 < seq_state->pos[COEFF2_DIM]) && (SEQ_ASL_NONE != seq->asl.label_type)) {
+
+					seq_state->mode = SEQ_BLOCK_PRE;
+					return asl(N, ev, seq_state, seq);
+				}
+
 				if (seq->loop_dims[COEFF2_DIM] - 1  == seq_state->pos[COEFF2_DIM]) {
 
 					seq_state->mode = SEQ_BLOCK_PRE;
@@ -505,11 +572,27 @@ int seq_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 
 		} else if (0 < seq_state->pos[PHS1_DIM]) {
 
-			md_max_dims(DIMS, (COEFF2_FLAG | PHS2_FLAG) &  ~msm_flag, seq_state->pos, seq_state->pos, last_idx);
+			md_max_dims(DIMS, (COEFF2_FLAG | PHS2_FLAG) &  ~msm_flag & ~asl_flag, seq_state->pos, seq_state->pos, last_idx);
 		}
 	}
 
 	if (1 == seq_state->pos[COEFF_DIM]) {
+
+		// Skip readout for ASL label slice and only acquire one M0 image at the beginning of the measurement
+		if (SEQ_ASL_NONE != seq->asl.label_type) {
+			
+			if (seq_state->pos[SLICE_DIM] == seq->asl.label_slice_index) {
+
+				md_max_dims(DIMS, COEFF2_FLAG, seq_state->pos, seq_state->pos, last_idx);
+				return 0;
+			}    
+
+			if (seq_state->pos[BATCH_DIM] == 0 && seq_state->pos[AVG_DIM] > 0) {
+				
+				md_max_dims(DIMS, COEFF2_FLAG | SLICE_FLAG | TIME_FLAG | PHS1_FLAG, seq_state->pos, seq_state->pos, last_idx);
+				return 0;
+			}
+		}
 
 		int i = 0;
 
@@ -524,10 +607,13 @@ int seq_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 
 	if (2 == seq_state->pos[COEFF_DIM]) {
 
-		md_max_dims(DIMS, (COEFF2_FLAG | PHS2_FLAG) & ~msm_flag, seq_state->pos, seq_state->pos, last_idx);
+		md_max_dims(DIMS, (COEFF2_FLAG | PHS2_FLAG) & ~msm_flag & ~asl_flag, seq_state->pos, seq_state->pos, last_idx);
 
-		if (md_check_equal_dims(DIMS, last_idx, seq_state->pos, (SEQ_FLAGS & ~(BATCH_FLAG | msm_flag)))
-		    && (0. < seq->magn.inv_delay_time)) {
+		if (md_check_equal_dims(DIMS, last_idx, seq_state->pos, (SEQ_FLAGS & ~(BATCH_FLAG | msm_flag | asl_flag)))
+			&& (0. < seq->magn.inv_delay_time)) {
+
+				if(SEQ_ASL_NONE != seq->asl.label_type && (seq_state->pos[BATCH_DIM] == 0 && seq_state->pos[AVG_DIM] > 0))
+					return 0;
 
 				seq_state->mode = SEQ_BLOCK_POST;
 

@@ -40,7 +40,12 @@ void traj_conf_from_seq(struct traj_conf *conf, const struct seq_config* seq)
 	case SEQ_PEMODE_RAGA:
 
 		conf->rational = true;
-		conf->aligned_flags = 0;
+
+		if (SEQ_ASL_NONE != seq->asl.label_type)
+			conf->aligned_flags = PHS2_FLAG | SLICE_FLAG | AVG_FLAG | BATCH_FLAG;
+		else
+			conf->aligned_flags = 0;
+
 		break;
 
 	case SEQ_PEMODE_CARTESIAN:

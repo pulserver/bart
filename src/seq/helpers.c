@@ -22,6 +22,7 @@
 #include "seq/mag_prep.h"
 #include "seq/opts.h"
 #include "seq/ui_enums.h"
+#include "seq/seq_asl.h"
 
 #include "helpers.h"
 
@@ -64,6 +65,9 @@ long seq_relevant_readouts_meas_time(const struct seq_config* seq)
 double seq_total_measure_time(const struct seq_config* seq)
 {
 	double pre_duration = seq->magn.init_delay +  seq->phys.tr; // noise scan
+
+	if (SEQ_ASL_NONE != seq->asl.label_type)
+		return calc_asl_duration(seq) + pre_duration;
 
 	pre_duration += seq->phys.tr * (seq->magn.prep_scans * seq->loop_dims[SLICE_DIM] * seq->loop_dims[PHS2_DIM]);
 
@@ -117,7 +121,10 @@ static void custom_params_to_config(struct seq_config* seq, int nl, const long c
 	seq->magn.prep_scans = custom_long[SEQ_UI_IDX_LONG_PREP_SCANS];
 	seq->phys.rf_duration = 1E-6 * custom_long[SEQ_UI_IDX_LONG_RF_DURATION_US];
 	seq->magn.init_delay = custom_long[SEQ_UI_IDX_LONG_INIT_DELAY];
-	seq->loop_dims[BATCH_DIM] = custom_long[SEQ_UI_IDX_LONG_INVERSIONS];
+	seq->asl.label_type = (enum asl_label_type)custom_long[SEQ_UI_IDX_LONG_ASL_MODE];
+	seq->loop_dims[BATCH_DIM] = (SEQ_ASL_NONE != seq->asl.label_type) 
+					? ASL_BATCH_DIM_SIZE 
+					: custom_long[SEQ_UI_IDX_LONG_INVERSIONS];
 	seq->magn.inv_delay_time = custom_long[SEQ_UI_IDX_LONG_INV_DELAY];
 	seq->enc.aligned_flags = (unsigned long)custom_long[SEQ_UI_IDX_LONG_RAGA_ALIGNED_FLAGS];
 
@@ -139,6 +146,9 @@ static void custom_params_to_config(struct seq_config* seq, int nl, const long c
 	seq->cest.offset_last = custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_LAST_PPM];
 	seq->cest.offset_increment = custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_INCREMENT_PPM];
 	seq->cest.offset_pause = custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_PAUSE_S]; 
+	
+	seq->asl.ld = 1E-3 * custom_double[SEQ_UI_IDX_DOUBLE_ASL_LD];
+	seq->asl.pld = 1E-3 * custom_double[SEQ_UI_IDX_DOUBLE_ASL_PLD];
 }
 
 
@@ -177,6 +187,10 @@ static void config_to_custom_params(int nl, long custom_long[__VLA(nl)], int nd,
 	custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_LAST_PPM] = seq->cest.offset_last;
 	custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_INCREMENT_PPM] = seq->cest.offset_increment;
 	custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_PAUSE_S] = seq->cest.offset_pause;
+
+	custom_long[SEQ_UI_IDX_LONG_ASL_MODE] = seq->asl.label_type;
+	custom_double[SEQ_UI_IDX_DOUBLE_ASL_LD] = lround(1.E3 * seq->asl.ld);
+	custom_double[SEQ_UI_IDX_DOUBLE_ASL_PLD] = lround(1.E3 * seq->asl.pld);
 }
 
 
@@ -287,6 +301,9 @@ void seq_ui_interface_standard_conf(int reverse, struct seq_config* conf, struct
 
 static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in_dims[D])
 {
+	if(SEQ_ASL_NONE != seq->asl.label_type)
+		seq->enc.order = SEQ_ORDER_SEQ_ASL;
+
 	switch (seq->enc.order) {
 
 	case SEQ_ORDER_AVG_OUTER:
@@ -325,6 +342,8 @@ static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in
 	long frames = in_dims[TIME_DIM];
 	seq->loop_dims[TIME_DIM] = frames;
 
+	seq->loop_dims[BATCH_DIM] = (SEQ_ASL_NONE != seq->asl.label_type) ? ASL_BATCH_DIM_SIZE : seq->loop_dims[BATCH_DIM];
+
 	long radial_views = in_dims[PHS1_DIM];
 
 	if (SEQ_PEMODE_RAGA == seq->enc.pe_mode) {
@@ -349,6 +368,8 @@ static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in
 	int pre_calls = 3; // 3 additional calls for delay_meas + noise_scan + ecg trigger
 	if (SEQ_CEST_NONE != seq->cest.sat_type) 
 		seq->loop_dims[COEFF2_DIM] = seq->cest.sat_pulses + MAX(1, seq->magn.prep_scans) + pre_calls; // no trigger for CEST, but spoiler or mag_prep
+	else if (SEQ_ASL_NONE != seq->asl.label_type)
+		seq->loop_dims[COEFF2_DIM] = calc_asl_coeff2_dim(seq) + pre_calls;
 	else
 		seq->loop_dims[COEFF2_DIM] = MAX(1, seq->magn.prep_scans) + pre_calls;
 
@@ -365,6 +386,7 @@ static void conf_to_loop_dims(const int D, long dims[D], struct seq_config* seq)
 
 	dims[PHS1_DIM] = seq->loop_dims[PHS1_DIM];
 
+	dims[BATCH_DIM] = (SEQ_ASL_NONE != seq->asl.label_type) ? ASL_BATCH_DIM_SIZE : seq->loop_dims[BATCH_DIM];
 	dims[TIME_DIM] = seq->loop_dims[TIME_DIM];
 
 	if (SEQ_PEMODE_RAGA == seq->enc.pe_mode)
@@ -390,6 +412,9 @@ struct seq_interface_conf seq_get_interface_conf(struct seq_config* conf)
 
 	// if (conf->enc.is3D)
 	// 	ret.mode |= SEQ_MODE_3D;
+
+	if (SEQ_ASL_NONE != conf->asl.label_type)
+		ret.mode |= SEQ_MODE_ASL;
 
 	ret.tr = conf->phys.tr;
 	ret.radial_views = conf->loop_dims[PHS1_DIM];
@@ -501,6 +526,11 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 		"\nCEST offsets\t\ttype=%d \t %.2f / %.2f / %.2f \t (pause: %.2f)",
 		seq->cest.offset_type, seq->cest.offset_first, seq->cest.offset_last, seq->cest.offset_increment,
 		seq->cest.offset_pause);
+
+	ctr += snprintf(info + ctr, (size_t)(N - ctr),
+		"\n\nASL mode/LD/PLD\t\t%d/%.3f/%.3f\t (label sl idx: %d)",
+		seq->asl.label_type, seq->asl.ld, seq->asl.pld, seq->asl.label_slice_index);
+
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n\nCrowthers no. of radial Spokes =\t%.2f\n\n", M_PI * seq->geom.baseres);
 
