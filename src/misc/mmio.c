@@ -1134,12 +1134,15 @@ static complex float* load_cfl_internal(const char* name, int D, long dimensions
 	if (1 < mpi_get_num_procs() && !mpi_shared_files)
 		mpi_sync_val(dimensions, (long)sizeof(long[D]));
 
+	strm = stream_lookup(addr);
+
+	if ((NULL != strm) && 1 < mpi_get_num_procs())
+		error("Stream support for MPI is not implemented!");
+
 	if (!stream || cfl_loop_desc_active()) {
 
 		long pos[D];
 		work_buffer_get_pos(D, dimensions, pos, false, cfl_loop_index[cfl_loop_worker_id()]);
-
-		stream_t strm = stream_lookup(addr);
 
 		stream_sync_slice(strm, D, dimensions, cfl_loop_desc.flags, pos);
 	}
