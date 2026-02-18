@@ -52,6 +52,12 @@ enum cest_offset_type {
 	SEQ_CEST_OFFSET_INVIVO
 };
 
+enum asl_label_type { 
+
+	SEQ_ASL_NONE,
+	SEQ_ASL_PCASL,
+};
+
 struct seq_phys {
 
 	double tr;
@@ -121,6 +127,22 @@ struct seq_trigger {
 	int trigger_out;
 };
 
+struct asl_pulse {
+
+	double rf_duration;
+	double flip_angle;
+};
+
+struct seq_asl {
+				
+	enum asl_label_type label_type;		// ASL labeling mode (currently only PCASL is supported)
+	double ld;				// Labeling duration for PCASL in s
+	double pld;				// Post-labeling delay in s
+	double ampl_grad_sli;			// Amplitude of slice-selection gradient during labeling in T/m
+	double pulse_spacing;			// Spacing between two consecutive hanning pulses in s
+	struct asl_pulse hanning;		// Hanning pulse parameters
+	int label_slice_index;			// Chronological index of labeling slice
+};
 
 struct seq_cest {
 
@@ -146,6 +168,7 @@ struct seq_config {
 	struct seq_magn magn;
 	struct seq_trigger trigger;
 	struct seq_cest cest;
+	struct seq_asl asl;
 	struct seq_sys sys; 
 
 	int order[DIMS];

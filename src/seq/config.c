@@ -149,6 +149,17 @@ const struct seq_config seq_config_defaults = {
 		.offset_pause = 3.5,
 	},
 
+	.asl = {
+		.label_type = SEQ_ASL_NONE,
+		.ld = 2.,
+		.pld = 1.3,
+		.hanning.rf_duration = 500.E-6,
+		.hanning.flip_angle = 25.,
+		.pulse_spacing = 1.15E-3,
+		.ampl_grad_sli = 10E-3,
+		.label_slice_index = 1,
+	},
+
 	.sys = {
 		.gamma = 42.575575E6,
 		.b0 = 2.893620,
