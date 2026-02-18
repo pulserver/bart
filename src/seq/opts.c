@@ -155,6 +155,7 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 		OPTL_UINT(0, "asl", &conf->asl.label_type, "asl", "ASL mode (0: NONE 1: PCASL) (default: NONE)"),
 		OPTL_DOUBLE(0, "LD", &conf->asl.ld, "LD", "PCASL labeling duration"),
 		OPTL_DOUBLE(0, "PLD", &conf->asl.pld, "PLD", "Post-labeling delay"),
+		OPTL_INT(0, "asl_label_slice", &conf->asl.label_slice_index, "asl_label_slice", "Chronological index of labeling slice"), // mandatory in sequence
 
 		OPTL_SET(0, "support", &seq_opts->support, "save support points of gradient"),
 
