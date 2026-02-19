@@ -2070,12 +2070,12 @@ void delayed_optimize_queue(list_t ops_queue)
 	if (0 == N)
 		return;
 
-	double start_time = timestamp();
-
 	float mpeak1 = compute_mpeak(ops_queue, false);
 
 	debug_printf(delayed_dl, "Optimize queue with %d operations\n", list_count(ops_queue));
 	debug_delayed_queue(delayed_dl, ops_queue, true);
+
+	double start_time = timestamp();
 
 	delayed_optimize_unset_clear(ops_queue);
 
@@ -2114,23 +2114,27 @@ void delayed_optimize_queue(list_t ops_queue)
 	delayed_optimize_alloc(ops_queue);
 	delayed_optimize_free(ops_queue);
 
+	double first_step = timestamp() - start_time;
+
 	debug_printf(delayed_dl, "First step: Optimized queue with %d operations\n", list_count(ops_queue));
 	debug_delayed_queue(delayed_dl, ops_queue, true);
 
-	double first_step = timestamp() - start_time;
-
 	float mpeak2 = compute_mpeak(ops_queue, false);
 
+	start_time = timestamp();
+
 	delayed_optimize_queue_looping(ops_queue);
+
+	double second_step = timestamp() - start_time;
 
 	debug_printf(delayed_dl, "Second step: Optimized queue with %d operations\n", list_count(ops_queue));
 	debug_delayed_queue(delayed_dl, ops_queue, true);
 
-	double tot_time = timestamp() - start_time;
+	double tot_time = first_step + second_step;
 
 	float mpeak3 = compute_mpeak(ops_queue, false);
 	debug_printf(MIN(DP_DEBUG3, delayed_dl), "Optimized queue with %d operations %s -> %s -> %s took %es (%es + %es)\n",
-		N, STRING_MEM_SIZE(mpeak1), STRING_MEM_SIZE(mpeak2), STRING_MEM_SIZE(mpeak3), tot_time, first_step, tot_time - first_step);
+		N, STRING_MEM_SIZE(mpeak1), STRING_MEM_SIZE(mpeak2), STRING_MEM_SIZE(mpeak3), tot_time, first_step, second_step);
 }
 
 static void delayed_optimize_set_tmp_buffer(list_t ops_queue)
