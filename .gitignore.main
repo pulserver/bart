@@ -69,3 +69,8 @@ compile_commands.json
 
 #wasm:
 *.wasm
+
+# dll/lib
+bart.def
+bart.dll
+bart.lib
