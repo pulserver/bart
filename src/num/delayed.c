@@ -193,6 +193,7 @@ static void delayed_optimize_new_buffer_on_overwrite(list_t ops_queue);
 static bool delayed_optimize_inplace(list_t ops_queue);
 static bool delayed_optimize_clear(list_t ops_queue);
 static void delayed_optimize_copy(list_t ops_queue);
+static void delayed_optimize_unset_clear(list_t ops_queue);
 
 
 static unsigned long queue_compute_loop_flags(long loop_dims[MAX_DIMS], list_t ops_queue);;
@@ -2076,6 +2077,8 @@ void delayed_optimize_queue(list_t ops_queue)
 	debug_printf(delayed_dl, "Optimize queue with %d operations\n", list_count(ops_queue));
 	debug_delayed_queue(delayed_dl, ops_queue, true);
 
+	delayed_optimize_unset_clear(ops_queue);
+
 	delayed_optimize_alloc(ops_queue);
 	delayed_optimize_free(ops_queue);
 
@@ -2243,6 +2246,21 @@ static void delayed_optimize_new_buffer_on_overwrite(list_t ops_queue)
 	}
 }
 
+static void delayed_optimize_unset_clear(list_t ops_queue)
+{
+	for (int i = 0; i < list_count(ops_queue); i++) {
+
+		delayed_op_t* op = list_get_item(ops_queue, i);
+
+		if (delayed_op_is_alloc(op) && vptr_is_set_clear(op->args[0].ptr_base)) {
+
+			vptr_unset_clear(op->args[0].ptr_base);
+			op = delayed_op_clear_create(op->args[0].N, op->args[0].adims, op->args[0].astrs, op->args[0].ptr_base, op->args[0].asize);
+			list_insert(ops_queue, op, ++i);
+		}
+	}
+}
+
 static void delayed_optimize_alloc(list_t ops_queue)
 {
 	for (int i = list_count(ops_queue) - 1; i >= 0; i--) {
@@ -2262,16 +2280,16 @@ static void delayed_optimize_alloc(list_t ops_queue)
 			continue;
 
 		bool reinsert = true;
+		delayed_op_t* clear_op = NULL;
 
 		for (int j = i; j < list_count(ops_queue); j++) {
 
 			if (!delayed_ptr_required(list_get_item(ops_queue, j), op->args[0].ptr_base))
 				continue;
 
-			if (delayed_op_is_clear(list_get_item(ops_queue, j)) && !vptr_is_mem_allocated(op->args[0].ptr_base)) {
+			if ((NULL == clear_op) && delayed_op_is_clear(list_get_item(ops_queue, j))) {
 
-				delayed_op_free(list_remove_item(ops_queue, j--));
-				vptr_clear(op->args[0].ptr_base);
+				clear_op = list_remove_item(ops_queue, j--);
 				continue;
 			}
 
@@ -2279,17 +2297,25 @@ static void delayed_optimize_alloc(list_t ops_queue)
 
 				delayed_op_free(list_remove_item(ops_queue, j));
 				delayed_op_free(op);
+				if (NULL != clear_op)
+					delayed_op_free(clear_op);
 			} else {
 
 				list_insert(ops_queue, op, j);
+				if (NULL != clear_op)
+					list_insert(ops_queue, clear_op, j + 1);
 			}
 
 			reinsert = false;
 			break;
 		}
 
-		if (reinsert)
+		if (reinsert) {
+
 			list_append(ops_queue, op);
+			if (NULL != clear_op)
+				list_append(ops_queue, clear_op);
+		}
 	}
 }
 
@@ -2348,11 +2374,6 @@ static void replace_inplace(list_t ops_queue, delayed_op_t* op_allo, delayed_op_
 
 			op->args[0].ptr = nptr;
 			op->args[0].ptr_base = nptr;
-
-			if (vptr_is_set_clear(optr))
-				vptr_clear(nptr);
-			else
-				vptr_unset_clear(nptr);
 
 			continue;
 		}
@@ -2417,18 +2438,6 @@ static bool delayed_optimize_inplace(list_t ops_queue)
 				    || !((NULL != CAST_MAYBE(delayed_op_md_fun_s, op)) || (NULL != CAST_MAYBE(delayed_op_copy_s, op)) || (NULL != CAST_MAYBE(delayed_op_vptr_fun_s, op))))
 					continue;
 
-				if (vptr_is_set_clear(op_allo->args[0].ptr_base)) {
-
-					bool read = false;
-
-					for (int i = 0; i < op->N; i++)
-						if (op->args[i].read && op->args[i].ptr_base == op_allo->args[0].ptr_base)
-							read = true;
-
-					if (read)
-						continue;
-				}
-
 				bool inplace = true;
 
 				for (int j = 0; j < op->N && inplace; j++) {
@@ -2460,19 +2469,6 @@ static bool delayed_optimize_inplace(list_t ops_queue)
 
 static bool delayed_optimize_clear(list_t ops_queue)
 {
-	for (int i = 0; i < list_count(ops_queue); i++) {
-
-		delayed_op_t* op = list_get_item(ops_queue, i);
-
-		if (delayed_op_is_alloc(op) && vptr_is_set_clear(op->args[0].ptr_base)) {
-
-			vptr_unset_clear(op->args[0].ptr_base);
-			op = delayed_op_clear_create(op->args[0].N, op->args[0].adims, op->args[0].astrs, op->args[0].ptr_base, op->args[0].asize);
-			i++;
-			list_insert(ops_queue, op, i);
-		}
-	}
-
 	bool changed = false;
 
 	for (int i = list_count(ops_queue) - 1; i >= 0; i--) {
