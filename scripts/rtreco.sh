@@ -633,9 +633,6 @@ coilcompression_geom () (
 
 coilcompression_none () (
 
-	# SVD based coil compression
-	# TRJ is void but provided for easy replacement with rovir
-
 	KSP=$(readlink -f $1)
 	TRJ=$(readlink -f $2)
 	DST=$(readlink -f $3)
@@ -644,7 +641,10 @@ coilcompression_none () (
 	trap 'rm -rf "$WORKDIR"' EXIT
 	cd "$WORKDIR" || exit
 
-	bart -r $KSP copy $KSP $DST;
+	mkfifo $TRJ || true;
+	cat $TRJ > /dev/null &
+
+	bart copy --stream 1024 $KSP $DST;
 )
 
 
