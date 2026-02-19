@@ -2599,8 +2599,129 @@ static bool delayed_optimize_clear(list_t ops_queue)
 	return changed;
 }
 
+static void delayed_optimize_copy_clone(list_t ops_queue)
+{
+	for (int i = 0; i < list_count(ops_queue); i++) {
+
+		delayed_op_t* op = list_get_item(ops_queue, i);
+
+		if (!delayed_op_is_copy(op))
+			continue;
+
+		if (!op->args[0].fitting || !op->args[1].fitting)
+			continue;
+
+		enum VPTR_LOC loc0 = vptr_get_loc(op->args[0].ptr);
+		enum VPTR_LOC loc1 = vptr_get_loc(op->args[1].ptr);
+
+		bool same_loc =    (loc0 == loc1)
+				|| ((VPTR_CFL == loc0) && (VPTR_CPU == loc1))
+				|| ((VPTR_CFL == loc1) && (VPTR_CPU == loc0));
+
+		if (!same_loc)
+			continue;
+
+		delayed_op_t* op_alloc = (i - 1 >= 0) ? list_get_item(ops_queue, i - 1) : NULL;
+		delayed_op_t* op_free = (i + 1 < list_count(ops_queue)) ? list_get_item(ops_queue, i + 1) : NULL;
+
+		// alloc(B); work(B); copy B -> A; free(B);
+		// in this case, work can be done in A directly if A is not
+		// accessed in between allocation and free of B, i.e.
+		// work(A);
+		bool buffer_before =   op_free && delayed_op_is_free(op_free)
+				    && CAST_DOWN(delayed_op_free_s, op_free)->tmp_buffer
+				    && op_free->args[0].ptr_base == op->args[1].ptr_base;
+
+		// alloc(A); copy B -> A; free(B); work(A); free(A);
+		// in this case, work can be done in B
+		// work(B); free(B);
+		bool buffer_after =   op_alloc && delayed_op_is_alloc(op_alloc)
+				   && CAST_DOWN(delayed_op_alloc_s, op_alloc)->tmp_buffer
+				   && op_alloc->args[0].ptr_base == op->args[0].ptr_base
+				   && op_free && delayed_op_is_free(op_free)
+				   && op_free->args[0].ptr_base == op->args[1].ptr_base;
+
+		void* optr = NULL;
+		void* nptr = NULL;
+
+		if (buffer_before) {
+
+			optr = op->args[1].ptr;
+			nptr = op->args[0].ptr;
+
+			int idx_alloc = -1;
+
+			for (int j = i - 1; buffer_before; j--) {
+
+				delayed_op_t* op2 = list_get_item(ops_queue, j);
+
+				if (delayed_op_is_alloc(op2) && op2->args[0].ptr_base == nptr) {
+
+					idx_alloc = j;
+					continue;
+				}
+
+				if (delayed_op_is_alloc(op2) && op2->args[0].ptr_base == optr) {
+
+					delayed_op_free(list_remove_item(ops_queue, j));
+					if (-1 != idx_alloc)
+						list_insert(ops_queue, list_remove_item(ops_queue, idx_alloc - 1), j);
+
+					i--;
+					delayed_op_free(list_remove_item(ops_queue, i)); //buffer free op
+					break;
+				}
+
+				for (int k = 0; k < op2->N; k++)
+					buffer_before = buffer_before && (op2->args[k].ptr_base != op->args[0].ptr_base);
+			}
+
+			if (buffer_before)
+				buffer_after = false;
+		}
+
+		if (buffer_after) {
+
+			for (int j = i + 2; true; j++) {
+
+				delayed_op_t* op2 = list_get_item(ops_queue, j);
+				if (delayed_op_is_free(op2) && op2->args[0].ptr_base == op->args[1].ptr_base) {
+
+					delayed_op_free(list_remove_item(ops_queue, j));
+					list_insert(ops_queue, list_remove_item(ops_queue, i), j);
+					break;
+				}
+			}
+		}
+
+		if (buffer_after || buffer_before) {
+
+			delayed_op_free(list_remove_item(ops_queue, i));
+			i--; // redo index i
+
+			for (int j = 0; j < list_count(ops_queue); j++) {
+
+				delayed_op_t* op = list_get_item(ops_queue, j);
+
+				for (int k = 0; k < op->N; k++) {
+
+					if (op->args[k].ptr_base == optr) {
+
+						op->args[k].ptr_base = nptr;
+						op->args[k].ptr = nptr + (op->args[k].ptr - optr);
+					}
+				}
+
+			}
+		}
+	}
+}
+
+
 static void delayed_optimize_copy(list_t ops_queue)
 {
+	delayed_optimize_copy_clone(ops_queue);
+
 	for (int i = list_count(ops_queue) - 1; i >= 0; i--) {
 
 		delayed_op_t* op = list_get_item(ops_queue, i);
