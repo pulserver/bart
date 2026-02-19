@@ -1,4 +1,5 @@
 /* Copyright 2020. Uecker Lab. University Medical Center Göttingen.
+ * Copyright 2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
@@ -777,14 +778,10 @@ static bool simple_z3op(int N_checks, struct simple_z3op_check strided_calls[N_c
 	if ((1 == N) && (CFL_SIZE == ostrs[0]) && (CFL_SIZE == istrs1[0]) && (CFL_SIZE == istrs2[0]))
 		return false;
 
-	long ndims[N];
-	long nostrs[N];
-	long nistrs1[N];
-	long nistrs2[N];
-	memset(ndims, 0, sizeof ndims);		// -fanalyzer uninitialized
-	memset(nostrs, 0, sizeof nostrs);	// -fanalyzer uninitialized
-	memset(nistrs1, 0, sizeof nistrs1);	// -fanalyzer uninitialized
-	memset(nistrs2, 0, sizeof nistrs2);	// -fanalyzer uninitialized
+	long ndims[N] = { };	// GCC ANALYZER
+	long nostrs[N] = { };	// GCC ANALYZER
+	long nistrs1[N] = { };	// GCC ANALYZER
+	long nistrs2[N] = { };	// GCC ANALYZER
 
 	const complex float* tin1 = NULL;
 	const complex float* tin2 = NULL;

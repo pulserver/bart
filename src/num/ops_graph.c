@@ -1,4 +1,5 @@
 /* Copyright 2021. Uecker Lab, University Medical Center Göttingen.
+ * Copyright 2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  * */
@@ -628,20 +629,16 @@ static void graph_apply(const operator_data_t* _data, int _N, void* _args[_N])
 	assert(list_count(d->graph->ext_nodes) == _N);
 
 
-	void** arg_lists[N];
-	int* ref_counts[N];
-	memset(arg_lists, 0, sizeof arg_lists);		// -fanalyzer uninitialized
-	memset(ref_counts, 0, sizeof ref_counts);	// -fanalyzer uninitialized
+	void** arg_lists[N] = { };	// GCC ANALYZER
+	int* ref_counts[N] = { };	// GCC ANALYZER
 
 	for (int i = 0; i < N; i++) {
 
 		node_t node = list_get_item(d->graph->nodes, i);
 		int Nv = node->N_vertices;
 
-		void* args[Nv];
-		int ref_count[Nv];
-		memset(args, 0, sizeof args);		// -fanalyzer uninitialized
-		memset(ref_count, 0, sizeof ref_count);	// -fanalyzer uninitialized
+		void* args[Nv] = { };	// GCC ANALYZER
+		int ref_count[Nv] = { };	// GCC ANALYZER
 
 		for (int i = 0; i < Nv; i++) {
 

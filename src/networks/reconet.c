@@ -1,5 +1,5 @@
 /* Copyright 2021-2022. Uecker Lab. University Medical Center Göttingen.
- * Copyright 2021-2025. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2021-2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  **/
@@ -669,8 +669,7 @@ static nn_t reconet_iterations_create(const struct reconet_s* config, int Nb, st
 
 static nn_t reconet_create(const struct reconet_s* config, int Nb, enum NETWORK_STATUS status)
 {
-	struct sense_model_s* models[Nb];
-	memset(models, 0, sizeof models);	// -fanalyzer uninitialized
+	struct sense_model_s* models[Nb] = { };	// GCC ANALYZER
 
 	for (int i = 0; i < Nb; i++)
 			models[i] = sense_model_create(config->sense_config);

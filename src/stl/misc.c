@@ -252,9 +252,10 @@ static void stl_write_binary(FILE* fp, const long dims[3], const double* model)
 
 	assert((((union { uint16_t s; uint8_t b; }){ 1 }).b));	// little endian
 
-        char header[80 + (int)sizeof(int32_t)];
-	memset(header, 0, sizeof(header));
+        char header[80 + (int)sizeof(int32_t)] = { };
+
         snprintf(header, 80, "Created by BART %s.\n", bart_version);
+
 	memcpy(&header[80], &(uint32_t){ (uint32_t)dims[2] }, sizeof(uint32_t));
 
 	if (sizeof(header) != xwrite(fd, sizeof(header), header))

@@ -265,6 +265,7 @@ static bool make_op_map_dims(int C, int D, const long dim[D], const long* str[C]
 
 		const long (*mstrs)[mdims->D][mdims->N] = (void*)mdims->strs;
 		const long* nstr[C];
+
 		for (int i = 0; i < C; i++)
 			nstr[i] = (*mstrs)[i];
 
@@ -1896,8 +1897,7 @@ void md_reduce_zmax(int D, const long dims[D], unsigned long rflags, complex flo
 	long odims[D];
 	md_select_dims(D, ~rflags, odims, dims);
 
-	long pos[D];
-	md_set_dims(D, pos, 0);
+	long pos[D] = { };
 
 	md_slice(D, rflags, pos, dims, dst, src, CFL_SIZE);
 
@@ -4291,8 +4291,7 @@ void md_smax(int D, const long dim[D], float* optr, const float* iptr, float val
 
 static void md_fdiff_core2(int D, const long dims[D], int d, bool dir, const long ostr[D], float* out, const long istr[D], const float* in)
 {
-	long pos[D];
-	md_set_dims(D, pos, 0);
+	long pos[D] = { };
 	pos[d] = dir ? 1 : -1;
 
 	md_circ_shift2(D, dims, pos, ostr, out, istr, in, FL_SIZE);
@@ -4341,8 +4340,7 @@ void md_fdiff_backwards2(int D, const long dims[D], int d, const long ostr[D], f
  */
 void md_fdiff_backwards(int D, const long dims[D], int d, float* out, const float* in)
 {
-	long strs[D];
-	memset(strs, 0, sizeof strs); // warning
+	long strs[D] = { }; // warning
 	md_calc_strides(D, strs, dims, FL_SIZE);
 
 	md_fdiff_backwards2(D, dims, d, strs, out, strs, in);
@@ -4354,8 +4352,7 @@ static void md_zfdiff_core2(int D, const long dims[D], int d, bool dir, const lo
 {
 	// we could also implement in terms of md_fdiff2
 
-	long pos[D];
-	md_set_dims(D, pos, 0);
+	long pos[D] = { };
 	pos[d] = dir ? 1 : -1;
 
 	md_circ_shift2(D, dims, pos, ostr, out, istr, in, CFL_SIZE);
@@ -4390,8 +4387,7 @@ void md_zfdiff_backwards2(int D, const long dims[D], int d, const long ostr[D], 
  */
 void md_zfdiff(int D, const long dims[D], int d, complex float* out, const complex float* in)
 {
-	long strs[D];
-	memset(strs, 0, sizeof strs); // warning
+	long strs[D] = { }; // warning
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
 	md_zfdiff2(D, dims, d, strs, out, strs, in);
@@ -4418,8 +4414,7 @@ void md_zfdiff0(int D, const long dims[D], int d, complex float* out, const comp
  */
 void md_zfdiff_backwards(int D, const long dims[D], int d, complex float* out, const complex float* in)
 {
-	long strs[D];
-	memset(strs, 0, sizeof strs); // warning
+	long strs[D] = { }; // warning
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
 	md_zfdiff_backwards2(D, dims, d, strs, out, strs, in);
@@ -4436,10 +4431,7 @@ void md_zfdiff_backwards0(int D, const long dims[D], int d, complex float* out, 
 	long zdims[D];
 	md_select_dims(D, ~MD_BIT(d), zdims, dims);
 
-	long pos[D]; // = { };
-	for (int i = 0; i < D; i++)
-		pos[i] = 0;
-
+	long pos[D] = { };
 	pos[d] = dims[d] - 1;
 
 	long strs[D];
@@ -4461,8 +4453,7 @@ static void md_zcumsum_core2(int D, const long dims[D], unsigned long flags, com
 	long zdims[D];
 	md_select_dims(D, ~0UL, zdims, dims);
 
-	long center[D]; // = { };
-	memset(center, 0, sizeof center);
+	long center[D] = { };
 
 	for (int i = 0; i < D; i++) {
 

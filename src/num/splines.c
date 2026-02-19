@@ -1,9 +1,7 @@
 /* Copyright 2016. Martin Uecker.
+ * Copyright 2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
- *
- * Authors:
- * 2016 Martin Uecker
  */
 
 #include <math.h>
@@ -240,8 +238,7 @@ static double cox_deboor_i(double x, int N, int p, const double tau[static N + 1
         if (0 == N)
                 return coeff[0];
 
-        double coeff2[N];
-	memset(coeff2, 0, sizeof coeff2);	// -fanalyzer uninitialized
+        double coeff2[N] = { };		// GCC ANALYZER
         cox_deboor_step(N, coeff2, x, p, tau, coeff);
 
         return cox_deboor_i(x, N - 1, p, tau, coeff2);

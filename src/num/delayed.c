@@ -1772,8 +1772,10 @@ static unsigned long queue_compute_loop_flags(long loop_dims[MAX_DIMS], list_t o
 				x->ptr = arg->ptr_base;
 				x->written = 0UL;
 				x->read = 0UL;
+
 				memset(x->rpos, 0, sizeof(x->rpos));
 				memset(x->wpos, 0, sizeof(x->wpos));
+
 				w = PTR_PASS(x);
 				list_push(written, w);
 			}

@@ -1,9 +1,7 @@
 /* Copyright 2015. The Regents of the University of California.
+ * Copyright 2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
- *
- * Authors:
- * 2012 Martin Uecker
  */
 
 #include <assert.h>
@@ -483,17 +481,12 @@ void overlapandsave2NE(int N, unsigned long flags, const long blk[N], const long
 
 void overlapandsave2NEB(int N, unsigned long flags, const long blk[N], const long odims[N], complex float* dst, const long dims1[N], const complex float* src1, const long dims2[N], const complex float* src2, const long mdims[N], const complex float* msk)
 {
-	long dims1B[N];
-	memset(dims1B, 0, sizeof dims1B);;	// maybe-uninitialized
+	long dims1B[N] = { };	// maybe-uninitialized
 
-	long tdims[2 * N];
-	long nodims[2 * N];
-	long ndims2[2 * N];
+	long tdims[2 * N] = { };	// GCC ANALYZER
+	long nodims[2 * N] = { };	// GCC ANALYZER
+	long ndims2[2 * N] = { };	// GCC ANALYZER
 	long nmdims[2 * N];
-	memset(tdims, 0, sizeof tdims);		// -fanalyzer uninitialized
-	memset(nodims, 0, sizeof nodims);	// -fanalyzer uninitialized
-	memset(ndims2, 0, sizeof ndims2);	// -fanalyzer uninitialized
-
 
 	int e = N;
 
@@ -657,16 +650,12 @@ void overlapandsave2NEB(int N, unsigned long flags, const long blk[N], const lon
 
 void overlapandsave2HB(int N, unsigned long flags, const long blk[N], const long dims1[N], complex float* dst, const long odims[N], const complex float* src1, const long dims2[N], const complex float* src2, const long mdims[N], const complex float* msk)
 {
-	long dims1B[N];
-	memset(dims1B, 0, sizeof dims1B);	// maybe-uninitialized
+	long dims1B[N] = { };	// maybe-uninitialized
 
-	long tdims[2 * N];
-	long nodims[2 * N];
-	long ndims2[2 * N];
+	long tdims[2 * N] = { };	// GCC ANALYZER
+	long nodims[2 * N] = { };	// GCC ANALYZER
+	long ndims2[2 * N] = { };	// GCC ANALYZER
 	long nmdims[2 * N];
-	memset(tdims, 0, sizeof tdims);		// -fanalyzer uninitialized
-	memset(nodims, 0, sizeof nodims);	// -fanalyzer uninitialized
-	memset(ndims2, 0, sizeof ndims2);	// -fanalyzer uninitialized
 
 	int e = N;
 

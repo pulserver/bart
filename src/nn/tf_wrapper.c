@@ -1,5 +1,5 @@
 /* Copyright 2021-2022. Uecker Lab. University Medical Center Göttingen.
- * Copyright 2022-2025. Graz University of Technology.
+ * Copyright 2022-2026. Graz University of Technology.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  */
@@ -317,8 +317,7 @@ static list_t read_name_mapping(const char * filename, const char* signature_key
 	if (-1 == (fd = open(filename, O_RDONLY)))
 		return NULL;
 
-	char config[4097];
-	memset(config, 0, 4097);
+	char config[4097] = { };
 
 	int max;
 	if (0 > (max = read(fd, config, 4096)))

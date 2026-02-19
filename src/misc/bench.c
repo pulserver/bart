@@ -1,4 +1,4 @@
-/* Copyright 2024. Institute of Biomedical Imaging. TU Graz.
+/* Copyright 2024-2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  */
@@ -26,8 +26,7 @@ static void bench_sync(bool sync_gpu)
 
 void run_bench(long rounds, bool print, bool sync_gpu, bench_f fun)
 {
-	double runtimes[rounds];
-	memset(runtimes, 0, sizeof runtimes); // maybe-uninitialized
+	double runtimes[rounds] = { };	// maybe-uninitialized
 
 	bench_sync(sync_gpu);
 

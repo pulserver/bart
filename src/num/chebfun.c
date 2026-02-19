@@ -1,4 +1,5 @@
 /* Copyright 2016. Martin Uecker.
+ * Copyright 2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  */
@@ -127,18 +128,14 @@ void chebmul(int A, int B, float dst[A + B], const float src1[A], const float sr
 {
 	int N = A + B;
 
-	float tmp1[N];
-	float tmp2[N];
-	memset(tmp1, 0, sizeof tmp1);	// -fanalyzer uninitialized
-	memset(tmp2, 0, sizeof tmp2);	// -fanalyzer uninitialized
+	float tmp1[N] = { };	// GCC ANALYZER
+	float tmp2[N] = { };	// GCC ANALYZER
 
 	resample(N, A, tmp1, src1);
 	resample(N, B, tmp2, src2);
 
-	float val1[N];
-	float val2[N];
-	memset(val1, 0, sizeof val1);	// -fanalyzer uninitialized
-	memset(val2, 0, sizeof val2);	// -fanalyzer uninitialized
+	float val1[N] = { };	// GCC ANAYLZER
+	float val2[N] = { };	// GCC ANALYZER
 
 	chebinv(N, val1, tmp1);
 	chebinv(N, val2, tmp2);

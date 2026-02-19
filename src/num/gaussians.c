@@ -1,4 +1,4 @@
-/* Copyright 2025. TU Graz. Institute of Biomedical Imaging.
+/* Copyright 2025-2026. TU Graz. Institute of Biomedical Imaging.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  **/
@@ -57,8 +57,7 @@ float gaussian_mix_pdf(int M, int N, const float coeff[M], const complex float m
 void gaussian_sample(int N, const complex float m[N],
 		const complex float icov[N][N], complex float x[N])
 {
-	complex float u[N];
-	memset(u, 0, sizeof u);	// maybe-uninitialized
+	complex float u[N] = { };	// maybe-uninitialized
 
 	for (int i = 0; i < N; i++)
 		u[i] = gaussian_rand() / sqrtf(2.);

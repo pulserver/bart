@@ -904,8 +904,7 @@ void md_copy2(int D, const long dim[D], const long ostr[D], void* optr, const lo
 		long (*nstr2[2])[D] = { &ocstr, &icstr };
 		int ND = optimize_dims_gpu(2, D, bdims, nstr2);
 
-		long pos[D];
-		md_set_dims(D, pos, 0);
+		long pos[D] = { };
 
 		do {
 			void* dst = optr + md_calc_offset(D, ostr, pos);
@@ -1113,7 +1112,7 @@ void md_copy2(int D, const long dim[D], const long ostr[D], void* optr, const lo
 		return;
 	}
 
-out:	;
+out:
 #endif
 #endif
 	const long (*nstr[2])[D] = { (const long (*)[D])ostr, (const long (*)[D])istr };
@@ -1160,6 +1159,7 @@ void md_copy(int D, const long dim[D], void* optr, const void* iptr, size_t size
 void md_fill2(int D, const long dim[D], const long str[D], void* ptr, const void* iptr, size_t size)
 {
 	void* tmp = md_alloc_sameplace(1, MD_SINGLETON_DIMS(1), size, ptr);
+
 	md_copy(1, MD_SINGLETON_DIMS(1), tmp, iptr, size);
 
 	long istr[D];
@@ -1373,8 +1373,7 @@ void md_copy_block(int D, const long pos[D], const long odim[D], void* optr, con
  */
 void md_resize(int D, const long odim[D], void* optr, const long idim[D], const void* iptr, size_t size)
 {
-	long pos[D]; // = { };
-	memset(pos, 0, sizeof(long[D]));
+	long pos[D] = { };
 
 	for (int i = 0; i < D; i++) {
 
@@ -1396,8 +1395,7 @@ void md_resize(int D, const long odim[D], void* optr, const long idim[D], const 
  */
 void md_pad(int D, const void* val, const long odim[D], void* optr, const long idim[D], const void* iptr, size_t size)
 {
-	long pos[D]; // = { };
-	memset(pos, 0, sizeof(long[D]));
+	long pos[D] = { };
 
 	md_fill(D, odim, optr, val, size);
 	md_copy_block(D, pos, odim, optr, idim, iptr, size);
@@ -1484,6 +1482,7 @@ void md_reflectpad_center2(int D, const long odim[D], const long ostr[D], void* 
 	long blockdim[D];
 	long center_block[D];
 	long block0_size[D];
+
 	long count = 0;
 
 	for (int i = 0; i < D; i++) {
@@ -1516,14 +1515,9 @@ void md_reflectpad_center2(int D, const long odim[D], const long ostr[D], void* 
 		}
 	}
 
-	long block_pos[D];
-	long in_pos[D];
-
-	md_set_dims(D, block_pos, 0);
-	md_set_dims(D, in_pos, 0);
-
-	long opos[D];
-	md_set_dims(D, opos, 0);
+	long block_pos[D] = { };
+	long in_pos[D] = { };
+	long opos[D] = { };
 
 	do {
 		for (int i = 0, idx = loop_idx[0]; i < count; idx = (++i < count) ? loop_idx[i] : idx) {
@@ -2061,8 +2055,7 @@ void md_reshape(int D, unsigned long flags, const long odims[D], void* optr, con
 	long ostrs[D];
 	md_calc_strides(D, ostrs, odims, size);
 
-	long istrs[D];
-	memset(istrs, 0, sizeof istrs); // warning
+	long istrs[D] = { }; // warning
 	md_calc_strides(D, istrs, idims, size);
 
 	md_reshape2(D, flags, odims, ostrs, optr, idims, istrs, iptr, size);

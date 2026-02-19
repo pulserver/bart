@@ -1,5 +1,5 @@
 /* Copyright 2017-2021. Uecker Lab. University Medical Center Göttingen.
- * Copyright 2022-2025. Insitute of Biomedical Imaging. TU Graz.
+ * Copyright 2022-2026. Insitute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
@@ -131,8 +131,7 @@ static void find_nearest_orthogonal_spokes(int N, int spokes[N], float ref_angle
 // [RING] Find (nearly) orthogonal spokes
 static void find_intersec_sp(const int no_intersec_sp, int intersec_sp[no_intersec_sp], const int cur_idx, const int N, const float angles[N])
 {
-	float intersec_angles[no_intersec_sp];
-	memset(intersec_angles, 0, sizeof intersec_angles);	// GCC ANALYZER
+	float intersec_angles[no_intersec_sp] = { };	// GCC ANALYZER
 
 	for (int i = 0; i < no_intersec_sp; i++) {
 

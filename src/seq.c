@@ -133,8 +133,7 @@ int main_seq(int argc, char* argv[argc])
 
 	if ((1 < total_slices) && (0. < seq_opts.dist)) {
 
-		float shift[total_slices][3];
-		memset(shift, 0, sizeof shift);
+		float shift[total_slices][3] = { };
 		float init_shift = seq->conf->geom.shift[0][2];
 
 		for (int i = 0; i < total_slices; i++) {
@@ -147,8 +146,10 @@ int main_seq(int argc, char* argv[argc])
 		seq_set_fov_pos(total_slices, 3, &shift[0][0], seq->conf);
 
 		debug_printf(DP_INFO, "slice shifts:\n\t%d %f \t\n", 0, seq->conf->geom.shift[0][2]);
+
 		for (int i = 1; i < total_slices; i++)
 			debug_printf(DP_INFO, "\t%d: %f \n", i, seq->conf->geom.shift[i][2]);
+
 		debug_printf(DP_INFO, "\n");
 	}
 

@@ -1,6 +1,6 @@
 /* Copyright 2013. The Regents of the University of California.
  * Copyright 2017-2021. Uecker Lab. University Medical Center Göttingen.
- * Copyright 2024-2025. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2024-2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by 
  * a BSD-style license which can be found in the LICENSE file.
  */
@@ -50,8 +50,7 @@ int main_circshift(int argc, char* argv[argc])
 	if ((0 > dim) || (dim >= N))
 		error("Dimension out of range");
 
-	long center[N];
-	memset(center, 0, sizeof(long[N]));
+	long center[N] = { };
 	center[dim] = shift;
 
 	complex float* idata = load_cfl(in_file, N, dims);

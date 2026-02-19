@@ -1283,11 +1283,8 @@ void loop_access_dims(int N, unsigned long flags[N], const long adims[N], const 
 				dstrs[i][j] = -dstrs[i][j];
 	}
 
-	long mlpos[D];
-	long mupos[D];
-
-	memset(mlpos, 0, sizeof mlpos);	// GCC ANALYZER
-	memset(mupos, 0, sizeof mupos);	// GCC ANALYZER
+	long mlpos[D] = { };	// GCC ANALYZER
+	long mupos[D] = { };	// GCC ANALYZER
 
 	for (int j = 0; j < D; j++) {
 
@@ -1411,8 +1408,8 @@ unsigned long vptr_block_loop_flags(int N, const long dims[N], const long strs[N
 	md_select_dims(N + 1, md_nontriv_strides(N + 1, tstrs), tdims, tdims);
 	md_select_strides(N + 1, md_nontriv_dims(N + 1, tdims), tstrs, tstrs);
 
-	unsigned long flags[N + 1];
-	memset(flags, 0, sizeof flags);	// GCC ANALYZER
+	unsigned long flags[N + 1] = { }; // GCC ANALYZER
+
 	loop_access_dims(N + 1, flags, tdims, tstrs, mem->shape.N + 1, mdims, ptr - mem->ptr);
 
 	unsigned long ret_flags = 0;
