@@ -2583,6 +2583,23 @@ static bool delayed_optimize_clear(list_t ops_queue)
 					nop = delayed_op_clear_create(op2->args[0].N, op2->args[0].adims, op2->args[0].astrs, op2->args[0].ptr, op2->args[0].asize);
 				break;
 
+			case offsetof(struct vec_ops, zfmac):
+			case offsetof(struct vec_ops, zfmacc):
+			case offsetof(struct vec_ops, fmac):
+			case offsetof(struct vec_ops, zfmacD):
+			case offsetof(struct vec_ops, zfmaccD):
+			case offsetof(struct vec_ops, fmacD):
+
+				if (delayed_arg_subset(op2->args[1], op->args[0]) || delayed_arg_subset(op2->args[2], op->args[0])) {
+
+					changed = true;
+					delayed_op_free(list_remove_item(ops_queue, j + 1));
+					i = j + 2;
+					continue;
+				}
+
+				break;
+
 			default:
 			}
 
