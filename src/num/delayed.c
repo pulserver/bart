@@ -46,9 +46,9 @@
 		_idx++;								\
 		_fsize /= 1024;							\
 	}									\
-	int len = snprintf(NULL, 0, "%.3g %s", _fsize, str_byte[_idx]);		\
+	int len = snprintf(NULL, 0, "%.3g%s", _fsize, str_byte[_idx]);		\
 	char* _ret = alloca(((unsigned int)len + 1) * sizeof(char));		\
-	sprintf(_ret, "%.3g %s", _fsize, str_byte[_idx]);			\
+	sprintf(_ret, "%.3g%s", _fsize, str_byte[_idx]);			\
 	_ret;									\
 })
 
@@ -826,7 +826,11 @@ static void delayed_op_alloc_fun(delayed_op_t* op, unsigned long flags, long /*p
 static const char* delayed_op_alloc_debug(delayed_op_t* op, bool /*nested*/)
 {
 	bool clear = vptr_is_set_clear(op->args[0].ptr_base);
-	const char* ret = ptr_printf("%s (+%s)%s ", op->TYPEID->name, STRING_MEM_SIZE(op->mchange), clear ? " (cleared)" : "");
+	const char* ret = ptr_printf("%s (%s+%s%s)%s ", op->TYPEID->name,
+				vptr_loc_name[vptr_get_loc(op->args[0].ptr_base)],
+				STRING_MEM_SIZE(op->mchange),
+				CAST_DOWN(delayed_op_alloc_s, op)->tmp_buffer ? " buf" : "",
+				clear ? " (cleared)" : "");
 
 	ptr_append_print_args(&ret, op);
 	ptr_append_printf(&ret, " ");
@@ -884,7 +888,10 @@ static void delayed_op_free_del(const delayed_op_t* op)
 
 static const char* delayed_op_free_debug(delayed_op_t* op, bool /*nested*/)
 {
-	const char* ret = ptr_printf("%s (%s) ", op->TYPEID->name, STRING_MEM_SIZE(op->mchange));
+	const char* ret = ptr_printf("%s (%s%s%s) ", op->TYPEID->name,
+					vptr_loc_name[vptr_get_loc(op->args[0].ptr_base)],
+					STRING_MEM_SIZE(op->mchange),
+					CAST_DOWN(delayed_op_free_s, op)->tmp_buffer ? " buf" : "");
 
 	ptr_append_print_args(&ret, op);
 	ptr_append_printf(&ret, " ");
@@ -924,6 +931,20 @@ struct delayed_op_copy_s {
 
 static DEF_TYPEID(delayed_op_copy_s);
 
+static const char* delayed_op_copy_debug(delayed_op_t* op, bool /*nested*/)
+{
+	bool identity = op->args[0].fitting && op->args[1].fitting;
+
+	const char* ret = ptr_printf("%s%s %s->%s ", op->TYPEID->name, identity ? " (identity)" : "",
+			vptr_loc_name[vptr_get_loc(op->args[1].ptr_base)], vptr_loc_name[vptr_get_loc(op->args[0].ptr_base)]);
+
+	ptr_append_print_args(&ret, op);
+	ptr_append_printf(&ret, " ");
+	ptr_append_print_loopable_accessdims(&ret, op, 0);
+
+	return ret;
+}
+
 static void delayed_op_copy_fun(delayed_op_t* op, unsigned long flags, long pos[MAX_DIMS])
 {
 	long dims[2][op->D];
@@ -943,7 +964,7 @@ static struct delayed_op_s* delayed_op_copy_create(int D, const long dim[D], con
 	PTR_ALLOC(struct delayed_op_copy_s, op);
 	SET_TYPEID(delayed_op_copy_s, op);
 
-	delayed_op_init(CAST_UP(op), D, ~0UL, 2, arg, 0, 0, delayed_op_copy_fun, NULL, NULL);
+	delayed_op_init(CAST_UP(op), D, ~0UL, 2, arg, 0, 0, delayed_op_copy_fun, NULL, delayed_op_copy_debug);
 
 	return CAST_UP(PTR_PASS(op));
 }

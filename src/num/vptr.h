@@ -11,6 +11,7 @@ struct vptr_shape_s {
 };
 
 enum VPTR_LOC { VPTR_CPU, VPTR_GPU, VPTR_CFL, VPTR_ANY, VPTR_LOC_MAX };
+extern const char* vptr_loc_name[VPTR_LOC_MAX];
 extern long vptr_size[VPTR_LOC_MAX];
 extern long vptr_peak[VPTR_LOC_MAX];
 
@@ -53,6 +54,7 @@ extern void vptr_set_loop_flags(const void* x, unsigned long flags);
 extern _Bool is_vptr(const void* ptr);
 extern _Bool is_vptr_cpu(const void* ptr);
 extern _Bool is_vptr_gpu(const void* ptr);
+extern enum VPTR_LOC vptr_get_loc(const void* ptr);
 
 extern void vptr_set_gpu(const void* ptr);
 extern void vptr_set_cpu(const void* ptr);

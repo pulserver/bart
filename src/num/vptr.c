@@ -192,6 +192,8 @@ struct vptr_mem_s vptr_mem_default = { NULL, 1, NULL, 0, 0UL };
 long vptr_size[VPTR_LOC_MAX] = { 0 };
 long vptr_peak[VPTR_LOC_MAX] = { 0 };
 
+const char* vptr_loc_name[VPTR_LOC_MAX] = { "CPU", "GPU", "CFL", "ANY" };
+
 
 static enum VPTR_LOC vptr_loc_sameplace(enum VPTR_LOC loc)
 {
@@ -961,6 +963,13 @@ static void vptr_update_loc(struct mem_s* mem, enum VPTR_LOC loc)
 	for (int i = 0; (NULL != mem->blocks.mem) && (i < mem->blocks.num_blocks); i++)
 		if (NULL != mem->blocks.mem[i])
 			error("Cannot change location of already allocated virtual pointer!\n");
+}
+
+enum VPTR_LOC vptr_get_loc(const void* ptr)
+{
+	struct mem_s* mem = search(ptr, false);
+	assert(NULL != mem);
+	return mem->loc;
 }
 
 void vptr_set_gpu(const void* ptr)
