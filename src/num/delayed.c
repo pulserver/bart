@@ -1043,8 +1043,10 @@ static void delayed_op_clear_fun(delayed_op_t* op, unsigned long flags, long pos
 
 static struct delayed_op_s* delayed_op_clear_create(int D, const long dim[D], const long str[D], void* ptr, size_t size)
 {
+	long tdim[D];
+	md_select_dims(D, md_nontriv_strides(D, str), tdim, dim);
 
-	struct delayed_op_arg_s arg[1] = { arg_create(D, dim, str, ptr, size, false, true) };
+	struct delayed_op_arg_s arg[1] = { arg_create(D, tdim, str, ptr, size, false, true) };
 
 	PTR_ALLOC(struct delayed_op_clear_s, op);
 	SET_TYPEID(delayed_op_clear_s, op);
