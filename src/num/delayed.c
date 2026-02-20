@@ -184,6 +184,7 @@ static struct delayed_op_s* delayed_op_chain_create(list_t ops_list, unsigned lo
 
 static inline bool delayed_arg_same_access(struct delayed_op_arg_s arg1, struct delayed_op_arg_s arg2);
 static inline bool delayed_arg_depends_on(struct delayed_op_arg_s arg1, struct delayed_op_arg_s arg2);
+static inline bool delayed_op_depends_on(struct delayed_op_s* op1, struct delayed_op_s* op2);
 static inline bool delayed_arg_subset(struct delayed_op_arg_s a, struct delayed_op_arg_s b);
 
 static void delayed_optimize_set_tmp_buffer(list_t ops_queue);
@@ -194,6 +195,7 @@ static bool delayed_optimize_inplace(list_t ops_queue);
 static bool delayed_optimize_clear(list_t ops_queue);
 static void delayed_optimize_copy(list_t ops_queue);
 static void delayed_optimize_unset_clear(list_t ops_queue);
+static bool delayed_optimize_accumulate(list_t ops_queue);
 
 
 static unsigned long queue_compute_loop_flags(long loop_dims[MAX_DIMS], list_t ops_queue);;
@@ -1606,6 +1608,16 @@ static inline bool delayed_arg_depends_on(struct delayed_op_arg_s arg1, struct d
 	return true;
 }
 
+static inline bool delayed_op_depends_on(struct delayed_op_s* op1, struct delayed_op_s* op2)
+{
+	for (int i = 0; i < op1->N; i++)
+		for (int j = 0; j < op2->N; j++)
+			if (delayed_arg_depends_on(op1->args[i], op2->args[j]))
+				return true;
+
+	return false;
+}
+
 static inline bool delayed_arg_subset(struct delayed_op_arg_s a, struct delayed_op_arg_s b)
 {
 	if (a.ptr_base != b.ptr_base)
@@ -2103,6 +2115,9 @@ void delayed_optimize_queue(list_t ops_queue)
 
 		delayed_optimize_alloc(ops_queue);
 		delayed_optimize_free(ops_queue);
+
+		if (delayed_optimize_accumulate(ops_queue))
+			repeat = true;
 
 		if (delayed_optimize_inplace(ops_queue))
 			repeat = true;
@@ -2613,6 +2628,164 @@ static bool delayed_optimize_clear(list_t ops_queue)
 				i = j + 2;
 			}
 		}
+	}
+
+	return changed;
+}
+
+static bool delayed_optimize_accumulate(list_t ops_queue)
+{
+	bool changed = false;
+
+	for (int i = list_count(ops_queue) - 2; i >= 0; i--) {
+
+		delayed_op_t* add_op = list_get_item(ops_queue, i);
+
+		if (   NULL == CAST_MAYBE(delayed_op_md_fun_s, add_op)
+		    || (offsetof(struct vec_ops, add) != CAST_DOWN(delayed_op_md_fun_s, add_op)->offset)
+		    || 0 != CAST_MAYBE(delayed_op_md_fun_s, add_op)->mpi_r_flags)	// FIXME: should be handeled
+			continue;
+
+		delayed_op_t* free_op = list_get_item(ops_queue, i + 1);
+		if (!delayed_op_is_free(free_op))
+			continue;
+
+		if (add_op->args[1].ptr_base == add_op->args[2].ptr_base)
+			continue;
+
+		int accum = -1;
+
+		if (   add_op->args[1].fitting
+		    && (add_op->args[1].ptr_base == free_op->args[0].ptr_base)
+		    && (add_op->args[0].ptr == add_op->args[2].ptr)
+		    && md_check_equal_dims(add_op->D, add_op->args[0].astrs, add_op->args[2].astrs, ~0UL))
+			accum = 1;
+
+		if (   add_op->args[2].fitting
+		    && (add_op->args[2].ptr_base == free_op->args[0].ptr_base)
+		    && (add_op->args[0].ptr == add_op->args[1].ptr)
+		    && md_check_equal_dims(add_op->D, add_op->args[0].astrs, add_op->args[1].astrs, ~0UL))
+			accum = 2;
+
+		if (-1 == accum)
+			continue;
+
+		if (debug_level > delayed_dl) {
+
+			const char* op_str = print_delayed_fun_f(list_get_item(ops_queue, i), false);
+			debug_printf(DP_INFO, "Found accumulation: %s\n", op_str);
+			xfree(op_str);
+		}
+
+		bool stop = false;
+
+		int j = i - 1;
+		delayed_op_t* op = NULL;
+
+		for (; j >= 0 && !stop; j--) {
+
+			op = list_get_item(ops_queue, j);
+
+			for (int k = 0; k < op->N; k++)
+				if (   op->args[k].ptr_base == add_op->args[1].ptr_base
+				    || op->args[k].ptr_base == add_op->args[2].ptr_base)
+					stop = true;
+
+			if (stop)
+				break;
+		}
+
+		if (!stop)
+			continue;
+
+		list_insert(ops_queue, list_remove_item(ops_queue, i), j + 1);		// add op
+
+		int k = j;
+		stop = false;
+
+		for (; k >= 0 && !stop; k--) {
+
+			op = list_get_item(ops_queue, k);
+
+			for (int l = 0; l < op->N; l++)
+				if (op->args[l].write && op->args[l].ptr_base == add_op->args[accum].ptr_base)
+					stop = true;
+
+			if (stop)
+				break;
+		}
+
+		if (!stop)
+			continue;
+
+
+#if 1
+		op = list_remove_item(ops_queue, k);
+
+		while (!delayed_op_depends_on(op, list_get_item(ops_queue, k)))
+			k++;
+
+		list_insert(ops_queue, op, k);
+#endif
+
+		op = list_get_item(ops_queue, j);
+
+		if (debug_level > delayed_dl) {
+
+			const char* op_str = print_delayed_fun_f(op, false);
+			debug_printf(delayed_dl, "Try merging: %s\n", op_str);
+			xfree(op_str);
+		}
+
+		auto md_op = CAST_MAYBE(delayed_op_md_fun_s, op);
+
+		if (   (NULL == md_op)
+		    || (op->args[0].ptr_base != add_op->args[accum].ptr_base)
+		    || (op->args[0].ptr != add_op->args[accum].ptr_base)
+		    || (op->args[0].msize != op->args[0].asize)
+		    || !md_check_equal_dims(op->args[0].N, op->args[0].astrs, MD_STRIDES(op->args[0].N, op->args[0].mdims, op->args[0].msize), ~0UL))
+			continue;
+
+		const void* ptr[] = { add_op->args[0].ptr, op->args[1].ptr, op->args[2].ptr };
+		const long* strs[] = { add_op->args[0].astrs, op->args[1].astrs, op->args[2].astrs };
+		size_t sizes[] = { CFL_SIZE, CFL_SIZE, CFL_SIZE };
+
+
+		switch (md_op->offset) {
+
+		case offsetof(struct vec_ops, zfmac):
+		case offsetof(struct vec_ops, zfmacc):
+
+			if (   (op->args[1].ptr_base == add_op->args[accum].ptr_base)
+			    || (op->args[2].ptr_base == add_op->args[accum].ptr_base))
+				continue;
+
+			list_insert(ops_queue, delayed_op_md_fun_create(md_op->type, md_op->offset, op->D, op->args[0].adims, 3, strs, ptr, sizes), j);
+			delayed_op_free(list_remove_item(ops_queue, j + 1));		// free old
+			list_insert(ops_queue, list_remove_item(ops_queue, j + 1), j);	// accum before fmac
+			break;
+
+		case offsetof(struct vec_ops, zmul):
+
+			list_insert(ops_queue, delayed_op_md_fun_create(md_op->type, offsetof(struct vec_ops, zfmac), op->D, op->args[0].adims, 3, strs, ptr, sizes), j);
+			delayed_op_free(list_remove_item(ops_queue, j + 1));
+			delayed_op_free(list_remove_item(ops_queue, j + 1));
+			break;
+
+		case offsetof(struct vec_ops, zmulc):
+
+			list_insert(ops_queue, delayed_op_md_fun_create(md_op->type, offsetof(struct vec_ops, zfmacc), op->D, op->args[0].adims, 3, strs, ptr, sizes), j);
+			delayed_op_free(list_remove_item(ops_queue, j + 1));
+			delayed_op_free(list_remove_item(ops_queue, j + 1));
+			break;
+
+		default:
+			continue;
+		}
+
+		debug_printf(delayed_dl, "Merged\n");
+
+		changed = true;
 	}
 
 	return changed;
