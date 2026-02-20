@@ -441,7 +441,13 @@ void seq_print_info_radial_views(int N, char* info, const struct seq_config* seq
 
 	int ctr = 0;
 
-	ctr += snprintf(info + ctr, (size_t)(N - ctr), "Rational Approximation of Golden Angle Sampling. Tiny-GA: %d\nallowed spokes: ", seq->enc.tiny);
+	struct traj_conf conf;
+	traj_conf_from_seq(&conf, seq);
+	double angle = calc_angle_atom(&conf) * raga_increment(seq->loop_dims[PHS1_DIM], conf.tiny_gold);
+
+	ctr += snprintf(info + ctr, (size_t)(N - ctr), 
+		"Rational Approximation of Golden Angle Sampling.\nTiny-GA: %d\tProjection angle: %f (deg)\nallowed spokes: ",
+		seq->enc.tiny, angle * 180. / M_PI);
 
 	int i = 1;
 

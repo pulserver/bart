@@ -316,18 +316,20 @@ int main_seq(int argc, char* argv[argc])
 
 	int prepped_rfs = bart_seq_prepare(seq);
 
+	char radial_info[300];
+	seq_print_info_radial_views(300, radial_info, seq->conf);
+
 	if (0 > prepped_rfs) {
 
 		if (ERROR_SETTING_SPOKES_RAGA == prepped_rfs) {
 
-			char info[300];
-			seq_print_info_radial_views(300, info, seq->conf);
-			debug_printf(DP_WARN, "%s\n", info);
+			debug_printf(DP_WARN, "%s\n", radial_info);
 		}
 
 		error("Sequence preparation failed! - check seq_config, %s [ %d ] \n", error_string(prepped_rfs), prepped_rfs);
 	}
 
+	debug_printf(DP_DEBUG1, "%s\n", radial_info);
 	debug_printf(DP_INFO, "Nr. of RF shapes: %d\n", prepped_rfs);
 
 	for (int i = 0; i < prepped_rfs; i++) {
