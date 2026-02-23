@@ -81,26 +81,26 @@ struct custom_ui* seq_custom_ui_init(void)
 {
 	struct custom_ui* ui = xmalloc(sizeof (struct custom_ui));
 
-	ui->sizes[SELECTION] = ARRAY_SIZE(custom_selection_defaults);
-	ui->sizes[BOOL] = ARRAY_SIZE(custom_bool_defaults);
-	ui->sizes[LONG] = ARRAY_SIZE(custom_long_defaults);
-	ui->sizes[longarr] = ARRAY_SIZE(custom_longarr_defaults);
-	ui->sizes[DOUBLE] = ARRAY_SIZE(custom_double_defaults);
-	ui->sizes[doublearr] = ARRAY_SIZE(custom_doublearr_defaults);
+	ui->sizes[SEQ_UI_SELECTION] = ARRAY_SIZE(custom_selection_defaults);
+	ui->sizes[SEQ_UI_BOOL] = ARRAY_SIZE(custom_bool_defaults);
+	ui->sizes[SEQ_UI_LONG] = ARRAY_SIZE(custom_long_defaults);
+	ui->sizes[SEQ_UI_longarr] = ARRAY_SIZE(custom_longarr_defaults);
+	ui->sizes[SEQ_UI_DOUBLE] = ARRAY_SIZE(custom_double_defaults);
+	ui->sizes[SEQ_UI_doublearr] = ARRAY_SIZE(custom_doublearr_defaults);
 
-	ui->selections = xmalloc((size_t)ui->sizes[SELECTION] * (sizeof (struct seq_ui_selection)));
-	ui->checkboxes = xmalloc((size_t)ui->sizes[BOOL] * (sizeof (struct seq_ui_long)));
-	ui->longs = xmalloc((size_t)ui->sizes[LONG] * (sizeof (struct seq_ui_long)));
-	ui->longarr = xmalloc((size_t)ui->sizes[longarr] * (sizeof (struct seq_ui_long)));
-	ui->doubles = xmalloc((size_t)ui->sizes[DOUBLE] * (sizeof (struct seq_ui_double)));
-	ui->doublearr = xmalloc((size_t)ui->sizes[doublearr] * (sizeof (struct seq_ui_double)));
+	ui->selections = xmalloc((size_t)ui->sizes[SEQ_UI_SELECTION] * (sizeof (struct seq_ui_selection)));
+	ui->checkboxes = xmalloc((size_t)ui->sizes[SEQ_UI_BOOL] * (sizeof (struct seq_ui_long)));
+	ui->longs = xmalloc((size_t)ui->sizes[SEQ_UI_LONG] * (sizeof (struct seq_ui_long)));
+	ui->longarr = xmalloc((size_t)ui->sizes[SEQ_UI_longarr] * (sizeof (struct seq_ui_long)));
+	ui->doubles = xmalloc((size_t)ui->sizes[SEQ_UI_DOUBLE] * (sizeof (struct seq_ui_double)));
+	ui->doublearr = xmalloc((size_t)ui->sizes[SEQ_UI_doublearr] * (sizeof (struct seq_ui_double)));
 
-	memcpy(ui->selections, &custom_selection_defaults, (size_t)ui->sizes[SELECTION] * (sizeof (struct seq_ui_selection)));
-	memcpy(ui->checkboxes, &custom_bool_defaults, (size_t)ui->sizes[BOOL] * (sizeof (struct seq_ui_long)));
-	memcpy(ui->longs, &custom_long_defaults, (size_t)ui->sizes[LONG] * (sizeof (struct seq_ui_long)));
-	memcpy(ui->longarr, &custom_longarr_defaults, (size_t)ui->sizes[longarr] * (sizeof (struct seq_ui_long)));
-	memcpy(ui->doubles, &custom_double_defaults, (size_t)ui->sizes[DOUBLE] * (sizeof (struct seq_ui_double)));
-	memcpy(ui->doublearr, &custom_doublearr_defaults, (size_t)ui->sizes[doublearr] * (sizeof (struct seq_ui_double)));
+	memcpy(ui->selections, &custom_selection_defaults, (size_t)ui->sizes[SEQ_UI_SELECTION] * (sizeof (struct seq_ui_selection)));
+	memcpy(ui->checkboxes, &custom_bool_defaults, (size_t)ui->sizes[SEQ_UI_BOOL] * (sizeof (struct seq_ui_long)));
+	memcpy(ui->longs, &custom_long_defaults, (size_t)ui->sizes[SEQ_UI_LONG] * (sizeof (struct seq_ui_long)));
+	memcpy(ui->longarr, &custom_longarr_defaults, (size_t)ui->sizes[SEQ_UI_longarr] * (sizeof (struct seq_ui_long)));
+	memcpy(ui->doubles, &custom_double_defaults, (size_t)ui->sizes[SEQ_UI_DOUBLE] * (sizeof (struct seq_ui_double)));
+	memcpy(ui->doublearr, &custom_doublearr_defaults, (size_t)ui->sizes[SEQ_UI_doublearr] * (sizeof (struct seq_ui_double)));
 
 	return ui;
 }

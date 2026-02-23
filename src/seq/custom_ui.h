@@ -58,12 +58,12 @@ struct seq_ui_double {
 
 enum custom_ui_type {
 
-	SELECTION = 0,
-	BOOL,
-	LONG,
-	longarr,
-	DOUBLE,
-	doublearr,
+	SEQ_UI_SELECTION = 0,
+	SEQ_UI_BOOL,
+	SEQ_UI_LONG,
+	SEQ_UI_longarr,
+	SEQ_UI_DOUBLE,
+	SEQ_UI_doublearr,
 };
 
 struct custom_ui {
