@@ -163,8 +163,8 @@ void pulseq_init(struct pulseq *ps, const struct seq_config* seq)
 			fovz(seq),
 		},
 		.total_duration = 0.,
-		.label_flags = md_nontriv_dims(DIMS, seq->loop_dims)
-			& (SEQ_FLAGS | TE_FLAG) & ~(COEFF_FLAG | COEFF2_FLAG| ITER_FLAG), // MDH dimension to write
+		.label_flags = ((md_nontriv_dims(DIMS, seq->loop_dims) | PHS1_FLAG) // single-spoke acquistion
+			& (SEQ_FLAGS | TE_FLAG) & ~(COEFF_FLAG | COEFF2_FLAG| ITER_FLAG)), // MDH dimension to write
 	};
 }
 
