@@ -353,9 +353,9 @@ static int adc_to_pulseq(struct pulseq *ps, int i_adc, double block_start, int N
 	struct adc a = {
 
 		.id = adc_id,
-		.num = (uint64_t)samples,
-		.dwell = (uint64_t)lround(ev[adc_idx].adc.dwell_ns / ev[adc_idx].adc.os),
-		.delay = (uint64_t)lround((ev[adc_idx].start - block_start) / ps->rf_raster_time),
+		.num = (unsigned long)samples,
+		.dwell = (unsigned long)lround(ev[adc_idx].adc.dwell_ns / ev[adc_idx].adc.os),
+		.delay = (unsigned long)lround((ev[adc_idx].start - block_start) / ps->rf_raster_time),
 		.freq = ev[adc_idx].adc.freq,
 		.phase = phase_pulseq(&ev[adc_idx])
 	};
