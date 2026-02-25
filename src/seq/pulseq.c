@@ -275,21 +275,24 @@ static int check_existing_gradient_shape(const struct pulseq* ps, const struct s
 	return -1;
 }
 
-static void grad_to_pulseq(int grad_id[3], struct pulseq *ps, struct seq_sys sys, long grad_start,
-			  long grad_len, double g[SEQ_MAX_GRAD_POINTS][3])
+static void grad_to_pulseq(int grad_id[3], struct pulseq *ps, struct seq_sys sys, double grad_start,
+			  double grad_len, double g[SEQ_MAX_GRAD_POINTS][3])
 {
-	double g_axis[grad_len];
+	long grad_start_brt = lround(grad_start / ps->gradient_raster_time);
+	long grad_len_brt = lround(grad_len / ps->gradient_raster_time);
+
+	double g_axis[grad_len_brt];
 
 	for (int a = 0; a < 3; a++) {
 
-		for (int i = 0; i < grad_len; i++)
-			g_axis[i] = - g[i + grad_start][a] / sys.grad.max_amplitude; // -1. for consistency
+		for (int i = 0; i < grad_len_brt; i++)
+			g_axis[i] = - g[i + grad_start_brt][a] / sys.grad.max_amplitude; // -1. for consistency
 
-		if (check_empty_shape(grad_len, g_axis))
+		if (check_empty_shape(grad_len_brt, g_axis))
 			continue;
 
 		int sid = VEC_LEN(ps->shapes) + 1;
-		struct shape tmp_shape = make_compressed_shape(sid, grad_len, g_axis);
+		struct shape tmp_shape = make_compressed_shape(sid, grad_len_brt, g_axis);
 
 		int gid2 = check_existing_gradient_shape(ps, &tmp_shape);
 
@@ -328,7 +331,7 @@ static double phase_pulseq(const struct seq_event* ev)
 	return (ret < 0.) ? (ret + 2. * M_PI) : ret;
 }
 
-static int adc_to_pulseq(struct pulseq *ps, int i_adc, long block_start, int N, const struct seq_event ev[N])
+static int adc_to_pulseq(struct pulseq *ps, int i_adc, double block_start, int N, const struct seq_event ev[N])
 {
 	int adc_idx = events_idx(i_adc, SEQ_EVENT_ADC, N, ev);
 
@@ -352,7 +355,7 @@ static int adc_to_pulseq(struct pulseq *ps, int i_adc, long block_start, int N, 
 		.id = adc_id,
 		.num = (uint64_t)samples,
 		.dwell = (uint64_t)lround(ev[adc_idx].adc.dwell_ns / ev[adc_idx].adc.os),
-		.delay = round(1.E6 * (ev[adc_idx].start - block_start)),
+		.delay = (uint64_t)lround((ev[adc_idx].start - block_start) / ps->rf_raster_time),
 		.freq = ev[adc_idx].adc.freq,
 		.phase = phase_pulseq(&ev[adc_idx])
 	};
@@ -518,26 +521,25 @@ void events_to_pulseq(struct pulseq *ps, enum seq_block mode, double tr, struct 
 	if (1 < events_counter(SEQ_EVENT_PULSE, N, ev))
 		error("Multiple RFs per block not supported\n");
 
-	long dur = lround(seq_block_end(N, ev, mode, tr, ps->block_raster_time) / ps->block_raster_time);
-	ps->total_duration += dur * ps->block_raster_time;
+	double dur = seq_block_end(N, ev, mode, tr, ps->block_raster_time);	ps->total_duration += dur;
 
 	double grad_shapes[SEQ_MAX_GRAD_POINTS][3];
 	seq_compute_gradients(SEQ_MAX_GRAD_POINTS, grad_shapes, ps->gradient_raster_time, N, ev);
 
-	long grad_len = lround((seq_block_end_flat(N, ev, ps->block_raster_time) + seq_block_rdt(N, ev, ps->block_raster_time)) / ps->block_raster_time);
+	double grad_len = seq_block_end_flat(N, ev, ps->block_raster_time) + seq_block_rdt(N, ev, ps->block_raster_time);
 
-	if (grad_len > dur)
-		error("Gradient length %ld exceeds block duration %ld\n", grad_len, dur);
+	if (round_up_raster(grad_len, ps->block_raster_time) > round_up_raster(dur, ps->block_raster_time))
+		error("Gradient length %.3f ms exceeds block duration %.3f ms\n", 1.E3 * grad_len, 1.E3 * dur);
 
-	long dur_split = dur;
-	long grad_start = 0;
+	double dur_split = dur;
+	double grad_start = 0;
 
 	for (int i = 0; i < n_blocks; i++) {
 
-		int adc_id = adc_to_pulseq(ps, i, grad_start * 10, N, ev);
+		int adc_id = adc_to_pulseq(ps, i, grad_start, N, ev);
 
 		if ((i != (n_blocks - 1)) && (0 < adc_id))
-			dur_split = (round_up_raster((ev[events_idx(i, SEQ_EVENT_ADC, N, ev)].end), ps->block_raster_time) + 2. * ps->block_raster_time) / ps->block_raster_time - grad_start;
+			dur_split = (round_up_raster((ev[events_idx(i, SEQ_EVENT_ADC, N, ev)].end), ps->block_raster_time) + 2. * ps->block_raster_time) - grad_start;
 		else
 			dur_split = dur - grad_start;
 
@@ -558,7 +560,7 @@ void events_to_pulseq(struct pulseq *ps, enum seq_block mode, double tr, struct 
 		struct ps_block b = {
 
 			.num = VEC_LEN(ps->ps_blocks) + 1,
-			.dur = (unsigned long)dur_split,
+			.dur = (unsigned long)lround(dur_split / ps->block_raster_time),
 			.rf = rf_id,
 			.g = { g_id[0], g_id[1], g_id[2] },
 			.adc = adc_id,
