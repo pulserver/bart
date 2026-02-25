@@ -153,10 +153,10 @@ void pulseq_init(struct pulseq *ps, const struct seq_config* seq)
 	*ps = (struct pulseq) {
 
 		.version = { 1, 4, 2, },
-		.adc_raster_time = 1.e-7,
-		.gradient_raster_time = 1.e-5,
-		.block_raster_time = 1.e-5,
-		.rf_raster_time = 1.e-6,
+		.adc_raster_time = seq->sys.raster_dwell,
+		.gradient_raster_time = seq->sys.raster_grad,
+		.block_raster_time = seq->sys.raster_grad,
+		.rf_raster_time = seq->sys.raster_rf,
 		.fov = {
 			seq->geom.fov,
 			seq->geom.fov,
