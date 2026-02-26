@@ -663,7 +663,7 @@ build_pipeline ()
 
 
 	WORKDIR=$(mktemp --tmpdir -d $TMP_TEMPLATE 2>/dev/null)
-	trap 'rm -rf "$WORKDIR"; kill $(jobs -p) || true' EXIT
+	trap 'rm -rf "$WORKDIR"; jobs=$(jobs -p); [ -n "${jobs%?}" ] && kill $jobs || true' EXIT
 	cd "$WORKDIR" || exit
 
 	echo "WORKING_DIR:    $WORKDIR" >> $LOGFILE
