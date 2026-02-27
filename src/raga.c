@@ -31,19 +31,20 @@ static const char help_str[] = "Generate file with RAGA indices for given approx
 
 int main_raga(int argc, char* argv[argc])
 {
-	const char* out_file= NULL;
+	const char* out_file = NULL;
 	int Y;
 
 	struct arg_s args[] = {
 
 		ARG_INT(true, &Y, "spokes"),
-		ARG_OUTFILE(true, &out_file, "output"),
+		ARG_OUTFILE(false, &out_file, "output"),
 	};
 
 	int raga_inc = 0;
 	int tiny_gold = 0;
 	bool double_base = true;
 	long dims[DIMS] = { [0 ... DIMS - 1] = 1  };
+	bool search = false;
 
 	const struct opt_s opts[] = {
 
@@ -55,6 +56,7 @@ int main_raga(int argc, char* argv[argc])
 		OPTL_LONG('i', "inversions", &dims[BATCH_DIM], "i", "Number of (non-aligned) inversions"),
 		OPTL_LONG('c', "shifts", &dims[CSHIFT_DIM], "c", "Number of (non-aligned) shifts"),
 		OPTL_CLEAR(0, "no-double-base", &double_base, "Define GA over Pi base instead of 2Pi."),
+		OPTL_SET(0, "search-tiny", &search, "Search for tiny golden-angle index with given number of spokes."),
 	};
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
@@ -63,6 +65,17 @@ int main_raga(int argc, char* argv[argc])
 
 	assert(0 < Y);
 	assert(raga_inc < Y);
+
+	if (search) {
+
+		assert(0 == raga_inc);
+
+		for (int idx = 1; idx < 50; idx++)
+			if (check_gen_fib(Y, idx))
+				debug_printf(DP_INFO, "Possible tiny golden-angle index: %d\n", idx);
+
+		return 0;
+	}
 
 	// Recover tiny golden angle from raga_inc if it was not passed
 
@@ -104,6 +117,9 @@ int main_raga(int argc, char* argv[argc])
 
 	long odims[DIMS];
 	md_transpose_dims(DIMS, PHS2_DIM, PHS1_DIM, odims, dims);
+
+	if (NULL == out_file)
+		error("No output for indices defined.\n");
 
 	complex float* odata = create_cfl(out_file, DIMS, odims);
 	md_clear(DIMS, odims, odata, CFL_SIZE);
