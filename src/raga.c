@@ -23,6 +23,8 @@
 #include "noncart/traj.h"
 
 #include "seq/config.h"
+#include "seq/anglecalc.h"
+#include "seq/helpers.h"
 
 static const char help_str[] = "Generate file with RAGA indices for given approximated tiny golden ratio angle/raga increment and full frame spokes.";
 
@@ -79,6 +81,18 @@ int main_raga(int argc, char* argv[argc])
 		assert(tiny_gold == recover_gen_fib_ind(Y / (double_base ? 1 : 2), raga_inc));
 
 	debug_printf(DP_INFO, "Golden Ratio Index is set to:\t%d\n", tiny_gold);
+
+
+	char radial_info[300];
+	struct seq_config seq_conf = seq_config_defaults;
+	seq_conf.enc.pe_mode = SEQ_PEMODE_RAGA;
+	seq_conf.enc.tiny = tiny_gold;
+	seq_conf.loop_dims[PHS1_DIM] = Y;
+
+	seq_print_info_radial_views(300, radial_info, &seq_conf);
+
+	if (!check_gen_fib(Y / (double_base ? 1 : 2), tiny_gold))
+		error(radial_info);
 
 	assert(0 < tiny_gold);
 

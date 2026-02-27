@@ -461,4 +461,6 @@ void seq_print_info_radial_views(int N, char* info, const struct seq_config* seq
 
 		i++;
 	}
+
+	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n");
 }
