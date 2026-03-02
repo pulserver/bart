@@ -125,17 +125,22 @@ int prep_rf_inversion(struct seq_event* rf_ev, double start, const struct seq_co
 long flash_ex_calls(const struct seq_config* seq)
 {
 	long dims[DIMS];
-	md_select_dims(DIMS, PHS1_FLAG|TIME_FLAG|TIME2_FLAG|AVG_FLAG|BATCH_FLAG, dims, seq->loop_dims);
+	md_select_dims(DIMS, SEQ_FLAGS & ~(COEFF_FLAG|COEFF2_FLAG), dims, seq->loop_dims);
 
+	long incomplete_raga_spks = 0;
 	if (SEQ_PEMODE_RAGA == seq->enc.pe_mode)
-		dims[PHS1_DIM] = 1;
+		incomplete_raga_spks = seq->loop_dims[PHS1_DIM] - seq->loop_dims[ITER_DIM];
 
-	if (1 < seq->geom.mb_factor)
-		dims[PHS2_DIM] = seq->loop_dims[PHS2_DIM];
-	else
-		dims[SLICE_DIM] = seq->loop_dims[SLICE_DIM];
+	if (1 < seq->geom.mb_factor) {
 
-	return md_calc_size(DIMS, dims);
+		dims[SLICE_DIM] = 1;
+		incomplete_raga_spks *= dims[PHS2_DIM];
+	}
+	
+	if (SEQ_ORDER_SEQ_MS == seq->enc.order)
+		incomplete_raga_spks *= dims[SLICE_DIM];
+
+	return md_calc_size(DIMS, dims) - incomplete_raga_spks;
 }
 
 static long cols_to_echo(long echo, const struct seq_config* seq)
