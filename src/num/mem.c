@@ -275,6 +275,9 @@ bool mem_ondevice(const void* ptr)
 
 void mem_device_free(void* ptr, void (*device_free)(const void* ptr, bool host))
 {
+	if (NULL == ptr)
+		return;
+
 	for (int i = 0; i < CUDA_MAX_STREAMS + 1; i++) {
 
 		if (i != cuda_get_stream_id() && CUDA_MAX_STREAMS != cuda_get_stream_id())
