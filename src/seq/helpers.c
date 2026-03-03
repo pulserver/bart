@@ -71,10 +71,7 @@ double seq_total_measure_time(const struct seq_config* seq)
 	prep_pulse_duration += seq->magn.inv_delay_time;
 	// prep_pulse_duration *= inv_calls(seq);
 
-	long dims[DIMS] = { };
-	md_select_dims(DIMS, SEQ_FLAGS & ~(COEFF_FLAG|COEFF2_FLAG), dims, seq->loop_dims);
-
-	long img_calls = md_calc_size(DIMS, dims);
+	long img_calls = flash_ex_calls(seq) * seq->geom.mb_factor;
 	double imaging_duration = seq->phys.tr * img_calls;
 
 	if ((SEQ_TRIGGER_OFF != seq->trigger.type) && (1 < seq->trigger.pulses)) {
