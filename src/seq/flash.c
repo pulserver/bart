@@ -363,7 +363,7 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 	if (!prep_grad_sli_reph(&slice_rephaser, seq))
 		return ERROR_PREP_GRAD_SLI_REPH;
 
-	if ((grad_total_time(&slice) - 1.e-3) > timing.slice_rephaser)
+	if ((grad_total_time(&slice) - 1.E-9) > timing.slice_rephaser)
 		return ERROR_SLI_TIMING;
 
 	i += seq_grad_to_event(ev + i, timing.slice_rephaser, &slice_rephaser, projSLICE);
@@ -413,7 +413,7 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 		if (!prep_grad_ro(&readout, seq_state->pos[TE_DIM], seq))
 			return ERROR_PREP_GRAD_RO_RO;
 
-		if ((seq_state->pos[TE_DIM] == 0) && (timing.readout_dephaser + grad_total_time(&readout_dephaser) - 1.e-3) > timing.readout[seq_state->pos[TE_DIM]])
+		if ((seq_state->pos[TE_DIM] == 0) && (timing.readout_dephaser + grad_total_time(&readout_dephaser) - 1.E-9) > timing.readout[seq_state->pos[TE_DIM]])
 			return ERROR_RO_TIMING;
 
 		i += seq_grad_to_event(ev + i, timing.readout[seq_state->pos[TE_DIM]], &readout, projX);
