@@ -138,6 +138,9 @@ static bool test_block_minv_init_delay(void)
 	if (3 != pre_blocks)
 		return false;
 
+	if (16 != i)
+		return false;
+
 	bart_seq_free(seq);
 
 	return true;
@@ -204,6 +207,9 @@ static bool test_block_minv_multislice(void)
 	} while (seq_continue(seq->state, seq->conf));
 
 	if (4 != inversions)
+		return false;
+
+	if (21 != i)
 		return false;
 
 	bart_seq_free(seq);
