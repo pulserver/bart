@@ -694,6 +694,12 @@ int main_twixread(int argc, char* argv[argc])
 	complex float* out = create_cfl(out_file, DIMS, odims);
 	md_clear(DIMS, odims, out, CFL_SIZE);
 
+	long pdims[DIMS];
+	long pstrs[DIMS];
+	md_select_dims(DIMS, ~(READ_FLAG | COIL_FLAG), pdims, bin_dims);
+	md_calc_strides(DIMS, pstrs, pdims, CFL_SIZE);
+	complex float* pat = md_calloc(DIMS, pdims, CFL_SIZE);
+
 	bool pmu_out = (NULL != pmu_file);
 
 	long pmu_dims[DIMS];
@@ -798,16 +804,11 @@ int main_twixread(int argc, char* argv[argc])
 			if (0 < bin)
 				pos[TIME_DIM] = call / bin;
 
-			long strs[DIMS];
-			long sstrs[DIMS];
-			md_calc_strides(DIMS, strs, bin_dims, CFL_SIZE);
-			md_singleton_strides(DIMS, sstrs);
-
-			complex float zero[1] = { 0. };
-
-			if (!md_compare2(DIMS, adc_dims, strs, &MD_ACCESS(DIMS, strs, pos, out), sstrs, zero, CFL_SIZE))
+			if (0. != MD_ACCESS(DIMS, pstrs, pos, pat))
 				error("Read same ADC position twice!\n"
 				      "Check squashed dimensions.\n");
+
+			MD_ACCESS(DIMS, pstrs, pos, pat) = 1.;
 
 			md_copy_block(DIMS, pos, bin_dims, out, adc_dims, buf, CFL_SIZE);
 
@@ -822,6 +823,7 @@ int main_twixread(int argc, char* argv[argc])
 
 	unmap_cfl(DIMS, odims, out);
 	unmap_cfl(DIMS, pmu_dims, pmu);
+	md_free(pat);
 
 	return 0;
 }
