@@ -432,6 +432,9 @@ static bool test_block_prep(void)
 
 	bart_seq_free(seq);
 
+	if (23 != i)
+		return false;
+
 	return true;
 }
 
