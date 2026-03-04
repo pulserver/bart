@@ -45,8 +45,8 @@ static void post_process(enum mdb_t mode, const struct linop_s* op, struct moba_
 
 	// Project B1 map back into image space
 
-        long map_dims[DIMS];
-        md_select_dims(DIMS, FFT_FLAGS|TIME_FLAG|TIME2_FLAG, map_dims, dims);
+	long map_dims[DIMS];
+	md_select_dims(DIMS, FFT_FLAGS|TIME_FLAG|TIME2_FLAG, map_dims, dims);
 
 	complex float* tmp = md_alloc_sameplace(DIMS, map_dims, CFL_SIZE, img);
 
@@ -54,18 +54,18 @@ static void post_process(enum mdb_t mode, const struct linop_s* op, struct moba_
 
 	case MDB_BLOCH:
 
-                assert(NULL != data);
+		assert(NULL != data);
 
-                pos[COEFF_DIM] = 3;
+		pos[COEFF_DIM] = 3;
 
-                md_copy_block(DIMS, pos, map_dims, tmp, imgs_dims, img, CFL_SIZE);
-                bloch_forw_alpha(op, tmp, tmp);
-                md_copy_block(DIMS, pos, imgs_dims, img, map_dims, tmp, CFL_SIZE);
+		md_copy_block(DIMS, pos, map_dims, tmp, imgs_dims, img, CFL_SIZE);
+		bloch_forw_alpha(op, tmp, tmp);
+		md_copy_block(DIMS, pos, imgs_dims, img, map_dims, tmp, CFL_SIZE);
 
 		break;
 
-        // Reparameterized Look-Locker Model
-        // Estimate effective flip angle from R1'
+	// Reparameterized Look-Locker Model
+	// Estimate effective flip angle from R1'
 	// FIXME: Move to separate function which can be tested with a unit test
 
 	case MDB_T1_PHY:
@@ -76,7 +76,7 @@ static void post_process(enum mdb_t mode, const struct linop_s* op, struct moba_
 
 		pos[COEFF_DIM] = 2;
 
-                long map_size = md_calc_size(DIMS, map_dims);
+		long map_size = md_calc_size(DIMS, map_dims);
 
 		md_copy_block(DIMS, pos, map_dims, tmp, imgs_dims, img, CFL_SIZE);
 
@@ -99,7 +99,7 @@ static void post_process(enum mdb_t mode, const struct linop_s* op, struct moba_
 
 		md_zacosr(DIMS, map_dims, tmp, tmp);
 
-	        md_zsmul(DIMS, map_dims, tmp, tmp, 180. / M_PI);        // output the effective flip angle map (in degree!)
+		md_zsmul(DIMS, map_dims, tmp, tmp, 180. / M_PI);        // output the effective flip angle map (in degree!)
 
 		md_copy_block(DIMS, pos, imgs_dims, img, map_dims, tmp, CFL_SIZE);
 
@@ -154,36 +154,36 @@ static void set_bloch_conf(enum mdb_t mode, struct mdb_irgnm_l1_conf* conf2, con
 
 	case MDB_BLOCH:
 
-                assert(NULL != data);
+		assert(NULL != data);
 
 		switch (data->sim.seq.seq_type) {
 
 		case SEQ_IRFLASH:
 
 			conf2->l2flags = (0 != data->other.scale[3]) ? ((0 == conf->l2para) ? 8 : conf->l2para) : 0;
-                        conf2->constrained_maps = (-1 == conf->constrained_maps) ? 1 : conf->constrained_maps;	// only R1 map: bitmask (1 0 0 0) = 1
-                        conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 2 : conf->not_wav_maps; // no wavelet for T2 and B1 map
+			conf2->constrained_maps = (-1 == conf->constrained_maps) ? 1 : conf->constrained_maps;	// only R1 map: bitmask (1 0 0 0) = 1
+			conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 2 : conf->not_wav_maps; // no wavelet for T2 and B1 map
 			break;
 
 		case SEQ_IRBSSFP:
 
 			conf2->l2flags = (0 == conf->l2para) ? 0 : conf->l2para;
-                        conf2->constrained_maps = (-1 == conf->constrained_maps) ? 5 : conf->constrained_maps;	// only T1 and T2: bitmask(1 0 1 0) = 5
-                        conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps; // no wavelet for B1 map
+			conf2->constrained_maps = (-1 == conf->constrained_maps) ? 5 : conf->constrained_maps;	// only T1 and T2: bitmask(1 0 1 0) = 5
+			conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps; // no wavelet for B1 map
 			break;
 
 		default:
-                }
+	}
 
 		break;
 
-        // No Wavelet penalty on flip angle map
+	// No Wavelet penalty on flip angle map
 
 	case MDB_T1_PHY:
 
 		conf2->l2flags = (0 == conf->l2para) ? 4 : conf->l2para;
-                conf2->constrained_maps = (-1 == conf->constrained_maps) ? 2 : conf->constrained_maps;    // only R1 map: bitmask (0 1 0) = 2
-                conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;	// no wavelet for R1' map
+		conf2->constrained_maps = (-1 == conf->constrained_maps) ? 2 : conf->constrained_maps;    // only R1 map: bitmask (0 1 0) = 2
+		conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;	// no wavelet for R1' map
 
 		break;
 
@@ -342,7 +342,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 		.constrained_maps = conf->constrained_maps,
 		.auto_norm = conf->auto_norm,
 		.no_sens_l2 = data->other.no_sens_l2,
-                .not_wav_maps = (0 == conf->not_wav_maps) ? 0 : conf->not_wav_maps,
+		.not_wav_maps = (0 == conf->not_wav_maps) ? 0 : conf->not_wav_maps,
 		.algo = conf->algo,
 		.rho = conf->rho,
 		.ropts = conf->ropts,
@@ -351,7 +351,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 		.ratio = conf->ratio,
 	};
 
-        set_bloch_conf(conf->mode, &conf2, conf, data, imgs_dims);
+	set_bloch_conf(conf->mode, &conf2, conf, data, imgs_dims);
 
 	// Always constrain last parameter map as default
 	if (-1 == conf2.constrained_maps)
@@ -395,8 +395,8 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 	// Clean up
 
 
-        if ((MDB_T1_PHY == conf->mode) || (MDB_BLOCH == conf->mode) || (MDB_IR_MGRE == conf->mode))
-                linop_free(nl.linop_alpha);
+	if ((MDB_T1_PHY == conf->mode) || (MDB_BLOCH == conf->mode) || (MDB_IR_MGRE == conf->mode))
+		linop_free(nl.linop_alpha);
 
 	nlop_free(nl.nlop);
 
@@ -423,14 +423,14 @@ void moba_recon(const struct moba_conf* conf, struct moba_conf_s* data, const lo
 	md_select_dims(DIMS, ~COIL_FLAG, pat_dims, data_dims);
 
 	if (NULL != init)
-                md_copy(DIMS, imgs_dims, img, init, CFL_SIZE);
+		md_copy(DIMS, imgs_dims, img, init, CFL_SIZE);
 
 	switch (conf->mode) {
 
 	case MDB_T1:
-        case MDB_T1_PHY:
+	case MDB_T1_PHY:
 	case MDB_T2:
-        case MDB_BLOCH:
+	case MDB_BLOCH:
 	case MDB_IR_MGRE:
 
 		recon(conf, data, dims, imgs_dims, img, coil_dims, sens, pattern, mask, TI, TE, b1, b0, data_dims, kspace_data);
