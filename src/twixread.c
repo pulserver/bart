@@ -668,9 +668,19 @@ int main_twixread(int argc, char* argv[argc])
 		siemens_meas_setup(ifd, &hdr); // reset
 	}
 
+	long bin_dims[DIMS];
+	md_copy_dims(DIMS, bin_dims, dims);
+
+	if (0 < bin) {
+
+		debug_printf(DP_WARN, "Binning option is for RAGA sampled data only!\n");
+
+		bin_dims[TIME_DIM] = (adcs + (bin - 1)) / bin;
+	}
+
 
 	long odims[DIMS];
-	md_copy_dims(DIMS, odims, dims);
+	md_copy_dims(DIMS, odims, bin_dims);
 
 	if (-1 != radial_lines) {
 
@@ -679,13 +689,6 @@ int main_twixread(int argc, char* argv[argc])
 		odims[1] = dims[0];
 		odims[2] = dims[1];
 		assert(1 == dims[2]);
-	}
-
-	if (0 < bin) {
-
-		debug_printf(DP_WARN, "Binning option is for RAGA sampled data only!\n");
-
-		odims[TIME_DIM] = (adcs + (bin - 1)) / bin;
 	}
 
 	complex float* out = create_cfl(out_file, DIMS, odims);
@@ -797,7 +800,7 @@ int main_twixread(int argc, char* argv[argc])
 
 			long strs[DIMS];
 			long sstrs[DIMS];
-			md_calc_strides(DIMS, strs, (0 < bin) ? odims : dims, CFL_SIZE);
+			md_calc_strides(DIMS, strs, bin_dims, CFL_SIZE);
 			md_singleton_strides(DIMS, sstrs);
 
 			complex float zero[1] = { 0. };
@@ -806,8 +809,7 @@ int main_twixread(int argc, char* argv[argc])
 				error("Read same ADC position twice!\n"
 				      "Check squashed dimensions.\n");
 
-			// FIXME: odims not working with MPI data
-			md_copy_block(DIMS, pos, (0 < bin) ? odims : dims, out, adc_dims, buf, CFL_SIZE);
+			md_copy_block(DIMS, pos, bin_dims, out, adc_dims, buf, CFL_SIZE);
 
 			call++;
 		}
