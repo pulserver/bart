@@ -818,7 +818,7 @@ int main_twixread(int argc, char* argv[argc])
 
 	md_free(buf);
 
-	unmap_cfl(DIMS, dims, out);
+	unmap_cfl(DIMS, odims, out);
 	unmap_cfl(DIMS, pmu_dims, pmu);
 
 	return 0;
