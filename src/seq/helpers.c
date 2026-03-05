@@ -424,6 +424,12 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n\nCrowthers no. of radial Spokes =\t%.2f", M_PI * seq->geom.baseres);
 
+
+	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n\nbart seq ");
+	struct seq_opts seq_opts = seq_opts_defaults;
+	ctr += seq_cmdline_print((size_t)(N - ctr), info + ctr, seq, &seq_opts);
+	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n\n");
+
 	if (ctr > N)
 		return -1;
 
