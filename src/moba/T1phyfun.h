@@ -6,8 +6,6 @@ struct moba_conf_s;
 
 
 extern const struct linop_s* T1_get_alpha_trafo(struct nlop_s* op);
-extern void T1_forw_alpha(const struct linop_s* op, complex float* dst, const complex float* src);
-extern void T1_back_alpha(const struct linop_s* op, complex float* dst, const complex float* src);
 
 extern float read_relax(float tr, float angle);
 

@@ -25,8 +25,6 @@ enum meco_model {
 void ir_meco_calc_fat_modu(int N, const long dims[N], const complex float TE[dims[CSHIFT_DIM]], complex float dst[dims[CSHIFT_DIM]], enum fat_spec fat_spec);
 
 extern const struct linop_s* ir_meco_get_fB0_trafo(struct nlop_s* op);
-extern void ir_meco_forw_fB0(const struct linop_s* op, complex float* dst, const complex float* src);
-extern void ir_meco_back_fB0(const struct linop_s* op, complex float* dst, const complex float* src);
 
 extern int ir_meco_get_num_of_coeff(enum meco_model sel_model);
 

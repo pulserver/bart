@@ -76,18 +76,6 @@ const struct linop_s* bloch_get_alpha_trafo(const struct nlop_s* op)
 	return data->linop_alpha;
 }
 
-
-void bloch_forw_alpha(const struct linop_s* op, complex float* dst, const complex float* src)
-{
-	linop_forward_unchecked(op, dst, src);
-}
-
-void bloch_back_alpha(const struct linop_s* op, complex float* dst, const complex float* src)
-{
-	linop_adjoint_unchecked(op, dst, src);
-}
-
-
 static void bloch_fun(const nlop_data_t* _data, complex float* dst, const complex float* src)
 {
 	double starttime = timestamp();
@@ -188,7 +176,7 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 		md_zsmul(data->N, data->map_dims, omscale, omscale, scale[8]);
 	}
 
-	bloch_forw_alpha(data->linop_alpha, b1scale, b1scale);	// freq -> pixel + smoothing!
+	linop_forward_unchecked(data->linop_alpha, b1scale, b1scale);	// freq -> pixel + smoothing!
 
 
 	//Allocate Output CPU memory
@@ -311,7 +299,7 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 				//debug_printf(DP_INFO, "\tR1:%f, R1_2:%f, R1_3:%f,R1_4:%f,R1_5:%f \n", sim_data.voxel.r1[0], sim_data.voxel.r1[1], sim_data.voxel.r1[2], sim_data.voxel.r1[3], sim_data.voxel.r1[4]);
 				//debug_printf(DP_INFO, "\tR2:%f, R2_2:%f, R2_3:%f, R2_4:%f, R2_5:%f \n", sim_data.voxel.r2[0], sim_data.voxel.r2[1], sim_data.voxel.r2[2], sim_data.voxel.r2[3], sim_data.voxel.r2[4]);
 				//debug_printf(DP_INFO, "\tM0:%f, M0_2:%f, M0_3:%f, M0_4:%f,M0_5:%f\n", sim_data.voxel.m0[0],sim_data.voxel.m0[1],sim_data.voxel.m0[2],sim_data.voxel.m0[3], sim_data.voxel.m0[4]);
-				//debug_printf(DP_INFO, "\tB1:%f\n", sim_data.voxel.b1); 
+				//debug_printf(DP_INFO, "\tB1:%f\n", sim_data.voxel.b1);
 				//debug_printf(DP_INFO, "\tk:%f, k2:%f, k3:%f, k4:%f\n", sim_data.voxel.k[0], sim_data.voxel.k[1], sim_data.voxel.k[2],sim_data.voxel.k[3]);
 				//debug_printf(DP_INFO, "\tOm:%f, Om2:%f, Om3:%f, Om4:%f\n\n", sim_data.voxel.Om[1], sim_data.voxel.Om[2], sim_data.voxel.Om[3], sim_data.voxel.Om[4]);
 
@@ -339,7 +327,7 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 
 					bloch_simulation(&sim_data, sim_data.seq.rep_num, &m, &sa_r1, &sa_r2, &sa_m0, &sa_b1);
 					break;
-				
+
 				case MODEL_BMC:
 
 					bloch_simulation2(&sim_data, sim_data.seq.rep_num, sim_data.voxel.P, &m_p, &sa_r1_p, &sa_r2_p, &sa_m0_p, &sa_b1_p, &sa_k_p,  &sa_om_p);
@@ -548,7 +536,7 @@ static void bloch_der(const nlop_data_t* _data, int /*o*/, int /*i*/, complex fl
 
 	pos[COEFF_DIM] = 3; // B1
 	md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, src, CFL_SIZE);
-	bloch_forw_alpha(data->linop_alpha, tmp_map, tmp_map); // freq -> pixel + smoothing!
+	linop_forward_unchecked(data->linop_alpha, tmp_map, tmp_map); // freq -> pixel + smoothing!
 	md_zreal(data->N, data->map_dims, tmp_map, tmp_map);
 	md_copy_block(data->N, pos, data->in_dims, tmp, data->map_dims, tmp_map, CFL_SIZE);
 
@@ -618,7 +606,7 @@ static void bloch_adj(const nlop_data_t* _data, int /*o*/, int /*i*/, complex fl
 	pos[COEFF_DIM] = 3; // B1
 	md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, tmp, CFL_SIZE);
 	md_zreal(data->N, data->map_dims, tmp_map, tmp_map);
-	bloch_back_alpha(data->linop_alpha, tmp_map, tmp_map); // freq -> pixel + smoothing!
+	linop_adjoint_unchecked(data->linop_alpha, tmp_map, tmp_map); // freq -> pixel + smoothing!
 	md_copy_block(data->N, pos, data->in_dims, dst, data->map_dims, tmp_map, CFL_SIZE);
 
  	for (int p = 0; p < data->moba_data->sim.voxel.P - 1; p++) {

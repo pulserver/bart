@@ -79,16 +79,6 @@ const struct linop_s* T1_get_alpha_trafo(struct nlop_s* op)
 	return data->linop_alpha;
 }
 
-void T1_forw_alpha(const struct linop_s* op, complex float* dst, const complex float* src)
-{
-	linop_forward_unchecked(op, dst, src);
-}
-
-void T1_back_alpha(const struct linop_s* op, complex float* dst, const complex float* src)
-{
-	linop_adjoint_unchecked(op, dst, src);
-}
-
 /**
  * Readout relaxation rate for reparameterized Look-Locker model
  * Roeloffs, V., Wang, X., Sumpf, T.J., Untenberger, M., Voit, D. and Frahm, J. (2016),
@@ -141,7 +131,7 @@ static void T1_fun(const nlop_data_t* _data, complex float* dst, const complex f
 	pos[COEFF_DIM] = 2;
 	md_copy_block(data->N, pos, data->map_dims, data->alpha, data->in_dims, src, CFL_SIZE);
 
-	T1_forw_alpha(data->linop_alpha, data->tmp_map, data->alpha);
+	linop_forward_unchecked(data->linop_alpha, data->tmp_map, data->alpha);
 
 	// R1p_nom = -ln(cos(fa_nom))/tr = alpha_nom -> Sobolev on r1p around 0 instead of 1
 	md_zfill(data->N, data->map_dims, data->tmp_ones, data->r1p_nom);
@@ -225,7 +215,7 @@ static void T1_der(const nlop_data_t* _data, int /*o*/, int /*i*/, complex float
 	pos[COEFF_DIM] = 2;
 	md_copy_block(data->N, pos, data->map_dims, data->tmp_map, data->in_dims, src, CFL_SIZE);
 	//const complex float* tmp_alpha = (const void*)src + md_calc_offset(data->N, data->in_strs, pos);
-	T1_forw_alpha(data->linop_alpha, data->tmp_map, data->tmp_map);
+	linop_forward_unchecked(data->linop_alpha, data->tmp_map, data->tmp_map);
 
 	// dst = dst + dalpha * alpha'
 	md_zfmac2(data->N, data->out_dims, data->out_strs, dst, data->map_strs, data->tmp_map, data->out_strs, data->tmp_dalpha);
@@ -264,7 +254,7 @@ static void T1_adj(const nlop_data_t* _data, int /*o*/, int /*i*/, complex float
         // Real constraint through adjoint derivative operator? -> breaks scalar product test!
         // md_zreal(data->N, data->map_dims, data->tmp_map, data->tmp_map);
 
-        T1_back_alpha(data->linop_alpha, data->tmp_map, data->tmp_map);
+        linop_adjoint_unchecked(data->linop_alpha, data->tmp_map, data->tmp_map);
 
 	// dst[2] = sum (conj(alpha') * src, t)
 	pos[COEFF_DIM] = 2;

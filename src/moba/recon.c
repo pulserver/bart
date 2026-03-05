@@ -59,7 +59,7 @@ static void post_process(enum mdb_t mode, const struct linop_s* op, struct moba_
 		pos[COEFF_DIM] = 3;
 
 		md_copy_block(DIMS, pos, map_dims, tmp, imgs_dims, img, CFL_SIZE);
-		bloch_forw_alpha(op, tmp, tmp);
+		linop_forward_unchecked(op, tmp, tmp);
 		md_copy_block(DIMS, pos, imgs_dims, img, map_dims, tmp, CFL_SIZE);
 
 		break;
@@ -80,7 +80,7 @@ static void post_process(enum mdb_t mode, const struct linop_s* op, struct moba_
 
 		md_copy_block(DIMS, pos, map_dims, tmp, imgs_dims, img, CFL_SIZE);
 
-		T1_forw_alpha(op, tmp, tmp);
+		linop_forward_unchecked(op, tmp, tmp);
 
 		md_zreal(DIMS, map_dims, tmp, tmp);
 
@@ -131,7 +131,7 @@ static void post_process(enum mdb_t mode, const struct linop_s* op, struct moba_
 
 		md_copy_block(DIMS, pos, map_dims, tmp, imgs_dims, img, CFL_SIZE);
 
-		ir_meco_forw_fB0(op, tmp, tmp);
+		linop_forward_unchecked(op, tmp, tmp);
 
 		// TE is provided in ms, therefore B0*1000 transforms: [1/ms] -> [1/s]
 		md_zsmul(DIMS, map_dims, tmp, tmp, 1000.);
@@ -271,7 +271,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 	case MDB_T1_PHY:
 	case MDB_BLOCH:
 	case MDB_IR_MGRE:
-		
+
 		nl = moba_create(dims, mask, TI, TE_IR_MGRE, b1, b0, conf->scale_fB0, pattern, &mconf, data);
 		break;
 	}
@@ -292,7 +292,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 
 		md_copy_block(DIMS, pos, map_dims, tmp, imgs_dims, img, CFL_SIZE);
 
-		ir_meco_back_fB0(nl.linop_alpha, tmp, tmp);
+		linop_adjoint_unchecked(nl.linop_alpha, tmp, tmp);
 
 		md_copy_block(DIMS, pos, imgs_dims, img, map_dims, tmp, CFL_SIZE);
 	}

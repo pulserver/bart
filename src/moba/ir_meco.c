@@ -138,16 +138,6 @@ const struct linop_s* ir_meco_get_fB0_trafo(struct nlop_s* op)
 	return data->linop_fB0;
 }
 
-void ir_meco_forw_fB0(const struct linop_s* op, complex float* dst, const complex float* src)
-{
-	linop_forward_unchecked(op, dst, src);
-}
-
-void ir_meco_back_fB0(const struct linop_s* op, complex float* dst, const complex float* src)
-{
-	linop_adjoint_unchecked(op, dst, src);
-}
-
 static void ir_meco_init(struct ir_meco_s* data, const void* arg)
 {
 	if (NULL != data->Ms_w)
@@ -246,7 +236,7 @@ static void ir_meco_fun(const nlop_data_t* _data, complex float* dst, const comp
 	// fB0
 	pos[COEFF_DIM] = 7;
 	md_copy_block(data->N, pos, data->map_dims, data->fB0, data->in_dims, src, CFL_SIZE);
-	ir_meco_forw_fB0(data->linop_fB0, data->fB0, data->fB0); // Forward: convert from k-space to image-space
+	linop_forward_unchecked(data->linop_fB0, data->fB0, data->fB0); // Forward: convert from k-space to image-space
 
 	// exp(1i*2*pi * LfB0 * fB0 .* TE)
 	md_zmul2(data->N, data->out3_dims, data->out3_strs, tmp_exp3, data->map_strs, data->fB0, data->TE_strs, multiplace_read(data->TE, dst));
@@ -409,7 +399,7 @@ static void ir_meco_der(const nlop_data_t* _data, int /*o*/, int /*i*/, complex 
 	//dfB0
 	pos[COEFF_DIM] = 7;
 	md_copy_block(data->N, pos, data->map_dims, data->tmp_map, data->in_dims, src, CFL_SIZE);
-	ir_meco_forw_fB0(data->linop_fB0, data->tmp_map, data->tmp_map); // Forward: convert from k-space to image-space
+	linop_forward_unchecked(data->linop_fB0, data->tmp_map, data->tmp_map); // Forward: convert from k-space to image-space
 	md_zreal(data->N, data->map_dims, data->tmp_map, data->tmp_map);
 	md_zfmac2(data->N, data->out_dims, data->out_strs, dst, data->map_strs, data->tmp_map, data->out_strs, data->dfB0);
 }
@@ -473,7 +463,7 @@ static void ir_meco_adj(const nlop_data_t* _data, int /*o*/, int /*i*/, complex 
 	md_clear(data->N, data->map_dims, data->tmp_map, CFL_SIZE);
 	md_zfmacc2(data->N, data->out_dims, data->map_strs, data->tmp_map, data->out_strs, src, data->out_strs, data->dfB0);
 	md_zreal(data->N, data->map_dims, data->tmp_map, data->tmp_map);
-	ir_meco_back_fB0(data->linop_fB0, data->tmp_map, data->tmp_map); // Backward: convert from image-space to k-space
+	linop_adjoint_unchecked(data->linop_fB0, data->tmp_map, data->tmp_map); // Backward: convert from image-space to k-space
 	pos[COEFF_DIM] = 7;
 	md_copy_block(data->N, pos, data->in_dims, dst, data->map_dims, data->tmp_map, CFL_SIZE);
 }
@@ -517,7 +507,7 @@ static void ir_meco_w_fun(const nlop_data_t* _data, complex float* dst, const co
 	// fB0
 	pos[COEFF_DIM] = 4;
 	md_copy_block(data->N, pos, data->map_dims, data->fB0, data->in_dims, src, CFL_SIZE);
-	ir_meco_forw_fB0(data->linop_fB0, data->fB0, data->fB0); // Forward: convert from k-space to image-space
+	linop_forward_unchecked(data->linop_fB0, data->fB0, data->fB0); // Forward: convert from k-space to image-space
 
 	// tmp_exp2 = exp(-t.*scaling_R1s*R1s):
 	md_zsmul(data->N, data->map_dims, data->tmp_map, data->R1s_w, -1.0*data->scaling_R1s_w);
@@ -617,7 +607,7 @@ static void ir_meco_w_der(const nlop_data_t* _data, int /*o*/, int /*i*/, comple
 	//dfB0
 	pos[COEFF_DIM] = 4;
 	md_copy_block(data->N, pos, data->map_dims, data->tmp_map, data->in_dims, src, CFL_SIZE);
-	ir_meco_forw_fB0(data->linop_fB0, data->tmp_map, data->tmp_map); // Forward: convert from k-space to image-space
+	linop_forward_unchecked(data->linop_fB0, data->tmp_map, data->tmp_map); // Forward: convert from k-space to image-space
 	md_zreal(data->N, data->map_dims, data->tmp_map, data->tmp_map);
 	md_zfmac2(data->N, data->out_dims, data->out_strs, dst, data->map_strs, data->tmp_map, data->out_strs, data->dfB0);
 }
@@ -661,7 +651,7 @@ static void ir_meco_w_adj(const nlop_data_t* _data, int /*o*/, int /*i*/, comple
 	md_clear(data->N, data->map_dims, data->tmp_map, CFL_SIZE);
 	md_zfmacc2(data->N, data->out_dims, data->map_strs, data->tmp_map, data->out_strs, src, data->out_strs, data->dfB0);
 	md_zreal(data->N, data->map_dims, data->tmp_map, data->tmp_map);
-	ir_meco_back_fB0(data->linop_fB0, data->tmp_map, data->tmp_map); // Backward: convert from image-space to k-space
+	linop_adjoint_unchecked(data->linop_fB0, data->tmp_map, data->tmp_map); // Backward: convert from image-space to k-space
 	pos[COEFF_DIM] = 4;
 	md_copy_block(data->N, pos, data->in_dims, dst, data->map_dims, data->tmp_map, CFL_SIZE);
 }
@@ -698,7 +688,7 @@ static void meco_fun(const nlop_data_t* _data, complex float* dst, const complex
 	pos[COEFF_DIM] = 3;
 	md_copy_block(data->N, pos, data->map_dims, data->fB0, data->in_dims, src, CFL_SIZE);
 
-	ir_meco_forw_fB0(data->linop_fB0, data->fB0, data->fB0);
+	linop_forward_unchecked(data->linop_fB0, data->fB0, data->fB0);
 
 	// exp(1i*2*pi * L_fB0 * fB0 .* TE)
 	md_zmul2(data->N, data->out_dims, data->out_strs, data->dMs_w, data->map_strs, data->fB0, data->TE_strs, multiplace_read(data->TE, dst));
@@ -768,7 +758,7 @@ static void meco_der(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 	//dfB0
 	pos[COEFF_DIM] = 3;
 	md_copy_block(data->N, pos, data->map_dims, data->tmp_map, data->in_dims, src, CFL_SIZE);
-	ir_meco_forw_fB0(data->linop_fB0, data->tmp_map, data->tmp_map);
+	linop_forward_unchecked(data->linop_fB0, data->tmp_map, data->tmp_map);
 	md_zreal(data->N, data->map_dims, data->tmp_map, data->tmp_map);
 	md_zfmac2(data->N, data->out_dims, data->out_strs, dst, data->map_strs, data->tmp_map, data->out_strs, data->dfB0);
 }
@@ -807,7 +797,7 @@ static void meco_adj(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 	md_zfmacc2(data->N, data->out_dims, data->map_strs, data->tmp_map, data->out_strs, src, data->out_strs, data->dfB0);
 	md_zreal(data->N, data->map_dims, data->tmp_map, data->tmp_map);
 
-	ir_meco_back_fB0(data->linop_fB0, data->tmp_map, data->tmp_map);
+	linop_adjoint_unchecked(data->linop_fB0, data->tmp_map, data->tmp_map);
 
 	pos[COEFF_DIM] = 3;
 	md_copy_block(data->N, pos, data->in_dims, dst, data->map_dims, data->tmp_map, CFL_SIZE);
@@ -838,7 +828,7 @@ static void meco_fun2(const nlop_data_t* _data, complex float* dst, const comple
 	pos[COEFF_DIM] = 2;
 	md_copy_block(data->N, pos, data->map_dims, data->fB0, data->in_dims, src, CFL_SIZE);
 
-	ir_meco_forw_fB0(data->linop_fB0, data->fB0, data->fB0); // from k-space to image space
+	linop_forward_unchecked(data->linop_fB0, data->fB0, data->fB0); // from k-space to image space
 
 	// exp(1i*2*pi * L_fB0 * fB0 .* TE)
 	md_zmul2(data->N, data->out_dims, data->out_strs, data->dMs_w, data->map_strs, data->fB0, data->TE_strs, multiplace_read(data->TE, dst));
@@ -886,7 +876,7 @@ static void meco_der2(const nlop_data_t* _data, int /*o*/, int /*i*/, complex fl
 	//dfB0
 	pos[COEFF_DIM] = 2;
 	md_copy_block(data->N, pos, data->map_dims, data->tmp_map, data->in_dims, src, CFL_SIZE);
-	ir_meco_forw_fB0(data->linop_fB0, data->tmp_map, data->tmp_map);
+	linop_forward_unchecked(data->linop_fB0, data->tmp_map, data->tmp_map);
 	md_zreal(data->N, data->map_dims, data->tmp_map, data->tmp_map);
 	md_zfmac2(data->N, data->out_dims, data->out_strs, dst, data->map_strs, data->tmp_map, data->out_strs, data->dfB0);
 }
@@ -916,7 +906,7 @@ static void meco_adj2(const nlop_data_t* _data, int /*o*/, int /*i*/, complex fl
 	md_clear(data->N, data->map_dims, data->tmp_map, CFL_SIZE);
 	md_zfmacc2(data->N, data->out_dims, data->map_strs, data->tmp_map, data->out_strs, src, data->out_strs, data->dfB0);
 	md_zreal(data->N, data->map_dims, data->tmp_map, data->tmp_map);
-	ir_meco_back_fB0(data->linop_fB0, data->tmp_map, data->tmp_map);
+	linop_adjoint_unchecked(data->linop_fB0, data->tmp_map, data->tmp_map);
 	pos[COEFF_DIM] = 2;
 	md_copy_block(data->N, pos, data->in_dims, dst, data->map_dims, data->tmp_map, CFL_SIZE);
 }

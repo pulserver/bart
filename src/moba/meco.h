@@ -39,8 +39,6 @@ extern void meco_calc_fat_modu(int N, const long dims[N], const complex float TE
 
 extern const complex float* meco_get_scaling(struct nlop_s* op);
 extern const struct linop_s* meco_get_fB0_trafo(struct nlop_s* op);
-extern void meco_forw_fB0(const struct linop_s* op, complex float* dst, const complex float* src);
-extern void meco_back_fB0(const struct linop_s* op, complex float* dst, const complex float* src);
 
 extern int meco_get_weight_fB0_type(struct nlop_s* op);
 
