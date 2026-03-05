@@ -22,6 +22,7 @@
 #include "seq/event.h"
 #include "seq/helpers.h"
 #include "seq/seq.h"
+#include "seq/opts.h"
 
 #include "seq/misc.h"
 #include "seq/flash.h"
@@ -35,7 +36,6 @@
 
 static const char help_str[] = "Computes a GRE sequence.";
 
-enum gradient_mode { GRAD_FAST, GRAD_NORMAL, GRAD_WHISPER };
 
 int main_seq(int argc, char* argv[argc])
 {
