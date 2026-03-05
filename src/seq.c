@@ -44,7 +44,6 @@ int main_seq(int argc, char* argv[argc])
 	const char* grad_file = NULL;
 	const char* mom_file = NULL;
 	const char* adc_file = NULL;
-	const char* raga_file = NULL;
 	const char* seq_file = NULL;
 
 	struct arg_s args[] = {
@@ -55,31 +54,21 @@ int main_seq(int argc, char* argv[argc])
 		ARG_OUTFILE(false, &seq_file,  "pulseq file"),
 	};
 
-	float dt = -1.;
-	long samples = -1;
-	double rel_shift[3] = { };
-	long raga_full_frames = 0;
-	float dist = 1.;
-
 	struct bart_seq* seq = bart_seq_alloc("");
 	bart_seq_defaults(seq);
 
-	enum gradient_mode gradient_mode = GRAD_FAST;
 
-	bool chrono = false;
-	bool support = false;
+	struct seq_opts seq_opts = seq_opts_defaults;
 
-	long custom_params_long[SEQ_MAX_PARAMS_LONG] = { 0 };
-	double custom_params_double[SEQ_MAX_PARAMS_DOUBLE] = { 0. };
 
 	const struct opt_s opts[] = {
 
-		OPT_FLOAT('d', &dt, "dt", "time-increment per sample (default: seq->conf->phys.tr / 1000)"),
-		OPT_LONG('N', &samples, "samples", "Number of samples (default: 1000)"),
+		OPT_FLOAT('d', &seq_opts.dt, "dt", "time-increment per sample (default: seq->conf->phys.tr / 1000)"),
+		OPT_LONG('N', &seq_opts.samples, "samples", "Number of samples (default: 1000)"),
 
 		OPT_DOVEC3('s', &seq->conf->geom.shift[0], "RO:PE:SL", "FOV shift"),
-		OPT_DOVEC3('S', &rel_shift, "RO:PE:SL", "relative FOV shift"),
-		OPTL_FLOAT(0, "dist", &dist, "dist", "slice distance factor [1 / slice_thickness] (default: 1.)"),
+		OPT_DOVEC3('S', &seq_opts.rel_shift, "RO:PE:SL", "relative FOV shift"),
+		OPTL_FLOAT(0, "dist", &seq_opts.dist, "dist", "slice distance factor [1 / slice_thickness] (default: 1.)"),
 
 		// contrast mode
 		OPTL_SELECT(0, "no-spoiling", enum flash_contrast, &seq->conf->phys.contrast,
@@ -111,8 +100,8 @@ int main_seq(int argc, char* argv[argc])
 		OPTL_SELECT(0, "raga", enum pe_mode, &seq->conf->enc.pe_mode, SEQ_PEMODE_RAGA, "RAGA PE"),
 		OPTL_ULONG(0, "raga_flags", &seq->conf->enc.aligned_flags, "raga_aligned_flags", "RAGA aligned flags (by bitmask)"),
 
-		OPTL_SET(0, "chrono", &chrono, "save gradients/moments/sampling in chronological order (RAGA)"),
-		OPT_OUTFILE('R', &raga_file, "file", "raga indices"),
+		OPTL_SET(0, "chrono", &seq_opts.chrono, "save gradients/moments/sampling in chronological order (RAGA)"),
+		OPT_OUTFILE('R', &seq_opts.raga_file, "file", "raga indices"),
 
 		OPTL_PINT(0, "tiny", &seq->conf->enc.tiny, "tiny", "Tiny golden-ratio index"),
 
@@ -120,7 +109,7 @@ int main_seq(int argc, char* argv[argc])
 		OPTL_LONG('r', "lines", &seq->conf->loop_dims[PHS1_DIM], "lines", "Number of phase encoding lines"),
 		OPTL_LONG('z', "partitions", &seq->conf->loop_dims[PHS2_DIM], "partitions", "Number of partitions (3D) or SMS groups (2D)"),
 		OPTL_LONG('t', "measurements", &seq->conf->loop_dims[TIME_DIM], "measurements", "Number of measurements / frames (RAGA: total number of spokes)"),
-		OPTL_LONG('f', "raga_full_frames", &raga_full_frames, "raga_full_frames", "Number of full frames (only RAGA)"),
+		OPTL_LONG('f', "raga_full_frames", &seq_opts.raga_full_frames, "raga_full_frames", "Number of full frames (only RAGA)"),
 		OPTL_LONG('m', "slices", &seq->conf->loop_dims[SLICE_DIM], "slices", "Number of slices of multiband factor (SMS)"),
 		OPTL_LONG('i', "inversions", &seq->conf->loop_dims[BATCH_DIM], "inversions", "Number of inversions"),
 
@@ -139,27 +128,27 @@ int main_seq(int argc, char* argv[argc])
 		OPTL_DOUBLE(0, "inv_delay", &seq->conf->magn.inv_delay_time, "inv_delay_time", "Inversion delay time"),
 
 		// gradient mode
-		OPTL_SELECT(0, "gradient-normal", enum gradient_mode, &gradient_mode, GRAD_NORMAL, "Gradient normal mode (default: fast)"),
-		OPTL_SELECT(0, "gradient-whisper", enum gradient_mode, &gradient_mode, GRAD_WHISPER, "Gradient whispher mode (default: fast)"),
+		OPTL_SELECT(0, "gradient-normal", enum gradient_mode, &seq_opts.gradient_mode, GRAD_NORMAL, "Gradient normal mode (default: fast)"),
+		OPTL_SELECT(0, "gradient-whisper", enum gradient_mode, &seq_opts.gradient_mode, GRAD_WHISPER, "Gradient whispher mode (default: fast)"),
 
 
-		OPTL_VECN(0, "CUSTOM_LONG", custom_params_long, "custom long parameters"),
-		OPTL_DOVECN(0, "CUSTOM_DOUBLE", custom_params_double, "custom double parameters"),
+		OPTL_VECN(0, "CUSTOM_LONG", seq_opts.custom_params_long, "custom long parameters"),
+		OPTL_DOVECN(0, "CUSTOM_DOUBLE", seq_opts.custom_params_double, "custom double parameters"),
 		OPTL_VECN(0, "LOOP", seq->conf->loop_dims, "sequence loop dimensions"),
 	};
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
 
-	if (custom_params_long[0] > 0)
-		seq_ui_interface_custom_params(0, seq->conf, SEQ_MAX_PARAMS_LONG, custom_params_long,
-					SEQ_MAX_PARAMS_DOUBLE, custom_params_double);
+	if (seq_opts.custom_params_long[0] > 0)
+		seq_ui_interface_custom_params(0, seq->conf, SEQ_MAX_PARAMS_LONG, seq_opts.custom_params_long,
+					SEQ_MAX_PARAMS_DOUBLE, seq_opts.custom_params_double);
 
 	if (   (SEQ_PEMODE_RAGA == seq->conf->enc.pe_mode)
 	    && (1 == seq->conf->loop_dims[TIME_DIM])
 	    && (seq->conf->loop_dims[TIME_DIM] < seq->conf->loop_dims[PHS1_DIM])) {
 
-		if (0 < raga_full_frames)
-			seq->conf->loop_dims[TIME_DIM] = raga_full_frames * seq->conf->loop_dims[PHS1_DIM];
+		if (0 < seq_opts.raga_full_frames)
+			seq->conf->loop_dims[TIME_DIM] = seq_opts.raga_full_frames * seq->conf->loop_dims[PHS1_DIM];
 
 		if (1 == seq->conf->loop_dims[TIME_DIM]) {
 
@@ -173,20 +162,20 @@ int main_seq(int argc, char* argv[argc])
 
 	const long total_slices = get_slices(seq->conf);
 
-	if ((0. < fabs(rel_shift[0])) || (0. < fabs(rel_shift[1])) || (0. < fabs(rel_shift[2]))) {
+	if ((0. < fabs(seq_opts.rel_shift[0])) || (0. < fabs(seq_opts.rel_shift[1])) || (0. < fabs(seq_opts.rel_shift[2]))) {
 
 		if ((0. < fabs(seq->conf->geom.shift[0][0])) || (0. < fabs(seq->conf->geom.shift[0][1])) || (0. < fabs(seq->conf->geom.shift[0][2])))
 			error("Choose either relative or absolute FOV shift");
 
 		for (int i = 0; i < total_slices; i++) {
 
-			seq->conf->geom.shift[i][0] = rel_shift[0] * seq->conf->geom.fov;
-			seq->conf->geom.shift[i][1] = rel_shift[1] * seq->conf->geom.fov;
-			seq->conf->geom.shift[i][2] = rel_shift[2] * seq->conf->geom.slice_thickness;
+			seq->conf->geom.shift[i][0] = seq_opts.rel_shift[0] * seq->conf->geom.fov;
+			seq->conf->geom.shift[i][1] = seq_opts.rel_shift[1] * seq->conf->geom.fov;
+			seq->conf->geom.shift[i][2] = seq_opts.rel_shift[2] * seq->conf->geom.slice_thickness;
 		}
 	}
 
-	if ((1 < total_slices) && (0. < dist)) {
+	if ((1 < total_slices) && (0. < seq_opts.dist)) {
 
 		float shift[total_slices][3];
 		memset(shift, 0, sizeof shift);
@@ -195,7 +184,7 @@ int main_seq(int argc, char* argv[argc])
 
 			shift[i][0] = seq->conf->geom.shift[0][0];
 			shift[i][1] = seq->conf->geom.shift[0][1];
-			shift[i][2] = (i - 0.5 * (total_slices - 1)) * dist * seq->conf->geom.slice_thickness;
+			shift[i][2] = (i - 0.5 * (total_slices - 1)) * seq_opts.dist * seq->conf->geom.slice_thickness;
 		}
 
 		seq_set_fov_pos(total_slices, 3, &shift[0][0], seq->conf);
@@ -206,19 +195,19 @@ int main_seq(int argc, char* argv[argc])
 		debug_printf(DP_INFO, "\n");
 	}
 
-	if (0 > samples)
-		samples = (0. > dt) ? 1000 : (seq->conf->phys.tr / dt);
+	if (0 > seq_opts.samples)
+		seq_opts.samples = (0. > seq_opts.dt) ? 1000 : (seq->conf->phys.tr / seq_opts.dt);
 
-	double ddt = (0 > dt) ? seq->conf->phys.tr / samples : ceil(dt * 1.e6) / 1.e6; //FIXME breaks with float
+	double ddt = (0 > seq_opts.dt) ? seq->conf->phys.tr / seq_opts.samples : ceil(seq_opts.dt * 1.e6) / 1.e6; //FIXME breaks with float
 
 	if (SEQ_PEMODE_RAGA != seq->conf->enc.pe_mode)
-		chrono = true;
+		seq_opts.chrono = true;
 
-	if ((NULL != raga_file) && chrono)
+	if ((NULL != seq_opts.raga_file) && seq_opts.chrono)
 		error("RAGA indices only for raga pe mode and non chronologic mode\n");
 
 	// FIXME, this should be moved in system configurations
-	switch (gradient_mode) {
+	switch (seq_opts.gradient_mode) {
 
 	case GRAD_NORMAL:
 		seq->conf->sys.grad.max_amplitude = 22.E-3;
@@ -249,7 +238,7 @@ int main_seq(int argc, char* argv[argc])
 
 	int E = 0;
 
-	if (support) {
+	if (seq_opts.support) {
 
 		seq->state->mode = SEQ_BLOCK_KERNEL_PREPARE;
 
@@ -264,11 +253,11 @@ int main_seq(int argc, char* argv[argc])
 	}
 
 	mdims[PHS2_DIM] *= mdims[PHS1_DIM];
-	mdims[PHS1_DIM] = support ? events_counter(SEQ_EVENT_GRADIENT, E, seq->event) : samples;
-	mdims[READ_DIM] = support ? 6 : 3;
+	mdims[PHS1_DIM] = seq_opts.support ? events_counter(SEQ_EVENT_GRADIENT, E, seq->event) : seq_opts.samples;
+	mdims[READ_DIM] = seq_opts.support ? 6 : 3;
 
-	double g2[samples][mdims[READ_DIM]];
-	float m0[samples][3];
+	double g2[seq_opts.samples][mdims[READ_DIM]];
+	float m0[seq_opts.samples][3];
 
 	long mstrs[DIMS];
 	md_calc_strides(DIMS, mstrs, mdims, CFL_SIZE);
@@ -309,8 +298,11 @@ int main_seq(int argc, char* argv[argc])
 	if (NULL != adc_file)
 		out_adc = create_cfl(adc_file, DIMS, adims);
 
-	if (NULL != raga_file)
-		out_raga = create_cfl(raga_file, DIMS, ind_dims);
+	if (NULL != seq_opts.raga_file) {
+
+		out_raga = create_cfl(seq_opts.raga_file, DIMS, ind_dims);
+		md_clear(DIMS, ind_dims, out_raga, CFL_SIZE);
+	}
 
 	struct pulseq ps;
 
@@ -368,14 +360,14 @@ int main_seq(int argc, char* argv[argc])
 			goto debug_print_events;
 
 		debug_printf(DP_DEBUG1, "end of last event: %.8f \t end of calc: %.8f\n",
-				events_end_time(E, seq->event, 1, 0), samples * ddt);
+				events_end_time(E, seq->event, 1, 0), seq_opts.samples * ddt);
 
-		if (support)
-			seq_gradients_support(samples, g2, E, seq->event);
+		if (seq_opts.support)
+			seq_gradients_support(seq_opts.samples, g2, E, seq->event);
 		else
-			seq_compute_gradients(samples, g2, ddt, E, seq->event);
+			seq_compute_gradients(seq_opts.samples, g2, ddt, E, seq->event);
 
-		seq_compute_moment0(samples, m0, ddt, E, seq->event);
+		seq_compute_moment0(seq_opts.samples, m0, ddt, E, seq->event);
 
 
 		long pos_save[DIMS]; // FIXME use separate function
@@ -387,7 +379,7 @@ int main_seq(int argc, char* argv[argc])
 		    && (seq->conf->loop_dims[PHS1_DIM] - 1 == pos_save[PHS1_DIM]))
 				pos_save[PHS1_DIM] = seq->conf->loop_dims[ITER_DIM] - 1;
 
-		if (!chrono) {
+		if (!seq_opts.chrono) {
 
 			int adc_idx = events_idx(0, SEQ_EVENT_ADC, E, seq->event);
 

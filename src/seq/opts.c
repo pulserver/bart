@@ -3,6 +3,7 @@
  * a BSD-style license which can be found in the LICENSE file.
  */
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include <setjmp.h>
 
@@ -14,6 +15,29 @@
 #include "seq/helpers.h"
 
 #include "opts.h"
+
+
+const struct seq_opts seq_opts_defaults = {
+
+	.dt = -1.,
+	.samples = -1,
+	.rel_shift = { },
+	.raga_full_frames = 0,
+	.dist = 1.,
+
+	.gradient_mode = GRAD_FAST,
+
+	.chrono = false,
+	.support = false,
+
+	.raga_file = NULL,
+
+	.custom_params_long = { 0 },
+	.custom_params_double = { 0. },
+};
+
+
+
 
 static int error_catcher2(void fun(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m], const char* help_str, int n, const struct opt_s opts[n]), 
 					int* argcp, char* argv[*argcp], int m, const struct arg_s args[m], const char* help_str, int n, const struct opt_s opts[n])
