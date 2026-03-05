@@ -3,6 +3,8 @@
 
 #include "misc/cppwrap.h"
 
+#include "misc/opts.h"
+
 struct seq_config;
 
 enum gradient_mode { GRAD_FAST, GRAD_NORMAL, GRAD_WHISPER };
@@ -28,6 +30,10 @@ struct seq_opts {
 };
 
 extern const struct seq_opts seq_opts_defaults;
+
+
+extern void seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m],
+			const char* help_str, struct seq_config* conf, struct seq_opts* seq_opts);
 
 
 extern int read_config_from_str(struct seq_config* seq, int N, const char* buffer_in);
