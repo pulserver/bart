@@ -424,7 +424,14 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 			seq->loop_dims[ITER_DIM], seq->loop_dims[CSHIFT_DIM], seq->loop_dims[TIME_DIM], seq->loop_dims[TIME2_DIM],
 			seq->loop_dims[LEVEL_DIM], seq->loop_dims[SLICE_DIM], seq->loop_dims[AVG_DIM], seq->loop_dims[BATCH_DIM]);
 
-	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n\nCrowthers no. of radial Spokes =\t%.2f", M_PI * seq->geom.baseres);
+	int slices = get_slices(seq);
+	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n\nFOV shifts:\tREAD\tPHASE\tSLICE\n");
+
+	for (int i = 0; i < slices; i++)
+		ctr += snprintf(info + ctr, (size_t)(N - ctr), "\t[%d]:\t%+.4f\t%+.4f\t%+.4f\n",
+				i, seq->geom.shift[i][0], seq->geom.shift[i][1], seq->geom.shift[i][2]);
+
+	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n\nCrowthers no. of radial Spokes =\t%.2f\n\n", M_PI * seq->geom.baseres);
 
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n\nbart seq ");
