@@ -536,8 +536,6 @@ int main_twixread(int argc, char* argv[argc])
 	long adcs = 0;
 	long radial_lines = -1;
 
-	int bin = 0;
-
 	bool autoc = false;
 	bool linectr = false;
 	bool partctr = false;
@@ -582,7 +580,6 @@ int main_twixread(int argc, char* argv[argc])
 		OPT_SET('C', &chrono, "read data chronologically and ignore adc postitions"),
 		OPTL_SET(0, "rational", &rational, "Rational Approximation Sampling"),
 		OPT_SET('M', &mpi, "MPI mode"),
-		OPTL_PINT(0, "bin", &bin, "d", "Binning of spokes for RAGA sampled data"),
 		OPT_CLEAR('X', &check_read, "no consistency check for number of read acquisitions"),
 		OPT_INT('d', &debug_level, "level", "Debug level"),
 	};
@@ -668,19 +665,8 @@ int main_twixread(int argc, char* argv[argc])
 		siemens_meas_setup(ifd, &hdr); // reset
 	}
 
-	long bin_dims[DIMS];
-	md_copy_dims(DIMS, bin_dims, dims);
-
-	if (0 < bin) {
-
-		debug_printf(DP_WARN, "Binning option is for RAGA sampled data only!\n");
-
-		bin_dims[TIME_DIM] = (adcs + (bin - 1)) / bin;
-	}
-
-
 	long odims[DIMS];
-	md_copy_dims(DIMS, odims, bin_dims);
+	md_copy_dims(DIMS, odims, dims);
 
 	if (-1 != radial_lines) {
 
@@ -696,7 +682,7 @@ int main_twixread(int argc, char* argv[argc])
 
 	long pdims[DIMS];
 	long pstrs[DIMS];
-	md_select_dims(DIMS, ~(READ_FLAG | COIL_FLAG), pdims, bin_dims);
+	md_select_dims(DIMS, ~(READ_FLAG | COIL_FLAG), pdims, dims);
 	md_calc_strides(DIMS, pstrs, pdims, CFL_SIZE);
 	complex float* pat = md_calloc(DIMS, pdims, CFL_SIZE);
 
@@ -801,16 +787,13 @@ int main_twixread(int argc, char* argv[argc])
 				pos[PHS1_DIM] = call % dims[PHS1_DIM];
 			}
 
-			if (0 < bin)
-				pos[TIME_DIM] = call / bin;
-
 			if (0. != MD_ACCESS(DIMS, pstrs, pos, pat))
 				error("Read same ADC position twice!\n"
 				      "Check squashed dimensions.\n");
 
 			MD_ACCESS(DIMS, pstrs, pos, pat) = 1.;
 
-			md_copy_block(DIMS, pos, bin_dims, out, adc_dims, buf, CFL_SIZE);
+			md_copy_block(DIMS, pos, dims, out, adc_dims, buf, CFL_SIZE);
 
 			call++;
 		}
