@@ -42,7 +42,7 @@ extern const struct linop_s* meco_get_fB0_trafo(struct nlop_s* op);
 
 extern int meco_get_weight_fB0_type(struct nlop_s* op);
 
-extern struct nlop_s* nlop_meco_create(int N, const long y_dims[N], const long x_dims[N], const complex float* TE, enum meco_model sel_model, bool real_pd, enum fat_spec fat_spec, const float* scale_fB0);
+extern struct nlop_s* nlop_meco_create(int N, const long y_dims[N], const long x_dims[N], const complex float* TE, enum meco_model sel_model, enum fat_spec fat_spec, const float* scale_fB0);
 
 #endif // _MECO_H
 

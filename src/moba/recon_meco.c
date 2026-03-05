@@ -136,7 +136,7 @@ static void rescale_maps(int model, double scaling_Y, const struct linop_s* op, 
 
 
 void meco_recon(const struct moba_conf* moba_conf,
-		enum meco_model sel_model, bool real_pd, enum fat_spec fat_spec,
+		enum meco_model sel_model, enum fat_spec fat_spec,
 		const float* scale_fB0, bool warmstart, bool out_origin_maps,
 		const long maps_dims[DIMS], complex float* maps,
 		const long sens_dims[DIMS], complex float* sens,
@@ -292,7 +292,7 @@ void meco_recon(const struct moba_conf* moba_conf,
 		mconf.b = moba_conf->sobolev_b;
 		mconf.cnstcoil_flags = TE_FLAG;
 
-		struct meco_s nl = meco_create(Y_1s_dims, meco_1s_dims, maps_1s_dims, mask, TE, P_ptr, sel_model, real_pd, fat_spec, scale_fB0, &mconf);
+		struct meco_s nl = meco_create(Y_1s_dims, meco_1s_dims, maps_1s_dims, mask, TE, P_ptr, sel_model, fat_spec, scale_fB0, &mconf);
 
 
 		struct iter3_irgnm_conf irgnm_conf = iter3_irgnm_defaults;

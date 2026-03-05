@@ -185,7 +185,7 @@ const struct nlop_s* moba_get_nlop(struct mobafit_model_config* config, const lo
 
 		static float scale_fB0[2] = { 0., 1. };
 
-		nlop = nlop_meco_create(DIMS, out_dims, param_dims, enc, config->mgre_model, false, FAT_SPEC_1, scale_fB0);
+		nlop = nlop_meco_create(DIMS, out_dims, param_dims, enc, config->mgre_model, FAT_SPEC_1, scale_fB0);
 		break;
 
 	case TSE:

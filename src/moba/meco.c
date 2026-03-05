@@ -43,8 +43,6 @@ struct meco_s {
 	int N;
 	long model;
 
-	bool real_pd;
-
 	const long* y_dims;
 	const long* x_dims;
 	const long* der_dims;
@@ -866,14 +864,12 @@ static void meco_adj(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 
 
 	// real constraint
-	unsigned long  PD_flag = get_PD_flag(data->model);
 	unsigned long R2S_flag = get_R2S_flag(data->model);
 	unsigned long fB0_flag = get_fB0_flag(data->model);
 
 	for (long pind = 0; pind < data->x_dims[COEFF_DIM]; pind++) {
 
-		if (  (MD_IS_SET(PD_flag, pind) && data->real_pd)
-		    || MD_IS_SET(R2S_flag, pind)
+		if (   MD_IS_SET(R2S_flag, pind)
 		    || MD_IS_SET(fB0_flag, pind)) {
 
 			x_pos[COEFF_DIM] = pind;
@@ -921,7 +917,7 @@ static void meco_del(const nlop_data_t* _data)
 }
 
 
-struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_dims[N], const complex float* TE, enum meco_model sel_model, bool real_pd, enum fat_spec fat_spec, const float* scale_fB0)
+struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_dims[N], const complex float* TE, enum meco_model sel_model, enum fat_spec fat_spec, const float* scale_fB0)
 {
 	PTR_ALLOC(struct meco_s, data);
 	SET_TYPEID(meco_s, data);
@@ -1015,8 +1011,6 @@ struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_
 		[MECO_R2S] = meco_fun_r2s,
 		[MECO_PHASEDIFF] = meco_fun_phasediff,
 	};
-
-	data->real_pd = real_pd;
 
 	return nlop_create(N, y_dims, N, x_dims, CAST_UP(PTR_PASS(data)), meco_funs[sel_model], meco_der, meco_adj, NULL, NULL, meco_del);
 }

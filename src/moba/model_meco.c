@@ -2,7 +2,7 @@
  * Copyright 2022-2024. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
- * 
+ *
  * Authors:
  * 2019-2020 Martin Uecker
  * 2019-2020 Zhengguo Tan
@@ -31,7 +31,7 @@
 #include "meco.h"
 
 
-struct meco_s meco_create(const long dims[DIMS], const long y_dims[DIMS], const long x_dims[DIMS], const complex float* mask, const complex float* TE, const complex float* psf, enum meco_model sel_model, bool real_pd, enum fat_spec fat_spec, const float* scale_fB0, const struct noir_model_conf_s* conf)
+struct meco_s meco_create(const long dims[DIMS], const long y_dims[DIMS], const long x_dims[DIMS], const complex float* mask, const complex float* TE, const complex float* psf, enum meco_model sel_model, enum fat_spec fat_spec, const float* scale_fB0, const struct noir_model_conf_s* conf)
 {
 	struct meco_s ret;
 	struct noir_s nlinv = noir_create(dims, mask, psf, conf);
@@ -44,8 +44,8 @@ struct meco_s meco_create(const long dims[DIMS], const long y_dims[DIMS], const 
 	} else {
 
 		// chain model
-		struct nlop_s* meco = nlop_meco_create(DIMS, y_dims, x_dims, TE, sel_model, real_pd, fat_spec, scale_fB0);
-		
+		struct nlop_s* meco = nlop_meco_create(DIMS, y_dims, x_dims, TE, sel_model, fat_spec, scale_fB0);
+
 		const struct nlop_s* b = nlinv.nlop;
 		nlinv.nlop = nlop_chain2(meco, 0, b, 0);
 		nlop_free(b);
@@ -61,7 +61,7 @@ struct meco_s meco_create(const long dims[DIMS], const long y_dims[DIMS], const 
 		ret.weight_fB0_type = meco_get_weight_fB0_type(meco);
 
 		nlop_free(meco);
-		nlop_free(nlinv.nlop);		
+		nlop_free(nlinv.nlop);
 	}
 
 	return ret;
