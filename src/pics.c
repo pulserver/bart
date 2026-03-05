@@ -741,8 +741,7 @@ int main_pics(int argc, char* argv[argc])
 	}
 
 	for (int i = 0; i < NUM_REGS; i++)
-		if (NULL != sdims[i])
-			xfree(sdims[i]);
+		xfree(sdims[i]);
 
 	// perform the reconstruction
 
