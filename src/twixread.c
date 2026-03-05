@@ -548,7 +548,6 @@ int main_twixread(int argc, char* argv[argc])
 	// i.e. PATREFANDIMASCAN or PATREFSCAN flags are set for AC region depending on position.
 	// If refscan_ac is set, we interpret PATREFSCAN lines as image lines, too.
 
-	bool rational = false;
 	long dims[DIMS];
 	md_singleton_dims(DIMS, dims);
 
@@ -578,7 +577,6 @@ int main_twixread(int argc, char* argv[argc])
 		OPT_CLEAR('S', &refscan_ac, "don't include reference lines"),
 		OPT_ULONG('I', &ignore_dims_flags, "flags", "ignore (squash) selected dimensions (defaults to LEVEL_FLAG)"),
 		OPT_SET('C', &chrono, "read data chronologically and ignore adc postitions"),
-		OPTL_SET(0, "rational", &rational, "Rational Approximation Sampling"),
 		OPT_SET('M', &mpi, "MPI mode"),
 		OPT_CLEAR('X', &check_read, "no consistency check for number of read acquisitions"),
 		OPT_INT('d', &debug_level, "level", "Debug level"),
@@ -710,7 +708,6 @@ int main_twixread(int argc, char* argv[argc])
 	long mpi_slice = -1;
 
 	sar = ADC_OK;
-	long call = 0;
 
 	while (ADC_END != sar) {
 
@@ -775,18 +772,6 @@ int main_twixread(int argc, char* argv[argc])
 			if (pmu_out)
 				md_copy_block(DIMS, pos, pmu_dims, pmu, MD_SINGLETON_DIMS(DIMS), &pmu_val, CFL_SIZE);
 
-			if (rational) {
-
-				if (1 == call) {
-
-					debug_printf(DP_INFO, "RAGA Spokes: %ld\n", dims[PHS1_DIM]);
-					debug_printf(DP_INFO, "RAGA Increment is: %ld\n", pos[PHS1_DIM]);
-				}
-
-				// Reorder to temporal scheme for RAGA sampling
-				pos[PHS1_DIM] = call % dims[PHS1_DIM];
-			}
-
 			if (0. != MD_ACCESS(DIMS, pstrs, pos, pat))
 				error("Read same ADC position twice!\n"
 				      "Check squashed dimensions.\n");
@@ -795,7 +780,6 @@ int main_twixread(int argc, char* argv[argc])
 
 			md_copy_block(DIMS, pos, dims, out, adc_dims, buf, CFL_SIZE);
 
-			call++;
 		}
 	}
 
