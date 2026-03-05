@@ -222,6 +222,11 @@ int main_seq(int argc, char* argv[argc])
 	}
 
 	debug_printf(DP_DEBUG1, "%s\n", radial_info);
+
+	char config_info[7852];
+	seq_print_info_config(7852, config_info, seq->conf);
+	debug_printf(DP_DEBUG1, "%s\n", config_info);
+
 	debug_printf(DP_INFO, "Nr. of RF shapes: %d\n", prepped_rfs);
 
 	for (int i = 0; i < prepped_rfs; i++) {
