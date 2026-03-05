@@ -279,7 +279,7 @@ ISMRM_BASE ?= /usr/local/ismrmrd/
 TBASE+=show slice crop resize join transpose squeeze flatten zeros ones flip circshift extract repmat bitmask reshape version delta copy casorati vec poly index multicfl tee compress
 TFLP+=scale invert conj fmac saxpy sdot spow cpyphs creal carg normalize cdf97 pattern nrmse mip avg cabs zexp calc unwrap
 TNUM+=fft fftmod fftshift noise bench threshold conv rss filter nlmeans mandelbrot wavelet window var std fftrot roistat pol2mask conway morphop hist gmm
-TRECO+=pics pocsense sqpics itsense nlinv moba nufft nufftbase rof tgv ictv sake wave lrmatrix estdims estshift estdelay wavepsf wshfl rtnlinv mobafit mobasig grog denoise estscaling
+TRECO+=pics sqpics itsense nlinv moba nufft nufftbase rof tgv ictv sake wave lrmatrix estdims estshift estdelay wavepsf wshfl rtnlinv mobafit mobasig grog denoise estscaling
 TCALIB+=ecalib ecaltwo caldir walsh cc ccapply rovir calmat svd estvar whiten rmfreq ssa bin psf ncalib phasepole
 TMRI+=homodyne poisson twixread fakeksp looklocker upat fovshift seq
 TSIM+=phantom traj signal epg sim pulse raga stl bloch grid trajcor coils
@@ -307,7 +307,6 @@ endif
 
 MODULES_pics = -lgrecon -lsense -lmotion -liter -llinops -lwavelet -llowrank -lnoncart -lnn -lnlops
 MODULES_sqpics = -lsense -liter -llinops -lwavelet -llowrank -lnoncart -llinops
-MODULES_pocsense = -lsense -liter -llinops -lwavelet
 MODULES_nlinv = -lnoir -lgrecon -lwavelet -llowrank -lnn -liter -lnlops -llinops -lnoncart
 MODULES_ncalib = -lnoir -lgrecon -lwavelet -llowrank -lnn -liter -lnlops -llinops -lnoncart
 MODULES_phasepole = -lnoir -lgrecon -lwavelet -llowrank -lnn -liter -lnlops -llinops -lnoncart

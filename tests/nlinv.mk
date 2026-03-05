@@ -1,21 +1,25 @@
 
 
 
-tests/test-nlinv: normalize nlinv pocsense nrmse $(TESTS_OUT)/shepplogan_coil_ksp.ra
+tests/test-nlinv: normalize nlinv fft fmac nrmse $(TESTS_OUT)/shepplogan_coil_ksp.ra
 	set -e ; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
 	$(TOOLDIR)/nlinv $(TESTS_OUT)/shepplogan_coil_ksp.ra r.ra c.ra			;\
 	$(TOOLDIR)/normalize 8 c.ra c_norm.ra						;\
-	$(TOOLDIR)/pocsense -i1 $(TESTS_OUT)/shepplogan_coil_ksp.ra c_norm.ra proj.ra	;\
-	$(TOOLDIR)/nrmse -t 0.05 proj.ra $(TESTS_OUT)/shepplogan_coil_ksp.ra		;\
+	$(TOOLDIR)/fft -i 3 $(TESTS_OUT)/shepplogan_coil_ksp.ra cim.ra			;\
+	$(TOOLDIR)/fmac -s8 -C cim.ra c_norm.ra tmp.ra					;\
+	$(TOOLDIR)/fmac tmp.ra c_norm.ra proj.ra					;\
+	$(TOOLDIR)/nrmse -t 0.05 proj.ra cim.ra						;\
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
-tests/test-nlinv-reg: normalize nlinv pocsense nrmse $(TESTS_OUT)/shepplogan_coil_ksp.ra
+tests/test-nlinv-reg: normalize nlinv fft fmac nrmse $(TESTS_OUT)/shepplogan_coil_ksp.ra
 	set -e ; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
 	$(TOOLDIR)/nlinv -i10 -RW:3:0:0.1 --liniter=50 $(TESTS_OUT)/shepplogan_coil_ksp.ra r.ra c.ra	;\
 	$(TOOLDIR)/normalize 8 c.ra c_norm.ra						;\
-	$(TOOLDIR)/pocsense -i1 $(TESTS_OUT)/shepplogan_coil_ksp.ra c_norm.ra proj.ra	;\
-	$(TOOLDIR)/nrmse -t 0.03 proj.ra $(TESTS_OUT)/shepplogan_coil_ksp.ra		;\
+	$(TOOLDIR)/fft -i 3 $(TESTS_OUT)/shepplogan_coil_ksp.ra cim.ra			;\
+	$(TOOLDIR)/fmac -s8 -C cim.ra c_norm.ra tmp.ra					;\
+	$(TOOLDIR)/fmac tmp.ra c_norm.ra proj.ra					;\
+	$(TOOLDIR)/nrmse -t 0.03 proj.ra cim.ra						;\
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
@@ -143,12 +147,14 @@ tests/test-nlinv-psf-noncart: traj phantom nufft resize nlinv fmac nrmse
 	touch $@
 
 
-tests/test-nlinv-gpu: normalize nlinv pocsense nrmse $(TESTS_OUT)/shepplogan_coil_ksp.ra
+tests/test-nlinv-gpu: normalize fft fmac nrmse $(TESTS_OUT)/shepplogan_coil_ksp.ra
 	set -e ; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
 	$(TOOLDIR)/nlinv -g $(TESTS_OUT)/shepplogan_coil_ksp.ra r.ra c.ra		;\
 	$(TOOLDIR)/normalize 8 c.ra c_norm.ra						;\
-	$(TOOLDIR)/pocsense -i1 $(TESTS_OUT)/shepplogan_coil_ksp.ra c_norm.ra proj.ra	;\
-	$(TOOLDIR)/nrmse -t 0.05 proj.ra $(TESTS_OUT)/shepplogan_coil_ksp.ra		;\
+	$(TOOLDIR)/fft -i 3 $(TESTS_OUT)/shepplogan_coil_ksp.ra cim.ra			;\
+	$(TOOLDIR)/fmac -s8 -C cim.ra c_norm.ra tmp.ra					;\
+	$(TOOLDIR)/fmac tmp.ra c_norm.ra proj.ra					;\
+	$(TOOLDIR)/nrmse -t 0.05 proj.ra cim.ra						;\
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
