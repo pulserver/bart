@@ -220,7 +220,7 @@ int main_moba(int argc, char* argv[argc])
 		OPT_PINT('C', &conf.inner_iter, "iter", "inner iterations"),
 		OPT_FLOAT('s', &conf.step, "step", "step size"),
 		OPT_FLOAT('B', &conf.lower_bound, "bound", "lower bound for relaxation"),
-		OPT_FLVEC2('b', &conf.scale_fB0, "SMO:SC", "B0 field: spatial smooth level; scaling [default: 222.; 1.]"),
+		OPT_FLVEC2('b', &conf.scale_fB0, "a:b", "B0 field: sobolev parameter (a=0 means no sobolev) [default: 222.; 32.]"),
 		OPT_INT('d', &debug_level, "level", "Debug level"),
 		OPT_SET('N', &conf.auto_norm, "(normalize)"),
 		OPT_FLOAT('f', &restrict_fov, "FOV", ""),

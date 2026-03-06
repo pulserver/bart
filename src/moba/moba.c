@@ -3,7 +3,7 @@
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  **/
- 
+
 #include <stdbool.h>
 
 #include "moba/meco.h"
@@ -52,7 +52,7 @@ struct moba_conf moba_defaults = {
 	// MECO
 	.mgre_model = MECO_WFR2S,
 	.fat_spec = FAT_SPEC_1,
-	.scale_fB0 = { 222., 1. },
+	.scale_fB0 = { 222., 32. },
 	.out_origin_maps = false,
 };
 

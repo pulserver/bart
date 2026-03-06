@@ -71,7 +71,7 @@ struct moba_conf {
 	// MECO
 	enum meco_model mgre_model;
 	enum fat_spec fat_spec;
-	float scale_fB0[2]; // { spatial smoothness, scaling }
+	float scale_fB0[2]; // { a, b }
 	bool out_origin_maps;
 
 	int num_gpu;

@@ -198,11 +198,11 @@ void meco_calc_fat_modu(int N, const long dims[N], const complex float TE[dims[T
 
 
 
-static void meco_calc_weights(const nlop_data_t* _data, const int N, const long dims[N], float wgh_fB0)
+static void meco_calc_weights(const nlop_data_t* _data, const int N, const long dims[N], float a, float b)
 {
 	struct meco_s* data = CAST_DOWN(meco_s, _data);
 
-	enum meco_weights_fB0 weights_type = (0. == wgh_fB0) ? MECO_IDENTITY : MECO_SOBOLEV;
+	enum meco_weights_fB0 weights_type = (0. == a) ? MECO_IDENTITY : MECO_SOBOLEV;
 
 	switch (weights_type) {
 
@@ -222,7 +222,7 @@ static void meco_calc_weights(const nlop_data_t* _data, const int N, const long 
 
 		complex float* weights = md_alloc(3, dims, CFL_SIZE);
 
-		noir_calc_weights(wgh_fB0, 32., dims, weights);
+		noir_calc_weights(a, b, dims, weights);
 
 		auto linop_wghts = linop_cdiag_create(N, data->map_dims, FFT_FLAGS, weights);
 		auto linop_ifftc = linop_ifftc_create(N, data->map_dims, FFT_FLAGS);
@@ -996,7 +996,7 @@ struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_
 	long w_dims[N];
 	md_select_dims(N, FFT_FLAGS, w_dims, data->x_dims);
 
-	meco_calc_weights(CAST_UP(data), N, w_dims, scale_fB0[0]);
+	meco_calc_weights(CAST_UP(data), N, w_dims, scale_fB0[0], scale_fB0[1]);
 
 	// scaling
 	data->scaling = md_alloc(N, scaling_dims, CFL_SIZE);
@@ -1005,7 +1005,7 @@ struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_
 		data->scaling[pind] = 1.0;
 
 	long fB0_ind = x_dims[COEFF_DIM] - 1;
-	data->scaling[fB0_ind] = scale_fB0[1];
+	data->scaling[fB0_ind] = 1.;
 
 	nlop_fun_t meco_funs[] = {
 
