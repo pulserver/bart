@@ -120,14 +120,6 @@ int main_seq(int argc, char* argv[argc])
 		debug_printf(DP_INFO, "\n");
 	}
 
-	if (0 > seq_opts.samples)
-		seq_opts.samples = (0. > seq_opts.dt) ? 1000 : (seq->conf->phys.tr / seq_opts.dt);
-
-	double ddt = (0 > seq_opts.dt) ? seq->conf->phys.tr / seq_opts.samples : ceil(seq_opts.dt * 1.e6) / 1.e6; //FIXME breaks with float
-
-	if (SEQ_PEMODE_RAGA != seq->conf->enc.pe_mode)
-		seq_opts.chrono = true;
-
 	if ((NULL != seq_opts.raga_file) && seq_opts.chrono)
 		error("RAGA indices only for raga pe mode and non chronologic mode\n");
 
@@ -268,14 +260,14 @@ int main_seq(int argc, char* argv[argc])
 			goto debug_print_events;
 
 		debug_printf(DP_DEBUG1, "end of last event: %.8f \t end of calc: %.8f\n",
-				events_end_time(E, seq->event, 1, 0), seq_opts.samples * ddt);
+				events_end_time(E, seq->event, 1, 0), seq_opts.samples * seq_opts.dt);
 
 		if (seq_opts.support)
 			seq_gradients_support(seq_opts.samples, g2, E, seq->event);
 		else
-			seq_compute_gradients(seq_opts.samples, g2, ddt, E, seq->event);
+			seq_compute_gradients(seq_opts.samples, g2, seq_opts.dt, E, seq->event);
 
-		seq_compute_moment0(seq_opts.samples, m0, ddt, E, seq->event);
+		seq_compute_moment0(seq_opts.samples, m0, seq_opts.dt, E, seq->event);
 
 
 		long pos_save[DIMS]; // FIXME use separate function

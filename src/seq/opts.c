@@ -45,7 +45,7 @@ void seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[
 
 	const struct opt_s opts[] = {
 
-		OPT_FLOAT('d', &seq_opts->dt, "dt", "time-increment per sample (default: seq->conf->phys.tr / 1000)"),
+		OPT_DOUBLE('d', &seq_opts->dt, "dt", "time-increment per sample (default: seq->conf->phys.tr / 1000)"),
 		OPT_LONG('N', &seq_opts->samples, "samples", "Number of samples (default: 1000)"),
 
 		OPT_DOVEC3('s', &conf->geom.shift[0], "RO:PE:SL", "FOV shift"),
@@ -124,6 +124,14 @@ void seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[
 
 
 // modifications in seq-tool
+
+	if (0 > seq_opts->samples)
+		seq_opts->samples = (0. > seq_opts->dt) ? 1000 : (conf->phys.tr / seq_opts->dt);
+
+	seq_opts->dt = (0 > seq_opts->dt) ? conf->phys.tr / seq_opts->samples : ceil(seq_opts->dt * 1.E6) / 1.E6;
+
+	if (SEQ_PEMODE_RAGA != conf->enc.pe_mode)
+		seq_opts->chrono = true;
 
 	// FIXME, this should be moved in system configurations
 	switch (seq_opts->gradient_mode) {

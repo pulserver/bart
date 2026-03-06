@@ -12,7 +12,7 @@ enum gradient_mode { GRAD_FAST, GRAD_NORMAL, GRAD_WHISPER };
 
 struct seq_opts {
 
-	float dt;
+	double dt;
 	long samples;
 	double rel_shift[3];
 	long raga_full_frames;
