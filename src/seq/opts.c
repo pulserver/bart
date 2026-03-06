@@ -4,6 +4,7 @@
  */
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
 #include <string.h>
 #include <setjmp.h>
 
@@ -119,6 +120,27 @@ void seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[
 
 	cmdline(argcp, argv, m, args, help_str, ARRAY_SIZE(opts), opts);
 
+
+
+
+// modifications in seq-tool
+
+	// FIXME, this should be moved in system configurations
+	switch (seq_opts->gradient_mode) {
+
+	case GRAD_NORMAL:
+		conf->sys.grad.max_amplitude = 22.E-3;
+		conf->sys.grad.inv_slew_rate = 10.E-3 * sqrt(2.);
+		break;
+
+	case GRAD_WHISPER:
+		conf->sys.grad.max_amplitude = 22.E-3;
+		conf->sys.grad.inv_slew_rate = 20.E-3 * sqrt(2.);
+		break;
+
+	case GRAD_FAST:
+		break;
+	}
 }
 
 

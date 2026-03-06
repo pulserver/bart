@@ -131,23 +131,6 @@ int main_seq(int argc, char* argv[argc])
 	if ((NULL != seq_opts.raga_file) && seq_opts.chrono)
 		error("RAGA indices only for raga pe mode and non chronologic mode\n");
 
-	// FIXME, this should be moved in system configurations
-	switch (seq_opts.gradient_mode) {
-
-	case GRAD_NORMAL:
-		seq->conf->sys.grad.max_amplitude = 22.E-3;
-		seq->conf->sys.grad.inv_slew_rate = 10.E-3 * sqrt(2.);
-		break;
-
-	case GRAD_WHISPER:
-		seq->conf->sys.grad.max_amplitude = 22.E-3;
-		seq->conf->sys.grad.inv_slew_rate = 20.E-3 * sqrt(2.);
-		break;
-
-	case GRAD_FAST:
-		break;
-	}
-
 
 	debug_printf(DP_INFO, "loops: %ld \t dims: ", md_calc_size(DIMS, seq->conf->loop_dims));
 	debug_print_dims(DP_INFO, DIMS, seq->conf->loop_dims);
