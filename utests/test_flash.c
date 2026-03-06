@@ -21,13 +21,13 @@ static bool test_command(void)
 	struct seq_config seq = seq_config_defaults;
 	seq.geom.baseres = 250;
 
-	if (!read_config_from_str(&seq, 200, "bart seq --BR 200 --FOV 305\0"))
+	if (!read_config_from_str(&seq, 200, "bart seq --BR 200 --FOV 0.305\0"))
 		return false;
 
 	if (200 != seq.geom.baseres)
 		return false;
 
-	if (305 != seq.geom.fov)
+	if (0.305 != seq.geom.fov)
 		return false;
 
 	return true;
