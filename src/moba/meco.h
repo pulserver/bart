@@ -32,7 +32,6 @@ extern unsigned long get_fB0_flag(enum meco_model sel_model);
 
 extern void meco_calc_fat_modu(int N, const long dims[N], const complex float TE[*], complex float dst[*], enum fat_spec fat_spec);
 
-extern const complex float* meco_get_scaling(struct nlop_s* op);
 extern const struct linop_s* meco_get_fB0_trafo(struct nlop_s* op);
 
 extern struct nlop_s* nlop_meco_create(int N, const long y_dims[N], const long x_dims[N], const complex float* TE, enum meco_model sel_model, enum fat_spec fat_spec, const float* scale_fB0);

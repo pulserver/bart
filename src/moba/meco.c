@@ -59,7 +59,6 @@ struct meco_s {
 	complex float* der_x;
 	struct multiplace_array_s* TE;
 	struct multiplace_array_s* cshift;
-	complex float* scaling; // length = number of maps
 
 	const struct linop_s* linop_fB0;
 };
@@ -154,13 +153,6 @@ static void meco_calc_weights(const nlop_data_t* _data, const int N, const long 
 	}
 }
 
-const complex float* meco_get_scaling(struct nlop_s* op)
-{
-	const nlop_data_t* _data = nlop_get_data(op);
-	struct meco_s* data = CAST_DOWN(meco_s, _data);
-	return data->scaling;
-}
-
 const struct linop_s* meco_get_fB0_trafo(struct nlop_s* op)
 {
 	const nlop_data_t* _data = nlop_get_data(op);
@@ -201,7 +193,6 @@ static void meco_fun_wf(const nlop_data_t* _data, complex float* dst, const comp
 
 	// dst = F .* cshift
 	md_zmul2(data->N, data->y_dims, data->y_strs, dst, data->map_strs, F, data->TE_strs, multiplace_read(data->cshift, dst));
-	md_zsmul(data->N, data->y_dims, dst, dst, data->scaling[PIND_F]);
 
 
 	// W
@@ -225,7 +216,7 @@ static void meco_fun_wf(const nlop_data_t* _data, complex float* dst, const comp
 	linop_forward_unchecked(data->linop_fB0, fB0, fB0);
 
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_exp, data->map_strs, fB0, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_exp, tmp_exp, 2.i * M_PI * data->scaling[PIND_FB0]);
+	md_zsmul(data->N, data->y_dims, tmp_exp, tmp_exp, 2.i * M_PI);
 
 	// tmp_exp = exp(1i*2*pi * fB0 .* TE)
 	md_zexp(data->N, data->y_dims, tmp_exp, tmp_exp);
@@ -245,7 +236,6 @@ static void meco_fun_wf(const nlop_data_t* _data, complex float* dst, const comp
 	x_pos[COEFF_DIM] = PIND_F;
 
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, tmp_exp, data->TE_strs, multiplace_read(data->cshift, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, data->scaling[PIND_F]);
 
 	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
 
@@ -253,7 +243,7 @@ static void meco_fun_wf(const nlop_data_t* _data, complex float* dst, const comp
 	x_pos[COEFF_DIM] = PIND_FB0;
 
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, dst, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, I*2.*M_PI * data->scaling[PIND_FB0]);
+	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, 2.i * M_PI);
 
 	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
 
@@ -300,7 +290,6 @@ static void meco_fun_wfr2s(const nlop_data_t* _data, complex float* dst, const c
 
 	// dst = F .* cshift
 	md_zmul2(data->N, data->y_dims, data->y_strs, dst, data->map_strs, F, data->TE_strs, multiplace_read(data->cshift, dst));
-	md_zsmul(data->N, data->y_dims, dst, dst, data->scaling[PIND_F]);
 
 
 	// W
@@ -321,7 +310,7 @@ static void meco_fun_wfr2s(const nlop_data_t* _data, complex float* dst, const c
 
 	md_copy_block(data->N, x_pos, data->map_dims, R2s, data->x_dims, src, CFL_SIZE);
 
-	md_zsmul(data->N, data->map_dims, R2s, R2s, -1. * data->scaling[PIND_R2S]);
+	md_zsmul(data->N, data->map_dims, R2s, R2s, -1.);
 
 
 	x_pos[COEFF_DIM] = PIND_FB0;
@@ -332,7 +321,7 @@ static void meco_fun_wfr2s(const nlop_data_t* _data, complex float* dst, const c
 
 	linop_forward_unchecked(data->linop_fB0, fB0, fB0);
 
-	md_zaxpy2(data->N, data->map_dims, data->map_strs, R2s, 2.i * M_PI * data->scaling[PIND_FB0], data->map_strs, fB0);
+	md_zaxpy2(data->N, data->map_dims, data->map_strs, R2s, 2.i * M_PI, data->map_strs, fB0);
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_exp, data->map_strs, R2s, data->TE_strs, multiplace_read(data->TE, dst));
 
 	// tmp_exp = exp(z TE)
@@ -354,7 +343,6 @@ static void meco_fun_wfr2s(const nlop_data_t* _data, complex float* dst, const c
 	x_pos[COEFF_DIM] = PIND_F;
 
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, tmp_exp, data->TE_strs, multiplace_read(data->cshift, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, data->scaling[PIND_F]);
 
 	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
 
@@ -362,7 +350,7 @@ static void meco_fun_wfr2s(const nlop_data_t* _data, complex float* dst, const c
 	x_pos[COEFF_DIM] = PIND_R2S;
 
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, dst, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, -1. * data->scaling[PIND_R2S]);
+	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, -1.);
 
 	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
 
@@ -370,7 +358,7 @@ static void meco_fun_wfr2s(const nlop_data_t* _data, complex float* dst, const c
 	x_pos[COEFF_DIM] = PIND_FB0;
 
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, dst, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, 2.i * M_PI * data->scaling[PIND_FB0]);
+	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, 2.i * M_PI);
 
 	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
 
@@ -426,7 +414,7 @@ static void meco_fun_wf2r2s(const nlop_data_t* _data, complex float* dst, const 
 	md_copy_block(data->N, x_pos, data->map_dims, R2sW, data->x_dims, src, CFL_SIZE);
 
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_exp_R2sW, data->map_strs, R2sW, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_exp_R2sW, tmp_exp_R2sW, -1. * data->scaling[PIND_R2SW]);
+	md_zsmul(data->N, data->y_dims, tmp_exp_R2sW, tmp_exp_R2sW, -1.);
 
 
 	// F
@@ -437,7 +425,6 @@ static void meco_fun_wf2r2s(const nlop_data_t* _data, complex float* dst, const 
 	md_copy_block(data->N, x_pos, data->map_dims, F, data->x_dims, src, CFL_SIZE);
 
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->map_strs, F, data->TE_strs, multiplace_read(data->cshift, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, data->scaling[PIND_F]);
 
 
 	// R2sF
@@ -447,7 +434,7 @@ static void meco_fun_wf2r2s(const nlop_data_t* _data, complex float* dst, const 
 	md_copy_block(data->N, x_pos, data->map_dims, R2sF, data->x_dims, src, CFL_SIZE);
 
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_exp_R2sF, data->map_strs, R2sF, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_exp_R2sF, tmp_exp_R2sF, -1. * data->scaling[PIND_R2SF]);
+	md_zsmul(data->N, data->y_dims, tmp_exp_R2sF, tmp_exp_R2sF, -1.);
 
 
 	// fB0
@@ -459,7 +446,7 @@ static void meco_fun_wf2r2s(const nlop_data_t* _data, complex float* dst, const 
 	linop_forward_unchecked(data->linop_fB0, fB0, fB0);
 
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_exp_fB0, data->map_strs, fB0, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_exp_fB0, tmp_exp_fB0, 2.i * M_PI * data->scaling[PIND_FB0]);
+	md_zsmul(data->N, data->y_dims, tmp_exp_fB0, tmp_exp_fB0, 2.i * M_PI);
 
 	// tmp_exp_R2sW = exp(- R2sW TE)
 	md_zexp(data->N, data->y_dims, tmp_exp_R2sW, tmp_exp_R2sW);
@@ -492,7 +479,7 @@ static void meco_fun_wf2r2s(const nlop_data_t* _data, complex float* dst, const 
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->map_strs, W, data->y_strs, tmp_eco);
 
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, tmp_eco, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, -1. * data->scaling[PIND_R2SW]);
+	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, -1.);
 
 	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
 
@@ -501,7 +488,6 @@ static void meco_fun_wf2r2s(const nlop_data_t* _data, complex float* dst, const 
 	md_zmul(data->N, data->y_dims, tmp_eco, tmp_exp_fB0, tmp_exp_R2sF);
 
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, tmp_eco, data->TE_strs, multiplace_read(data->cshift, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, data->scaling[PIND_F]);
 
 	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
 
@@ -513,7 +499,7 @@ static void meco_fun_wf2r2s(const nlop_data_t* _data, complex float* dst, const 
 
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, tmp_eco, data->TE_strs, multiplace_read(data->cshift, dst));
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, tmp_eco, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, -1. * data->scaling[PIND_R2SF]);
+	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, -1.);
 
 	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
 
@@ -521,7 +507,7 @@ static void meco_fun_wf2r2s(const nlop_data_t* _data, complex float* dst, const 
 	x_pos[COEFF_DIM] = PIND_FB0;
 
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, dst, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, 2.i * M_PI * data->scaling[PIND_FB0]);
+	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, 2.i * M_PI);
 
 	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
 
@@ -569,7 +555,7 @@ static void meco_fun_r2s(const nlop_data_t* _data, complex float* dst, const com
 
 	md_copy_block(data->N, x_pos, data->map_dims, R2s, data->x_dims, src, CFL_SIZE);
 
-	md_zsmul(data->N, data->map_dims, R2s, R2s, -1. * data->scaling[PIND_R2S]);
+	md_zsmul(data->N, data->map_dims, R2s, R2s, -1.);
 
 
 	x_pos[COEFF_DIM] = PIND_FB0;
@@ -580,7 +566,7 @@ static void meco_fun_r2s(const nlop_data_t* _data, complex float* dst, const com
 
 	linop_forward_unchecked(data->linop_fB0, fB0, fB0);
 
-	md_zaxpy2(data->N, data->map_dims, data->map_strs, R2s, 2.i * M_PI * data->scaling[PIND_FB0], data->map_strs, fB0);
+	md_zaxpy2(data->N, data->map_dims, data->map_strs, R2s, 2.i * M_PI, data->map_strs, fB0);
 
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_exp, data->map_strs, R2s, data->TE_strs, multiplace_read(data->TE, dst));
 
@@ -612,7 +598,7 @@ static void meco_fun_r2s(const nlop_data_t* _data, complex float* dst, const com
 	x_pos[COEFF_DIM] = PIND_R2S;
 
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, dst, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, -1. * data->scaling[PIND_R2S]);
+	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, -1.);
 
 	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
 
@@ -621,7 +607,7 @@ static void meco_fun_r2s(const nlop_data_t* _data, complex float* dst, const com
 	x_pos[COEFF_DIM] = PIND_FB0;
 
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, dst, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, 2.i * M_PI * data->scaling[PIND_FB0]);
+	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, 2.i * M_PI);
 
 	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
 
@@ -667,7 +653,7 @@ static void meco_fun_phasediff(const nlop_data_t* _data, complex float* dst, con
 
 	linop_forward_unchecked(data->linop_fB0, fB0, fB0);
 
-	md_zaxpy2(data->N, data->map_dims, data->map_strs, fB0, 2.i * M_PI * data->scaling[PIND_FB0], data->map_strs, fB0);
+	md_zaxpy2(data->N, data->map_dims, data->map_strs, fB0, 2.i * M_PI, data->map_strs, fB0);
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_exp, data->map_strs, fB0, data->TE_strs, multiplace_read(data->TE, dst));
 
 
@@ -698,7 +684,7 @@ static void meco_fun_phasediff(const nlop_data_t* _data, complex float* dst, con
 	x_pos[COEFF_DIM] = PIND_FB0;
 
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, dst, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, 2.i * M_PI * data->scaling[PIND_FB0]);
+	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, 2.i * M_PI);
 
 	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
 
@@ -801,7 +787,6 @@ static void meco_del(const nlop_data_t* _data)
 
 	multiplace_free(data->TE);
 	multiplace_free(data->cshift);
-	md_free(data->scaling);
 
 	md_free(data->der_x);
 
@@ -899,15 +884,6 @@ struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_
 	md_select_dims(N, FFT_FLAGS, w_dims, data->x_dims);
 
 	meco_calc_weights(CAST_UP(data), N, w_dims, scale_fB0[0], scale_fB0[1]);
-
-	// scaling
-	data->scaling = md_alloc(N, scaling_dims, CFL_SIZE);
-
-	for (int pind = 0; pind < x_dims[COEFF_DIM]; pind++)
-		data->scaling[pind] = 1.0;
-
-	long fB0_ind = x_dims[COEFF_DIM] - 1;
-	data->scaling[fB0_ind] = 1.;
 
 	nlop_fun_t meco_funs[] = {
 

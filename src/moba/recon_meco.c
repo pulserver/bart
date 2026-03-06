@@ -93,7 +93,7 @@ void init_meco_maps(const long maps_dims[DIMS], complex float* maps, enum meco_m
 
 // rescale the reconstructed maps to the unit of Hz
 // note: input and output are both maps
-static void rescale_maps(int model, double scaling_Y, const struct linop_s* op, const complex float* scaling, const long maps_dims[DIMS], complex float* maps)
+static void rescale_maps(int model, double scaling_Y, const struct linop_s* op, const long maps_dims[DIMS], complex float* maps)
 {
 	if (MECO_PI == model) {
 
@@ -117,13 +117,15 @@ static void rescale_maps(int model, double scaling_Y, const struct linop_s* op, 
 
 		for (long n = 0; n < nr_coeff; n++) {
 
+			if (!MD_IS_SET(fB0_flag, n))
+				continue;
+
+
+
 			pos[COEFF_DIM] = n;
 			md_copy_block(DIMS, pos, map_dims, map, maps_dims, maps, CFL_SIZE);
 
-			md_zsmul(DIMS, map_dims, map, map, scaling[n]);
-
-			if (MD_IS_SET(fB0_flag, n))
-				linop_forward_unchecked(op, map, map);
+			linop_forward_unchecked(op, map, map);
 
 			md_copy_block(DIMS, pos, maps_dims, maps, map_dims, map, CFL_SIZE);
 		}
@@ -401,7 +403,7 @@ void meco_recon(const struct moba_conf* moba_conf,
 
 		if (!out_origin_maps) {
 
-			rescale_maps(sel_model, scaling_Y, nl.linop_fB0, nl.scaling, maps_1s_dims, maps_ptr);
+			rescale_maps(sel_model, scaling_Y, nl.linop_fB0, maps_1s_dims, maps_ptr);
 
 			noir_forw_coils(nl.linop, sens_ptr, sens_ptr);
 			fftmod(DIMS, sens_1s_dims, mconf.fft_flags, sens_ptr, sens_ptr);
