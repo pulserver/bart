@@ -624,7 +624,7 @@ int main_moba(int argc, char* argv[argc])
 
 	long pos[DIMS] = { [0 ... DIMS - 1] = 0 };
 
-	// assert(img_dims[COEFF_DIM] <= (long)ARRAY_SIZE(data.other.scale));
+	assert(img_dims[COEFF_DIM] <= (long)ARRAY_SIZE(data.other.scale));
 
 	for (int i = 0; i < img_dims[COEFF_DIM]; i++) {
 
