@@ -345,7 +345,7 @@ void meco_recon(const struct moba_conf* moba_conf,
 			struct optreg_conf optreg_conf = optreg_defaults;
 
 			optreg_conf.moba_model = sel_model;
-			optreg_conf.weight_fB0_type = nl.weight_fB0_type;
+			optreg_conf.use_sobolev_fB0 = 0. < scale_fB0[0];
 
 			opt_reg_moba_configure(DIMS, x_dims, ropts, prox_ops, trafos, &optreg_conf);
 

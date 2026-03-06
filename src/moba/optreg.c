@@ -2,7 +2,7 @@
  * Copyright 2022-2025. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
- * 
+ *
  * Authors:
  * 2020 Xiaoqing Wang
  * 2020 Martin Uecker
@@ -45,7 +45,7 @@
 struct optreg_conf optreg_defaults = {
 
 	.moba_model = MECO_WFR2S,
-	.weight_fB0_type = MECO_SOBOLEV,
+	.use_sobolev_fB0 = true,
 };
 
 
@@ -226,10 +226,10 @@ bool opt_reg_moba(void* ptr, char c, const char* optarg)
 	const int r = p->r;
 
 	assert(r < NUM_REGS);
-	
+
 	char rt[5];
 	int ret;
-	
+
 	switch (c) {
 
 	case 'r':
@@ -244,7 +244,7 @@ bool opt_reg_moba(void* ptr, char c, const char* optarg)
 			int ret = sscanf(optarg, "%*[^:]:%lu:%lu:%f", &regs[r].xflags, &regs[r].jflags, &regs[r].lambda);
 			assert(3 == ret);
 
-		} else 
+		} else
 		if (strcmp(rt, "Q") == 0) {
 
 			regs[r].xform = L2IMG;
@@ -253,7 +253,7 @@ bool opt_reg_moba(void* ptr, char c, const char* optarg)
 			regs[r].xflags = 0u;
 			regs[r].jflags = 0u;
 
-		} else 
+		} else
 		if (strcmp(rt, "S") == 0) {
 
 			regs[r].xform = POS;
@@ -262,14 +262,14 @@ bool opt_reg_moba(void* ptr, char c, const char* optarg)
 			regs[r].xflags = 0u;
 			regs[r].jflags = 0u;
 
-		} else 
+		} else
 		if (strcmp(rt, "T") == 0) {
 
 			regs[r].xform = TV;
 			int ret = sscanf(optarg, "%*[^:]:%lu:%lu:%f", &regs[r].xflags, &regs[r].jflags, &regs[r].lambda);
 			assert(3 == ret);
 
-		} else 
+		} else
 		if (strcmp(rt, "h") == 0) {
 
 			help_reg_moba();
@@ -307,10 +307,10 @@ static void opt_reg_meco_configure(int N, const long dims[N], const struct opt_r
 	// set number of coefficients for joint regularization
 	long nr_joint_coeff = get_num_of_coeff(optreg_conf->moba_model);
 
-	if (MECO_SOBOLEV == optreg_conf->weight_fB0_type)
+	if (optreg_conf->use_sobolev_fB0)
 		nr_joint_coeff -= 1;
 
-	// set the flag for the position of the coefficient 
+	// set the flag for the position of the coefficient
 	// which needs non-negativity constraint
 	unsigned long nonneg_flag = get_R2S_flag(optreg_conf->moba_model);
 
@@ -458,7 +458,7 @@ static void opt_reg_IRLL_configure(int N, const long dims[N], struct opt_reg_s* 
 
 			auto extract = linop_extract_create(1, MD_DIMS(0), MD_DIMS(md_calc_size(DIMS, img_dims)), MD_DIMS(md_calc_size(DIMS, x_dims)));
 			extract = linop_reshape_out_F(extract, DIMS, img_dims);
-			
+
 			auto grad = linop_grad_create(DIMS, img_dims, DIMS, regs[nr].xflags);
 
 			trafos[nr] = linop_chain(extract, grad);
@@ -492,7 +492,7 @@ static void opt_reg_IRLL_configure(int N, const long dims[N], struct opt_reg_s* 
 			auto stack0 = operator_p_stack_FF(COEFF_DIM, COEFF_DIM, zero_prox1, zsmax_prox);
 
 			trafos[nr] = linop_identity_create(DIMS, x_dims);;
-			prox_ops[nr] = operator_p_stack_FF(0, 0, operator_p_flatten_F(stack0), 
+			prox_ops[nr] = operator_p_stack_FF(0, 0, operator_p_flatten_F(stack0),
 							operator_p_flatten_F(prox_zero_create(DIMS, coil_dims)));
 
 			break;

@@ -24,11 +24,6 @@ enum meco_model {
 };
 #endif
 
-enum meco_weights_fB0 {
-	MECO_IDENTITY,
-	MECO_SOBOLEV,
-};
-
 extern int get_num_of_coeff(enum meco_model sel_model);
 extern unsigned long get_PD_flag(enum meco_model sel_model);
 extern unsigned long get_R2S_flag(enum meco_model sel_model);
@@ -39,8 +34,6 @@ extern void meco_calc_fat_modu(int N, const long dims[N], const complex float TE
 
 extern const complex float* meco_get_scaling(struct nlop_s* op);
 extern const struct linop_s* meco_get_fB0_trafo(struct nlop_s* op);
-
-extern int meco_get_weight_fB0_type(struct nlop_s* op);
 
 extern struct nlop_s* nlop_meco_create(int N, const long y_dims[N], const long x_dims[N], const complex float* TE, enum meco_model sel_model, enum fat_spec fat_spec, const float* scale_fB0);
 

@@ -62,7 +62,6 @@ struct meco_s {
 	complex float* scaling; // length = number of maps
 
 	const struct linop_s* linop_fB0;
-	int weight_fB0_type;
 };
 
 DEF_TYPEID(meco_s);
@@ -132,21 +131,13 @@ static void meco_calc_weights(const nlop_data_t* _data, const int N, const long 
 {
 	struct meco_s* data = CAST_DOWN(meco_s, _data);
 
-	enum meco_weights_fB0 weights_type = (0. == a) ? MECO_IDENTITY : MECO_SOBOLEV;
-
-	switch (weights_type) {
-
-	case MECO_IDENTITY:
+	if (0. == a) {
 
 		debug_printf(DP_DEBUG2, " identity weight on fB0\n");
 
 		data->linop_fB0 = linop_identity_create(N, data->map_dims);
 
-		data->weight_fB0_type = MECO_IDENTITY;
-
-		break;
-
-	case MECO_SOBOLEV:
+	} else {
 
 		debug_printf(DP_DEBUG2, " sobolev weight on fB0\n");
 
@@ -160,15 +151,6 @@ static void meco_calc_weights(const nlop_data_t* _data, const int N, const long 
 		data->linop_fB0 = linop_chain_FF(linop_wghts, linop_ifftc);
 
 		md_free(weights);
-
-		data->weight_fB0_type = MECO_SOBOLEV;
-
-		break;
-
-	default:
-
-		assert(0);
-		break;
 	}
 }
 
@@ -184,14 +166,6 @@ const struct linop_s* meco_get_fB0_trafo(struct nlop_s* op)
 	const nlop_data_t* _data = nlop_get_data(op);
 	struct meco_s* data = CAST_DOWN(meco_s, _data);
 	return data->linop_fB0;
-}
-
-int meco_get_weight_fB0_type(struct nlop_s* op)
-{
-	const nlop_data_t* _data = nlop_get_data(op);
-	struct meco_s* data = CAST_DOWN(meco_s, _data);
-
-	return data->weight_fB0_type;
 }
 
 // ************************************************************* //

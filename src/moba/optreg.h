@@ -5,7 +5,7 @@ struct linop_s;
 struct optreg_conf {
 
 	int moba_model;
-	int weight_fB0_type;
+	_Bool use_sobolev_fB0;
 
 	int tvscales_N;
 	complex float* tvscales;
