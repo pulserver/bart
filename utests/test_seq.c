@@ -4,6 +4,7 @@
  */
 
 #include <math.h>
+#include <stdio.h>
 
 #include "num/multind.h"
 
@@ -18,6 +19,28 @@
 
 #define FLASH_EVENTS 14
 
+
+// those are actively used in sequence
+static bool test_commands_sequence(void)
+{
+	struct bart_seq* seq = bart_seq_alloc("");
+	bart_seq_defaults(seq);
+
+	static char seq_cmd[128];
+	snprintf(seq_cmd, 128, "bart seq --pe_mode 1 --contrast 2 --tiny 13");
+
+	if (!seq_config_from_string(seq->conf, 128, seq_cmd))
+		return false;
+
+	if ((1 != seq->conf->enc.pe_mode) || (2 != seq->conf->phys.contrast) || (13 != seq->conf->enc.tiny))
+		return false;
+
+	bart_seq_free(seq);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_commands_sequence);
 
 
 static int trigger_event_count(const struct seq_config* seq, const struct seq_state* seq_state)
