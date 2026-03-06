@@ -209,9 +209,6 @@ const struct nlop_s* nlop_ir_meco_model_create(int N, const long map_dims[N], co
 		arg_t tmp2 = inversion_recovery(args[3], args[4], args[5], N, TI_dims, TI);
 		arg_t tmp3 = fat_spectrum(tmp2, N, TE_dims, TE);
 
-		// FIXME: This is WRONG, but it was in the old model!!!
-		tmp3 = snlop_scale_F(tmp3, 0.5);
-
 		arg_t tmp4 = snlop_add(tmp1, tmp3);
 		arg_t tmp5 = B0_modulation(tmp4, args[7], N, TE_dims, TE);
 		out = T2s_decay(tmp5, args[6], N, TE_dims, TE);
