@@ -53,6 +53,8 @@ void seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[
 		OPTL_FLOAT(0, "dist", &seq_opts->dist, "dist", "slice distance factor [1 / slice_thickness] (default: 1.)"),
 
 		// contrast mode
+		OPTL_UINT(0, "contrast", &conf->phys.contrast, "contrast", "Spoiling [RF_RANDOM,RF_SPOILED,BALANCED,GSTF_RANDOM,GSTF_SPOILED]"),
+
 		OPTL_SELECT(0, "no-spoiling", enum flash_contrast, &conf->phys.contrast,
 				SEQ_CONTRAST_NO_SPOILING, "spoiling off (default: rf random)"),
 		OPTL_SELECT(0, "spoiled", enum flash_contrast, &conf->phys.contrast,
@@ -112,6 +114,8 @@ void seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[
 		// gradient mode
 		OPTL_SELECT(0, "gradient-normal", enum gradient_mode, &seq_opts->gradient_mode, GRAD_NORMAL, "Gradient normal mode (default: fast)"),
 		OPTL_SELECT(0, "gradient-whisper", enum gradient_mode, &seq_opts->gradient_mode, GRAD_WHISPER, "Gradient whispher mode (default: fast)"),
+
+		OPTL_SET(0, "support", &seq_opts->support, "save support points of gradient"),
 
 		OPTL_VECN(0, "CUSTOM_LONG", seq_opts->custom_params_long, "custom long parameters"),
 		OPTL_DOVECN(0, "CUSTOM_DOUBLE", seq_opts->custom_params_double, "custom double parameters"),
