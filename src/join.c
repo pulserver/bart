@@ -158,9 +158,22 @@ int main_join(int argc, char* argv[argc])
 
 	if (append) {
 
-		// Here, we need to trick the IO subsystem into absolutely NOT
-		// unlinking our input, as the same file is also an output here.
-		io_close(out_file);
+		if (md_check_dimensions(N - dim - 1, out_dims + dim + 1, 0UL)) {
+
+			debug_printf(DP_INFO, "dim: %d; out_dims + dim + 1:\n", dim);
+			debug_print_dims(DP_INFO, N - dim - 1, out_dims + dim + 1);
+			debug_printf(DP_WARN, "True appending impossible, dimensions after join-dim"
+					      "are not trivial - rewriting appended file.\n");
+
+			// keep a reference to original input data
+			in_data[0] = load_cfl(out_file, N, in_dims[0]);
+		} else {
+
+			// here, io_close will prevent the subsequent create_cfl-call
+			// from unlinking and recreating the output, thus keeping
+			// it's contents (input 0) and appending to it
+			io_close(out_file);
+		}
 	}
 
 	complex float* out_data = NULL;
@@ -170,8 +183,14 @@ int main_join(int argc, char* argv[argc])
 	else
 		out_data = create_cfl(out_file, N, out_dims);
 
-	long ostr[N];
-	md_calc_strides(N, ostr, out_dims, CFL_SIZE);
+
+	if (append && md_check_dimensions(N - dim - 1, out_dims + dim + 1, 0UL)) {
+
+		// fake append: rewriting the contents of the output
+		md_copy2(N, in_dims[0], MD_STRIDES(N, out_dims, CFL_SIZE), out_data,
+			MD_STRIDES(N, in_dims[0], CFL_SIZE), in_data[0], CFL_SIZE);
+		unmap_cfl(N, in_dims[0], in_data[0]);
+	}
 
 	if (! stream) {
 
@@ -184,9 +203,6 @@ int main_join(int argc, char* argv[argc])
 			long pos[N];
 			md_singleton_strides(N, pos);
 			pos[dim] = offsets[i];
-
-			long istr[N];
-			md_calc_strides(N, istr, in_dims[i], CFL_SIZE);
 
 			md_copy_block(N, pos, out_dims, out_data, in_dims[i], in_data[i], CFL_SIZE);
 
