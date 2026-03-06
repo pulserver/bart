@@ -469,7 +469,8 @@ endif
 
 
 CPPFLAGS += $(DEPFLAG) -iquote $(srcdir)/
-CFLAGS += -std=gnu17
+# CUDA code still uses older GCC
+CFLAGS += -std=gnu2x
 CXXFLAGS += -std=c++17
 
 
