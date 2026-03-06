@@ -14,6 +14,7 @@
 #include "seq/flash.h"
 #include "seq/seq.h"
 #include "seq/helpers.h"
+#include "seq/custom_ui.h"
 
 #include "utest.h"
 
@@ -42,6 +43,32 @@ static bool test_commands_sequence(void)
 
 UT_REGISTER_TEST(test_commands_sequence);
 
+
+// those custom ui values are used in the sequence
+static bool test_get_ui_idx(void)
+{
+	if (0 > seq_custom_ui_get_idx("CMD"))
+		return false;
+
+	if (0 > seq_custom_ui_get_idx("PE_MODE"))
+		return false;
+
+	if (0 > seq_custom_ui_get_idx("CONTRAST"))
+		return false;
+
+	if (0 > seq_custom_ui_get_idx("TINY"))
+		return false;
+
+	if (0 > seq_custom_ui_get_idx("RECO"))
+		return false;
+
+	if (0 > seq_custom_ui_get_idx("RAGA_ALIGNED_FLAGS"))
+		return false;
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_get_ui_idx);
 
 static int trigger_event_count(const struct seq_config* seq, const struct seq_state* seq_state)
 {
