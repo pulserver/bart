@@ -70,116 +70,48 @@ DEF_TYPEID(meco_s);
 
 int get_num_of_coeff(enum meco_model sel_model)
 {
-	int ncoeff = 0;
-
 	switch (sel_model) {
-	case MECO_PI:		assert(0);
-	case MECO_WF: 		ncoeff = 3; break;
-	case MECO_WFR2S:	ncoeff = 4; break;
-	case MECO_WF2R2S:	ncoeff = 5; break;
-	case MECO_R2S:		ncoeff = 3; break;
-	case MECO_PHASEDIFF:	ncoeff = 2; break;
+	case MECO_WF: 		return 3;
+	case MECO_WFR2S:	return 4;
+	case MECO_WF2R2S:	return 5;
+	case MECO_R2S:		return 3;
+	case MECO_PHASEDIFF:	return 2;
 	default:
 		assert(0);
 	}
-
-	return ncoeff;
 }
 
 unsigned long get_PD_flag(enum meco_model sel_model)
 {
-	unsigned long PD_flag = 0;
-
 	switch (sel_model) {
-
-	case MECO_PI:
-
-		assert(0);
-
-	case MECO_WF:
-
-		PD_flag = MD_SET(PD_flag, 0);
-		PD_flag = MD_SET(PD_flag, 1);
-		break;
-
-	case MECO_WFR2S:
-
-		PD_flag = MD_SET(PD_flag, 0);
-		PD_flag = MD_SET(PD_flag, 1);
-		break;
-
-	case MECO_WF2R2S:
-
-		PD_flag = MD_SET(PD_flag, 0);
-		PD_flag = MD_SET(PD_flag, 2);
-		break;
-
-	case MECO_R2S:
-
-		PD_flag = MD_SET(PD_flag, 0);
-		break;
-
-	case MECO_PHASEDIFF:
-
-		PD_flag = MD_SET(PD_flag, 0);
-		break;
-
+	case MECO_WF:		return MD_BIT(0) | MD_BIT(1);
+	case MECO_WFR2S:	return MD_BIT(0) | MD_BIT(1);
+	case MECO_WF2R2S:	return MD_BIT(0) | MD_BIT(2);
+	case MECO_R2S:		return MD_BIT(0);
+	case MECO_PHASEDIFF:	return MD_BIT(0);
 	default:
 		assert(0);
 	}
-
-	return PD_flag;
 }
 
 unsigned long get_R2S_flag(enum meco_model sel_model)
 {
-	unsigned long R2S_flag = 0;
-
 	switch (sel_model) {
 
-	case MECO_PI:
-
-		assert(0);
-
-	case MECO_WF:
-
-		break;
-
-	case MECO_WFR2S:
-
-		R2S_flag = MD_SET(R2S_flag, 2);
-		break;
-
-	case MECO_WF2R2S:
-
-		R2S_flag = MD_SET(R2S_flag, 1);
-		R2S_flag = MD_SET(R2S_flag, 3);
-		break;
-
-	case MECO_R2S:
-
-		R2S_flag = MD_SET(R2S_flag, 1);
-		break;
-
-	case MECO_PHASEDIFF:
-
-		break;
-
+	case MECO_WF:		return 0;
+	case MECO_WFR2S:	return MD_BIT(2);
+	case MECO_WF2R2S:	return MD_BIT(1) | MD_BIT(3);
+	case MECO_R2S:		return MD_BIT(1);
+	case MECO_PHASEDIFF:	return 0;
 	default:
 		assert(0);
 	}
-
-	return R2S_flag;
 }
 
 unsigned long get_fB0_flag(enum meco_model sel_model)
 {
-	// the last parameter is fB0
-	unsigned long fB0_flag = 0;
-
-	fB0_flag = MD_SET(fB0_flag, get_num_of_coeff(sel_model) - 1);
-
-	return fB0_flag;
+	// fB0 is always in the last position
+	return MD_BIT(get_num_of_coeff(sel_model) - 1);
 }
 
 void meco_calc_fat_modu(int N, const long dims[N], const complex float TE[dims[TE_DIM]], complex float dst[dims[TE_DIM]], enum fat_spec fat_spec)
