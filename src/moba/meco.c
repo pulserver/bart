@@ -125,34 +125,6 @@ void meco_calc_fat_modu(int N, const long dims[N], const complex float TE[dims[T
 }
 
 
-
-static void meco_calc_weights(const nlop_data_t* _data, const int N, const long dims[N], float a, float b)
-{
-	struct meco_s* data = CAST_DOWN(meco_s, _data);
-
-	if (0. == a) {
-
-		debug_printf(DP_DEBUG2, " identity weight on fB0\n");
-
-		data->linop_fB0 = linop_identity_create(N, data->map_dims);
-
-	} else {
-
-		debug_printf(DP_DEBUG2, " sobolev weight on fB0\n");
-
-		complex float* weights = md_alloc(3, dims, CFL_SIZE);
-
-		noir_calc_weights(a, b, dims, weights);
-
-		auto linop_wghts = linop_cdiag_create(N, data->map_dims, FFT_FLAGS, weights);
-		auto linop_ifftc = linop_ifftc_create(N, data->map_dims, FFT_FLAGS);
-
-		data->linop_fB0 = linop_chain_FF(linop_wghts, linop_ifftc);
-
-		md_free(weights);
-	}
-}
-
 const struct linop_s* meco_get_fB0_trafo(struct nlop_s* op)
 {
 	const nlop_data_t* _data = nlop_get_data(op);
@@ -879,11 +851,18 @@ struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_
 
 	data->cshift = multiplace_move_F(N, TE_dims, CFL_SIZE, cshift);
 
-	// weight on fB0
-	long w_dims[N];
-	md_select_dims(N, FFT_FLAGS, w_dims, data->x_dims);
+	if (0. == scale_fB0[0]) {
 
-	meco_calc_weights(CAST_UP(data), N, w_dims, scale_fB0[0], scale_fB0[1]);
+		debug_printf(DP_DEBUG2, " identity weight on fB0\n");
+
+		data->linop_fB0 = linop_identity_create(N, data->map_dims);
+
+	} else {
+
+		debug_printf(DP_DEBUG2, " sobolev weight on fB0\n");
+
+		data->linop_fB0 = linop_noir_weights_create(N, map_dims, map_dims, map_dims, FFT_FLAGS, 1., scale_fB0[0], scale_fB0[1], 1);
+	}
 
 	nlop_fun_t meco_funs[] = {
 
