@@ -111,6 +111,9 @@ nn_t nn_from_nlop(const struct nlop_s* op)
 
 void nn_free(nn_t op)
 {
+	if (NULL == op)
+		return;
+
 	int II = nn_get_nr_in_args(op);
 	int OO = nn_get_nr_out_args(op);
 

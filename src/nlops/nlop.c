@@ -444,6 +444,9 @@ int nlop_get_nr_out_args(const struct nlop_s* op)
 
 void nlop_free(const struct nlop_s* op)
 {
+	if (NULL == op)
+		return;
+
 	int II = nlop_get_nr_in_args(op);
 	int OO = nlop_get_nr_out_args(op);
 
@@ -462,6 +465,9 @@ void nlop_free(const struct nlop_s* op)
 
 struct nlop_s* nlop_clone(const struct nlop_s* op)
 {
+	if (NULL == op)
+		return NULL;
+
 	PTR_ALLOC(struct nlop_s, n);
 
 	int II = nlop_get_nr_in_args(op);

@@ -444,7 +444,7 @@ void snlop_chain(int N, arg_t oargs[N], arg_t iargs[N], bool keep)
 
 	for (int i = 0; i < N; i++)
 		snlop_combine(iargs[0]->x, iargs[i]->x);
-	
+
 	for (int i = 0; i < N; i++) {
 
 		if (arg_is_input(oargs[0]) && !arg_is_input(oargs[i]))
@@ -699,6 +699,9 @@ const struct nlop_s* nlop_from_snlop_F(snlop_t snlop, int OO, arg_t oargs[OO], i
 
 void snlop_del_arg(arg_t arg)
 {
+	if (NULL == arg)
+		return;
+
 	snlop_t snlop = arg->x;
 	int o = snlop_get_idx(arg, true);
 
