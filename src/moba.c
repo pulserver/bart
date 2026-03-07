@@ -266,8 +266,6 @@ int main_moba(int argc, char* argv[argc])
 	num_init_gpu_support();
 	num_rand_init(0ULL);
 
-	data.model = conf.mode;
-
 	if (MDB_T1_PHY == conf.mode)
 		debug_printf(DP_INFO, "The TR for MDB_T1_PHY is %f s!\n", data.sim.seq.tr);
 
@@ -278,6 +276,8 @@ int main_moba(int argc, char* argv[argc])
 
 	if (t2_old_flag)
 		conf.mode = MDB_T2;
+
+	data.model = conf.mode;
 
 	if (conf.ropts->r > 0)
 		conf.algo = ALGO_ADMM;
