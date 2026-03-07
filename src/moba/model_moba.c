@@ -38,7 +38,7 @@
 
 
 struct mobamod moba_create(const long dims[DIMS], const complex float* mask, const complex float* TI, const complex float* TE, const complex float* b1,
-		const complex float* b0, const float* scale_fB0, const complex float* psf, const struct noir_model_conf_s* conf, struct moba_conf_s* data)
+		const complex float* b0, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, const complex float* psf, const struct noir_model_conf_s* conf, struct moba_conf_s* data)
 {
 	long data_dims[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, data_dims, dims);
@@ -71,7 +71,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 		// FIXME: Integrate other models here
 		assert(0);
 		break;
-		
+
 	case MDB_T2:
 
 		complex float* enc = md_alloc(DIMS, TI_dims, CFL_SIZE);
@@ -93,7 +93,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 		for (int i = 0; i < 8; i++)
 			debug_printf(DP_DEBUG2, "FP Scale[%d]=%f\n", i, crealf(data->other.scale[i]));
 
-		model = nlop_ir_meco_create(DIMS, map_dims, out_dims, in_dims, TI_dims, TI, TE_dims, TE, scale_fB0, data->other.scale);
+		model = nlop_ir_meco_create(DIMS, map_dims, out_dims, in_dims, TI_dims, TI, TE_dims, TE, scale_fB0, meco_model, fat_spec, data->other.scale);
 		break;
 
 	case MDB_BLOCH:

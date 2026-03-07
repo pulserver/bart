@@ -32,6 +32,7 @@
 #include "moba/ir_meco.h"
 #include "moba/optreg.h"
 
+#include "simu/signals.h"
 #include "utest.h"
 
 
@@ -39,7 +40,7 @@
 
 
 
-static bool test_nlop_T1fun(void) 
+static bool test_nlop_T1fun(void)
 {
 	enum { N = 16 };
 	long map_dims[N] = { 16, 16, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
@@ -57,7 +58,7 @@ static bool test_nlop_T1fun(void)
 	struct nlop_s* T1 = nlop_T1_create(N, map_dims, out_dims, in_dims, TI_dims, TI, 2., 1.);
 
 	nlop_apply(T1, N, out_dims, dst, N, in_dims, src);
-	
+
 	float err = linop_test_adjoint_real(nlop_get_derivative(T1, 0, 0));
 
 	nlop_free(T1);
@@ -70,7 +71,7 @@ static bool test_nlop_T1fun(void)
 
 UT_REGISTER_TEST(test_nlop_T1fun);
 
-static bool test_nlop_T1fun_der(void) 
+static bool test_nlop_T1fun_der(void)
 {
 	enum { N = 16 };
 	long map_dims[N] = { 16, 16, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
@@ -254,7 +255,7 @@ static bool test_nlop_ir_meco(void)
 
 	float scale_others[8] = { 1, 1, 1, 1, 1, 1, 0.1, 0.1 };
 
-	struct nlop_s* ir_meco = nlop_ir_meco_create(N, map_dims, out_dims, in_dims, TI_dims, TI, TE_dims, TE, scale_fB0, scale_others);
+	struct nlop_s* ir_meco = nlop_ir_meco_create(N, map_dims, out_dims, in_dims, TI_dims, TI, TE_dims, TE, scale_fB0, IR_MECO_W_T1_F_T1_R2S, FAT_SPEC_1, scale_others);
 
 	nlop_apply(ir_meco, N, out_dims, dst, N, in_dims, src);
 
@@ -317,7 +318,7 @@ static bool test_nlop_ir_meco_der(void)
 
 
 
-	struct nlop_s* ir_meco = nlop_ir_meco_create(N, map_dims, out_dims, in_dims, TI_dims, TI, TE_dims, TE, scale_fB0, scale_others);
+	struct nlop_s* ir_meco = nlop_ir_meco_create(N, map_dims, out_dims, in_dims, TI_dims, TI, TE_dims, TE, scale_fB0, IR_MECO_W_T1_F_T1_R2S, FAT_SPEC_1, scale_others);
 
 	float err = nlop_test_derivative_at(ir_meco, in);
 

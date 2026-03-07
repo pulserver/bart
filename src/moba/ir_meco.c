@@ -67,11 +67,10 @@ static void calc_fat_modu(int N, const long dims[N], complex float* dst, const c
 }
 
 // F .* zm
-static arg_t fat_spectrum(arg_t F, int N, const long TE_dims[N], const complex float* TE)
+static arg_t fat_spectrum(arg_t F, int N, const long TE_dims[N], const complex float* TE, enum fat_spec fat_spec)
 {
 	complex float* cshift = md_alloc(N, TE_dims, CFL_SIZE);
 
-	enum fat_spec fat_spec = FAT_SPEC_1;
 	calc_fat_modu(N, TE_dims, cshift, TE, fat_spec);
 
 	arg_t arg_cshift = snlop_const(N, TE_dims, cshift, "cshift");
@@ -136,65 +135,60 @@ static arg_t inversion_recovery(arg_t MS, arg_t M0, arg_t R1s, int N, const long
 
 
 const struct nlop_s* nlop_ir_meco_model_create(int N, const long map_dims[N], const long in_dims[N], const long TI_dims[N],
-				const complex float* TI, const long TE_dims[N], const complex float* TE)
+				const complex float* TI, const long TE_dims[N], const complex float* TE, enum meco_model meco_model, enum fat_spec fat_spec)
 {
+	assert(ir_meco_get_num_of_coeff(meco_model) == in_dims[COEFF_DIM]);
+
 	arg_t args [in_dims[COEFF_DIM]];
 	arg_t out = NULL;
 
-	if (3 == in_dims[COEFF_DIM]) { // W, F, fB0
+	arg_t tmp[5] = { NULL };
+
+	switch (meco_model) {
+
+	case IR_MECO_WF_fB0:
 
 		debug_printf(DP_DEBUG1, "MODEL: W, F, fB0\n");
 		args[0] = snlop_input(N, map_dims, "W");
 		args[1] = snlop_input(N, map_dims, "F");
 		args[2] = snlop_input(N, map_dims, "fB0");
 
-		arg_t tmp1 = fat_spectrum(args[1], N, TE_dims, TE);
-		arg_t tmp2 = snlop_add(tmp1, args[0]);
+		tmp[0] = fat_spectrum(args[1], N, TE_dims, TE, fat_spec);
+		tmp[1] = snlop_add(tmp[0], args[0]);
 
-		out = B0_modulation(tmp2, args[2], N, TE_dims, TE);
+		out = B0_modulation(tmp[1], args[2], N, TE_dims, TE);
+		break;
 
-		snlop_del_arg(tmp2);
-		snlop_del_arg(tmp1);
-
-	} else if (4 == in_dims[COEFF_DIM]) { // W, F, R2*, fB0
+	case IR_MECO_WF_R2S:
 
 		debug_printf(DP_DEBUG1, "MODEL: W, F, R2*, fB0\n");
-
 		args[0] = snlop_input(N, map_dims, "W");
 		args[1] = snlop_input(N, map_dims, "F");
 		args[2] = snlop_input(N, map_dims, "R2s");
 		args[3] = snlop_input(N, map_dims, "fB0");
 
-		arg_t tmp1 = fat_spectrum(args[1], N, TE_dims, TE);
-		arg_t tmp2 = snlop_add(tmp1, args[0]);
-		arg_t tmp3 = B0_modulation(tmp2, args[3], N, TE_dims, TE);
+		tmp[0] = fat_spectrum(args[1], N, TE_dims, TE, fat_spec);
+		tmp[1] = snlop_add(tmp[0], args[0]);
+		tmp[2] = B0_modulation(tmp[1], args[3], N, TE_dims, TE);
 
-		out = T2s_decay(tmp3, args[2], N, TE_dims, TE);
+		out = T2s_decay(tmp[2], args[2], N, TE_dims, TE);
+		break;
 
-		snlop_del_arg(tmp1);
-		snlop_del_arg(tmp2);
-		snlop_del_arg(tmp3);
-
-	} else if (5 == in_dims[COEFF_DIM]) { // Ms, M0, R1*, R2*, fB0
+	case IR_MECO_T1_R2S:
 
 		debug_printf(DP_DEBUG1, "MODEL: Ms, M0, R1*, R2*, fB0\n");
-
 		args[0] = snlop_input(N, map_dims, "Ms");
 		args[1] = snlop_input(N, map_dims, "M0");
 		args[2] = snlop_input(N, map_dims, "R1s");
 		args[3] = snlop_input(N, map_dims, "R2s");
 		args[4] = snlop_input(N, map_dims, "fB0");
 
-		arg_t tmp1 = inversion_recovery(args[0], args[1], args[2], N, TI_dims, TI);
-		arg_t tmp2 = B0_modulation(tmp1, args[4], N, TE_dims, TE);
-		out = T2s_decay(tmp2, args[3], N, TE_dims, TE);
+		tmp[0] = inversion_recovery(args[0], args[1], args[2], N, TI_dims, TI);
+		tmp[1] = B0_modulation(tmp[0], args[4], N, TE_dims, TE);
+		out = T2s_decay(tmp[1], args[3], N, TE_dims, TE);
+		break;
 
-		snlop_del_arg(tmp1);
-		snlop_del_arg(tmp2);
-
-	} else { // Ms_w, M0_w, R1*_w, Ms_f, M0_f, R1*_f, R2*, fB0
-
-		debug_printf(DP_DEBUG1, "MODEL: Ms_w, M0_w, R1*_w, Ms_f, M0_f, R1*_f, R2*, fB0\n");
+	case IR_MECO_W_T1_F_T1_R2S:
 
 		args[0] = snlop_input(N, map_dims, "Ms_w");
 		args[1] = snlop_input(N, map_dims, "M0_w");
@@ -205,20 +199,20 @@ const struct nlop_s* nlop_ir_meco_model_create(int N, const long map_dims[N], co
 		args[6] = snlop_input(N, map_dims, "R2s");
 		args[7] = snlop_input(N, map_dims, "fB0");
 
-		arg_t tmp1 = inversion_recovery(args[0], args[1], args[2], N, TI_dims, TI);
-		arg_t tmp2 = inversion_recovery(args[3], args[4], args[5], N, TI_dims, TI);
-		arg_t tmp3 = fat_spectrum(tmp2, N, TE_dims, TE);
+		tmp[0] = inversion_recovery(args[0], args[1], args[2], N, TI_dims, TI);
+		tmp[1] = inversion_recovery(args[3], args[4], args[5], N, TI_dims, TI);
+		tmp[2] = fat_spectrum(tmp[1], N, TE_dims, TE, fat_spec);
 
-		arg_t tmp4 = snlop_add(tmp1, tmp3);
-		arg_t tmp5 = B0_modulation(tmp4, args[7], N, TE_dims, TE);
-		out = T2s_decay(tmp5, args[6], N, TE_dims, TE);
-
-		snlop_del_arg(tmp1);
-		snlop_del_arg(tmp2);
-		snlop_del_arg(tmp3);
-		snlop_del_arg(tmp4);
-		snlop_del_arg(tmp5);
+		tmp[3] = snlop_add(tmp[0], tmp[2]);
+		tmp[4] = B0_modulation(tmp[3], args[7], N, TE_dims, TE);
+		out = T2s_decay(tmp[4], args[6], N, TE_dims, TE);
+		break;
+	default:
+		error("invalid model");
 	}
+
+	for (int i = 0; i < (int)ARRAY_SIZE(tmp); i++)
+		snlop_del_arg(tmp[i]);
 
 	const struct nlop_s* ret = nlop_from_snlop_F(snlop_from_arg(out),
 							1, (arg_t[1]){ out },
@@ -235,9 +229,9 @@ const struct nlop_s* nlop_ir_meco_model_create(int N, const long map_dims[N], co
 
 
 struct nlop_s* nlop_ir_meco_create(int N, const long map_dims[N], const long /*out_dims*/[N], const long in_dims[N], const long TI_dims[N],
-				const complex float* TI, const long TE_dims[N], const complex float* TE, const float* scale_fB0, const float* scale)
+				const complex float* TI, const long TE_dims[N], const complex float* TE, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, const float* scale)
 {
-	const struct nlop_s* model = nlop_ir_meco_model_create(N, map_dims, in_dims, TI_dims, TI, TE_dims, TE);
+	const struct nlop_s* model = nlop_ir_meco_model_create(N, map_dims, in_dims, TI_dims, TI, TE_dims, TE, meco_model, fat_spec);
 
 	const struct linop_s* prec[in_dims[COEFF_DIM]];
 

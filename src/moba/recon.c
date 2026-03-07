@@ -272,7 +272,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 	case MDB_BLOCH:
 	case MDB_IR_MGRE:
 
-		nl = moba_create(dims, mask, TI, TE_IR_MGRE, b1, b0, conf->scale_fB0, pattern, &mconf, data);
+		nl = moba_create(dims, mask, TI, TE_IR_MGRE, b1, b0, conf->scale_fB0, conf->mgre_model, conf->fat_spec, pattern, &mconf, data);
 		break;
 	}
 
