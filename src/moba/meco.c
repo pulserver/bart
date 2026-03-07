@@ -25,6 +25,7 @@
 #include "num/flpmath.h"
 #include "num/multind.h"
 #include "num/multiplace.h"
+#include "num/iovec.h"
 
 #include "simu/signals.h"
 
@@ -46,34 +47,96 @@
 #include "meco.h"
 
 
-struct meco_s {
+struct meco_old_phasecontrast_s {
 
 	nlop_data_t super;
 
-	int N;
-	long model;
-
-	const long* y_dims;
-	const long* x_dims;
-	const long* der_dims;
-	const long* map_dims;
-	const long* TE_dims;
-
-	const long* y_strs;
-	const long* x_strs;
-	const long* der_strs;
-	const long* map_strs;
-	const long* TE_strs;
-
-	// Parameter maps
-	complex float* der_x;
 	struct multiplace_array_s* TE;
-	struct multiplace_array_s* cshift;
-
-	const struct linop_s* linop_fB0;
 };
 
-DEF_TYPEID(meco_s);
+DEF_TYPEID(meco_old_phasecontrast_s);
+
+// ************************************************************* //
+//  Model: rho .* exp(i 2\pi fB0 TE) reproducing wrong scaling from old version
+// ************************************************************* //
+static void meco_fun_phasediff(const nlop_data_t* _data, int N, const long y_dims[N], _Complex float* dst, const long x_dims[N], const _Complex float* src, const long ddims[N], _Complex float* jac)
+{
+	struct meco_old_phasecontrast_s* data = CAST_DOWN(meco_old_phasecontrast_s, _data);
+
+	long map_dims[N];
+	long TE_dims[N];
+
+	md_select_dims(N, TE_FLAG, TE_dims, y_dims);
+	md_select_dims(N, ~COEFF_FLAG, map_dims, x_dims);
+
+	long pos[N];
+	md_set_dims(N, pos, 0);
+
+	complex float* tmp_exp = md_alloc_sameplace(N, y_dims, CFL_SIZE, dst);
+
+	complex float* rho = md_alloc_sameplace(N, map_dims, CFL_SIZE, dst);
+	complex float* fB0 = md_alloc_sameplace(N, map_dims, CFL_SIZE, dst);
+
+	md_copy_block(N, (pos[COEFF_DIM] = 0, pos), map_dims, rho, x_dims, src, CFL_SIZE);
+	md_copy_block(N, (pos[COEFF_DIM] = 1, pos), map_dims, fB0, x_dims, src, CFL_SIZE);
+
+	//exp (i 2\pi fB0 TE) reproducing wrong scaling from old version
+	md_zsmul(N, map_dims, fB0, fB0, 1. + 2.i * M_PI);
+
+	md_ztenmul(N, y_dims, tmp_exp, TE_dims, multiplace_read(data->TE, dst), map_dims, fB0);
+	md_zexp(N, y_dims, tmp_exp, tmp_exp);
+
+	md_ztenmul(N, y_dims, dst, y_dims, tmp_exp, map_dims, rho);
+
+
+	if (NULL != jac) {
+
+		md_copy_block(N, (pos[COEFF_DIM] = 0, pos), ddims, jac, y_dims, tmp_exp, CFL_SIZE);
+
+		complex float* tmp_eco = md_alloc_sameplace(N, y_dims, CFL_SIZE, dst);
+
+		md_ztenmul(N, y_dims, tmp_eco, y_dims, dst, TE_dims, multiplace_read(data->TE, dst));
+		md_zsmul(N, y_dims, tmp_eco, tmp_eco, 2.i * M_PI);
+
+		md_copy_block(N, (pos[COEFF_DIM] = 1, pos), ddims, jac, y_dims, tmp_eco, CFL_SIZE);
+
+		md_free(tmp_eco);
+	}
+
+	md_free(tmp_exp);
+
+	md_free(rho);
+	md_free(fB0);
+}
+
+static void meco_del(const nlop_data_t* _data)
+{
+	struct meco_old_phasecontrast_s* data = CAST_DOWN(meco_old_phasecontrast_s, _data);
+
+	multiplace_free(data->TE);
+
+	xfree(data);
+}
+
+static struct nlop_s* nlop_meco_old_phase_constrast_create(const int N, const long x_dims[N], const long TE_dims[N], const complex float* TE)
+{
+	PTR_ALLOC(struct meco_old_phasecontrast_s, data);
+	SET_TYPEID(meco_old_phasecontrast_s, data);
+
+	data->TE = multiplace_move(N, TE_dims, CFL_SIZE, TE);
+
+	long y_dims[N];
+	md_max_dims(N, ~0UL, y_dims, x_dims, TE_dims);
+	md_select_dims(N, ~COEFF_FLAG, y_dims, y_dims);
+
+	long ddims[N];
+	assert(md_check_compat(N, ~0UL, y_dims, x_dims));
+	md_max_dims(N, ~0UL, ddims, y_dims, x_dims);
+
+	return nlop_zblock_diag_create(CAST_UP(PTR_PASS(data)), N, y_dims, x_dims, ddims, meco_fun_phasediff, meco_del);
+}
+
+
 
 
 int get_num_of_coeff(enum meco_model sel_model)
@@ -149,760 +212,6 @@ static void calc_fat_modu(int N, const long dims[N], complex float* dst, const c
 }
 
 
-const struct linop_s* meco_get_fB0_trafo(struct nlop_s* op)
-{
-	const nlop_data_t* _data = nlop_get_data(op);
-	struct meco_s* data = CAST_DOWN(meco_s, _data);
-	return data->linop_fB0;
-}
-
-// ************************************************************* //
-//  Model: (W + F cshift) .* exp(i 2\pi fB0 TE)
-// ************************************************************* //
-static void meco_fun_wf(const nlop_data_t* _data, complex float* dst, const complex float* src)
-{
-	struct meco_s* data = CAST_DOWN(meco_s, _data);
-
-	if (NULL == data->der_x)
-		data->der_x = md_alloc_sameplace(data->N, data->der_dims, CFL_SIZE, dst);
-
-	long x_pos[data->N];
-
-	for (int i = 0; i < data->N; i++)
-		x_pos[i] = 0;
-
-	enum { PIND_W = 0, PIND_F = 1, PIND_FB0 = 2 };
-
-	complex float* tmp_exp = md_alloc_sameplace(data->N, data->y_dims, CFL_SIZE, dst);
-	complex float* tmp_eco = md_alloc_sameplace(data->N, data->y_dims, CFL_SIZE, dst);
-
-	// =============================== //
-	//  forward operator
-	// =============================== //
-
-	// F
-	x_pos[COEFF_DIM] = PIND_F;
-
-	complex float* F = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
-
-	md_copy_block(data->N, x_pos, data->map_dims, F, data->x_dims, src, CFL_SIZE);
-
-	// dst = F .* cshift
-	md_zmul2(data->N, data->y_dims, data->y_strs, dst, data->map_strs, F, data->TE_strs, multiplace_read(data->cshift, dst));
-
-
-	// W
-	x_pos[COEFF_DIM] = PIND_W;
-
-	complex float* W = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
-
-	md_copy_block(data->N, x_pos, data->map_dims, W, data->x_dims, src, CFL_SIZE);
-
-	// dst = W + F .* cshift
-	md_zadd2(data->N, data->y_dims, data->y_strs, dst, data->y_strs, dst, data->map_strs, W);
-
-
-	// fB0
-	x_pos[COEFF_DIM] = PIND_FB0;
-
-	complex float* fB0 = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
-
-	md_copy_block(data->N, x_pos, data->map_dims, fB0, data->x_dims, src, CFL_SIZE);
-
-	linop_forward_unchecked(data->linop_fB0, fB0, fB0);
-
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_exp, data->map_strs, fB0, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_exp, tmp_exp, 2.i * M_PI);
-
-	// tmp_exp = exp(1i*2*pi * fB0 .* TE)
-	md_zexp(data->N, data->y_dims, tmp_exp, tmp_exp);
-
-	// dst = dst .* tmp_exp
-	md_zmul(data->N, data->y_dims, dst, dst, tmp_exp);
-
-
-	// =============================== //
-	//  partial derivative operator
-	// =============================== //
-	// der_W
-	x_pos[COEFF_DIM] = PIND_W;
-	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_exp, CFL_SIZE);
-
-	// der_F
-	x_pos[COEFF_DIM] = PIND_F;
-
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, tmp_exp, data->TE_strs, multiplace_read(data->cshift, dst));
-
-	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
-
-	// der_fB0
-	x_pos[COEFF_DIM] = PIND_FB0;
-
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, dst, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, 2.i * M_PI);
-
-	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
-
-	md_free(tmp_exp);
-	md_free(tmp_eco);
-	md_free(W);
-	md_free(F);
-	md_free(fB0);
-}
-
-
-// ************************************************************* //
-//  Model: (W + F cshift) .* exp(- R2s TE) .* exp(i 2\pi fB0 TE)
-// ************************************************************* //
-static void meco_fun_wfr2s(const nlop_data_t* _data, complex float* dst, const complex float* src)
-{
-	struct meco_s* data = CAST_DOWN(meco_s, _data);
-
-	if (NULL == data->der_x)
-		data->der_x = md_alloc_sameplace(data->N, data->der_dims, CFL_SIZE, dst);
-
-	long x_pos[data->N];
-
-	for (int i = 0; i < data->N; i++)
-		x_pos[i] = 0;
-
-
-	enum { PIND_W = 0, PIND_F = 1, PIND_R2S = 2, PIND_FB0 = 3 };
-
-	complex float* tmp_exp = md_alloc_sameplace(data->N, data->y_dims, CFL_SIZE, dst);
-	complex float* tmp_eco = md_alloc_sameplace(data->N, data->y_dims, CFL_SIZE, dst);
-
-
-	// =============================== //
-	//  forward operator
-	// =============================== //
-
-	// F
-	x_pos[COEFF_DIM] = PIND_F;
-
-	complex float* F = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
-
-	md_copy_block(data->N, x_pos, data->map_dims, F, data->x_dims, src, CFL_SIZE);
-
-	// dst = F .* cshift
-	md_zmul2(data->N, data->y_dims, data->y_strs, dst, data->map_strs, F, data->TE_strs, multiplace_read(data->cshift, dst));
-
-
-	// W
-	x_pos[COEFF_DIM] = PIND_W;
-
-	complex float* W = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
-
-	md_copy_block(data->N, x_pos, data->map_dims, W, data->x_dims, src, CFL_SIZE);
-
-	// dst = W + F .* cshift
-	md_zadd2(data->N, data->y_dims, data->y_strs, dst, data->y_strs, dst, data->map_strs, W);
-
-
-	// R2s and fB0
-	x_pos[COEFF_DIM] = PIND_R2S;
-
-	complex float* R2s = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
-
-	md_copy_block(data->N, x_pos, data->map_dims, R2s, data->x_dims, src, CFL_SIZE);
-
-	md_zsmul(data->N, data->map_dims, R2s, R2s, -1.);
-
-
-	x_pos[COEFF_DIM] = PIND_FB0;
-
-	complex float* fB0 = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
-
-	md_copy_block(data->N, x_pos, data->map_dims, fB0, data->x_dims, src, CFL_SIZE);
-
-	linop_forward_unchecked(data->linop_fB0, fB0, fB0);
-
-	md_zaxpy2(data->N, data->map_dims, data->map_strs, R2s, 2.i * M_PI, data->map_strs, fB0);
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_exp, data->map_strs, R2s, data->TE_strs, multiplace_read(data->TE, dst));
-
-	// tmp_exp = exp(z TE)
-	md_zexp(data->N, data->y_dims, tmp_exp, tmp_exp);
-
-	// dst = dst .* tmp_exp
-	md_zmul(data->N, data->y_dims, dst, dst, tmp_exp);
-
-
-	// =============================== //
-	//  partial derivative operator
-	// =============================== //
-	// der_W
-	x_pos[COEFF_DIM] = PIND_W;
-
-	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_exp, CFL_SIZE);
-
-	// der_F
-	x_pos[COEFF_DIM] = PIND_F;
-
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, tmp_exp, data->TE_strs, multiplace_read(data->cshift, dst));
-
-	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
-
-	// der_R2s
-	x_pos[COEFF_DIM] = PIND_R2S;
-
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, dst, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, -1.);
-
-	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
-
-	// der_fB0
-	x_pos[COEFF_DIM] = PIND_FB0;
-
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, dst, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, 2.i * M_PI);
-
-	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
-
-	md_free(tmp_exp);
-	md_free(tmp_eco);
-	md_free(W);
-	md_free(F);
-	md_free(R2s);
-	md_free(fB0);
-}
-
-
-// ************************************************************* //
-//  Model: (W exp(- R2s_W TE) + F cshift exp(- R2s_F TE)) .* exp(i 2\pi fB0 TE)
-// ************************************************************* //
-static void meco_fun_wf2r2s(const nlop_data_t* _data, complex float* dst, const complex float* src)
-{
-	struct meco_s* data = CAST_DOWN(meco_s, _data);
-
-	if (NULL == data->der_x)
-		data->der_x = md_alloc_sameplace(data->N, data->der_dims, CFL_SIZE, dst);
-
-	long x_pos[data->N];
-
-	for (int i = 0; i < data->N; i++)
-		x_pos[i] = 0;
-
-
-	enum { PIND_W = 0, PIND_R2SW = 1, PIND_F = 2, PIND_R2SF = 3, PIND_FB0 = 4 };
-
-	complex float* tmp_exp_R2sW = md_alloc_sameplace(data->N, data->y_dims, CFL_SIZE, dst);
-	complex float* tmp_exp_R2sF = md_alloc_sameplace(data->N, data->y_dims, CFL_SIZE, dst);
-	complex float* tmp_exp_fB0  = md_alloc_sameplace(data->N, data->y_dims, CFL_SIZE, dst);
-	complex float* tmp_eco      = md_alloc_sameplace(data->N, data->y_dims, CFL_SIZE, dst);
-
-	// =============================== //
-	//  forward operator
-	// =============================== //
-
-	// W
-	x_pos[COEFF_DIM] = PIND_W;
-
-	complex float* W = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
-
-	md_copy_block(data->N, x_pos, data->map_dims, W, data->x_dims, src, CFL_SIZE);
-
-
-	// R2sW
-	x_pos[COEFF_DIM] = PIND_R2SW;
-
-	complex float* R2sW = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
-
-	md_copy_block(data->N, x_pos, data->map_dims, R2sW, data->x_dims, src, CFL_SIZE);
-
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_exp_R2sW, data->map_strs, R2sW, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_exp_R2sW, tmp_exp_R2sW, -1.);
-
-
-	// F
-	x_pos[COEFF_DIM] = PIND_F;
-
-	complex float* F = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
-
-	md_copy_block(data->N, x_pos, data->map_dims, F, data->x_dims, src, CFL_SIZE);
-
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->map_strs, F, data->TE_strs, multiplace_read(data->cshift, dst));
-
-
-	// R2sF
-	x_pos[COEFF_DIM] = PIND_R2SF;
-
-	complex float* R2sF = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
-	md_copy_block(data->N, x_pos, data->map_dims, R2sF, data->x_dims, src, CFL_SIZE);
-
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_exp_R2sF, data->map_strs, R2sF, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_exp_R2sF, tmp_exp_R2sF, -1.);
-
-
-	// fB0
-	x_pos[COEFF_DIM] = PIND_FB0;
-
-	complex float* fB0 = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
-	md_copy_block(data->N, x_pos, data->map_dims, fB0, data->x_dims, src, CFL_SIZE);
-
-	linop_forward_unchecked(data->linop_fB0, fB0, fB0);
-
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_exp_fB0, data->map_strs, fB0, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_exp_fB0, tmp_exp_fB0, 2.i * M_PI);
-
-	// tmp_exp_R2sW = exp(- R2sW TE)
-	md_zexp(data->N, data->y_dims, tmp_exp_R2sW, tmp_exp_R2sW);
-
-	// tmp_exp_R2sF = exp(- R2sF TE)
-	md_zexp(data->N, data->y_dims, tmp_exp_R2sF, tmp_exp_R2sF);
-
-	// tmp_exp_fB0 = exp(i 2\pi fB0 TE)
-	md_zexp(data->N, data->y_dims, tmp_exp_fB0, tmp_exp_fB0);
-
-	// tmp_eco = W exp(- R2s_W TE) + F cshift exp(- R2s_F TE)
-	md_zmul(data->N, data->y_dims, tmp_eco, tmp_eco, tmp_exp_R2sF);
-	md_zfmac2(data->N, data->y_dims, data->y_strs, tmp_eco, data->map_strs, W, data->y_strs, tmp_exp_R2sW);
-
-	// dst = tmp_eco .* tmp_exp_fB0
-	md_zmul(data->N, data->y_dims, dst, tmp_eco, tmp_exp_fB0);
-
-
-	// =============================== //
-	//  partial derivative operator
-	// =============================== //
-	// der_W
-	x_pos[COEFF_DIM] = PIND_W;
-	md_zmul(data->N, data->y_dims, tmp_eco, tmp_exp_fB0, tmp_exp_R2sW);
-
-	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
-
-	// der_R2sW
-	x_pos[COEFF_DIM] = PIND_R2SW;
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->map_strs, W, data->y_strs, tmp_eco);
-
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, tmp_eco, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, -1.);
-
-	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
-
-	// der_F
-	x_pos[COEFF_DIM] = PIND_F;
-	md_zmul(data->N, data->y_dims, tmp_eco, tmp_exp_fB0, tmp_exp_R2sF);
-
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, tmp_eco, data->TE_strs, multiplace_read(data->cshift, dst));
-
-	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
-
-	// der_R2sF
-	x_pos[COEFF_DIM] = PIND_R2SF;
-	md_zmul(data->N, data->y_dims, tmp_eco, tmp_exp_fB0, tmp_exp_R2sF);
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->map_strs, F, data->y_strs, tmp_eco);
-
-
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, tmp_eco, data->TE_strs, multiplace_read(data->cshift, dst));
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, tmp_eco, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, -1.);
-
-	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
-
-	// der_fB0
-	x_pos[COEFF_DIM] = PIND_FB0;
-
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, dst, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, 2.i * M_PI);
-
-	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
-
-	md_free(tmp_exp_fB0);
-	md_free(tmp_exp_R2sW);
-	md_free(tmp_exp_R2sF);
-	md_free(tmp_eco);
-	md_free(W);
-	md_free(R2sW);
-	md_free(F);
-	md_free(R2sF);
-	md_free(fB0);
-}
-
-
-// ************************************************************* //
-//  Model: rho .* exp(- R2s TE) .* exp(i 2\pi fB0 TE)
-// ************************************************************* //
-static void meco_fun_r2s(const nlop_data_t* _data, complex float* dst, const complex float* src)
-{
-	struct meco_s* data = CAST_DOWN(meco_s, _data);
-
-	if (NULL == data->der_x)
-		data->der_x = md_alloc_sameplace(data->N, data->der_dims, CFL_SIZE, dst);
-
-	long x_pos[data->N];
-
-	for (int i = 0; i < data->N; i++)
-		x_pos[i] = 0;
-
-
-	enum { PIND_RHO = 0, PIND_R2S = 1, PIND_FB0 = 2 };
-
-	complex float* tmp_exp = md_alloc_sameplace(data->N, data->y_dims, CFL_SIZE, dst);
-	complex float* tmp_eco = md_alloc_sameplace(data->N, data->y_dims, CFL_SIZE, dst);
-
-	// =============================== //
-	//  forward operator
-	// =============================== //
-
-	// R2s and fB0
-	x_pos[COEFF_DIM] = PIND_R2S;
-
-	complex float* R2s = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
-
-	md_copy_block(data->N, x_pos, data->map_dims, R2s, data->x_dims, src, CFL_SIZE);
-
-	md_zsmul(data->N, data->map_dims, R2s, R2s, -1.);
-
-
-	x_pos[COEFF_DIM] = PIND_FB0;
-
-	complex float* fB0 = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
-
-	md_copy_block(data->N, x_pos, data->map_dims, fB0, data->x_dims, src, CFL_SIZE);
-
-	linop_forward_unchecked(data->linop_fB0, fB0, fB0);
-
-	md_zaxpy2(data->N, data->map_dims, data->map_strs, R2s, 2.i * M_PI, data->map_strs, fB0);
-
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_exp, data->map_strs, R2s, data->TE_strs, multiplace_read(data->TE, dst));
-
-	// tmp_exp = exp(z TE)
-	md_zexp(data->N, data->y_dims, tmp_exp, tmp_exp);
-
-
-	// rho
-	x_pos[COEFF_DIM] = PIND_RHO;
-
-	complex float* rho = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
-
-	md_copy_block(data->N, x_pos, data->map_dims, rho, data->x_dims, src, CFL_SIZE);
-
-	// dst = tmp_exp .* rho
-	md_zmul2(data->N, data->y_dims, data->y_strs, dst, data->y_strs, tmp_exp, data->map_strs, rho);
-
-
-	// =============================== //
-	//  partial derivative operator
-	// =============================== //
-	// der_rho
-	x_pos[COEFF_DIM] = PIND_RHO;
-
-	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_exp, CFL_SIZE);
-
-
-	// der_R2s
-	x_pos[COEFF_DIM] = PIND_R2S;
-
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, dst, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, -1.);
-
-	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
-
-
-	// der_fB0
-	x_pos[COEFF_DIM] = PIND_FB0;
-
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, dst, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, 2.i * M_PI);
-
-	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
-
-	md_free(tmp_exp);
-	md_free(tmp_eco);
-	md_free(rho);
-	md_free(R2s);
-	md_free(fB0);
-}
-
-
-// ************************************************************* //
-//  Model: rho .* exp(i 2\pi fB0 TE)
-// ************************************************************* //
-static void meco_fun_phasediff(const nlop_data_t* _data, complex float* dst, const complex float* src)
-{
-	struct meco_s* data = CAST_DOWN(meco_s, _data);
-
-	if (NULL == data->der_x)
-		data->der_x = md_alloc_sameplace(data->N, data->der_dims, CFL_SIZE, dst);
-
-	long x_pos[data->N];
-
-	for (int i = 0; i < data->N; i++)
-		x_pos[i] = 0;
-
-
-	enum { PIND_RHO = 0, PIND_FB0 = 1 };
-
-	complex float* tmp_exp = md_alloc_sameplace(data->N, data->y_dims, CFL_SIZE, dst);
-	complex float* tmp_eco = md_alloc_sameplace(data->N, data->y_dims, CFL_SIZE, dst);
-
-	// =============================== //
-	//  forward operator
-	// =============================== //
-
-	// R2s and fB0
-	x_pos[COEFF_DIM] = PIND_FB0;
-
-	complex float* fB0 = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
-
-	md_copy_block(data->N, x_pos, data->map_dims, fB0, data->x_dims, src, CFL_SIZE);
-
-	linop_forward_unchecked(data->linop_fB0, fB0, fB0);
-
-	if (!use_compat_to_version("v0.9.00"))
-		md_zsmul2(data->N, data->map_dims, data->map_strs, fB0, data->map_strs, fB0, 2.i * M_PI);
-	else
-		md_zsmul2(data->N, data->map_dims, data->map_strs, fB0, data->map_strs, fB0, 1. + 2.i * M_PI);
-
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_exp, data->map_strs, fB0, data->TE_strs, multiplace_read(data->TE, dst));
-
-
-	// tmp_exp = exp(z TE)
-	md_zexp(data->N, data->y_dims, tmp_exp, tmp_exp);
-
-
-	// rho
-	x_pos[COEFF_DIM] = PIND_RHO;
-
-	complex float* rho = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
-
-	md_copy_block(data->N, x_pos, data->map_dims, rho, data->x_dims, src, CFL_SIZE);
-
-	// dst = tmp_exp .* rho
-	md_zmul2(data->N, data->y_dims, data->y_strs, dst, data->y_strs, tmp_exp, data->map_strs, rho);
-
-
-	// =============================== //
-	//  partial derivative operator
-	// =============================== //
-	// der_rho
-	x_pos[COEFF_DIM] = PIND_RHO;
-
-	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_exp, CFL_SIZE);
-
-	// der_fB0
-	x_pos[COEFF_DIM] = PIND_FB0;
-
-	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_eco, data->y_strs, dst, data->TE_strs, multiplace_read(data->TE, dst));
-	md_zsmul(data->N, data->y_dims, tmp_eco, tmp_eco, 2.i * M_PI);
-
-	md_copy_block(data->N, x_pos, data->der_dims, data->der_x, data->y_dims, tmp_eco, CFL_SIZE);
-
-	md_free(tmp_exp);
-	md_free(tmp_eco);
-	md_free(rho);
-	md_free(fB0);
-}
-
-
-static void meco_der(const nlop_data_t* _data, int /*o*/, int /*i*/, complex float* dst, const complex float* src)
-{
-	struct meco_s* data = CAST_DOWN(meco_s, _data);
-
-	long x_pos[data->N];
-
-	for (int i = 0; i < data->N; i++)
-		x_pos[i] = 0;
-
-
-	complex float* tmp_map = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
-	complex float* tmp_exp = md_alloc_sameplace(data->N, data->y_dims, CFL_SIZE, dst);
-
-	md_clear(data->N, data->y_dims, dst, CFL_SIZE);
-
-	for (long pind = 0; pind < data->x_dims[COEFF_DIM]; pind++) {
-
-		x_pos[COEFF_DIM] = pind;
-
-		md_copy_block(data->N, x_pos, data->map_dims, tmp_map, data->x_dims, src, CFL_SIZE);
-		md_copy_block(data->N, x_pos, data->y_dims, tmp_exp, data->der_dims, data->der_x, CFL_SIZE);
-
-		if (pind == data->x_dims[COEFF_DIM] - 1)
-			linop_forward_unchecked(data->linop_fB0, tmp_map, tmp_map);
-
-		md_zfmac2(data->N, data->y_dims, data->y_strs, dst, data->map_strs, tmp_map, data->y_strs, tmp_exp);
-	}
-
-	md_free(tmp_map);
-	md_free(tmp_exp);
-}
-
-static void meco_adj(const nlop_data_t* _data, int /*o*/, int /*i*/, complex float* dst, const complex float* src)
-{
-	struct meco_s* data = CAST_DOWN(meco_s, _data);
-
-	long x_pos[data->N];
-
-	for (int i = 0; i < data->N; i++)
-		x_pos[i] = 0;
-
-
-	complex float* tmp_map = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
-	complex float* tmp_exp = md_alloc_sameplace(data->N, data->y_dims, CFL_SIZE, dst);
-
-	md_clear(data->N, data->x_dims, dst, CFL_SIZE);
-
-	for (long pind = 0; pind < data->x_dims[COEFF_DIM]; pind++) {
-
-		x_pos[COEFF_DIM] = pind;
-
-		md_copy_block(data->N, x_pos, data->map_dims, tmp_map, data->x_dims, dst, CFL_SIZE);
-		md_copy_block(data->N, x_pos, data->y_dims, tmp_exp, data->der_dims, data->der_x, CFL_SIZE);
-
-		md_zfmacc2(data->N, data->y_dims, data->map_strs, tmp_map, data->y_strs, src, data->y_strs, tmp_exp);
-
-		md_copy_block(data->N, x_pos, data->x_dims, dst, data->map_dims, tmp_map, CFL_SIZE);
-	}
-
-
-	// real constraint
-	unsigned long R2S_flag = get_R2S_flag(data->model);
-	unsigned long fB0_flag = get_fB0_flag(data->model);
-
-	for (long pind = 0; pind < data->x_dims[COEFF_DIM]; pind++) {
-
-		if (   MD_IS_SET(R2S_flag, pind)
-		    || MD_IS_SET(fB0_flag, pind)) {
-
-			x_pos[COEFF_DIM] = pind;
-
-			md_copy_block(data->N, x_pos, data->map_dims, tmp_map, data->x_dims, dst, CFL_SIZE);
-#if 1
-			md_zreal(data->N, data->map_dims, tmp_map, tmp_map);
-#endif
-			if (MD_IS_SET(fB0_flag, pind))
-				linop_adjoint_unchecked(data->linop_fB0, tmp_map, tmp_map);
-
-			md_copy_block(data->N, x_pos, data->x_dims, dst, data->map_dims, tmp_map, CFL_SIZE);
-		}
-	}
-
-	md_free(tmp_map);
-	md_free(tmp_exp);
-}
-
-static void meco_del(const nlop_data_t* _data)
-{
-	struct meco_s* data = CAST_DOWN(meco_s, _data);
-
-	multiplace_free(data->TE);
-	multiplace_free(data->cshift);
-
-	md_free(data->der_x);
-
-	xfree(data->y_dims);
-	xfree(data->x_dims);
-	xfree(data->der_dims);
-	xfree(data->map_dims);
-	xfree(data->TE_dims);
-
-	xfree(data->y_strs);
-	xfree(data->x_strs);
-	xfree(data->der_strs);
-	xfree(data->map_strs);
-	xfree(data->TE_strs);
-
-	linop_free(data->linop_fB0);
-
-	xfree(data);
-}
-
-
-struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_dims[N], const complex float* TE, enum meco_model sel_model, enum fat_spec fat_spec, const float* scale_fB0)
-{
-	PTR_ALLOC(struct meco_s, data);
-	SET_TYPEID(meco_s, data);
-
-
-	PTR_ALLOC(long[N], nydims);
-	md_copy_dims(N, *nydims, y_dims);
-	data->y_dims = *PTR_PASS(nydims);
-
-	assert(x_dims[COEFF_DIM] == get_num_of_coeff(sel_model));
-	data->model = sel_model;
-
-	PTR_ALLOC(long[N], nxdims);
-	md_copy_dims(N, *nxdims, x_dims);
-	data->x_dims = *PTR_PASS(nxdims);
-
-	PTR_ALLOC(long[N], nderdims);
-	md_merge_dims(N, *nderdims, y_dims, x_dims);
-	data->der_dims = *PTR_PASS(nderdims);
-
-	long map_dims[N];
-	md_select_dims(N, ~COEFF_FLAG, map_dims, x_dims);
-	PTR_ALLOC(long[N], n1dims);
-	md_copy_dims(N, *n1dims, map_dims);
-	data->map_dims = *PTR_PASS(n1dims);
-
-	long TE_dims[N];
-	md_select_dims(N, TE_FLAG, TE_dims, y_dims);
-	PTR_ALLOC(long[N], ntedims);
-	md_copy_dims(N, *ntedims, TE_dims);
-	data->TE_dims = *PTR_PASS(ntedims);
-
-	long scaling_dims[N];
-	md_select_dims(N, COEFF_FLAG, scaling_dims, x_dims);
-
-
-	PTR_ALLOC(long[N], nystr);
-	md_calc_strides(N, *nystr, y_dims, CFL_SIZE);
-	data->y_strs = *PTR_PASS(nystr);
-
-	PTR_ALLOC(long[N], nxstr);
-	md_calc_strides(N, *nxstr, x_dims, CFL_SIZE);
-	data->x_strs = *PTR_PASS(nxstr);
-
-	PTR_ALLOC(long[N], nderstr);
-	md_calc_strides(N, *nderstr, data->der_dims, CFL_SIZE);
-	data->der_strs = *PTR_PASS(nderstr);
-
-	PTR_ALLOC(long[N], n1str);
-	md_calc_strides(N, *n1str, map_dims, CFL_SIZE);
-	data->map_strs = *PTR_PASS(n1str);
-
-	PTR_ALLOC(long[N], ntestr);
-	md_calc_strides(N, *ntestr, TE_dims, CFL_SIZE);
-	data->TE_strs = *PTR_PASS(ntestr);
-
-	data->N = N;
-	data->der_x = NULL;
-
-	// echo times
-	data->TE = multiplace_move(N, TE_dims, CFL_SIZE, TE);
-
-
-	// calculate cshift
-	complex float* cshift = md_alloc(N, TE_dims, CFL_SIZE);
-
-	calc_fat_modu(N, TE_dims, cshift, TE, fat_spec);
-
-	data->cshift = multiplace_move_F(N, TE_dims, CFL_SIZE, cshift);
-
-	if (0. == scale_fB0[0]) {
-
-		debug_printf(DP_DEBUG2, " identity weight on fB0\n");
-
-		data->linop_fB0 = linop_identity_create(N, data->map_dims);
-
-	} else {
-
-		debug_printf(DP_DEBUG2, " sobolev weight on fB0\n");
-
-		data->linop_fB0 = linop_noir_weights_create(N, map_dims, map_dims, map_dims, FFT_FLAGS, 1., scale_fB0[0], scale_fB0[1], 1);
-	}
-
-	nlop_fun_t meco_funs[] = {
-
-		[MECO_WF] = meco_fun_wf,
-		[MECO_WFR2S] = meco_fun_wfr2s,
-		[MECO_WF2R2S] = meco_fun_wf2r2s,
-		[MECO_R2S] = meco_fun_r2s,
-		[MECO_PHASEDIFF] = meco_fun_phasediff,
-	};
-
-	return nlop_create(N, y_dims, N, x_dims, CAST_UP(PTR_PASS(data)), meco_funs[sel_model], meco_der, meco_adj, NULL, NULL, meco_del);
-}
 
 
 
@@ -1108,6 +417,14 @@ const struct nlop_s* nlop_ir_meco_model_create(int N, const long map_dims[N], co
 	// This requires the model to be holomorphic, so we impose real constraints afterwards
 	ret = nlop_zprecomp_jacobian_F(ret);
 
+
+	if ((MECO_PHASEDIFF == meco_model) && use_compat_to_version("v0.9.00")) {
+
+		nlop_free(ret);
+		ret = nlop_meco_old_phase_constrast_create(N, in_dims, TE_dims, TE);
+	}
+
+
 	unsigned long real_constraint_flag = get_R2S_flag(meco_model) | get_R1S_flag(meco_model) | get_fB0_flag(meco_model);
 
 	float scales[in_dims[COEFF_DIM]];
@@ -1138,49 +455,28 @@ struct nlop_s* nlop_ir_meco_create(int N, const long map_dims[N], const long /*o
 
 	const struct linop_s* prec[in_dims[COEFF_DIM]];
 
-	for (int i = 0; i < in_dims[COEFF_DIM]; i++)
-		prec[i] = NULL;
+	const struct linop_s* linop_fB0 = NULL;
 
+	if (0. == scale_fB0[0]) {
 
-	// weight on alpha
-	long w_dims[N];
-	md_select_dims(N, FFT_FLAGS, w_dims, map_dims);
+		debug_printf(DP_DEBUG2, " identity weight on fB0\n");
 
-	complex float* weights = md_alloc(N, w_dims, CFL_SIZE);
-	noir_calc_weights(scale_fB0[0], scale_fB0[1], w_dims, weights);
-
-	const struct linop_s* linop_fB0 = linop_cdiag_create(N, map_dims, FFT_FLAGS, weights);
-	linop_fB0 = linop_chain_FF(linop_fB0, linop_ifftc_create(N, map_dims, FFT_FLAGS)); // IFFT(W.* \hat{x_{k}})
-	linop_fB0 = linop_chain_FF(linop_fB0, linop_zreal_create(N, map_dims)); // IFFT(W.* \hat{x_{k}})
-
-	md_free(weights);
-
-	if (3 == in_dims[COEFF_DIM]) { // W, F, fB0
-
-		prec[2] = linop_fB0;
-
-	} else if (4 == in_dims[COEFF_DIM]) { // W, F, R2*, fB0
-
-		prec[2] = linop_zreal_create(N, map_dims);
-		prec[3] = linop_fB0;
-
-	} else if (5 == in_dims[COEFF_DIM]) { // Ms, M0, R1*, R2*, fB0
-
-		prec[2] = linop_zreal_create(N, map_dims);
-		prec[3] = linop_zreal_create(N, map_dims);
-		prec[4] = linop_fB0;
-
-	} else if (8 == in_dims[COEFF_DIM]) { // Ms_w, M0_w, R1*_w, Ms_f, M0_f, R1*_f, R2*, fB0
-
-		prec[2] = linop_zreal_create(N, map_dims);
-		prec[5] = linop_zreal_create(N, map_dims);
-		prec[6] = linop_zreal_create(N, map_dims);
-		prec[7] = linop_fB0;
+		linop_fB0 = linop_identity_create(N, map_dims);
 
 	} else {
 
-		assert(0);
+		debug_printf(DP_DEBUG2, " sobolev weight on fB0\n");
+
+		linop_fB0 = linop_noir_weights_create(N, map_dims, map_dims, map_dims, FFT_FLAGS, 1., scale_fB0[0], scale_fB0[1], 1);
 	}
+
+	linop_fB0 = linop_chain_FF(linop_fB0, linop_zreal_create(N, map_dims));
+
+	for (int i = 0; i < in_dims[COEFF_DIM]; i++)
+		prec[i] = NULL;
+
+	prec[in_dims[COEFF_DIM] - 1] = linop_fB0;
+
 
 	const struct linop_s* precond = moba_precond_create(N, in_dims, prec, scale);
 
@@ -1200,6 +496,31 @@ const struct linop_s* ir_meco_get_fB0_trafo(struct nlop_s* op)
 	return moba_attach_trafo_get_linop(op);
 }
 
+const struct linop_s* meco_get_fB0_trafo(struct nlop_s* op)
+{
+	return moba_attach_trafo_get_linop(op);
+}
+
+
+struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_dims[N], const complex float* TE, enum meco_model sel_model, enum fat_spec fat_spec, const float* scale_fB0)
+{
+	long map_dims[N];
+	md_select_dims(N, ~COEFF_FLAG, map_dims, x_dims);
+
+	long TE_dims[N];
+	md_select_dims(N, TE_FLAG, TE_dims, y_dims);
+
+	float scale[x_dims[COEFF_DIM]];
+	for (long i = 0; i < x_dims[COEFF_DIM]; i++)
+		scale[i] = 1.;
+
+	const struct nlop_s* ret = nlop_ir_meco_create(N, map_dims, /*out_dims*/NULL, x_dims, /*TI_dims*/NULL,
+							/*TI*/NULL, TE_dims, TE, scale_fB0, sel_model, fat_spec, /*scale*/scale);
+
+	assert(md_check_equal_dims(N, y_dims, nlop_codomain(ret)->dims, ~0UL));
+
+	return (struct nlop_s*)ret;
+}
 
 
 
