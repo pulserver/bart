@@ -528,10 +528,17 @@ int main_moba(int argc, char* argv[argc])
 	long init_dims[DIMS] = { [0 ... DIMS-1] = 1 };
 	complex float* init = NULL;
 
-	if (NULL != init_file)
+	if (NULL != init_file) {
+
 		init = load_cfl(init_file, DIMS, init_dims);
 
-	assert(md_check_bounds(DIMS, 0, img_dims, init_dims));
+		for (int i = 0; i < (int)ARRAY_SIZE(data.other.initval); i++)
+			if (1. != data.other.initval[i])
+				error("Cannot provide initialization value and initialization file!\n");
+
+		if (!md_check_equal_dims(DIMS, img_dims, init_dims, ~0UL))
+			error("Initialization dimensions do not match image dimensions!\n");
+	}
 
 	// Load passed B1
 
