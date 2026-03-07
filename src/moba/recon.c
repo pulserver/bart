@@ -422,9 +422,6 @@ void moba_recon(const struct moba_conf* conf, struct moba_conf_s* data, const lo
 	md_select_dims(DIMS, fft_flags|COIL_FLAG|TE_FLAG|MAPS_FLAG|CSHIFT_FLAG|TIME_FLAG|TIME2_FLAG, data_dims, dims);
 	md_select_dims(DIMS, ~COIL_FLAG, pat_dims, data_dims);
 
-	if (NULL != init)
-		md_copy(DIMS, imgs_dims, img, init, CFL_SIZE);
-
 	switch (conf->mode) {
 
 	case MDB_T1:

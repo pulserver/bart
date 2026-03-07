@@ -538,6 +538,8 @@ int main_moba(int argc, char* argv[argc])
 
 		if (!md_check_equal_dims(DIMS, img_dims, init_dims, ~0UL))
 			error("Initialization dimensions do not match image dimensions!\n");
+
+		md_copy(DIMS, img_dims, img, init, CFL_SIZE);
 	}
 
 	// Load passed B1
