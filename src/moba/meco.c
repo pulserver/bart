@@ -78,25 +78,15 @@ DEF_TYPEID(meco_s);
 int get_num_of_coeff(enum meco_model sel_model)
 {
 	switch (sel_model) {
-	case MECO_WF: 		return 3;
-	case MECO_WFR2S:	return 4;
-	case MECO_WF2R2S:	return 5;
-	case MECO_R2S:		return 3;
-	case MECO_PHASEDIFF:	return 2;
-	default:
-		assert(0);
-	}
-}
-
-int ir_meco_get_num_of_coeff(enum meco_model sel_model)
-{
-	switch (sel_model) {
-
-	case MECO_WF:			return 3; // meco, water, fat, fB0
-	case MECO_WFR2S:		return 4; // meco, water, fat, R2*, fB0
+	case MECO_WF: 			return 3;
+	case MECO_WFR2S:		return 4;
+	case MECO_WF2R2S:		return 5;
+	case MECO_R2S:			return 3;
+	case MECO_PHASEDIFF:		return 2;
 	case IR_MECO_T1_R2S:		return 5; // ir + meco, water T1, R2*, fB0
 	case IR_MECO_W_T1_F_T1_R2S:	return 8; // ir + meco, water T1, fat T1, R2*, fB0
-	default: error("invalid model");
+	default:
+		assert(0);
 	}
 }
 
@@ -973,7 +963,7 @@ static arg_t inversion_recovery(arg_t MS, arg_t M0, arg_t R1s, int N, const long
 const struct nlop_s* nlop_ir_meco_model_create(int N, const long map_dims[N], const long in_dims[N], const long TI_dims[N],
 				const complex float* TI, const long TE_dims[N], const complex float* TE, enum meco_model meco_model, enum fat_spec fat_spec)
 {
-	assert(ir_meco_get_num_of_coeff(meco_model) == in_dims[COEFF_DIM]);
+	assert((MECO_PI != meco_model) || (get_num_of_coeff(meco_model) == in_dims[COEFF_DIM]));
 
 	arg_t args [in_dims[COEFF_DIM]];
 	arg_t out = NULL;

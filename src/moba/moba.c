@@ -95,7 +95,7 @@ int moba_get_nr_of_coeffs(const struct moba_conf* conf, int in)
 		break;
 
 	case MDB_IR_MGRE:
-		coeffs = ir_meco_get_num_of_coeff(conf->mgre_model);
+		coeffs = (MECO_PI != conf->mgre_model) ? get_num_of_coeff(conf->mgre_model) : in;
 		break;
 	}
 

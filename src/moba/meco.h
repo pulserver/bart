@@ -23,7 +23,6 @@ enum meco_model {
 #endif
 
 extern int get_num_of_coeff(enum meco_model sel_model);
-extern int ir_meco_get_num_of_coeff(enum meco_model sel_model);
 extern unsigned long get_PD_flag(enum meco_model sel_model);
 extern unsigned long get_R2S_flag(enum meco_model sel_model);
 extern unsigned long get_fB0_flag(enum meco_model sel_model);
