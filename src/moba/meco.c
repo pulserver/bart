@@ -107,13 +107,24 @@ unsigned long get_R2S_flag(enum meco_model sel_model)
 {
 	switch (sel_model) {
 
-	case MECO_WF:		return 0;
-	case MECO_WFR2S:	return MD_BIT(2);
-	case MECO_WF2R2S:	return MD_BIT(1) | MD_BIT(3);
-	case MECO_R2S:		return MD_BIT(1);
-	case MECO_PHASEDIFF:	return 0;
+	case MECO_WF:			return 0;
+	case MECO_WFR2S:		return MD_BIT(2);
+	case MECO_WF2R2S:		return MD_BIT(1) | MD_BIT(3);
+	case MECO_R2S:			return MD_BIT(1);
+	case MECO_PHASEDIFF:		return 0;
+	case IR_MECO_T1_R2S:		return MD_BIT(3);
+	case IR_MECO_W_T1_F_T1_R2S:	return MD_BIT(6);
 	default:
 		assert(0);
+	}
+}
+
+static unsigned long get_R1S_flag(enum meco_model sel_model)
+{
+	switch (sel_model) {
+	case IR_MECO_T1_R2S:		return MD_BIT(2);
+	case IR_MECO_W_T1_F_T1_R2S:	return MD_BIT(5);
+	default:			return 0;
 	}
 }
 
@@ -968,7 +979,7 @@ const struct nlop_s* nlop_ir_meco_model_create(int N, const long map_dims[N], co
 	arg_t args [in_dims[COEFF_DIM]];
 	arg_t out = NULL;
 
-	arg_t tmp[5] = { NULL };
+	arg_t tmp[6] = { NULL };
 
 	switch (meco_model) {
 
@@ -998,6 +1009,46 @@ const struct nlop_s* nlop_ir_meco_model_create(int N, const long map_dims[N], co
 		tmp[2] = B0_modulation(tmp[1], args[3], N, TE_dims, TE);
 
 		out = T2s_decay(tmp[2], args[2], N, TE_dims, TE);
+		break;
+
+	case MECO_WF2R2S:
+
+		debug_printf(DP_DEBUG1, "MODEL: W, R2*W, F, R2*F, fB0\n");
+		args[0] = snlop_input(N, map_dims, "W");
+		args[1] = snlop_input(N, map_dims, "R2sW");
+		args[2] = snlop_input(N, map_dims, "F");
+		args[3] = snlop_input(N, map_dims, "R2sF");
+		args[4] = snlop_input(N, map_dims, "fB0");
+
+		tmp[0] = fat_spectrum(args[2], N, TE_dims, TE, fat_spec);
+		tmp[1] = T2s_decay(tmp[0], args[3], N, TE_dims, TE);
+
+		tmp[3] = T2s_decay(args[0], args[1], N, TE_dims, TE);
+
+		tmp[4] = snlop_add(tmp[1], tmp[3]);
+		tmp[5] = snlop_add(tmp[3], args[4]);
+
+		out = B0_modulation(tmp[5], args[4], N, TE_dims, TE);
+		break;
+
+	case MECO_R2S:
+
+		debug_printf(DP_DEBUG1, "MODEL: rho, R2*, fB0\n");
+		args[0] = snlop_input(N, map_dims, "rho");
+		args[1] = snlop_input(N, map_dims, "R2s");
+		args[2] = snlop_input(N, map_dims, "fB0");
+
+		tmp[0] = B0_modulation(args[0], args[2], N, TE_dims, TE);
+		out = T2s_decay(tmp[0], args[1], N, TE_dims, TE);
+		break;
+
+	case MECO_PHASEDIFF:
+
+		debug_printf(DP_DEBUG1, "MODEL: rho, fB0\n");
+		args[0] = snlop_input(N, map_dims, "rho");
+		args[1] = snlop_input(N, map_dims, "fB0");
+
+		out = B0_modulation(args[0], args[1], N, TE_dims, TE);
 		break;
 
 	case IR_MECO_T1_R2S:
@@ -1048,11 +1099,32 @@ const struct nlop_s* nlop_ir_meco_model_create(int N, const long map_dims[N], co
 	for (int i = 0; i < in_dims[COEFF_DIM] - 1; i++)
 		ret = nlop_stack_inputs_F(ret, 0, 1, COEFF_DIM);
 
+	// precompute jacobian wrapper, such that derivative is simple ztenmul
+	// This requires the model to be holomorphic, so we impose real constraints afterwards
 	ret = nlop_zprecomp_jacobian_F(ret);
 
-	return ret;
-}
+	unsigned long real_constraint_flag = get_R2S_flag(meco_model) | get_R1S_flag(meco_model) | get_fB0_flag(meco_model);
 
+	float scales[in_dims[COEFF_DIM]];
+	const struct linop_s* lop_rvcs[in_dims[COEFF_DIM]];
+
+	for (int i = 0; i < in_dims[COEFF_DIM]; i++) {
+
+		if (MD_IS_SET(real_constraint_flag, i))
+			lop_rvcs[i] = linop_zreal_create(N, map_dims);
+		else
+			lop_rvcs[i] = NULL;
+
+		scales[i] = 1.;
+	}
+
+	const struct linop_s* rvc = moba_precond_create(N, in_dims, lop_rvcs, scales);
+
+	for (int i = 0; i < in_dims[COEFF_DIM]; i++)
+		linop_free(lop_rvcs[i]);
+
+	return nlop_chain_FF(nlop_from_linop_F(rvc), ret);
+}
 
 struct nlop_s* nlop_ir_meco_create(int N, const long map_dims[N], const long /*out_dims*/[N], const long in_dims[N], const long TI_dims[N],
 				const complex float* TI, const long TE_dims[N], const complex float* TE, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, const float* scale)
