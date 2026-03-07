@@ -1268,6 +1268,8 @@ bool opt_subopt(void* _ptr, char /*c*/, const char* optarg)
 	char* option = tmpoptionp;
 	char* value = NULL;
 
+	assert(NULL != option);	//analyzer-possible-null-dereference
+
 	int i = -1;
 
 	while ('\0' != *option) {
