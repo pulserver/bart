@@ -36,18 +36,14 @@
 
 int ir_meco_get_num_of_coeff(enum meco_model sel_model)
 {
-	int ncoeff = 0;
-
 	switch (sel_model) {
 
-	case IR_MECO_WF_fB0:		ncoeff = 3; break; // meco, water, fat, fB0
-	case IR_MECO_WF_R2S:		ncoeff = 4; break; // meco, water, fat, R2*, fB0
-	case IR_MECO_T1_R2S:		ncoeff = 5; break; // ir + meco, water T1, R2*, fB0
-	case IR_MECO_W_T1_F_T1_R2S:	ncoeff = 8; break; // ir + meco, water T1, fat T1, R2*, fB0
+	case MECO_WF:			return 3; // meco, water, fat, fB0
+	case MECO_WFR2S:		return 4; // meco, water, fat, R2*, fB0
+	case IR_MECO_T1_R2S:		return 5; // ir + meco, water T1, R2*, fB0
+	case IR_MECO_W_T1_F_T1_R2S:	return 8; // ir + meco, water T1, fat T1, R2*, fB0
 	default: error("invalid model");
 	}
-
-	return ncoeff;
 }
 
 // Calculate Model:
@@ -146,7 +142,7 @@ const struct nlop_s* nlop_ir_meco_model_create(int N, const long map_dims[N], co
 
 	switch (meco_model) {
 
-	case IR_MECO_WF_fB0:
+	case MECO_WF:
 
 		debug_printf(DP_DEBUG1, "MODEL: W, F, fB0\n");
 		args[0] = snlop_input(N, map_dims, "W");
@@ -159,7 +155,7 @@ const struct nlop_s* nlop_ir_meco_model_create(int N, const long map_dims[N], co
 		out = B0_modulation(tmp[1], args[2], N, TE_dims, TE);
 		break;
 
-	case IR_MECO_WF_R2S:
+	case MECO_WFR2S:
 
 		debug_printf(DP_DEBUG1, "MODEL: W, F, R2*, fB0\n");
 		args[0] = snlop_input(N, map_dims, "W");
