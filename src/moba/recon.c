@@ -27,7 +27,7 @@
 #include "moba/model_moba.h"
 #include "moba/blochfun.h"
 #include "moba/T1phyfun.h"
-#include "moba/ir_meco.h"
+#include "moba/meco.h"
 #include "moba/iter_l1.h"
 #include "moba/moba.h"
 #include "moba/exp.h"

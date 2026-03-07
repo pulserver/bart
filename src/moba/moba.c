@@ -7,7 +7,6 @@
 #include <stdbool.h>
 
 #include "moba/meco.h"
-#include "moba/ir_meco.h"
 
 #include "misc/debug.h"
 

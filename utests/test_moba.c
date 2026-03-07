@@ -29,7 +29,7 @@
 #include "moba/blochfun.h"
 #include "moba/T1fun.h"
 #include "moba/T1phyfun.h"
-#include "moba/ir_meco.h"
+#include "moba/meco.h"
 #include "moba/optreg.h"
 
 #include "simu/signals.h"
