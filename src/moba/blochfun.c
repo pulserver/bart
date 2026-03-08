@@ -718,22 +718,7 @@ struct nlop_s* nlop_bloch_create(int N, const long out_dims[N], const long in_di
 	data->b0 = b0;
 
 	// Smoothness penalty for alpha map: Sobolev norm
-
-	long w_dims[N];
-	md_select_dims(N, FFT_FLAGS, w_dims, map_dims);
-
-	complex float* weights = md_alloc(N, w_dims, CFL_SIZE);
-	noir_calc_weights(config->other.b1_sobolev_a, config->other.b1_sobolev_b, w_dims, weights);
-
-	const struct linop_s* linop_wghts = linop_cdiag_create(N, map_dims, FFT_FLAGS, weights);
-	const struct linop_s* linop_ifftc = linop_ifftc_create(N, map_dims, FFT_FLAGS);
-
-	data->linop_alpha = linop_chain(linop_wghts, linop_ifftc);
-
-	md_free(weights);
-
-	linop_free(linop_wghts);
-	linop_free(linop_ifftc);
+	data->linop_alpha = linop_noir_weights_create(N, map_dims, map_dims, map_dims, FFT_FLAGS, 1., config->other.b1_sobolev_a, config->other.b1_sobolev_b, 1.);
 
 	return nlop_create(N, out_dims, N, in_dims, CAST_UP(PTR_PASS(data)), bloch_fun, bloch_der, bloch_adj, NULL, NULL, bloch_del);
 }
