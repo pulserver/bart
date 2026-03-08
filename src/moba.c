@@ -538,8 +538,6 @@ int main_moba(int argc, char* argv[argc])
 
 		if (!md_check_equal_dims(DIMS, img_dims, init_dims, ~0UL))
 			error("Initialization dimensions do not match image dimensions!\n");
-
-		md_copy(DIMS, img_dims, img, init, CFL_SIZE);
 	}
 
 	// Load passed B1
@@ -620,6 +618,8 @@ int main_moba(int argc, char* argv[argc])
 
 		data.other.fov_reduction_factor = restrict_fov;
 
+		//FIXME: this may be bad for any map regularized by Sobolev,
+		// 	 as it will create sharp edges in the initialization
 		if (MDB_BLOCH != conf.mode)
 		        md_zmul2(DIMS, img_dims, img_strs, img, img_strs, img, msk_strs, mask);
 	}
@@ -639,7 +639,7 @@ int main_moba(int argc, char* argv[argc])
 
 		pos[COEFF_DIM] = i;
 
-		md_copy_block(DIMS, pos, tmp_dims, tmp, img_dims, img, CFL_SIZE);
+		md_copy_block(DIMS, pos, tmp_dims, tmp, img_dims, (NULL != init) ? init : img, CFL_SIZE);
 
 		md_zsmul(DIMS, tmp_dims, tmp, tmp, data.other.initval[i] / (data.other.scale[i] ?: 1));
 
