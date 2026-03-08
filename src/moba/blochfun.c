@@ -170,9 +170,9 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 
 		// FIXME: Multiplication for > 2
 		md_zsmul(data->N, pool_dims, r1_poolscale, r1_poolscale, scale[4]);
-		md_zsmul(data->N, pool_dims, r2_poolscale, r2_poolscale, scale[6]);
-		md_zsmul(data->N, pool_dims, kscale, kscale, scale[7]);
-		md_zsmul(data->N, pool_dims, m0_poolscale, m0_poolscale, scale[5]);
+		md_zsmul(data->N, pool_dims, r2_poolscale, r2_poolscale, scale[5]);
+		md_zsmul(data->N, pool_dims, kscale, kscale, scale[6]);
+		md_zsmul(data->N, pool_dims, m0_poolscale, m0_poolscale, scale[7]);
 		md_zsmul(data->N, data->map_dims, omscale, omscale, scale[8]);
 	}
 
