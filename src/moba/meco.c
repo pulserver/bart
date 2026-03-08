@@ -18,6 +18,7 @@
 #include "misc/misc.h"
 #include "misc/mri.h"
 #include "misc/types.h"
+#include "misc/version.h"
 
 #include "num/gpuops.h"
 #include "num/filter.h"
@@ -648,7 +649,11 @@ static void meco_fun_phasediff(const nlop_data_t* _data, complex float* dst, con
 
 	linop_forward_unchecked(data->linop_fB0, fB0, fB0);
 
-	md_zaxpy2(data->N, data->map_dims, data->map_strs, fB0, 2.i * M_PI, data->map_strs, fB0);
+	if (!use_compat_to_version("v0.9.00"))
+		md_zsmul2(data->N, data->map_dims, data->map_strs, fB0, data->map_strs, fB0, 2.i * M_PI);
+	else
+		md_zsmul2(data->N, data->map_dims, data->map_strs, fB0, data->map_strs, fB0, 1. + 2.i * M_PI);
+
 	md_zmul2(data->N, data->y_dims, data->y_strs, tmp_exp, data->map_strs, fB0, data->TE_strs, multiplace_read(data->TE, dst));
 
 
