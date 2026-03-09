@@ -482,7 +482,7 @@ void cmdline_synth(void (*print)(const char* str, ...), int n, const struct opt_
 			{
 				struct opt_select_s *os = opts[i].ptr;
 
-				if (0 != memcpy(os->ptr, os->value, os->size))
+				if (0 != memcmp(os->ptr, os->value, os->size))
 					continue;
 			}
 			break;
