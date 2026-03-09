@@ -74,6 +74,19 @@ static bool test_print_command(void)
 UT_REGISTER_TEST(test_print_command);
 
 
+static bool test_broken_command(void)
+{
+	struct seq_config seq = seq_config_defaults;
+
+	if (!read_config_from_str(&seq, 200, "bart seq --broken 3\0"))
+		return true;
+
+	return false;
+}
+
+UT_REGISTER_TEST(test_broken_command);
+
+
 static bool test_print(void)
 {
 	struct seq_config seq = seq_config_defaults;
