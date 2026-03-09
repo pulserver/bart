@@ -1037,6 +1037,26 @@ endif
 
 
 
+
+ifeq ($(BUILDTYPE), WASM)
+$(CTARGETS): LDFLAGS += -s EXPORTED_FUNCTIONS=_main,__Block_object_dispose -lnodefs.js -lnoderawfs.js --pre-js src/pre.js
+$(UTARGETS): LDFLAGS += -s EXPORTED_FUNCTIONS=_main,__Block_object_dispose -lnodefs.js -lnoderawfs.js --pre-js src/pre.js
+bart: LDFLAGS += -s EXPORTED_FUNCTIONS=_main,__Block_object_dispose -lnodefs.js -lnoderawfs.js --pre-js src/pre.js
+
+web/wwwroot/bart_main.js: LDFLAGS += -sMODULARIZE=1 -sEXPORT_NAME=bart_main \
+	-s EXPORTED_FUNCTIONS=_main,_malloc,_free,_mmap,_munmap,_setenv,_getenv,__Block_object_dispose \
+	-s EXPORTED_RUNTIME_METHODS=ccall,cwrap,FS
+
+# https://stackoverflow.com/questions/7525589/create-comma-separated-lists-in-gnu-make
+null  :=
+space := $(null) #
+comma := ,
+web/wwwroot/bart_cmd.js: LDFLAGS += -s EXPORTED_FUNCTIONS=_main,_malloc,_free,__Block_object_dispose,$\
+	_bart_version,_memcfl_create,_load_cfl,_memcfl_list_all,_memcfl_unlink,$\
+	$(subst $(space),$(comma),$(addprefix _main_, $(XTARGETS)))
+endif
+
+
 .SECONDEXPANSION:
 $(CTARGETS): commands/% : src/main.c $(srcdir)/%.o $$(MODULES_%) $(MODULES)
 	$(LINKER) $(LDFLAGS) $(CFLAGS) $(CPPFLAGS) -Dmain_real=main_$(@F) $+ $(FFTW_L) $(CUDA_L) $(BLAS_L) $(PNG_L) $(ISMRM_L) $(LIBS) -lm $(LIBRT) -o $@
@@ -1083,7 +1103,13 @@ $(UTARGETS_WINE): % : utests/utest.c utests/%.o bart.dll
 #	$(CC) $(LDFLAGS) -Wl,-Tutests/utests.ld $(CFLAGS) -o $@ $+ $(FFTW_L) $(CUDA_L) $(BLAS_L) -lm -rt
 
 
+ifeq ($(BUILDTYPE), WASM)
+web/wwwroot/bart_main.js: src/main.c $(srcdir)/bart.o $(MODULES_bart) $(MODULES)
+	$(LINKER) $(LDFLAGS) $(CFLAGS) $(CPPFLAGS) -Dmain_real=main_bart $+ $(FFTW_L) $(CUDA_L) $(BLAS_L) $(PNG_L) $(ISMRM_L) $(LIBS) -lm $(LIBRT) -o $@
 
+web/wwwroot/bart_cmd.js: src/main.c $(srcdir)/bart.o $(MODULES_bart) $(MODULES)
+	$(LINKER) $(LDFLAGS) $(CFLAGS) $(CPPFLAGS) -Dmain_real=main_bart $+ $(FFTW_L) $(CUDA_L) $(BLAS_L) $(PNG_L) $(ISMRM_L) $(LIBS) -lm $(LIBRT) -o $@
+endif
 
 
 # automatic tests

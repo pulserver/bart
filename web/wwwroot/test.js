@@ -1,9 +1,11 @@
 /* Copyright 2023. Christian Tönnes.
+ * Copyright 2026. Institute of Biomedical Imaging. TU Graz
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
- * 
+ *
  * Authors:
  * 2023 Christian Tönnes <christian.toennes@keks.li>
+ * 2026 Philip Schaten <philip.schaten@tugraz.at>
  */
 
 const DIMS = 16;
@@ -36,34 +38,6 @@ function show_phantom() {
 
     var btn = document.getElementById("fft_phantom");
     btn.removeAttribute("disabled");
-}
-
-function fft_phantom_direct() {
-    var t = performance.now();
-    var dims = new Int32Array(DIMS);
-    dims.fill(1);
-    dims[0] = 128;
-    dims[1] = 128;
-    phant_data = calc_phantom(dims);
-    data = fft(phant_data, dims, 3);
-    console.log("runtime direct: ", performance.now()-t);
-    //var [phant_data, data] = calc_phantom_fft(dims);
-    console.log(phant_data.reduce((p,c,i) => i%2?[p[0], p[1]+c]:[p[0]+c,p[1]], [0,0]))
-    console.log(data.reduce((p,c,i) => i%2?[p[0], p[1]+c]:[p[0]+c,p[1]], [0,0]))
-    var canvas = document.getElementById("fft_phant");
-    ctx = canvas.getContext('2d');
-    canvas.width = 128;
-    canvas.height = 128;
-    idata = ctx.createImageData(128, 128);
-    var result = new Uint8ClampedArray(128 * 128 * 4);
-    for(var i=0;i<128*128;i++) {
-        result[4*i] = data[2*i]*256;
-        result[4*i+1] = data[2*i]*256;
-        result[4*i+2] = data[2*i]*256;
-        result[4*i+3] = 255;
-    }
-    idata.data.set(result);
-    ctx.putImageData(idata, 0, 0);
 }
 
 function fft_phantom() {
@@ -108,7 +82,7 @@ function ifft_fft_phantom() {
         data[i] /= 0.5*size;
     }
     console.log(data.reduce((p,c,i) => i%2?[p[0], p[1]+c]:[p[0]+c,p[1]], [0,0]))
-    
+
     var canvas = document.getElementById("ifft_phant");
     ctx = canvas.getContext('2d');
     canvas.width = dims[0];
@@ -208,7 +182,7 @@ function pics() {
 
     var [data, dims] = from_memcfl("sensitivities.mem", dims);
     console.log("dims", dims);
-    
+
     var canvas = document.getElementById("pics_sens");
     ctx = canvas.getContext('2d');
     canvas.width = dims[0]*dims[4];
@@ -232,10 +206,10 @@ function pics() {
     ctx.putImageData(idata, 0, 0);
 
     bart_command(["pics", "-l1", "-r 0.001", "pics_kspace.mem", "sensitivities.mem", "image_out.mem"]);
-    
+
     var [data, dims] = from_memcfl("image_out.mem", dims);
     console.log("dims", dims);
-    
+
     var canvas = document.getElementById("pics");
     ctx = canvas.getContext('2d');
     canvas.width = dims[0]*dims[4];
@@ -263,8 +237,8 @@ function bart_command(argv) {
     var t = performance.now();
     var inArgv = allocFromStringArray(argv);
     var inArgv_byteOffset = inArgv.byteOffset;
-    
-    if(this["_main_"+argv[0]] == undefined) { 
+
+    if(this["_main_"+argv[0]] == undefined) {
         console.log("function:", "_main_"+argv[0], "was not exported.");
     }
     this["_main_"+argv[0]](argv.length, inArgv_byteOffset);
@@ -274,49 +248,6 @@ function bart_command(argv) {
         _free(inArgv[k]);
     }
     console.log("Runtime", argv[0], performance.now()-t);
-}
-
-function calc_phantom(dims) {
-    var sstrs = new Int32Array(DIMS);
-    var samples = 0;
-    var d3 = false;
-    var kspace = false;
-    var popts  = _pha_opts_defaults;
-
-    for(var i=0;i<DIMS;i++) {sstrs[i] = 0;}
-    
-    var size = 2;
-    for(var dim in dims) {
-        size = size*dims[dim];
-    }
-    var data = alloc(size*scalar_size);
-    var data_byteOffset = data.byteOffset;
-    var heapDims = allocFromArray(dims);
-    var heapDims_byteOffset = heapDims.byteOffset;
-    var heapsstrs = allocFromArray(sstrs);
-    var heapsstrs_byteOffset = heapsstrs.byteOffset;
-
-    _num_init();
-    var phant_sel = document.getElementById("select_phantom").value;
-    switch(phant_sel){ 
-        case "0":
-            _calc_phantom(heapDims_byteOffset, data_byteOffset, d3, kspace, heapsstrs_byteOffset, samples, popts);
-            break;
-        case "1":
-            _calc_bart(heapDims.byteOffset, data.byteOffset, kspace, heapsstrs.byteOffset, samples, popts);
-            break;
-        case "2":
-            _calc_circ(heapDims.byteOffset, data.byteOffset, d3, kspace, heapsstrs.byteOffset, samples, popts);
-            break;
-    } 
-
-    var pdata = new Float32Array(size);
-    pdata.set(new Float32Array(Module.HEAPU8.buffer, data_byteOffset, size));
-
-    free(data);
-    free(heapDims);
-    free(heapsstrs);
-    return pdata;
 }
 
 function allocFromString(string) {
@@ -336,7 +267,7 @@ function allocFromStringArray(inArgv) {
         var heapArray_byteOffset = heapArray.byteOffset;
         heapArgv32[k] = heapArray_byteOffset;
     }
-    
+
     return heapArgv;
 }
 
@@ -357,7 +288,7 @@ function from_memcfl(name) {
     var heapName = allocFromString(name);
     var heapName_byteOffset = heapName.byteOffset
     var out_data = _load_cfl(heapName_byteOffset, DIMS, heapDims_byteOffset);
-    
+
     var dims = Int32Array.from(new Int32Array(Module.HEAPU8.buffer, heapDims_byteOffset, DIMS));
     var size = 2;
     for(var dim in dims) {
@@ -366,71 +297,6 @@ function from_memcfl(name) {
     var data = Float32Array.from(new Float32Array(Module.HEAPU8.buffer, out_data, size));
     return [data, dims];
 }
-
-/** Compute the FFT of a real-valued mxn matrix. */
-function fft(data, dims, flags=0) {
-    /* Allocate input and output arrays on the heap. */
-    
-    var size = 2
-    for(var dim in dims) {
-        size = size*dims[dim];
-    }
-    var outData = alloc(size*scalar_size);
-    var outData_byteOffset = outData.byteOffset;
-    var inData = allocFromArray(data);
-    var inData_byteOffset = inData.byteOffset;
-    
-    var heapDims = allocFromArray(dims);
-    var heapDims_byteOffset = heapDims.byteOffset
-
-    _fftc(dims.length, heapDims_byteOffset, flags, outData_byteOffset, inData_byteOffset);
-
-    /* Get spectrum from the heap, copy it to local array. */
-    var spectrum = new Float32Array(size);
-    if(scalar_size==8) {
-        var tmp = new Float64Array(Module.HEAPU8.buffer, outData_byteOffset, size);
-        for(var i=0;i<tmp.length;i++) { spectrum[i] = tmp[i]; }
-    } else {
-        spectrum.set(new Float32Array(Module.HEAPU8.buffer, outData_byteOffset, size));
-    }
-
-    /* Free heap objects. */
-    free(inData_byteOffset);
-    free(outData_byteOffset);
-    free(heapDims_byteOffset);
-
-    return spectrum;
-}
-
-/** Compute the inverse FFT of a real-valued mxn matrix. */
-function ifft(data, dims, flags=0) {
-    var size = 2
-    for(var dim in dims) {
-        size = size*dims[dim];
-    }
-    var outData = alloc(size*scalar_size);
-    var outData_byteOffset = outData.byteOffset;
-    var inData = allocFromArray(data);
-    var inData_byteOffset = inData.byteOffset;
-
-    var heapDims = allocFromArray(dims);
-    var heapDims_byteOffset = heapDims.byteOffset;
-
-    _ifftc(dims.length, heapDims_byteOffset, flags, outData_byteOffset, inData_byteOffset);
-
-    var data = scalar_size==4 ? Float32Array.from(new Float32Array(Module.HEAPU8.buffer,outData_byteOffset, size)): Float32Array.from(new Float64Array(Module.HEAPU8.buffer,outData_byteOffset, size));
-
-    for (i=0;i<size;i++) {
-        data[i] /= 0.5*size;
-    }
-
-    free(inData);
-    free(outData);
-    free(heapDims);
-
-    return data;
-}
-
 
 /** Create a heap array from the array ar. */
 function allocFromArray(ar) {

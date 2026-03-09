@@ -1,3 +1,12 @@
+/* Copyright 2026. Institute of Biomedical Imaging. TU Graz
+ * All rights reserved. Use of this source code is governed by
+ * a BSD-style license which can be found in the LICENSE file.
+ *
+ * Authors:
+ * 2026 Philip Schaten <philip.schaten@tugraz.at>
+ */
+
+
 console.log("Hello from bart_worker")
 
 // malloc code based on script from Christian Tönnes
@@ -50,6 +59,7 @@ function allocFromArray(module, ar) {
 var bart_module;
 var stdout = "";
 var stderr = "";
+var bart_ok = false;
 
 async function reload_bart(data) {
     bart_module = await bart_main({
@@ -69,6 +79,8 @@ async function reload_bart(data) {
         monitorRunDependencies: function(left) { },
         noInitialRun: true
     })
+
+    bart_ok = true;
 
     console.log("Bart loaded");
     return null;
@@ -95,6 +107,11 @@ async function rm_file(data)
 var bart_state = 'idle';
 
 async function bart_cmd(data) {
+
+    if (!bart_ok) {
+
+        await reload_bart(0);
+    }
 
     bart_state = 'prep';
     argv = data[1].trim().split(/\s+/)
@@ -123,7 +140,10 @@ async function bart_cmd(data) {
         // furthermore, if exit/abort are called in the c code, it causes a runtime error
         // which would break bart tool -h.
         console.log("WASM Runtime error occurred:", e.message);
+        console.log("stdout:", stdout);
+        console.log("\n\n===stderr:", stderr);
         rt_error = e.message;
+        bart_ok = false;
     }
 
     bart_module._free(argv_heap_offset);

@@ -1,27 +1,21 @@
 <!-- Copyright 2023. Christian Tönnes.
+  Copyright 2026. Institute of Biomedical Imaging. TU Graz
   All rights reserved. Use of this source code is governed by
   a BSD-style license which can be found in the LICENSE file.
-  
   Authors:
   2023 Christian Tönnes <christian.toennes@keks.li>
+  2026 Philip Schaten <philip.schaten@tugraz.at>
  -->
 <!DOCTYPE html>
 <html>
     <head>
-        <script src="./bart.js"></script>
+        <script src="./bart_cmd.js"></script>
         <script src="./test.js"></script>
+        <meta charset=utf-8>
     </head>
     <body>
         <div>
             <a href="/cmd.html">Go to full BART CMD interface</a>
-        </div>
-        <div>
-            <label for="select_phantom">Select Phantom Type:</label>
-            <select id="select_phantom">
-                <option value="0">Shepp-Logan</option>
-                <option value="1">BART</option>
-                <option value="2">Circle</option>
-            </select>
         </div>
         <div>
             <button id="show_phantom" onclick="show_phantom()">Show Phantom</button>

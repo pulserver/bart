@@ -92,25 +92,19 @@ ISMRMRD=0
 
 Embedding in JupyterLite:
 
-- Install JupyterLite CLI: python -m pip install jupyterlite-core
-- Install Pyodide kernel: jupyterlite-pyodide-kernel
-- Create folder, e.g.: mkdir lite
-- jupyter lite init --output-dir demo --port 8000
-
-- Add a folder for python packages: mkdir lite/pypi
+- Install JupyterLite CLI, Pyodide kernel and build-module: pip install jupyterlite-core jupyterlite-pyodide-kernel build
+- Create a JupyterLite folder: jupyter lite init --output-dir demo --port 8000
+- Inside, add a folder for python packages: mkdir demo/pypi
 - Build BART python package: from bart/pkg/python,  python3 -m build --wheel
-- Copy wheel: e.g. cp bart/pkg/python/dist/bart-0.0.1-py3-none-any.whl lite/pypi
-
-- Build bart wasm: bart/build_webasm_main.sh
-- Copy files to web: cp bart/web/wwwroot/bart_main.{js,wasm} /bart/web/wwwroot/bart_{base,worker}.js lite/demo/extensions/@jupyterlite/pyodide-kernel-extension/static/
-
+- Copy wheel: e.g. cp bart/pkg/python/dist/bart-0.0.1-py3-none-any.whl demo/pypi
+- Build bart wasm module: make web/wwwroot/bart_main.js
+- Copy files to web: cp bart/web/wwwroot/bart_main.{js,wasm} /bart/web/wwwroot/bart_{base,worker}.js /demo/extensions/@jupyterlite/pyodide-kernel-extension/static/
 - jupyter lite build
 
+Run:
+- emrun demo/_output/index.html
+- in jupyter, call "%pip install bart"
+- import bart
+- await bart.bart2(1, "phantom")
+
 Plain pyodide repl works similar
-
-======
-
-Further Notes:
-
-- Several BART features are controlled via environment variables. However, webasm code running under node.js can not read the 'normal' environment
-  of the node process. To work around: echo "Module.preRun = () => {ENV.LANG = undefined};" > src/pre.js, and add "--pre-js src/pre.js" to LDFLAGS.

@@ -1,3 +1,12 @@
+/* Copyright 2026. Institute of Biomedical Imaging. TU Graz
+ * All rights reserved. Use of this source code is governed by
+ * a BSD-style license which can be found in the LICENSE file.
+ *
+ * Authors:
+ * 2026 Philip Schaten <philip.schaten@tugraz.at>
+ */
+
+
 console.log("Hello from bart_base")
 
 // rpc
@@ -73,25 +82,19 @@ async function py_wrapper(res)
 
 function send_cfl(name)
 {
-    return py_wrapper(send_msg(['put_file', `${name}.hdr`, pyodide.FS.readFile(`${name}.hdr`)]).then((x)=>{
-        return send_msg(['put_file', `${name}.cfl`, pyodide.FS.readFile(`${name}.cfl`)]);
-    }));
+    return py_wrapper(send_msg(['put_file', `${name}`, pyodide.FS.readFile(`${name}`)]));
 }
 
 function get_cfl(name)
 {
-    return py_wrapper(send_msg(['get_file', `${name}.hdr`]).then((hdr) => {
-        pyodide.FS.writeFile(`${name}.hdr`, hdr);
-        return send_msg(['get_file', `${name}.cfl`]).then((cfl) => {
-            pyodide.FS.writeFile(`${name}.cfl`, cfl)
-            return name;
-    })}));
+    return py_wrapper(send_msg(['get_file', `${name}`]).then((hdr) => {
+pyodide.FS.writeFile(`${name}`, hdr);
+    }));
 }
 
 function rm_cfl(name)
 {
-    return py_wrapper(send_msg(['rm_file', `${name}.hdr`]).then((x) => {
-        return send_msg(['rm_file', `${name}.cfl`])}));
+    return py_wrapper(send_msg(['rm_file', `${name}`]));
 }
 
 function bart_cmd(cmd)
