@@ -275,11 +275,11 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 					spa_ind_pools = md_calc_offset(data->N, pool_strs, spa_pos_pools) / (long)CFL_SIZE;
 
 					//FIXME: Switch to Boolean?
-					sim_data.voxel.r1[p + 1] = (data->moba_data->other.scale[4 + p]) ? crealf(r1_poolscale[spa_ind_pools]) : data->moba_data->other.initval[4 + p];
-					sim_data.voxel.r2[p + 1] = (data->moba_data->other.scale[4 + sim_data.voxel.P - 1 + p]) ? crealf(r2_poolscale[spa_ind_pools]) : data->moba_data->other.initval[4 + sim_data.voxel.P - 1 + p];
-					sim_data.voxel.k[p] = (data->moba_data->other.scale[4 + 2 * (sim_data.voxel.P - 1) + p]) ? crealf(kscale[spa_ind_pools]) : data->moba_data->other.initval[4 + 2 * (sim_data.voxel.P - 1) + p];
-					sim_data.voxel.m0[p + 1] = (data->moba_data->other.scale[4 + 3 * (sim_data.voxel.P - 1) + p]) ? crealf(m0_poolscale[spa_ind_pools]) : data->moba_data->other.initval[4 + 3 * (sim_data.voxel.P - 1) + p];
-					sim_data.voxel.Om[p + 1] = (data->moba_data->other.scale[4 + 4 * (sim_data.voxel.P - 1) + p]) ? crealf(omscale[spa_ind_pools]) : data->moba_data->other.initval[4 + 4 * (sim_data.voxel.P - 1) + p];
+					sim_data.voxel.r1[p + 1] = (data->moba_data->other.scale[4 + 0 * (sim_data.voxel.P - 1) + p]) ? crealf(r1_poolscale[spa_ind_pools])	: data->moba_data->other.initval[4 + 0 * (sim_data.voxel.P - 1) + p];
+					sim_data.voxel.r2[p + 1] = (data->moba_data->other.scale[4 + 1 * (sim_data.voxel.P - 1) + p]) ? crealf(r2_poolscale[spa_ind_pools]) 	: data->moba_data->other.initval[4 + 1 * (sim_data.voxel.P - 1) + p];
+					sim_data.voxel.k[p]	 = (data->moba_data->other.scale[4 + 2 * (sim_data.voxel.P - 1) + p]) ? crealf(kscale[spa_ind_pools])		: data->moba_data->other.initval[4 + 2 * (sim_data.voxel.P - 1) + p];
+					sim_data.voxel.m0[p + 1] = (data->moba_data->other.scale[4 + 3 * (sim_data.voxel.P - 1) + p]) ? crealf(m0_poolscale[spa_ind_pools])	: data->moba_data->other.initval[4 + 3 * (sim_data.voxel.P - 1) + p];
+					sim_data.voxel.Om[p + 1] = (data->moba_data->other.scale[4 + 4 * (sim_data.voxel.P - 1) + p]) ? crealf(omscale[spa_ind_pools])		: data->moba_data->other.initval[4 + 4 * (sim_data.voxel.P - 1) + p];
 				}
 
 				// Extract external B0 value from input
@@ -376,10 +376,10 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 					case MODEL_BLOCH:
 
 						dr1_cpu[position] = a * (*scale2)[0] * m0scale[spa_ind] * (sa_r1[j][0] + sa_r1[j][1] * 1.i);
-						dm0_cpu[position] = a * (*scale2)[1] * (sa_m0[j][0] + sa_m0[j][1] * 1.i);
+						dm0_cpu[position] = a * (*scale2)[1] * 			  (sa_m0[j][0] + sa_m0[j][1] * 1.i);
 						dr2_cpu[position] = a * (*scale2)[2] * m0scale[spa_ind] * (sa_r2[j][0] + sa_r2[j][1] * 1.i);
 						db1_cpu[position] = a * (*scale2)[3] * m0scale[spa_ind] * (sa_b1[j][0] + sa_b1[j][1] * 1.i);
-						sig_cpu[position] = a * m0scale[spa_ind] * (m[j][0] + m[j][1] * 1.i);
+						sig_cpu[position] = a * 	       m0scale[spa_ind] * (    m[j][0] +     m[j][1] * 1.i);
 						break;
 
 					case MODEL_BMC:
@@ -390,14 +390,14 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 							dm0_cpu[position] = (*scale2)[1] * (sa_m0_p[j][0][2]);
 							dr2_cpu[position] = (*scale2)[2] * (sa_r2_p[j][0][2]);
 							db1_cpu[position] = (*scale2)[3] * (sa_b1_p[j][0][2]);
-							sig_cpu[position] = m_p[0][0][2];
+							sig_cpu[position] =                (    m_p[0][0][2]);
 						} else {
 
 							dr1_cpu[position] = (*scale2)[0] * (sa_r1_p[j][0][0] + sa_r1_p[j][0][1] * 1.i);
 							dm0_cpu[position] = (*scale2)[1] * (sa_m0_p[j][0][0] + sa_m0_p[j][0][1] * 1.i);
-							dr2_cpu[position] = (*scale2)[2]  * (sa_r2_p[j][0][0] + sa_r2_p[j][0][1] * 1.i);
-							db1_cpu[position] = (*scale2)[3]  * (sa_b1_p[j][0][0] + sa_b1_p[j][0][1] * 1.i);
-							sig_cpu[position] = (m_p[0][0][0] + m_p[j][0][1] * 1.i);
+							dr2_cpu[position] = (*scale2)[2] * (sa_r2_p[j][0][0] + sa_r2_p[j][0][1] * 1.i);
+							db1_cpu[position] = (*scale2)[3] * (sa_b1_p[j][0][0] + sa_b1_p[j][0][1] * 1.i);
+							sig_cpu[position] =                (    m_p[0][0][0] +     m_p[j][0][1] * 1.i);
 						}
 						break;
 					}
@@ -409,18 +409,18 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 
 						if (SEQ_CEST == sim_data.seq.seq_type) {
 
-							dr1_pools_cpu[position] = (*scale2)[4 + p] * sa_r1_p[j][p + 1][2];
-							dr2_pools_cpu[position] = (*scale2)[4 + sim_data.voxel.P - 1 + p] * sa_r2_p[j][p + 1][2];
-							dk_cpu[position] = (*scale2)[4 + 2 * (sim_data.voxel.P - 1) + p]  * sa_k_p[j][p][2];
+							dr1_pools_cpu[position] = (*scale2)[4 + 0 * (sim_data.voxel.P - 1) + p] * sa_r1_p[j][p + 1][2];
+							dr2_pools_cpu[position] = (*scale2)[4 + 1 * (sim_data.voxel.P - 1) + p] * sa_r2_p[j][p + 1][2];
+							dk_cpu[position]	= (*scale2)[4 + 2 * (sim_data.voxel.P - 1) + p] *  sa_k_p[j][p + 0][2];
 							dm0_pools_cpu[position] = (*scale2)[4 + 3 * (sim_data.voxel.P - 1) + p] * sa_m0_p[j][p + 1][2];
-							dom_cpu[position] = (*scale2)[4 + 4 * (sim_data.voxel.P - 1) + p] * sa_om_p[j][p][2];
+							dom_cpu[position]	= (*scale2)[4 + 4 * (sim_data.voxel.P - 1) + p] * sa_om_p[j][p + 0][2];
 						} else {
 
-							dr1_pools_cpu[position] = (*scale2)[4 + p] * (sa_r1_p[j][p + 1][0] + sa_r1_p[j][p + 1][1] * 1.i);
-							dr2_pools_cpu[position] = (*scale2)[4 + sim_data.voxel.P - 1 + p] * (sa_r2_p[j][p + 1][0] + sa_r2_p[j][p + 1][1] * 1.i);
-							dk_cpu[position] = (*scale2)[4 + 2 * (sim_data.voxel.P - 1) + p]  * (sa_k_p[j][p][0] + sa_k_p[j][p][1] * 1.i);
+							dr1_pools_cpu[position] = (*scale2)[4 + 0 * (sim_data.voxel.P - 1) + p] * (sa_r1_p[j][p + 1][0] + sa_r1_p[j][p + 1][1] * 1.i);
+							dr2_pools_cpu[position] = (*scale2)[4 + 1 * (sim_data.voxel.P - 1) + p] * (sa_r2_p[j][p + 1][0] + sa_r2_p[j][p + 1][1] * 1.i);
+							dk_cpu[position] 	= (*scale2)[4 + 2 * (sim_data.voxel.P - 1) + p] * ( sa_k_p[j][p + 0][0] +  sa_k_p[j][p + 0][1] * 1.i);
 							dm0_pools_cpu[position] = (*scale2)[4 + 3 * (sim_data.voxel.P - 1) + p] * (sa_m0_p[j][p + 1][0] + sa_m0_p[j][p + 1][1] * 1.i);
-							dom_cpu[position] = (*scale2)[4 + 4 * (sim_data.voxel.P - 1) + p] * (sa_om_p[j][p][0] + sa_om_p[j][p][1] * 1.i);
+							dom_cpu[position] 	= (*scale2)[4 + 4 * (sim_data.voxel.P - 1) + p] * (sa_om_p[j][p + 0][0] + sa_om_p[j][p + 0][1] * 1.i);
 						}
 					}
 				}
@@ -474,10 +474,10 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 	for (int p = 0; p < data->moba_data->sim.voxel.P - 1; p++) {
 
 		pos[ITER_DIM] = p;
-		pos[COEFF_DIM] = 4 + p;// R1
+		pos[COEFF_DIM] = 4 + 0 * (data->moba_data->sim.voxel.P - 1) + p;// R1
 		md_copy_block(data->N, pos, data->der_dims, data->derivatives, pool_out_dims, dr1_pools_cpu, CFL_SIZE);
 
-		pos[COEFF_DIM] = 4 + data->moba_data->sim.voxel.P - 1 + p;// R2
+		pos[COEFF_DIM] = 4 + 1 * (data->moba_data->sim.voxel.P - 1) + p;// R2
 		md_copy_block(data->N, pos, data->der_dims, data->derivatives, pool_out_dims, dr2_pools_cpu, CFL_SIZE);
 
 		pos[COEFF_DIM] = 4 + 2 * (data->moba_data->sim.voxel.P - 1) + p;// k
@@ -542,12 +542,12 @@ static void bloch_der(const nlop_data_t* _data, int /*o*/, int /*i*/, complex fl
 
 	for (int p = 0; p < data->moba_data->sim.voxel.P - 1; p++) {
 
-		pos[COEFF_DIM] = 4 + p; // R1
+		pos[COEFF_DIM] = 4 + 0 * (data->moba_data->sim.voxel.P - 1) + p; // R1
 		md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, src, CFL_SIZE);
 		md_zreal(data->N, data->map_dims, tmp_map, tmp_map);
 		md_copy_block(data->N, pos, data->in_dims, tmp, data->map_dims, tmp_map, CFL_SIZE);
 
-		pos[COEFF_DIM] = 4 + data->moba_data->sim.voxel.P - 1 + p; // R2
+		pos[COEFF_DIM] = 4 + 1 * (data->moba_data->sim.voxel.P - 1) + p; // R2
 		md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, src, CFL_SIZE);
 		md_zreal(data->N, data->map_dims, tmp_map, tmp_map);
 		md_copy_block(data->N, pos, data->in_dims, tmp, data->map_dims, tmp_map, CFL_SIZE);
