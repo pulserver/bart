@@ -1467,8 +1467,10 @@ void cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m], 
 
 	int next_opt = options(argcp, argv, buf, help_str, n, opts, m, args, false);
 
-#ifndef  BARTDLL
+#ifndef BARTDLL
+#if UTEST
 	save_command_line(*argcp, argv);
+#endif
 #endif
 
 	if (   (*argcp - next_opt < min_args)
