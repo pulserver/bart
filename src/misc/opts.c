@@ -459,18 +459,39 @@ static void print_interface(FILE* fp, const char* name, const char* usage_str, c
 	}
 }
 
-static void void_printf(const char* fmt, ...)
+static int void_printf(int size, char buf[static size], const char* fmt, ...)
 {
+	(void)size;
+	(void)buf;
+
 	va_list ap;
 	va_start(ap, fmt);
 	vprintf(fmt, ap);
 	va_end(ap);
+
+	return 0;
 }
 
-void cmdline_synth(void (*print)(const char* str, ...), int n, const struct opt_s opts[static n ?: 1])
+static int xsnprintf(int size, char buf[static size], const char* fmt, ...)
 {
-	if (NULL == print)
+	va_list ap;
+	va_start(ap, fmt);
+
+	int rv = vsnprintf((size > 0) ? buf : NULL, (size_t)size, fmt, ap);
+
+	va_end(ap);
+
+	return rv;
+}
+
+int cmdline_synth(int (*print)(int len, char buf[static len], const char* str, ...), int len, char buf[static len], int n, const struct opt_s opts[static n ?: 1])
+{
+	if (0 == len)
 		print = void_printf;
+	else
+		print = xsnprintf;
+
+	int ctr = 0;
 
 	for (int i = 0; i < n; i++) {
 
@@ -531,33 +552,33 @@ void cmdline_synth(void (*print)(const char* str, ...), int n, const struct opt_
 		}
 
 		if (i > 0)
-			(*print)(" ");
+			ctr += (*print)(len - ctr, buf + ctr, " ");
 
 		// print options and parameter
 
 		if (opts[i].s)
-			(*print)("--%s ",opts[i].s);
+			ctr += (*print)(len - ctr, buf + ctr, "--%s ",opts[i].s);
 		else
-			(*print)("-%c", opts[i].c);
+			ctr += (*print)(len - ctr, buf + ctr, "-%c", opts[i].c);
 
 
 		switch (opts[i].type) {
 
-		case OPT_FLOAT: (*print)("%.2e", *(float*)opts[i].ptr); break;
-		case OPT_DOUBLE: (*print)("%.2e", *(double*)opts[i].ptr); break;
+		case OPT_FLOAT: ctr += (*print)(len - ctr, buf + ctr, "%.2e", *(float*)opts[i].ptr); break;
+		case OPT_DOUBLE: ctr += (*print)(len - ctr, buf + ctr, "%.2e", *(double*)opts[i].ptr); break;
 		case OPT_INT:
-		case OPT_PINT: (*print)("%d", *(int*)opts[i].ptr); break;
-		case OPT_UINT: (*print)("%u", *(unsigned int*)opts[i].ptr); break;
-		case OPT_LONG: (*print)("%ld", *(long*)opts[i].ptr); break;
-		case OPT_ULONG: (*print)("%lu", *(unsigned long*)opts[i].ptr); break;
-		case OPT_ULLONG: (*print)("%llu", *(unsigned long long*)opts[i].ptr); break;
+		case OPT_PINT: ctr += (*print)(len - ctr, buf + ctr, "%d", *(int*)opts[i].ptr); break;
+		case OPT_UINT: ctr += (*print)(len - ctr, buf + ctr, "%u", *(unsigned int*)opts[i].ptr); break;
+		case OPT_LONG: ctr += (*print)(len - ctr, buf + ctr, "%ld", *(long*)opts[i].ptr); break;
+		case OPT_ULONG: ctr += (*print)(len - ctr, buf + ctr, "%lu", *(unsigned long*)opts[i].ptr); break;
+		case OPT_ULLONG: ctr += (*print)(len - ctr, buf + ctr, "%llu", *(unsigned long long*)opts[i].ptr); break;
 
 		case OPT_CFL:
 
 			{
 				complex float* cfl = opts[i].ptr;
 
-				(*print)("%.2e+%.2ei", crealf(*cfl), cimagf(*cfl));
+				ctr += (*print)(len - ctr, buf + ctr, "%.2e+%.2ei", crealf(*cfl), cimagf(*cfl));
 			}
 			break;
 
@@ -594,8 +615,8 @@ void cmdline_synth(void (*print)(const char* str, ...), int n, const struct opt_
 			for (int j = 0; j < count; j++) {
 
 				if (j > 0)
-					(*print)(":");
-				(*print)("%ld", (*vn)[j]);
+					ctr += (*print)(len - ctr, buf + ctr, ":");
+				ctr += (*print)(len - ctr, buf + ctr, "%ld", (*vn)[j]);
 			}
 
 			break;
@@ -638,8 +659,8 @@ void cmdline_synth(void (*print)(const char* str, ...), int n, const struct opt_
 			for (int j = 0; j < count; j++) {
 
 				if (j > 0)
-					(*print)(":");
-				(*print)("%.2e", (*fvn)[j]);
+					ctr += (*print)(len - ctr, buf + ctr, ":");
+				ctr += (*print)(len - ctr, buf + ctr, "%.2e", (*fvn)[j]);
 			}
 
 			break;
@@ -671,8 +692,8 @@ void cmdline_synth(void (*print)(const char* str, ...), int n, const struct opt_
 			for (int j = 0; j < count; j++) {
 
 				if (j > 0)
-					(*print)(":");
-				(*print)("%.2e", (*dvn)[j]);
+					ctr += (*print)(len - ctr, buf + ctr, ":");
+				ctr += (*print)(len - ctr, buf + ctr, "%.2e", (*dvn)[j]);
 			}
 
 			break;
@@ -683,7 +704,7 @@ void cmdline_synth(void (*print)(const char* str, ...), int n, const struct opt_
 		case OPT_OUTFILE:
 		case OPT_INOUTFILE:
 
-			(*print)("\"%s\"", *(const char**)opts[i].ptr);
+			ctr += (*print)(len - ctr, buf + ctr, "\"%s\"", *(const char**)opts[i].ptr);
 			break;
 
 		case OPT_SUBOPT:
@@ -691,7 +712,7 @@ void cmdline_synth(void (*print)(const char* str, ...), int n, const struct opt_
 			{
 				// FIXME: this is not quite right
 				struct opt_subopt_s *osu = opts[i].ptr;
-				cmdline_synth(print, osu->n, osu->opts);
+				ctr += cmdline_synth(print, len, buf, osu->n, osu->opts);
 			}
 			break;
 
@@ -701,9 +722,11 @@ void cmdline_synth(void (*print)(const char* str, ...), int n, const struct opt_
 			break;
 
 		default:
-			(*print)("<unknown>");
+			ctr += (*print)(len - ctr, buf + ctr, "<unknown>");
 		}
 	}
+
+	return ctr;
 }
 
 static void check_options(int n, const struct opt_s opts[n ?: 1])
@@ -1339,19 +1362,6 @@ static void check_args(int N, const struct arg_s args[N])
 		error("Cannot have more than one tuple argument!\n");
 }
 
-
-
-static int xsnprintf(int size, char buf[static size], const char* fmt, ...)
-{
-	va_list ap;
-	va_start(ap, fmt);
-
-	int rv = vsnprintf((size > 0) ? buf : NULL, (size_t)size, fmt, ap);
-
-	va_end(ap);
-
-	return rv;
-}
 
 static int add_arg(int bufsize, char buf[static bufsize], const char* argname, bool required, bool file)
 {
