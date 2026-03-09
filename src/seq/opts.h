@@ -32,8 +32,11 @@ struct seq_opts {
 extern const struct seq_opts seq_opts_defaults;
 
 
-extern void seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m],
-			const char* help_str, struct seq_config* conf, struct seq_opts* seq_opts);
+extern int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m],
+			const char* help_str, struct seq_config* conf, struct seq_opts* seq_opts,
+			int len, char* buf);
+
+extern int seq_cmdline_print(int len, char* buf, const struct seq_config* conf, struct seq_opts* seq_opts);
 
 
 extern int read_config_from_str(struct seq_config* seq, int N, const char* buffer_in);

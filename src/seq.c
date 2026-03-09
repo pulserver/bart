@@ -61,7 +61,7 @@ int main_seq(int argc, char* argv[argc])
 	struct seq_opts seq_opts = seq_opts_defaults;
 
 	seq_cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, 
-		seq->conf, &seq_opts);
+		seq->conf, &seq_opts, 0, NULL);
 
 
 	if (seq_opts.custom_params_long[0] > 0)

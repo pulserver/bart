@@ -39,8 +39,9 @@ const struct seq_opts seq_opts_defaults = {
 
 
 
-void seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m],
-			const char* help_str, struct seq_config* conf, struct seq_opts* seq_opts)
+int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m],
+			const char* help_str, struct seq_config* conf, struct seq_opts* seq_opts,
+			int len, char* buf)
 {
 
 	const struct opt_s opts[] = {
@@ -122,6 +123,11 @@ void seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[
 		OPTL_VECN(0, "LOOP", conf->loop_dims, "sequence loop dimensions"),
 	};
 
+
+	if (0 != len)
+		return cmdline_synth(NULL, len, buf, ARRAY_SIZE(opts), opts);
+
+
 	cmdline(argcp, argv, m, args, help_str, ARRAY_SIZE(opts), opts);
 
 
@@ -153,10 +159,22 @@ void seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[
 	case GRAD_FAST:
 		break;
 	}
+
+	return 0;
 }
 
-static int error_catcher2(void fun(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m], const char* help_str, struct seq_config* conf, struct seq_opts* seq_opts),
-					int* argcp, char* argv[*argcp], int m, const struct arg_s args[m], const char* help_str, struct seq_config* conf, struct seq_opts* seq_opts)
+int seq_cmdline_print(int len, char* buf, const struct seq_config* conf, struct seq_opts* seq_opts)
+{
+	struct seq_config conf2;
+	memcpy(&conf2, conf, sizeof(struct seq_config));
+
+	int argcp = 0; // UBSan
+	return seq_cmdline(&argcp, NULL, 0, NULL, NULL, &conf2, seq_opts, len, buf);
+}
+
+
+static int error_catcher2(int fun(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m], const char* help_str, struct seq_config* conf, struct seq_opts* seq_opts, int len, char* buf),
+					int* argcp, char* argv[*argcp], int m, const struct arg_s args[m], const char* help_str, struct seq_config* conf, struct seq_opts* seq_opts, int len, char* buf)
 {
 	int ret = -1;
 
@@ -164,7 +182,7 @@ static int error_catcher2(void fun(int* argcp, char* argv[*argcp], int m, const 
 
 	if (0 == setjmp(error_jumper.buf)) {
 
-		fun(argcp, argv, m, args, help_str, conf, seq_opts);
+		fun(argcp, argv, m, args, help_str, conf, seq_opts, len, buf);
 		ret = 0;
 	}
 
@@ -201,7 +219,7 @@ int read_config_from_str(struct seq_config* seq, int N, const char* buffer_in)
 
 	struct seq_opts seq_opts = seq_opts_defaults;
 
-	int a = error_catcher2(seq_cmdline, &i, argv, ARRAY_SIZE(args), args, help, seq, &seq_opts);
+	int a = error_catcher2(seq_cmdline, &i, argv, ARRAY_SIZE(args), args, help, seq, &seq_opts, 0, NULL);
 
 	free(buffer);	
 
