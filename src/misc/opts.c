@@ -543,8 +543,8 @@ void cmdline_synth(void (*print)(const char* str, ...), int n, const struct opt_
 
 		switch (opts[i].type) {
 
-		case OPT_FLOAT: (*print)("%f", *(float*)opts[i].ptr); break;
-		case OPT_DOUBLE: (*print)("%f", *(double*)opts[i].ptr); break;
+		case OPT_FLOAT: (*print)("%.2e", *(float*)opts[i].ptr); break;
+		case OPT_DOUBLE: (*print)("%.2e", *(double*)opts[i].ptr); break;
 		case OPT_INT:
 		case OPT_PINT: (*print)("%d", *(int*)opts[i].ptr); break;
 		case OPT_UINT: (*print)("%u", *(unsigned int*)opts[i].ptr); break;
@@ -557,7 +557,7 @@ void cmdline_synth(void (*print)(const char* str, ...), int n, const struct opt_
 			{
 				complex float* cfl = opts[i].ptr;
 
-				(*print)("%f+%fi", crealf(*cfl), cimagf(*cfl));
+				(*print)("%.2e+%.2ei", crealf(*cfl), cimagf(*cfl));
 			}
 			break;
 
@@ -639,7 +639,7 @@ void cmdline_synth(void (*print)(const char* str, ...), int n, const struct opt_
 
 				if (j > 0)
 					(*print)(":");
-				(*print)("%f", (*fvn)[j]);
+				(*print)("%.2e", (*fvn)[j]);
 			}
 
 			break;
@@ -672,7 +672,7 @@ void cmdline_synth(void (*print)(const char* str, ...), int n, const struct opt_
 
 				if (j > 0)
 					(*print)(":");
-				(*print)("%f", (*dvn)[j]);
+				(*print)("%.2e", (*dvn)[j]);
 			}
 
 			break;
