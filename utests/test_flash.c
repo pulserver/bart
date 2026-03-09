@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdio.h>
 
 #include "num/multind.h"
 
@@ -34,6 +35,43 @@ static bool test_command(void)
 }
 
 UT_REGISTER_TEST(test_command);
+
+static bool test_print_command(void)
+{
+	struct seq_config conf = seq_config_defaults;
+
+	const bool print_debug = false;
+	char config_info_tmp[7852];
+
+	if (print_debug) {
+
+		seq_print_info_config(7852, config_info_tmp, &conf);
+		printf("%s\n", config_info_tmp);
+	}
+
+	struct seq_opts seq_opts = seq_opts_defaults;
+
+	char buf[5000];
+	int ctr = seq_cmdline_print(5000, buf, &conf, &seq_opts);
+
+	if (0 > ctr)
+		return false;
+
+	struct seq_config conf_ref = seq_config_defaults;
+
+	if (0 != memcmp(&conf, &conf_ref, sizeof(struct seq_config)))
+		return false;
+
+	if (print_debug) {
+
+		seq_print_info_config(7852, config_info_tmp, &conf);
+		printf("%s\n", config_info_tmp);
+	}
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_print_command);
 
 
 static bool test_print(void)
