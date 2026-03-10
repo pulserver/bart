@@ -132,6 +132,23 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 		OPTL_SELECT(0, "trigger", enum trigger_type, &conf->trigger.type, SEQ_TRIGGER_ECG, "Triggering (ECG)"),
 		OPTL_DOUBLE(0, "trigger-delay", &conf->trigger.delay_time, "trigger.delay_time", "Trigger delay"),
 
+		//CEST
+		OPTL_SELECT(0, "cest-gauss", enum cest_saturation_type, &conf->cest.sat_type, SEQ_CEST_GAUSS, "CEST with gaussian sat. pulses"),
+		OPTL_SELECT(0, "cest-oc", enum cest_saturation_type, &conf->cest.sat_type, SEQ_CEST_OC, "CEST with optimal control sat. pulses"),
+		OPTL_LONG(0, "cest-sat-pulses", &conf->cest.sat_pulses, "saturation pulses", "Saturation pulses"),
+		OPTL_DOUBLE(0, "cest-sat-pause", &conf->cest.sat_pulse_pause, "sat pulse pause", "Pause between saturation pulses"),
+
+		OPTL_DOUBLE(0, "gauss-dur", &conf->cest.gauss_pulse_duration, "gauss duration", "Gauss saturation pulse duration"),
+		OPTL_DOUBLE(0, "gauss-fa", &conf->cest.gauss_pulse_fa, "gauss fa", "Gauss saturation pulse flip anlge"),
+		OPTL_DOUBLE(0, "oc-scale", &conf->cest.oc_pulse_b1_scaling, "oc scaling", "OC saturation pulse scaling"),
+
+		OPTL_SELECT(0, "cest-offsets-pha", enum cest_offset_type, &conf->cest.offset_type, SEQ_CEST_OFFSET_PHANTOM, "CEST with custom offsets for phantom (default: equidistant)"),
+		OPTL_SELECT(0, "cest-offsets-invivo", enum cest_offset_type, &conf->cest.offset_type, SEQ_CEST_OFFSET_INVIVO, "CEST with custom offsets for invivo (default: equidistant)"),
+		OPTL_DOUBLE(0, "cest-offset-first", &conf->cest.offset_first, "cest offset first", "CEST offset first [ppm]"),
+		OPTL_DOUBLE(0, "cest-offset-last", &conf->cest.offset_last, "cest offset last", "CEST offset last [ppm]"),
+		OPTL_DOUBLE(0, "cest-offset-increment", &conf->cest.offset_increment, "cest offset increment", "CEST offset increment [ppm]"),
+		OPTL_DOUBLE(0, "cest-offset-pause", &conf->cest.offset_pause, "cest offset pause", "CEST offset pause"),
+
 		OPTL_SET(0, "support", &seq_opts->support, "save support points of gradient"),
 
 		OPTL_VECN(0, "CUSTOM_LONG", seq_opts->custom_params_long, "custom long parameters"),
