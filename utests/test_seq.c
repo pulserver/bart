@@ -29,12 +29,15 @@ static bool test_commands_sequence(void)
 	bart_seq_defaults(seq);
 
 	static char seq_cmd[128];
-	snprintf(seq_cmd, 128, "bart seq --pe_mode 1 --contrast 2 --tiny 13");
+	snprintf(seq_cmd, 128, "bart seq --pe_mode 1 --contrast 2 --tiny 13 --asl_label_slice 3");
 
 	if (!seq_config_from_string(seq->conf, 128, seq_cmd))
 		return false;
 
 	if ((1 != seq->conf->enc.pe_mode) || (2 != seq->conf->phys.contrast) || (13 != seq->conf->enc.tiny))
+		return false;
+
+	if (3 != seq->conf->asl.label_slice_index)
 		return false;
 
 	bart_seq_free(seq);
