@@ -167,6 +167,12 @@ long flash_ex_calls(const struct seq_config* seq)
 	if (SEQ_ORDER_SEQ_MS == seq->enc.order)
 		incomplete_raga_spks *= dims[SLICE_DIM];
 
+	if (SEQ_ASL_NONE != seq->asl.label_type) {
+
+		dims[AVG_DIM] = dims[AVG_DIM] * 2 + 1;
+		dims[BATCH_DIM] = 1;
+	}
+
 	return md_calc_size(DIMS, dims) - incomplete_raga_spks
 		+ dims[PHS2_DIM] * dims[SLICE_DIM] * seq->magn.prep_scans;
 }
