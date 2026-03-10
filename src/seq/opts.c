@@ -25,6 +25,7 @@ const struct seq_opts seq_opts_defaults = {
 	.rel_shift = { },
 	.raga_full_frames = -1,
 	.dist = 1.,
+	.label_slice_shift = { },
 
 	.gradient_mode = GRAD_FAST,
 
@@ -53,6 +54,7 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 		OPT_DOVEC3('s', &conf->geom.shift[0], "RO:PE:SL", "FOV shift"),
 		OPT_DOVEC3('S', &seq_opts->rel_shift, "RO:PE:SL", "relative FOV shift"),
 		OPTL_FLOAT(0, "dist", &seq_opts->dist, "dist", "slice distance factor [1 / slice_thickness] (default: 1.)"),
+		OPT_DOVEC3('u', &seq_opts->label_slice_shift, "RO:PE:SL", "FOV shift of ASL label slice"),
 
 		// contrast mode
 		OPTL_UINT(0, "contrast", &conf->phys.contrast, "contrast", "(Spoiling [RF_RANDOM,RF_SPOILED,BALANCED,GSTF_RANDOM,GSTF_SPOILED])"),

@@ -17,6 +17,7 @@ struct seq_opts {
 	double rel_shift[3];
 	long raga_full_frames;
 	float dist;
+	double label_slice_shift[3];
 
 	enum gradient_mode gradient_mode;
 
