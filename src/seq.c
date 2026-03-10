@@ -58,6 +58,7 @@ int main_seq(int argc, char* argv[argc])
 	struct bart_seq* seq = bart_seq_alloc("");
 	bart_seq_defaults(seq);
 
+	long stat_counter[4] = { }; // all, all_empty, max_empty, temp
 
 	struct seq_opts seq_opts = seq_opts_defaults;
 
@@ -250,9 +251,20 @@ int main_seq(int argc, char* argv[argc])
 
 		E = seq_block(seq->N, seq->event, seq->state, seq->conf);
 
-		if (0 < E)
-			debug_printf(DP_DEBUG2, "block mode: %d ; E: %d \n", seq->state->mode, E);
+		stat_counter[0]++;
 
+		if (0 < E) {
+
+			stat_counter[2] = MAX(stat_counter[2], stat_counter[3]);
+			stat_counter[3] = 0;
+			debug_printf(DP_DEBUG2, "block mode: %d ; E: %d \n", seq->state->mode, E);
+		}
+
+		if (0 == E) {
+
+			stat_counter[1]++;
+			stat_counter[3]++;
+		}
 
 		if (0 > E)
 			error("Sequence execution failed! - check seq_config, %s [ %d ] \n", error_string(E), E);
@@ -404,6 +416,10 @@ debug_print_events:
 			debug_printf(DP_INFO, "Pulse statistics: pulse_id: %d, calls: %ld\n",
 				i, pulse_calls[i]);
 	}
+
+	if (seq_opts.stats)
+		debug_printf(DP_INFO, "Block statistics: all: %ld \t empty: %ld (%.1f%%) \t max empty: %ld\n",
+				stat_counter[0], stat_counter[1], 100. * stat_counter[1] / stat_counter[0], stat_counter[2]);
 
 	unmap_cfl(DIMS, mdims, out_grad);
 	unmap_cfl(DIMS, mdims, out_mom);
