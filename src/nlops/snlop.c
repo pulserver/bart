@@ -119,7 +119,7 @@ static int get_arg_name_count(const char* name)
 		PTR_ALLOC(struct reg_arg_name, n);
 
 		n->counter = 0;
-		n->name = strdup(name);
+		n->name = xstrdup(name);
 
 		list_append(reg_arg_names, PTR_PASS(n));
 
@@ -139,7 +139,7 @@ void arg_set_name(arg_t arg, const char* name)
 
 	xfree(arg->name);
 
-	arg->name = strdup(name);
+	arg->name = xstrdup(name);
 }
 
 void arg_set_name_F(arg_t arg, const char* name)
@@ -482,7 +482,7 @@ arg_t snlop_input(int N, const long dims[N], const char* name)
 
 	snlop->x = nlop_from_linop_F(linop_identity_create(N, dims));
 
-	arg->name = strdup(name);
+	arg->name = xstrdup(name);
 
 	assert(snlop_check(snlop));
 

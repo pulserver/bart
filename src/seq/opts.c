@@ -100,7 +100,7 @@ int read_config_from_str(struct seq_config* seq, int N, const char* buffer_in)
 		OPTL_VECN(0, "LOOP", seq->loop_dims, "sequence loop dimensions"),
 	};
 
-	char* buffer = strdup(buffer_in);
+	char* buffer = xstrdup(buffer_in);
 
 	char *token = strtok(buffer, " \t");
 

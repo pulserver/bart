@@ -584,8 +584,8 @@ void egraph_unset_active(list_t graph)
 
 void export_egraph_dot(const char* filename, list_t graph)
 {
-	const char* nodes = strdup("");
-	const char* edges = strdup("");
+	const char* nodes = xstrdup("");
+	const char* edges = xstrdup("");
 	bool sort = true;
 
 	const char* last_node = NULL;

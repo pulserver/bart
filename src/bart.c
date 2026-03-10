@@ -400,7 +400,7 @@ static int batch_wrapper(main_fun_t* dispatch_func, int argc, char *argv[argc], 
 
 	for (int m = 0; m < argc; m++) {
 
-		thread_argv[m] = strdup(argv[m]);
+		thread_argv[m] = xstrdup(argv[m]);
 		thread_argv_save[m] = thread_argv[m];
 	}
 

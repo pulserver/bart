@@ -980,12 +980,10 @@ bool opt_cfl(void* ptr, char /*c*/, const char* optarg)
 
 bool opt_string(void* ptr, char /*c*/, const char* optarg)
 {
-	*(const char**)ptr = strdup(optarg);
+	*(const char**)ptr = xstrdup(optarg);
 
 #pragma omp critical (bart_options_str_list)
 	list_append(str_list, *(char**)ptr);
-
-	assert(NULL != ptr);
 
 	return false;
 }
@@ -993,7 +991,7 @@ bool opt_string(void* ptr, char /*c*/, const char* optarg)
 
 static bool opt_file(void* ptr, char /*c*/, const char* optarg, bool out, bool in)
 {
-	*(const char**)ptr = strdup(optarg);
+	*(const char**)ptr = xstrdup(optarg);
 
 #pragma omp critical (bart_options_str_list)
 	list_append(str_list, *(char**)ptr);
@@ -1266,7 +1264,7 @@ bool opt_subopt(void* _ptr, char /*c*/, const char* optarg)
 	tokens[ptr->n][1] = NULL;
 
 
-	char* tmpoptionp = strdup(optarg);
+	char* tmpoptionp = xstrdup(optarg);
 	char* option = tmpoptionp;
 	char* value = NULL;
 

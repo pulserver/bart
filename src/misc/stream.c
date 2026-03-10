@@ -343,7 +343,7 @@ stream_t stream_create(int N, const long dims[N], int pipefd, bool input, bool b
 	// msync only makes sense for output streams that are not binary.
 	assert(!msync || !(input || binary));
 
-	char* fifo_name = name ? (strcmp("-", name) ? strdup(name) : NULL) : NULL;
+	char* fifo_name = name ? (strcmp("-", name) ? xstrdup(name) : NULL) : NULL;
 
 
 	PTR_ALLOC(struct stream, ret);

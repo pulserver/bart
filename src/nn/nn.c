@@ -170,7 +170,7 @@ void nn_clone_arg_i_from_i(nn_t nn1, int i1, nn_t nn2, int i2)
 		xfree(nn1->in_names[i1]);
 
 	if (NULL != nn2->in_names[i2])
-		nn1->in_names[i1] = strdup(nn2->in_names[i2]);
+		nn1->in_names[i1] = xstrdup(nn2->in_names[i2]);
 	else
 		nn1->in_names[i1] = NULL;
 
@@ -190,7 +190,7 @@ void nn_clone_arg_o_from_o(nn_t nn1, int o1, nn_t nn2, int o2)
 		xfree(nn1->out_names[o1]);
 
 	if (NULL != nn2->out_names[o2])
-		nn1->out_names[o1] = strdup(nn2->out_names[o2]);
+		nn1->out_names[o1] = xstrdup(nn2->out_names[o2]);
 	else
 		nn1->out_names[o1] = NULL;
 
@@ -346,7 +346,7 @@ const char* nn_get_in_name_from_arg_index(nn_t op, int i, bool clone)
 	if (NULL == op->in_names[i])
 		return NULL;
 
-	return clone ? strdup(op->in_names[i]) : op->in_names[i];
+	return clone ? xstrdup(op->in_names[i]) : op->in_names[i];
 }
 
 const char* nn_get_out_name_from_arg_index(nn_t op, int o, bool clone)
@@ -356,7 +356,7 @@ const char* nn_get_out_name_from_arg_index(nn_t op, int o, bool clone)
 	if (NULL == op->out_names[o])
 		return NULL;
 
-	return clone ? strdup(op->out_names[o]) : op->out_names[o];
+	return clone ? xstrdup(op->out_names[o]) : op->out_names[o];
 }
 
 int nn_get_in_index_from_arg_index(nn_t op, int i)
@@ -598,7 +598,7 @@ void nn_get_in_args_names(nn_t op, int II, const char* names[II], bool copy)
 	assert(II == nn_get_nr_in_args(op));
 
 	for (int i = 0; i < II; i++)
-		names[i] = (NULL != op->in_names[i]) && copy ? strdup(op->in_names[i]) : op->in_names[i];
+		names[i] = (NULL != op->in_names[i]) && copy ? xstrdup(op->in_names[i]) : op->in_names[i];
 }
 
 void nn_get_out_args_names(nn_t op, int OO, const char* names[OO], bool copy)
@@ -606,7 +606,7 @@ void nn_get_out_args_names(nn_t op, int OO, const char* names[OO], bool copy)
 	assert(OO == nn_get_nr_out_args(op));
 
 	for (int i = 0; i < OO; i++)
-		names[i] = (NULL != op->out_names[i]) && copy ? strdup(op->out_names[i]) : op->out_names[i];
+		names[i] = (NULL != op->out_names[i]) && copy ? xstrdup(op->out_names[i]) : op->out_names[i];
 }
 
 

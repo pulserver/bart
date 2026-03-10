@@ -46,7 +46,7 @@ static const struct named_tensor_s* named_tensor_create(int N, const long dims[N
 	md_copy_dims(N, result->dims, dims);
 
 	result->data = data;
-	result->name = strdup(name);
+	result->name = xstrdup(name);
 
 	return result;
 }

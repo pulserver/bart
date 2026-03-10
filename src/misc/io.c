@@ -199,7 +199,7 @@ static void io_register(const char* name, bool output, bool input, bool open)
 
 		PTR_ALLOC(struct iofile_s, ion);
 
-		ion->name = strdup(name);
+		ion->name = xstrdup(name);
 		ion->output = output;
 		ion->input = input;
 		ion->open = open;
@@ -604,7 +604,7 @@ int parse_cfl_header(long N, const char header[N + 1], char** file, char** cmd, 
 
 			pos += delta;
 
-			*file = strdup(filename);
+			*file = xstrdup(filename);
 
 		} else if (NULL != cmd && 0 == strcmp(keyword, "Command")) {
 
@@ -1108,7 +1108,7 @@ static void toolgraph_add_input(const char* node, const char* file)
 	if (MAX_INPUT_NODES == i)
 		error("BART tool graph: Too many input files\n");
 
-	input_nodes[i] = strdup(node);
+	input_nodes[i] = xstrdup(node);
 
 #pragma omp critical(toolgraph_fd)
 	xdprintf(toolgraph_fd, "%s:%s ", node, file);
@@ -1132,7 +1132,7 @@ static int toolgraph_create_node_fd(const char* tool_name, int dirfd, char** nod
 	if (-1 == fd)
 		error("graph_generate_name.\n");
 
-	*node = strdup(name);
+	*node = xstrdup(name);
 
 	return fd;
 }

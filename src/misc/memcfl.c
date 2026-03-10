@@ -36,7 +36,7 @@ void memcfl_register(const char* name, int D, const long dims[D], complex float*
 {
 	PTR_ALLOC(struct memcfl, mem);
 
-	mem->name = strdup(name);
+	mem->name = xstrdup(name);
 	mem->D = D;
 	mem->next = memcfl_list;
 

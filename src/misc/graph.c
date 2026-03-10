@@ -61,7 +61,7 @@ void node_free(node_t x)
 
 void node_init(struct node_s* x, int N_vertices, vertex_is_out_f is_output, const char* name, bool external, graph_t subgraph)
 {
-	x->name = (NULL != name) ? strdup(name) : NULL;
+	x->name = (NULL != name) ? xstrdup(name) : NULL;
 
 	x->N_vertices = N_vertices;
 	x->edges = *TYPE_ALLOC(list_t[N_vertices]);

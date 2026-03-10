@@ -817,7 +817,7 @@ static nn_t nlinvnet_train_loss_create(const struct nlinvnet_s* nlinvnet, int Nb
 
 	nn_t loss = train_loss_create(nlinvnet->train_loss, N, out_dims);
 
-	/*const*/ char* loss_name = strdup(nn_get_out_name_from_arg_index(loss, 0, NULL));
+	/*const*/ char* loss_name = xstrdup(nn_get_out_name_from_arg_index(loss, 0, NULL));
 
 	if (!loss_name)
 		error("memory out");

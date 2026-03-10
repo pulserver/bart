@@ -74,6 +74,17 @@ void* xrealloc(void *p, size_t s)
 }
 
 
+char* xstrdup(const char* str)
+{
+	char* s = strdup(str);
+
+	if (NULL == s)
+		error("Could not allocate memory.\n");
+
+	return s;
+}
+
+
 void xfree(const void* x)
 {
 	free((void*)x);

@@ -46,6 +46,7 @@
 
 extern void* xmalloc(size_t s) alloc_size(1);
 extern void* xrealloc(void *, size_t s) alloc_size(2);
+extern char* xstrdup(const char* str);
 extern void xfree(const void*);
 extern void warn_nonnull_ptr(void*);
 
