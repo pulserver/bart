@@ -495,6 +495,9 @@ int cmdline_synth(int (*print)(int len, char buf[static len], const char* str, .
 
 	for (int i = 0; i < n; i++) {
 
+		if (!show_option_p(opts[i]))
+			continue;
+
 		/* Decide whether option is present. */
 		switch (opts[i].type) {
 
