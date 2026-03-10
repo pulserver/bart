@@ -151,6 +151,11 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 		OPTL_DOUBLE(0, "cest-offset-increment", &conf->cest.offset_increment, "cest offset increment", "CEST offset increment [ppm]"),
 		OPTL_DOUBLE(0, "cest-offset-pause", &conf->cest.offset_pause, "cest offset pause", "CEST offset pause"),
 
+		// ASL
+		OPTL_UINT(0, "asl", &conf->asl.label_type, "asl", "ASL mode (0: NONE 1: PCASL) (default: NONE)"),
+		OPTL_DOUBLE(0, "LD", &conf->asl.ld, "LD", "PCASL labeling duration"),
+		OPTL_DOUBLE(0, "PLD", &conf->asl.pld, "PLD", "Post-labeling delay"),
+
 		OPTL_SET(0, "support", &seq_opts->support, "save support points of gradient"),
 
 		OPTL_VECN(0, "CUSTOM_LONG", seq_opts->custom_params_long, "custom long parameters"),
