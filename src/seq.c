@@ -152,6 +152,15 @@ int main_seq(int argc, char* argv[argc])
 		debug_printf(DP_INFO, "\n");
 	}
 
+	if (SEQ_ASL_NONE != seq->conf->asl.label_type) {
+		
+		seq->conf->loop_dims[SLICE_DIM] = seq->conf->loop_dims[SLICE_DIM] + 1;  // add label slice
+		seq->conf->asl.label_slice_index = seq->conf->loop_dims[SLICE_DIM] - 1; // set last slice as label slice
+		seq->conf->geom.shift[seq->conf->asl.label_slice_index][2] = seq_opts.label_slice_shift[2];
+
+		debug_printf(DP_INFO, "ASL label slice shift:\n\t%d %f \t\n", 0, seq->conf->geom.shift[seq->conf->asl.label_slice_index][2]);
+	}
+
 	if ((NULL != seq_opts.raga_file) && seq_opts.chrono)
 		error("RAGA indices only for raga pe mode and non chronologic mode\n");
 
