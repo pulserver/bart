@@ -54,10 +54,12 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 		OPTL_FLOAT(0, "dist", &seq_opts->dist, "dist", "slice distance factor [1 / slice_thickness] (default: 1.)"),
 
 		// contrast mode
-		OPTL_UINT(0, "contrast", &conf->phys.contrast, "contrast", "Spoiling [RF_RANDOM,RF_SPOILED,BALANCED,GSTF_RANDOM,GSTF_SPOILED]"),
+		OPTL_UINT(0, "contrast", &conf->phys.contrast, "contrast", "(Spoiling [RF_RANDOM,RF_SPOILED,BALANCED,GSTF_RANDOM,GSTF_SPOILED])"),
 
 		OPTL_SELECT(0, "no-spoiling", enum flash_contrast, &conf->phys.contrast,
 				SEQ_CONTRAST_NO_SPOILING, "spoiling off (default: rf random)"),
+		OPTL_SELECT(0, "random", enum flash_contrast, &conf->phys.contrast,
+				SEQ_CONTRAST_RF_RANDOM, "RF_RANDOM (inc: random, no gradient) (default)"),
 		OPTL_SELECT(0, "spoiled", enum flash_contrast, &conf->phys.contrast,
 				SEQ_CONTRAST_RF_SPOILED, "RF_SPOILED (inc: 50 deg, gradient on) (default: rf random)"),
 
@@ -79,7 +81,7 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 		OPTL_DOUBLE(0, "os", &conf->phys.os, "os", "Oversampling factor"),
 
 		// encoding
-		OPTL_UINT(0, "pe_mode", &conf->enc.pe_mode, "pe_mode", "Phase-encoding mode"),
+		OPTL_UINT(0, "pe_mode", &conf->enc.pe_mode, "pe_mode", "(Phase-encoding mode)"),
 		OPTL_SELECT(0, "turn", enum pe_mode, &conf->enc.pe_mode, SEQ_PEMODE_TURN, "turn-based PE (default: RAGA)"),
 		OPTL_SELECT(0, "mems", enum pe_mode, &conf->enc.pe_mode, SEQ_PEMODE_MEMS_HYB, "multi-echo/multi-spoke PE (default: RAGA)"),
 		OPTL_SELECT(0, "raga", enum pe_mode, &conf->enc.pe_mode, SEQ_PEMODE_RAGA, "RAGA PE"),
