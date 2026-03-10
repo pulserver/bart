@@ -102,6 +102,7 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 		OPTL_LONG('f', "raga_full_frames", &seq_opts->raga_full_frames, "raga_full_frames", "Number of full frames (only RAGA)"),
 		OPTL_LONG('m', "slices", &conf->loop_dims[SLICE_DIM], "slices", "Number of slices of multiband factor (SMS)"),
 		OPTL_LONG('i', "inversions", &conf->loop_dims[BATCH_DIM], "inversions", "Number of inversions"),
+		OPTL_LONG('a', "averages", &conf->loop_dims[AVG_DIM], "averages", "Number of averages"),
 
 		// order
 		OPTL_SELECT(0, "sequential-multislice", enum seq_order, &conf->enc.order, SEQ_ORDER_SEQ_MS, "seq_order: sequential multislice (default: avg outer)"),
