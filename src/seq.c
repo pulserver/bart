@@ -135,12 +135,13 @@ int main_seq(int argc, char* argv[argc])
 
 		float shift[total_slices][3];
 		memset(shift, 0, sizeof shift);
+		float init_shift = seq->conf->geom.shift[0][2];
 
 		for (int i = 0; i < total_slices; i++) {
 
 			shift[i][0] = seq->conf->geom.shift[0][0];
 			shift[i][1] = seq->conf->geom.shift[0][1];
-			shift[i][2] = (i - 0.5 * (total_slices - 1)) * seq_opts.dist * seq->conf->geom.slice_thickness;
+			shift[i][2] = init_shift + (i - 0.5 * (total_slices - 1)) * seq_opts.dist * seq->conf->geom.slice_thickness;
 		}
 
 		seq_set_fov_pos(total_slices, 3, &shift[0][0], seq->conf);
