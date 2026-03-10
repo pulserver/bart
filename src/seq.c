@@ -264,7 +264,7 @@ int main_seq(int argc, char* argv[argc])
 		if (SEQ_BLOCK_KERNEL_IMAGE != seq->state->mode)
 			goto debug_print_events;
 
-		debug_printf(DP_DEBUG1, "end of last event: %.8f \t end of calc: %.8f\n",
+		debug_printf(DP_DEBUG2, "end of last event: %.8f \t end of calc: %.8f\n",
 				events_end_time(E, seq->event, 1, 0), seq_opts.samples * seq_opts.dt);
 
 		if (seq_opts.support)
