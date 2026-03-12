@@ -7,6 +7,7 @@
  * Authors:
  * 2014-2017	Jon Tamir
  * 2016-2019	Martin Uecker
+ * 2026		Tobias Trimmal
  */
 
 #include <complex.h>
@@ -337,6 +338,37 @@ const struct operator_p_s* prox_l2ball_create(int N, const long dims[N], float e
 {
 	return prox_l2ball2_create(N, 0, dims, eps, y);
 }
+
+/**
+ * Proximal function for f(z) = 0 if y = z, else +inf
+ * Solution is y
+ */
+
+static void prox_indicator_apply(const operator_data_t* _data, float /*mu*/, complex float* dst, const complex float* /*src*/)
+{
+	auto d = CAST_DOWN(prox_l2ball_data, _data);
+
+	if (NULL != d->y)
+		md_copy(d->N, d->dims, dst, multiplace_read(d->y, dst), CFL_SIZE);
+	else
+		md_clear(d->N, d->dims, dst, CFL_SIZE);
+}
+
+const struct operator_p_s* prox_indicator_create(int N, const long dims[N], const complex float* y)
+{
+	PTR_ALLOC(struct prox_l2ball_data, pdata);
+	SET_TYPEID(prox_l2ball_data, pdata);
+
+	pdata->y = (NULL == y) ? NULL : multiplace_move(N, dims, CFL_SIZE, y);
+	pdata->eps = 0;
+	pdata->N = N;
+	pdata->flags = ~0UL;
+	pdata->dims = ARR_CLONE(long[N], dims);
+
+
+	return operator_p_create(N, dims, N, dims, CAST_UP(PTR_PASS(pdata)), prox_indicator_apply, prox_l2ball_del);
+}
+
 
 
 
