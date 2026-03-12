@@ -58,8 +58,10 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 
 		OPTL_SELECT(0, "no-spoiling", enum flash_contrast, &conf->phys.contrast,
 				SEQ_CONTRAST_NO_SPOILING, "spoiling off (default: rf random)"),
+		OPTL_SELECT(0, "flash", enum flash_contrast, &conf->phys.contrast,
+				SEQ_CONTRAST_RF_RANDOM, "FLASH (RF_RANDOM: random phase, no gradient spoiling) (default)"),
 		OPTL_SELECT(0, "random", enum flash_contrast, &conf->phys.contrast,
-				SEQ_CONTRAST_RF_RANDOM, "RF_RANDOM (inc: random, no gradient) (default)"),
+				SEQ_CONTRAST_RF_RANDOM, "(RF_RANDOM (phase: random, no gradient) (default))"),
 		OPTL_SELECT(0, "spoiled", enum flash_contrast, &conf->phys.contrast,
 				SEQ_CONTRAST_RF_SPOILED, "RF_SPOILED (inc: 50 deg, gradient on) (default: rf random)"),
 
