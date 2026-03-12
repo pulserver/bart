@@ -152,6 +152,28 @@ tests/test-calc-zacosr: ones scale calc nrmse
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
+tests/test-calc-2args: calc ones noise fmac nrmse
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)						;\
+	$(TOOLDIR)/ones 2 10 1 o1.ra								;\
+	$(TOOLDIR)/ones 2 1 10 o2.ra								;\
+	$(TOOLDIR)/noise o1.ra o1.ra								;\
+	$(TOOLDIR)/noise o2.ra o2.ra								;\
+	$(TOOLDIR)/calc zmul o1.ra o2.ra o3.ra							;\
+	$(TOOLDIR)/fmac o1.ra o2.ra o4.ra							;\
+	$(TOOLDIR)/nrmse -t 0.000001 o3.ra o4.ra						;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
+tests/test-calc-2args-scalar: calc ones noise scale nrmse
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)						;\
+	$(TOOLDIR)/ones 2 10 1 o1.ra								;\
+	$(TOOLDIR)/noise o1.ra o1.ra								;\
+	$(TOOLDIR)/calc -v 3.i zmul o1.ra o2.ra							;\
+	$(TOOLDIR)/scale 3.i o1.ra o3.ra							;\
+	$(TOOLDIR)/nrmse -t 0.000001 o2.ra o3.ra						;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
 TESTS += tests/test-calc-zsqrt tests/test-calc-zconj
 TESTS += tests/test-calc-zreal tests/test-calc-zimag tests/test-calc-zarg tests/test-calc-zabs
 TESTS += tests/test-calc-zphsr
@@ -159,3 +181,4 @@ TESTS += tests/test-calc-zlog tests/test-calc-zexp
 TESTS += tests/test-calc-zsin tests/test-calc-zcos
 TESTS += tests/test-calc-zsinh tests/test-calc-zcosh
 TESTS += tests/test-calc-zatanr tests/test-calc-zacosr
+TESTS += tests/test-calc-2args tests/test-calc-2args-scalar
