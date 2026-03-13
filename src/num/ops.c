@@ -1133,7 +1133,7 @@ static const struct graph_s* copy_wrapper_graph_create(const struct operator_s* 
 	return result;
 }
 
-static const struct operator_s* operator_copy_wrapper_generic(int N, const long* strs[N], enum COPY_LOCATION loc[N], const struct operator_s* op, int device, bool copy_output)
+static const struct operator_s* operator_copy_wrapper_generic(int N, const long* strs[N], enum COPY_LOCATION loc[N], const struct operator_s* op, int device, bool copy_output, bool graph)
 {
 	assert(N == operator_nr_args(op));
 
@@ -1150,7 +1150,7 @@ static const struct operator_s* operator_copy_wrapper_generic(int N, const long*
 		for (int i = 0; i < N; i++)
 			loc2[i] = (CL_SAMEPLACE == data->loc[i]) ? loc[i] : data->loc[i];
 
-		return operator_copy_wrapper_generic(N, data->strs, loc2, data->op, device, data->copy_output);
+		return operator_copy_wrapper_generic(N, data->strs, loc2, data->op, device, data->copy_output, true);
 	}
 
 	PTR_ALLOC(struct copy_data_s, data);
@@ -1190,7 +1190,7 @@ static const struct operator_s* operator_copy_wrapper_generic(int N, const long*
 		data->loc[i] = loc[i];
 	}
 
-	return operator_generic_create2(N, op->io_flags, D, dims, *strs2, CAST_UP(PTR_PASS(data)), copy_fun, copy_del, copy_wrapper_graph_create);
+	return operator_generic_create2(N, op->io_flags, D, dims, *strs2, CAST_UP(PTR_PASS(data)), copy_fun, copy_del, graph ? copy_wrapper_graph_create : NULL);
 }
 
 const struct operator_s* operator_sameplace_wrapper(const struct operator_s* op, const void* ref)
@@ -1222,14 +1222,17 @@ const struct operator_s* operator_nograph_wrapper(const struct operator_s* op)
 
 	const long* strs[N];
 
+	enum COPY_LOCATION loc[N];
+
 	for (int i = 0; i < N; i++) {
 
 		auto dom = operator_arg_domain(op, i);
 		assert(md_check_equal_dims(dom->N, MD_STRIDES(dom->N, dom->dims, dom->size), dom->strs, ~0UL));
 		strs[i] = dom->strs;
+		loc[i] = CL_SAMEPLACE;
 	}
 
-	return operator_copy_wrapper_sameplace(N, strs, op, NULL);
+	return operator_copy_wrapper_generic(N, strs, loc, op, -2 /*=no change of device*/, false, false);
 }
 
 
@@ -1252,7 +1255,7 @@ const struct operator_s* operator_copy_wrapper_sameplace(int N, const long* strs
 
 	assert(N == operator_nr_args(op));
 
-	return operator_copy_wrapper_generic(N, strs, loc, op, -2 /*=no change of device*/, false);
+	return operator_copy_wrapper_generic(N, strs, loc, op, -2 /*=no change of device*/, false, true);
 }
 
 
@@ -1275,7 +1278,7 @@ const struct operator_s* operator_gpu_wrapper2(const struct operator_s* op, unsi
 		strs[i] = NULL;
 	}
 
-	return operator_copy_wrapper_generic(N, strs, loc, op, -1 /*select gpu by thread*/, false);
+	return operator_copy_wrapper_generic(N, strs, loc, op, -1 /*select gpu by thread*/, false, true);
 }
 
 
@@ -2159,7 +2162,10 @@ const struct operator_s* operator_stack2(int M, const int arg_list[M], const int
 		c = d;
 	}
 
-	return c;
+	auto e = operator_nograph_wrapper(c);
+	operator_free(c);
+
+	return e;
 }
 
 /**
