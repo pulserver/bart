@@ -1,10 +1,11 @@
 /* Copyright 2014-2015. The Regents of the University of California.
  * Copyright 2016-2019. Martin Uecker.
  * Copyright 2024-2026. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2026. Department of Radiology. Boston Children's Hospital.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  */
- 
+
 #include <complex.h>
 #include <assert.h>
 #include <strings.h>
@@ -162,7 +163,7 @@ static void grad_op_apply(const linop_data_t* _data, complex float* dst, const c
 
 	grad_op(data->grad, data->N, data->dims, data->d, data->flags, dst, src);
 }
-	
+
 static void grad_op_adjoint(const linop_data_t* _data, complex float* dst, const complex float* src)
 {
 	const auto data = CAST_DOWN(grad_s, _data);
@@ -238,3 +239,82 @@ struct linop_s* linop_grad_create(long N, const long dims[N], int d, unsigned lo
 	return linop_grad_backward_create(N, dims, d, flags);
 }
 
+
+
+struct laplace_s {
+
+	linop_data_t super;
+
+	int N;
+	long* dims;
+	unsigned long flags;
+	const float* scaling;
+};
+
+static DEF_TYPEID(laplace_s);
+
+static void laplace_apply(const linop_data_t* _data, complex float* dst, const complex float* src)
+{
+	const auto data = CAST_DOWN(laplace_s, _data);
+
+	float sumh = 0;
+
+	for (int i = 0; i < data->N; i++)
+		if (MD_IS_SET(data->flags, i))
+			sumh += data->scaling[i];
+
+	md_zsmul(data->N, data->dims, dst, src, -2. * sumh);
+
+	complex float* tmp = md_alloc_sameplace(data->N, data->dims, CFL_SIZE, dst);
+
+	for (int i = 0; i < data->N; i++) {
+
+		if (MD_IS_SET(data->flags, i)) {
+
+			long pos[data->N];
+			md_set_dims(data->N, pos, 0);
+
+			md_circ_shift(data->N, data->dims, (pos[i] = 1, pos), tmp, src, CFL_SIZE);
+			md_zaxpy(data->N, data->dims, dst, data->scaling[i], tmp);
+
+			md_circ_shift(data->N, data->dims, (pos[i] = -1, pos), tmp, src, CFL_SIZE);
+			md_zaxpy(data->N, data->dims, dst, data->scaling[i], tmp);
+		}
+	}
+
+	md_free(tmp);
+}
+
+static void laplace_free(const linop_data_t* _data)
+{
+	const auto data = CAST_DOWN(laplace_s, _data);
+
+	xfree(data->dims);
+	xfree(data->scaling);
+	xfree(data);
+}
+
+
+struct linop_s* linop_scaled_laplace_create(long N, const long dims[N], unsigned long flags, const float scaling[N])
+{
+	PTR_ALLOC(struct laplace_s, data);
+	SET_TYPEID(laplace_s, data);
+
+	data->N = N;
+	data->flags = flags;
+	data->dims = ARR_CLONE(long[N], dims);
+	data->scaling = ARR_CLONE(float[N], scaling);
+
+	return linop_create(N, dims, N, dims, CAST_UP(PTR_PASS(data)), laplace_apply, laplace_apply, NULL, NULL, laplace_free);
+}
+
+
+struct linop_s* linop_laplace_create(long N, const long dims[N], unsigned long flags)
+{
+	float scaling[N];
+	for (int i = 0; i < N; i++)
+		scaling[i] = 1.;
+
+	return linop_scaled_laplace_create(N, dims, flags, scaling);
+
+}

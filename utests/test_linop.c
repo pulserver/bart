@@ -173,7 +173,7 @@ static bool test_linop_extract(void)
 
 	for (int i = 0; i < N; i++)
 		pos[i] = 0;
-	
+
 	struct linop_s* diaga = linop_cdiag_create(N, dims, 0, &val1a);
 	struct linop_s* extract = linop_extract_create(N, pos, dims2, dims);
 	struct linop_s* diaga1 = linop_chain_FF(diaga, extract);
@@ -249,7 +249,7 @@ static bool test_linop_permute(void)
 
 	md_permute(N, perm, odims, dst1, idims, src, CFL_SIZE);
 
-	auto lop = linop_permute_create(N, perm, idims); 
+	auto lop = linop_permute_create(N, perm, idims);
 
 	linop_forward(lop, N, odims, dst2, N, idims, src);
 
@@ -320,7 +320,7 @@ static bool test_linop_hankelization(void)
 {
 	enum { N = 5 };
 	long dims[N] = { 8, 4, 6, 1, 7 };
-	
+
 	struct linop_s* lop = linop_hankelization_create(N, dims, 1, 3, 2);
 
 	UT_RETURN_ON_FAILURE(UT_TOL > linop_test_adjoint(lop));
@@ -408,3 +408,68 @@ static bool test_linop_gradient(void)
 
 
 UT_REGISTER_TEST(test_linop_gradient);
+
+
+static const struct linop_s* linop_laplace_chain_create(int N, const long dims[N], unsigned long flags)
+{
+	const struct linop_s* lop_grad = linop_grad_forward_create(N, dims, N, flags);
+	const struct linop_s* lop_div_tmp = linop_grad_forward_create(N, dims, N, flags);
+	const struct linop_s* lop_div = linop_get_adjoint(lop_div_tmp);
+	linop_free(lop_div_tmp);
+
+	const struct linop_s* ret = linop_chain_FF(lop_grad, lop_div);
+
+	return linop_chain_FF(ret, linop_scale_create(N, dims, -1.0));
+}
+
+
+static bool test_linop_laplace_cmp(void)
+{
+	enum { N = 3 };
+	long idims[N] = { 16, 16, 4 };
+	unsigned long flags = MD_BIT(0) | MD_BIT(2);
+
+	const struct linop_s* lop_laplace1 = linop_laplace_create(N, idims, flags);
+	const struct linop_s* lop_laplace2 = linop_laplace_chain_create(N, idims, flags);
+
+	complex float* src = md_alloc(N, idims, CFL_SIZE);
+	md_gaussian_rand(N, idims, src);
+
+	complex float* dst1 = md_alloc(N, idims, CFL_SIZE);
+	complex float* dst2 = md_alloc(N, idims, CFL_SIZE);
+
+	linop_forward(lop_laplace1, N, idims, dst1, N, idims, src);
+	linop_forward(lop_laplace2, N, idims, dst2, N, idims, src);
+
+	float err = md_znrmse(N, idims, dst1, dst2);
+
+	linop_free(lop_laplace1);
+	linop_free(lop_laplace2);
+
+	md_free(src);
+	md_free(dst1);
+	md_free(dst2);
+
+	UT_RETURN_ASSERT(err < UT_TOL);
+}
+
+
+UT_REGISTER_TEST(test_linop_laplace_cmp);
+
+
+static bool test_linop_laplace_adjoint(void)
+{
+	enum { N = 3 };
+	long idims[N] = { 16, 16, 4 };
+	unsigned long flags = MD_BIT(0) | MD_BIT(2);
+
+	const struct linop_s* lop_laplace = linop_laplace_create(N, idims, flags);
+
+	float err = linop_test_adjoint(lop_laplace);
+
+	linop_free(lop_laplace);
+	UT_RETURN_ASSERT(err < UT_TOL);
+}
+
+
+UT_REGISTER_TEST(test_linop_laplace_adjoint);
