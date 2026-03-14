@@ -72,6 +72,7 @@ const struct iter3_levenberg_marquardt_conf iter3_levenberg_marquardt_defaults =
 	.iter = 15,
 	.cgiter = 50,
 	.redu = 0.1,
+	.maxreg = 1.e15,
 	.Bi = 1,
 	.Bo = 1,
 	.l2lambda = 0.1,

@@ -811,7 +811,7 @@ void irgnm2(int iter, float alpha, float alpha_min, float alpha_min0, float redu
  * (Batched) Levenberg-Marquardt
  *
  */
-void levenberg_marquardt(int maxiter, int cgiter, float l2lambda, float redu,
+void levenberg_marquardt(int maxiter, int cgiter, float l2lambda, float redu, float maxreg,
 	long N, long M, long Bi, long Bo,
 	const struct vec_iter_s* vops,
 	struct iter_op_s op,
@@ -874,6 +874,8 @@ void levenberg_marquardt(int maxiter, int cgiter, float l2lambda, float redu,
 		vops->smul(Bo * Bi, (redu - 1./redu), valid, valid);
 		vops->sadd(Bo * Bi, valid, 1. / redu);
 		vops->mul(Bo * Bi, l2arr, l2arr, valid);
+
+		vops->smin(Bo * Bi, maxreg, l2arr, l2arr);
 	}
 
 	vops->del(d);
@@ -1294,7 +1296,7 @@ static void getgrad(int NI, bool in_optimize_flag[NI], long isize[NI], float* gr
 			continue;
 
 		for (int i = 0; i < NI; i++) {
-			 
+
 			tmp_grad[i] = NULL;
 
 			if (in_optimize_flag[i])
@@ -1307,7 +1309,7 @@ static void getgrad(int NI, bool in_optimize_flag[NI], long isize[NI], float* gr
 
 		for (int i = 0; i < NI; i++) {
 
-			if ((0 >= count) || !in_optimize_flag[i]) 
+			if ((0 >= count) || !in_optimize_flag[i])
 				continue;
 
 			vops->add(isize[i], grad[i], grad[i], tmp_grad[i]);

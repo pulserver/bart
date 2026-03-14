@@ -44,6 +44,7 @@ struct iter3_levenberg_marquardt_conf {
 	int iter;
 	int cgiter;
 	float redu;
+	float maxreg;
 	long Bi;
 	long Bo;
 	float l2lambda;

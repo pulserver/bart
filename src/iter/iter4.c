@@ -278,7 +278,7 @@ void iter4_levenberg_marquardt(const iter3_conf* _conf,
 	struct iter_op_s adj = { nlop_adj_iter, CAST_UP(&data) };
 	struct iter_op_s nrm = { nlop_nrm_iter, CAST_UP(&data) };
 
-	levenberg_marquardt(conf->iter, MIN(conf->cgiter, N / conf->Bi / conf->Bo), conf->l2lambda, conf->redu,
+	levenberg_marquardt(conf->iter, MIN(conf->cgiter, N / conf->Bi / conf->Bo), conf->l2lambda, conf->redu, conf->maxreg,
 				N / 2 / conf->Bi / conf->Bo, M / 2 / conf->Bi / conf->Bo, conf->Bi, conf->Bo,
 				select_vecops(dst), frw, adj, nrm, dst, src, cb, NULL);
 }
