@@ -2,6 +2,7 @@
  * Copyright 2014. Joseph Y Cheng.
  * Copyright 2016-2022. Uecker Lab. University Center Göttingen.
  * Copyright 2023. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2026. Department of Radiology. Boston Children's Hospital.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
@@ -655,7 +656,7 @@ const struct vec_iter_s gpu_iter_ops = {
 	.div = cuda_div,
 	.sqrt = cuda_sqrt,
 	.smax = cuda_smax,
-	.smin = NULL,
+	.smin = cuda_smin,
 	.sadd = cuda_sadd_inpl,
 	.sdiv = NULL,
 	.le = cuda_le,

@@ -1,6 +1,7 @@
 /* Copyright 2013-2018. The Regents of the University of California.
  * Copyright 2017-2022. Uecker Lab. University Medical Center Göttingen.
  * Copryight 2023-2024. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2026. Department of Radiology. Boston Children's Hospital.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
@@ -1356,6 +1357,22 @@ extern "C" void cuda_smax(long N, float val, float* dst, const float* src1)
 	CUDA_KERNEL_ERROR;
 }
 
+
+__global__ void kern_smin(long N, float val, float* dst, const float* src1)
+{
+	int start = threadIdx.x + blockDim.x * blockIdx.x;
+	int stride = blockDim.x * gridDim.x;
+
+	for (long i = start; i < N; i += stride)
+		dst[i] = MIN(src1[i], val);
+}
+
+
+extern "C" void cuda_smin(long N, float val, float* dst, const float* src1)
+{
+	kern_smin<<<gridsize(N), blocksize(N), 0, cuda_get_stream()>>>(N, val, dst, src1);
+	CUDA_KERNEL_ERROR;
+}
 
 __global__ void kern_max(long N, float* dst, const float* src1, const float* src2)
 {
