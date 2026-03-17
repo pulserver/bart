@@ -500,6 +500,7 @@ int main_mobafit(int argc, char* argv[argc])
 
 		assert(NULL == basis);
 		nlop = nlop_chain_FF(nlop, nlop_zabs_create(DIMS, y_patch_dims));
+		md_zabs(DIMS, y_dims, y, y);
 	}
 
 	assert(nlop);
