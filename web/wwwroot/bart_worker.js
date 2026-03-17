@@ -13,8 +13,8 @@ console.log("Hello from bart_worker")
 
 function alloc(module, nbytes) {
 
-    let ptr = module._malloc(nbytes);
-    return new Uint8Array(module.HEAPU8.buffer, ptr, nbytes);
+    let ptr = module._malloc(BigInt(nbytes));
+    return new Uint8Array(module.HEAPU8.buffer, Number(ptr), nbytes);
 }
 
 function allocFromString(module, string) {
@@ -31,16 +31,15 @@ function allocFromString(module, string) {
 
 function allocFromStringArray(module, inArgv) {
 
-    let heapArgv = alloc(module, inArgv.length * 4);
+    let heapArgv = alloc(module, inArgv.length * 8);
 
-    let heapArgv32 = new Int32Array(module.HEAPU8.buffer, heapArgv.byteOffset, inArgv.length);
+    let heapArgv64 = new BigInt64Array(module.HEAPU8.buffer, heapArgv.byteOffset, inArgv.length);
 
     for (let k in inArgv) {
 
         let heapArray = allocFromString(module, inArgv[k]);
 
-        let heapArray_byteOffset = heapArray.byteOffset;
-        heapArgv32[k] = heapArray_byteOffset;
+        heapArgv64[k] = BigInt(heapArray.byteOffset);
     }
 
     return heapArgv;
@@ -129,7 +128,7 @@ async function bart_cmd(data) {
     try {
         var t = performance.now();
         bart_state = 'run';
-        ret = bart_module.ccall("main", "number", ["number", "number"], [argc, argv_heap_offset])
+        ret = bart_module.ccall("main", "number", ["number", "bigint"], [argc, BigInt(argv_heap_offset)])
         bart_state = 'done';
         console.log("Runtime ccall:", performance.now() - t, " ms");
     } catch(e) {
@@ -146,9 +145,10 @@ async function bart_cmd(data) {
         bart_ok = false;
     }
 
-    bart_module._free(argv_heap_offset);
-    for(var k in argv_heap)
-        bart_module._free(argv_heap[k]);
+    let heapArgv64 = new BigInt64Array(bart_module.HEAPU8.buffer, argv_heap_offset, argc);
+    for (let k = 0; k < argc; k++)
+        bart_module._free(heapArgv64[k]);
+    bart_module._free(BigInt(argv_heap_offset));
 
     return { 'ret': ret, 'stdout': stdout, 'stderr': stderr, 'rt_error': rt_error }
 }

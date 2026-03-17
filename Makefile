@@ -1067,7 +1067,7 @@ bart: LDFLAGS += -s EXPORTED_FUNCTIONS=_main,__Block_object_dispose -lnodefs.js 
 
 web/wwwroot/bart_main.js: LDFLAGS += -sMODULARIZE=1 -sEXPORT_NAME=bart_main \
 	-s EXPORTED_FUNCTIONS=_main,_malloc,_free,_mmap,_munmap,_setenv,_getenv,__Block_object_dispose \
-	-s EXPORTED_RUNTIME_METHODS=ccall,cwrap,FS
+	-s EXPORTED_RUNTIME_METHODS=ccall,cwrap,FS,HEAPU8
 
 # https://stackoverflow.com/questions/7525589/create-comma-separated-lists-in-gnu-make
 null  :=
@@ -1188,7 +1188,7 @@ UTEST_RUN=valgrind --quiet --leak-check=full --error-exitcode=1 valgrind --log-f
 endif
 
 ifeq ($(BUILDTYPE), WASM)
-UTEST_RUN=node
+UTEST_RUN=node24
 endif
 
 .PHONY: utests-all utest utests_gpu-all utest_gpu

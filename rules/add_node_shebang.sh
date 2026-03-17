@@ -9,5 +9,5 @@ do
 		continue
 	fi
 	chmod +x "$exe"
-	sed -i '1s|^|#!/usr/bin/env node\n|' "$exe"
+	sed -i '1s|^|#!/usr/bin/env node24\n|' "$exe"
 done
