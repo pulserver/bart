@@ -32,7 +32,7 @@ static void rounded_div(int D, const long dims[D], float bound, complex float* o
 	}
 }
 
-static void unwrap(int D, const long dims[D], int d, float bounds, 
+static void unwrap(int D, const long dims[D], int d, float bounds,
 	complex float* optr, const complex float* iptr)
 {
 	md_zfdiff0(D, dims, d, optr, iptr);
@@ -50,13 +50,13 @@ static const char help_str[] = "Unwrap along selected dimensions.";
 
 int main_unwrap(int argc, char* argv[argc])
 {
-	int dim = -1;
+	unsigned long flags = 0;
 	const char* in_file = NULL;
 	const char* out_file = NULL;
 
 	struct arg_s args[] = {
 
-		ARG_INT(true, &dim, "dim"),
+		ARG_ULONG(true, &flags, "flags"),
 		ARG_INFILE(true, &in_file, "input"),
 		ARG_OUTFILE(true, &out_file, "output"),
 	};
@@ -79,8 +79,10 @@ int main_unwrap(int argc, char* argv[argc])
 
 	complex float* out_data = NULL;
 	out_data = create_cfl(out_file, DIMS, out_dims);
-	
-	unwrap(DIMS, in_dims, dim, bounds, out_data, in_data);
+
+	if (1 != bitcount(flags))
+		error("Cumulative sum can only be applied along one dimension, but multiple dimensions were selected.\n");
+	unwrap(DIMS, in_dims, md_min_idx(flags), bounds, out_data, in_data);
 
 	unmap_cfl(DIMS, in_dims, in_data);
 	unmap_cfl(DIMS, out_dims, out_data);
