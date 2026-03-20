@@ -245,7 +245,7 @@ void centered_gradient(int N, const long dims[N], const complex float grad[N], c
 	complex float cn = 0.;
 
 	for (int n = 0; n < N; n++)
-		 cn -= grad[n] * (float)dims[n] / 2.;
+		 cn -= grad[n] * (float)(dims[n] / 2);
 
 	long strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
@@ -364,7 +364,7 @@ static void md_zwindow2(int D, const long dims[D], unsigned long flags, const lo
 	case WINDOW_HAMMING: nary_zhamming(dims[lsb], win); break;
 	case WINDOW_HANN: nary_zhann(dims[lsb], win); break;
 	};
-			
+
 	md_zmul2(D, dims, ostrs, optr, istrs, iptr, win_strs, win);
 
 	md_free(win);

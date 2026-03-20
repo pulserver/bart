@@ -337,7 +337,7 @@ static void apply_linphases_3D_int(vptr_fun_data_t* _data, int N, int D, const l
 	double cn = 0.;
 
 	for (int n = 0; n < 3; n++)
-		cn -= shifts2[n] * (double)img_dims[n] / 2.;
+		cn -= shifts2[n] * (double)(img_dims[n] / 2);
 
 	for (int n = 0; fftm && (n < 3); n++) {
 

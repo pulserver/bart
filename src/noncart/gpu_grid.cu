@@ -109,7 +109,7 @@ extern "C" void cuda_apply_linphases_3D(int N, const long img_dims[], const floa
 	for (int n = 0; n < 3; n++) {
 
 		c.shifts[n] = 2. * M_PI * (float)(shifts[n]) / ((float)img_dims[n]);
-		c.cn -= c.shifts[n] * (float)img_dims[n] / 2.;
+		c.cn -= c.shifts[n] * (float)(img_dims[n] / 2);
 
 		c.dims[n] = img_dims[n];
 		c.tot *= c.dims[n];

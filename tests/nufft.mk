@@ -475,7 +475,7 @@ tests/test-nufft-odd-adjoint: traj scale phantom nufft nrmse conj
 	$(TOOLDIR)/phantom -t traj2.ra ksp.ra						;\
 	$(TOOLDIR)/nufft -x128:127:1 -a traj2.ra ksp.ra reco1.ra			;\
 	$(TOOLDIR)/conj reco1.ra reco2.ra						;\
-	$(TOOLDIR)/nrmse -t 0.02 reco1.ra reco2.ra					;\
+	$(TOOLDIR)/nrmse -t 0.00002 reco1.ra reco2.ra					;\
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
@@ -483,11 +483,11 @@ tests/test-nufft-odd-adjoint2: transpose fft traj scale phantom nufft nrmse conj
 	set -e ; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
 	$(TOOLDIR)/traj -x128 -y127 traj.ra						;\
 	$(TOOLDIR)/phantom -t traj.ra ksp.ra						;\
-	$(TOOLDIR)/nufft -x128:127:1 -a traj.ra ksp.ra reco1.ra				;\
+	$(TOOLDIR)/nufft -P -x128:127:1 -a traj.ra ksp.ra reco1.ra			;\
 	$(TOOLDIR)/fft -u -i 7 ksp.ra reco2.ra 						;\
 	$(TOOLDIR)/transpose 0 1 reco2.ra reco2.ra 					;\
 	$(TOOLDIR)/transpose 1 2 reco2.ra reco2.ra 					;\
-	$(TOOLDIR)/nrmse -t 0.01 reco1.ra reco2.ra					;\
+	$(TOOLDIR)/nrmse -t 0.00002 reco1.ra reco2.ra					;\
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
@@ -498,7 +498,7 @@ tests/test-nufft-odd-adjoint-noprecomp: traj scale phantom nufft nrmse conj
 	$(TOOLDIR)/phantom -t traj2.ra ksp.ra						;\
 	$(TOOLDIR)/nufft --no-precomp -x128:127:1 -a traj2.ra ksp.ra reco1.ra		;\
 	$(TOOLDIR)/conj reco1.ra reco2.ra						;\
-	$(TOOLDIR)/nrmse -t 0.02 reco1.ra reco2.ra					;\
+	$(TOOLDIR)/nrmse -t 0.00002 reco1.ra reco2.ra					;\
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
@@ -509,7 +509,7 @@ tests/test-nufft-odd-adjoint-zeromem: traj scale phantom nufft nrmse conj carg
 	$(TOOLDIR)/phantom -t traj2.ra ksp.ra						;\
 	$(TOOLDIR)/nufft --zero-mem -x128:127:1 -a traj2.ra ksp.ra reco1.ra		;\
 	$(TOOLDIR)/conj reco1.ra reco2.ra						;\
-	$(TOOLDIR)/nrmse -t 0.02 reco1.ra reco2.ra					;\
+	$(TOOLDIR)/nrmse -t 0.00002 reco1.ra reco2.ra					;\
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
@@ -517,11 +517,11 @@ tests/test-nufft-odd-forward2: transpose fft traj scale phantom nufft nrmse conj
 	set -e ; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
 	$(TOOLDIR)/traj -x127 -y127 traj.ra						;\
 	$(TOOLDIR)/phantom -x127 img.ra							;\
-	$(TOOLDIR)/nufft traj.ra img.ra ksp1.ra						;\
+	$(TOOLDIR)/nufft -P traj.ra img.ra ksp1.ra					;\
 	$(TOOLDIR)/fft -u 7 img.ra ksp2.ra 						;\
 	$(TOOLDIR)/transpose 0 1 ksp2.ra ksp2.ra 					;\
 	$(TOOLDIR)/transpose 0 2 ksp2.ra ksp2.ra					;\
-	$(TOOLDIR)/nrmse -t 0.02 ksp1.ra ksp2.ra					;\
+	$(TOOLDIR)/nrmse -t 0.00002 ksp1.ra ksp2.ra					;\
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
@@ -534,8 +534,8 @@ tests/test-nufft-toeplitz-odd: traj scale phantom nufft nrmse resize
 	$(TOOLDIR)/nufft -i -r              -x128:127:1 traj2.ra ksp.ra reco1.ra	;\
 	$(TOOLDIR)/nufft -i    		    -x128:127:1 traj2.ra ksp.ra reco2.ra	;\
 	$(TOOLDIR)/nufft -i    --no-precomp -x128:127:1 traj2.ra ksp.ra reco3.ra	;\
-	$(TOOLDIR)/nrmse -t 0.01 reco1.ra reco2.ra					;\
-	$(TOOLDIR)/nrmse -t 0.02 reco1.ra reco3.ra					;\
+	$(TOOLDIR)/nrmse -t 0.0008 reco1.ra reco2.ra					;\
+	$(TOOLDIR)/nrmse -t 0.0008 reco1.ra reco3.ra					;\
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 

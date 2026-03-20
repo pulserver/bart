@@ -12,6 +12,27 @@ tests/test-fovshift: phantom fft fovshift circshift nrmse
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
+tests/test-fovshift-pixel: phantom fft fovshift circshift nrmse
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)						;\
+	$(TOOLDIR)/phantom x.ra									;\
+	$(TOOLDIR)/fft -u 7 x.ra k.ra								;\
+	$(TOOLDIR)/fovshift -p -s0:64:0. k.ra ks.ra						;\
+	$(TOOLDIR)/fft -u -i 7 ks.ra xs.ra							;\
+	$(TOOLDIR)/circshift -- 1 -64 x.ra xc.ra						;\
+	$(TOOLDIR)/nrmse -t 0.00001 xc.ra xs.ra							;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
+tests/test-fovshift-odd: phantom fft fovshift circshift nrmse
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)						;\
+	$(TOOLDIR)/phantom -x 65 x.ra								;\
+	$(TOOLDIR)/fft -u 7 x.ra k.ra								;\
+	$(TOOLDIR)/fovshift -p -s0:3:0. k.ra ks.ra						;\
+	$(TOOLDIR)/fft -u -i 7 ks.ra xs.ra							;\
+	$(TOOLDIR)/circshift -- 1 -3 x.ra xc.ra							;\
+	$(TOOLDIR)/nrmse -t 0.00001 xc.ra xs.ra							;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
 
 
 tests/test-fovshift-nc: traj scale phantom fovshift nufft fft nrmse
@@ -30,5 +51,5 @@ tests/test-fovshift-nc: traj scale phantom fovshift nufft fft nrmse
 
 
 
-TESTS += tests/test-fovshift tests/test-fovshift-nc
+TESTS += tests/test-fovshift tests/test-fovshift-nc tests/test-fovshift-pixel tests/test-fovshift-odd
 
