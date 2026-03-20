@@ -291,7 +291,11 @@ void klaplace_scaled(int N, const long dims[N], unsigned long flags, const float
 	md_free(tmp);
 }
 
-
+//WARNING: When used as ifftuc(klaplace * fftuc(x)), the resulting laplacian is
+//	   scaled wrongly by an overall factor of
+//	   1) -(2pi)^2 when assuming voxel spacing of dx=1 (c.f. test_klaplace_filter)
+//	   2) -(2pi N)^2 when assuming voxel spacing of dx=1/FoV
+//	   We keep it like this for reproducibility of Sobolev norms
 void klaplace(int N, const long dims[N], unsigned long flags, complex float* out)
 {
 	float sc[N];
