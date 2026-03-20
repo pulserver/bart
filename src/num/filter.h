@@ -33,6 +33,8 @@ typedef complex float CLOSURE_TYPE(sample_filter_fun)(const long pos[], const fl
 
 extern void md_zsample_filter(int D, const long dims[__VLA(D)], unsigned long flags, const float resolution[__VLA2(D)], _Complex float* z, sample_filter_fun fun, _Bool centered);
 
+extern void klaplace_fd_scaled_uncentered(int N, const long dims[__VLA(N)], const float scale[__VLA(N)], complex float* z);
+extern void klaplace_fd_uncentered(int N, const long dims[__VLA(N)], complex float* z);
 
 #include "misc/cppwrap.h"
 

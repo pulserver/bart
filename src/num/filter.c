@@ -478,6 +478,32 @@ void md_zsample_filter(int N, const long dims[N], unsigned long flags, const flo
 	md_parallel_zsample(N, dims, z, filter_kernel);
 }
 
+void klaplace_fd_scaled_uncentered(int N, const long dims[N], const float scale[N], complex float* z)
+{
+	const float* scalep = scale;	// because of clang
+
+	NESTED(complex float, filter_kernel_laplace, (const long /*pos*/[], const float kpos[]))
+	{
+		complex float val = 0;
+
+		for (int i = 0; i < N; i++)
+			val += scalep[i] * (cexpf(-1.i * kpos[i]) + cexpf(1.i * kpos[i]) - 2.);
+
+		return val;
+	};
+
+	md_zsample_filter(N, dims, ~0UL, NULL, z, filter_kernel_laplace, false);
+}
+
+void klaplace_fd_uncentered(int N, const long dims[N], complex float* z)
+{
+	float scale[N];
+	for (int i = 0; i < N; i++)
+		scale[i] = 1.;
+
+	klaplace_fd_scaled_uncentered(N, dims, scale, z);
+}
+
 
 
 
