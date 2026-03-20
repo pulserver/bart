@@ -398,10 +398,14 @@ UT_REGISTER_TEST(test_flash_mom2);
 
 static bool test_flash_phase(void)
 {
-	struct seq_state seq_state = { 0 };
+	struct seq_state seq_state = { };
 	seq_state.mode = SEQ_BLOCK_KERNEL_IMAGE;
 
 	struct seq_config seq = seq_config_defaults;
+
+	seq.loop_dims[PHS1_DIM] = 999;
+
+	seq_ui_interface_loop_dims(0, &seq, DIMS, seq.loop_dims);
 
 	seq.geom.shift[0][0] = 10.E-3;
 	seq.geom.shift[0][1] = 20.E-3;
@@ -410,9 +414,9 @@ static bool test_flash_phase(void)
 	int E = 200;
 	struct seq_event ev[E];
 
-	for (int i = 0; i < 1000; i++) {
+	for (int i = 0; i < 999; i++) {
 
-		seq_state.pos[TIME_DIM] = i;
+		seq_state.pos[PHS1_DIM] = i;
 		E = flash(E, ev, &seq_state, &seq);
 
 		struct seq_event ev_rf = ev[events_idx(0, SEQ_EVENT_PULSE, E, ev)];
