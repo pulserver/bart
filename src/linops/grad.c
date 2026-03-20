@@ -12,6 +12,7 @@
 
 #include "num/multind.h"
 #include "num/flpmath.h"
+#include "num/laplace.h"
 
 #include "linops/linop.h"
 
@@ -257,32 +258,7 @@ static void laplace_apply(const linop_data_t* _data, complex float* dst, const c
 {
 	const auto data = CAST_DOWN(laplace_s, _data);
 
-	float sumh = 0;
-
-	for (int i = 0; i < data->N; i++)
-		if (MD_IS_SET(data->flags, i))
-			sumh += data->scaling[i];
-
-	md_zsmul(data->N, data->dims, dst, src, -2. * sumh);
-
-	complex float* tmp = md_alloc_sameplace(data->N, data->dims, CFL_SIZE, dst);
-
-	for (int i = 0; i < data->N; i++) {
-
-		if (MD_IS_SET(data->flags, i)) {
-
-			long pos[data->N];
-			md_set_dims(data->N, pos, 0);
-
-			md_circ_shift(data->N, data->dims, (pos[i] = 1, pos), tmp, src, CFL_SIZE);
-			md_zaxpy(data->N, data->dims, dst, data->scaling[i], tmp);
-
-			md_circ_shift(data->N, data->dims, (pos[i] = -1, pos), tmp, src, CFL_SIZE);
-			md_zaxpy(data->N, data->dims, dst, data->scaling[i], tmp);
-		}
-	}
-
-	md_free(tmp);
+	md_laplace_fd_scaled(data->N, data->dims, data->flags, data->scaling, dst, src);
 }
 
 static void laplace_free(const linop_data_t* _data)
