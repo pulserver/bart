@@ -396,6 +396,101 @@ static bool test_flash_mom2(void)
 UT_REGISTER_TEST(test_flash_mom2);
 
 
+static bool test_flash_freq1(void)
+{
+	struct seq_state seq_state = { 0 };
+	seq_state.mode = SEQ_BLOCK_KERNEL_IMAGE;
+
+	struct seq_config seq = seq_config_defaults;
+	seq.loop_dims[PHS1_DIM] = 3;
+	seq.geom.shift[0][0] = 10.E-3;
+
+	//  gamma * shift * ro_amplitude * sin(proj_angle)
+	double modulation = seq.geom.shift[0][0] / (seq.geom.fov * seq.phys.dwell);
+	const double expected_angle[3] = { 0. , 4. * M_PI / 3. , 2. * M_PI / 3. };
+	
+
+	int E = 200;
+	struct seq_event ev[E];
+
+	for (int i = 0; i < seq.loop_dims[PHS1_DIM]; i++) {
+
+		seq_state.pos[PHS1_DIM] = i;
+		E = flash(E, ev, &seq_state, &seq);
+
+		struct seq_event ev_adc = ev[events_idx(0, SEQ_EVENT_ADC, E, ev)];
+
+		if (3. * UT_TOL < fabs(ev_adc.adc.freq - modulation * sin(expected_angle[i])))
+			return false;
+	}
+		
+	return true;
+}
+
+UT_REGISTER_TEST(test_flash_freq1);
+
+
+static bool test_flash_freq2(void)
+{
+	struct seq_state seq_state = { 0 };
+	seq_state.mode = SEQ_BLOCK_KERNEL_IMAGE;
+
+	struct seq_config seq = seq_config_defaults;
+	seq.loop_dims[PHS1_DIM] = 3;
+	seq.geom.shift[0][1] = 20.E-3;
+
+	//  gamma * shift * ro_amplitude * cos(proj_angle)
+	double modulation = seq.geom.shift[0][1] / (seq.geom.fov * seq.phys.dwell);
+	const double expected_angle[3] = { 0. , 4. * M_PI / 3. , 2. * M_PI / 3. };
+
+	int E = 200;
+	struct seq_event ev[E];
+
+	for (int i = 0; i < seq.loop_dims[PHS1_DIM]; i++) {
+
+		seq_state.pos[PHS1_DIM] = i;
+		E = flash(E, ev, &seq_state, &seq);
+
+		struct seq_event ev_adc = ev[events_idx(0, SEQ_EVENT_ADC, E, ev)];
+
+		if (3. * UT_TOL < fabs(ev_adc.adc.freq - modulation * cos(expected_angle[i])))
+			return false;
+	}
+		
+	return true;
+}
+
+UT_REGISTER_TEST(test_flash_freq2);
+
+
+static bool test_flash_freq3(void)
+{
+	struct seq_state seq_state = { 0 };
+	seq_state.mode = SEQ_BLOCK_KERNEL_IMAGE;
+
+	struct seq_config seq = seq_config_defaults;
+	seq.geom.shift[0][2] = 20.E-3;
+
+	//  gamma * shift * slice_amplitude
+	const double expected_freq = seq.geom.shift[0][2] * seq.phys.bwtp /
+					(seq.phys.rf_duration * seq.geom.slice_thickness);
+
+	int E = 200;
+	struct seq_event ev[E];
+
+	E = flash(E, ev, &seq_state, &seq);
+
+	struct seq_event ev_rf = ev[events_idx(0, SEQ_EVENT_PULSE, E, ev)];
+		
+	if (UT_TOL < fabs(ev_rf.pulse.freq - expected_freq))
+		return false;
+		
+	return true;
+}
+
+UT_REGISTER_TEST(test_flash_freq3);
+
+
 static bool test_flash_phase(void)
 {
 	struct seq_state seq_state = { };
