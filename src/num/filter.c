@@ -1,12 +1,14 @@
 /* Copyright 2015-2017. The Regents of the University of California.
  * Copyright 2016-2017. Martin Uecker.
  * Copyright 2023-2024. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2026. Department of Radiology. Boston Children's Hospital.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
  * Authors:
  * 2012-2017 Martin Uecker
  * 2017 Jon Tamir
+ * 2026 Moritz Blumenthal
  */
 
 #include <assert.h>
@@ -291,11 +293,11 @@ void klaplace_scaled(int N, const long dims[N], unsigned long flags, const float
 	md_free(tmp);
 }
 
-//WARNING: When used as ifftuc(klaplace * fftuc(x)), the resulting laplacian is
-//	   scaled wrongly by an overall factor of
+//WARNING: Defintion of klaplace corresponds to conventions of continuous Fourier transform
+//	   (up to a sign), i.e. when used as filter by ifftuc(klaplace * fftuc(x)),
+//	   the resulting laplacian is scaled wrongly by an overall factor of
 //	   1) -(2pi)^2 when assuming voxel spacing of dx=1 (c.f. test_klaplace_filter)
 //	   2) -(2pi N)^2 when assuming voxel spacing of dx=1/FoV
-//	   We keep it like this for reproducibility of Sobolev norms
 void klaplace(int N, const long dims[N], unsigned long flags, complex float* out)
 {
 	float sc[N];
@@ -435,3 +437,47 @@ void md_zhann2(int D, const long dims[D], const unsigned long flags, const long 
 {
 	return md_zwindow2(D, dims, flags, ostrs, optr, istrs, iptr, WINDOW_HANN);
 }
+
+
+
+void md_zsample_filter(int N, const long dims[N], unsigned long flags, const float resolution[N], complex float* z, sample_filter_fun fun, bool centered)
+{
+	if (NULL == resolution) {
+
+		float resolution[N];
+		for (int i = 0; i < N; i++)
+			resolution[i] = 1.;
+
+		md_zsample_filter(N, dims, flags, resolution, z, fun, centered);
+		return;
+	}
+
+	float scale[N];
+	for (int i = 0; i < N; i++)
+		scale[i] = MD_IS_SET(flags, i) ? 2 * M_PI / (dims[i] * resolution[i]) : 0.;
+
+	const long* dimsp = dims;	// because of clang
+	const float* scalep = scale;	// because of clang
+
+	NESTED(complex float, filter_kernel, (const long pos[]))
+	{
+		float kpos[N];
+		for (int i = 0; i < N; i++) {
+
+			if (centered)
+				kpos[i] = (pos[i] - (dimsp[i] / 2)) * scalep[i];
+			else
+				kpos[i] = (pos[i] - (pos[i] > dimsp[i] / 2 ? dimsp[i] : 0)) * scalep[i];
+		}
+
+		complex float val = fun(pos, kpos);
+
+		return val;
+	};
+
+	md_parallel_zsample(N, dims, z, filter_kernel);
+}
+
+
+
+

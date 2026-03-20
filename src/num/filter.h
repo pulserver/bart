@@ -28,5 +28,11 @@ extern void md_zhamming2(int D, const long dims[__VLA(D)], const unsigned long f
 extern void md_zhann(int D, const long dims[__VLA(D)], const unsigned long flags, complex float* optr, const complex float* iptr);
 extern void md_zhann2(int D, const long dims[__VLA(D)], const unsigned long flags, const long ostr[__VLA(D)], complex float* optr, const long istr[__VLA(D)], const complex float* iptr);
 
+#include "misc/nested.h"
+typedef complex float CLOSURE_TYPE(sample_filter_fun)(const long pos[], const float kpos[]);
+
+extern void md_zsample_filter(int D, const long dims[__VLA(D)], unsigned long flags, const float resolution[__VLA2(D)], _Complex float* z, sample_filter_fun fun, _Bool centered);
+
+
 #include "misc/cppwrap.h"
 
