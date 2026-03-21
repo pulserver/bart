@@ -171,7 +171,7 @@ int main_mobafit(int argc, char* argv[argc])
 
 		ARG_INFILE(true, &enc_file, "enc"),
 		ARG_INFILE(true, &echo_file, "echo/contrast images"),
-		ARG_OUTFILE(false, &coeff_file, "coefficients"),
+		ARG_OUTFILE(true, &coeff_file, "coefficients"),
 		ARG_OUTFILE(false, &cov_file, "covariance matrix"),
 	};
 
