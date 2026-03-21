@@ -55,7 +55,11 @@ static const char help_str[] = "Model-based nonlinear inverse reconstruction";
 
 static void edge_filter1(const long map_dims[DIMS], complex float* dst, float lambda)
 {
-	klaplace(DIMS, map_dims, READ_FLAG|PHS1_FLAG, dst);
+	float sc[DIMS];
+	for (int i = 0; i < DIMS; i++)
+		sc[i] = 1. / (float)map_dims[i];
+
+	klaplace_scaled(DIMS, map_dims, READ_FLAG|PHS1_FLAG, sc, dst);
 	md_zreal(DIMS, map_dims, dst, dst);
 	md_zsqrt(DIMS, map_dims, dst, dst);
 
@@ -72,7 +76,11 @@ static void edge_filter2(const long map_dims[DIMS], complex float* dst, float la
 {
 	float beta = 100.;
 
-	klaplace(DIMS, map_dims, READ_FLAG|PHS1_FLAG, dst);
+	float sc[DIMS];
+	for (int i = 0; i < DIMS; i++)
+		sc[i] = 1. / (float)map_dims[i];
+
+	klaplace_scaled(DIMS, map_dims, READ_FLAG|PHS1_FLAG, sc, dst);
 	md_zspow(DIMS, map_dims, dst, dst, 0.5);
 
 	md_zsmul(DIMS, map_dims, dst, dst, -beta * 2.);

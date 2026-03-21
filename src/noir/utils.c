@@ -37,7 +37,11 @@ void noir_calc_weights(double a, double b, const long dims[3], complex float* ds
 		if (1 != dims[i])
 			flags = MD_SET(flags, i);
 
-	klaplace(3, dims, flags, dst);
+	float scale[3];
+	for (int i = 0; i < 3; i++)
+		scale[i] = 1. / (float)dims[i];
+
+	klaplace_scaled(3, dims, flags, scale, dst);
 	md_zsmul(3, dims, dst, dst, a);
 	md_zsadd(3, dims, dst, dst, 1.);
 	md_zspow(3, dims, dst, dst, -b / 2.);	// 1 + 220. \Laplace^16

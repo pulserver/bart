@@ -293,18 +293,22 @@ void klaplace_scaled(int N, const long dims[N], unsigned long flags, const float
 	md_free(tmp);
 }
 
-//WARNING: Defintion of klaplace corresponds to conventions of continuous Fourier transform
-//	   (up to a sign), i.e. when used as filter by ifftuc(klaplace * fftuc(x)),
-//	   the resulting laplacian is scaled wrongly by an overall factor of
-//	   1) -(2pi)^2 when assuming voxel spacing of dx=1 (c.f. test_klaplace_filter)
-//	   2) -(2pi N)^2 when assuming voxel spacing of dx=1/FoV
+
+
+/* Definition of klaplace corresponds to conventions of continuous Fourier
+ * transform (up to a sign), i.e. when used as filter by
+ * ifftuc(klaplace * fftuc(x)), the resulting laplacian is scaled by a
+ * factor of -(2pi)^2 assuming voxel spacing of dx=1 (c.f. test_klaplace_filter)
+ * Usually, it needs to be rescaled for physical units. */
+
 void klaplace(int N, const long dims[N], unsigned long flags, complex float* out)
 {
 	float sc[N];
 	for (int j = 0; j < N; j++)
-		sc[j] = 1. / (float)dims[j];
+		sc[j] = 1.;
 
 	klaplace_scaled(N, dims, flags, sc, out);
+	md_zsmul(N, dims, out, out, -4. * M_PI * M_PI);
 }
 
 

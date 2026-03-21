@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include "misc/debug.h"
+
 #include "num/multind.h"
 #include "num/flpmath.h"
 #include "num/laplace.h"
@@ -20,16 +21,16 @@ static bool test_laplace_fd(void)
 
 	complex float* in = md_alloc(N, dims_in, CFL_SIZE);
 
-	float scale = 2 * M_PI / (float)dims_in[0];
+	float scale = 2. * M_PI / (float)dims_in[0];
 
 	for (int i = 0; i < dims_in[0]; i++)
-		in[i] = cos(scale * i);
+		in[i] = cosf(scale * i);
 
 	complex float* out = md_alloc(N, dims_in, CFL_SIZE);
 	md_laplace_fd(N, dims_in, ~0UL, out, in);
 
 	for (int i = 0; i < dims_in[0]; i++)
-		in[i] = -1. * scale * scale * cos(scale * i);
+		in[i] = -1. * scale * scale * cosf(scale * i);
 
 	float err = md_znrmse(N, dims_in, out, in);
 	md_free(in);
@@ -49,11 +50,11 @@ static bool test_laplace_fd_wrapped_phase(void)
 
 	complex float* in = md_alloc(N, dims_in, CFL_SIZE);
 
-	float scale = 2 * M_PI / (float)dims_in[0];
+	float scale = 2. * M_PI / (float)dims_in[0];
 
 	for (int i = 0; i < dims_in[0]; i++) {
 
-		in[i] = 4 * cos(scale * i);
+		in[i] = 4. * cosf(scale * i);
 		in[i] = cargf(cexpf(1.i * in[i]));
 	}
 
@@ -61,7 +62,7 @@ static bool test_laplace_fd_wrapped_phase(void)
 	md_laplace_fd_wrapped_phase(N, dims_in, ~0UL, out, in);
 
 	for (int i = 0; i < dims_in[0]; i++)
-		in[i] = -4. * scale * scale * cos(scale * i);
+		in[i] = -4. * scale * scale * cosf(scale * i);
 
 	float err = md_znrmse(N, dims_in, out, in);
 	md_free(in);
@@ -81,11 +82,11 @@ static bool test_laplace_fd_wrapped_phase_exp(void)
 
 	complex float* in = md_alloc(N, dims_in, CFL_SIZE);
 
-	float scale = 2 * M_PI / (float)dims_in[0];
+	float scale = 2. * M_PI / (float)dims_in[0];
 
 	for (int i = 0; i < dims_in[0]; i++) {
 
-		in[i] = 4 * cos(scale * i);
+		in[i] = 4. * cosf(scale * i);
 		in[i] = cargf(cexpf(1.i * in[i]));
 	}
 
@@ -93,7 +94,7 @@ static bool test_laplace_fd_wrapped_phase_exp(void)
 	md_laplace_fd_wrapped_phase_exp(N, dims_in, ~0UL, out, in);
 
 	for (int i = 0; i < dims_in[0]; i++)
-		in[i] = -4. * scale * scale * cos(scale * i);
+		in[i] = -4. * scale * scale * cosf(scale * i);
 
 	float err = md_znrmse(N, dims_in, out, in);
 	md_free(in);
@@ -112,27 +113,28 @@ static bool test_klaplace_filter(void)
 
 	complex float* in = md_alloc(N, dims_in, CFL_SIZE);
 
-	float scale = 2 * M_PI / (float)dims_in[0];
+	float scale = 2. * M_PI / (float)dims_in[0];
 
 	for (int i = 0; i < dims_in[0]; i++)
-		in[i] = cos(scale * i);
+		in[i] = cosf(scale * i);
 
 	complex float* out = md_alloc(N, dims_in, CFL_SIZE);
-	fftuc(N, dims_in, 1, out, in);
+	fftuc(N, dims_in, 1UL, out, in);
 
 	complex float* filter = md_alloc(N, dims_in, CFL_SIZE);
-	klaplace(N, dims_in, 1UL, filter);
 
-	// WARNING: compensate wrong scaling of klaplace:
-	md_zsmul(N, dims_in, filter, filter, -powf(2 * M_PI, 2));
+	float sc[N] = { 1. / (float)dims_in[0] };
+	klaplace_scaled(N, dims_in, 1UL, sc, filter);
+	md_zsmul(N, dims_in, filter, filter, -powf(2. * M_PI, 2.));
+
 
 	md_zmul(N, dims_in, out, out, filter);
 	md_free(filter);
 
-	ifftuc(N, dims_in, 1, out, out);
+	ifftuc(N, dims_in, 1UL, out, out);
 
 	for (int i = 0; i < dims_in[0]; i++)
-		in[i] = -1. * scale * scale * cos(scale * i);
+		in[i] = -1. * powf(scale, 2.) * cosf(scale * i);
 
 	float err = md_znrmse(N, dims_in, out, in);
 	md_free(in);
@@ -151,13 +153,13 @@ static bool test_klaplace_fd_filter(void)
 
 	complex float* in = md_alloc(N, dims_in, CFL_SIZE);
 
-	float scale = 2 * M_PI / (float)dims_in[0];
+	float scale = 2. * M_PI / (float)dims_in[0];
 
 	for (int i = 0; i < dims_in[0]; i++)
-		in[i] = cos(scale * i);
+		in[i] = cosf(scale * i);
 
 	complex float* out = md_alloc(N, dims_in, CFL_SIZE);
-	fftu(N, dims_in, 1, out, in);
+	fftu(N, dims_in, 1UL, out, in);
 
 	complex float* filter = md_alloc(N, dims_in, CFL_SIZE);
 	klaplace_fd_uncentered(N, dims_in, filter);
@@ -165,10 +167,10 @@ static bool test_klaplace_fd_filter(void)
 	md_zmul(N, dims_in, out, out, filter);
 	md_free(filter);
 
-	ifftu(N, dims_in, 1, out, out);
+	ifftu(N, dims_in, 1UL, out, out);
 
 	for (int i = 0; i < dims_in[0]; i++)
-		in[i] = -1. * scale * scale * cos(scale * i);
+		in[i] = -1. * scale * scale * cosf(scale * i);
 
 	float err = md_znrmse(N, dims_in, out, in);
 	md_free(in);
