@@ -1,6 +1,6 @@
 /* Copyright 2013-2014. The Regents of the University of California.
  * Copyright 2019-2021. Uecker Lab, University Medical Center Goettingen.
- * Copryright 2022-2025. Institute of Biomedical Imaging. TU Graz.
+ * Copryright 2022-2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
@@ -23,7 +23,7 @@
 #include "num/ops_p.h"
 #include "num/rand.h"
 #include "num/vptr.h"
-
+#include "num/vec_iter.h"
 #include "num/ops.h"
 #include "num/iovec.h"
 #ifdef USE_CUDA
@@ -36,7 +36,6 @@
 
 #include "iter/prox.h"
 #include "iter/prox2.h"
-#include "iter/vec.h"
 #include "iter/italgos.h"
 #include "iter/iter2.h"
 #include "iter/iter3.h"
@@ -44,7 +43,6 @@
 #include "iter/lsqr.h"
 #include "iter/prox.h"
 #include "iter/thresh.h"
-#include "iter/vec.h"
 #include "iter/admm.h"
 
 

@@ -1,7 +1,7 @@
 /* Copyright 2014-2016. The Regents of the University of California.
  * Copyright 2016-2018. Martin Uecker.
  * Copyright 2017. University of Oxford.
- * Copyright 2024-2025. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2024-2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
@@ -25,8 +25,9 @@
 
 #include "misc/debug.h"
 
+#include "num/vec_iter.h"
+
 #include "iter/italgos.h"
-#include "iter/vec.h"
 #include "iter/monitor.h"
 
 #include "niht.h"

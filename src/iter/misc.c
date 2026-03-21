@@ -1,26 +1,26 @@
 /* Copyright 2015. The Regents of the University of California.
  * Copyright 2017,2022. Uecker Lab. University Medical Center Göttingen.
  * Copyright 2018. Massachusetts Institute of Technology.
- * Copyright 2024. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2024-2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
  * Authors:
- * 2014 Frank Ong <frankong@berkeley.edu>
- * 2015 Martin Uecker <uecker@eecs.berkeley.edu>
+ * 2014 Frank Ong
+ * 2015 Martin Uecker
  */
 
 #include "num/multind.h"
 #include "num/ops.h"
 #include "num/iovec.h"
 #include "num/rand.h"
+#include "num/vec_iter.h"
 
 #include "misc/misc.h"
 #include "misc/debug.h"
 
 #include "iter/italgos.h"
 #include "iter/iter2.h"
-#include "iter/vec.h"
 
 #include "misc.h"
 

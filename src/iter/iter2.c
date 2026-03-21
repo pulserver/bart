@@ -27,6 +27,7 @@
 #include "num/ops_p.h"
 #include "num/ops.h"
 #include "num/vptr.h"
+#include "num/vec_iter.h"
 
 #include "linops/linop.h"
 #include "linops/someops.h"
@@ -35,7 +36,6 @@
 #include "iter/iter.h"
 #include "iter/prox.h"
 #include "iter/admm.h"
-#include "iter/vec.h"
 #include "iter/niht.h"
 #include "iter/misc.h"
 

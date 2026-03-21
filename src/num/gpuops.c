@@ -1,7 +1,7 @@
 /* Copyright 2013-2018. The Regents of the University of California.
  * Copyright 2014. Joseph Y Cheng.
  * Copyright 2016-2022. Uecker Lab. University Center Göttingen.
- * Copyright 2023. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2023-2026. Institute of Biomedical Imaging. TU Graz.
  * Copyright 2026. Department of Radiology. Boston Children's Hospital.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
@@ -40,6 +40,7 @@
 #include "num/rand.h"
 #include "num/mpi_ops.h"
 #include "num/vptr.h"
+#include "num/vec_iter.h"
 
 #ifdef USE_CUDNN
 #include "num/cudnn_wrapper.h"
@@ -582,49 +583,6 @@ const struct vec_ops gpu_ops = {
 };
 
 
-// defined in iter/vec.h
-struct vec_iter_s {
-
-	float* (*allocate)(long N);
-	void (*del)(float* x);
-	void (*clear)(long N, float* x);
-	void (*copy)(long N, float* a, const float* x);
-	void (*swap)(long N, float* a, float* x);
-
-	double (*norm)(long N, const float* x);
-	double (*dot)(long N, const float* x, const float* y);
-
-	void (*sub)(long N, float* a, const float* x, const float* y);
-	void (*add)(long N, float* a, const float* x, const float* y);
-
-	void (*smul)(long N, float alpha, float* a, const float* x);
-	void (*xpay)(long N, float alpha, float* a, const float* x);
-	void (*axpy)(long N, float* a, float alpha, const float* x);
-	void (*axpbz)(long N, float* out, const float a, const float* x, const float b, const float* z);
-	void (*fmac)(long N, float* a, const float* x, const float* y);
-
-	void (*mul)(long N, float* a, const float* x, const float* y);
-	void (*div)(long N, float* a, const float* x, const float* y);
-	void (*sqrt)(long N, float* a, const float* x);
-
-	void (*smax)(long N, float alpha, float* a, const float* x);
-	void (*smin)(long N, float alpha, float* a, const float* x);
-	void (*sadd)(long N, float* x, float y);
-	void (*sdiv)(long N, float* a, float x, const float* y);
-	void (*le)(long N, float* a, const float* x, const float* y);
-
-	void (*zmul)(long N, complex float* dst, const complex float* src1, const complex float* src2);
-	void (*zsmax)(long N, float val, complex float* dst, const complex float* src1);
-
-	void (*rand)(long N, float* dst);
-	void (*uniform)(long N, float* dst);
-
-	void (*xpay_bat)(long Bi, long N, long Bo, const float* beta, float* a, const float* x);
-	void (*dot_bat)(long Bi, long N, long Bo, float* dst, const float* src1, const float* src2);
-	void (*axpy_bat)(long Bi, long N, long Bo, float* a, const float* alpha, const float* x);
-
-};
-
 
 static void cuda_sadd_inpl(long N, float* dst, float val)
 {
@@ -664,7 +622,6 @@ const struct vec_iter_s gpu_iter_ops = {
 	.xpay_bat = cuda_xpay_bat,
 	.dot_bat = cuda_dot_bat,
 	.axpy_bat = cuda_axpy_bat,
-
 };
 #endif
 

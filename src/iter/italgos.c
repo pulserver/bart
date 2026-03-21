@@ -38,14 +38,14 @@
 
 #include <math.h>
 #include <stdbool.h>
-
-#include <stdio.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "misc/misc.h"
 #include "misc/debug.h"
 
-#include "iter/vec.h"
+#include "num/vec_iter.h"
+
 #include "iter/monitor.h"
 #include "iter/monitor_iter6.h"
 

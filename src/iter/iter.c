@@ -1,7 +1,7 @@
 /* Copyright 2013-2018. The Regents of the University of California.
  * Copyright 2017. University of Oxford.
  * Copyright 2016-2022. Uecker Lab. University Medical Center Göttingen.
- * Copyright 2022-2025. Intitute of Biomedical imaging. TU Graz.
+ * Copyright 2022-2026. Intitute of Biomedical imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
@@ -21,6 +21,7 @@
 #include "num/multind.h"
 #include "num/flpmath.h"
 #include "num/ops.h"
+#include "num/vec_iter.h"
 
 #include "linops/linop.h"
 #include "linops/someops.h"
@@ -29,7 +30,6 @@
 #include "iter/prox.h"
 #include "iter/admm.h"
 #include "iter/iter2.h"
-#include "iter/vec.h"
 
 #include "misc/debug.h"
 #include "misc/misc.h"

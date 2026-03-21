@@ -37,13 +37,13 @@
 #include <assert.h>
 
 #include "num/ops.h"
+#include "num/vec_iter.h"
 
 #include "misc/debug.h"
 #include "misc/misc.h"
 #include "misc/types.h"
 
 #include "iter/italgos.h"
-#include "iter/vec.h"
 #include "iter/monitor.h"
 
 #include "admm.h"

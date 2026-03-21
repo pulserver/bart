@@ -1,5 +1,5 @@
 /* Copyright 2017-2021. Uecker Lab. University Medical Center Göttingen.
- * Copyright 2023-2025. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2023-2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  */
@@ -13,13 +13,13 @@
 #include "num/flpmath.h"
 #include "num/iovec.h"
 #include "num/vptr.h"
+#include "num/vec_iter.h"
 
 #include "nlops/nlop.h"
 
 #include "misc/types.h"
 
 #include "iter/italgos.h"
-#include "iter/vec.h"
 #include "iter/iter3.h"
 #include "iter/iter2.h"
 

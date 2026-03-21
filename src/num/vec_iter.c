@@ -1,5 +1,5 @@
 /* Copyright 2013-2015. The Regents of the University of California.
- * Copyright 2022. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2022-2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  */
@@ -9,8 +9,7 @@
 #include "num/vptr.h"
 #include "num/vptr_iter.h"
 
-
-#include "vec.h"
+#include "vec_iter.h"
 
 
 // defined in vecops.c and gpuops.c
