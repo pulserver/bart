@@ -1,5 +1,6 @@
 /* Copyright 2020-2023. Uecker Lab, University Medical Center Goettingen.
  * Copyright 2022-2026. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2026. Department of Radiology. Boston Children's Hospital.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
@@ -10,6 +11,7 @@
 
 #include <stdbool.h>
 #include <complex.h>
+#include <math.h>
 
 #include "num/multind.h"
 #include "num/flpmath.h"
@@ -23,6 +25,7 @@
 #include "misc/utils.h"
 #include "misc/opts.h"
 #include "misc/debug.h"
+#include "misc/types.h"
 
 #include "iter/italgos.h"
 #include "iter/iter3.h"
@@ -111,6 +114,45 @@ static void mobafit_bound(iter_op_data* _data, float* dst, const float* src)
 	md_free(tmp_map);
 }
 
+static void mobafit_compute_covariance(struct iter_conjgrad_conf conjgrad_conf, const struct nlop_s* nlop, const long cov_dims[DIMS], complex float* cov, const long ydims[DIMS], const complex float* y, const long xdims[DIMS], const complex float* x)
+{
+	complex float* res = md_alloc_sameplace(DIMS, ydims, CFL_SIZE, y);
+	nlop_apply(nlop, DIMS, ydims, res, DIMS, xdims, x);
+	md_zsub(DIMS, ydims, res, res, y);
+
+	long bdims[DIMS];
+	md_select_dims(DIMS, ~COEFF_FLAG, bdims, xdims);
+
+	complex float* sig = md_alloc_sameplace(DIMS, bdims, CFL_SIZE, x);
+	md_zss(DIMS, ydims, TE_FLAG, sig, res);
+
+	//FIXME: for a proper treatment, we need the number of real/complex degrees of freedom
+	md_zsmul(DIMS, bdims, sig, sig, 1.f / sqrtf(ydims[TE_DIM] - xdims[COEFF_DIM]));
+
+	md_free(res);
+
+	long cov_strs[DIMS];
+	md_calc_strides(DIMS, cov_strs, cov_dims, CFL_SIZE);
+
+	md_clear(DIMS, cov_dims, cov, CFL_SIZE);
+
+	long pos[DIMS] = { 0 };
+
+	for (pos[COEFF_DIM] = 0; pos[COEFF_DIM] < cov_dims[COEFF_DIM]; pos[COEFF_DIM]++) {
+
+		complex float* id = md_alloc_sameplace(DIMS, xdims, CFL_SIZE, x);
+		md_clear(DIMS, xdims, id, CFL_SIZE);
+		md_copy_block(DIMS, pos, xdims, id, bdims, sig, CFL_SIZE);
+
+		iter2_conjgrad(CAST_UP(&(conjgrad_conf)), nlop_get_derivative(nlop, 0, 0)->normal, 0, NULL, NULL, NULL, NULL,
+			2 * md_calc_size(DIMS, xdims), (float*)MD_ACCESS_PTR(DIMS, cov_strs, pos, cov), (const float*)id, NULL);
+
+		md_free(id);
+	}
+
+	md_free(sig);
+}
+
 
 static const char help_str[] = "Pixel-wise fitting of physical signal models.";
 
@@ -123,12 +165,14 @@ int main_mobafit(int argc, char* argv[argc])
 	const char* coeff_file = NULL;
 	const char* b1_file = NULL;
 	const char* b0_file = NULL;
+	const char* cov_file = NULL;
 
 	struct arg_s args[] = {
 
 		ARG_INFILE(true, &enc_file, "enc"),
 		ARG_INFILE(true, &echo_file, "echo/contrast images"),
 		ARG_OUTFILE(false, &coeff_file, "coefficients"),
+		ARG_OUTFILE(false, &cov_file, "covariance matrix"),
 	};
 
 	float init0[DIMS] = { };
@@ -397,15 +441,23 @@ int main_mobafit(int argc, char* argv[argc])
 
 	complex float* x = create_cfl(coeff_file, DIMS, x_dims);
 
+	long cov_dims[DIMS];
+	md_copy_dims(DIMS, cov_dims, x_dims);
+	cov_dims[TE_DIM] = cov_dims[COEFF_DIM];
+
+	complex float* covariance = cov_file ? create_cfl(cov_file, DIMS, cov_dims) : NULL;
+
 	md_zfill(DIMS, x_dims, x, 1.);
 
 	long y_patch_dims[DIMS];
 	long x_patch_dims[DIMS];
 	long y_patch_sig_dims[DIMS];
+	long cov_patch_dims[DIMS];
 
 	md_select_dims(DIMS, FFT_FLAGS | TE_FLAG | COEFF_FLAG, y_patch_dims, y_dims);
 	md_select_dims(DIMS, FFT_FLAGS | TE_FLAG | COEFF_FLAG, y_patch_sig_dims, y_sig_dims);
 	md_select_dims(DIMS, FFT_FLAGS | TE_FLAG | COEFF_FLAG, x_patch_dims, x_dims);
+	md_select_dims(DIMS, FFT_FLAGS | TE_FLAG | COEFF_FLAG, cov_patch_dims, cov_dims);
 
 	long map_dims[DIMS];
 	md_select_dims(DIMS, ~(COEFF_FLAG | TE_FLAG), map_dims, x_patch_dims);
@@ -621,6 +673,16 @@ int main_mobafit(int argc, char* argv[argc])
 
 		md_copy_block(DIMS, pos, x_dims, x, x_patch_dims, x_patch, CFL_SIZE);
 
+		if (NULL != covariance) {
+
+			complex float* cov_patch = md_alloc_sameplace(DIMS, cov_patch_dims, CFL_SIZE, x_patch);
+
+			mobafit_compute_covariance(conjgrad_conf, nlop, cov_patch_dims, cov_patch, y_patch_dims, y_patch, x_patch_dims, x_patch);
+
+			md_copy_block(DIMS, pos, cov_dims, covariance, cov_patch_dims, cov_patch, CFL_SIZE);
+			md_free(cov_patch);
+		}
+
 	} while (md_next(DIMS, y_dims, ~(FFT_FLAGS | TE_FLAG | COEFF_FLAG), pos));
 
 
@@ -637,6 +699,7 @@ int main_mobafit(int argc, char* argv[argc])
 	unmap_cfl(DIMS, y_dims, y);
 	unmap_cfl(DIMS, enc_dims, enc);
 	unmap_cfl(DIMS, x_dims, x);
+	unmap_cfl(DIMS, cov_dims, covariance);
 
 	double recosecs = timestamp() - start_time;
 
