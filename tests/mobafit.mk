@@ -337,6 +337,23 @@ tests/test-mobafit-irll-irgn-reg: phantom signal reshape fmac index mobafit slic
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
+tests/test-mobafit-phase: phantom signal fmac index scale extract mobafit slice nrmse
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)			;\
+	$(TOOLDIR)/phantom -x16 -c circ.ra				;\
+	$(TOOLDIR)/signal -G -n8 -1 3:3:1 -2 0.02:0.02:1 signal_p1.ra	;\
+	$(TOOLDIR)/extract 5 1 8 signal_p1.ra signal.ra			;\
+	$(TOOLDIR)/fmac circ.ra signal.ra echoes.ra			;\
+	$(TOOLDIR)/index 5 8 tmp1.ra					;\
+	$(TOOLDIR)/scale 1.6 tmp1.ra tmp2.ra				;\
+	$(TOOLDIR)/extract 5 1 8 tmp2.ra TE.ra				;\
+	$(TOOLDIR)/mobafit -i10 -P TE.ra echoes.ra reco.ra		;\
+	$(TOOLDIR)/slice 6 1 reco.ra fB0.ra				;\
+	$(TOOLDIR)/phantom -x16 -c circ.ra				;\
+	$(TOOLDIR)/fmac fB0.ra circ.ra masked.ra			;\
+	$(TOOLDIR)/scale -- 0.02 circ.ra ref.ra				;\
+	$(TOOLDIR)/nrmse -t 0.0001 ref.ra masked.ra			;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
 
 
 TESTS += tests/test-mobafit-r2s tests/test-mobafit-wfr2s
@@ -347,6 +364,7 @@ TESTS += tests/test-mobafit-irll-irgn-reg
 TESTS += tests/test-mobafit-ir_t1
 TESTS += tests/test-mobafit-sim-om
 TESTS += tests/test-mobafit-sim-pool2 tests/test-mobafit-sim-pool3
+TESTS += tests/test-mobafit-phase
 
 TESTS_SLOW += tests/test-mobafit-sim
 TESTS_SLOW += tests/test-mobafit-bmc-sim

@@ -302,6 +302,7 @@ int main_mobafit(int argc, char* argv[argc])
 		OPT_SELECT('G', enum seq_type, &seq, MGRE, "MGRE"),
 		OPT_SELECT('D', enum seq_type, &seq, DIFF, "diffusion"),
 		OPT_SELECT('S', enum seq_type, &seq, SIM, "Simulation based fitting"),
+		OPT_SELECT('P', enum seq_type, &seq, PHASE, "Phase fitting f(p0, fB0) = |M| exp(i 2pi p0) * exp(i 2pi * fB0 * te)"),
 		OPT_PINT('m', &mgre_model, "model", "Select the MGRE model from enum { WF = 0, WFR2S, WF2R2S, R2S, PHASEDIFF } [default: WFR2S]"),
 		OPT_SET('a', &use_magn, "fit magnitude of signal model to data"),
 		OPT_PINT('i', &iter, "iter", "Number of IRGNM steps"),
@@ -432,6 +433,11 @@ int main_mobafit(int argc, char* argv[argc])
 		x_dims[COEFF_DIM] = 1 + 3 * num_lorentzian_pools;
 		break;
 
+	case PHASE:
+
+		x_dims[COEFF_DIM] = 2;
+		break;
+
 	default:
 		debug_printf(DP_DEBUG2, "Sequence Type %c \n", seq);
 
@@ -515,6 +521,11 @@ int main_mobafit(int argc, char* argv[argc])
 		moba_conf->sim.seq.rep_num = y_dims[TE_DIM];
 
 		nlop = nlop_bloch_create(DIMS, der_dims, map_dims, out_dims, in_dims, b1, b0, moba_conf);
+		break;
+
+	case PHASE:
+
+		nlop = mobafit_phase_nlop(y_patch_dims, y, enc_dims, enc);
 		break;
 
 	default:

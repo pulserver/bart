@@ -1,9 +1,12 @@
 /* Copyright 2022-2024. TU Graz. Institute of Biomedical Imaging.
+ * Copyright 2026. Department of Radiology. Boston Children's Hospital.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
  * Author:
  *	Nick Scholand
+ *	Markus Huemer
+ *	Moritz Blumenthal
  */
 
 #include <complex.h>
@@ -17,6 +20,8 @@
 
 #include "nlops/nlop.h"
 #include "nlops/chain.h"
+#include "nlops/snlop.h"
+#include "nlops/smath.h"
 
 #include "num/multind.h"
 #include "num/flpmath.h"
@@ -219,5 +224,38 @@ const struct nlop_s* moba_get_nlop(struct mobafit_model_config* config, const lo
 
 	return nlop;
 }
+
+
+// Simple phase evolution. Not integrated moba_get_nlop becaus it requires the signal itself.
+const struct nlop_s* mobafit_phase_nlop(const long out_dims[DIMS], const complex float* sig, const long enc_dims[DIMS], complex float* enc)
+{
+	long map_dims[DIMS];
+	md_select_dims(DIMS, ~TE_FLAG, map_dims, out_dims);
+
+	arg_t args[2] = { snlop_input(DIMS, map_dims, "Phi0"), snlop_input(DIMS, map_dims, "fB0") };
+
+	arg_t TE = snlop_const(DIMS, enc_dims, enc, "TE");
+
+	arg_t out = snlop_mul_F(snlop_real(args[1]), TE, 0);
+	out = snlop_add_F(out, snlop_real(args[0]));
+	out = snlop_scale_F(out, 2.i * M_PI);
+	out = snlop_exp_F(out);
+
+	complex float* mag = md_alloc_sameplace(DIMS, out_dims, CFL_SIZE, sig);
+	md_zabs(DIMS, out_dims, mag, sig);
+
+	out = snlop_mul_F(out, snlop_const(DIMS, map_dims, mag, "mag"), 0);
+
+	md_free(mag);
+
+	const struct nlop_s* ret = nlop_from_snlop_F(snlop_from_arg(out),
+							1, (arg_t[1]){ out },
+							2, args);
+
+	return nlop_stack_inputs_F(ret, 0, 1, COEFF_DIM);
+}
+
+
+
 
 

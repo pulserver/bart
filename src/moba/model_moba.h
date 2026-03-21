@@ -27,7 +27,8 @@ enum seq_type {
 	MGRE,
 	DIFF,
 	IR,
-	SIM
+	SIM,
+	PHASE,
 };
 
 struct mobafit_model_config {
@@ -41,4 +42,7 @@ extern struct mobamod moba_create(const long dims[DIMS], const complex float* ma
 		const complex float* b0, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, const complex float* psf, const struct noir_model_conf_s* conf, struct moba_conf_s* data);
 
 const struct nlop_s* moba_get_nlop(struct mobafit_model_config* data, const long out_dims[DIMS], const long param_dims[DIMS], const long enc_dims[DIMS], complex float* enc);
+
+extern const struct nlop_s* mobafit_phase_nlop(const long out_dims[DIMS], const complex float* sig, const long enc_dims[DIMS], complex float* enc);
+
 
