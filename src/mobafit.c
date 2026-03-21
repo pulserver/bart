@@ -196,6 +196,8 @@ int main_mobafit(int argc, char* argv[argc])
 	int mgre_model = MECO_WFR2S;
 	int num_lorentzian_pools = 0;
 
+	bool fB0_init = false;
+
 	int iter = 5;
 
 	const char* basis_file = NULL;
@@ -327,6 +329,7 @@ int main_mobafit(int argc, char* argv[argc])
 		OPTL_SUBOPT(0, "other", "...", "configure other simulation parameters", ARRAY_SIZE(other_opts), other_opts),
 		OPTL_SUBOPT(0, "pool", "...", "configure pool parameters for BMC simulation", ARRAY_SIZE(pool_opts), pool_opts),
 		OPTL_SUBOPT(0, "cest", "...", "configure parameters for CEST simulation", ARRAY_SIZE(cest_opts), cest_opts),
+		OPTL_SET(0, "fB0-init", &(fB0_init), "Take fB0 average of echos with equal dTE for initialization of fB0"),
 	};
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
@@ -592,6 +595,10 @@ int main_mobafit(int argc, char* argv[argc])
 
 	md_zfill(DIMS, x_dims, x, 1.);
 	md_zmul2(DIMS, x_dims, x_strs, x, x_strs, x, c_strs, init);
+
+	if (fB0_init)
+		mobafit_phase_init(seq, x_dims, x, y_dims, y, enc_dims, enc);
+
 	md_zdiv2(DIMS, x_dims, x_strs, x, x_strs, x, c_strs, scale);
 
 	bounds.dims = x_patch_dims;

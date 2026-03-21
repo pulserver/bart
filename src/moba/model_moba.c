@@ -255,7 +255,111 @@ const struct nlop_s* mobafit_phase_nlop(const long out_dims[DIMS], const complex
 	return nlop_stack_inputs_F(ret, 0, 1, COEFF_DIM);
 }
 
+static void mobafit_phase_average(int N, const long dims[N], complex float* fB0, const complex float* sig, const long TE_dims[N], complex float* TE)
+{
+	assert(TE_DIM < N);
 
+	long pos[N];
+	md_set_dims(N, pos, 0);
+	pos[TE_DIM] = -1;
+
+	complex float* dTE = md_alloc_sameplace(N, TE_dims, CFL_SIZE, TE);
+	md_circ_shift(N, TE_dims, pos, dTE, TE, CFL_SIZE);
+	md_zsub(N, TE_dims, dTE, dTE, TE);
+
+	complex float* dsig = md_alloc_sameplace(N, dims, CFL_SIZE, sig);
+	md_circ_shift(N, dims, pos, dsig, sig, CFL_SIZE);
+	md_zmulc(N, dims, dsig, dsig, sig);
+
+	long TE_strs[N];
+	long sig_strs[N];
+
+	md_calc_strides(N, TE_strs, TE_dims, CFL_SIZE);
+	md_calc_strides(N, sig_strs, dims, CFL_SIZE);
+
+	long sTE_dims[N];
+	md_select_dims(N, ~TE_FLAG, sTE_dims, TE_dims);
+	pos[TE_DIM] = 0;
+
+	complex float* dTE_tmp = md_alloc_sameplace(N, sTE_dims, CFL_SIZE, TE);
+	md_copy_block(N, pos, sTE_dims, dTE_tmp, TE_dims, dTE, CFL_SIZE);
+	float nrm = md_znorm(N, sTE_dims, dTE_tmp);
+
+	for (pos[TE_DIM] = 0; pos[TE_DIM] < TE_dims[TE_DIM]; pos[TE_DIM]++) {
+
+		md_zsub2(N, sTE_dims, MD_STRIDES(N, sTE_dims, CFL_SIZE), dTE_tmp, TE_strs, MD_ACCESS_PTR(N, TE_strs, pos, dTE), TE_strs, dTE);
+		float nrmse = md_znorm(N, sTE_dims, dTE_tmp) / nrm;
+
+		if (1.e-5 < nrmse)
+			break;
+	}
+
+	md_free(dTE_tmp);
+
+	long avg_dims[N];
+	md_copy_dims(N, avg_dims, dims);
+	avg_dims[TE_DIM] = pos[TE_DIM];
+
+	debug_printf(DP_INFO, "Use first %ld echos to initialize fB0.\n", pos[TE_DIM] + 1);
+
+	long fB0_dims[N];
+	long fB0_strs[N];
+	md_select_dims(N, ~TE_FLAG, fB0_dims, dims);
+	md_calc_strides(N, fB0_strs, fB0_dims, CFL_SIZE);
+
+	md_clear(N, fB0_dims, fB0, CFL_SIZE);
+	md_zadd2(N, avg_dims, fB0_strs, fB0, fB0_strs, fB0, sig_strs, dsig);
+
+	md_zarg(N, fB0_dims, fB0, fB0);
+
+	md_zspow(N, TE_dims, dTE, dTE, -1.);
+	md_zsmul(N, TE_dims, dTE, dTE, 1. / (2. * M_PI));
+
+	md_zmul2(N, fB0_dims, fB0_strs, fB0, fB0_strs, fB0, TE_strs, dTE);
+
+	md_free(dTE);
+	md_free(dsig);
+}
+
+
+void mobafit_phase_init(enum seq_type seq, const long coeff_dims[DIMS], complex float* init, const long sig_dims[DIMS], const complex float* sig, const long enc_dims[DIMS], complex float* enc)
+{
+	if (PHASE != seq && MGRE != seq)
+		error("Phase initialization only available for phase contrast and MGRE models");
+
+	long map_dims[DIMS];
+	md_select_dims(DIMS, ~TE_FLAG, map_dims, sig_dims);
+
+	complex float* fB0 = md_alloc_sameplace(DIMS, map_dims, CFL_SIZE, sig);
+	mobafit_phase_average(DIMS, sig_dims, fB0, sig, enc_dims, enc);
+
+	long pos[DIMS] = { 0 };
+	pos[COEFF_DIM] = coeff_dims[COEFF_DIM] - 1; // fB0 is always the last coefficient
+	md_copy_block(DIMS, pos,coeff_dims, init, map_dims, fB0, CFL_SIZE);
+
+	// also init phase at TE=0
+	if (PHASE == seq) {
+
+		long sig_strs[DIMS];
+		long coeff_strs[DIMS];
+		long map_strs[DIMS];
+
+		md_calc_strides(DIMS, sig_strs, sig_dims, CFL_SIZE);
+		md_calc_strides(DIMS, coeff_strs, coeff_dims, CFL_SIZE);
+		md_calc_strides(DIMS, map_strs, map_dims, CFL_SIZE);
+
+		md_zarg2(DIMS, map_dims, coeff_strs, init, sig_strs, sig);
+		md_zsmul2(DIMS, map_dims, coeff_strs, init, coeff_strs, init, 1. / (2. * M_PI));
+
+		long enc_strs[DIMS];
+		md_calc_strides(DIMS, enc_strs, enc_dims, CFL_SIZE);
+
+		md_zsmul(DIMS, map_dims, fB0, fB0, -1.);
+		md_zfmac2(DIMS, map_dims, coeff_strs, init, map_strs, fB0, enc_strs, enc);
+	}
+
+	md_free(fB0);
+}
 
 
 

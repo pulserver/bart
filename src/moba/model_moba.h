@@ -45,4 +45,5 @@ const struct nlop_s* moba_get_nlop(struct mobafit_model_config* data, const long
 
 extern const struct nlop_s* mobafit_phase_nlop(const long out_dims[DIMS], const complex float* sig, const long enc_dims[DIMS], complex float* enc);
 
+extern void mobafit_phase_init(enum seq_type seq, const long coeff_dims[DIMS], complex float* init, const long sig_dims[DIMS], const complex float* sig, const long enc_dims[DIMS], complex float* enc);
 
