@@ -31,5 +31,17 @@ tests/test-join-append-one: ones zeros join nrmse
 	touch $@
 
 
-TESTS += tests/test-join tests/test-join-append tests/test-join-append-one
+tests/test-join-append-rewrite: ones zeros join nrmse
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)						;\
+	$(TOOLDIR)/ones 3 6 7 1 o								;\
+	$(TOOLDIR)/zeros 3 6 7 1 z								;\
+	$(TOOLDIR)/join 0 o z o j								;\
+	$(TOOLDIR)/join -a 0 z o o								;\
+	$(TOOLDIR)/nrmse -t 0. j o								;\
+	rm *.cfl ; rm *.hdr ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
+
+TESTS += tests/test-join tests/test-join-append tests/test-join-append-one \
+tests/test-join-append-rewrite
 
