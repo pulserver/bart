@@ -22,6 +22,8 @@ struct seq_opts {
 
 	_Bool chrono;
 	_Bool support;
+	_Bool stats;
+
 
 	const char* raga_file;
 

@@ -25,6 +25,7 @@
 #include "seq/opts.h"
 
 #include "seq/misc.h"
+#include "seq/checks.h"
 #include "seq/flash.h"
 #include "seq/kernel.h"
 #include "seq/pulseq.h"
@@ -227,8 +228,11 @@ int main_seq(int argc, char* argv[argc])
 
 	debug_printf(DP_INFO, "Nr. of RF shapes: %d\n", prepped_rfs);
 
+	long pulse_calls[prepped_rfs];
+
 	for (int i = 0; i < prepped_rfs; i++) {
 
+		pulse_calls[i] = 0;
 		double s = seq_pulse_scaling(&seq->rf_shape[i]);
 		double n = seq_pulse_norm_sum(&seq->rf_shape[i]);
 
@@ -348,6 +352,9 @@ int main_seq(int argc, char* argv[argc])
 debug_print_events:
 		seq_linearize_events(E, seq->event, &seq->state->start_block, seq->state->mode, seq->conf->phys.tr, seq->conf->sys.raster_grad);
 
+		seq_rf_count(prepped_rfs, pulse_calls, E, seq->event);
+
+
 		for (int i = 0; i < E; i++) {
 
 			debug_printf(DP_DEBUG3, "event[%d]:\t%.8f\t\t%.8f\t\t%.8f\t\t", i,
@@ -386,6 +393,17 @@ debug_print_events:
 
 	if (1.E-3 < fabs(seq->state->start_block - seq_total_measure_time(seq->conf)))
 		debug_printf(DP_WARN, "Calculation of sequence duration invalid!\n");
+
+	for (int i = 0; i < prepped_rfs; i++) {
+
+		if (pulse_calls[i] != seq->rf_shape[i].sar_calls)
+			debug_printf(DP_WARN, "Calculation of pulse calls invalid! pulse_id: %d, calls: %ld (expected: %.0f)\n",
+				i, pulse_calls[i], seq->rf_shape[i].sar_calls);
+
+		if (seq_opts.stats)
+			debug_printf(DP_INFO, "Pulse statistics: pulse_id: %d, calls: %ld\n",
+				i, pulse_calls[i]);
+	}
 
 	unmap_cfl(DIMS, mdims, out_grad);
 	unmap_cfl(DIMS, mdims, out_mom);

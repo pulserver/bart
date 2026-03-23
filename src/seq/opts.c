@@ -30,6 +30,7 @@ const struct seq_opts seq_opts_defaults = {
 
 	.chrono = false,
 	.support = false,
+	.stats = false,
 
 	.raga_file = NULL,
 
@@ -131,6 +132,8 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 		OPTL_VECN(0, "CUSTOM_LONG", seq_opts->custom_params_long, "custom long parameters"),
 		OPTL_DOVECN(0, "CUSTOM_DOUBLE", seq_opts->custom_params_double, "custom double parameters"),
 		OPTL_VECN(0, "LOOP", conf->loop_dims, "sequence loop dimensions"),
+
+		OPTL_SET(0, "stats", &seq_opts->stats, "Statistics / check of sequence"),
 	};
 
 
