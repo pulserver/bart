@@ -218,6 +218,16 @@ int main_seq(int argc, char* argv[argc])
 		if (ERROR_SETTING_SPOKES_RAGA == prepped_rfs)
 			debug_printf(DP_WARN, "%s\n", radial_info);
 
+		double min_tr = seq_minimum_tr(seq->conf);
+		double min_te[SEQ_MAX_NO_ECHOES] = { };
+		double fill_te[SEQ_MAX_NO_ECHOES] = { };
+		seq_minimum_te(seq->conf, min_te, fill_te);
+
+		debug_printf(DP_INFO, "minimum TE/TR: %.3f/%.3f ms (fill: %.3f)\n", 1.E3 * min_te[0], 1.E3 * min_tr, 1.E3 * fill_te[0]);
+
+		if (1 < seq->conf->loop_dims[TE_DIM])
+			debug_printf(DP_INFO, "(delta TE: %.3f)\n", 1.E3 * (min_te[1] - min_te[0]));
+
 		error("Sequence preparation failed! - check seq_config, %s [ %d ] \n", error_string(prepped_rfs), prepped_rfs);
 	}
 
