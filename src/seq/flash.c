@@ -423,7 +423,7 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 
 	} while (md_next(DIMS, seq->loop_dims, TE_FLAG, seq_state->pos));
 
-	if (seq_block_end_flat(i, ev, seq->sys.raster_grad) > seq->phys.tr)
+	if (seq_block_end_flat(i, ev, seq->sys.raster_grad) - 1E-9 > seq->phys.tr)
 		return ERROR_END_FLAT_KERNEL;
 
 	if (   (SEQ_PEMODE_RAGA == seq->enc.pe_mode)
