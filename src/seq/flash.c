@@ -194,6 +194,12 @@ int prep_grad_ro(struct grad_trapezoid* grad, long echo, const struct seq_config
 }
 
 
+static double slice_momentum_to_rephase(const struct seq_config* seq)
+{
+	double amp = slice_amplitude(seq);
+	return amp * (0.5 * seq->phys.rf_duration + 0.5 * amp * seq->sys.grad.inv_slew_rate);
+}
+
 
 static int prep_grad_sli(struct grad_trapezoid* grad, const struct seq_config* seq)
 {
@@ -217,13 +223,10 @@ static int prep_grad_sli_reph(struct grad_trapezoid* grad, const struct seq_conf
 {
 	*grad = (struct grad_trapezoid){ 0 };
 
-	double amp = slice_amplitude(seq);
-	double mom = amp * (0.5 * seq->phys.rf_duration + 0.5 * amp * seq->sys.grad.inv_slew_rate);
-
 	struct grad_limits limits = seq->sys.grad;
 	limits.max_amplitude *= SCALE_GRAD;
 
-	if (!grad_soft(grad, available_time_RF_SLI(0, seq), -mom, limits))
+	if (!grad_soft(grad, available_time_RF_SLI(0, seq), -slice_momentum_to_rephase(seq), limits))
 		return 0;
 
 	return 1;
