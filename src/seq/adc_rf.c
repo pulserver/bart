@@ -138,16 +138,20 @@ long flash_ex_calls(const struct seq_config* seq)
 	return md_calc_size(DIMS, dims);
 }
 
-
-double adc_time_to_echo(const struct seq_config* seq)
+static long cols_to_echo(long echo, const struct seq_config* seq)
 {
-	return 0.5 * seq->phys.dwell * seq->geom.baseres;
+	return (0 == (echo % 2)) ? (seq->geom.baseres * seq->phys.asym_echo) : (seq->geom.baseres - (seq->geom.baseres * seq->phys.asym_echo));
+}
+
+double adc_time_to_echo(long echo, const struct seq_config* seq)
+{
+	return seq->phys.dwell * cols_to_echo(echo, seq);
 }
 
 
 double adc_duration(const struct seq_config* seq)
 {
-	return round_up_raster(seq->phys.dwell * seq->geom.baseres, seq->sys.raster_rf);
+	return round_up_raster(seq->phys.dwell * seq->geom.baseres * (0.5 + seq->phys.asym_echo), seq->sys.raster_rf);
 }
 
 static double adc_nco_freq(double proj_angle, long chrono_slice, const struct seq_config* seq)
@@ -169,9 +173,9 @@ int prep_adc(struct seq_event* adc_ev, double start, double rf_spoil_phase,
 	adc_ev->end = adc_ev->start + adc_duration(seq);
 
 	adc_ev->adc.dwell_ns = (long)(seq->phys.dwell * 1.E9 + 0.5);
-	adc_ev->adc.columns = seq->geom.baseres;
+	adc_ev->adc.columns = (long)(seq->geom.baseres * (seq->phys.asym_echo + 0.5));
 
-	adc_ev->mid = adc_ev->start + adc_time_to_echo(seq);
+	adc_ev->mid = adc_ev->start + adc_time_to_echo(seq_state->pos[TE_DIM], seq);
 
 	md_copy_dims(DIMS, adc_ev->adc.pos, seq_state->pos);
 

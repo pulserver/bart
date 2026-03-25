@@ -328,6 +328,9 @@ static int check_settings(const struct seq_state* seq_state, const struct seq_co
 			return ERROR_SETTING_SPOKES_EVEN;
 	}
 
+	if ((1 < seq->loop_dims[TE_DIM]) && (0.5 != seq->phys.asym_echo))
+		return ERROR_SETTING_ASYM_MECO;
+
 	return 1;
 }
 

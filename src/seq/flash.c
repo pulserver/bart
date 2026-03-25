@@ -38,7 +38,7 @@ static double start_rf(const struct seq_config* seq)
 static double start_adc(long echo, const struct seq_config* seq)
 {
 	return round_up_raster(start_rf(seq) + seq->phys.rf_duration / 2. + seq->phys.te + echo * seq->phys.te_delta
-				- adc_time_to_echo(seq), seq->sys.raster_rf);
+				- adc_time_to_echo(echo, seq), seq->sys.raster_rf);
 }
 
 static double ro_shift(long echo, const struct seq_config* seq)
@@ -60,13 +60,13 @@ static double available_time_RF_SLI(int ro, const struct seq_config* seq)
 
 	return seq->phys.te - seq->phys.rf_duration / 2.
 		- ampl * seq->sys.grad.inv_slew_rate
-		- round_up_raster(adc_time_to_echo(seq) - 0.99 * seq->sys.raster_rf, seq->sys.raster_rf) // round down
+		- round_up_raster(adc_time_to_echo(0, seq) - 0.99 * seq->sys.raster_rf, seq->sys.raster_rf) // round down
 		- ro_shift(0, seq);
 }
 
 static double ro_time_to_echo(long echo, const struct seq_config* seq)
 {
-	return ro_shift(echo, seq) + adc_time_to_echo(seq);
+	return ro_shift(echo, seq) + adc_time_to_echo(echo, seq);
 }
 
 static long ro_time_after_echo(long echo, const struct seq_config* seq)
@@ -82,7 +82,7 @@ static double ro_momentum_to_echo(long echo, const struct seq_config* seq)
 
 	return amp *
 		(0.5 * amp * seq->sys.grad.inv_slew_rate
-		+ ro_shift(echo, seq) + adc_time_to_echo(seq));
+		+ ro_shift(echo, seq) + adc_time_to_echo(echo, seq));
 }
 
 static double ro_momentum_after_echo(long echo, const struct seq_config* seq)

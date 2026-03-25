@@ -166,7 +166,7 @@ int main_seq(int argc, char* argv[argc])
 	md_copy_dims(DIMS, adims, kernel_dims);
 
 	adims[PHS2_DIM] *= adims[PHS1_DIM]; // consistency with traj tool
-	adims[PHS1_DIM] = seq->conf->geom.baseres * seq->conf->phys.os;
+	adims[PHS1_DIM] = lround(seq->conf->geom.baseres * seq->conf->phys.os * (0.5 + seq->conf->phys.asym_echo));
 	adims[READ_DIM] = 5;
 
 	long adc_dims[DIMS];

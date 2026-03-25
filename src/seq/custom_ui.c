@@ -72,6 +72,7 @@ static const struct seq_ui_double custom_double_defaults[] = {
 static const struct seq_ui_double custom_doublearr_defaults[] = {
 
 	{ "", SEQ_UI_IDX_DOUBLE_BWTP, "BWTP", { 0., 200., 0.1, 1.6 }, "RF bandwidth-time-product.", "" },
+	{ "", SEQ_UI_IDX_DOUBLE_ASYM_ECHO, "Asymmetric Echo", { 0.1, 0.5, 0.01, 0.5 }, "asymmetric echo (0.5 means full echo)", "" },
 
 };
 

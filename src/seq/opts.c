@@ -80,6 +80,7 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 		// others sequence parameters
 		OPTL_DOUBLE(0, "rf_duration", &conf->phys.rf_duration, "rf_duration", "RF pulse duration"),
 		OPTL_DOUBLE(0, "dwell", &conf->phys.dwell, "dwell", "Dwell time"),
+		OPTL_DOUBLE(0, "asym_echo", &conf->phys.asym_echo, "asym_echo", "Asymmetric echo [default = 0.5]"),
 		OPTL_DOUBLE(0, "os", &conf->phys.os, "os", "Oversampling factor"),
 
 		// encoding

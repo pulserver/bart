@@ -16,7 +16,7 @@ int prep_rf_inversion(struct seq_event* rf_ev, double start, const struct seq_co
 int prep_rf_excitation(struct seq_event* rf_ev, double start, double rf_spoil_phase,
 		const struct seq_state* seq_state, const struct seq_config* seq);
 
-double adc_time_to_echo(const struct seq_config* seq);
+double adc_time_to_echo(long echo, const struct seq_config* seq);
 double adc_duration(const struct seq_config* seq);
 
 int prep_adc(struct seq_event* adc_ev, double start, double rf_spoil_phase,

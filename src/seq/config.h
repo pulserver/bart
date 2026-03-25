@@ -44,6 +44,7 @@ struct seq_phys {
 
 	double dwell;
 	double os;
+	double asym_echo;
 
 	enum flash_contrast contrast;
 	double rf_duration;

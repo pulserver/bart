@@ -29,6 +29,7 @@ SEQ_CUSTOM_UI_IDX_LONG(enum_entry)
 #define SEQ_CUSTOM_UI_IDX_DOUBLE(M)	\
 	M(CMD)				\
 	M(BWTP)				\
+	M(ASYM_ECHO)
 
 enum custom_idx_double {
 #define enum_entry(name) SEQ_UI_IDX_DOUBLE_##name,

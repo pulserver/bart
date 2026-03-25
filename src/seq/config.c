@@ -97,6 +97,7 @@ const struct seq_config seq_config_defaults = {
 		.te_delta = 2.0E-3,
 		.dwell = 4.E-6,
 		.os = 2.,
+		.asym_echo = 0.5,
 		.contrast = SEQ_CONTRAST_RF_RANDOM,
 		.rf_duration = 620.E-6,
 		.flip_angle = 6.,

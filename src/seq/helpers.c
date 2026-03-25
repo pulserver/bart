@@ -107,6 +107,7 @@ static void custom_params_to_config(struct seq_config* seq, int nl, const long c
 	seq->enc.aligned_flags = (unsigned long)custom_long[SEQ_UI_IDX_LONG_RAGA_ALIGNED_FLAGS];
 
 	seq->phys.bwtp = custom_double[SEQ_UI_IDX_DOUBLE_BWTP];
+	seq->phys.asym_echo = custom_double[SEQ_UI_IDX_DOUBLE_ASYM_ECHO];
 }
 
 
@@ -128,6 +129,7 @@ static void config_to_custom_params(int nl, long custom_long[__VLA(nl)], int nd,
 	custom_long[SEQ_UI_IDX_LONG_INV_DELAY] = seq->magn.inv_delay_time;
 	custom_long[SEQ_UI_IDX_LONG_RAGA_ALIGNED_FLAGS] = (long)seq->enc.aligned_flags;
 	custom_double[SEQ_UI_IDX_DOUBLE_BWTP] = seq->phys.bwtp;
+	custom_double[SEQ_UI_IDX_DOUBLE_ASYM_ECHO] = seq->phys.asym_echo;
 }
 
 
@@ -390,12 +392,12 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 {
 	int ctr = 0;
 
-	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n\nseq_config\nTR/TE0/deltaTE\t\t\t\t\t%f/%f/%f", 
+	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n\nseq_config\nTR/TE0/deltaTE\t\t\t\t%f/%f/%f", 
 			seq->phys.tr, seq->phys.te, seq->phys.te_delta);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr), 
-			"\ndwell/os\t\t\t\t%.8f/%.2f\ncontrast/rf duration/FA/BWTP\t\t%d/%.6f/%.2f/%.2f",
-			seq->phys.dwell, seq->phys.os,
+			"\ndwell/os/asym\t\t\t\t%.8f/%.2f/%.2f\ncontrast/rf duration/FA/BWTP\t\t%d/%.6f/%.2f/%.2f",
+			seq->phys.dwell, seq->phys.os, seq->phys.asym_echo,
 			seq->phys.contrast, seq->phys.rf_duration, seq->phys.flip_angle, seq->phys.bwtp);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr), 
