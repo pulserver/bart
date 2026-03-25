@@ -253,19 +253,19 @@ static double gradient_time_after_RO(const struct seq_config* seq)
 
 double min_tr_flash(const struct seq_config* seq)
 {
-	double time_ro_rf = MAX((seq->sys.min_duration_ro_rf - seq->sys.grad.max_amplitude * seq->sys.grad.inv_slew_rate), seq->sys.coil_control_lead);
-	double time_gradients = gradient_time_after_RO(seq);
+	double time_gradients_after_RO = ro_amplitude(seq) * seq->sys.grad.inv_slew_rate + gradient_time_after_RO(seq);
 
-	double time_after_RO = MAX(time_ro_rf, time_gradients);
-
+	// we have to check for minimum timings between rf and next adc
+	double add_time_ro_rf = MAX(MAX(seq->sys.min_duration_ro_rf, seq->sys.coil_control_lead) 
+					- (time_gradients_after_RO + slice_amplitude(seq) * seq->sys.grad.inv_slew_rate), 0.);
 
 	struct grad_trapezoid last_ro;
 	prep_grad_ro(&last_ro, seq->loop_dims[TE_DIM] - 1, seq);
 
-	double last_ro_start = start_rf(seq) + seq->phys.rf_duration + available_time_RF_SLI(1, seq) 
-				- seq->phys.te_delta; // available_time_RF_SLI only adds first echo, but we need te[echo]
+	double last_ro_start = start_rf(seq) + seq->phys.rf_duration + available_time_RF_SLI(1, seq)
+				+ (seq->loop_dims[TE_DIM] - 1) * seq->phys.te_delta;
 
-	return round_up_raster(last_ro_start + grad_duration(&last_ro) + time_after_RO, seq->sys.raster_grad);
+	return round_up_raster(last_ro_start + grad_duration(&last_ro) + add_time_ro_rf, seq->sys.raster_grad);
 }
 
 
