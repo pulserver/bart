@@ -201,6 +201,18 @@ static double slice_momentum_to_rephase(const struct seq_config* seq)
 }
 
 
+static double end_last_ro(int rampdown, const struct seq_config* seq)
+{
+	double rdt = 0;
+	if (rampdown)
+		rdt = ro_amplitude(seq) * seq->sys.grad.inv_slew_rate;
+
+	return start_rf(seq) + seq->phys.rf_duration / 2. + seq->phys.te
+		+ seq->phys.te_delta * (seq->loop_dims[TE_DIM] - 1)
+		+ ro_time_after_echo(seq->loop_dims[TE_DIM] - 1,seq) + rdt;
+}
+
+
 static int prep_grad_sli(struct grad_trapezoid* grad, const struct seq_config* seq)
 {
 	*grad = (struct grad_trapezoid){ 0 };
