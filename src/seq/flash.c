@@ -69,7 +69,7 @@ static double ro_time_to_echo(long echo, const struct seq_config* seq)
 	return ro_shift(echo, seq) + adc_time_to_echo(echo, seq);
 }
 
-static long ro_time_after_echo(long echo, const struct seq_config* seq)
+static double ro_time_after_echo(long echo, const struct seq_config* seq)
 {
 	return round_up_raster(adc_duration(seq) + ro_shift(echo, seq), seq->sys.raster_grad) 
 		- ro_time_to_echo(echo, seq);
@@ -85,12 +85,17 @@ static double ro_momentum_to_echo(long echo, const struct seq_config* seq)
 		+ ro_shift(echo, seq) + adc_time_to_echo(echo, seq));
 }
 
+static double ro_momentum(long echo, const struct seq_config* seq)
+{
+	double amp = ro_amplitude(seq);
+
+	return amp * (amp * seq->sys.grad.inv_slew_rate
+		 + round_up_raster(adc_duration(seq) + ro_shift(echo, seq), seq->sys.raster_grad));
+}
+
 static double ro_momentum_after_echo(long echo, const struct seq_config* seq)
 {
-	struct grad_trapezoid grad;
-	prep_grad_ro(&grad, echo, seq);
-
-	return grad_momentum(&grad) - ro_momentum_to_echo(echo, seq);
+	return ro_momentum(echo, seq) - ro_momentum_to_echo(echo, seq);
 }
 
 static double ro_blip_angle(const long pos[DIMS], const struct seq_config* seq)
