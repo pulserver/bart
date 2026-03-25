@@ -66,4 +66,7 @@ void crank_nicolson(float h, int N, float x[N], float st, float end,
 	void CLOSURE_TYPE(f)(int N, float (*matrix)[N][N], float t));
 void crank_nicolson_matrix(float h, int N, float x[N], float st, float end, const float matrix[N][N]);
 
-
+void crank_nicolson_adjoint(float h, int N, float x[N], float st, float end,
+		void CLOSURE_TYPE(f)(int N, float (*matrix_ak)[N][N], float (*matrix_akp1)[N][N], float t));
+void crank_nicolson_matrix_adjoint(float h, int N, float x[N], float st, float end, 
+		const float matrix_ak[N][N], const float matrix_akp1[N][N]);

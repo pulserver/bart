@@ -45,6 +45,53 @@ static bool test_cn_matrix(void)
 UT_REGISTER_TEST(test_cn_matrix);
 
 
+static bool test_cn_matrix_with_inhomogeneous_term(void)
+{
+	float mat[3][3] = {
+	    {  0., 1., 1.},
+	    { -1., 0., 0. },
+	    {  0., 0., 0. },
+	};
+
+	float x[3] = { 0., 0., 1. };
+	float h = 0.05;
+
+	crank_nicolson_matrix(h, 3, x, 0., M_PI, mat);
+
+	UT_RETURN_ON_FAILURE_TOL(fabsf(x[0]), 1.E-3);
+	UT_RETURN_ON_FAILURE_TOL(fabsf(x[1] + 2), 1.E-3);
+	UT_RETURN_ON_FAILURE_TOL(fabsf(x[2] - 1), 1.E-3);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_cn_matrix_with_inhomogeneous_term);
+
+
+static bool test_cn_matrix_with_inhomogeneous_term2(void)
+{
+	float mat[4][4] = {
+	    {  0., 1., 0., 0.  },
+	    { -1., 0., 0., 2.5 },
+	    {  0., 0., 0., 5.  },
+	    {  0., 0., 0., 0.  },
+	};
+
+	float x[4] = { 0., 0., 0., 1. };
+	float h = 0.05;
+
+	crank_nicolson_matrix(h, 4, x, 0., M_PI, mat);
+
+	UT_RETURN_ON_FAILURE_TOL(fabs(x[0] - 5), 1.E-3);
+	UT_RETURN_ON_FAILURE_TOL(fabs(x[1] - 0), 1.E-2);
+	UT_RETURN_ON_FAILURE_TOL(fabs(x[2] - 5 * M_PI), 1.E-3);
+	UT_RETURN_ON_FAILURE_TOL(fabs(x[3] - 1), 1.E-3);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_cn_matrix_with_inhomogeneous_term2);
+
 
 static bool test_ode_matrix(void)
 {

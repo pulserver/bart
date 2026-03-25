@@ -54,15 +54,17 @@ void crank_nicolson(float h, int N, float x[N], float st, float end,
 
 		float B[N][N];
 
+		// (I + dt/2 * A)
 		for (int i = 0; i < N; i++)
 			for (int j = 0; j < N; j++)
 				B[i][j] = (i == j) + h * A[i][j] / 2.;
 
 		float tmp[N];
-		matf_vecmul(N, N, tmp, B, x);
+		matf_vecmul(N, N, tmp, B, x); // tmp = (I + dt/2 * A) * x_{n-1}
 
 		t += h;
 
+		// (I - dt/2 * A)
 		for (int i = 0; i < N; i++)
 			for (int j = 0; j < N; j++)
 				B[i][j] = (i == j) - h * A[i][j] / 2.;
@@ -94,6 +96,65 @@ void crank_nicolson_matrix(float h, int N, float x[N], float st, float end, cons
 	crank_nicolson(h, N, x, st, end, ode_matrix_fun);
 }
 
+void crank_nicolson_adjoint(float h, int N, float x[N], float st, float end,
+	void CLOSURE_TYPE(f)(int N, float (*matrix_ak)[N][N], float (*matrix_akp1)[N][N], float t))
+{
+	for (float t = end; t > st; ) {
+
+		float Ak[N][N];
+		float Akp1[N][N];
+		NESTED_CALL(f, (N, &Ak, &Akp1, t - h / 2.));
+
+		/* (I - dt / 2 Ak) x_n = (I + dt / 2 Akp1) x_{n+1}
+		 * x_{n} = (I - dt / 2 Ak)^{-1} (I + dt / 2 Akp1) x_{n+1}
+		 */
+
+		 // (I + dt/2 * Akp1)
+		float B[N][N];
+		for (int i = 0; i < N; i++)
+			for (int j = 0; j < N; j++)
+				B[i][j] = (i == j) + h * Akp1[i][j] / 2.;
+
+		float tmp[N];
+		matf_vecmul(N, N, tmp, B, x); // tmp = (I + dt/2 * Akp1) * x_{n+1}
+
+		t -= h;
+
+		// (I - dt/2 * Ak)
+		for (int i = 0; i < N; i++)
+			for (int j = 0; j < N; j++)
+				B[i][j] = (i == j) - h * Ak[i][j] / 2.;
+
+#ifndef NO_LAPACK
+		matf_solve(N, x, B, tmp);
+#else
+		assert(0);
+#endif
+		if (t - h < st)
+			h = t - st;
+	}
+}
+
+void crank_nicolson_matrix_adjoint(float h, int N, float x[N], float st, float end, 
+	const float matrix_ak[N][N], const float matrix_akp1[N][N])
+{
+#ifdef __clang__
+	const void* matrix1 = matrix_ak;	// clang workaround
+	const void* matrix2 = matrix_akp1;	// clang workaround
+#endif
+	NESTED(void, ode_matrix_fun, (int N, float (*Ak)[N][N], float (*Akp1)[N][N], float t))
+	{
+		(void)t;
+#ifdef __clang__
+		const float (*matrix_ak)[N] = matrix1;
+		const float (*matrix_akp1)[N] = matrix2;
+#endif
+		matf_copy(N, N, *Ak, matrix_ak);
+		matf_copy(N, N, *Akp1, matrix_akp1);
+	};
+
+	crank_nicolson_adjoint(h, N, x, st, end, ode_matrix_fun);
+}
 
 #define tridiag(s) (s * (s + 1) / 2)
 
