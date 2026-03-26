@@ -543,12 +543,6 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 			seq->loop_dims[ITER_DIM], seq->loop_dims[CSHIFT_DIM], seq->loop_dims[TIME_DIM], seq->loop_dims[TIME2_DIM],
 			seq->loop_dims[LEVEL_DIM], seq->loop_dims[SLICE_DIM], seq->loop_dims[AVG_DIM], seq->loop_dims[BATCH_DIM]);
 
-	int slices = get_slices(seq);
-	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n\nFOV shifts:\tREAD\tPHASE\tSLICE\n");
-
-	for (int i = 0; i < slices; i++)
-		ctr += snprintf(info + ctr, (size_t)(N - ctr), "\t[%d]:\t%+.4f\t%+.4f\t%+.4f\n",
-				i, seq->geom.shift[i][0], seq->geom.shift[i][1], seq->geom.shift[i][2]);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
 		"\nCEST sat\t\ttype=%d \t n=%ld \t\t\t (pause: %.4f)",
@@ -573,6 +567,24 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 	struct seq_opts seq_opts = seq_opts_defaults;
 	ctr += seq_cmdline_print((size_t)(N - ctr), info + ctr, seq, &seq_opts);
 	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n\n");
+
+	int slices = get_slices(seq);
+	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n\nFOV shifts:\tREAD\tPHASE\tSLICE\n");
+	for (int i = 0; i < slices; i++)
+		ctr += snprintf(info + ctr, (size_t)(N - ctr), "\t[%d]:\t%+.4f\t%+.4f\t%+.4f\n",
+				i, seq->geom.shift[i][0], seq->geom.shift[i][1], seq->geom.shift[i][2]);
+
+	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n\nROTATION MATRIX\n");
+	for (int i = 0; i < slices; i++) {
+
+		ctr += snprintf(info + ctr, (size_t)(N - ctr), 
+			"\t[%d]:\t%+.4f\t%+.4f\t%+.4f\n\t\t%+.4f\t%+.4f\t%+.4f\n\t\t%+.4f\t%+.4f\t%+.4f\n",
+				i, seq->geom.rot[i][0][0], seq->geom.rot[i][0][1], seq->geom.rot[i][0][2],
+				   seq->geom.rot[i][1][0], seq->geom.rot[i][1][1], seq->geom.rot[i][1][2],
+				   seq->geom.rot[i][2][0], seq->geom.rot[i][2][1], seq->geom.rot[i][2][2]);
+
+	}
+
 
 	if (ctr > N)
 		return -1;
