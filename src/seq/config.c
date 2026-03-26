@@ -109,6 +109,7 @@ const struct seq_config seq_config_defaults = {
 		.slice_thickness = .006,
 		.slab_os = 1.,
 		.shift = { [0 ... SEQ_MAX_SLICES - 1] = { 0., 0., 0. } },
+		.rot = { [0 ... SEQ_MAX_SLICES - 1] = { { 1., 0., 0. }, { 0., 1., 0. }, { 0., 0., 1. } } },
 		.baseres = 256,
 		.mb_factor = 1,
 		.sms_distance = .020,
