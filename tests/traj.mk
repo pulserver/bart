@@ -85,8 +85,10 @@ tests/test-traj_golden_partitions: traj nrmse ${TRAJ_GOLDEN_PARTITIONS}.cfl
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
-TESTS_AGUE += tests/test-traj_turns tests/test-traj_GA_c tests/test-traj_GA_H tests/test-traj_tiny_GA tests/test-traj_MEMS
-TESTS_AGUE += tests/test-traj_MEMS_ASYM tests/test-traj_golden_partitions
+TESTS_AGUE += tests/test-traj_turns tests/test-traj_GA_c tests/test-traj_GA_H tests/test-traj_tiny_GA
+TESTS_AGUE += tests/test-traj_MEMS-legacy tests/test-traj_MEMS
+TESTS_AGUE += tests/test-traj_MEMS_ASYM-legacy tests/test-traj_MEMS_ASYM
+TESTS_AGUE += tests/test-traj_golden_partitions
 
 tests/test-traj-over: traj scale nrmse
 	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)			;\
