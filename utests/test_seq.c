@@ -232,7 +232,7 @@ static bool test_fov_shift(void)
 	float good[3] = {0, 0, 0};
 
 
-	float gui_shift[slices][3];
+	float gui_shift[4 * slices][3];
 
 	for (int i = 0; i < slices; i++) {
 
@@ -270,7 +270,7 @@ static bool test_fov_shift3x3(void)
 	float in[9] = {-36, -27, -18, -9, 0, 9, 18, 27, 36};
 	float good[9] = {-9, 0, 9, -9, 0, 9, -9, 0, 9};
 
-	float gui_shift[slices][3];
+	float gui_shift[4 * slices][3];
 
 	for (int i = 0; i < slices; i++) {
 

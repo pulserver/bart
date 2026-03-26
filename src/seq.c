@@ -136,7 +136,7 @@ int main_seq(int argc, char* argv[argc])
 
 	if ((1 < total_slices) && (0. < seq_opts.dist)) {
 
-		float shift[total_slices][3] = { };
+		float shift[4 * total_slices][3] = { }; // also includes 3x3 rotation matrix
 		float init_shift = seq->conf->geom.shift[0][2];
 
 		for (int i = 0; i < total_slices; i++) {

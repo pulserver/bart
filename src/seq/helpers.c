@@ -482,7 +482,15 @@ void seq_set_fov_pos(int N, int M, const float* shifts, struct seq_config* seq)
 		} else {
 
 			seq->geom.shift[i][2] = shifts[i * M + 2];
-		}		
+		}
+
+		// FIXME: new interface fct to sequence
+		for (int j = 0; j < 3; j++) {
+
+			seq->geom.rot[i][j][0] = shifts[(j + 1) * total_slices * M + i * M + 0];
+			seq->geom.rot[i][j][1] = shifts[(j + 1) * total_slices * M + i * M + 1];
+			seq->geom.rot[i][j][2] = shifts[(j + 1) * total_slices * M + i * M + 2];
+		}
 	}
 
 	if (1 == seq->geom.mb_factor)
