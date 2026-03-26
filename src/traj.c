@@ -179,6 +179,7 @@ int main_traj(int argc, char* argv[argc])
 		error("Oversampling factor must be positive.\n");
 
 	X = (int)((float)X * over);
+	D = (int)((float)D * over);
 
 
 	int tot_sp = Y * E * conf.mb * conf.turns;	// total number of lines/spokes
@@ -192,7 +193,7 @@ int main_traj(int argc, char* argv[argc])
 
 	dims[TE_DIM] = E;
 
-	if (-1 == D)
+	if (0 > D)
 		D = X;
 
 	if (D < X)

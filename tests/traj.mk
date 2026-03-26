@@ -17,6 +17,7 @@ O_TRAJ_MEMS=-x128 -y31 -t7 -r -s3 -D -E -e5 -c
 
 TRAJ_MEMS_ASYM=$(AGUE_REF)/traj/t_MEMS_asym
 O_TRAJ_MEMS_ASYM=-x128 -d192 -y31 -t7 -r -s3 -D -E -e5 -c
+O_TRAJ_MEMS_ASYMo2=-x64 -d96 -y31 -t7 -r -s3 -D -E -e5 -c -o2
 
 TRAJ_GOLDEN_PARTITIONS=$(AGUE_REF)/traj/t_golden_partitions
 O_TRAJ_GOLDEN_PARTITIONS=-x 384 -y 29 -t 1 -m 3 -g -D
@@ -78,6 +79,14 @@ tests/test-traj_MEMS_ASYM: traj nrmse ${TRAJ_MEMS_ASYM}.cfl
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
+tests/test-traj_MEMS_ASYMo2: traj scale nrmse ${TRAJ_MEMS_ASYM}.cfl
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)			;\
+	$(TOOLDIR)/traj ${O_TRAJ_MEMS_ASYMo2} traj1.ra			;\
+	$(TOOLDIR)/scale 2. traj1.ra t_MEMS_asym.ra			;\
+	$(TOOLDIR)/nrmse -t5e-7 t_MEMS_asym.ra ${TRAJ_MEMS_ASYM}	;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
 tests/test-traj_golden_partitions: traj nrmse ${TRAJ_GOLDEN_PARTITIONS}.cfl
 	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)								;\
 	BART_COMPAT_VERSION="v0.9.00" $(TOOLDIR)/traj ${O_TRAJ_GOLDEN_PARTITIONS} t_golden_partitions.ra	;\
@@ -87,7 +96,7 @@ tests/test-traj_golden_partitions: traj nrmse ${TRAJ_GOLDEN_PARTITIONS}.cfl
 
 TESTS_AGUE += tests/test-traj_turns tests/test-traj_GA_c tests/test-traj_GA_H tests/test-traj_tiny_GA
 TESTS_AGUE += tests/test-traj_MEMS-legacy tests/test-traj_MEMS
-TESTS_AGUE += tests/test-traj_MEMS_ASYM-legacy tests/test-traj_MEMS_ASYM
+TESTS_AGUE += tests/test-traj_MEMS_ASYM-legacy tests/test-traj_MEMS_ASYM tests/test-traj_MEMS_ASYMo2
 TESTS_AGUE += tests/test-traj_golden_partitions
 
 tests/test-traj-over: traj scale nrmse
