@@ -232,7 +232,7 @@ static bool test_fov_shift(void)
 	float good[3] = {0, 0, 0};
 
 
-	float gui_shift[slices][4];
+	float gui_shift[slices][3];
 
 	for (int i = 0; i < slices; i++) {
 
@@ -248,7 +248,7 @@ static bool test_fov_shift(void)
 	seq->conf->loop_dims[SLICE_DIM] = slices;
 	seq_ui_interface_loop_dims(0, seq->conf, DIMS, seq->conf->loop_dims);
 
-	seq_set_fov_pos(slices, 4, &gui_shift[0][0], seq->conf);
+	seq_set_fov_pos(slices, 3, &gui_shift[0][0], seq->conf);
 
 	if (1.E-2 *  UT_TOL < fabs(seq->conf->geom.sms_distance - 27.E-3))
 		return false;
@@ -270,7 +270,7 @@ static bool test_fov_shift3x3(void)
 	float in[9] = {-36, -27, -18, -9, 0, 9, 18, 27, 36};
 	float good[9] = {-9, 0, 9, -9, 0, 9, -9, 0, 9};
 
-	float gui_shift[slices][4];
+	float gui_shift[slices][3];
 
 	for (int i = 0; i < slices; i++) {
 
@@ -286,7 +286,7 @@ static bool test_fov_shift3x3(void)
 	seq->conf->loop_dims[SLICE_DIM] = slices;
 	seq_ui_interface_loop_dims(0, seq->conf, DIMS, seq->conf->loop_dims);
 
-	seq_set_fov_pos(slices, 4, &gui_shift[0][0], seq->conf);
+	seq_set_fov_pos(slices, 3, &gui_shift[0][0], seq->conf);
 
 	if (1.E-2 *  UT_TOL < fabs(seq->conf->geom.sms_distance - 27.E-3))
 		return false;
