@@ -169,3 +169,15 @@ tests/test-seq-meco: seq traj extract nrmse
 
 
 TESTS +=  tests/test-seq-meco
+
+tests/test-seq-asym: traj seq extract nrmse 
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)				;\
+	$(TOOLDIR)/traj -x 192 -d 256 -o 2. -y 377 -r -D trj_ref.ra 		;\
+	$(TOOLDIR)/seq -r 377 --asym_echo 0.25 --raga samples.ra grad.ra mom.ra ;\
+	$(TOOLDIR)/extract 0 0 3 samples.ra trj_seq.ra				;\
+	$(TOOLDIR)/nrmse -t 2E-7 trj_ref.ra trj_seq.ra				;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
+
+TESTS +=  tests/test-seq-asym
