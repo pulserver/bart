@@ -170,9 +170,6 @@ static double adc_nco_freq(double proj_angle, long chrono_slice, const struct se
 int prep_adc(struct seq_event* adc_ev, double start, double rf_spoil_phase,
 		const struct seq_state* seq_state, const struct seq_config* seq)
 {
-	if (SEQ_BLOCK_KERNEL_DUMMY == seq_state->mode)
-		return 0;
-
 	adc_ev->type = SEQ_EVENT_ADC;
 
 	adc_ev->start = start;
@@ -199,6 +196,12 @@ int prep_adc(struct seq_event* adc_ev, double start, double rf_spoil_phase,
 	adc_ev->adc.flags = 0;
 	if (SEQ_BLOCK_KERNEL_NOISE == seq_state->mode)
 		adc_ev->adc.flags |= SEQ_ADC_FLAG_ADJ;
+
+	if (SEQ_BLOCK_KERNEL_DUMMY == seq_state->mode) {
+
+		adc_ev->adc.pos[PHS1_DIM] = seq_state->pos[COEFF2_DIM] - 3; // 3 blocks before dummy (delay, noise, ecg)
+		adc_ev->adc.flags |= SEQ_ADC_FLAG_DUMMY;
+	}
 
 	long zeros[DIMS] = { 0 };
 	long last_idx[DIMS];

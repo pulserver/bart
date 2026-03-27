@@ -118,9 +118,17 @@ static bool test_flash_events(void)
 	if ((FLASH_EVENTS - 1) != E) // no rf
 		return false;
 
+	int e_adc = events_idx(0, SEQ_EVENT_ADC, E, ev);
+	if (0 == (ev[e_adc].adc.flags & SEQ_ADC_FLAG_ADJ))
+		return false;
+
 	seq_state.mode = SEQ_BLOCK_KERNEL_DUMMY;
 	E = flash(E, ev, &seq_state, &seq);
-	if ((FLASH_EVENTS - 1) != E) //no adc
+	if (FLASH_EVENTS != E)
+		return false;
+
+	e_adc = events_idx(0, SEQ_EVENT_ADC, E, ev);
+	if (0 == (ev[e_adc].adc.flags & SEQ_ADC_FLAG_DUMMY))
 		return false;
 
 	seq_state.mode = SEQ_BLOCK_KERNEL_IMAGE;

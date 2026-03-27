@@ -31,6 +31,7 @@ enum adc_flags {
 	SEQ_ADC_FLAG_LASTCON	= (1u << 5),
 	SEQ_ADC_FLAG_LASTMEAS	= (1u << 6),
 	SEQ_ADC_FLAG_MEASTIME	= (1u << 7),
+	SEQ_ADC_FLAG_DUMMY	= (1u << 8),
 };
 
 
