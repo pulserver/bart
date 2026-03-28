@@ -213,10 +213,8 @@ int main_seq(int argc, char* argv[argc])
 
 	if (0 > prepped_rfs) {
 
-		if (ERROR_SETTING_SPOKES_RAGA == prepped_rfs) {
-
+		if (ERROR_SETTING_SPOKES_RAGA == prepped_rfs)
 			debug_printf(DP_WARN, "%s\n", radial_info);
-		}
 
 		error("Sequence preparation failed! - check seq_config, %s [ %d ] \n", error_string(prepped_rfs), prepped_rfs);
 	}

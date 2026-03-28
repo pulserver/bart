@@ -267,7 +267,8 @@ double seq_pulse_scaling(const struct rf_shape* pulse)
 double seq_pulse_norm_sum(const struct rf_shape* pulse)
 {
 	double dwell = pulse->sar_dur / pulse->samples;
-	return ((pulse->integral / dwell) / pulse->max);
+
+	return (pulse->integral / dwell) / pulse->max;
 }
 
 void seq_cfl_to_sample(const struct rf_shape* pulse, int idx, float* mag, float* pha)
@@ -322,7 +323,7 @@ static int check_settings(const struct seq_state* seq_state, const struct seq_co
 
 		if ((SEQ_PEMODE_RAGA == seq->enc.pe_mode)
 		    && !check_gen_fib(seq->loop_dims[PHS1_DIM], seq->enc.tiny))
-				return ERROR_SETTING_SPOKES_RAGA;
+			return ERROR_SETTING_SPOKES_RAGA;
 
 		if (0 == (seq->loop_dims[PHS1_DIM] % 2))
 			return ERROR_SETTING_SPOKES_EVEN;
@@ -363,6 +364,7 @@ int seq_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 		if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~0UL)) {
 
 			seq_state->mode = SEQ_BLOCK_PRE;
+
 			return wait_time_to_event(ev, 0., seq->magn.init_delay);
 		}
 
