@@ -527,14 +527,14 @@ static bool ismrmrd_convert_acquisition(struct isrmrm_config_s* config, const IS
 	return true;
 }
 
-long ismrm_stream_read(struct isrmrm_config_s* conf, int N, const long dims[N], long pos[N], complex float* out)
+long ismrm_stream_read(struct isrmrm_config_s* conf, int N, const long dims[N], long pos[N], complex float* out, struct ismrm_meta* meta)
 {
 	assert(NULL != conf->ismrm_cpp_state);
 
 	ISMRMRD_Acquisition acq;
 	ismrmrd_init_acquisition(&acq);
 
-	long bytes = ismrm_stream_read_acquisition(conf, &acq);
+	long bytes = ismrm_stream_read_acquisition(conf, &acq, meta);
 	if (0 == bytes)
 		return bytes;
 

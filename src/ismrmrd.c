@@ -15,6 +15,8 @@
 
 #include <limits.h>
 
+#include <fcntl.h>
+
 #include "num/multind.h"
 #include "num/flpmath.h"
 
@@ -25,8 +27,22 @@
 #include "misc/opts.h"
 #include "misc/stream.h"
 
+#include "misc/io.h"
+
 #include "ismrm/read.h"
 #include "ismrm/xml_wrapper.h"
+
+static struct ismrm_meta meta = { };
+
+static const struct opt_s ismrm_meta_opts[] = {
+
+	OPTL_FLVEC3('\0', "field_of_view", &meta.field_of_view, "x:y:z", "Field of View (mm)"),
+	OPTL_FLVEC3('\0', "offset", &meta.offset, "x:y:z", "Offset (mm)"),
+	OPTL_FLVEC3('\0', "table_offset", &meta.table_offset, "x:y:z", "Table Position (mm)"),
+	OPTL_FLVEC3('\0', "read_dir", &meta.read_dir, "x:y:z", "Readout direction in patient coordinates"),
+	OPTL_FLVEC3('\0', "phase_dir", &meta.phase_dir, "x:y:z", "Phase encoding direction in patient coordinates"),
+	OPTL_FLVEC3('\0', "slice_dir", &meta.slice_dir, "x:y:z", "Slice normal in patient coordinates"),
+};
 
 
 static const char help_str[] = "Import/Export ISMRM raw data files and streams.";
@@ -37,6 +53,7 @@ int main_ismrmrd(int argc, char* argv[argc])
 	const char* in_file = NULL;
 	const char* out_file = NULL;
 
+	const char* meta_file = NULL;
 
 	enum ismrm_write_opts { NO_ISMRM_WRITE=0, ISMRM_WRITE_CFL_IMG, ISMRM_WRITE_USHORT_IMG } write_ismrm = 0;
 	bool stream = false;
@@ -60,11 +77,11 @@ int main_ismrmrd(int argc, char* argv[argc])
 		OPTL_SELECT('\0', "write-ismrm-cfl-img", enum ismrm_write_opts, &write_ismrm, ISMRM_WRITE_CFL_IMG, "Output ISMRM data as cfl image."),
 		OPTL_SELECT('\0', "write-ismrm-ush-img", enum ismrm_write_opts, &write_ismrm, ISMRM_WRITE_USHORT_IMG, "Output ISMRM data as unsigned short image."),
 		OPTL_SET('\0', "stream", &stream, "Use streaming protocols."),
+		OPTL_STRING('\0', "meta", &meta_file, "meta.fifo", "write metadata to file/apply metadata from file"),
 
 	};
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
-
 
 	if (NULL == out_file) {
 
@@ -103,6 +120,29 @@ int main_ismrmrd(int argc, char* argv[argc])
 	complex float* bart_cfl = NULL;
 	stream_t bart_stream = NULL;
 
+	int meta_fd = -1;
+
+	if (NULL != meta_file)
+		meta_fd = open(meta_file, write_ismrm ? O_RDONLY : O_WRONLY);
+
+	if (-1 != meta_fd && write_ismrm) {
+
+		char buf[512] = { };
+		xread(meta_fd, ARRAY_SIZE(buf) - 1, buf);
+
+		char* args[(strlen(buf) + 1) / 2] = { };
+		int count = 0;
+
+		char* buf_p = buf;
+		for(; (args[count] = strsep(&buf_p, " ")); count++);
+		if (count == 0)
+			error("ismrmrd: metadata file empty.\n");
+
+		options(&count, args, "", "", ARRAY_SIZE(ismrm_meta_opts), ismrm_meta_opts, 0, NULL, true);
+
+		close(meta_fd);
+	}
+
 	config.ismrm_cpp_state = ismrm_stream_open(write_ismrm ? out_file : in_file, write_ismrm);
 
 	if (write_ismrm) {
@@ -126,7 +166,7 @@ int main_ismrmrd(int argc, char* argv[argc])
 
 			if (ISMRM_WRITE_CFL_IMG == write_ismrm) {
 
-				ismrm_stream_write_cfl_image(&config, dims[0], dims[1], src);
+				ismrm_stream_write_cfl_image(&config, dims[0], dims[1], src, &meta, pos);
 			} else if (ISMRM_WRITE_USHORT_IMG) {
 
 				unsigned short* buf = md_alloc(2, dims, sizeof(unsigned short));
@@ -142,7 +182,7 @@ int main_ismrmrd(int argc, char* argv[argc])
 
 				md_parallel_loop(2, dims, MD_BIT(0) | MD_BIT(1), sample_kernel);
 
-				ismrm_stream_write_mag_image(&config, dims[0], dims[1], buf);
+				ismrm_stream_write_mag_image(&config, dims[0], dims[1], buf, &meta, pos);
 
 				md_free(buf);
 			} else {
@@ -162,9 +202,22 @@ int main_ismrmrd(int argc, char* argv[argc])
 
 		bart_stream = stream_lookup(bart_cfl);
 
-		while (ismrm_stream_read(&config, D, dims, pos, bart_cfl))
-			if(bart_stream)
+		while (ismrm_stream_read(&config, D, dims, pos, bart_cfl, &meta))
+			if (bart_stream)
 				stream_sync_slice(bart_stream, D, dims, flags, pos);
+
+		if (-1 != meta_fd) {
+
+			char buf[2048] = { };
+
+			int ctr = cmdline_synth(NULL, ARRAY_SIZE(buf), buf, ARRAY_SIZE(ismrm_meta_opts), ismrm_meta_opts);
+
+			const char prefix[] = "ismrmrd_metadata ";
+			xwrite(meta_fd, strlen(prefix), prefix);
+			xwrite(meta_fd, ctr, buf);
+
+			close(meta_fd);
+		}
 	}
 
 	unmap_cfl(D, dims, bart_cfl);

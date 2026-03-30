@@ -1,5 +1,5 @@
 /* Copyright 2022. Uecker Lab. University Center Göttingen.
- * Copyright 2024-2025. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2024-2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  */
@@ -119,6 +119,8 @@ struct ismrm_cpp_state {
 	std::ostream* os;
 	ISMRMRD::OStreamView* ws;
 	ISMRMRD::ProtocolSerializer* serializer;
+
+	ISMRMRD::IsmrmrdHeader hdr;
 };
 
 extern "C" struct ismrm_cpp_state* ismrm_stream_open(const char* file, bool write)
@@ -221,10 +223,9 @@ extern "C" void ismrm_stream_read_meta(struct isrmrm_config_s* config)
 
 		assert (type == ISMRMRD::ISMRMRD_MESSAGE_HEADER);
 
-		ISMRMRD::IsmrmrdHeader hdr;
-		s->deserializer->deserialize(hdr);
+		s->deserializer->deserialize(s->hdr);
 
-		ismrm_read_encoding_limits_from_hdr(hdr, config);
+		ismrm_read_encoding_limits_from_hdr(s->hdr, config);
 
 	} catch(std::runtime_error& e) {
 
@@ -290,7 +291,7 @@ static bool ignore_next_message(struct isrmrm_config_s* config)
 	return false;
 }
 
-extern "C" long ismrm_stream_read_acquisition(struct isrmrm_config_s* config, ISMRMRD::ISMRMRD_Acquisition* c_acq)
+extern "C" long ismrm_stream_read_acquisition(struct isrmrm_config_s* config, ISMRMRD::ISMRMRD_Acquisition* c_acq, struct ismrm_meta* meta)
 {
 	struct ismrm_cpp_state* s = config->ismrm_cpp_state;
 
@@ -328,48 +329,54 @@ extern "C" long ismrm_stream_read_acquisition(struct isrmrm_config_s* config, IS
 		if (LONG_MAX < data_size)
 			error("BART ISMRMRD Wrapper: Too large acquisition.\n");
 
+		auto fov = s->hdr.encoding[0].encodedSpace.fieldOfView_mm;
+		float fov_array[3] = { fov.x, fov.y, fov.z };
+
+#define ARRAY_ASSIGN(count, src, dst) do { for (int i = 0; i < count; i++) dst[i] = src[i]; } while (false)
+		ARRAY_ASSIGN(3, c_acq->head.position, meta->offset);
+		ARRAY_ASSIGN(3, c_acq->head.patient_table_position, meta->table_offset);
+		ARRAY_ASSIGN(3, c_acq->head.read_dir, meta->read_dir);
+		ARRAY_ASSIGN(3, c_acq->head.phase_dir, meta->phase_dir);
+		ARRAY_ASSIGN(3, c_acq->head.slice_dir, meta->slice_dir);
+		ARRAY_ASSIGN(3, fov_array, meta->field_of_view);
+#undef ARRAY_ASSIGN
+
 		return (long)data_size;
 
-	} catch(std::runtime_error& e) {
+	} catch (std::runtime_error& e) {
 
 		error("BART ISMRMRD Wrapper: Exception thrown: %s\n", e.what());
 	}
 }
 
 template<typename T>
-static void ismrm_set_metadata(ISMRMRD::Image<T>& img)
+static void ismrm_set_metadata(ISMRMRD::Image<T>& img, const struct ismrm_meta* meta, const long idx[DIMS])
 {
-	//FIXME
-	float fov[3] = { 200, 200, 5 };
-	float pos[3] = { 0, 0, 0 };
-	float table_pos[3] = { 0, 0, -1591 };
-	float read_dir[3] = { -1, 0, 0 };
-	float phase_dir[3] = { 0, 1, 0 };
-	float slice_dir[3] = { 0, 0, 1 };
+	img.setFieldOfView(meta->field_of_view[0], meta->field_of_view[1], meta->field_of_view[2]);
+	img.setPosition(meta->offset[0], meta->offset[1], meta->offset[2]);
+	img.setPatientTablePosition(meta->table_offset[0], meta->table_offset[1], meta->table_offset[2]);
+	img.setReadDirection(meta->read_dir[0], meta->read_dir[1], meta->read_dir[2]);
+	img.setPhaseDirection(meta->phase_dir[0], meta->phase_dir[1], meta->phase_dir[2]);
+	img.setSliceDirection(meta->slice_dir[0], meta->slice_dir[1], meta->slice_dir[2]);
 
-	img.setSlice(0);
-	img.setFieldOfView(fov[0], fov[1], fov[2]);
-	img.setPosition(pos[0], pos[1], pos[2]);
-	img.setPatientTablePosition(table_pos[0], table_pos[1], table_pos[2]);
-	img.setReadDirection(read_dir[0], read_dir[1], read_dir[2]);
-	img.setPhaseDirection(phase_dir[0], phase_dir[1], phase_dir[2]);
-	img.setSliceDirection(slice_dir[0], slice_dir[1], slice_dir[2]);
+	img.setSlice(idx[SLICE_DIM]);
+	img.setRepetition(idx[TIME_DIM]);
 
-	ISMRMRD::MetaContainer meta;
+	ISMRMRD::MetaContainer meta_container;
 
-	meta.append("ImageRowDir", read_dir[0]);
-	meta.append("ImageRowDir", read_dir[1]);
-	meta.append("ImageRowDir", read_dir[2]);
+	meta_container.append("ImageRowDir", meta->read_dir[0]);
+	meta_container.append("ImageRowDir", meta->read_dir[1]);
+	meta_container.append("ImageRowDir", meta->read_dir[2]);
 
-	meta.append("ImageColumnDir", phase_dir[0]);
-	meta.append("ImageColumnDir", phase_dir[1]);
-	meta.append("ImageColumnDir", phase_dir[2]);
-	meta.append("Keep_image_geometry", "0");
+	meta_container.append("ImageColumnDir", meta->phase_dir[0]);
+	meta_container.append("ImageColumnDir", meta->phase_dir[1]);
+	meta_container.append("ImageColumnDir", meta->phase_dir[2]);
+	meta_container.append("Keep_image_geometry", "0");
 
 	try {
 
 		std::stringstream meta_string_stream;
-		ISMRMRD::serialize(meta, meta_string_stream);
+		ISMRMRD::serialize(meta_container, meta_string_stream);
 
 		img.setAttributeString(meta_string_stream.str().c_str());
 
@@ -391,7 +398,7 @@ static void ismrm_send_img(const ISMRMRD::Image<T> &img, const struct isrmrm_con
 	}
 }
 
-extern "C" void ismrm_stream_write_cfl_image(struct isrmrm_config_s* config, long size0, long size1, _Complex float* buf)
+extern "C" void ismrm_stream_write_cfl_image(struct isrmrm_config_s* config, long size0, long size1, _Complex float* buf, const struct ismrm_meta* meta, const long pos[DIMS])
 {
 	ISMRMRD::Image<std::complex<float> > img(size0, size1);
 
@@ -400,11 +407,11 @@ extern "C" void ismrm_stream_write_cfl_image(struct isrmrm_config_s* config, lon
 
 	img.setImageType(ISMRMRD::ISMRMRD_IMTYPE_COMPLEX);
 
-	ismrm_set_metadata(img);
+	ismrm_set_metadata(img, meta, pos);
 	ismrm_send_img(img, config);
 }
 
-extern "C" void ismrm_stream_write_mag_image(struct isrmrm_config_s* config, long size0, long size1, unsigned short* buf)
+extern "C" void ismrm_stream_write_mag_image(struct isrmrm_config_s* config, long size0, long size1, unsigned short* buf, const struct ismrm_meta* meta, const long pos[DIMS])
 {
 	ISMRMRD::Image<unsigned short> img(size0, size1);
 
@@ -413,7 +420,7 @@ extern "C" void ismrm_stream_write_mag_image(struct isrmrm_config_s* config, lon
 
 	img.setImageType(ISMRMRD::ISMRMRD_IMTYPE_IMAG);
 
-	ismrm_set_metadata(img);
+	ismrm_set_metadata(img, meta, pos);
 	ismrm_send_img(img, config);
 }
 

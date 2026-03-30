@@ -83,6 +83,17 @@ struct isrmrm_config_s {
 	struct ismrm_cpp_state* ismrm_cpp_state;
 };
 
+typedef float vec3_t[3];
+
+struct ismrm_meta {
+	vec3_t field_of_view;
+	vec3_t offset;
+	vec3_t table_offset;
+	vec3_t read_dir;
+	vec3_t phase_dir;
+	vec3_t slice_dir;
+};
+
 extern struct isrmrm_config_s ismrm_default_config;
 
 extern void ismrm_print_xml(const char* filename);
@@ -91,6 +102,6 @@ extern void ismrm_read(const char* datafile, struct isrmrm_config_s* config, int
 
 extern void ismrm_stream_read_dims(struct isrmrm_config_s* config, int N, long dims[__VLA(N)]);
 
-extern long ismrm_stream_read(struct isrmrm_config_s* conf, int N, const long dims[__VLA(N)], long pos[__VLA(N)], _Complex float* out);
+extern long ismrm_stream_read(struct isrmrm_config_s* conf, int N, const long dims[__VLA(N)], long pos[__VLA(N)], _Complex float* out, struct ismrm_meta* meta);
 
 #include "misc/cppwrap.h"
