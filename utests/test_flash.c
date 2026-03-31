@@ -581,8 +581,10 @@ static bool test_raga_spokes(void)
 	struct seq_config seq = seq_config_defaults;
 
 	const int expected_spokes = 8;
+	const int slices = 3;
 
 	seq.loop_dims[PHS1_DIM] = 5;
+	seq.loop_dims[SLICE_DIM] = slices;
 	seq.loop_dims[TIME_DIM] = expected_spokes;
 
 	seq_ui_interface_loop_dims(0, &seq, DIMS, seq.loop_dims);
@@ -591,9 +593,12 @@ static bool test_raga_spokes(void)
 	struct seq_event ev[max_E];
 
 	int ctr = 0;
+	int E = 0;
+	long last_raga_idx = -1;
+
 	do {
 
-		int E = seq_block(max_E, ev,  &seq_state, &seq);
+		E = seq_block(max_E, ev,  &seq_state, &seq);
 
 		if (0 > E)
 			return false;
@@ -601,13 +606,19 @@ static bool test_raga_spokes(void)
 		if (0 == E)
 			continue;
 
+		last_raga_idx = ev[events_idx(0, SEQ_EVENT_ADC, E, ev)].adc.pos[PHS1_DIM];
+
 		if (SEQ_BLOCK_KERNEL_IMAGE == seq_state.mode)
 			ctr++;
 
 	} while (seq_continue(&seq_state, &seq));
 
-	if (ctr != expected_spokes)
+	if (ctr != slices * expected_spokes)
 		return false;
+
+	if (4 != last_raga_idx) // bart raga -m 3 5 indices; PHS2_DIM = 2, SLICE_DIM = 2 
+		return false;
+
 	return true;
 }
 
