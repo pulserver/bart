@@ -23,7 +23,8 @@
 #define CFL_SIZE sizeof(complex float)
 #endif
 
-static const char help_str[] = "Reshape selected dimensions.";
+static const char help_str[] = "Reshape selected dimensions. One dimension can be set to -1 or 0, "
+				"which will be filled in to match the total size.";
 
 
 int main_reshape(int argc, char* argv[argc])
@@ -44,7 +45,7 @@ int main_reshape(int argc, char* argv[argc])
 
 	unsigned long stream_flags = 0 ;
 
-	const struct opt_s opts[] = { 
+	const struct opt_s opts[] = {
 
 		OPT_ULONG('s', &stream_flags, "flags", "stream flagged dims"),
 	};
@@ -63,19 +64,43 @@ int main_reshape(int argc, char* argv[argc])
 	complex float* in_data = (0 != stream_flags ? load_async_cfl : load_cfl)(in_file, DIMS, in_dims);
 
 	md_copy_dims(DIMS, out_dims, in_dims);
-	
+
 	int j = 0;
 
 	long otot = 1;
 	long itot = 1;
 
+	long place_dim = -1;
+
 	for (int i = 0; i < DIMS; i++) {
 
 		if (MD_IS_SET(flags, i)) {
 
-			otot *= dims[j];
+			if (0 >= dims[j]) {
+
+				if (-1 == place_dim)
+					place_dim = i;
+				else
+					error("Only one dimension can be set to -1 or 0.\n");
+			} else {
+
+				otot *= dims[j];
+			}
+
 			itot *= in_dims[i];
 			out_dims[i] = dims[j++];
+		}
+	}
+
+	if (-1 != place_dim) {
+
+		if (0 == itot % otot) {
+
+			out_dims[place_dim] = itot / otot;
+			otot *= out_dims[place_dim];
+		} else {
+
+			error("Cannot fill in placeholder (%d) since remainder does not vanish (%ld %% %ld = %ld).\n", place_dim, itot, otot, itot % otot);
 		}
 	}
 
@@ -89,7 +114,7 @@ int main_reshape(int argc, char* argv[argc])
 	assert(j == n);
 
 	complex float* out_data = NULL;
-	
+
 	if (0 == stream_flags) {
 
 		out_data = create_cfl(out_file, DIMS, out_dims);

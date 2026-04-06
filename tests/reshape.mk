@@ -59,9 +59,19 @@ tests/test-reshape-mpi: bart
 	touch $@
 
 
+tests/test-reshape-placeholder: phantom reshape nrmse
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
+	$(TOOLDIR)/phantom x.ra								;\
+	$(TOOLDIR)/reshape    7 256 1 64 x.ra x1.ra					;\
+	$(TOOLDIR)/reshape -- 7 -1 1 64 x.ra x2.ra					;\
+	$(TOOLDIR)/nrmse -t 0. x1.ra x2.ra						;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
 
 TESTS += tests/test-reshape
 TESTS += tests/test-reshape-non-factor tests/test-reshape-factor
+TESTS += tests/test-reshape-placeholder
 
 TESTS_MPI += tests/test-reshape-mpi
 
