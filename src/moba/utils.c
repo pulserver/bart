@@ -21,6 +21,59 @@
 
 #include "utils.h"
 
+struct moba_rvc_s {
+
+	linop_data_t super;
+
+	int N;
+	const long* dims;
+
+	unsigned long rvc;
+};
+
+DEF_TYPEID(moba_rvc_s);
+
+static void moba_rvc_apply(const linop_data_t* _data, complex float* dst, const complex float* src)
+{
+	const auto data = CAST_DOWN(moba_rvc_s, _data);
+
+	md_copy(data->N, data->dims, dst, src, CFL_SIZE);
+
+	long pos[data->N];
+	md_set_dims(data->N, pos, 0);
+
+	long map_dims[data->N];
+	md_select_dims(data->N, ~COEFF_FLAG, map_dims, data->dims);
+
+	long strs[data->N];
+	md_calc_strides(data->N, strs, data->dims, CFL_SIZE);
+
+	for (; pos[COEFF_DIM] < data->dims[COEFF_DIM]; pos[COEFF_DIM]++)
+		if (MD_IS_SET(data->rvc, pos[COEFF_DIM]))
+			md_zreal2(data->N, map_dims, strs, MD_ACCESS_PTR(data->N, strs, pos, dst), strs, MD_ACCESS_PTR(data->N, strs, pos, dst));
+}
+
+static void moba_rvc_del(const linop_data_t* _data)
+{
+	const auto data = CAST_DOWN(moba_rvc_s, _data);
+
+	xfree(data->dims);
+
+	xfree(data);
+}
+
+const struct linop_s* moba_rvc_create(int N, const long in_dims[N], unsigned long flags)
+{
+	PTR_ALLOC(struct moba_rvc_s, data);
+	SET_TYPEID(moba_rvc_s, data);
+
+	data->N = N;
+	data->dims = ARR_CLONE(long[N], in_dims);
+	data->rvc = flags;
+
+	return linop_create(N, in_dims, N, in_dims, CAST_UP(PTR_PASS(data)), moba_rvc_apply, moba_rvc_apply, moba_rvc_apply, NULL, moba_rvc_del);
+}
+
 
 
 struct moba_precond_s {

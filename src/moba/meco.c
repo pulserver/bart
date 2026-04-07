@@ -427,25 +427,7 @@ const struct nlop_s* nlop_ir_meco_model_create(int N, const long map_dims[N], co
 
 	unsigned long real_constraint_flag = get_R2S_flag(meco_model) | get_R1S_flag(meco_model) | get_fB0_flag(meco_model);
 
-	float scales[in_dims[COEFF_DIM]];
-	const struct linop_s* lop_rvcs[in_dims[COEFF_DIM]];
-
-	for (int i = 0; i < in_dims[COEFF_DIM]; i++) {
-
-		if (MD_IS_SET(real_constraint_flag, i))
-			lop_rvcs[i] = linop_zreal_create(N, map_dims);
-		else
-			lop_rvcs[i] = NULL;
-
-		scales[i] = 1.;
-	}
-
-	const struct linop_s* rvc = moba_precond_create(N, in_dims, lop_rvcs, scales);
-
-	for (int i = 0; i < in_dims[COEFF_DIM]; i++)
-		linop_free(lop_rvcs[i]);
-
-	return nlop_chain_FF(nlop_from_linop_F(rvc), ret);
+	return nlop_chain_FF(nlop_from_linop_F(moba_rvc_create(N, in_dims, real_constraint_flag)), ret);
 }
 
 struct nlop_s* nlop_ir_meco_create(int N, const long /*out_dims*/[N], const long in_dims[N], const long TI_dims[N],
