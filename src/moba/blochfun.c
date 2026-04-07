@@ -22,6 +22,8 @@
 #include "num/filter.h"
 
 #include "nlops/nlop.h"
+#include "nlops/chain.h"
+#include "nlops/cast.h"
 
 #include "linops/linop.h"
 #include "linops/someops.h"
@@ -29,6 +31,7 @@
 #include "simu/bloch.h"
 
 #include "moba/moba.h"
+#include "moba/utils.h"
 
 #include "noir/utils.h"
 
@@ -61,20 +64,10 @@ struct blochfun_s {
 	const complex float* b0;
 
 	const struct moba_conf_s* moba_data;
-
-	const struct linop_s* linop_alpha;
 };
 
 DEF_TYPEID(blochfun_s);
 
-
-
-const struct linop_s* bloch_get_alpha_trafo(const struct nlop_s* op)
-{
-	struct blochfun_s* data = CAST_DOWN(blochfun_s, nlop_get_data(op));
-
-	return data->linop_alpha;
-}
 
 static void bloch_fun(const nlop_data_t* _data, complex float* dst, const complex float* src)
 {
@@ -150,33 +143,6 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 		md_copy_block(data->N, pos, pool_dims, omscale, data->in_dims, src, CFL_SIZE);
 	}
 
-	int P = data->in_dims[COEFF_DIM];
-	float scale[P];
-
-	for (int i = 0; i < P; i++) {
-
-		scale[i] = data->moba_data->other.scale[i];
-
-		if (0. == scale[i])
-			scale[i] = 1.;
-	}
-
-	md_zsmul(data->N, data->map_dims, r1scale, r1scale, scale[0]);
-	md_zsmul(data->N, data->map_dims, m0scale, m0scale, scale[1]);
-	md_zsmul(data->N, data->map_dims, r2scale, r2scale, scale[2]);
-	md_zsmul(data->N, data->map_dims, b1scale, b1scale, scale[3]);
-
-	if (data->moba_data->sim.voxel.P > 1 ) {
-
-		// FIXME: Multiplication for > 2
-		md_zsmul(data->N, pool_dims, r1_poolscale, r1_poolscale, scale[4]);
-		md_zsmul(data->N, pool_dims, r2_poolscale, r2_poolscale, scale[5]);
-		md_zsmul(data->N, pool_dims, kscale, kscale, scale[6]);
-		md_zsmul(data->N, pool_dims, m0_poolscale, m0_poolscale, scale[7]);
-		md_zsmul(data->N, data->map_dims, omscale, omscale, scale[8]);
-	}
-
-	linop_forward_unchecked(data->linop_alpha, b1scale, b1scale);	// freq -> pixel + smoothing!
 
 
 	//Allocate Output CPU memory
@@ -256,17 +222,16 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 				sim_data.seq.rep_num = data->out_dims[TE_DIM];
 
 				// FIXME: Why set scaling? Maybe change to boolean?
-				sim_data.voxel.r1[0] = (data->moba_data->other.scale[0]) ?  crealf(r1scale[spa_ind]) : data->moba_data->other.initval[0];
-				sim_data.voxel.r2[0] = (data->moba_data->other.scale[2]) ?  crealf(r2scale[spa_ind]) : data->moba_data->other.initval[2];
-				sim_data.voxel.m0[0] = 1.;
-
-				// FIXME: Incompatible with fitting of b1 with mobafit
-				sim_data.voxel.b1 = b1s * (1. + crealf(b1scale[spa_ind]));
-
+				sim_data.voxel.r1[0] = crealf(r1scale[spa_ind]);
+				sim_data.voxel.r2[0] = crealf(r2scale[spa_ind]);
 				if (sim_data.voxel.P > 1) {
 
-					sim_data.voxel.m0[0] = (data->moba_data->other.scale[1]) ? crealf(m0scale[spa_ind]) : data->moba_data->other.initval[1];
-					sim_data.voxel.b1 = (data->moba_data->other.scale[3]) ? crealf(b1scale[spa_ind]) : data->moba_data->other.initval[3];
+					sim_data.voxel.m0[0] = crealf(m0scale[spa_ind]);
+					sim_data.voxel.b1 = crealf(b1scale[spa_ind]);
+				} else {
+
+					sim_data.voxel.m0[0] = 1.;
+					sim_data.voxel.b1 = b1s * (1. + crealf(b1scale[spa_ind]));
 				}
 
 				for (int p = 0; p < sim_data.voxel.P - 1; p++) {
@@ -275,11 +240,11 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 					spa_ind_pools = md_calc_offset(data->N, pool_strs, spa_pos_pools) / (long)CFL_SIZE;
 
 					//FIXME: Switch to Boolean?
-					sim_data.voxel.r1[p + 1] = (data->moba_data->other.scale[4 + 0 * (sim_data.voxel.P - 1) + p]) ? crealf(r1_poolscale[spa_ind_pools])	: data->moba_data->other.initval[4 + 0 * (sim_data.voxel.P - 1) + p];
-					sim_data.voxel.r2[p + 1] = (data->moba_data->other.scale[4 + 1 * (sim_data.voxel.P - 1) + p]) ? crealf(r2_poolscale[spa_ind_pools]) 	: data->moba_data->other.initval[4 + 1 * (sim_data.voxel.P - 1) + p];
-					sim_data.voxel.k[p]	 = (data->moba_data->other.scale[4 + 2 * (sim_data.voxel.P - 1) + p]) ? crealf(kscale[spa_ind_pools])		: data->moba_data->other.initval[4 + 2 * (sim_data.voxel.P - 1) + p];
-					sim_data.voxel.m0[p + 1] = (data->moba_data->other.scale[4 + 3 * (sim_data.voxel.P - 1) + p]) ? crealf(m0_poolscale[spa_ind_pools])	: data->moba_data->other.initval[4 + 3 * (sim_data.voxel.P - 1) + p];
-					sim_data.voxel.Om[p + 1] = (data->moba_data->other.scale[4 + 4 * (sim_data.voxel.P - 1) + p]) ? crealf(omscale[spa_ind_pools])		: data->moba_data->other.initval[4 + 4 * (sim_data.voxel.P - 1) + p];
+					sim_data.voxel.r1[p + 1] =  crealf(r1_poolscale[spa_ind_pools]);
+					sim_data.voxel.r2[p + 1] =  crealf(r2_poolscale[spa_ind_pools]);
+					sim_data.voxel.k[p]	 =  crealf(kscale[spa_ind_pools]);
+					sim_data.voxel.m0[p + 1] =  crealf(m0_poolscale[spa_ind_pools]);
+					sim_data.voxel.Om[p + 1] =  crealf(omscale[spa_ind_pools]);
 				}
 
 				// Extract external B0 value from input
@@ -367,37 +332,35 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 					else if ((SEQ_BSSFP == sim_data.seq.seq_type) || (SEQ_IRBSSFP == sim_data.seq.seq_type))
 						a = 1. / sinf(CAST_UP(&sim_data.pulse.sinc)->flipangle / 2. * M_PI / 180.) / (sim_data.seq.nom_slice_thickness * 1000.);
 
-					const float (*scale2)[24] = &data->moba_data->other.scale;
-
 					// complex m0scale[spa_ind] adds scaling and phase to the signal
 					// M = M_x + i M_y	and S = S_x + i S_y
 					switch (sim_data.seq.model) {
 
 					case MODEL_BLOCH:
 
-						dr1_cpu[position] = a * (*scale2)[0] * m0scale[spa_ind] * (sa_r1[j][0] + sa_r1[j][1] * 1.i);
-						dm0_cpu[position] = a * (*scale2)[1] * 			  (sa_m0[j][0] + sa_m0[j][1] * 1.i);
-						dr2_cpu[position] = a * (*scale2)[2] * m0scale[spa_ind] * (sa_r2[j][0] + sa_r2[j][1] * 1.i);
-						db1_cpu[position] = a * (*scale2)[3] * m0scale[spa_ind] * (sa_b1[j][0] + sa_b1[j][1] * 1.i);
-						sig_cpu[position] = a * 	       m0scale[spa_ind] * (    m[j][0] +     m[j][1] * 1.i);
+						dr1_cpu[position] = a * m0scale[spa_ind] * (sa_r1[j][0] + sa_r1[j][1] * 1.i);
+						dm0_cpu[position] = a * 		   (sa_m0[j][0] + sa_m0[j][1] * 1.i);
+						dr2_cpu[position] = a * m0scale[spa_ind] * (sa_r2[j][0] + sa_r2[j][1] * 1.i);
+						db1_cpu[position] = a * m0scale[spa_ind] * (sa_b1[j][0] + sa_b1[j][1] * 1.i);
+						sig_cpu[position] = a * m0scale[spa_ind] * (    m[j][0] +     m[j][1] * 1.i);
 						break;
 
 					case MODEL_BMC:
 
 						if (SEQ_CEST == sim_data.seq.seq_type) {
 
-							dr1_cpu[position] = (*scale2)[0] * (sa_r1_p[j][0][2]);
-							dm0_cpu[position] = (*scale2)[1] * (sa_m0_p[j][0][2]);
-							dr2_cpu[position] = (*scale2)[2] * (sa_r2_p[j][0][2]);
-							db1_cpu[position] = (*scale2)[3] * (sa_b1_p[j][0][2]);
-							sig_cpu[position] =                (    m_p[0][0][2]);
+							dr1_cpu[position] = (sa_r1_p[j][0][2]);
+							dm0_cpu[position] = (sa_m0_p[j][0][2]);
+							dr2_cpu[position] = (sa_r2_p[j][0][2]);
+							db1_cpu[position] = (sa_b1_p[j][0][2]);
+							sig_cpu[position] = (    m_p[0][0][2]);
 						} else {
 
-							dr1_cpu[position] = (*scale2)[0] * (sa_r1_p[j][0][0] + sa_r1_p[j][0][1] * 1.i);
-							dm0_cpu[position] = (*scale2)[1] * (sa_m0_p[j][0][0] + sa_m0_p[j][0][1] * 1.i);
-							dr2_cpu[position] = (*scale2)[2] * (sa_r2_p[j][0][0] + sa_r2_p[j][0][1] * 1.i);
-							db1_cpu[position] = (*scale2)[3] * (sa_b1_p[j][0][0] + sa_b1_p[j][0][1] * 1.i);
-							sig_cpu[position] =                (    m_p[0][0][0] +     m_p[j][0][1] * 1.i);
+							dr1_cpu[position] = (sa_r1_p[j][0][0] + sa_r1_p[j][0][1] * 1.i);
+							dm0_cpu[position] = (sa_m0_p[j][0][0] + sa_m0_p[j][0][1] * 1.i);
+							dr2_cpu[position] = (sa_r2_p[j][0][0] + sa_r2_p[j][0][1] * 1.i);
+							db1_cpu[position] = (sa_b1_p[j][0][0] + sa_b1_p[j][0][1] * 1.i);
+							sig_cpu[position] = (    m_p[0][0][0] +     m_p[j][0][1] * 1.i);
 						}
 						break;
 					}
@@ -409,18 +372,18 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 
 						if (SEQ_CEST == sim_data.seq.seq_type) {
 
-							dr1_pools_cpu[position] = (*scale2)[4 + 0 * (sim_data.voxel.P - 1) + p] * sa_r1_p[j][p + 1][2];
-							dr2_pools_cpu[position] = (*scale2)[4 + 1 * (sim_data.voxel.P - 1) + p] * sa_r2_p[j][p + 1][2];
-							dk_cpu[position]	= (*scale2)[4 + 2 * (sim_data.voxel.P - 1) + p] *  sa_k_p[j][p + 0][2];
-							dm0_pools_cpu[position] = (*scale2)[4 + 3 * (sim_data.voxel.P - 1) + p] * sa_m0_p[j][p + 1][2];
-							dom_cpu[position]	= (*scale2)[4 + 4 * (sim_data.voxel.P - 1) + p] * sa_om_p[j][p + 0][2];
+							dr1_pools_cpu[position] = sa_r1_p[j][p + 1][2];
+							dr2_pools_cpu[position] = sa_r2_p[j][p + 1][2];
+							dk_cpu[position]	=  sa_k_p[j][p + 0][2];
+							dm0_pools_cpu[position] = sa_m0_p[j][p + 1][2];
+							dom_cpu[position]	= sa_om_p[j][p + 0][2];
 						} else {
 
-							dr1_pools_cpu[position] = (*scale2)[4 + 0 * (sim_data.voxel.P - 1) + p] * (sa_r1_p[j][p + 1][0] + sa_r1_p[j][p + 1][1] * 1.i);
-							dr2_pools_cpu[position] = (*scale2)[4 + 1 * (sim_data.voxel.P - 1) + p] * (sa_r2_p[j][p + 1][0] + sa_r2_p[j][p + 1][1] * 1.i);
-							dk_cpu[position] 	= (*scale2)[4 + 2 * (sim_data.voxel.P - 1) + p] * ( sa_k_p[j][p + 0][0] +  sa_k_p[j][p + 0][1] * 1.i);
-							dm0_pools_cpu[position] = (*scale2)[4 + 3 * (sim_data.voxel.P - 1) + p] * (sa_m0_p[j][p + 1][0] + sa_m0_p[j][p + 1][1] * 1.i);
-							dom_cpu[position] 	= (*scale2)[4 + 4 * (sim_data.voxel.P - 1) + p] * (sa_om_p[j][p + 0][0] + sa_om_p[j][p + 0][1] * 1.i);
+							dr1_pools_cpu[position] = (sa_r1_p[j][p + 1][0] + sa_r1_p[j][p + 1][1] * 1.i);
+							dr2_pools_cpu[position] = (sa_r2_p[j][p + 1][0] + sa_r2_p[j][p + 1][1] * 1.i);
+							dk_cpu[position] 	= ( sa_k_p[j][p + 0][0] +  sa_k_p[j][p + 0][1] * 1.i);
+							dm0_pools_cpu[position] = (sa_m0_p[j][p + 1][0] + sa_m0_p[j][p + 1][1] * 1.i);
+							dom_cpu[position] 	= (sa_om_p[j][p + 0][0] + sa_om_p[j][p + 0][1] * 1.i);
 						}
 					}
 				}
@@ -508,136 +471,18 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 
 static void bloch_der(const nlop_data_t* _data, int /*o*/, int /*i*/, complex float* dst, const complex float* src)
 {
-	debug_printf(DP_DEBUG3, "Start Derivative\n");
-
 	struct blochfun_s* data = CAST_DOWN(blochfun_s, _data);
 
-	// Transform B1 map component from freq to pixel domain
 
-	long pos[data->N];
-	md_set_dims(data->N, pos, 0);
-
-	complex float* tmp = md_alloc_sameplace(data->N, data->in_dims, CFL_SIZE, dst);
-	complex float* tmp_map = md_alloc_sameplace(data->N, data->in_dims, CFL_SIZE, dst);
-
-	pos[COEFF_DIM] = 0; // R1
-	md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, src, CFL_SIZE);
-	md_zreal(data->N, data->map_dims, tmp_map, tmp_map);
-	md_copy_block(data->N, pos, data->in_dims, tmp, data->map_dims, tmp_map, CFL_SIZE);
-
-	pos[COEFF_DIM] = 1; // M0
-	md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, src, CFL_SIZE);
-	md_copy_block(data->N, pos, data->in_dims, tmp, data->map_dims, tmp_map, CFL_SIZE);
-
-	pos[COEFF_DIM] = 2; // R2
-	md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, src, CFL_SIZE);
-	md_zreal(data->N, data->map_dims, tmp_map, tmp_map);
-	md_copy_block(data->N, pos, data->in_dims, tmp, data->map_dims, tmp_map, CFL_SIZE);
-
-	pos[COEFF_DIM] = 3; // B1
-	md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, src, CFL_SIZE);
-	linop_forward_unchecked(data->linop_alpha, tmp_map, tmp_map); // freq -> pixel + smoothing!
-	md_zreal(data->N, data->map_dims, tmp_map, tmp_map);
-	md_copy_block(data->N, pos, data->in_dims, tmp, data->map_dims, tmp_map, CFL_SIZE);
-
-	for (int p = 0; p < data->moba_data->sim.voxel.P - 1; p++) {
-
-		pos[COEFF_DIM] = 4 + 0 * (data->moba_data->sim.voxel.P - 1) + p; // R1
-		md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, src, CFL_SIZE);
-		md_zreal(data->N, data->map_dims, tmp_map, tmp_map);
-		md_copy_block(data->N, pos, data->in_dims, tmp, data->map_dims, tmp_map, CFL_SIZE);
-
-		pos[COEFF_DIM] = 4 + 1 * (data->moba_data->sim.voxel.P - 1) + p; // R2
-		md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, src, CFL_SIZE);
-		md_zreal(data->N, data->map_dims, tmp_map, tmp_map);
-		md_copy_block(data->N, pos, data->in_dims, tmp, data->map_dims, tmp_map, CFL_SIZE);
-
-		pos[COEFF_DIM] = 4 + 2 * (data->moba_data->sim.voxel.P - 1) + p; // k
-		md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, src, CFL_SIZE);
-		md_zreal(data->N, data->map_dims, tmp_map, tmp_map);
-		md_copy_block(data->N, pos, data->in_dims, tmp, data->map_dims, tmp_map, CFL_SIZE);
-
-		pos[COEFF_DIM] = 4 + 3 * (data->moba_data->sim.voxel.P - 1) + p; // M0
-		md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, src, CFL_SIZE);
-		md_copy_block(data->N, pos, data->in_dims, tmp, data->map_dims, tmp_map, CFL_SIZE);
-
-		pos[COEFF_DIM] = 4 + 4 * (data->moba_data->sim.voxel.P - 1) + p; // Om
-		md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, src, CFL_SIZE);
-		md_zreal(data->N, data->map_dims, tmp_map, tmp_map);
-		md_copy_block(data->N, pos, data->in_dims, tmp, data->map_dims, tmp_map, CFL_SIZE);
-	}
-
-	md_ztenmul(data->N, data->out_dims, dst, data->in_dims, tmp, data->der_dims, data->derivatives);
-
-	md_free(tmp);
-	md_free(tmp_map);
+	md_ztenmul(data->N, data->out_dims, dst, data->in_dims, src, data->der_dims, data->derivatives);
 }
 
 static void bloch_adj(const nlop_data_t* _data, int /*o*/, int /*i*/, complex float* dst, const complex float* src)
 {
-	debug_printf(DP_DEBUG3, "Start Derivative\n");
-
 	struct blochfun_s* data = CAST_DOWN(blochfun_s, _data);
 
-	// Transform B1 map component from freq to pixel domain
 
-	long pos[data->N];
-	md_set_dims(data->N, pos, 0);
-
-	complex float* tmp = md_alloc_sameplace(data->N, data->in_dims, CFL_SIZE, dst);
-	complex float* tmp_map = md_alloc_sameplace(data->N, data->in_dims, CFL_SIZE, dst);
-
-	md_ztenmulc(data->N, data->in_dims, tmp, data->out_dims, src, data->der_dims, data->derivatives);
-
-	pos[COEFF_DIM] = 0; // R1
-	md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, tmp, CFL_SIZE);
-	md_zreal(data->N, data->map_dims, tmp_map, tmp_map);
-	md_copy_block(data->N, pos, data->in_dims, dst, data->map_dims, tmp_map, CFL_SIZE);
-
-	pos[COEFF_DIM] = 1; // M0
-	md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, tmp, CFL_SIZE);
-	md_copy_block(data->N, pos, data->in_dims, dst, data->map_dims, tmp_map, CFL_SIZE);
-
-	pos[COEFF_DIM] = 2; // R2
-	md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, tmp, CFL_SIZE);
-	md_zreal(data->N, data->map_dims, tmp_map, tmp_map);
-	md_copy_block(data->N, pos, data->in_dims, dst, data->map_dims, tmp_map, CFL_SIZE);
-
-	pos[COEFF_DIM] = 3; // B1
-	md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, tmp, CFL_SIZE);
-	md_zreal(data->N, data->map_dims, tmp_map, tmp_map);
-	linop_adjoint_unchecked(data->linop_alpha, tmp_map, tmp_map); // freq -> pixel + smoothing!
-	md_copy_block(data->N, pos, data->in_dims, dst, data->map_dims, tmp_map, CFL_SIZE);
-
- 	for (int p = 0; p < data->moba_data->sim.voxel.P - 1; p++) {
-
-		pos[COEFF_DIM] = 4 + p; // R1_2
-		md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, tmp, CFL_SIZE);
-		md_zreal(data->N, data->map_dims, tmp_map, tmp_map);
-		md_copy_block(data->N, pos, data->in_dims, dst, data->map_dims, tmp_map, CFL_SIZE);
-
-		pos[COEFF_DIM] = 4 + data->moba_data->sim.voxel.P - 1 + p; // R2_2
-		md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, tmp, CFL_SIZE);
-		md_zreal(data->N, data->map_dims, tmp_map, tmp_map);
-		md_copy_block(data->N, pos, data->in_dims, dst, data->map_dims, tmp_map, CFL_SIZE);
-
-		pos[COEFF_DIM] = 4 + 2 * (data->moba_data->sim.voxel.P - 1) + p; // k
-		md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, tmp, CFL_SIZE);
-		md_zreal(data->N, data->map_dims, tmp_map, tmp_map);
-		md_copy_block(data->N, pos, data->in_dims, dst, data->map_dims, tmp_map, CFL_SIZE);
-
-		pos[COEFF_DIM] = 4 + 3 * (data->moba_data->sim.voxel.P - 1) + p; // M0
-		md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, tmp, CFL_SIZE);
-		md_copy_block(data->N, pos, data->in_dims, dst, data->map_dims, tmp_map, CFL_SIZE);
-
-		pos[COEFF_DIM] = 4 + 4 * (data->moba_data->sim.voxel.P - 1) + p; // Om
-		md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, tmp, CFL_SIZE);
-		md_zreal(data->N, data->map_dims, tmp_map, tmp_map);
-		md_copy_block(data->N, pos, data->in_dims, dst, data->map_dims, tmp_map, CFL_SIZE);
-	}
-
-	md_free(tmp);
-	md_free(tmp_map);
+	md_ztenmulc(data->N, data->in_dims, dst, data->out_dims, src, data->der_dims, data->derivatives);
 }
 
 
@@ -657,13 +502,11 @@ static void bloch_del(const nlop_data_t* _data)
 	xfree(data->in_strs);
 	xfree(data->out_strs);
 
-	linop_free(data->linop_alpha);
-
 	xfree(data);
 }
 
 
-struct nlop_s* nlop_bloch_create(int N, const long out_dims[N], const long in_dims[N],
+static struct nlop_s* nlop_bloch_int_create(int N, const long out_dims[N], const long in_dims[N],
 			const complex float* b1, const complex float* b0, const struct moba_conf_s* config)
 {
 	PTR_ALLOC(struct blochfun_s, data);
@@ -717,8 +560,47 @@ struct nlop_s* nlop_bloch_create(int N, const long out_dims[N], const long in_di
 	data->b1 = b1;
 	data->b0 = b0;
 
-	// Smoothness penalty for alpha map: Sobolev norm
-	data->linop_alpha = linop_noir_weights_create(N, map_dims, map_dims, map_dims, FFT_FLAGS, 1., config->other.b1_sobolev_a, config->other.b1_sobolev_b, 1.);
+	const struct nlop_s* ret = nlop_create(N, out_dims, N, in_dims, CAST_UP(PTR_PASS(data)), bloch_fun, bloch_der, bloch_adj, NULL, NULL, bloch_del);
 
-	return nlop_create(N, out_dims, N, in_dims, CAST_UP(PTR_PASS(data)), bloch_fun, bloch_der, bloch_adj, NULL, NULL, bloch_del);
+	unsigned long rvc = MD_BIT(0) | MD_BIT(2) | MD_BIT(3); // R1, R2, B1
+	for (int p = 0; p < config->sim.voxel.P - 1; p++) {
+
+		rvc |= MD_BIT(4 + 0 * (config->sim.voxel.P - 1) + p); // R1_2
+		rvc |= MD_BIT(4 + 1 * (config->sim.voxel.P - 1) + p); // R2_2
+		rvc |= MD_BIT(4 + 2 * (config->sim.voxel.P - 1) + p); // k
+		rvc |= MD_BIT(4 + 4 * (config->sim.voxel.P - 1) + p); // Om
+	}
+
+	return nlop_chain_FF(nlop_from_linop_F(moba_rvc_create(N, in_dims, rvc)), ret);
+}
+
+
+struct nlop_s* nlop_bloch_create(int N, const long out_dims[N], const long in_dims[N],
+			const complex float* b1, const complex float* b0, const struct moba_conf_s* config)
+{
+	long map_dims[N];
+	md_select_dims(N, ~COEFF_FLAG, map_dims, in_dims);
+
+	int n_coef = in_dims[COEFF_DIM];
+
+	const struct linop_s* lop_prec[n_coef];
+	for (int i = 0; i < n_coef; i++)
+		lop_prec[i] = NULL;
+
+	struct linop_s* lop_sobolev = linop_noir_weights_create(N, map_dims, map_dims, map_dims, FFT_FLAGS, 1., config->other.b1_sobolev_a, config->other.b1_sobolev_b, 1.);
+	lop_prec[3] = linop_clone(lop_sobolev); 	// B1
+
+	const struct nlop_s* ret = nlop_bloch_int_create(N, out_dims, in_dims, b1, b0, config);
+	ret = nlop_chain_FF(moba_precond_create(N, in_dims, lop_prec, config->other.scale, config->other.initval), ret);
+	ret = moba_attach_trafo_F(ret, lop_sobolev);
+
+	for(int i = 0; i < in_dims[COEFF_DIM]; i++)
+		linop_free(lop_prec[i]);
+
+	return (struct nlop_s*)ret;
+}
+
+const struct linop_s* bloch_get_alpha_trafo(const struct nlop_s* op)
+{
+	return moba_attach_trafo_get_linop((struct nlop_s*)op);
 }
