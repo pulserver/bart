@@ -462,10 +462,13 @@ struct nlop_s* nlop_ir_meco_create(int N, const long /*out_dims*/[N], const long
 
 	prec[in_dims[COEFF_DIM] - 1] = linop_fB0;
 
+	float init[in_dims[COEFF_DIM]];
+	for (int i = 0; i < in_dims[COEFF_DIM]; i++)
+		init[i] = 0.;
 
-	const struct linop_s* precond = moba_precond_create(N, in_dims, prec, scale);
+	const struct nlop_s* precond = moba_precond_create(N, in_dims, prec, scale, init);
 
-	const struct nlop_s* ret = nlop_chain_FF(nlop_from_linop_F(precond), model);
+	const struct nlop_s* ret = nlop_chain_FF(precond, model);
 	ret = moba_attach_trafo_F(ret, linop_fB0);
 
 	for(int i = 0; i < in_dims[COEFF_DIM]; i++)

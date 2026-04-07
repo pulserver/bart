@@ -78,7 +78,7 @@ const struct linop_s* moba_rvc_create(int N, const long in_dims[N], unsigned lon
 
 struct moba_precond_s {
 
-	linop_data_t super;
+	nlop_data_t super;
 
 	int N;
 	const long* dims;
@@ -89,11 +89,12 @@ struct moba_precond_s {
 
 	struct multiplace_array_s* diag;
 	const struct linop_s** map_linops;
+	const float* init_val;
 };
 
 DEF_TYPEID(moba_precond_s);
 
-static void moba_precond_apply(const linop_data_t* _data, complex float* dst, const complex float* src)
+static void moba_precond_derivative(const nlop_data_t* _data, int /*o*/, int /*i*/, complex float* dst, const complex float* src)
 {
 	const auto data = CAST_DOWN(moba_precond_s, _data);
 
@@ -126,7 +127,7 @@ static void moba_precond_apply(const linop_data_t* _data, complex float* dst, co
 
 }
 
-static void moba_precond_adjoint(const linop_data_t* _data, complex float* dst, const complex float* src)
+static void moba_precond_adjoint(const nlop_data_t* _data, int /*o*/, int /*i*/, complex float* dst, const complex float* src)
 {
 	const auto data = CAST_DOWN(moba_precond_s, _data);
 
@@ -158,7 +159,24 @@ static void moba_precond_adjoint(const linop_data_t* _data, complex float* dst, 
 	md_free(tmp2);
 }
 
-static void moba_precond_del(const linop_data_t* _data)
+static void moba_precond_apply(const nlop_data_t* _data, complex float* dst, const complex float* src)
+{
+	moba_precond_derivative(_data, 0, 0, dst, src);
+
+	const auto data = CAST_DOWN(moba_precond_s, _data);
+
+	long pos[data->N];
+	md_set_dims(data->N, pos, 0);
+
+	const complex float* diag = multiplace_read(data->diag, NULL);
+
+	for (; pos[COEFF_DIM] < data->dims[COEFF_DIM]; pos[COEFF_DIM]++)
+		if (0. == cabsf(diag[pos[COEFF_DIM]]) && (0. != data->init_val[pos[COEFF_DIM]]))
+			md_zfill2(data->N, data->map_dims, data->strs, MD_ACCESS_PTR(data->N, data->strs, pos, dst), data->init_val[pos[COEFF_DIM]]);
+
+}
+
+static void moba_precond_del(const nlop_data_t* _data)
 {
 	const auto data = CAST_DOWN(moba_precond_s, _data);
 
@@ -174,11 +192,12 @@ static void moba_precond_del(const linop_data_t* _data)
 	multiplace_free(data->diag);
 
 	xfree(data->map_linops);
+	xfree(data->init_val);
 
 	xfree(data);
 }
 
-const struct linop_s* moba_precond_create(int N, const long in_dims[N], const struct linop_s* linops[in_dims[COEFF_DIM]], const float scaling[in_dims[COEFF_DIM]])
+const struct nlop_s* moba_precond_create(int N, const long in_dims[N], const struct linop_s* linops[in_dims[COEFF_DIM]], const float scaling[in_dims[COEFF_DIM]], const float init[in_dims[COEFF_DIM]])
 {
 	assert(COEFF_DIM < N);
 
@@ -211,12 +230,16 @@ const struct linop_s* moba_precond_create(int N, const long in_dims[N], const st
 
 	const struct linop_s* map_linops[in_dims[COEFF_DIM]];
 	for (int i = 0; i < in_dims[COEFF_DIM]; i++)
-		map_linops[i] = (NULL != linops[i]) ? linop_clone(linops[i]) : NULL;
+		map_linops[i] = (NULL != linops && NULL != linops[i]) ? linop_clone(linops[i]) : NULL;
+
+	float init_val2[in_dims[COEFF_DIM]];
+	for (int i = 0; i < in_dims[COEFF_DIM]; i++)
+		init_val2[i] = (NULL != init) ? init[i] : 0.f;
 
 	data->map_linops = ARR_CLONE(const struct linop_s*[in_dims[COEFF_DIM]], map_linops);
+	data->init_val = ARR_CLONE(float[in_dims[COEFF_DIM]], init_val2);
 
-
-	return linop_create(N, in_dims, N, in_dims, CAST_UP(PTR_PASS(data)), moba_precond_apply, moba_precond_adjoint, NULL, NULL, moba_precond_del);
+	return nlop_create(N, in_dims, N, in_dims, CAST_UP(PTR_PASS(data)), moba_precond_apply, moba_precond_derivative, moba_precond_adjoint, NULL, NULL, moba_precond_del);
 }
 
 
