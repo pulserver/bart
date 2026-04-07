@@ -176,7 +176,7 @@ const struct nlop_s* moba_get_nlop(struct mobafit_model_config* config, const lo
 		if (n_params  != 3)
 			error("Number of parameters (%d) does not match IR-LL model (Mss, M0, R1s)\n", n_params);
 
-		nlop = nlop_T1_create(DIMS, out_dims, param_dims, enc_dims, enc, 1, 1);
+		nlop = nlop_T1_create(DIMS, out_dims, param_dims, enc_dims, enc, 1.);
 		break;
 
 	case MGRE:

@@ -53,7 +53,6 @@ struct T1_s {
 	struct multiplace_array_s* TI;
 
 	float scaling_M0;
-	float scaling_R1s;
 };
 
 DEF_TYPEID(T1_s);
@@ -103,8 +102,8 @@ static void T1_fun(const nlop_data_t* _data, complex float* dst, const complex f
 		md_zreal(data->N, data->map_dims, R1s, R1s);
 
 
-	// -1*scaling_R1s.*R1s
-	md_zsmul2(data->N, data->map_dims, data->map_strs, tmp_map, data->map_strs, R1s, -1.0*data->scaling_R1s);
+	// -R1s
+	md_zsmul2(data->N, data->map_dims, data->map_strs, tmp_map, data->map_strs, R1s, -1.0);
 
 	// exp(-t.*scaling_R1s*R1s):
 
@@ -117,28 +116,26 @@ static void T1_fun(const nlop_data_t* _data, complex float* dst, const complex f
 	// Mss + scaling_M0*M0
 	md_zadd(data->N, data->map_dims, tmp_map, Mss, tmp_map);
 
-	// (Mss + scaling_M0*M0).*exp(-t.*scaling_R1s*R1s)
+	// (Mss + scaling_M0*M0).*exp(-t.*R1s)
 	md_zmul2(data->N, data->out_dims, data->out_strs, dst, data->map_strs, tmp_map, data->out_strs, tmp_exp);
 
-	// Mss -(Mss + scaling_M0*M0).*exp(-t.*scaling_R1s*R1s)
+	// Mss -(Mss + scaling_M0*M0).*exp(-t.*R1s)
 	md_zsub2(data->N, data->out_dims, data->out_strs, dst, data->map_strs, Mss, data->out_strs, dst);
 
 	// Calculating derivatives
 
-	// M0' = -scaling_M0.*exp(-t.*scaling_R1s.*R1s)
+	// M0' = -scaling_M0.*exp(-t.*R1s)
 	md_zsmul(data->N, data->out_dims, data->tmp_dM0, tmp_exp, -data->scaling_M0);
 
-	// Mss' = 1 - exp(-t.*scaling_R1s.*R1s)
+	// Mss' = 1 - exp(-t.*R1s)
 	md_zfill(data->N, data->map_dims, tmp_ones, 1.0);
 	md_zsub2(data->N, data->out_dims, data->out_strs, data->tmp_dMss, data->map_strs, tmp_ones, data->out_strs, tmp_exp);
 
-	// t*exp(-t.*scaling_R1s*R1s):
+	// t*exp(-t.*R1s):
 	md_zmul2(data->N, data->out_dims, data->out_strs, tmp_exp, data->out_strs, tmp_exp, data->TI_strs, multiplace_read(data->TI, dst));
 
-	// scaling_R1s.*exp(-t.*scaling_R1s.*R1s).*t
-	if (!use_compat_to_version("v0.6.00"))
-		md_zsmul(data->N, data->out_dims, tmp_exp, tmp_exp, data->scaling_R1s);
-	else
+	// scaling_R1s.*exp(-t.*R1s).*t
+	if (use_compat_to_version("v0.6.00"))
 		md_zsmul(data->N, data->out_dims, tmp_exp, tmp_exp, data->scaling_M0);
 
 	// scaling_M0.*M0
@@ -147,7 +144,7 @@ static void T1_fun(const nlop_data_t* _data, complex float* dst, const complex f
 	// Mss + scaling_M0*M0
 	md_zadd(data->N, data->map_dims, tmp_ones, Mss, tmp_map);
 
-	// R1s' = (Mss + scaling_M0*M0) * scaling_R1s.*exp(-t.*scaling_R1s.*R1s) * t
+	// R1s' = (Mss + scaling_M0*M0) * exp(-t.*R1s) * t
 	md_zmul2(data->N, data->out_dims, data->out_strs, data->tmp_dR1s, data->map_strs, tmp_ones, data->out_strs, tmp_exp);
 
 	md_free(tmp_map);
@@ -267,7 +264,7 @@ static void T1_del(const nlop_data_t* _data)
 
 
 struct nlop_s* nlop_T1_create(int N, const long out_dims[N], const long in_dims[N], const long TI_dims[N], const complex float* TI,
-				float scaling_M0, float scaling_R1s)
+				float scaling_M0)
 {
 	PTR_ALLOC(struct T1_s, data);
 	SET_TYPEID(T1_s, data);
@@ -315,7 +312,6 @@ struct nlop_s* nlop_T1_create(int N, const long out_dims[N], const long in_dims[
 	data->TI = multiplace_move(N, TI_dims, CFL_SIZE, TI);
 
 	data->scaling_M0 = scaling_M0;
-	data->scaling_R1s = scaling_R1s;
 
 	return nlop_create(N, out_dims, N, in_dims, CAST_UP(PTR_PASS(data)), T1_fun, T1_der, T1_adj, NULL, NULL, T1_del);
 }

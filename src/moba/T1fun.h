@@ -6,7 +6,7 @@ enum T1_model { IRLL = 10, };
 
 
 extern struct nlop_s* nlop_T1_create(int N, const long out_dims[N], const long in_dims[N],
-                const long TI_dims[N], const _Complex float* TI, float scaling_M0, float scaling_R1s);
+                const long TI_dims[N], const _Complex float* TI, float scaling_M0);
 
 extern const struct nlop_s* nlop_ir_create(int N, const long dims[N], const _Complex float* enc);
 

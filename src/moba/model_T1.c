@@ -38,7 +38,7 @@
 
 
 struct mobamod T1_create(const long dims[DIMS], const complex float* mask, const complex float* TI, const complex float* psf,
-				float scaling_M0, float scaling_R1s, const struct noir_model_conf_s* conf, float fov)
+				float scaling_M0, const struct noir_model_conf_s* conf, float fov)
 {
 	long data_dims[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, data_dims, dims);
@@ -77,14 +77,14 @@ struct mobamod T1_create(const long dims[DIMS], const complex float* mask, const
 			md_copy_dims(3, in_dims2, red_fov);
 		}
 
-		T1 = nlop_T1_create(DIMS, out_dims2, in_dims2, TI_dims, TI, scaling_M0, scaling_R1s);
+		T1 = nlop_T1_create(DIMS, out_dims2, in_dims2, TI_dims, TI, scaling_M0);
 
 		T1 = nlop_chain_FF(T1, nlop_from_linop_F(linop_resize_center_create(DIMS, out_dims, out_dims2)));
 		T1 = nlop_chain_FF(nlop_from_linop_F(linop_resize_center_create(DIMS, in_dims2, in_dims)), T1);
 
 	} else {
 
-		T1 = nlop_T1_create(DIMS, out_dims, in_dims, TI_dims, TI, scaling_M0, scaling_R1s);
+		T1 = nlop_T1_create(DIMS, out_dims, in_dims, TI_dims, TI, scaling_M0);
 	}
 
 	debug_printf(DP_INFO, "T1 Model created:\n Model ");

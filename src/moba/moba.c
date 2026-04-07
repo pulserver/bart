@@ -46,7 +46,6 @@ struct moba_conf moba_defaults = {
 
 	// T1
 	.scaling_M0 = 1.,
-	.scaling_R1s = 1.,
 
 	// MECO
 	.mgre_model = MECO_WFR2S,
