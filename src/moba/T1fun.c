@@ -183,7 +183,7 @@ static void T1_der(const nlop_data_t* _data, int /*o*/, int /*i*/, complex float
 	pos[COEFF_DIM] = 0;
 	md_copy_block(data->N, pos, data->map_dims, tmp_map, data->in_dims, src, CFL_SIZE);
 	//const complex float* tmp_Mss = (const void*)src + md_calc_offset(data->N, data->in_strs, pos);
-	
+
 	// dst = dst + dMss * Mss'
 	md_zfmac2(data->N, data->out_dims, data->out_strs, dst, data->map_strs, tmp_map, data->out_strs, data->tmp_dMss);
 
@@ -266,12 +266,14 @@ static void T1_del(const nlop_data_t* _data)
 }
 
 
-struct nlop_s* nlop_T1_create(int N, const long map_dims[N], const long out_dims[N], const long in_dims[N], const long TI_dims[N], const complex float* TI, 
+struct nlop_s* nlop_T1_create(int N, const long out_dims[N], const long in_dims[N], const long TI_dims[N], const complex float* TI,
 				float scaling_M0, float scaling_R1s)
 {
 	PTR_ALLOC(struct T1_s, data);
 	SET_TYPEID(T1_s, data);
 
+	long map_dims[N];
+	md_select_dims(N, ~COEFF_FLAG, map_dims, in_dims);
 
 	PTR_ALLOC(long[N], ndims);
 	md_copy_dims(N, *ndims, map_dims);

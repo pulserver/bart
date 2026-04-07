@@ -491,7 +491,6 @@ int main_mobafit(int argc, char* argv[argc])
 		long b0_dims[DIMS];
 
 		long bloch_dims[DIMS];
-		long der_dims[DIMS];
 		long out_dims[DIMS];
 		long in_dims[DIMS];
 
@@ -516,14 +515,12 @@ int main_mobafit(int argc, char* argv[argc])
 		if (NULL != b0_file)
 			b0 = load_cfl(b0_file, DIMS, b0_dims);
 
-		md_select_dims(DIMS, FFT_FLAGS | TE_FLAG | COEFF_FLAG | TIME2_FLAG, der_dims, bloch_dims);
-		md_select_dims(DIMS, FFT_FLAGS | TIME_FLAG | TIME2_FLAG, map_dims, bloch_dims);
 		md_select_dims(DIMS, FFT_FLAGS | TE_FLAG | TIME_FLAG | TIME2_FLAG, out_dims, bloch_dims);
 		md_select_dims(DIMS, FFT_FLAGS | COEFF_FLAG | TIME_FLAG | TIME2_FLAG, in_dims, bloch_dims);
 
 		moba_conf->sim.seq.rep_num = y_dims[TE_DIM];
 
-		nlop = nlop_bloch_create(DIMS, der_dims, map_dims, out_dims, in_dims, b1, b0, moba_conf);
+		nlop = nlop_bloch_create(DIMS, out_dims, in_dims, b1, b0, moba_conf);
 		break;
 
 	case PHASE:

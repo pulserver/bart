@@ -9,6 +9,6 @@ extern const struct linop_s* T1_get_alpha_trafo(struct nlop_s* op);
 
 extern float read_relax(float tr, float angle);
 
-extern struct nlop_s* nlop_T1_phy_create(int N, const long map_dims[N], const long out_dims[N], const long in_dims[N],
+extern struct nlop_s* nlop_T1_phy_create(int N, const long out_dims[N], const long in_dims[N],
                 const long TI_dims[N], const complex float* TI,  const struct moba_conf_s* config);
 

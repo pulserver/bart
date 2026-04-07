@@ -36,7 +36,7 @@ extern struct nlop_s* nlop_meco_create(int N, const long y_dims[N], const long x
 extern const struct nlop_s* nlop_ir_meco_model_create(int N, const long map_dims[N], const long in_dims[N], const long TI_dims[N],
 				const complex float* TI, const long TE_dims[N], const complex float* TE, enum meco_model meco_model, enum fat_spec fat_spec);
 
-extern struct nlop_s* nlop_ir_meco_create(int N, const long map_dims[N], const long out_dims[N], const long in_dims[N], const long TI_dims[N],
+extern struct nlop_s* nlop_ir_meco_create(int N, const long out_dims[N], const long in_dims[N], const long TI_dims[N],
 		const complex float* TI, const long TE_dims[N], const complex float* TE, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, const float* scale);
 
 

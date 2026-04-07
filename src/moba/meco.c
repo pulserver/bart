@@ -448,9 +448,12 @@ const struct nlop_s* nlop_ir_meco_model_create(int N, const long map_dims[N], co
 	return nlop_chain_FF(nlop_from_linop_F(rvc), ret);
 }
 
-struct nlop_s* nlop_ir_meco_create(int N, const long map_dims[N], const long /*out_dims*/[N], const long in_dims[N], const long TI_dims[N],
+struct nlop_s* nlop_ir_meco_create(int N, const long /*out_dims*/[N], const long in_dims[N], const long TI_dims[N],
 				const complex float* TI, const long TE_dims[N], const complex float* TE, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, const float* scale)
 {
+	long map_dims[N];
+	md_select_dims(N, ~COEFF_FLAG, map_dims, in_dims);
+
 	const struct nlop_s* model = nlop_ir_meco_model_create(N, map_dims, in_dims, TI_dims, TI, TE_dims, TE, meco_model, fat_spec);
 
 	const struct linop_s* prec[in_dims[COEFF_DIM]];
@@ -504,9 +507,6 @@ const struct linop_s* meco_get_fB0_trafo(struct nlop_s* op)
 
 struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_dims[N], const complex float* TE, enum meco_model sel_model, enum fat_spec fat_spec, const float* scale_fB0)
 {
-	long map_dims[N];
-	md_select_dims(N, ~COEFF_FLAG, map_dims, x_dims);
-
 	long TE_dims[N];
 	md_select_dims(N, TE_FLAG, TE_dims, y_dims);
 
@@ -514,7 +514,7 @@ struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_
 	for (long i = 0; i < x_dims[COEFF_DIM]; i++)
 		scale[i] = 1.;
 
-	const struct nlop_s* ret = nlop_ir_meco_create(N, map_dims, /*out_dims*/NULL, x_dims, /*TI_dims*/NULL,
+	const struct nlop_s* ret = nlop_ir_meco_create(N, /*out_dims*/NULL, x_dims, /*TI_dims*/NULL,
 							/*TI*/NULL, TE_dims, TE, scale_fB0, sel_model, fat_spec, /*scale*/scale);
 
 	assert(md_check_equal_dims(N, y_dims, nlop_codomain(ret)->dims, ~0UL));

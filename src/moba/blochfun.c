@@ -663,11 +663,17 @@ static void bloch_del(const nlop_data_t* _data)
 }
 
 
-struct nlop_s* nlop_bloch_create(int N, const long der_dims[N], const long map_dims[N], const long out_dims[N], const long in_dims[N],
+struct nlop_s* nlop_bloch_create(int N, const long out_dims[N], const long in_dims[N],
 			const complex float* b1, const complex float* b0, const struct moba_conf_s* config)
 {
 	PTR_ALLOC(struct blochfun_s, data);
 	SET_TYPEID(blochfun_s, data);
+
+	long der_dims[N];
+	md_max_dims(N, ~0UL, der_dims, out_dims, in_dims);
+
+	long map_dims[N];
+	md_select_dims(N, ~COEFF_FLAG, map_dims, in_dims);
 
 	PTR_ALLOC(long[N], derdims);
 	md_copy_dims(N, *derdims, der_dims);

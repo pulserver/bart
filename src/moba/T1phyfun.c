@@ -297,11 +297,13 @@ static void T1_del(const nlop_data_t* _data)
 }
 
 
-struct nlop_s* nlop_T1_phy_create(int N, const long map_dims[N], const long out_dims[N], const long in_dims[N], const long TI_dims[N], const complex float* TI,  const struct moba_conf_s* config)
+struct nlop_s* nlop_T1_phy_create(int N, const long out_dims[N], const long in_dims[N], const long TI_dims[N], const complex float* TI,  const struct moba_conf_s* config)
 {
 	PTR_ALLOC(struct T1_phy_s, data);
 	SET_TYPEID(T1_phy_s, data);
 
+	long map_dims[N];
+	md_select_dims(N, ~COEFF_FLAG, map_dims, in_dims);
 
 	PTR_ALLOC(long[N], ndims);
 	md_copy_dims(N, *ndims, map_dims);

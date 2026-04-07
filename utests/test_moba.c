@@ -43,7 +43,6 @@
 static bool test_nlop_T1fun(void)
 {
 	enum { N = 16 };
-	long map_dims[N] = { 16, 16, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	long out_dims[N] = { 16, 16, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	long in_dims[N] = { 16, 16, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	long TI_dims[N] = { 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
@@ -55,7 +54,7 @@ static bool test_nlop_T1fun(void)
 
 	md_zfill(N, in_dims, src, 1.0);
 
-	struct nlop_s* T1 = nlop_T1_create(N, map_dims, out_dims, in_dims, TI_dims, TI, 2., 1.);
+	struct nlop_s* T1 = nlop_T1_create(N, out_dims, in_dims, TI_dims, TI, 2., 1.);
 
 	nlop_apply(T1, N, out_dims, dst, N, in_dims, src);
 
@@ -74,7 +73,6 @@ UT_REGISTER_TEST(test_nlop_T1fun);
 static bool test_nlop_T1fun_der(void)
 {
 	enum { N = 16 };
-	long map_dims[N] = { 16, 16, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	long out_dims[N] = { 16, 16, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	long in_dims[N] = { 16, 16, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	long TI_dims[N] = { 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
@@ -82,7 +80,7 @@ static bool test_nlop_T1fun_der(void)
 	complex float TI[4] = { 0., 1., 2., 3. };
 
 
-	struct nlop_s* T1 = nlop_T1_create(N, map_dims, out_dims, in_dims, TI_dims, TI, 2., 1.);
+	struct nlop_s* T1 = nlop_T1_create(N, out_dims, in_dims, TI_dims, TI, 2., 1.);
 	float err = nlop_test_derivative(T1);
 
 	nlop_free(T1);
@@ -149,10 +147,8 @@ UT_REGISTER_TEST(test_op_p_stack_moba_nonneg);
 static bool test_nlop_blochfun(void)
 {
 	enum { N = 16 };
-	long map_dims[N] = { 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	long out_dims[N] = { 3, 3, 1, 1, 1, 500, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	long in_dims[N] = { 3, 3, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long all_dims[N] = { 3, 3, 1, 1, 1, 500, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
 	complex float* dst = md_alloc(N, out_dims, CFL_SIZE);
 	complex float* src = md_alloc(N, in_dims, CFL_SIZE);
@@ -174,7 +170,7 @@ static bool test_nlop_blochfun(void)
 
 	md_zfill(N, in_dims, src, 1.0);
 
-	struct nlop_s* op_bloch = nlop_bloch_create(N, all_dims, map_dims, out_dims, in_dims, NULL, NULL, &data);
+	struct nlop_s* op_bloch = nlop_bloch_create(N, out_dims, in_dims, NULL, NULL, &data);
 
 	nlop_apply(op_bloch, N, out_dims, dst, N, in_dims, src);
 
@@ -194,7 +190,6 @@ UT_REGISTER_TEST(test_nlop_blochfun);
 static bool test_nlop_T1phyfun(void)
 {
 	enum { N = 16 };
-	long map_dims[N] = { 16, 16, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	long out_dims[N] = { 16, 16, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	long in_dims[N] = { 16, 16, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	long TI_dims[N] = { 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
@@ -216,7 +211,7 @@ static bool test_nlop_T1phyfun(void)
 	data.sim.other = simdata_other_defaults;
         data.other = moba_other_defaults;
 
-	struct nlop_s* T1_phy = nlop_T1_phy_create(N, map_dims, out_dims, in_dims, TI_dims, TI, &data);
+	struct nlop_s* T1_phy = nlop_T1_phy_create(N, out_dims, in_dims, TI_dims, TI, &data);
 
 	nlop_apply(T1_phy, N, out_dims, dst, N, in_dims, src);
 
@@ -236,7 +231,6 @@ UT_REGISTER_TEST(test_nlop_T1phyfun);
 static bool test_nlop_ir_meco(void)
 {
 	enum { N = 16 };
-	long map_dims[N] = { 16, 16, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	long out_dims[N] = { 16, 16, 1, 1, 1, 4, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1 };
 	long in_dims[N] = { 16, 16, 1, 1, 1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	long TI_dims[N] = { 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
@@ -255,7 +249,7 @@ static bool test_nlop_ir_meco(void)
 
 	float scale_others[8] = { 1, 1, 1, 1, 1, 1, 0.1, 0.1 };
 
-	struct nlop_s* ir_meco = nlop_ir_meco_create(N, map_dims, out_dims, in_dims, TI_dims, TI, TE_dims, TE, scale_fB0, IR_MECO_W_T1_F_T1_R2S, FAT_SPEC_1, scale_others);
+	struct nlop_s* ir_meco = nlop_ir_meco_create(N, out_dims, in_dims, TI_dims, TI, TE_dims, TE, scale_fB0, IR_MECO_W_T1_F_T1_R2S, FAT_SPEC_1, scale_others);
 
 	nlop_apply(ir_meco, N, out_dims, dst, N, in_dims, src);
 
@@ -318,7 +312,7 @@ static bool test_nlop_ir_meco_der(void)
 
 
 
-	struct nlop_s* ir_meco = nlop_ir_meco_create(N, map_dims, out_dims, in_dims, TI_dims, TI, TE_dims, TE, scale_fB0, IR_MECO_W_T1_F_T1_R2S, FAT_SPEC_1, scale_others);
+	struct nlop_s* ir_meco = nlop_ir_meco_create(N, out_dims, in_dims, TI_dims, TI, TE_dims, TE, scale_fB0, IR_MECO_W_T1_F_T1_R2S, FAT_SPEC_1, scale_others);
 
 	float err = nlop_test_derivative_at(ir_meco, in);
 

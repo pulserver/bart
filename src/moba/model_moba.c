@@ -52,15 +52,11 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 	struct mobamod ret;
 
 	// FIXME: unify them more
-	long der_dims[DIMS];
-	long map_dims[DIMS];
 	long out_dims[DIMS];
 	long in_dims[DIMS];
 	long TI_dims[DIMS];
 	long TE_dims[DIMS];
 
-	md_select_dims(DIMS, conf->fft_flags|TE_FLAG|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, der_dims, dims);
-	md_select_dims(DIMS, conf->fft_flags|TIME_FLAG|TIME2_FLAG, map_dims, dims);
 	md_select_dims(DIMS, conf->fft_flags|TE_FLAG|CSHIFT_FLAG|TIME_FLAG|TIME2_FLAG, out_dims, dims);
 	md_select_dims(DIMS, conf->fft_flags|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, in_dims, dims);
 	md_select_dims(DIMS, TE_FLAG|TIME_FLAG|TIME2_FLAG, TI_dims, dims);
@@ -90,7 +86,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 
 	case MDB_T1_PHY:
 
-		model = nlop_T1_phy_create(DIMS, map_dims, out_dims, in_dims, TI_dims, TI, data);
+		model = nlop_T1_phy_create(DIMS, out_dims, in_dims, TI_dims, TI, data);
 		break;
 
 	case MDB_IR_MGRE:
@@ -98,7 +94,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 		for (int i = 0; i < 8; i++)
 			debug_printf(DP_DEBUG2, "FP Scale[%d]=%f\n", i, crealf(data->other.scale[i]));
 
-		model = nlop_ir_meco_create(DIMS, map_dims, out_dims, in_dims, TI_dims, TI, TE_dims, TE, scale_fB0, meco_model, fat_spec, data->other.scale);
+		model = nlop_ir_meco_create(DIMS, out_dims, in_dims, TI_dims, TI, TE_dims, TE, scale_fB0, meco_model, fat_spec, data->other.scale);
 		break;
 
 	case MDB_BLOCH:
@@ -111,7 +107,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 		if (SEQ_IRFLASH == data->sim.seq.seq_type)
 			data->other.scale[2] = 0.;
 
-		model = nlop_bloch_create(DIMS, der_dims, map_dims, out_dims, in_dims, b1, b0, data);
+		model = nlop_bloch_create(DIMS, out_dims, in_dims, b1, b0, data);
 		break;
 	}
 
@@ -180,10 +176,7 @@ const struct nlop_s* moba_get_nlop(struct mobafit_model_config* config, const lo
 		if (n_params  != 3)
 			error("Number of parameters (%d) does not match IR-LL model (Mss, M0, R1s)\n", n_params);
 
-		long map_dims[DIMS];
-		md_select_dims(DIMS, ~(TE_FLAG | COEFF_FLAG), map_dims, param_dims);
-
-		nlop = nlop_T1_create(DIMS, map_dims, out_dims, param_dims, enc_dims, enc, 1, 1);
+		nlop = nlop_T1_create(DIMS, out_dims, param_dims, enc_dims, enc, 1, 1);
 		break;
 
 	case MGRE:
