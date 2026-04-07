@@ -22,8 +22,10 @@
 #include "linops/someops.h"
 
 #include "nlops/nlop.h"
+#include "nlops/chain.h"
 
 #include "moba/moba.h"
+#include "moba/utils.h"
 
 #include "noir/utils.h"
 
@@ -63,9 +65,6 @@ struct T1_phy_s {
 
 	struct multiplace_array_s* TI;
 
-	const struct linop_s* linop_alpha;
-
-	float scaling_alpha;
 	float r1p_nom;
 };
 
@@ -74,9 +73,7 @@ DEF_TYPEID(T1_phy_s);
 
 const struct linop_s* T1_get_alpha_trafo(struct nlop_s* op)
 {
-	struct T1_phy_s* data = CAST_DOWN(T1_phy_s, nlop_get_data(op));
-
-	return data->linop_alpha;
+	return moba_attach_trafo_get_linop(op);
 }
 
 /**
@@ -131,17 +128,14 @@ static void T1_fun(const nlop_data_t* _data, complex float* dst, const complex f
 	pos[COEFF_DIM] = 2;
 	md_copy_block(data->N, pos, data->map_dims, data->alpha, data->in_dims, src, CFL_SIZE);
 
-	linop_forward_unchecked(data->linop_alpha, data->tmp_map, data->alpha);
-
 	// R1p_nom = -ln(cos(fa_nom))/tr = alpha_nom -> Sobolev on r1p around 0 instead of 1
 	md_zfill(data->N, data->map_dims, data->tmp_ones, data->r1p_nom);
 
-	// R1s = R1 + (1 + alpha * scaling_alpha)
-	md_zsmul(data->N, data->map_dims, data->tmp_R1s, data->tmp_map, data->scaling_alpha);
-	md_zadd(data->N, data->map_dims, data->tmp_R1s, data->tmp_ones, data->tmp_R1s);
+	// R1s = R1 + (1 + alpha)
+	md_zadd(data->N, data->map_dims, data->tmp_R1s, data->tmp_ones, data->alpha);
 	md_zadd(data->N, data->map_dims, data->tmp_R1s, data->R1, data->tmp_R1s);
 
-	// exp(-t.* (R1 + alpha * scaling_alpha)):
+	// exp(-t.* (R1 + alpha)):
         md_zsmul(data->N, data->map_dims, data->tmp_map, data->tmp_R1s, -1.0);
         md_zmul2(data->N, data->out_dims, data->out_strs, data->tmp_exp, data->map_strs, data->tmp_map, data->TI_strs, multiplace_read(data->TI, dst));
 
@@ -181,9 +175,6 @@ static void T1_fun(const nlop_data_t* _data, complex float* dst, const complex f
 	md_zmul2(data->N, data->out_dims, data->out_strs, data->tmp_dR1, data->map_strs, data->M0, data->out_strs, data->tmp_dR1);
 	md_zsub(data->N, data->out_dims, data->tmp_dR1, data->tmp_dalpha, data->tmp_dR1);
 
-	// alpha' * scaling_alpha
-	md_zsmul(data->N, data->out_dims, data->tmp_dalpha, data->tmp_dalpha, data->scaling_alpha);
-
         // FIXME: Precalculate derivatives here and perform md_ztenmul only in operators below -> potential speed up
 }
 
@@ -214,8 +205,6 @@ static void T1_der(const nlop_data_t* _data, int /*o*/, int /*i*/, complex float
 	// tmp =  dalpha
 	pos[COEFF_DIM] = 2;
 	md_copy_block(data->N, pos, data->map_dims, data->tmp_map, data->in_dims, src, CFL_SIZE);
-	//const complex float* tmp_alpha = (const void*)src + md_calc_offset(data->N, data->in_strs, pos);
-	linop_forward_unchecked(data->linop_alpha, data->tmp_map, data->tmp_map);
 
 	// dst = dst + dalpha * alpha'
 	md_zfmac2(data->N, data->out_dims, data->out_strs, dst, data->map_strs, data->tmp_map, data->out_strs, data->tmp_dalpha);
@@ -254,8 +243,6 @@ static void T1_adj(const nlop_data_t* _data, int /*o*/, int /*i*/, complex float
         // Real constraint through adjoint derivative operator? -> breaks scalar product test!
         // md_zreal(data->N, data->map_dims, data->tmp_map, data->tmp_map);
 
-        linop_adjoint_unchecked(data->linop_alpha, data->tmp_map, data->tmp_map);
-
 	// dst[2] = sum (conj(alpha') * src, t)
 	pos[COEFF_DIM] = 2;
 	md_copy_block(data->N, pos, data->in_dims, dst, data->map_dims, data->tmp_map, CFL_SIZE);
@@ -291,13 +278,11 @@ static void T1_del(const nlop_data_t* _data)
 	xfree(data->in_strs);
 	xfree(data->out_strs);
 
-	linop_free(data->linop_alpha);
-
 	xfree(data);
 }
 
 
-struct nlop_s* nlop_T1_phy_create(int N, const long out_dims[N], const long in_dims[N], const long TI_dims[N], const complex float* TI,  const struct moba_conf_s* config)
+static struct nlop_s* nlop_T1_phy_int_create(int N, const long out_dims[N], const long in_dims[N], const long TI_dims[N], const complex float* TI,  const struct moba_conf_s* config)
 {
 	PTR_ALLOC(struct T1_phy_s, data);
 	SET_TYPEID(T1_phy_s, data);
@@ -351,24 +336,32 @@ struct nlop_s* nlop_T1_phy_create(int N, const long out_dims[N], const long in_d
 	data->tmp_dalpha = NULL;
 	data->TI = multiplace_move(N, TI_dims, CFL_SIZE, TI);
 
-
-	// weight on alpha
-	long w_dims[N];
-	md_select_dims(N, FFT_FLAGS, w_dims, map_dims);
-
-	complex float* weights = md_alloc(N, w_dims, CFL_SIZE);
-
-	noir_calc_weights(config->other.b1_sobolev_a, config->other.b1_sobolev_b, w_dims, weights);
-
-	const struct linop_s* linop_wghts = linop_cdiag_create(N, map_dims, FFT_FLAGS, weights);
-	const struct linop_s* linop_ifftc = linop_ifftc_create(N, map_dims, FFT_FLAGS);
-
-	data->linop_alpha = linop_chain_FF(linop_wghts, linop_ifftc);
-
-	md_free(weights);
-
-	data->scaling_alpha = config->other.scale[2];
 	data->r1p_nom = read_relax(config->sim.seq.tr, DEG2RAD(CAST_UP(&config->sim.pulse.sinc)->flipangle));
 
 	return nlop_create(N, out_dims, N, in_dims, CAST_UP(PTR_PASS(data)), T1_fun, T1_der, T1_adj, NULL, NULL, T1_del);
 }
+
+struct nlop_s* nlop_T1_phy_create(int N, const long out_dims[N], const long in_dims[N], const long TI_dims[N], const complex float* TI,  const struct moba_conf_s* config)
+{
+	long map_dims[N];
+	md_select_dims(N, ~COEFF_FLAG, map_dims, in_dims);
+
+	int n_coef = in_dims[COEFF_DIM];
+
+	const struct linop_s* lop_prec[n_coef];
+	for (int i = 0; i < n_coef; i++)
+		lop_prec[i] = NULL;
+
+	struct linop_s* lop_sobolev = linop_noir_weights_create(N, map_dims, map_dims, map_dims, FFT_FLAGS, 1., config->other.b1_sobolev_a, config->other.b1_sobolev_b, 1.);
+	lop_prec[2] = linop_clone(lop_sobolev); // alpha
+
+	const struct nlop_s* ret = nlop_T1_phy_int_create(N, out_dims, in_dims, TI_dims, TI, config);
+	ret = nlop_chain_FF(moba_precond_create(N, in_dims, lop_prec, config->other.scale, config->other.initval), ret);
+	ret = moba_attach_trafo_F(ret, lop_sobolev);
+
+	for(int i = 0; i < in_dims[COEFF_DIM]; i++)
+		linop_free(lop_prec[i]);
+
+	return (struct nlop_s*)ret;
+}
+
