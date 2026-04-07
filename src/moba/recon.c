@@ -21,7 +21,6 @@
 #include "nlops/chain.h"
 
 #include "noir/model.h"
-#include "noir/recon.h"
 
 #include "moba/model_T1.h"
 #include "moba/model_moba.h"
