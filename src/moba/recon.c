@@ -22,7 +22,6 @@
 
 #include "noir/model.h"
 
-#include "moba/model_T1.h"
 #include "moba/model_moba.h"
 #include "moba/blochfun.h"
 #include "moba/T1phyfun.h"
@@ -257,21 +256,17 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 
 	switch (conf->mode) {
 
-	case MDB_T1:
-
-		nl = T1_create(dims, mask, TI, pattern, conf->scaling_M0, &mconf, data->other.fov_reduction_factor);
-		break;
-
 	case MDB_MGRE:
 
 		assert(0); // done in meco_recon (recon_meco.c)
 
+	case MDB_T1:
 	case MDB_T2:
 	case MDB_T1_PHY:
 	case MDB_BLOCH:
 	case MDB_IR_MGRE:
 
-		nl = moba_create(dims, mask, TI, TE_IR_MGRE, b1, b0, conf->scale_fB0, conf->mgre_model, conf->fat_spec, pattern, &mconf, data);
+		nl = moba_create(dims, mask, TI, TE_IR_MGRE, b1, b0, conf->scale_fB0, conf->mgre_model, conf->fat_spec, pattern, &mconf, data, conf->scaling_M0);
 		break;
 	}
 
