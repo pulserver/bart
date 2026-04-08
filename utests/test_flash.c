@@ -15,6 +15,7 @@
 
 #define FLASH_EVENTS 14
 #define FLASH_EVENTS_MECO 68
+#define FLASH_EVENTS_SPOILED 22
 
 
 static bool test_command(void)
@@ -394,6 +395,46 @@ static bool test_flash_mom2(void)
 }
 
 UT_REGISTER_TEST(test_flash_mom2);
+
+
+static bool test_flash_mom_spoiled(void)
+{
+	// we are always expecting same moment at end of imaging block
+	const double expected_moments[3] = { 2.798404E-5, 0., 1.9401939E-5 };
+
+	struct seq_state seq_state = { 0 };
+	seq_state.mode = SEQ_BLOCK_KERNEL_IMAGE;
+	struct seq_config seq = seq_config_defaults;
+
+	seq.phys.tr = 7E-3;
+	seq.phys.contrast = SEQ_CONTRAST_RF_SPOILED;
+	seq.loop_dims[PHS1_DIM] = 3;
+	seq.loop_dims[TIME_DIM] = 3;
+
+	seq_ui_interface_loop_dims(0, &seq, DIMS, seq.loop_dims);
+
+	int E = 200;
+	struct seq_event ev[E];
+
+	for (int i = 0; i < seq.loop_dims[PHS1_DIM]; i++) {
+
+		E = flash(E, ev, &seq_state, &seq);
+
+		if (FLASH_EVENTS_SPOILED != E)
+			return false;
+
+		double mom_end[3];
+		moment_sum(mom_end, seq.phys.tr, E, ev);
+
+		for (int j = 0; j < 3; j++)
+			if (1E-5 * UT_TOL < (fabs(mom_end[j] - expected_moments[j])))
+				return false;
+	}
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_flash_mom_spoiled);
 
 
 static bool test_flash_freq1(void)
