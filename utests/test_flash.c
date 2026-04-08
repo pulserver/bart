@@ -449,7 +449,6 @@ static bool test_flash_freq1(void)
 	//  gamma * shift * ro_amplitude * sin(proj_angle)
 	double modulation = seq.geom.shift[0][0] / (seq.geom.fov * seq.phys.dwell);
 	const double expected_angle[3] = { 0. , 4. * M_PI / 3. , 2. * M_PI / 3. };
-	
 
 	int E = 200;
 	struct seq_event ev[E];
@@ -464,7 +463,7 @@ static bool test_flash_freq1(void)
 		if (3. * UT_TOL < fabs(ev_adc.adc.freq - modulation * sin(expected_angle[i])))
 			return false;
 	}
-		
+
 	return true;
 }
 
@@ -497,7 +496,7 @@ static bool test_flash_freq2(void)
 		if (3. * UT_TOL < fabs(ev_adc.adc.freq - modulation * cos(expected_angle[i])))
 			return false;
 	}
-		
+
 	return true;
 }
 
@@ -522,7 +521,7 @@ static bool test_flash_freq3(void)
 	E = flash(E, ev, &seq_state, &seq);
 
 	struct seq_event ev_rf = ev[events_idx(0, SEQ_EVENT_PULSE, E, ev)];
-		
+
 	if (UT_TOL < fabs(ev_rf.pulse.freq - expected_freq))
 		return false;
 		
