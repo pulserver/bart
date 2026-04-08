@@ -40,7 +40,6 @@ struct noir2_conf_s {
 	int cgiter;
 	float cgtol;
 
-	unsigned long loop_flags;
 	_Bool realtime;
 	float temp_damp;
 

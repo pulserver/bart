@@ -188,7 +188,6 @@ const struct noir2_conf_s noir2_defaults = {
 	.cgiter = 100,
 	.cgtol = 0.1,
 
-	.loop_flags = 0,
 	.realtime = false,
 	.temp_damp = 0.9,
 
@@ -599,10 +598,10 @@ void noir2_recon_noncart(
 	const long msk_dims[N], const complex float* mask,
 	const long cim_dims[N])
 {
-	assert(0 == (conf->loop_flags & md_nontriv_dims(N, bas_dims)));
-	assert(0 == (conf->loop_flags & md_nontriv_dims(N, msk_dims)));
+	unsigned long loop_flags = (conf->realtime ? TIME_FLAG : 0);
 
-	unsigned long loop_flags = conf->loop_flags | (conf->realtime ? TIME_FLAG : 0);
+	assert(0 == (loop_flags & md_nontriv_dims(N, bas_dims)));
+	assert(0 == (loop_flags & md_nontriv_dims(N, msk_dims)));
 
 	struct noir2_model_conf_s mconf = noir2_model_conf_defaults;
 
@@ -645,20 +644,6 @@ void noir2_recon_noncart(
 	md_select_dims(N, ~loop_flags, lwgh_dims, wgh_dims);
 	md_select_dims(N, ~loop_flags, lkco_dims, kco_dims);
 	md_select_dims(N, ~loop_flags, lcim_dims, cim_dims);
-
-	long img_strs[N];
-	long col_strs[N];
-	long ksp_strs[N];
-	long trj_strs[N];
-	long wgh_strs[N];
-	long kco_strs[N];
-
-	md_calc_strides(N, img_strs, img_dims, CFL_SIZE);
-	md_calc_strides(N, col_strs, col_dims, CFL_SIZE);
-	md_calc_strides(N, ksp_strs, ksp_dims, CFL_SIZE);
-	md_calc_strides(N, trj_strs, trj_dims, CFL_SIZE);
-	md_calc_strides(N, wgh_strs, wgh_dims, CFL_SIZE);
-	md_calc_strides(N, kco_strs, kco_dims, CFL_SIZE);
 
 	struct noir2_s noir_ops = (conf->optimized ? noir2_noncart_optimized_create :noir2_noncart_create)(N, ltrj_dims, NULL, lwgh_dims, weights, bas_dims, basis, msk_dims, mask, lksp_dims, lcim_dims, limg_dims, lkco_dims, lcol_dims, &mconf);
 
@@ -774,9 +759,6 @@ void noir2_recon_cart(
 	const long msk_dims[N], const complex float* mask,
 	const long cim_dims[N])
 {
-	assert(0 == (conf->loop_flags && md_nontriv_dims(N, bas_dims)));
-	assert(0 == (conf->loop_flags && md_nontriv_dims(N, msk_dims)));
-
 	struct noir2_model_conf_s mconf = noir2_model_conf_defaults;
 
 	mconf.fft_flags = (conf->sms) ? SLICE_FLAG | FFT_FLAGS : FFT_FLAGS;
@@ -794,48 +776,7 @@ void noir2_recon_cart(
 
 	struct noir2_s noir_ops = noir2_cart_create(N, pat_dims, pattern, bas_dims, basis, msk_dims, mask, ksp_dims, cim_dims, img_dims, kco_dims, col_dims, &mconf);
 
-
-	long limg_dims[N];
-	long lcol_dims[N];
-	long lksp_dims[N];
-	long lpat_dims[N];
-	long lkco_dims[N];
-
-	md_select_dims(N, ~conf->loop_flags, limg_dims, img_dims);
-	md_select_dims(N, ~conf->loop_flags, lcol_dims, col_dims);
-	md_select_dims(N, ~conf->loop_flags, lksp_dims, ksp_dims);
-	md_select_dims(N, ~conf->loop_flags, lpat_dims, pat_dims);
-	md_select_dims(N, ~conf->loop_flags, lkco_dims, kco_dims);
-
-	long img_strs[N];
-	long col_strs[N];
-	long ksp_strs[N];
-	long pat_strs[N];
-	long kco_strs[N];
-
-	md_calc_strides(N, img_strs, img_dims, CFL_SIZE);
-	md_calc_strides(N, col_strs, col_dims, CFL_SIZE);
-	md_calc_strides(N, ksp_strs, ksp_dims, CFL_SIZE);
-	md_calc_strides(N, pat_strs, pat_dims, CFL_SIZE);
-	md_calc_strides(N, kco_strs, kco_dims, CFL_SIZE);
-
-	long pos[N];
-	md_set_dims(N, pos, 0);
-
-	do {
-
-		complex float* l_img = &MD_ACCESS(N, img_strs, pos, img);
-		complex float* l_sens = (NULL == sens) ? NULL : &MD_ACCESS(N, col_strs, pos, sens);
-		complex float* l_ksens = (NULL == ksens) ? NULL : &MD_ACCESS(N, kco_strs, pos, ksens);
-		const complex float* l_kspace = &MD_ACCESS(N, ksp_strs, pos, kspace);
-		const complex float* l_pattern = &MD_ACCESS(N, pat_strs, pos, pattern);
-
-		if (l_pattern != pattern)
-			noir2_cart_update(&noir_ops, N,lpat_dims, l_pattern, bas_dims, basis);
-
-		noir2_recon(conf, &noir_ops, N, limg_dims, l_img, NULL, lcol_dims, l_sens, lkco_dims, l_ksens, NULL, lksp_dims, l_kspace);
-
-	} while (md_next(N, ksp_dims, conf->loop_flags, pos));
+	noir2_recon(conf, &noir_ops, N, img_dims, img, NULL, col_dims, sens, kco_dims, ksens, NULL, ksp_dims, kspace);
 
 	noir2_free(&noir_ops);
 }
