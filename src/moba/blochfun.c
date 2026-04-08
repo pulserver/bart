@@ -158,26 +158,12 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 	complex float* dm0_pools_cpu = md_calloc(data->N, pool_out_dims, CFL_SIZE);
 	complex float* dom_cpu = md_calloc(data->N, pool_out_dims, CFL_SIZE);
 
-	float fov_reduction_factor = data->moba_data->other.fov_reduction_factor;
-
-	long start[3];
-	long end[3];
-
-	for (int i = 0; i < 3; i++) {
-
-		//consistent with compute_mask
-		long size = (1 == data->map_dims[i]) ? 1 : (data->map_dims[i] * fov_reduction_factor);
-		start[i] = labs((size / 2) - (data->map_dims[i] / 2));
-		end[i] = size + start[i];
-	}
-
-
 	// debug_sim(&(data->moba_data.sim));
 
 #pragma omp parallel for collapse(3)
-	for (int x = start[0]; x < end[0]; x++) {
-		for (int y = start[1]; y < end[1]; y++) {
-			for (int z = start[2]; z < end[2]; z++) {
+	for (int x = 0; x < data->map_dims[0]; x++) {
+		for (int y = 0; y < data->map_dims[1]; y++) {
+			for (int z = 0; z < data->map_dims[2]; z++) {
 
 				//Calculate correct spatial position
 				long spa_pos[DIMS];
@@ -502,6 +488,9 @@ static void bloch_del(const nlop_data_t* _data)
 	xfree(data->in_strs);
 	xfree(data->out_strs);
 
+	md_free(data->b1);
+	md_free(data->b0);
+
 	xfree(data);
 }
 
@@ -557,8 +546,20 @@ struct nlop_s* nlop_bloch_create(int N, const long out_dims[N], const long in_di
 
 	data->moba_data = config;
 
-	data->b1 = b1;
-	data->b0 = b0;
+	data->b1 = NULL;
+	data->b0 = NULL;
+
+	if (NULL != b1) {
+
+		data->b1 = md_alloc(N, map_dims, CFL_SIZE);
+		md_copy(N, map_dims, (void*)data->b1, b1, CFL_SIZE);
+	}
+
+	if (NULL != b0) {
+
+		data->b0 = md_alloc(N, map_dims, CFL_SIZE);
+		md_copy(N, map_dims, (void*)data->b0, b0, CFL_SIZE);
+	}
 
 	const struct nlop_s* ret = nlop_create(N, out_dims, N, in_dims, CAST_UP(PTR_PASS(data)), bloch_fun, bloch_der, bloch_adj, NULL, NULL, bloch_del);
 

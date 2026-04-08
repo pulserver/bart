@@ -22,6 +22,7 @@
 
 #include "nlops/nlop.h"
 #include "nlops/chain.h"
+#include "nlops/cast.h"
 #include "nlops/snlop.h"
 #include "nlops/smath.h"
 #include "nlops/cast.h"
@@ -72,6 +73,19 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 	md_select_dims(DIMS, CSHIFT_FLAG|TIME_FLAG|TIME2_FLAG, TE_dims, dims);
 	md_select_dims(DIMS, ~COEFF_FLAG, map_dims, in_dims);
 
+	long out_dims2[DIMS];
+	long in_dims2[DIMS];
+	long map_dims2[DIMS];
+
+	float fov = data->other.fov_reduction_factor;
+
+	for (int i = 0; i < DIMS; i++) {
+
+		out_dims2[i] = (1 < out_dims[i] && 3 > i) ? out_dims[i] * fov : out_dims[i];
+		in_dims2[i] = (1 < in_dims[i] && 3 > i) ? in_dims[i] * fov : in_dims[i];
+		map_dims2[i] = (1 < map_dims[i] && 3 > i) ? map_dims[i] * fov : map_dims[i];
+	}
+
 	struct nlop_s* model = NULL;
 
 	ret.linop_alpha = NULL;
@@ -87,7 +101,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 
 		if (MECO_PI == meco_model) {
 
-			model = nlop_from_linop_F(linop_identity_create(DIMS, out_dims));
+			model = nlop_from_linop_F(linop_identity_create(DIMS, out_dims2));
 			break;
 		}
 
@@ -98,13 +112,13 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 
 		lop_prec[NC - 1] = ret.linop_alpha;
 
-		model = nlop_meco_create(DIMS, out_dims, in_dims, TI/*TI is used as TE*/, meco_model, fat_spec);
+		model = nlop_meco_create(DIMS, out_dims2, in_dims2, TI/*TI is used as TE*/, meco_model, fat_spec);
 
 		break;
 
 	case MDB_T1:
 
-		model = nlop_T1_create(DIMS, out_dims, in_dims, TI_dims, TI, scaling_M0);
+		model = nlop_T1_create(DIMS, out_dims2, in_dims2, TI_dims, TI, scaling_M0);
 
 		break;
 
@@ -113,7 +127,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 		complex float* enc = md_alloc_sameplace(DIMS, TI_dims, CFL_SIZE, TI);
 
 		md_zsmul(DIMS, TI_dims, enc, TI, -1.);
-		model = nlop_exp_create(DIMS, out_dims, enc);
+		model = nlop_exp_create(DIMS, out_dims2, enc);
 
 		md_free(enc);
 
@@ -124,7 +138,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 		ret.linop_alpha = linop_noir_weights_create(DIMS, map_dims, map_dims, map_dims, FFT_FLAGS, 1., data->other.b1_sobolev_a, data->other.b1_sobolev_b, 1.);
 		lop_prec[2] = ret.linop_alpha;
 
-		model = nlop_T1_phy_create(DIMS, out_dims, in_dims, TI_dims, TI, data);
+		model = nlop_T1_phy_create(DIMS, out_dims2, in_dims2, TI_dims, TI, data);
 		break;
 
 	case MDB_IR_MGRE:
@@ -136,7 +150,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 
 		lop_prec[NC - 1] = ret.linop_alpha;
 
-		model = nlop_ir_meco_create(DIMS, out_dims, in_dims, TI_dims, TI, TE_dims, TE, meco_model, fat_spec);
+		model = nlop_ir_meco_create(DIMS, out_dims2, in_dims2, TI_dims, TI, TE_dims, TE, meco_model, fat_spec);
 		break;
 
 	case MDB_BLOCH:
@@ -149,9 +163,34 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 		if (SEQ_IRFLASH == data->sim.seq.seq_type)
 			data->other.scale[2] = 0.;
 
-		model = nlop_bloch_create(DIMS, out_dims, in_dims, b1, b0, data);
+		complex float* b1_2 = NULL;
+		complex float* b0_2 = NULL;
+
+		if (NULL != b1) {
+
+			b1_2 = md_alloc_sameplace(DIMS, map_dims2, CFL_SIZE, b1);
+			md_resize_center(DIMS, map_dims2, b1_2, map_dims, b1, CFL_SIZE);
+		}
+
+		if (NULL != b0) {
+
+			b0_2 = md_alloc_sameplace(DIMS, map_dims2, CFL_SIZE, b0);
+			md_resize_center(DIMS, map_dims2, b0_2, map_dims, b0, CFL_SIZE);
+		}
+
+		model = nlop_bloch_create(DIMS, out_dims2, in_dims2, b1_2, b0_2, data);
+
+		md_free(b1_2);
+		md_free(b0_2);
+
 		break;
 	}
+
+	if (!md_check_equal_dims(DIMS, out_dims, out_dims2, ~0UL))
+		model = nlop_chain_FF(model, nlop_from_linop_F(linop_resize_center_create(DIMS, out_dims, out_dims2)));
+
+	if (!md_check_equal_dims(DIMS, in_dims, in_dims2, ~0UL))
+		model = nlop_chain_FF(nlop_from_linop_F(linop_resize_center_create(DIMS, in_dims2, in_dims)), model);
 
 	for (int i = 0; i < NC; i++)
 		debug_printf(DP_DEBUG2, "FP Scale[%d]=%f\n", i, crealf(data->other.scale[i]));
