@@ -728,7 +728,7 @@ endif
 vpath %.a lib
 vpath % commands/
 
-boxextrasrcs := $(XTARGETS:%=src/%.c)
+boxextrasrcs := $(XTARGETS:%=$(srcdir)/%.c)
 
 define alib
 $(1)srcs := $(wildcard $(srcdir)/$(1)/*.c)
