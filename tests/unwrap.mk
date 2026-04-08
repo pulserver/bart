@@ -25,7 +25,7 @@ tests/test-unwrap-lap: unwrap zexp carg index scale flip join saxpy ones nrmse
 	$(TOOLDIR)/unwrap -l 1 o.ra u.ra							;\
 	$(TOOLDIR)/nrmse -t 5.e-4 i.ra u.ra							;\
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
-	touch $
+	touch $@
 
 TESTS += tests/test-unwrap
 TESTS += tests/test-unwrap-lap
