@@ -589,9 +589,9 @@ void noir2_recon(const struct noir2_conf_s* conf, struct noir2_s* noir_ops,
 
 void noir2_recon_noncart(
 	const struct noir2_conf_s* conf, int N,
-	const long img_dims[N], complex float* img, const complex float* img_ref,
+	const long img_dims[N], complex float* img,
 	const long col_dims[N], complex float* sens,
-	const long kco_dims[N], complex float* ksens, const complex float* sens_ref,
+	const long kco_dims[N], complex float* ksens,
 	const long ksp_dims[N], const complex float* kspace,
 	const long trj_dims[N], const complex float* traj,
 	const long wgh_dims[N], const complex float* weights,
@@ -675,13 +675,19 @@ void noir2_recon_noncart(
 #endif
 
 	complex float* l_img = 		md_alloc_sameplace(N, limg_dims, CFL_SIZE, ref);
-	complex float* l_img_ref = 	(!conf->realtime && (NULL == img_ref)) ? NULL : md_alloc_sameplace(N, limg_dims, CFL_SIZE, ref);
+	complex float* l_img_ref = 	conf->realtime ? md_alloc_sameplace(N, limg_dims, CFL_SIZE, ref) : NULL;
 	complex float* l_sens = 	(NULL == sens) ? NULL : md_alloc_sameplace(N, lcol_dims, CFL_SIZE, ref);
 	complex float* l_ksens = 	md_alloc_sameplace(N, lkco_dims, CFL_SIZE, ref);
-	complex float* l_sens_ref = 	(!conf->realtime && (NULL == sens_ref)) ? NULL : md_alloc_sameplace(N, lkco_dims, CFL_SIZE, ref);
+	complex float* l_sens_ref = 	conf->realtime ? md_alloc_sameplace(N, lkco_dims, CFL_SIZE, ref) : NULL;
 	complex float* l_kspace = 	md_alloc_sameplace(N, lksp_dims, CFL_SIZE, ref);
 	complex float* l_wgh = 		(!conf->realtime && (NULL == weights)) ? NULL : md_alloc_sameplace(N, lwgh_dims, CFL_SIZE, ref);
 	complex float* l_trj = 		md_alloc_sameplace(N, ltrj_dims, CFL_SIZE, ref);
+
+	if (conf->realtime) {
+
+		md_clear(N, limg_dims, l_img_ref, CFL_SIZE);
+		md_clear(N, lkco_dims, l_sens_ref, CFL_SIZE);
+	}
 
 	long pos[N];
 	md_set_dims(N, pos, 0);
@@ -716,30 +722,8 @@ void noir2_recon_noncart(
 			else
 				estimate_pattern(N, lksp_dims, COIL_FLAG, l_wgh, l_kspace);
 
-			if (0 == pos[TIME_DIM]) {
-
-				if (NULL == img_ref)
-					md_clear(N, limg_dims, l_img_ref, CFL_SIZE);
-				else
-					md_slice(N, loop_flags, pos, img_dims, l_img_ref, img_ref, CFL_SIZE);
-
-				if (NULL == sens_ref)
-					md_clear(N, lkco_dims, l_sens_ref, CFL_SIZE);
-				else
-					md_slice(N, loop_flags, pos, kco_dims, l_sens_ref, sens_ref, CFL_SIZE);
-			} else {
-
-				md_zsmul(N, limg_dims, l_img, l_img_ref, 1. / conf->temp_damp);
-				md_zsmul(N, lkco_dims, l_ksens, l_sens_ref, 1. / conf->temp_damp);
-			}
-
-		} else {
-
-			if (NULL != img_ref)
-				md_slice(N, loop_flags, pos, img_dims, l_img_ref, img_ref, CFL_SIZE);
-
-			if (NULL != sens_ref)
-				md_slice(N, loop_flags, pos, kco_dims, l_sens_ref, sens_ref, CFL_SIZE);
+			md_zsmul(N, limg_dims, l_img, l_img_ref, 1. / conf->temp_damp);
+			md_zsmul(N, lkco_dims, l_ksens, l_sens_ref, 1. / conf->temp_damp);
 		}
 
 		if (NULL != strm_trj)
@@ -781,9 +765,9 @@ void noir2_recon_noncart(
 
 void noir2_recon_cart(
 	const struct noir2_conf_s* conf, int N,
-	const long img_dims[N], complex float* img, const complex float* img_ref,
+	const long img_dims[N], complex float* img,
 	const long col_dims[N], complex float* sens,
-	const long kco_dims[N], complex float* ksens, const complex float* sens_ref,
+	const long kco_dims[N], complex float* ksens,
 	const long ksp_dims[N], const complex float* kspace,
 	const long pat_dims[N], const complex float* pattern,
 	const long bas_dims[N], const complex float* basis,
@@ -841,17 +825,15 @@ void noir2_recon_cart(
 	do {
 
 		complex float* l_img = &MD_ACCESS(N, img_strs, pos, img);
-		const complex float* l_img_ref = (NULL == img_ref) ? NULL : &MD_ACCESS(N, img_strs, pos, img_ref);
 		complex float* l_sens = (NULL == sens) ? NULL : &MD_ACCESS(N, col_strs, pos, sens);
 		complex float* l_ksens = (NULL == ksens) ? NULL : &MD_ACCESS(N, kco_strs, pos, ksens);
-		const complex float* l_sens_ref = (NULL == sens_ref) ? NULL : &MD_ACCESS(N, kco_strs, pos, sens_ref);
 		const complex float* l_kspace = &MD_ACCESS(N, ksp_strs, pos, kspace);
 		const complex float* l_pattern = &MD_ACCESS(N, pat_strs, pos, pattern);
 
 		if (l_pattern != pattern)
 			noir2_cart_update(&noir_ops, N,lpat_dims, l_pattern, bas_dims, basis);
 
-		noir2_recon(conf, &noir_ops, N, limg_dims, l_img, l_img_ref, lcol_dims, l_sens, lkco_dims, l_ksens, l_sens_ref, lksp_dims, l_kspace);
+		noir2_recon(conf, &noir_ops, N, limg_dims, l_img, NULL, lcol_dims, l_sens, lkco_dims, l_ksens, NULL, lksp_dims, l_kspace);
 
 	} while (md_next(N, ksp_dims, conf->loop_flags, pos));
 

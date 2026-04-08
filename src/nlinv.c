@@ -487,18 +487,15 @@ int main_nlinv(int argc, char* argv[argc])
 		mask = compute_mask(DIMS, msk_dims, restrict_dims);
 	}
 
-	complex float* ref_img = NULL;
-	complex float* ref_sens = NULL;
-
 	if (NULL != traj) {
 
 		struct nufft_conf_s nufft_conf = nufft_conf_options;
 		conf.nufft_conf = &nufft_conf;
 
 		noir2_recon_noncart(&conf, DIMS,
-			img_dims, img, ref_img,
+			img_dims, img,
 			sens_dims, sens,
-			ksens_dims, ksens, ref_sens,
+			ksens_dims, ksens,
 			ksp_dims, kspace,
 			trj_dims, traj,
 			pat_dims, pattern,
@@ -509,9 +506,9 @@ int main_nlinv(int argc, char* argv[argc])
 	} else {
 
 		noir2_recon_cart(&conf, DIMS,
-			img_dims, img, ref_img,
+			img_dims, img,
 			sens_dims, sens,
-			ksens_dims, ksens, ref_sens,
+			ksens_dims, ksens,
 			ksp_dims, kspace,
 			pat_dims, pattern,
 			bas_dims, basis,

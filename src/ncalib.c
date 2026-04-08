@@ -339,9 +339,9 @@ int main_ncalib(int argc, char* argv[argc])
 		conf.nufft_conf = &nufft_conf;
 
 		noir2_recon_noncart(&conf, DIMS,
-			img_dims, img, NULL,
+			img_dims, img,
 			sens_dims, sens,
-			ksens_dims, ksens, NULL,
+			ksens_dims, ksens,
 			ksp_dims, kspace,
 			trj_dims, traj,
 			pat_dims, pattern,
@@ -352,9 +352,9 @@ int main_ncalib(int argc, char* argv[argc])
 	} else {
 
 		noir2_recon_cart(&conf, DIMS,
-			img_dims, img, NULL,
+			img_dims, img,
 			sens_dims, sens,
-			ksens_dims, ksens, NULL,
+			ksens_dims, ksens,
 			ksp_dims, kspace,
 			pat_dims, pattern,
 			bas_dims, basis,

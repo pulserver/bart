@@ -65,9 +65,9 @@ extern void noir2_recon(const struct noir2_conf_s* conf, struct noir2_s* noir_op
 
 extern void noir2_recon_noncart(
 	const struct noir2_conf_s* conf, int N,
-	const long img_dims[N], _Complex float* img, const _Complex float* img_ref,
+	const long img_dims[N], _Complex float* img,
 	const long col_dims[N], _Complex float* sens,
-	const long kco_dims[N], _Complex float* ksens, const _Complex float* sens_ref,
+	const long kco_dims[N], _Complex float* ksens,
 	const long ksp_dims[N], const _Complex float* kspace,
 	const long trj_dims[N], const _Complex float* traj,
 	const long wgh_dims[N], const _Complex float* weights,
@@ -77,9 +77,9 @@ extern void noir2_recon_noncart(
 
 extern void noir2_recon_cart(
 	const struct noir2_conf_s* conf, int N,
-	const long img_dims[N], _Complex float* img, const _Complex float* img_ref,
+	const long img_dims[N], _Complex float* img,
 	const long col_dims[N], _Complex float* sens,
-	const long kco_dims[N], _Complex float* ksens, const _Complex float* sens_ref,
+	const long kco_dims[N], _Complex float* ksens,
 	const long ksp_dims[N], const _Complex float* kspace,
 	const long pat_dims[N], const _Complex float* pattern,
 	const long bas_dims[N], const _Complex float* basis,
