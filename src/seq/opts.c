@@ -7,12 +7,15 @@
 #include <string.h>
 #include <setjmp.h>
 
+#include "misc/debug.h"
 #include "misc/opts.h"
 #include "misc/mri.h"
 #include "misc/misc.h"
 
 #include "seq/config.h"
 #include "seq/helpers.h"
+#include "seq/misc.h"
+
 
 #include "opts.h"
 
@@ -39,6 +42,7 @@ const struct seq_opts seq_opts_defaults = {
 };
 
 
+static void seq_process_options(struct seq_config* conf, struct seq_opts* seq_opts);
 
 int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m],
 			const char* help_str, struct seq_config* conf, struct seq_opts* seq_opts,
@@ -176,11 +180,13 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 
 	cmdline(argcp, argv, m, args, help_str, ARRAY_SIZE(opts), opts);
 
+	seq_process_options(conf, seq_opts);
 
+	return 0;
+}
 
-
-// modifications in seq-tool
-
+static void seq_process_options(struct seq_config* conf, struct seq_opts* seq_opts)
+{
 	if (0 > seq_opts->samples)
 		seq_opts->samples = (0. > seq_opts->dt) ? 1000 : (conf->phys.tr / seq_opts->dt);
 
@@ -207,8 +213,81 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 		break;
 	}
 
-	return 0;
+	if (seq_opts->custom_params_long[0] > 0)
+		seq_ui_interface_custom_params(0, conf, SEQ_MAX_PARAMS_LONG, seq_opts->custom_params_long,
+					SEQ_MAX_PARAMS_DOUBLE, seq_opts->custom_params_double);
+
+	if (   (SEQ_PEMODE_RAGA == conf->enc.pe_mode)
+	    && (1 == conf->loop_dims[TIME_DIM])
+	    && (conf->loop_dims[TIME_DIM] < conf->loop_dims[PHS1_DIM])) {
+
+		if (0 < seq_opts->raga_full_frames)
+			conf->loop_dims[TIME_DIM] = seq_opts->raga_full_frames * conf->loop_dims[PHS1_DIM];
+
+		if (1 == conf->loop_dims[TIME_DIM]) {
+
+			debug_printf(DP_INFO, "Set total number of spokes to %ld (full frame for RAGA encoding)\n", conf->loop_dims[PHS1_DIM]);
+			conf->loop_dims[TIME_DIM] = conf->loop_dims[PHS1_DIM];
+		}
+	}
+
+	seq_ui_interface_loop_dims(0, conf, DIMS, conf->loop_dims);
+
+	const long total_slices = get_slices(conf);
+
+	if ((0. < fabs(seq_opts->rel_shift[0])) || (0. < fabs(seq_opts->rel_shift[1])) || (0. < fabs(seq_opts->rel_shift[2]))) {
+
+		if ((0. < fabs(conf->geom.shift[0][0])) || (0. < fabs(conf->geom.shift[0][1])) || (0. < fabs(conf->geom.shift[0][2])))
+			error("Choose either relative or absolute FOV shift");
+
+		double slab = conf->geom.slice_thickness;
+		if (conf->enc.is3D)
+			slab = conf->geom.slice_thickness * conf->loop_dims[PHS2_DIM] / conf->geom.slab_os;
+
+		for (int i = 0; i < total_slices; i++) {
+
+			conf->geom.shift[i][0] = seq_opts->rel_shift[0] * conf->geom.fov;
+			conf->geom.shift[i][1] = seq_opts->rel_shift[1] * conf->geom.fov;
+			conf->geom.shift[i][2] = seq_opts->rel_shift[2] * slab;
+		}
+	}
+
+	if ((1 < total_slices) && (0. < seq_opts->dist)) {
+
+		float shift[4 * total_slices][3] = { }; // also includes 3x3 rotation matrix
+		float init_shift = conf->geom.shift[0][2];
+
+		for (int i = 0; i < total_slices; i++) {
+
+			shift[i][0] = conf->geom.shift[0][0];
+			shift[i][1] = conf->geom.shift[0][1];
+			shift[i][2] = init_shift + (i - 0.5 * (total_slices - 1)) * seq_opts->dist * conf->geom.slice_thickness;
+		}
+
+		seq_set_fov_pos(total_slices, 3, &shift[0][0], conf);
+
+		debug_printf(DP_INFO, "slice shifts:\n\t%d %f \t\n", 0, conf->geom.shift[0][2]);
+
+		for (int i = 1; i < total_slices; i++)
+			debug_printf(DP_INFO, "\t%d: %f \n", i, conf->geom.shift[i][2]);
+
+		debug_printf(DP_INFO, "\n");
+	}
+
+	if (SEQ_ASL_NONE != conf->asl.label_type) {
+		
+		conf->loop_dims[SLICE_DIM] = conf->loop_dims[SLICE_DIM] + 1;  // add label slice
+		conf->asl.label_slice_index = conf->loop_dims[SLICE_DIM] - 1; // set last slice as label slice
+		conf->geom.shift[conf->asl.label_slice_index][2] = seq_opts->label_slice_shift[2];
+
+		debug_printf(DP_INFO, "ASL label slice shift:\n\t%d %f \t\n", 0, conf->geom.shift[conf->asl.label_slice_index][2]);
+	}
+
+	if ((NULL != seq_opts->raga_file) && seq_opts->chrono)
+		error("RAGA indices only for raga pe mode and non chronologic mode\n");
 }
+
+
 
 int seq_cmdline_print(int len, char* buf, const struct seq_config* conf, struct seq_opts* seq_opts)
 {
