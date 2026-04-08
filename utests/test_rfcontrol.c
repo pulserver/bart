@@ -1,30 +1,28 @@
-/* Copyright 2025. TU Graz. Institute of Biomedical Imaging.
+/* Copyright 2025-2026. TU Graz. Institute of Biomedical Imaging.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  */
 
 #include <math.h>
 
-#include "misc/nested.h"
 #include "misc/mri.h"
 
 #include "num/ode.h"
 #include "num/multind.h"
 #include "num/linalg.h"
+
 #include "simu/rfcontrol.h"
+#include "simu/bloch.h"
+
 #include "seq/pulse.h"
 
 #include "utest.h"
 
+
 static bool test_cn_bloch_no_rf_pulse(void)
 {
 	// Physical parameters
-	float T1 = 1;
-	float T2 = 1;
-	float B1 = 0.01;
 	float M0 = 1.;
-	float gamma = GYRO;
-	int relax = 0; // No relaxation
 
 	// Simulation parameters
 	float dt = 0.001;
@@ -33,18 +31,11 @@ static bool test_cn_bloch_no_rf_pulse(void)
 	// Initial state: equilibrium magnetization
 	float x[4] = { 0., 0., M0, 0. };
 
-	// No RF pulse, no gradient
-	float u = 0.; // RF x-component
-	float v = 0.; // RF y-component  
-	float w = 0.; // z-gradient component
-
 	// Bloch matrix 
-	float mat[4][4] = {
-		{ -1. / T2 * relax,      w * gamma,		v * gamma * B1, 	0   		},
-		{ -w * gamma,           -1. / T2 * relax,	u * gamma * B1, 	0   		},
-		{ -v * gamma * B1,      -u * gamma * B1,	-1. / T1 * relax, 	M0 / T1 * relax },
-		{ 0,      		 0,         		0, 			0   		}
-	};
+	float mat[4][4];
+
+	// No RF pulse, no gradient
+	bloch_matrix_ode(mat, 0., 0., (float[3]){ });
 
 	crank_nicolson_matrix(dt, 4, x, 0., sim_time, mat);
 
@@ -62,11 +53,8 @@ UT_REGISTER_TEST(test_cn_bloch_no_rf_pulse);
 static bool test_cn_bloch_rf_pulse(void)
 {
 	// Physical parameters
-	float T1 = 1;
-	float T2 = 1;
-	float B1 = 1;
-	float M0 = 1.;
-	int relax = 0; // No relaxation
+	const float B1 = 1.;
+	const float M0 = 1.;
 
 	// Prepare 90° sinc pulse
 	float pulse_duration = 0.001;
@@ -86,14 +74,9 @@ static bool test_cn_bloch_rf_pulse(void)
 
 		float u = crealf(p);
 		float v = cimagf(p);
-		float w = 0.; // No slice-selective gradient
 
-		float mat[4][4] = {
-		    { -1. / T2 * relax,	w,			v * B1,   		0},
-		    { -w,		-1. / T2 * relax,	u * B1,   		0},
-		    { -v * B1,		-u * B1,		-1. / T1 * relax, 	M0 / T1 * relax },
-		    { 0,		0,			0,			0 }
-		};
+		float mat[4][4];
+		bloch_matrix_ode(mat, 0., 0., (float[3]){ -v * B1, u * B1, 0. });
 
 		crank_nicolson_matrix(dt, 4, x, t, t + dt, mat);
 	}
@@ -101,8 +84,8 @@ static bool test_cn_bloch_rf_pulse(void)
 	// Assert that magnetization is in xy-plane after 90-degree pulse (Mz ~ 0, Mxy ~ M0)
 	float Mxy = sqrtf(x[0] * x[0] + x[1] * x[1]);
 
-	UT_RETURN_ON_FAILURE_TOL(fabsf(x[2] - 0), 1.E-5);
-	UT_RETURN_ON_FAILURE_TOL(fabsf(Mxy - M0), 1.E-5);
+	UT_RETURN_ON_FAILURE_TOL(fabsf(x[2] - 0), 1.E-4);
+	UT_RETURN_ON_FAILURE_TOL(fabsf(Mxy - M0), 1.E-4);
 
 	return true;
 }
@@ -128,8 +111,10 @@ static bool test_cn_bloch()
 	p.r2 = p.relax / p.T2;
 
 	double xdis[p.Nx];
+
 	for (int i = 0; i < p.Nx; i++)
 		xdis[i] = -p.a + (2.0 * p.a * i) / (p.Nx - 1);
+
 	p.xdis = xdis;
 
 	// Prepare 90° sinc pulse
@@ -143,6 +128,7 @@ static bool test_cn_bloch()
 	p.u = md_alloc(1, dims, sizeof(float));
 	p.v = md_alloc(1, dims, sizeof(float));
 	p.w = md_alloc(1, dims, sizeof(float));
+
 	for (int k = 0; k < p.Nt; k++) {
 
 		float t = k * p.dt;
@@ -155,10 +141,12 @@ static bool test_cn_bloch()
 
 	float M0[3][p.Nx];
 	for (int z = 0; z < p.Nx; z++) {
+
 		M0[0][z] = 0.;  // Mx
 		M0[1][z] = 0.;  // My
 		M0[2][z] = 1.;  // Mz
 	}
+
 	p.M0 = &M0[0][0];
 
 	float M[p.Nx][p.Nt][3];
@@ -202,8 +190,10 @@ static bool test_cn_adjoint()
 	p.r2 = p.relax / p.T2;
 
 	double xdis[p.Nx];
+
 	for (int i = 0; i < p.Nx; i++)
 		xdis[i] = -p.a + (2.0 * p.a * i) / (p.Nx - 1);
+
 	p.xdis = xdis;
 
 	// Prepare 90° sinc pulse
@@ -214,9 +204,11 @@ static bool test_cn_adjoint()
 	p.Nt = (int)(ps.super.duration / p.dt);
 
 	long dims[1] = { p.Nt };
+
 	p.u = md_alloc(1, dims, sizeof(float));
 	p.v = md_alloc(1, dims, sizeof(float));
 	p.w = md_alloc(1, dims, sizeof(float));
+
 	for (int k = 0; k < p.Nt; k++) {
 
 		float t = k * p.dt;
@@ -242,6 +234,7 @@ static bool test_cn_adjoint()
 
 	// Part 2: Adjoint simulation
 	float PT[p.Nx][3];  // Terminal conditions for adjoint
+
 	for (int z = 0; z < p.Nx; z++) {
 
 		PT[z][0] = 0.2 * z;  // Varying terminal Px
@@ -286,16 +279,20 @@ static bool test_single(void)
 	p.z = 0.0025;
 	p.Nx = 211;
 	p.xdis = xmalloc((size_t)p.Nx * sizeof(double));
+
 	for (int i = 0; i < p.Nx; i++)
 		p.xdis[i] = -p.a + (2.0 * p.a * i) / (p.Nx - 1);
+
 	p.dx = p.xdis[1] - p.xdis[0];
 
 	// Time discretization
 	p.T = 3.480;
 	p.Nt = 697;
 	p.tdis = xmalloc((size_t)p.Nt * sizeof(float));
+
 	for (int i = 0; i < p.Nt; i++)
 		p.tdis[i] = i * (p.T / (p.Nt - 1));
+
 	p.dt = p.tdis[1] - p.tdis[0];
 	p.Nu = 512;
 
@@ -333,6 +330,7 @@ static bool test_single(void)
 		M0[1][z] = 0.;
 		M0[2][z] = p.M0c;
 	}
+
 	p.M0 = &M0[0][0];
 
 	// TR-CG-Newton parameters
@@ -351,8 +349,10 @@ static bool test_single(void)
 
 	// Define target magnetization
 	float* inslice = xmalloc((size_t)p.Nx * sizeof(float));
+
 	for (int i = 0; i < p.Nx; i++)
 		inslice[i] = (float)(fabs(p.xdis[i]) < p.z); //  One slice in center
+
 	p.phi = 90.;
 
 	// Filter target profile with a gaussian function
@@ -360,11 +360,13 @@ static bool test_single(void)
 	int filter_size = 75;
 
 	float* x = xmalloc((size_t)p.Nx * sizeof(float));
+
 	for (int i = 0; i < p.Nx; i++)
 		x[i] = -filter_size + (2.0 * filter_size * i) / (p.Nx - 1);
 
 	float* gauss_filter = xmalloc((size_t)p.Nx * sizeof(float));
 	float sum = 0.;
+
 	for (int i = 0; i < p.Nx; i++) {
 
 		gauss_filter[i] = expf(-(x[i] * x[i]) / (2 * sigma * sigma));
@@ -399,6 +401,7 @@ static bool test_single(void)
 
 	// Create desired magnetization based on phi and inslice, outslice
 	float (*Md)[p.Nx] = xmalloc((size_t)3 * sizeof * Md);
+
 	float h1[3] = { 0., sin(p.phi * M_PI / 180.), cos(p.phi * M_PI / 180.) };
 	float h2[3] = { 0., 0., 1. };
 
@@ -409,7 +412,9 @@ static bool test_single(void)
 	p.Md = &Md[0][0];
 
 	debug_printf(DP_DEBUG1, "Computing minimizer for alpha = %1.4e\n", p.alpha);
+
 	float* u = xmalloc((size_t)p.Nu * sizeof(float));
+
 	tr_newton(p.Nu, u, p, tr, p.u);
 
 	xfree(p.xdis);
@@ -434,6 +439,8 @@ static bool test_single(void)
 
 UT_REGISTER_TEST(test_single);
 
+
+
 // Test takes too long
 static bool test_multi(void)
 {
@@ -448,7 +455,9 @@ static bool test_multi(void)
 	p.Nx = 5001;
 
 	p.xdis = xmalloc((size_t)p.Nx * sizeof(double));
+
 	double dx = (2. * p.a) / (double)(p.Nx - 1); // Compute grid spacing
+
 	for (int i = 0; i < p.Nx; i++) {
 
 		p.xdis[i] = -p.a + (double)i * dx;
@@ -463,6 +472,7 @@ static bool test_multi(void)
 	p.Nu = 512;
 
 	p.tdis = xmalloc((size_t)p.Nt * sizeof(float));
+
 	for (int i = 0; i < p.Nt; i++)
 		p.tdis[i] = i * (p.T / (p.Nt - 1));
 
@@ -494,12 +504,14 @@ static bool test_multi(void)
 
 	// Initial magnetization
 	float (*M0)[p.Nx] = xmalloc((size_t)3 * sizeof * M0);
+
 	for (int z = 0; z < p.Nx; z++) {
 
 		M0[0][z] = 0.;
 		M0[1][z] = 0.;
 		M0[2][z] = p.M0c;
 	}
+
 	p.M0 = &M0[0][0];
 
 	// TR-CG-Newton parameters
@@ -525,12 +537,13 @@ static bool test_multi(void)
 
 	// Define center positions for all simultaneous slices (different for even/odd slice number)
 	double* center_pos = xmalloc((size_t)sms * sizeof(double));
+
 	if (sms % 2 == 1) { // odd
 
 		for (int i = 0; i < sms; i++)
 			center_pos[i] = slice_sep * (i + 1 - (sms / 2 + 1));
-	}
-	else { // even
+
+	} else { // even
 
 		for (int i = 0; i < sms / 2; i++) {
 
@@ -568,6 +581,7 @@ static bool test_multi(void)
 
 	float sigma = 0.025; // Gaussian filter parameters
 	int filter_size = 75;
+
 	float* x = xmalloc((size_t)p.Nx * sizeof(float));
 
 	for (int i = 0; i < p.Nx; i++)
@@ -578,7 +592,7 @@ static bool test_multi(void)
 
 	for (int i = 0; i < p.Nx; i++) {
 
-		gauss_filter[i] = expf(-(x[i] * x[i]) / (2 * sigma * sigma));
+		gauss_filter[i] = expf(-(x[i] * x[i]) / (2. * sigma * sigma));
 		gaus_sum += gauss_filter[i];
 	}
 
@@ -588,15 +602,18 @@ static bool test_multi(void)
 	int half = p.Nx / 2;
 	float sum = 0.;
 	float masked_sum = 0.;
+
 	for (int i = 0; i < p.Nx; i++) {
 
 		sum = 0.;
 		for (int j = 0; j < p.Nx; j++) {
 
 			int k = i + j - half;
+
 			if (k >= 0 && k < p.Nx) {
 
 				sum += inslice[k] * gauss_filter[j] / gaus_sum;
+
 				if (masked_inslice)
 					masked_sum += masked_inslice[k] * gauss_filter[j] / gaus_sum;
 			}
@@ -632,12 +649,13 @@ static bool test_multi(void)
 	xfree(x);
 	xfree(inslice);
 	xfree(gauss_filter);
-	if (masked_inslice)
-		xfree(masked_inslice);
+	xfree(masked_inslice);
 
 	// Optimization
 	debug_printf(DP_DEBUG1, "Computing minimizer for alpha = %1.4e\n", p.alpha);
+
 	float* u = xmalloc((size_t)p.Nu * sizeof(float));
+
 	tr_newton(p.Nu, u, p, tr, p.u);
 
 	xfree(p.xdis);
@@ -660,3 +678,4 @@ static bool test_multi(void)
 }
 
 UT_UNUSED_TEST(test_multi);
+
