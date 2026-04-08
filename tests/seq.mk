@@ -9,7 +9,8 @@ tests/test-seq-raga: seq traj extract nrmse
 	touch $@
 
 
-TESTS +=  tests/test-seq-raga
+TESTS += tests/test-seq-raga
+
 
 tests/test-seq-raga2: seq traj extract nrmse
 	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)		;\
@@ -21,7 +22,8 @@ tests/test-seq-raga2: seq traj extract nrmse
 	touch $@
 
 
-TESTS +=  tests/test-seq-raga2
+TESTS += tests/test-seq-raga2
+
 
 tests/test-seq-raga-chrono: seq traj extract nrmse 
 	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)				;\
@@ -33,7 +35,8 @@ tests/test-seq-raga-chrono: seq traj extract nrmse
 	touch $@
 
 
-TESTS +=  tests/test-seq-raga-chrono
+TESTS += tests/test-seq-raga-chrono
+
 
 tests/test-seq-raga-sms: seq traj extract nrmse
 	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
@@ -45,7 +48,7 @@ tests/test-seq-raga-sms: seq traj extract nrmse
 	touch $@
 
 
-TESTS +=  tests/test-seq-raga-sms
+TESTS += tests/test-seq-raga-sms
 
 
 tests/test-seq-raga-sms-al: seq traj extract nrmse
@@ -58,7 +61,7 @@ tests/test-seq-raga-sms-al: seq traj extract nrmse
 	touch $@
 
 
-TESTS +=  tests/test-seq-raga-sms-al
+TESTS += tests/test-seq-raga-sms-al
 
 
 tests/test-seq-raga-sms-al-frame: seq traj extract nrmse
@@ -71,7 +74,7 @@ tests/test-seq-raga-sms-al-frame: seq traj extract nrmse
 	touch $@
 
 
-TESTS +=  tests/test-seq-raga-sms-al-frame
+TESTS += tests/test-seq-raga-sms-al-frame
 
 
 tests/test-seq-offcenter: seq traj extract scale phantom fovshift fmac nrmse
@@ -89,7 +92,7 @@ tests/test-seq-offcenter: seq traj extract scale phantom fovshift fmac nrmse
 	touch $@
 
 
-TESTS +=  tests/test-seq-offcenter
+TESTS += tests/test-seq-offcenter
 
 
 tests/test-seq-relative-fovshift: seq traj extract scale phantom fovshift fmac nrmse
@@ -101,7 +104,7 @@ tests/test-seq-relative-fovshift: seq traj extract scale phantom fovshift fmac n
 	touch $@
 
 
-TESTS +=  tests/test-seq-relative-fovshift
+TESTS += tests/test-seq-relative-fovshift
 
 
 tests/test-seq-raga-ordering: seq traj extract raga bin nrmse 
@@ -119,7 +122,7 @@ tests/test-seq-raga-ordering: seq traj extract raga bin nrmse
 	touch $@
 
 
-TESTS +=  tests/test-seq-raga-ordering
+TESTS += tests/test-seq-raga-ordering
 
 
 tests/test-seq-raga-ind: seq raga nrmse
@@ -131,7 +134,7 @@ tests/test-seq-raga-ind: seq raga nrmse
 	touch $@
 
 
-TESTS +=  tests/test-seq-raga-ind
+TESTS += tests/test-seq-raga-ind
 
 
 tests/test-seq-raga-ind-multislice: seq raga nrmse
@@ -143,7 +146,7 @@ tests/test-seq-raga-ind-multislice: seq raga nrmse
 	touch $@
 
 
-TESTS +=  tests/test-seq-raga-ind-multislice
+TESTS += tests/test-seq-raga-ind-multislice
 
 
 tests/test-seq-traj-meco: seq traj extract nrmse
@@ -156,7 +159,8 @@ tests/test-seq-traj-meco: seq traj extract nrmse
 	touch $@
 
 
-TESTS +=  tests/test-seq-traj-meco
+TESTS += tests/test-seq-traj-meco
+
 
 tests/test-seq-meco: seq traj extract nrmse
 	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)						;\
@@ -168,7 +172,8 @@ tests/test-seq-meco: seq traj extract nrmse
 	touch $@
 
 
-TESTS +=  tests/test-seq-meco
+TESTS += tests/test-seq-meco
+
 
 tests/test-seq-asym: traj seq extract nrmse 
 	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)				;\
@@ -180,4 +185,17 @@ tests/test-seq-asym: traj seq extract nrmse
 	touch $@
 
 
-TESTS +=  tests/test-seq-asym
+TESTS += tests/test-seq-asym
+
+
+tests/test-seq-spoiled-raga: seq traj extract nrmse 
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)		;\
+	$(TOOLDIR)/traj -x 256 -o 2. -y 377 -r -D trj_ref.ra 	;\
+	$(TOOLDIR)/seq -r 377 --spoiled --TR 5.25E-3 --raga samples.ra grad.ra mom.ra 	;\
+	$(TOOLDIR)/extract 0 0 3 samples.ra trj_seq.ra		;\
+	$(TOOLDIR)/nrmse -t 3E-7 trj_ref.ra trj_seq.ra		;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
+
+TESTS += tests/test-seq-raga
