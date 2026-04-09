@@ -415,8 +415,9 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 			seq->sys.gamma, seq->sys.b0, seq->sys.grad.max_amplitude, seq->sys.grad.inv_slew_rate);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
-			"\nmag prep/TI/init delay/inv delay\t\t%d/%.6f/%.2f/%.2f",
-			seq->magn.mag_prep, seq->magn.ti, seq->magn.init_delay, seq->magn.inv_delay_time);
+			"\nmag prep/TI/init delay/inv delay\t\t%d/%.6f/%.2f/%.2f\nprep scans/\t\t\t\t%ld",
+			seq->magn.mag_prep, seq->magn.ti, seq->magn.init_delay, seq->magn.inv_delay_time,
+			seq->magn.prep_scans);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
 			"\nloop_dims\t: %ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t",
