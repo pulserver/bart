@@ -23,7 +23,7 @@ const struct seq_opts seq_opts_defaults = {
 	.dt = -1.,
 	.samples = -1,
 	.rel_shift = { },
-	.raga_full_frames = 0,
+	.raga_full_frames = -1,
 	.dist = 1.,
 
 	.gradient_mode = GRAD_FAST,
@@ -181,6 +181,9 @@ int seq_cmdline_print(int len, char* buf, const struct seq_config* conf, struct 
 {
 	struct seq_config conf2;
 	memcpy(&conf2, conf, sizeof(struct seq_config));
+
+	// revert before writing cmdline seq-tool uses forward of seq_ui_interface_loop_dims
+	seq_ui_interface_loop_dims(1, &conf2, DIMS, conf2.loop_dims);
 
 	int argcp = 0; // UBSan
 	return seq_cmdline(&argcp, NULL, 0, NULL, NULL, &conf2, seq_opts, len, buf);
