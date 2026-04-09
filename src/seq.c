@@ -357,6 +357,12 @@ int main_seq(int argc, char* argv[argc])
 
 			do {
 
+				if (!seq_opts.chrono) {
+
+					int adc_idx = events_idx(pos_save[TE_DIM], SEQ_EVENT_ADC, E, seq->event);
+					pos_save[PHS2_DIM] = seq->event[adc_idx].adc.pos[PHS1_DIM];
+				}
+
 				double adc_start = seq->event[events_idx(pos_save[TE_DIM], SEQ_EVENT_ADC, E, seq->event)].start;
 				seq_compute_moment0_offset(adc_dims[PHS1_DIM], m0_adc, adc_start, seq->conf->phys.dwell / seq->conf->phys.os, E, seq->event);
 
