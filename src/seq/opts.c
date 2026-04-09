@@ -114,7 +114,9 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 		OPTL_DOUBLE(0, "sms_distance", &conf->geom.sms_distance, "sms_distance", "SMS slice distance"),
 
 		// magnetization preparation
+		OPTL_UINT(0, "mag_prep", &conf->magn.mag_prep, "mag_prep", "Magn. preparation [OFF, IR_SEL, IR_NON, SR_SEL, SR_NON, SR_ADIAB]"),
 		OPTL_SELECT(0, "IR_NON", enum mag_prep, &conf->magn.mag_prep, SEQ_PREP_IR_NONSELECTIVE, "Magn. preparation: Nonselective Inversion (default: off)"),
+		OPTL_SELECT(0, "IR_SEL", enum mag_prep, &conf->magn.mag_prep, SEQ_PREP_IR_SELECTIVE, "Magn. preparation: Selective Inversion (default: off)"),
 		OPTL_DOUBLE(0, "TI", &conf->magn.ti, "TI", "Inversion time"),
 		OPTL_DOUBLE(0, "init_delay", &conf->magn.init_delay, "init_delay", "Initial delay of measurement"),
 		OPTL_DOUBLE(0, "inv_delay", &conf->magn.inv_delay_time, "inv_delay_time", "Inversion delay time"),

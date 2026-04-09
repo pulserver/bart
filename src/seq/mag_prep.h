@@ -3,11 +3,9 @@
 
 #include "misc/cppwrap.h"
 
-#include "seq/config.h"
 #include "seq/event.h"
 
 struct seq_config;
-struct seq_state;
 
 extern int mag_prep(struct seq_event ev[6], const struct seq_config* seq);
 

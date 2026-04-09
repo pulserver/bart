@@ -95,7 +95,7 @@ int prep_rf_excitation(struct seq_event* rf_ev, double start, double rf_spoil_ph
 
 int prep_rf_inversion(struct seq_event* rf_ev, double start, const struct seq_config* seq)
 {
-	if (seq->magn.mag_prep != SEQ_PREP_IR_NONSELECTIVE)
+	if ((seq->magn.mag_prep != SEQ_PREP_IR_NONSELECTIVE) && (seq->magn.mag_prep != SEQ_PREP_IR_SELECTIVE))
 		return 0;
 
 	rf_ev->type = SEQ_EVENT_PULSE;	

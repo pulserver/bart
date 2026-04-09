@@ -150,7 +150,8 @@ int seq_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq_confi
 			pulse[idx].shape[j] = pulse_eval(pp, j * dwell);
 	}
 
-	if (SEQ_PREP_IR_NONSELECTIVE == seq->magn.mag_prep) {
+	if (   (SEQ_PREP_IR_NONSELECTIVE == seq->magn.mag_prep)
+	    || (SEQ_PREP_IR_SELECTIVE == seq->magn.mag_prep)) {
 
 		struct pulse_hypsec hs = pulse_hypsec_defaults;
 
@@ -322,6 +323,12 @@ static int check_settings(const struct seq_state* seq_state, const struct seq_co
 	if (   (0 < seq->magn.prep_scans)
 	    && (SEQ_PREP_OFF != seq->magn.mag_prep))
 		return ERROR_PREP_SCANS;
+
+	if (   (SEQ_PREP_SR_SELECTIVE == seq->magn.mag_prep)
+	    || (SEQ_PREP_SR_NONSELECTIVE == seq->magn.mag_prep)
+	    || (SEQ_PREP_SR_ADIABATIC == seq->magn.mag_prep))
+		return ERROR_MAG_PREP;
+
 
 	if (SEQ_CONTEXT_BINARY != seq_state->context) {
 
