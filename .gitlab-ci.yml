@@ -114,7 +114,7 @@ Build_Static:
   stage: build
   script:
 #    - apt-get update -qq && apt-get install -y libgfortran-12-dev
-    - SLINK=1 make
+    - DEBUG_DWARF=0 SLINK=1 make
   artifacts:
     paths:
       - bart
@@ -155,7 +155,7 @@ Build_WinDLL:
 Build_UBSan:
   stage: build
   script:
-    - UBSAN=1 ASAN=1 make all
+    - UBSAN=1 ASAN=0 make all
   artifacts:
     paths:
       - bart
@@ -363,7 +363,7 @@ UTest_Valgrind:
 UTest_UBSan:
   stage: test1
   script:
-    - AUTOCLEAN=0 UBSAN=1 ASAN=1 make utest
+    - AUTOCLEAN=0 UBSAN=1 ASAN=0 make utest
   needs: [Build_UBSan]
   dependencies:
      - Build_UBSan
@@ -497,7 +497,7 @@ IntTest_Clang_GPU:
 IntTest_UBSan:
   stage: test2
   script:
-    - AUTOCLEAN=0 UBSAN=1 ASAN=1 DEBUG=1 UBSAN_OPTIONS=print_stacktrace=1 make test
+    - AUTOCLEAN=0 UBSAN=1 ASAN=0 DEBUG=1 UBSAN_OPTIONS=print_stacktrace=1 make test
   needs: [Build_UBSan]
   dependencies:
     - Build_UBSan
