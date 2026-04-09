@@ -35,6 +35,35 @@
 #define CFL_SIZE sizeof(complex float)
 #endif
 
+
+static void position_to_save(int D, long pos_save[D], bool chrono, int E, const struct seq_event ev[E],
+				const long pos[D], const struct seq_config* conf)
+{
+	if (chrono) {
+
+		md_copy_dims(DIMS, pos_save, pos);
+
+		// revert incomplete RAGA frame handling from flash()
+		if (   (SEQ_PEMODE_RAGA == conf->enc.pe_mode)
+			&& (conf->loop_dims[TIME_DIM] - 1 == pos_save[TIME_DIM])
+			&& (conf->loop_dims[PHS1_DIM] - 1 == pos_save[PHS1_DIM]))
+				pos_save[PHS1_DIM] = conf->loop_dims[ITER_DIM] - 1;	
+
+	} else {
+
+		int adc_idx = events_idx(pos_save[TE_DIM], SEQ_EVENT_ADC, E, ev);
+
+		if (0 > adc_idx)
+			error("No ADC found - try chronologic ordering");
+
+		md_copy_dims(DIMS, pos_save, ev[adc_idx].adc.pos);
+	}
+
+	pos_save[PHS2_DIM] = pos_save[PHS2_DIM] * conf->loop_dims[PHS1_DIM] + pos_save[PHS1_DIM];
+	pos_save[PHS1_DIM] = 0;
+}
+
+
 static const char help_str[] = "Computes a GRE sequence.";
 
 
@@ -298,52 +327,34 @@ int main_seq(int argc, char* argv[argc])
 
 		seq_compute_moment0(seq_opts.samples, m0, seq_opts.dt, E, seq->event);
 
+		if (NULL != out_raga) {
 
-		long pos_save[DIMS]; // FIXME use separate function
-		md_copy_dims(DIMS, pos_save, seq->state->pos);
-
-		// revert incomplete RAGA frame handling from flash()
-		if (   (SEQ_PEMODE_RAGA == seq->conf->enc.pe_mode)
-		    && (seq->conf->loop_dims[TIME_DIM] - 1 == pos_save[TIME_DIM])
-		    && (seq->conf->loop_dims[PHS1_DIM] - 1 == pos_save[PHS1_DIM]))
-				pos_save[PHS1_DIM] = seq->conf->loop_dims[ITER_DIM] - 1;
-
-		if (!seq_opts.chrono) {
-
+			long pos_save[DIMS] = { };
 
 			do {
-
-				md_copy_dims(DIMS, pos_save, seq->state->pos);
-
+				position_to_save(DIMS, pos_save, true, E, seq->event, seq->state->pos, seq->conf);
 				int adc_idx = events_idx(pos_save[TE_DIM], SEQ_EVENT_ADC, E, seq->event);
 
 				if (0 > adc_idx)
 					error("No ADC found - try chronologic ordering");
 
-				if (NULL != out_raga) {
-
-					pos_save[PHS2_DIM] = pos_save[PHS2_DIM] * seq->conf->loop_dims[PHS1_DIM] + pos_save[PHS1_DIM];
-					pos_save[PHS1_DIM] = 0;
-					MD_ACCESS(DIMS, ind_strs, pos_save, out_raga) = seq->event[adc_idx].adc.pos[PHS1_DIM];
-				}
-
-				md_copy_dims(DIMS, pos_save, seq->event[adc_idx].adc.pos);
+				MD_ACCESS(DIMS, ind_strs, pos_save, out_raga) = seq->event[adc_idx].adc.pos[PHS1_DIM];
 
 			} while (md_next(DIMS, seq->conf->loop_dims, TE_FLAG, seq->state->pos));
-
 		}
 
-		pos_save[PHS2_DIM] = pos_save[PHS2_DIM] * seq->conf->loop_dims[PHS1_DIM] + pos_save[PHS1_DIM];
-		pos_save[PHS1_DIM] = 0;
+		
+		long pos_save_grad[DIMS] = { };
+		position_to_save(DIMS, pos_save_grad, seq_opts.chrono, E, seq->event, seq->state->pos, seq->conf);
 
 		do {
 			if (NULL != out_grad)
-				MD_ACCESS(DIMS, mstrs, pos_save, out_grad) = g2[pos_save[PHS1_DIM]][pos_save[READ_DIM]];
+				MD_ACCESS(DIMS, mstrs, pos_save_grad, out_grad) = g2[pos_save_grad[PHS1_DIM]][pos_save_grad[READ_DIM]];
 
 			if (NULL != out_mom)
-				MD_ACCESS(DIMS, mstrs, pos_save, out_mom) = m0[pos_save[PHS1_DIM]][pos_save[READ_DIM]];
+				MD_ACCESS(DIMS, mstrs, pos_save_grad, out_mom) = m0[pos_save_grad[PHS1_DIM]][pos_save_grad[READ_DIM]];
 
-		} while (md_next(DIMS, mdims, (READ_FLAG | PHS1_FLAG), pos_save));
+		} while (md_next(DIMS, mdims, (READ_FLAG | PHS1_FLAG), pos_save_grad));
 
 		if (NULL != out_adc) {
 
@@ -353,15 +364,10 @@ int main_seq(int argc, char* argv[argc])
 
 			float m0_adc[adc_dims[PHS1_DIM]][3];
 
-			pos_save[TE_DIM] = 0;
-
 			do {
-
-				if (!seq_opts.chrono) {
-
-					int adc_idx = events_idx(pos_save[TE_DIM], SEQ_EVENT_ADC, E, seq->event);
-					pos_save[PHS2_DIM] = seq->event[adc_idx].adc.pos[PHS1_DIM];
-				}
+				long pos_save[DIMS] = { };
+				pos_save[TE_DIM] = seq->state->pos[TE_DIM];
+				position_to_save(DIMS, pos_save, seq_opts.chrono, E, seq->event, seq->state->pos, seq->conf);
 
 				double adc_start = seq->event[events_idx(pos_save[TE_DIM], SEQ_EVENT_ADC, E, seq->event)].start;
 				seq_compute_moment0_offset(adc_dims[PHS1_DIM], m0_adc, adc_start, seq->conf->phys.dwell / seq->conf->phys.os, E, seq->event);
@@ -382,7 +388,7 @@ int main_seq(int argc, char* argv[argc])
 
 				} while (md_next(DIMS, adims, PHS1_FLAG, pos_save));
 
-			} while (md_next(DIMS, adims, TE_FLAG, pos_save));
+			} while (md_next(DIMS, adims, TE_FLAG, seq->state->pos));
 
 			md_free(adc);
 		}
