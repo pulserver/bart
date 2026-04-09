@@ -162,6 +162,7 @@ tests/test-seq-traj-meco: seq traj extract nrmse
 TESTS += tests/test-seq-traj-meco
 
 
+
 tests/test-seq-meco: seq traj extract nrmse
 	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)						;\
 	$(TOOLDIR)/traj -x 220 -o 2. -y 411 -s 31 -e 7 -r -D -A --double-base trj_ref.ra 	;\
@@ -173,6 +174,19 @@ tests/test-seq-meco: seq traj extract nrmse
 
 
 TESTS += tests/test-seq-meco
+
+
+
+tests/test-seq-raga-ind-meco: seq raga nrmse
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)				;\
+	$(TOOLDIR)/raga -s20 -e7 433 ind_ref.ra					;\
+	$(TOOLDIR)/seq -r 433 -e7 --tiny 20  --TR 20e-3 --raga -R ind_seq.ra  	;\
+	$(TOOLDIR)/nrmse -t 0. ind_ref.ra ind_seq.ra				;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
+
+TESTS += tests/test-seq-raga-ind-meco
 
 
 tests/test-seq-asym: traj seq extract nrmse 

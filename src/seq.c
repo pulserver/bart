@@ -310,19 +310,27 @@ int main_seq(int argc, char* argv[argc])
 
 		if (!seq_opts.chrono) {
 
-			int adc_idx = events_idx(0, SEQ_EVENT_ADC, E, seq->event);
 
-			if (0 > adc_idx)
-				error("No ADC found - try chronologic ordering");
+			do {
 
-			if (NULL != out_raga) {
+				md_copy_dims(DIMS, pos_save, seq->state->pos);
 
-				pos_save[PHS2_DIM] = pos_save[PHS2_DIM] * seq->conf->loop_dims[PHS1_DIM] + pos_save[PHS1_DIM];
-				pos_save[PHS1_DIM] = 0;
-				MD_ACCESS(DIMS, ind_strs, pos_save, out_raga) = seq->event[adc_idx].adc.pos[PHS1_DIM];
-			}
+				int adc_idx = events_idx(pos_save[TE_DIM], SEQ_EVENT_ADC, E, seq->event);
 
-			md_copy_dims(DIMS, pos_save, seq->event[adc_idx].adc.pos);
+				if (0 > adc_idx)
+					error("No ADC found - try chronologic ordering");
+
+				if (NULL != out_raga) {
+
+					pos_save[PHS2_DIM] = pos_save[PHS2_DIM] * seq->conf->loop_dims[PHS1_DIM] + pos_save[PHS1_DIM];
+					pos_save[PHS1_DIM] = 0;
+					MD_ACCESS(DIMS, ind_strs, pos_save, out_raga) = seq->event[adc_idx].adc.pos[PHS1_DIM];
+				}
+
+				md_copy_dims(DIMS, pos_save, seq->event[adc_idx].adc.pos);
+
+			} while (md_next(DIMS, seq->conf->loop_dims, TE_FLAG, seq->state->pos));
+
 		}
 
 		pos_save[PHS2_DIM] = pos_save[PHS2_DIM] * seq->conf->loop_dims[PHS1_DIM] + pos_save[PHS1_DIM];
@@ -344,6 +352,8 @@ int main_seq(int argc, char* argv[argc])
 			seq_compute_adc_samples(DIMS, adc_dims, adc, E, seq->event);
 
 			float m0_adc[adc_dims[PHS1_DIM]][3];
+
+			pos_save[TE_DIM] = 0;
 
 			do {
 
