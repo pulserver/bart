@@ -299,8 +299,17 @@ void delayed_compute(const void* /*ptr*/)
 
 	delayed_optimize_queue(ops);
 
-	if (0 < list_count(ops))
+	if (0 < list_count(ops)) {
+
 		debug_printf(delayed_dl, "Execute queue with %d operations\n", list_count(ops));
+		print_vptr_stats(delayed_dl);
+
+#ifdef USE_DWARF
+		debug_printf(delayed_dl, "Execution triggered here:\n");
+		if (delayed_dl <= debug_level)
+			debug_good_backtrace(1);
+#endif
+	}
 
 	long pos[MAX_DIMS] = { 0 };
 
