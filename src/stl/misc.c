@@ -310,13 +310,13 @@ static void stl_read_ascii(FILE *fp, long dims[3], double* model)
 	long* posp = pos;
 	long* strsp = strs;
 
-	NESTED(int, keyword, (const char* kw))
+	NESTED(bool, keyword, (const char* kw))
 	{
 		int end = 0;
-		return 0 == sscanf(linep, kw, &end) && '\0' == linep[end];
+		return (bool)(0 == sscanf(linep, kw, &end) && '\0' == linep[end]);
 	};
 
-	NESTED(int, keyword_args, (const char* kw))
+	NESTED(bool, keyword_args, (const char* kw))
 	{
 		int end = 0;
 		float f[3];
