@@ -260,8 +260,11 @@ static void vptr_rand(long N, float* dst)
 	if (0 >= N)
 		return;
 
-	const struct vptr_shape_s* shape = vptr_get_shape(dst);
+	const struct vptr_shape_s* shape = vptr_get_shape(vptr_resolve_range(dst));
+
 	assert(CFL_SIZE == shape->size);
+	assert(0 == vptr_get_offset(vptr_resolve_range(dst)));
+	assert(md_calc_size(shape->N, shape->dims) * 2 <= N);
 
 	md_gaussian_rand(shape->N, shape->dims, (complex float*)dst);
 
