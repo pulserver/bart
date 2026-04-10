@@ -409,8 +409,8 @@ static const struct operator_p_s* T1inv_p_create(const struct mdb_irgnm_l1_conf*
 	auto cd = nlop_codomain(nlop);
 	auto dm = nlop_domain(nlop);
 
-	int M = 2 * md_calc_size(cd->N, cd->dims);
-	int N = 2 * md_calc_size(dm->N, dm->dims);
+	long M = 2 * md_calc_size(cd->N, cd->dims);
+	long N = 2 * md_calc_size(dm->N, dm->dims);
 
 	long* ndims = *TYPE_ALLOC(long[DIMS]);
 	md_copy_dims(DIMS, ndims, dims);
