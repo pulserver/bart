@@ -26,6 +26,7 @@ static const struct selection_opt pemode_opts[] = {
 	{ SEQ_PEMODE_RAGA, "2. RAGA", },
 	{ SEQ_PEMODE_MEMS_HYB, "3. MEMS", },
 	{ SEQ_PEMODE_CARTESIAN, "4. CARTESIAN (center-out)", },
+	{ SEQ_PEMODE_CARTESIAN_LINEAR, "4. CARTESIAN (linear)", },
 };
 
 

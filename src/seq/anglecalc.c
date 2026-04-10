@@ -44,6 +44,7 @@ void traj_conf_from_seq(struct traj_conf *conf, const struct seq_config* seq)
 		break;
 
 	case SEQ_PEMODE_CARTESIAN:
+	case SEQ_PEMODE_CARTESIAN_LINEAR:
 
 		assert(0);
 	}
@@ -64,7 +65,8 @@ void traj_conf_from_seq(struct traj_conf *conf, const struct seq_config* seq)
 
 double get_rot_angle(const long pos[DIMS], const struct seq_config* seq)
 {
-	if (SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode)
+	if (   (SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode)
+	    || (SEQ_PEMODE_CARTESIAN_LINEAR == seq->enc.pe_mode))
 		return  M_PI / 2.;
 
 	struct traj_conf conf;
@@ -124,7 +126,11 @@ int check_gen_fib(int spokes, int tiny_ga)
  */
 long cartesian_line(const long pos[DIMS], const struct seq_config* seq)
 {
-	assert(SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode);
+	assert(   (SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode)
+	       || (SEQ_PEMODE_CARTESIAN_LINEAR == seq->enc.pe_mode));
+
+	if (SEQ_PEMODE_CARTESIAN_LINEAR == seq->enc.pe_mode)
+		return pos[PHS1_DIM];
 
 	long center = seq->loop_dims[PHS1_DIM] / 2;
 	long off = (pos[PHS1_DIM] + 1) / 2;

@@ -335,7 +335,8 @@ static int check_settings(const struct seq_state* seq_state, const struct seq_co
 
 	if (SEQ_CONTEXT_BINARY != seq_state->context) {
 
-		if (SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode)
+		if (   (SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode)
+		    || (SEQ_PEMODE_CARTESIAN_LINEAR == seq->enc.pe_mode))
 			return 1;
 
 		if ((SEQ_PEMODE_RAGA == seq->enc.pe_mode)

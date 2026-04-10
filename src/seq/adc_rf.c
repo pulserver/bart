@@ -152,7 +152,8 @@ static long cols_to_echo(long echo, const struct seq_config* seq)
 double adc_time_to_echo(long echo, const struct seq_config* seq)
 {
 	double dc_shift = 0.;
-	if (SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode)
+	if (   (SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode)
+	    || (SEQ_PEMODE_CARTESIAN_LINEAR == seq->enc.pe_mode))
 		dc_shift = 0.5 * seq->phys.dwell / seq->phys.os;
 
 	return seq->phys.dwell * cols_to_echo(echo, seq) + dc_shift;
@@ -247,7 +248,8 @@ int prep_adc(struct seq_event* adc_ev, double start, double rf_spoil_phase,
 	adc_ev->adc.freq = adc_nco_freq(proj_angle, seq_state->chrono_slice, seq);
 
 	double delta_pe = 0.;
-	if ((SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode) && (0 < seq->geom.shift[seq_state->chrono_slice][1]))
+	if (   ((SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode) || (SEQ_PEMODE_CARTESIAN_LINEAR == seq->enc.pe_mode))
+	    && (0 < seq->geom.shift[seq_state->chrono_slice][1]))
 		delta_pe = (360. * (seq->geom.shift[seq_state->chrono_slice][1] / seq->geom.fov)) * (- 0.5 * seq->loop_dims[PHS1_DIM] + adc_ev->adc.pos[PHS1_DIM]);
 
 	adc_ev->adc.phase = phase_clamp(rf_spoil_phase + delta_pe);

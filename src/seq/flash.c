@@ -161,7 +161,7 @@ static int prep_grad_phs1_encoding(struct grad_trapezoid* grad, int rew, const l
 {
 	*grad = (struct grad_trapezoid){ 0 };
 
-	if (SEQ_PEMODE_CARTESIAN != seq->enc.pe_mode)
+	if (!((SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode) || (SEQ_PEMODE_CARTESIAN_LINEAR == seq->enc.pe_mode)))
 		return 1;
 
 	if (rew && (SEQ_CONTRAST_RF_SPOILED != seq->phys.contrast))
