@@ -1,11 +1,10 @@
- 
+
 #include <complex.h>
 
 #include "misc/mri.h"
 
 struct linop_s;
 extern void noir_forw_coils(const struct linop_s* op, complex float* dst, const complex float* src);
-extern void noir_back_coils(const struct linop_s* op, complex float* dst, const complex float* src);
 
 struct noir_model_conf_s {
 
@@ -30,8 +29,3 @@ struct noir_s {
 };
 
 extern struct noir_s noir_create(const long dims[DIMS], const complex float* mask, const complex float* psf, const struct noir_model_conf_s* conf);
-
-
-struct nlop_data_s;
-extern void noir_orthogonalize(struct noir_s* op, complex float* coils);
-
