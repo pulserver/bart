@@ -6,11 +6,13 @@
 
 
 struct moba_conf;
+struct moba_conf_s;
 enum fat_spec;
 
 void init_meco_maps(const long maps_dims[DIMS], complex float* maps, enum meco_model sel_model);
 
-void meco_recon(const struct moba_conf* moba_conf,
+void meco_recon(const struct moba_conf* moba_conf, struct moba_conf_s* data,
+		const long dims[DIMS],
 		enum meco_model sel_model, enum fat_spec fat_spec,
 		const float* scale_fB0, bool warmstart, bool out_origin_maps,
 		const long maps_dims[DIMS], complex float* maps,
@@ -18,7 +20,7 @@ void meco_recon(const struct moba_conf* moba_conf,
 		const long init_dims[DIMS], const complex float* init,
 		const complex float* mask,
 		const complex float* TE,
-		const long P_dims[DIMS], const complex float* P,
+		const long P_dims[DIMS], const complex float* Pin,
 		const long Y_dims[DIMS], const complex float* Y);
 
 #endif

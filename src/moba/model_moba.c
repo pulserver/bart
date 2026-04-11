@@ -18,10 +18,13 @@
 #include "misc/mri.h"
 #include "misc/debug.h"
 
+#include "linops/someops.h"
+
 #include "nlops/nlop.h"
 #include "nlops/chain.h"
 #include "nlops/snlop.h"
 #include "nlops/smath.h"
+#include "nlops/cast.h"
 
 #include "num/multind.h"
 #include "num/flpmath.h"
@@ -69,8 +72,11 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 
 	case MDB_MGRE:
 
-		// FIXME: Integrate other models here
-		assert(0);
+		if (MECO_PI == meco_model)
+			model = nlop_from_linop_F(linop_identity_create(DIMS, out_dims));
+		else
+			model = nlop_meco_create(DIMS, out_dims, in_dims, TI /*TI is used as TE*/, meco_model, fat_spec, scale_fB0);
+
 		break;
 
 	case MDB_T1:
@@ -146,6 +152,8 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 		ret.linop_alpha = linop_clone(T1_get_alpha_trafo(model));
 	else if (MDB_IR_MGRE == data->model)
 		ret.linop_alpha = linop_clone(ir_meco_get_fB0_trafo(model));
+	else if (MDB_MGRE == data->model)
+		ret.linop_alpha = linop_clone(meco_get_fB0_trafo(model));
 
 	nlop_free(nlinv.nlop);
 	nlop_free(model);

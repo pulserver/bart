@@ -47,7 +47,7 @@
 
 #include "moba/iter_l1.h"
 #include "moba/meco.h"
-#include "moba/model_meco.h"
+#include "moba/model_moba.h"
 #include "moba/moba.h"
 
 #include "recon_meco.h"
@@ -137,7 +137,8 @@ static void rescale_maps(int model, double scaling_Y, const struct linop_s* op, 
 
 
 
-void meco_recon(const struct moba_conf* moba_conf,
+void meco_recon(const struct moba_conf* moba_conf, struct moba_conf_s* data,
+		const long dims[DIMS],
 		enum meco_model sel_model, enum fat_spec fat_spec,
 		const float* scale_fB0, bool warmstart, bool out_origin_maps,
 		const long maps_dims[DIMS], complex float* maps,
@@ -170,12 +171,16 @@ void meco_recon(const struct moba_conf* moba_conf,
 	long Y_1s_dims[DIMS];
 	md_copy_dims(DIMS, Y_1s_dims, Y_dims);
 
+	long dims_1s[DIMS];
+	md_copy_dims(DIMS, dims_1s, dims);
+
 	if (!moba_conf->stack_frames) {
 
 		maps_1s_dims[TIME_DIM] = 1;
 		sens_1s_dims[TIME_DIM] = 1;
 
 		Y_1s_dims[TIME_DIM] = 1;
+		dims_1s[TIME_DIM] = 1;
 	}
 
 	long maps_1s_size = md_calc_size(DIMS, maps_1s_dims);
@@ -294,7 +299,7 @@ void meco_recon(const struct moba_conf* moba_conf,
 		mconf.b = moba_conf->sobolev_b;
 		mconf.cnstcoil_flags = TE_FLAG;
 
-		struct meco_s nl = meco_create(Y_1s_dims, meco_1s_dims, maps_1s_dims, mask, TE, P_ptr, sel_model, fat_spec, scale_fB0, &mconf);
+		struct mobamod nl = moba_create(dims_1s, mask, TE, NULL, NULL, NULL, scale_fB0, sel_model, fat_spec, P_ptr, &mconf, data, 1.0);
 
 
 		struct iter3_irgnm_conf irgnm_conf = iter3_irgnm_defaults;
@@ -403,7 +408,7 @@ void meco_recon(const struct moba_conf* moba_conf,
 
 		if (!out_origin_maps) {
 
-			rescale_maps(sel_model, scaling_Y, nl.linop_fB0, maps_1s_dims, maps_ptr);
+			rescale_maps(sel_model, scaling_Y, nl.linop_alpha, maps_1s_dims, maps_ptr);
 
 			noir_forw_coils(nl.linop, sens_ptr, sens_ptr);
 			fftmod(DIMS, sens_1s_dims, mconf.fft_flags, sens_ptr, sens_ptr);

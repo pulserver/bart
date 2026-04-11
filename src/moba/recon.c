@@ -429,7 +429,7 @@ void moba_recon(const struct moba_conf* conf, struct moba_conf_s* data, const lo
 
 	case MDB_MGRE:
 
-		meco_recon(conf, conf->mgre_model, conf->fat_spec, conf->scale_fB0, true, conf->out_origin_maps, imgs_dims, img, coil_dims, sens, imgs_dims, init, mask, TI, pat_dims, pattern, data_dims, kspace_data);
+		meco_recon(conf, data, dims, conf->mgre_model, conf->fat_spec, conf->scale_fB0, true, conf->out_origin_maps, imgs_dims, img, coil_dims, sens, imgs_dims, init, mask, TI, pat_dims, pattern, data_dims, kspace_data);
 		break;
 
 	default:
