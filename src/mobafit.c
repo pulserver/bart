@@ -47,6 +47,7 @@
 #include "moba/blochfun.h"
 #include "moba/moba.h"
 #include "moba/lorentzian.h"
+#include "moba/utils.h"
 
 #include "moba/model_moba.h"
 
@@ -498,12 +499,6 @@ int main_mobafit(int argc, char* argv[argc])
 		moba_conf->sim = sim;
 		moba_conf->other = moba_other_defaults;
 
-		for (int i = 0; i < x_dims[COEFF_DIM]; i++) {
-
-			moba_conf->other.initval[i] = init0[i];
-			moba_conf->other.scale[i] = scale0[i];
-		}
-
 		md_copy_dims(DIMS, bloch_dims, x_dims);
 		bloch_dims[TE_DIM] = y_patch_dims[TE_DIM];
 		bloch_dims[READ_DIM] = x_patch_dims[READ_DIM];
@@ -521,6 +516,8 @@ int main_mobafit(int argc, char* argv[argc])
 		moba_conf->sim.seq.rep_num = y_dims[TE_DIM];
 
 		nlop = nlop_bloch_create(DIMS, out_dims, in_dims, b1, b0, moba_conf);
+		//FIXME: scale is applied twice and compensated once, but this is needed for init logic if scale=0
+		nlop = nlop_chain_FF(moba_precond_create(DIMS, in_dims, NULL, scale0, init0), nlop);
 		break;
 
 	case PHASE:

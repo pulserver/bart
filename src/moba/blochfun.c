@@ -506,7 +506,7 @@ static void bloch_del(const nlop_data_t* _data)
 }
 
 
-static struct nlop_s* nlop_bloch_int_create(int N, const long out_dims[N], const long in_dims[N],
+struct nlop_s* nlop_bloch_create(int N, const long out_dims[N], const long in_dims[N],
 			const complex float* b1, const complex float* b0, const struct moba_conf_s* config)
 {
 	PTR_ALLOC(struct blochfun_s, data);
@@ -574,33 +574,3 @@ static struct nlop_s* nlop_bloch_int_create(int N, const long out_dims[N], const
 	return nlop_chain_FF(nlop_from_linop_F(moba_rvc_create(N, in_dims, rvc)), ret);
 }
 
-
-struct nlop_s* nlop_bloch_create(int N, const long out_dims[N], const long in_dims[N],
-			const complex float* b1, const complex float* b0, const struct moba_conf_s* config)
-{
-	long map_dims[N];
-	md_select_dims(N, ~COEFF_FLAG, map_dims, in_dims);
-
-	int n_coef = in_dims[COEFF_DIM];
-
-	const struct linop_s* lop_prec[n_coef];
-	for (int i = 0; i < n_coef; i++)
-		lop_prec[i] = NULL;
-
-	struct linop_s* lop_sobolev = linop_noir_weights_create(N, map_dims, map_dims, map_dims, FFT_FLAGS, 1., config->other.b1_sobolev_a, config->other.b1_sobolev_b, 1.);
-	lop_prec[3] = linop_clone(lop_sobolev); 	// B1
-
-	const struct nlop_s* ret = nlop_bloch_int_create(N, out_dims, in_dims, b1, b0, config);
-	ret = nlop_chain_FF(moba_precond_create(N, in_dims, lop_prec, config->other.scale, config->other.initval), ret);
-	ret = moba_attach_trafo_F(ret, lop_sobolev);
-
-	for(int i = 0; i < in_dims[COEFF_DIM]; i++)
-		linop_free(lop_prec[i]);
-
-	return (struct nlop_s*)ret;
-}
-
-const struct linop_s* bloch_get_alpha_trafo(const struct nlop_s* op)
-{
-	return moba_attach_trafo_get_linop((struct nlop_s*)op);
-}

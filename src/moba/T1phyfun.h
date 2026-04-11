@@ -1,11 +1,7 @@
 
-struct linop_s;
+
 struct nlop_s;
-struct noir_model_conf_s;
 struct moba_conf_s;
-
-
-extern const struct linop_s* T1_get_alpha_trafo(struct nlop_s* op);
 
 extern float read_relax(float tr, float angle);
 

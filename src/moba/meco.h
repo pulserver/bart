@@ -28,16 +28,11 @@ extern unsigned long get_R2S_flag(enum meco_model sel_model);
 extern unsigned long get_fB0_flag(enum meco_model sel_model);
 
 
-extern const struct linop_s* meco_get_fB0_trafo(struct nlop_s* op);
-extern const struct linop_s* ir_meco_get_fB0_trafo(struct nlop_s* op);
 
-extern struct nlop_s* nlop_meco_create(int N, const long y_dims[N], const long x_dims[N], const complex float* TE, enum meco_model sel_model, enum fat_spec fat_spec, const float* scale_fB0);
-
-extern const struct nlop_s* nlop_ir_meco_model_create(int N, const long map_dims[N], const long in_dims[N], const long TI_dims[N],
-				const complex float* TI, const long TE_dims[N], const complex float* TE, enum meco_model meco_model, enum fat_spec fat_spec);
+extern struct nlop_s* nlop_meco_create(int N, const long y_dims[N], const long x_dims[N], const complex float* TE, enum meco_model sel_model, enum fat_spec fat_spec);
 
 extern struct nlop_s* nlop_ir_meco_create(int N, const long out_dims[N], const long in_dims[N], const long TI_dims[N],
-		const complex float* TI, const long TE_dims[N], const complex float* TE, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, const float* scale);
+		const complex float* TI, const long TE_dims[N], const complex float* TE, enum meco_model meco_model, enum fat_spec fat_spec);
 
 
 #endif // _MECO_H

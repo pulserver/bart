@@ -285,10 +285,13 @@ static arg_t inversion_recovery(arg_t MS, arg_t M0, arg_t R1s, int N, const long
 
 
 
-const struct nlop_s* nlop_ir_meco_model_create(int N, const long map_dims[N], const long in_dims[N], const long TI_dims[N],
+struct nlop_s* nlop_ir_meco_create(int N, const long out_dims[N], const long in_dims[N], const long TI_dims[N],
 				const complex float* TI, const long TE_dims[N], const complex float* TE, enum meco_model meco_model, enum fat_spec fat_spec)
 {
 	assert((MECO_PI != meco_model) || (get_num_of_coeff(meco_model) == in_dims[COEFF_DIM]));
+
+	long map_dims[N];
+	md_select_dims(N, ~COEFF_FLAG, map_dims, in_dims);
 
 	arg_t args [in_dims[COEFF_DIM]];
 	arg_t out = NULL;
@@ -424,87 +427,27 @@ const struct nlop_s* nlop_ir_meco_model_create(int N, const long map_dims[N], co
 		ret = nlop_meco_old_phase_constrast_create(N, in_dims, TE_dims, TE);
 	}
 
+	assert(md_check_equal_dims(N, out_dims, nlop_codomain(ret)->dims, ~0UL));
+
 
 	unsigned long real_constraint_flag = get_R2S_flag(meco_model) | get_R1S_flag(meco_model) | get_fB0_flag(meco_model);
 
 	return nlop_chain_FF(nlop_from_linop_F(moba_rvc_create(N, in_dims, real_constraint_flag)), ret);
 }
 
-struct nlop_s* nlop_ir_meco_create(int N, const long /*out_dims*/[N], const long in_dims[N], const long TI_dims[N],
-				const complex float* TI, const long TE_dims[N], const complex float* TE, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, const float* scale)
-{
-	long map_dims[N];
-	md_select_dims(N, ~COEFF_FLAG, map_dims, in_dims);
-
-	const struct nlop_s* model = nlop_ir_meco_model_create(N, map_dims, in_dims, TI_dims, TI, TE_dims, TE, meco_model, fat_spec);
-
-	const struct linop_s* prec[in_dims[COEFF_DIM]];
-
-	const struct linop_s* linop_fB0 = NULL;
-
-	if (0. == scale_fB0[0]) {
-
-		debug_printf(DP_DEBUG2, " identity weight on fB0\n");
-
-		linop_fB0 = linop_identity_create(N, map_dims);
-
-	} else {
-
-		debug_printf(DP_DEBUG2, " sobolev weight on fB0\n");
-
-		linop_fB0 = linop_noir_weights_create(N, map_dims, map_dims, map_dims, FFT_FLAGS, 1., scale_fB0[0], scale_fB0[1], 1);
-	}
-
-	linop_fB0 = linop_chain_FF(linop_fB0, linop_zreal_create(N, map_dims));
-
-	for (int i = 0; i < in_dims[COEFF_DIM]; i++)
-		prec[i] = NULL;
-
-	prec[in_dims[COEFF_DIM] - 1] = linop_fB0;
-
-	float init[in_dims[COEFF_DIM]];
-	for (int i = 0; i < in_dims[COEFF_DIM]; i++)
-		init[i] = 0.;
-
-	const struct nlop_s* precond = moba_precond_create(N, in_dims, prec, scale, init);
-
-	const struct nlop_s* ret = nlop_chain_FF(precond, model);
-	ret = moba_attach_trafo_F(ret, linop_fB0);
-
-	for(int i = 0; i < in_dims[COEFF_DIM]; i++)
-		if (NULL != prec[i])
-			linop_free(prec[i]);
-
-
-	return (struct nlop_s*)ret;
-}
-
-const struct linop_s* ir_meco_get_fB0_trafo(struct nlop_s* op)
-{
-	return moba_attach_trafo_get_linop(op);
-}
-
-const struct linop_s* meco_get_fB0_trafo(struct nlop_s* op)
-{
-	return moba_attach_trafo_get_linop(op);
-}
-
-
-struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_dims[N], const complex float* TE, enum meco_model sel_model, enum fat_spec fat_spec, const float* scale_fB0)
+struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_dims[N], const complex float* TE, enum meco_model sel_model, enum fat_spec fat_spec)
 {
 	long TE_dims[N];
 	md_select_dims(N, TE_FLAG, TE_dims, y_dims);
 
-	float scale[x_dims[COEFF_DIM]];
-	for (long i = 0; i < x_dims[COEFF_DIM]; i++)
-		scale[i] = 1.;
+	long map_dims[N];
+	md_select_dims(N, ~COEFF_FLAG, map_dims, x_dims);
 
-	const struct nlop_s* ret = nlop_ir_meco_create(N, /*out_dims*/NULL, x_dims, /*TI_dims*/NULL,
-							/*TI*/NULL, TE_dims, TE, scale_fB0, sel_model, fat_spec, /*scale*/scale);
+	struct nlop_s* model = nlop_ir_meco_create(N, y_dims, x_dims, NULL, NULL, TE_dims, TE, sel_model, fat_spec);
 
-	assert(md_check_equal_dims(N, y_dims, nlop_codomain(ret)->dims, ~0UL));
+	assert(md_check_equal_dims(N, y_dims, nlop_codomain(model)->dims, ~0UL));
 
-	return (struct nlop_s*)ret;
+	return model;
 }
 
 

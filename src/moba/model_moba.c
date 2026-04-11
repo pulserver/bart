@@ -26,11 +26,14 @@
 #include "nlops/smath.h"
 #include "nlops/cast.h"
 
+#include "linops/someops.h"
+
 #include "num/multind.h"
 #include "num/flpmath.h"
 #include "num/iovec.h"
 
 #include "noir/model.h"
+#include "noir/utils.h"
 
 #include "moba/blochfun.h"
 #include "moba/T1phyfun.h"
@@ -39,6 +42,7 @@
 #include "moba/lorentzian.h"
 #include "moba/exp.h"
 #include "moba/T1fun.h"
+#include "moba/utils.h"
 
 #include "simu/signals.h"
 
@@ -58,6 +62,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 	// FIXME: unify them more
 	long out_dims[DIMS];
 	long in_dims[DIMS];
+	long map_dims[DIMS];
 	long TI_dims[DIMS];
 	long TE_dims[DIMS];
 
@@ -65,17 +70,35 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 	md_select_dims(DIMS, conf->fft_flags|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, in_dims, dims);
 	md_select_dims(DIMS, TE_FLAG|TIME_FLAG|TIME2_FLAG, TI_dims, dims);
 	md_select_dims(DIMS, CSHIFT_FLAG|TIME_FLAG|TIME2_FLAG, TE_dims, dims);
+	md_select_dims(DIMS, ~COEFF_FLAG, map_dims, in_dims);
 
 	struct nlop_s* model = NULL;
+
+	ret.linop_alpha = NULL;
+
+	int NC = in_dims[COEFF_DIM];
+	const struct linop_s* lop_prec[NC];
+	for (int i = 0; i < NC; i++)
+		lop_prec[i] = NULL;
 
 	switch (data->model) {
 
 	case MDB_MGRE:
 
-		if (MECO_PI == meco_model)
+		if (MECO_PI == meco_model) {
+
 			model = nlop_from_linop_F(linop_identity_create(DIMS, out_dims));
+			break;
+		}
+
+		if (0. == scale_fB0[0])
+			ret.linop_alpha = linop_identity_create(DIMS, map_dims);
 		else
-			model = nlop_meco_create(DIMS, out_dims, in_dims, TI /*TI is used as TE*/, meco_model, fat_spec, scale_fB0);
+			ret.linop_alpha = linop_noir_weights_create(DIMS, map_dims, map_dims, map_dims, FFT_FLAGS, 1., scale_fB0[0], scale_fB0[1], 1);
+
+		lop_prec[NC - 1] = ret.linop_alpha;
+
+		model = nlop_meco_create(DIMS, out_dims, in_dims, TI/*TI is used as TE*/, meco_model, fat_spec);
 
 		break;
 
@@ -87,32 +110,39 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 
 	case MDB_T2:
 
-		complex float* enc = md_alloc(DIMS, TI_dims, CFL_SIZE);
+		complex float* enc = md_alloc_sameplace(DIMS, TI_dims, CFL_SIZE, TI);
 
 		md_zsmul(DIMS, TI_dims, enc, TI, -1.);
 		model = nlop_exp_create(DIMS, out_dims, enc);
 
-		xfree(enc);
+		md_free(enc);
 
 		break;
 
 	case MDB_T1_PHY:
+
+		ret.linop_alpha = linop_noir_weights_create(DIMS, map_dims, map_dims, map_dims, FFT_FLAGS, 1., data->other.b1_sobolev_a, data->other.b1_sobolev_b, 1.);
+		lop_prec[2] = ret.linop_alpha;
 
 		model = nlop_T1_phy_create(DIMS, out_dims, in_dims, TI_dims, TI, data);
 		break;
 
 	case MDB_IR_MGRE:
 
-		for (int i = 0; i < 8; i++)
-			debug_printf(DP_DEBUG2, "FP Scale[%d]=%f\n", i, crealf(data->other.scale[i]));
+		if (0. == scale_fB0[0])
+			ret.linop_alpha = linop_identity_create(DIMS, map_dims);
+		else
+			ret.linop_alpha = linop_noir_weights_create(DIMS, map_dims, map_dims, map_dims, FFT_FLAGS, 1., scale_fB0[0], scale_fB0[1], 1);
 
-		model = nlop_ir_meco_create(DIMS, out_dims, in_dims, TI_dims, TI, TE_dims, TE, scale_fB0, meco_model, fat_spec, data->other.scale);
+		lop_prec[NC - 1] = ret.linop_alpha;
+
+		model = nlop_ir_meco_create(DIMS, out_dims, in_dims, TI_dims, TI, TE_dims, TE, meco_model, fat_spec);
 		break;
 
 	case MDB_BLOCH:
 
-		for (int i = 0; i < 4; i++)
-			debug_printf(DP_DEBUG2, "FP Scale[%d]=%f\n", i, crealf(data->other.scale[i]));
+		ret.linop_alpha = linop_noir_weights_create(DIMS, map_dims, map_dims, map_dims, FFT_FLAGS, 1., data->other.b1_sobolev_a, data->other.b1_sobolev_b, 1.);
+		lop_prec[3] = ret.linop_alpha;
 
 		// Turn off matching of T2 for IR FLASH
 
@@ -122,6 +152,11 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 		model = nlop_bloch_create(DIMS, out_dims, in_dims, b1, b0, data);
 		break;
 	}
+
+	for (int i = 0; i < NC; i++)
+		debug_printf(DP_DEBUG2, "FP Scale[%d]=%f\n", i, crealf(data->other.scale[i]));
+
+	model = nlop_chain_FF(moba_precond_create(DIMS, in_dims, lop_prec, data->other.scale, data->other.initval), model);
 
 	debug_print_dims(DP_INFO, DIMS, nlop_generic_domain(model, 0)->dims);
 	debug_print_dims(DP_INFO, DIMS, nlop_generic_codomain(model, 0)->dims);
@@ -145,15 +180,6 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 
 	ret.nlop = nlop_flatten(nlinv.nlop);
 	ret.linop = nlinv.linop;
-
-	if (MDB_BLOCH == data->model)
-		ret.linop_alpha = linop_clone(bloch_get_alpha_trafo(model));
-	else if (MDB_T1_PHY == data->model)
-		ret.linop_alpha = linop_clone(T1_get_alpha_trafo(model));
-	else if (MDB_IR_MGRE == data->model)
-		ret.linop_alpha = linop_clone(ir_meco_get_fB0_trafo(model));
-	else if (MDB_MGRE == data->model)
-		ret.linop_alpha = linop_clone(meco_get_fB0_trafo(model));
 
 	nlop_free(nlinv.nlop);
 	nlop_free(model);
@@ -195,9 +221,7 @@ const struct nlop_s* moba_get_nlop(struct mobafit_model_config* config, const lo
 
 	case MGRE:
 
-		static float scale_fB0[2] = { 0., 1. };
-
-		nlop = nlop_meco_create(DIMS, out_dims, param_dims, enc, config->mgre_model, FAT_SPEC_1, scale_fB0);
+		nlop = nlop_meco_create(DIMS, out_dims, param_dims, enc, config->mgre_model, FAT_SPEC_1);
 		break;
 
 	case TSE:

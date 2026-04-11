@@ -70,12 +70,6 @@ struct T1_phy_s {
 
 DEF_TYPEID(T1_phy_s);
 
-
-const struct linop_s* T1_get_alpha_trafo(struct nlop_s* op)
-{
-	return moba_attach_trafo_get_linop(op);
-}
-
 /**
  * Readout relaxation rate for reparameterized Look-Locker model
  * Roeloffs, V., Wang, X., Sumpf, T.J., Untenberger, M., Voit, D. and Frahm, J. (2016),
@@ -282,7 +276,7 @@ static void T1_del(const nlop_data_t* _data)
 }
 
 
-static struct nlop_s* nlop_T1_phy_int_create(int N, const long out_dims[N], const long in_dims[N], const long TI_dims[N], const complex float* TI,  const struct moba_conf_s* config)
+struct nlop_s* nlop_T1_phy_create(int N, const long out_dims[N], const long in_dims[N], const long TI_dims[N], const complex float* TI,  const struct moba_conf_s* config)
 {
 	PTR_ALLOC(struct T1_phy_s, data);
 	SET_TYPEID(T1_phy_s, data);
@@ -341,27 +335,4 @@ static struct nlop_s* nlop_T1_phy_int_create(int N, const long out_dims[N], cons
 	return nlop_create(N, out_dims, N, in_dims, CAST_UP(PTR_PASS(data)), T1_fun, T1_der, T1_adj, NULL, NULL, T1_del);
 }
 
-struct nlop_s* nlop_T1_phy_create(int N, const long out_dims[N], const long in_dims[N], const long TI_dims[N], const complex float* TI,  const struct moba_conf_s* config)
-{
-	long map_dims[N];
-	md_select_dims(N, ~COEFF_FLAG, map_dims, in_dims);
-
-	int n_coef = in_dims[COEFF_DIM];
-
-	const struct linop_s* lop_prec[n_coef];
-	for (int i = 0; i < n_coef; i++)
-		lop_prec[i] = NULL;
-
-	struct linop_s* lop_sobolev = linop_noir_weights_create(N, map_dims, map_dims, map_dims, FFT_FLAGS, 1., config->other.b1_sobolev_a, config->other.b1_sobolev_b, 1.);
-	lop_prec[2] = linop_clone(lop_sobolev); // alpha
-
-	const struct nlop_s* ret = nlop_T1_phy_int_create(N, out_dims, in_dims, TI_dims, TI, config);
-	ret = nlop_chain_FF(moba_precond_create(N, in_dims, lop_prec, config->other.scale, config->other.initval), ret);
-	ret = moba_attach_trafo_F(ret, lop_sobolev);
-
-	for(int i = 0; i < in_dims[COEFF_DIM]; i++)
-		linop_free(lop_prec[i]);
-
-	return (struct nlop_s*)ret;
-}
 

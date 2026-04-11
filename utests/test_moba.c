@@ -245,11 +245,7 @@ static bool test_nlop_ir_meco(void)
 
 	md_zfill(N, in_dims, src, 1.0);
 
-	float scale_fB0[2] = { 22., 6. };
-
-	float scale_others[8] = { 1, 1, 1, 1, 1, 1, 0.1, 0.1 };
-
-	struct nlop_s* ir_meco = nlop_ir_meco_create(N, out_dims, in_dims, TI_dims, TI, TE_dims, TE, scale_fB0, IR_MECO_W_T1_F_T1_R2S, FAT_SPEC_1, scale_others);
+	struct nlop_s* ir_meco = nlop_ir_meco_create(N, out_dims, in_dims, TI_dims, TI, TE_dims, TE, IR_MECO_W_T1_F_T1_R2S, FAT_SPEC_1);
 
 	nlop_apply(ir_meco, N, out_dims, dst, N, in_dims, src);
 
@@ -277,11 +273,7 @@ static bool test_nlop_ir_meco_der(void)
 
 	complex float TI[4] = { 0., 1., 2., 3. };	// [s]
 
-	complex float TE[5] = { 0.1, .5, 1., 1.5, 2.0 }; // [ms]
-
-	float scale_fB0[2] = { 22., 6. };
-
-	float scale_others[8] = { 1, 1, 1, 1, 1, 1, 0.1, 0.1 };
+	complex float TE[5] = { 0.01, .05, 0.1, 0.15, 0.2 }; // [ms]
 
 	complex float* in= md_alloc(N, in_dims, CFL_SIZE);
 	md_zfill(N, in_dims, in, 1.0);
@@ -295,7 +287,7 @@ static bool test_nlop_ir_meco_der(void)
 	long in_strs[N];
 	md_calc_strides(N, in_strs, in_dims, CFL_SIZE);
 
-	complex float coeffs[8] = {1., 1., 1., 1., 1., 1., 10., 10.};
+	complex float coeffs[8] = {1., 1., 1., 1., 1., 1., 1., 1.};
 	md_zmul2(N, in_dims, in_strs, in, in_strs, in, coeff_strs, coeffs);
 
 
@@ -310,9 +302,7 @@ static bool test_nlop_ir_meco_der(void)
 
 	md_free(mask);
 
-
-
-	struct nlop_s* ir_meco = nlop_ir_meco_create(N, out_dims, in_dims, TI_dims, TI, TE_dims, TE, scale_fB0, IR_MECO_W_T1_F_T1_R2S, FAT_SPEC_1, scale_others);
+	struct nlop_s* ir_meco = nlop_ir_meco_create(N, out_dims, in_dims, TI_dims, TI, TE_dims, TE, IR_MECO_W_T1_F_T1_R2S, FAT_SPEC_1);
 
 	float err = nlop_test_derivative_at(ir_meco, in);
 

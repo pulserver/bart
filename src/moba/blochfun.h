@@ -3,8 +3,6 @@ struct nlop_s;
 struct noir_model_conf_s;
 struct moba_conf_s;
 
-extern const struct linop_s* bloch_get_alpha_trafo(const struct nlop_s* op);
-
 extern struct nlop_s* nlop_bloch_create(int N, const long out_dims[N], const long in_dims[N],
 		const complex float* b1, const complex float* b0, const struct moba_conf_s* _data);
 
