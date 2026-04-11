@@ -35,6 +35,7 @@ extern void unmap_cfl(int D, const long dims[__VLA(D)], const _Complex float* x)
 extern void unmap_shared_cfl(int D, const long dims[D], const _Complex float* x);
 
 extern _Complex float* anon_cfl(const char* name, int D, const long dims[__VLA(D)]);
+extern _Complex float* anon_cfl_sameplace(const char* name, int D, const long dimensions[__VLA(D)], const void* ref);
 extern _Complex float* create_cfl(const char* name, int D, const long dimensions[__VLA(D)]);
 extern _Complex float* create_async_cfl(const char* name, const unsigned long flags, int D, const long dimensions[__VLA(D)]);
 extern _Complex float* create_cfl_sameplace(const char* name, int D, const long dimensions[__VLA(D)], const void* ref);

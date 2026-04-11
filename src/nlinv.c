@@ -203,11 +203,7 @@ int main_nlinv(int argc, char* argv[argc])
 
 		if (!real_time_stream) {
 
-			pattern = anon_cfl("", DIMS, pat_dims);
-
-			if (is_vptr(kspace))
-				pattern = vptr_wrap_cfl(DIMS, pat_dims, CFL_SIZE, pattern, vptr_get_hint(kspace), true, false);
-
+			pattern = anon_cfl_sameplace("", DIMS, pat_dims, kspace);
 			estimate_pattern(DIMS, ksp_dims, COIL_FLAG, pattern, kspace);
 		}
 	}
@@ -287,9 +283,7 @@ int main_nlinv(int argc, char* argv[argc])
 
 		md_copy_dims(DIMS, pat_dims, psf_dims);
 
-		pattern = anon_cfl("", DIMS, pat_dims);
-		if (is_vptr(kspace))
-			pattern = vptr_wrap_cfl(DIMS, pat_dims, CFL_SIZE, pattern, vptr_get_hint(kspace), true, false);
+		pattern = anon_cfl_sameplace("", DIMS, pat_dims, kspace);
 
 		md_copy(DIMS, pat_dims, pattern, psf, CFL_SIZE);
 
@@ -432,10 +426,7 @@ int main_nlinv(int argc, char* argv[argc])
 
 	} else {
 
-		img = ((!pprocess) ? create_cfl : anon_cfl)(img_file, DIMS, img_dims);
-
-		if (is_vptr(kspace))
-			img = vptr_wrap_cfl(DIMS, img_dims, CFL_SIZE, ((!pprocess) ? create_cfl : anon_cfl)(img_file, DIMS, img_dims), vptr_get_hint(kspace), true, true);
+		img = ((!pprocess) ? create_cfl_sameplace : anon_cfl_sameplace)(img_file, DIMS, img_dims, kspace);
 	}
 
 	long msk_dims[DIMS];
@@ -448,10 +439,7 @@ int main_nlinv(int argc, char* argv[argc])
 
 	if (pprocess || sens_file) {
 
-		sens = ((NULL != sens_file) ? create_cfl : anon_cfl)(sens_file, DIMS, sens_dims);
-
-		if (is_vptr(kspace))
-			sens = vptr_wrap_cfl(DIMS, sens_dims, CFL_SIZE, sens, vptr_get_hint(kspace) , true, true);
+		sens = ((NULL != sens_file) ? create_cfl_sameplace : anon_cfl_sameplace)(sens_file, DIMS, sens_dims, kspace);
 	}
 
 	// initialization

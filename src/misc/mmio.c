@@ -1236,6 +1236,16 @@ complex float* anon_cfl(const char* /*name*/, int D, const long dims[D])
 	return addr;
 }
 
+complex float* anon_cfl_sameplace(const char* /*name*/, int D, const long dimensions[D], const void* ref)
+{
+	complex float* ret = anon_cfl(NULL, D, dimensions);
+
+	if (!is_vptr(ref))
+		return ret;
+	else
+	 	return vptr_wrap_cfl(D, dimensions, sizeof(complex float), ret, vptr_get_hint(ref), true, false);
+}
+
 
 
 void unmap_raw(const void* data, size_t size)
