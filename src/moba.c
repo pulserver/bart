@@ -15,6 +15,7 @@
 #include "num/fft.h"
 #include "num/init.h"
 #include "num/filter.h"
+#include "num/ops.h"
 #include "num/rand.h"
 
 #include "misc/mri.h"
@@ -401,12 +402,21 @@ int main_moba(int argc, char* argv[argc])
 		struct nufft_conf_s nufft_conf = nufft_conf_defaults;
 		nufft_conf.toeplitz = false;
 
-		const struct linop_s* nufft_op_k = nufft_create(DIMS, ksp_dims, grid_dims, traj_dims, traj, NULL, nufft_conf);
+		complex float* traj_cfl = traj;
+
+#ifdef USE_CUDA
+		if (bart_use_gpu)
+			traj = md_gpu_move(DIMS, traj_dims, traj, CFL_SIZE);
+#endif
+
+		struct linop_s* nufft_op_k = nufft_create(DIMS, ksp_dims, grid_dims, traj_dims, traj, NULL, nufft_conf);
+		const struct operator_s* op_adj = operator_sameplace_wrapper(nufft_op_k->adjoint, traj);
 
 		cim = md_alloc_sameplace(DIMS, grid_dims, CFL_SIZE, kspace_data);
 
-		linop_adjoint(nufft_op_k, DIMS, grid_dims, cim, DIMS, ksp_dims, kspace_data);
+		operator_apply(op_adj, DIMS, grid_dims, cim, DIMS, ksp_dims, kspace_data);
 
+		operator_free(op_adj);
 		linop_free(nufft_op_k);
 
 		md_select_dims(DIMS, FFT_FLAGS|TE_FLAG|CSHIFT_FLAG|TIME_FLAG|SLICE_FLAG|TIME2_FLAG, pat_dims, grid_dims);
@@ -432,9 +442,12 @@ int main_moba(int argc, char* argv[argc])
 
 		psf = compute_psf(DIMS, pat_dims, traj_dims, traj, traj_dims, NULL, wgh_dims, wgh, false, false);
 
-		md_zsmul(DIMS, pat_dims, psf, psf, scl_psf);
+		if (traj_cfl != traj)
+			md_free(traj);
 
-		fftuc(DIMS, pat_dims, FFT_FLAGS, pattern, psf);
+		md_zsmul(DIMS, pat_dims, psf, psf, scl_psf);
+		fftuc(DIMS, pat_dims, FFT_FLAGS, psf, psf);
+		md_copy(DIMS, pat_dims, pattern, psf, CFL_SIZE);
 
 		md_free(wgh);
 		md_free(psf);
