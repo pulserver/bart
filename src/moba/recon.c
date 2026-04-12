@@ -9,6 +9,7 @@
 
 #include "misc/debug.h"
 #include "misc/misc.h"
+#include "misc/version.h"
 
 #include "num/multind.h"
 #include "num/flpmath.h"
@@ -274,7 +275,9 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 	map_dims[COEFF_DIM] = 1;
 	long pos[DIMS] = { 0L };
 
-	if (MDB_IR_MGRE == conf->mode) {
+	if (MDB_IR_MGRE == conf->mode && use_compat_to_version("v1.0.00")) {
+
+		// Used in fetal paper
 
 		md_set_dims(DIMS, pos, 0);
 
@@ -381,7 +384,8 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 		}
 	}
 
-	post_process(conf->mode, nl.linop_alpha, data, dims, img);
+	if (!conf->out_origin_maps)
+		post_process(conf->mode, nl.linop_alpha, data, dims, img);
 
 	// Clean up
 
