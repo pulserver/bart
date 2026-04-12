@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <stddef.h>
 #include <unistd.h>
+#include <errno.h>
 
 #ifdef _WIN32
 #include "win/mman.h"
@@ -597,6 +598,12 @@ static struct mem_s* vptr_reserve_int(size_t len)
 
 	void* ptr = mmap(NULL, len, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
 
+	if (((void*)-1) == ptr) {
+
+		int errsv = errno;
+		error("Failed (errno: %d) to reserve virtual memory of size %zu bytes!\n", errsv, len);
+	}
+
 	PTR_ALLOC(struct mem_s, x);
 
 	x->ptr = ptr;
@@ -694,7 +701,7 @@ bool vptr_is_writeback(const void* ptr)
 	struct mem_s* mem = search(ptr, false);
 
 	if (NULL == mem)
-		error("Cannot check writeback flag of non-virtual pointer!\n");
+		error("Cannot check writeback flag of non-virtual pointer %p!\n", ptr);
 
 	return mem->writeback;
 }
@@ -704,7 +711,7 @@ bool vptr_is_set_clear(const void* ptr)
 	struct mem_s* mem = search(ptr, false);
 
 	if (NULL == mem)
-		error("Cannot check clear flag of non-virtual pointer!\n");
+		error("Cannot check clear flag of non-virtual pointer %p!\n", ptr);
 
 	return mem->clear;
 }
@@ -714,7 +721,7 @@ void vptr_unset_clear(const void* ptr)
 	struct mem_s* mem = search(ptr, false);
 
 	if (NULL == mem)
-		error("Cannot unset clear flag of non-virtual pointer!\n");
+		error("Cannot unset clear flag of non-virtual pointer %p!\n", ptr);
 
 	mem->clear = false;
 
@@ -833,7 +840,9 @@ void* vptr_resolve_range(const void* ptr)
 	assert(NULL != mem);
 
 	if((0 == mem->range.D) && (0 == mem->shape.N))
-		error("Virtual pointer not initialized!");
+		error("Virtual pointer (%p) not initialized!\n%s%s", ptr,
+			 mem->backtrace ? "Pointer allocated at:\n" : "",
+			 mem->backtrace ?: "");
 
 	if (0 == mem->range.D)
 		return (void*)ptr;
