@@ -112,6 +112,7 @@ extern const struct operator_s* operator_copy_wrapper_sameplace(int N, const lon
 extern const struct operator_s* operator_gpu_wrapper2(const struct operator_s* op, unsigned long move_flags);
 extern const struct operator_s* operator_gpu_wrapper(const struct operator_s* op);
 extern const struct operator_s* operator_cpu_wrapper(const struct operator_s* op);
+extern const struct operator_s* operator_sameplace_wrapper(const struct operator_s* op, const void* ref);
 
 struct vptr_hint_s;
 extern const struct operator_s* operator_vptr_wrapper(const struct operator_s* op, struct vptr_hint_s* hint);

@@ -1193,9 +1193,8 @@ static const struct operator_s* operator_copy_wrapper_generic(int N, const long*
 	return operator_generic_create2(N, op->io_flags, D, dims, *strs2, CAST_UP(PTR_PASS(data)), copy_fun, copy_del, copy_wrapper_graph_create);
 }
 
-const struct operator_s* operator_cpu_wrapper(const struct operator_s* op)
+const struct operator_s* operator_sameplace_wrapper(const struct operator_s* op, const void* ref)
 {
-	int ref = 1;
 	int N = operator_nr_args(op);
 
 	const long* strs[N];
@@ -1207,7 +1206,14 @@ const struct operator_s* operator_cpu_wrapper(const struct operator_s* op)
 		strs[i] = dom->strs;
 	}
 
-	return operator_copy_wrapper_sameplace(N, strs, op, &ref);
+	return operator_copy_wrapper_sameplace(N, strs, op, ref);
+}
+
+const struct operator_s* operator_cpu_wrapper(const struct operator_s* op)
+{
+	int ref = 1;
+
+	return operator_sameplace_wrapper(op, &ref);
 }
 
 const struct operator_s* operator_nograph_wrapper(const struct operator_s* op)
