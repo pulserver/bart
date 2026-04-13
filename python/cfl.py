@@ -1,12 +1,12 @@
 # Copyright 2013-2015. The Regents of the University of California.
 # Copyright 2021. Uecker Lab. University Center Göttingen.
-# Copyright 2024. Institute for Biomedical Imaging. TU Graz.
+# Copyright 2024-2026. Institute for Biomedical Imaging. TU Graz.
 # All rights reserved. Use of this source code is governed by
 # a BSD-style license which can be found in the LICENSE file.
 #
 # Authors:
-# 2013 Martin Uecker <uecker@eecs.berkeley.edu>
-# 2015 Jonathan Tamir <jtamir@eecs.berkeley.edu>
+# 2013 Martin Uecker
+# 2015 Jonathan Tamir
 
 
 import numpy as np
@@ -55,7 +55,7 @@ def _writera(name, array):
     ], dtype=np.uint64)
     shape_arr = np.array(array.shape, dtype=np.uint64)
 
-    with open(name, "wb") as f:
+    with open(name, "w+b") as f:
         f.write(header)
         f.write(shape_arr)
         f.write(np.ascontiguousarray(array.T))
@@ -123,7 +123,7 @@ def writecfl(name, array):
     if array.dtype != np.complex64:
         array = array.astype(np.complex64)
 
-    with open(name + ".cfl", "wb") as f:
+    with open(name + ".cfl", "w+b") as f:
         f.write(np.ascontiguousarray(array.T))
 
 
@@ -142,7 +142,7 @@ def writemulticfl(name, arrays):
             f.write(' '.join(str(i) for i in dim))
             f.write('\n')
 
-    with open(name + ".cfl", "wb") as f:
+    with open(name + ".cfl", "w+b") as f:
         for array in arrays:
             if array.dtype != np.complex64:
                 array = array.astype(np.complex64)
