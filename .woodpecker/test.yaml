@@ -1,0 +1,13 @@
+steps:
+  build:
+    image: debian
+    when:
+      branch:
+        - ${CI_REPO_DEFAULT_BRANCH}
+      event: [push, pull_request]
+    commands: |
+      apt-get update
+      apt-get install -yy make gcc libfftw3-dev liblapacke-dev libpng-dev libopenblas-dev gfortran
+      make
+      make utest
+
