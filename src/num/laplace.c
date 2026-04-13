@@ -61,33 +61,28 @@ void md_laplace_fd_wrapped_phase_scaled(int N, const long dims[N], unsigned long
 	md_clear(N, dims, out, CFL_SIZE);
 
 	complex float* tmp1 = md_alloc_sameplace(N, dims, CFL_SIZE, in);
-	complex float* tmp2 = md_alloc_sameplace(N, dims, CFL_SIZE, in);
 
 	for (int i = 0; i < N; i++) {
 
 		if (!MD_IS_SET(flags, i))
 			continue;
 
-		md_zconj(N, dims, tmp1, tmp);
-		md_zmul(N, dims, tmp1, tmp1, tmp1);
-
 		long pos[N];
 		md_set_dims(N, pos, 0);
 
-		md_circ_shift(N, dims, (pos[i] = 1, pos), tmp2, tmp, CFL_SIZE);
-		md_zmul(N, dims, tmp1, tmp1, tmp2);
-
-		md_circ_shift(N, dims, (pos[i] = -1, pos), tmp2, tmp, CFL_SIZE);
-		md_zmul(N, dims, tmp1, tmp1, tmp2);
-
+		md_circ_shift(N, dims, (pos[i] = 1, pos), tmp1, tmp, CFL_SIZE);
+		md_zmulc(N, dims, tmp1, tmp1, tmp);
 		md_zarg(N, dims, tmp1, tmp1);
+		md_zaxpy(N, dims, out, scale[i], tmp1);
 
+		md_circ_shift(N, dims, (pos[i] = -1, pos), tmp1, tmp, CFL_SIZE);
+		md_zmulc(N, dims, tmp1, tmp1, tmp);
+		md_zarg(N, dims, tmp1, tmp1);
 		md_zaxpy(N, dims, out, scale[i], tmp1);
 	}
 
 	md_free(tmp);
 	md_free(tmp1);
-	md_free(tmp2);
 }
 
 void md_laplace_fd_wrapped_phase(int N, const long dims[N], unsigned long flags, complex float* out, const complex float* in)
