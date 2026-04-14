@@ -319,8 +319,6 @@ int main_moba(int argc, char* argv[argc])
 	long traj_strs[DIMS];
 	complex float* traj = NULL;
 
-	long img_dims[DIMS];
-
 	if (NULL != traj_file) {
 
 		traj = load_cfl(traj_file, DIMS, traj_dims);
@@ -331,8 +329,9 @@ int main_moba(int argc, char* argv[argc])
 
 		if (0 == md_calc_size(3, img_vec)) {
 
-			estimate_im_dims(DIMS, FFT_FLAGS, img_dims, traj_dims, traj);
-			md_copy_dims(3, img_vec, img_dims);
+			long tmp_dims[DIMS];
+			estimate_im_dims(DIMS, FFT_FLAGS, tmp_dims, traj_dims, traj);
+			md_copy_dims(3, img_vec, tmp_dims);
 			debug_printf(DP_INFO, "Est. image size: %ld %ld %ld\n", img_vec[0], img_vec[1], img_vec[2]);
 		}
 
@@ -360,54 +359,6 @@ int main_moba(int argc, char* argv[argc])
 
 		conf.noncartesian = true;
 	}
-
-	md_select_dims(DIMS, FFT_FLAGS|MAPS_FLAG|COEFF_FLAG|TIME_FLAG|SLICE_FLAG|TIME2_FLAG, img_dims, grid_dims);
-
-
-	img_dims[COEFF_DIM] = moba_get_nr_of_coeffs(&conf, grid_dims[TE_DIM]); // grid_dims[TE_DIM] is only used for MECO_PI == conf.mgre_model
-
-
-	long img_strs[DIMS];
-	md_calc_strides(DIMS, img_strs, img_dims, CFL_SIZE);
-
-	long coil_dims[DIMS];
-	md_select_dims(DIMS, FFT_FLAGS|COIL_FLAG|MAPS_FLAG|TIME_FLAG|SLICE_FLAG|TIME2_FLAG, coil_dims, grid_dims);
-
-	long coil_strs[DIMS];
-	md_calc_strides(DIMS, coil_strs, coil_dims, CFL_SIZE);
-
-	complex float* img = create_cfl(out_file, DIMS, img_dims);
-
-	long dims[DIMS];
-	md_copy_dims(DIMS, dims, grid_dims);
-
-	dims[COEFF_DIM] = img_dims[COEFF_DIM];
-
-	bool sensout = (NULL != sens_file);
-	complex float* sens = (sensout ? create_cfl : anon_cfl)(sens_file, DIMS, coil_dims);
-
-	// Input sensitivities
-
-	const complex float* in_sens = NULL;
-	long in_sens_dims[DIMS];
-
-
-	if (NULL != input_sens) {
-
-		in_sens = load_cfl(input_sens, DIMS, in_sens_dims);
-
-		assert(md_check_compat(DIMS, ~(FFT_FLAGS|COIL_FLAG), coil_dims, in_sens_dims));
-
-		md_copy(DIMS, coil_dims, sens, in_sens, CFL_SIZE);	// Why copy?
-
-		unmap_cfl(DIMS, in_sens_dims, in_sens);
-
-	} else {
-
-		md_clear(DIMS, coil_dims, sens, CFL_SIZE);
-	}
-
-	md_zfill(DIMS, img_dims, img, 1.);
 
 	complex float* cim = md_alloc(DIMS, grid_dims, CFL_SIZE);
 
@@ -497,6 +448,51 @@ int main_moba(int argc, char* argv[argc])
 		if (normalize_scaling)
 			scaling *= sqrt((float)ksp_dims[SLICE_DIM]);
 	}
+
+	long img_dims[DIMS];
+
+	md_select_dims(DIMS, FFT_FLAGS|MAPS_FLAG|COEFF_FLAG|TIME_FLAG|SLICE_FLAG|TIME2_FLAG, img_dims, grid_dims);
+	img_dims[COEFF_DIM] = moba_get_nr_of_coeffs(&conf, grid_dims[TE_DIM]); // grid_dims[TE_DIM] is only used for MECO_PI == conf.mgre_model
+
+	long img_strs[DIMS];
+	md_calc_strides(DIMS, img_strs, img_dims, CFL_SIZE);
+
+	complex float* img = create_cfl(out_file, DIMS, img_dims);
+	md_zfill(DIMS, img_dims, img, 1.);
+
+
+	long coil_dims[DIMS];
+	md_select_dims(DIMS, FFT_FLAGS|COIL_FLAG|MAPS_FLAG|TIME_FLAG|SLICE_FLAG|TIME2_FLAG, coil_dims, grid_dims);
+
+	bool sensout = (NULL != sens_file);
+	complex float* sens = (sensout ? create_cfl : anon_cfl)(sens_file, DIMS, coil_dims);
+
+	// Input sensitivities
+
+	const complex float* in_sens = NULL;
+	long in_sens_dims[DIMS];
+
+
+	if (NULL != input_sens) {
+
+		in_sens = load_cfl(input_sens, DIMS, in_sens_dims);
+
+		assert(md_check_compat(DIMS, ~(FFT_FLAGS|COIL_FLAG), coil_dims, in_sens_dims));
+
+		md_copy(DIMS, coil_dims, sens, in_sens, CFL_SIZE);	// Why copy?
+
+		unmap_cfl(DIMS, in_sens_dims, in_sens);
+
+	} else {
+
+		md_clear(DIMS, coil_dims, sens, CFL_SIZE);
+	}
+
+	long dims[DIMS];
+	md_copy_dims(DIMS, dims, grid_dims);
+
+	dims[COEFF_DIM] = img_dims[COEFF_DIM];
+
 
 	if (conf.k_filter) {
 
