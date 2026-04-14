@@ -415,7 +415,7 @@ int main_moba(int argc, char* argv[argc])
 
 	md_zfill(DIMS, img_dims, img, 1.);
 
-	complex float* k_grid_data = anon_cfl("", DIMS, grid_dims);
+	complex float* k_grid_data = md_alloc(DIMS, grid_dims, CFL_SIZE);
 
 	complex float* pattern = NULL;
 	long pat_dims[DIMS];
@@ -669,15 +669,14 @@ int main_moba(int argc, char* argv[argc])
 #ifdef  USE_CUDA
 	if (bart_use_gpu) {
 
-		complex float* kspace_gpu = md_alloc_gpu(DIMS, grid_dims, CFL_SIZE);
+		complex float* k_grid_data_gpu = md_gpu_move(DIMS, grid_dims, k_grid_data, CFL_SIZE);
 
-		md_copy(DIMS, grid_dims, kspace_gpu, k_grid_data, CFL_SIZE);
+		md_free(k_grid_data);
 
-		moba_recon(&conf, &data, dims, img, sens, pattern, TI, TE_IR_MGRE, b1, b0, kspace_gpu, init);
-
-		md_free(kspace_gpu);
-	} else
+		k_grid_data = k_grid_data_gpu;
+	}
 #endif
+
 	moba_recon(&conf, &data, dims, img, sens, pattern, TI, TE_IR_MGRE, b1, b0, k_grid_data, init);
 
 	// Rescale estimated parameter maps
@@ -697,10 +696,10 @@ int main_moba(int argc, char* argv[argc])
 	}
 
 	md_free(tmp);
+	md_free(k_grid_data);
 
 	unmap_cfl(DIMS, coil_dims, sens);
 	unmap_cfl(DIMS, pat_dims, pattern);
-	unmap_cfl(DIMS, grid_dims, k_grid_data);
 	unmap_cfl(DIMS, img_dims, img);
 	unmap_cfl(DIMS, TI_dims, TI);
 	unmap_cfl(DIMS, traj_dims, traj);
