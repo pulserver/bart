@@ -315,15 +315,40 @@ int main_moba(int argc, char* argv[argc])
 	long grid_dims[DIMS];
 	md_copy_dims(DIMS, grid_dims, ksp_dims);
 
-	long traj_dims[DIMS];
-	long traj_strs[DIMS];
-	complex float* traj = NULL;
+	complex float* cim = NULL;
 
-	if (NULL != traj_file) {
+	complex float* pattern = NULL;
+	long pat_dims[DIMS];
 
-		traj = load_cfl(traj_file, DIMS, traj_dims);
 
-		md_calc_strides(DIMS, traj_strs, traj_dims, CFL_SIZE);
+	if (NULL != psf_file) {
+
+		complex float* tmp_psf = load_cfl(psf_file, DIMS, pat_dims);
+
+		pattern = anon_cfl("", DIMS, pat_dims);
+
+		md_copy(DIMS, pat_dims, pattern, tmp_psf, CFL_SIZE);
+
+		unmap_cfl(DIMS, pat_dims, tmp_psf);
+
+		cim = md_alloc_sameplace(DIMS, grid_dims, CFL_SIZE, kspace_data);
+
+		ifftuc(DIMS, grid_dims, FFT_FLAGS, cim, kspace_data);
+
+		unmap_cfl(DIMS, ksp_dims, kspace_data);
+
+		if (!md_check_compat(DIMS, COIL_FLAG, ksp_dims, pat_dims))
+			error("pattern not compatible with kspace dimensions\n");
+
+		if (-1 == restrict_fov)
+			restrict_fov = 0.5;
+
+		conf.noncartesian = true;
+
+	} else if (NULL != traj_file) {
+
+		long traj_dims[DIMS];
+		complex float* traj = load_cfl(traj_file, DIMS, traj_dims);
 
 		md_zsmul(DIMS, traj_dims, traj, traj, oversampling);
 
@@ -334,7 +359,6 @@ int main_moba(int argc, char* argv[argc])
 			md_copy_dims(3, img_vec, tmp_dims);
 			debug_printf(DP_INFO, "Est. image size: %ld %ld %ld\n", img_vec[0], img_vec[1], img_vec[2]);
 		}
-
 
 		if (!use_compat_to_version("v0.7.00")) {
 
@@ -358,37 +382,6 @@ int main_moba(int argc, char* argv[argc])
 			restrict_fov = 0.5;
 
 		conf.noncartesian = true;
-	}
-
-	complex float* cim = md_alloc(DIMS, grid_dims, CFL_SIZE);
-
-	complex float* pattern = NULL;
-	long pat_dims[DIMS];
-
-
-	if (NULL != psf_file) {
-
-		complex float* tmp_psf = load_cfl(psf_file, DIMS, pat_dims);
-
-		pattern = anon_cfl("", DIMS, pat_dims);
-
-		md_copy(DIMS, pat_dims, pattern, tmp_psf, CFL_SIZE);
-
-		unmap_cfl(DIMS, pat_dims, tmp_psf);
-
-		ifftuc(DIMS, grid_dims, FFT_FLAGS, cim, kspace_data);
-
-		unmap_cfl(DIMS, ksp_dims, kspace_data);
-
-		if (!md_check_compat(DIMS, COIL_FLAG, ksp_dims, pat_dims))
-			error("pattern not compatible with kspace dimensions\n");
-
-		if (-1 == restrict_fov)
-			restrict_fov = 0.5;
-
-		conf.noncartesian = true;
-
-	} else if (NULL != traj_file) {
 
 		struct nufft_conf_s nufft_conf = nufft_conf_defaults;
 		nufft_conf.toeplitz = false;
@@ -420,11 +413,15 @@ int main_moba(int argc, char* argv[argc])
 		// Gridding raw data
 
 		nufft_op_k = nufft_create(DIMS, ksp_dims, grid_dims, traj_dims, traj, NULL, nufft_conf);
+
+		cim = md_alloc_sameplace(DIMS, grid_dims, CFL_SIZE, kspace_data);
+
 		linop_adjoint(nufft_op_k, DIMS, grid_dims, cim, DIMS, ksp_dims, kspace_data);
 
 		linop_free(nufft_op_k);
 
 		unmap_cfl(DIMS, ksp_dims, kspace_data);
+		unmap_cfl(DIMS, traj_dims, traj);
 
 	} else {
 
@@ -433,6 +430,8 @@ int main_moba(int argc, char* argv[argc])
 		pattern = anon_cfl("", DIMS, pat_dims);
 
 		estimate_pattern(DIMS, ksp_dims, COIL_FLAG, pattern, kspace_data);
+
+		cim = md_alloc_sameplace(DIMS, grid_dims, CFL_SIZE, kspace_data);
 
 		ifftuc(DIMS, grid_dims, FFT_FLAGS, cim, kspace_data);
 
@@ -701,7 +700,6 @@ int main_moba(int argc, char* argv[argc])
 	unmap_cfl(DIMS, pat_dims, pattern);
 	unmap_cfl(DIMS, img_dims, img);
 	unmap_cfl(DIMS, TI_dims, TI);
-	unmap_cfl(DIMS, traj_dims, traj);
 	unmap_cfl(DIMS, init_dims, init);
 	unmap_cfl(DIMS, b1_dims, b1);
 	unmap_cfl(DIMS, TE_IR_MGRE_dims, TE_IR_MGRE);
