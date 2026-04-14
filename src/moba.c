@@ -312,12 +312,6 @@ int main_moba(int argc, char* argv[argc])
 	assert(TI_dims[TE_DIM] == ksp_dims[TE_DIM]);
 	assert(1 == ksp_dims[MAPS_DIM]);
 
-	if (conf.sms) {
-
-		debug_printf(DP_INFO, "SMS Model-based reconstruction. Multiband factor: %ld\n", ksp_dims[SLICE_DIM]);
-		fftmod(DIMS, ksp_dims, SLICE_FLAG, kspace_data, kspace_data); // fftmod to get correct slice order in output
-	}
-
 	long grid_dims[DIMS];
 	md_copy_dims(DIMS, grid_dims, ksp_dims);
 
@@ -415,7 +409,7 @@ int main_moba(int argc, char* argv[argc])
 
 	md_zfill(DIMS, img_dims, img, 1.);
 
-	complex float* k_grid_data = md_alloc(DIMS, grid_dims, CFL_SIZE);
+	complex float* cim = md_alloc(DIMS, grid_dims, CFL_SIZE);
 
 	complex float* pattern = NULL;
 	long pat_dims[DIMS];
@@ -431,7 +425,7 @@ int main_moba(int argc, char* argv[argc])
 
 		unmap_cfl(DIMS, pat_dims, tmp_psf);
 
-		md_copy(DIMS, grid_dims, k_grid_data, kspace_data, CFL_SIZE);
+		ifftuc(DIMS, grid_dims, FFT_FLAGS, cim, kspace_data);
 
 		unmap_cfl(DIMS, ksp_dims, kspace_data);
 
@@ -475,8 +469,7 @@ int main_moba(int argc, char* argv[argc])
 		// Gridding raw data
 
 		nufft_op_k = nufft_create(DIMS, ksp_dims, grid_dims, traj_dims, traj, NULL, nufft_conf);
-		linop_adjoint(nufft_op_k, DIMS, grid_dims, k_grid_data, DIMS, ksp_dims, kspace_data);
-		fftuc(DIMS, grid_dims, FFT_FLAGS, k_grid_data, k_grid_data);
+		linop_adjoint(nufft_op_k, DIMS, grid_dims, cim, DIMS, ksp_dims, kspace_data);
 
 		linop_free(nufft_op_k);
 
@@ -490,9 +483,19 @@ int main_moba(int argc, char* argv[argc])
 
 		estimate_pattern(DIMS, ksp_dims, COIL_FLAG, pattern, kspace_data);
 
-		md_copy(DIMS, grid_dims, k_grid_data, kspace_data, CFL_SIZE);
+		ifftuc(DIMS, grid_dims, FFT_FLAGS, cim, kspace_data);
 
 		unmap_cfl(DIMS, ksp_dims, kspace_data);
+	}
+
+	if (conf.sms) {
+
+		debug_printf(DP_INFO, "SMS Model-based reconstruction. Multiband factor: %ld\n", ksp_dims[SLICE_DIM]);
+		ifft(DIMS, grid_dims, SLICE_FLAG, cim, cim);
+
+		// FIXME: maybe this can go, but before sclaing was normalized with respect to k-space
+		if (normalize_scaling)
+			scaling *= sqrt((float)ksp_dims[SLICE_DIM]);
 	}
 
 	if (conf.k_filter) {
@@ -577,14 +580,14 @@ int main_moba(int argc, char* argv[argc])
 
 	if (normalize_scaling) {
 
-		scaling /= md_znorm(DIMS, grid_dims, k_grid_data);
+		scaling /= md_znorm(DIMS, grid_dims, cim);
 		scaling_psf /= md_znorm(DIMS, pat_dims, pattern);
 	}
 
 	if (1. != scaling) {
 
 		debug_printf(DP_INFO, "Scaling: %f\n", scaling);
-		md_zsmul(DIMS, grid_dims, k_grid_data, k_grid_data, scaling);
+		md_zsmul(DIMS, grid_dims, cim, cim, scaling);
 	}
 
 	if (1. != scaling_psf) {
@@ -669,15 +672,15 @@ int main_moba(int argc, char* argv[argc])
 #ifdef  USE_CUDA
 	if (bart_use_gpu) {
 
-		complex float* k_grid_data_gpu = md_gpu_move(DIMS, grid_dims, k_grid_data, CFL_SIZE);
+		complex float* cim_gpu = md_gpu_move(DIMS, grid_dims, cim, CFL_SIZE);
 
-		md_free(k_grid_data);
+		md_free(cim);
 
-		k_grid_data = k_grid_data_gpu;
+		cim = cim_gpu;
 	}
 #endif
 
-	moba_recon(&conf, &data, dims, img, sens, pattern, TI, TE_IR_MGRE, b1, b0, k_grid_data, init);
+	moba_recon(&conf, &data, dims, img, sens, pattern, TI, TE_IR_MGRE, b1, b0, cim, init);
 
 	// Rescale estimated parameter maps
 
@@ -696,7 +699,7 @@ int main_moba(int argc, char* argv[argc])
 	}
 
 	md_free(tmp);
-	md_free(k_grid_data);
+	md_free(cim);
 
 	unmap_cfl(DIMS, coil_dims, sens);
 	unmap_cfl(DIMS, pat_dims, pattern);

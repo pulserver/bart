@@ -34,6 +34,7 @@
 #include "num/filter.h"
 
 #include "noir/utils.h"
+#include "num/ops.h"
 
 #include "model.h"
 
@@ -73,35 +74,6 @@ struct noir_s noir_create(const long dims[DIMS], const complex float* psf, const
 
 	const struct linop_s* lop_fft = linop_fft_create(DIMS, data_dims, conf->fft_flags);
 
-
-	complex float* ptr = md_alloc_sameplace(DIMS, ptrn_dims, CFL_SIZE, psf);
-
-	md_copy(DIMS, ptrn_dims, ptr, psf, CFL_SIZE);
-	fftmod(DIMS, ptrn_dims, conf->fft_flags, ptr, ptr);
-
-	const struct linop_s* lop_pattern = linop_fmac_create(DIMS, data_dims, 0, 0, ~conf->ptrn_flags, ptr);
-	md_free(ptr);
-
-	if (conf->noncart) {
-
-		complex float* adj_ptr = md_alloc(DIMS, ptrn_dims, CFL_SIZE);
-
-		md_zfill(DIMS, ptrn_dims, adj_ptr, 1.);
-
-		fftmod(DIMS, ptrn_dims, conf->fft_flags, adj_ptr, adj_ptr);
-
-		const struct linop_s* lop_adj_pattern = linop_fmac_create(DIMS, data_dims, 0, 0, ~conf->ptrn_flags, adj_ptr);
-
-		md_free(adj_ptr);
-
-		const struct linop_s* lop_tmp = linop_from_ops(lop_pattern->forward, lop_adj_pattern->adjoint, NULL, NULL);
-
-		linop_free(lop_adj_pattern);
-		linop_free(lop_pattern);
-
-		lop_pattern = lop_tmp;
-	}
-
 	long fft_dims[DIMS];
 	md_select_dims(DIMS, FFT_FLAGS, fft_dims, dims);
 
@@ -110,15 +82,30 @@ struct noir_s noir_create(const long dims[DIMS], const complex float* psf, const
 	fftscale(DIMS, fft_dims, FFT_FLAGS, fft_mod, fft_mod);
 	fftmod(DIMS, fft_dims, FFT_FLAGS, fft_mod, fft_mod);
 
-	const struct linop_s* lop_fftmod = linop_cdiag_create(DIMS, data_dims, FFT_FLAGS, fft_mod);
+	lop_fft = linop_chain_FF(linop_cdiag_create(DIMS, data_dims, FFT_FLAGS, fft_mod), lop_fft);
 	md_free(fft_mod);
 
-	const struct linop_s* lop_fft2 = linop_chain(lop_fftmod, lop_fft);
-	linop_free(lop_fftmod);
+	const struct linop_s* lop_pattern = linop_cdiag_create(DIMS, data_dims, conf->ptrn_flags, psf);
+
+	const struct operator_s* ops[3] = {
+
+		lop_fft->forward,
+		conf->noncart ? lop_pattern->forward : lop_pattern->normal,
+		lop_fft->adjoint
+	};
+
+	const struct operator_s* op_frw = operator_chainN(3, ops);
+	const struct operator_s* op_adj = operator_identity_create(DIMS, data_dims);
+
+	// This is an asymmetric operator,
+	// forward maps coil images to gridded coil images
+	// adjoint is just identity
+	const struct linop_s* trafo = linop_from_ops(op_frw, op_adj, op_frw, NULL);
+
 	linop_free(lop_fft);
-
-	const struct linop_s* frw = linop_chain_FF(lop_fft2, lop_pattern);
-
+	linop_free(lop_pattern);
+	operator_free(op_frw);
+	operator_free(op_adj);
 
 	const struct nlop_s* nlw1 = nlop_tenmul_create(DIMS, data_dims, imgs_dims, coil_dims);
 
@@ -132,7 +119,7 @@ struct noir_s noir_create(const long dims[DIMS], const complex float* psf, const
 		nl = nlop_chain2_swap_FF(nlop_zreal, 0, nl, 0);
 	}
 
-	const struct nlop_s* nl2 = nlop_chain2_FF(nl, 0, nlop_from_linop_F(frw), 0);
+	const struct nlop_s* nl2 = nlop_chain2_FF(nl, 0, nlop_from_linop_F(trafo), 0);
 
 	struct nlop_s* nlop = (struct nlop_s*)nlop_attach(nl2, (void*)weights, noir_linop_del);
 	nlop_free(nl2);
