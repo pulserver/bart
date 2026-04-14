@@ -123,6 +123,9 @@ static void normal(iter_op_data* _data, float* _dst, const float* _src)
 
 	long col_size = data->size_x / 2 - md_calc_size(DIMS, img_dims);
 
+	if (0 == col_size)
+		return;
+
 	float alpha = data->alpha;
 
 	if (data->conf->no_sens_l2)

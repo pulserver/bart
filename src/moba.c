@@ -123,6 +123,7 @@ int main_moba(int argc, char* argv[argc])
 	const char* input_b1 = NULL;
 	const char* input_b0 = NULL;
 	const char* input_sens = NULL;
+	const char* fixed_sens = NULL;
 	const char* input_TE = NULL;
 
 	struct moba_conf conf = moba_defaults;
@@ -247,6 +248,7 @@ int main_moba(int argc, char* argv[argc])
 		OPTL_INT(0, "multi-gpu", &(conf.num_gpu), "num", "(number of gpus to use)"),
 		OPT_INFILE('I', &init_file, "init", "File for initialization"),
 		OPT_INFILE('t', &traj_file, "traj", "K-space trajectory"),
+		OPTL_INFILE(0, "sens", &fixed_sens, "sens", "Use precomputed sensitivities"),
 		OPT_FLOAT('o', &oversampling, "os", "Oversampling factor for gridding [default: 1.]"),
 		OPTL_VEC3('x', "img_dims", &img_vec, "x:y:z", "dimensions"),
 		OPT_SET('k', &conf.k_filter, "k-space edge filter for non-Cartesian trajectories"),
@@ -476,38 +478,57 @@ int main_moba(int argc, char* argv[argc])
 	complex float* img = create_cfl(out_file, DIMS, img_dims);
 	md_zfill(DIMS, img_dims, img, 1.);
 
+	long dims[DIMS];
+	md_copy_dims(DIMS, dims, grid_dims);
+
+	dims[COEFF_DIM] = img_dims[COEFF_DIM];
 
 	long coil_dims[DIMS];
 	md_select_dims(DIMS, FFT_FLAGS|COIL_FLAG|MAPS_FLAG|TIME_FLAG|SLICE_FLAG|TIME2_FLAG, coil_dims, grid_dims);
 
-	bool sensout = (NULL != sens_file);
-	complex float* sens = (sensout ? create_cfl : anon_cfl)(sens_file, DIMS, coil_dims);
+	complex float* sens = NULL;
 
-	// Input sensitivities
+	if (NULL != fixed_sens) {
 
-	const complex float* in_sens = NULL;
-	long in_sens_dims[DIMS];
+		long tmp_dims[DIMS];
 
+		sens = load_cfl(fixed_sens, DIMS, tmp_dims);
 
-	if (NULL != input_sens) {
+		assert(md_check_equal_dims(DIMS, tmp_dims, coil_dims, ~0UL));
+		assert(NULL == sens_file);
 
-		in_sens = load_cfl(input_sens, DIMS, in_sens_dims);
+		md_copy_dims(DIMS, tmp_dims, grid_dims);
+		md_select_dims(DIMS, ~COIL_FLAG, grid_dims, grid_dims);
 
-		assert(md_check_compat(DIMS, ~(FFT_FLAGS|COIL_FLAG), coil_dims, in_sens_dims));
+		complex float* adj = md_alloc_sameplace(DIMS, grid_dims, CFL_SIZE, cim);
 
-		md_copy(DIMS, coil_dims, sens, in_sens, CFL_SIZE);	// Why copy?
+		md_ztenmulc(DIMS, grid_dims, adj, tmp_dims, cim, coil_dims, sens);
+
+		md_free(cim);
+		cim = adj;
+
+		data.other.fixed_coil = true;
+
+	} else if (NULL != input_sens) {
+
+		sens = ((NULL != sens_file) ? create_cfl : anon_cfl)(sens_file, DIMS, coil_dims);
+
+		long in_sens_dims[DIMS];
+
+		const complex float* in_sens = load_cfl(input_sens, DIMS, in_sens_dims);
+
+		assert(md_check_equal_dims(DIMS, coil_dims, in_sens_dims, ~0UL));
+
+		md_copy(DIMS, coil_dims, sens, in_sens, CFL_SIZE);
 
 		unmap_cfl(DIMS, in_sens_dims, in_sens);
 
 	} else {
 
+		sens = ((NULL != sens_file) ? create_cfl : anon_cfl)(sens_file, DIMS, coil_dims);
+
 		md_clear(DIMS, coil_dims, sens, CFL_SIZE);
 	}
-
-	long dims[DIMS];
-	md_copy_dims(DIMS, dims, grid_dims);
-
-	dims[COEFF_DIM] = img_dims[COEFF_DIM];
 
 
 	if (conf.k_filter) {

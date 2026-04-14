@@ -83,6 +83,7 @@ struct moba_other_conf {
 	float b1_sobolev_a;
 	float b1_sobolev_b;
 
+	bool fixed_coil;
 	bool no_sens_l2;
 	bool no_sens_deriv;
 	bool export_ksp_coils;

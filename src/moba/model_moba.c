@@ -50,7 +50,7 @@
 
 
 struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const complex float* TE, const complex float* b1,
-		const complex float* b0, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, const long psf_dims[DIMS], const complex float* psf, const long coil_dims[DIMS], const struct noir_model_conf_s* conf, struct moba_conf_s* data,
+		const complex float* b0, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, const long psf_dims[DIMS], const complex float* psf, const long coil_dims[DIMS], complex float* coil, const struct noir_model_conf_s* conf, struct moba_conf_s* data,
 		float scaling_M0)
 {
 	long data_dims[DIMS];
@@ -59,7 +59,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 	struct noir_model_conf_s mconf = *conf;
 	mconf.sobolev_os = data->other.sobolev_os;
 
-	struct noir_s nlinv = noir_create(data_dims, coil_dims, psf_dims, psf, &mconf);
+	struct noir_s nlinv = noir_create(data_dims, coil_dims, coil, psf_dims, psf, &mconf);
 	struct mobamod ret;
 
 	// FIXME: unify them more
@@ -190,31 +190,21 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 
 	model = nlop_chain_FF(moba_precond_create(DIMS, in_dims, ret.linop_sobolev, data->other.scale, data->other.initval), model);
 
-	debug_print_dims(DP_INFO, DIMS, nlop_generic_domain(model, 0)->dims);
-	debug_print_dims(DP_INFO, DIMS, nlop_generic_codomain(model, 0)->dims);
-
-	debug_print_dims(DP_INFO, DIMS, nlop_generic_domain(nlinv.nlop, 0)->dims);
-	debug_print_dims(DP_INFO, DIMS, nlop_generic_domain(nlinv.nlop, 1)->dims);
-	debug_print_dims(DP_INFO, DIMS, nlop_generic_codomain(nlinv.nlop, 0)->dims);
+	debug_printf(DP_INFO, "Physics-");
+	nlop_debug(DP_INFO, model);
+	debug_printf(DP_INFO, "Encoding-");
+	nlop_debug(DP_INFO, nlinv.nlop);
 
 	const struct nlop_s* b = nlinv.nlop;
 
 	// Turn off coil derivative
-	if (data->other.no_sens_deriv)
-		b = nlop_no_der(b, 0, 1);
+	if (data->other.no_sens_deriv && !data->other.fixed_coil)
+		b = nlop_no_der_F(b, 0, 1);
 
-	const struct nlop_s* c = nlop_chain2(model, 0, b, 0);
-	nlop_free(b);
+	b = nlop_prepend_FF(model, b, 0);
 
-	nlinv.nlop = nlop_permute_inputs(c, 2, (const int[2]){ 1, 0 });
-
-	nlop_free(c);
-
-	ret.nlop = nlop_flatten(nlinv.nlop);
+	ret.nlop = nlop_flatten_F(b);
 	ret.linop = nlinv.linop;
-
-	nlop_free(nlinv.nlop);
-	nlop_free(model);
 
 	return ret;
 }

@@ -55,7 +55,7 @@ static void noir_linop_del(const void* _data)
 	linop_free(_data);
 }
 
-struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], const long pat_dims[DIMS], const complex float* psf, const struct noir_model_conf_s* conf)
+struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], complex float* coil, const long pat_dims[DIMS], const complex float* psf, const struct noir_model_conf_s* conf)
 {
 
 	long data_dims[DIMS];
@@ -71,6 +71,9 @@ struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], con
 
 	const struct linop_s* lop_fft = linop_fft_create(DIMS, data_dims, conf->fft_flags);
 
+	if (!md_check_equal_dims(DIMS, data_red_dims, data_dims, ~0UL))
+		lop_fft = linop_chain_FF(linop_resize_center_create(DIMS, data_dims, data_red_dims), lop_fft);
+
 	long fft_dims[DIMS];
 	md_select_dims(DIMS, FFT_FLAGS, fft_dims, data_dims);
 
@@ -79,11 +82,28 @@ struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], con
 	fftscale(DIMS, fft_dims, FFT_FLAGS, fft_mod, fft_mod);
 	fftmod(DIMS, fft_dims, FFT_FLAGS, fft_mod, fft_mod);
 
-	lop_fft = linop_chain_FF(linop_cdiag_create(DIMS, data_dims, FFT_FLAGS, fft_mod), lop_fft);
+	long fft_red_dims[DIMS];
+	md_select_dims(DIMS, FFT_FLAGS, fft_red_dims, data_red_dims);
+
+	complex float* fft_red_mod = md_alloc_sameplace(DIMS, fft_red_dims, CFL_SIZE, coil);
+	md_resize_center(DIMS, fft_red_dims, fft_red_mod, fft_dims, fft_mod, CFL_SIZE);
 	md_free(fft_mod);
 
-	if (!md_check_equal_dims(DIMS, data_red_dims, data_dims, ~0UL))
-		lop_fft = linop_chain_FF(linop_resize_center_create(DIMS, data_dims, data_red_dims), lop_fft);
+	if (NULL == coil) {
+
+		lop_fft = linop_chain_FF(linop_cdiag_create(DIMS, data_red_dims, FFT_FLAGS, fft_red_mod), lop_fft);
+
+		md_free(fft_red_mod);
+
+	} else {
+
+		assert(md_check_compat(DIMS, md_nontriv_dims(DIMS, coil_dims), coil_dims, fft_red_dims));
+		md_zmul2(DIMS, coil_dims, MD_STRIDES(DIMS, coil_dims, CFL_SIZE), coil, MD_STRIDES(DIMS, coil_dims, CFL_SIZE), coil, MD_STRIDES(DIMS, fft_red_dims, CFL_SIZE), fft_red_mod);
+		md_free(fft_red_mod);
+
+		lop_fft = linop_chain_FF(linop_fmac_dims_create(DIMS, data_red_dims, imgs_dims, coil_dims, coil), lop_fft);
+	}
+
 
 	const struct linop_s* lop_pattern = linop_cdiag_create(DIMS, data_dims, md_nontriv_dims(DIMS, pat_dims), psf);
 
@@ -95,7 +115,7 @@ struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], con
 	};
 
 	const struct operator_s* op_frw = operator_chainN(3, ops);
-	const struct operator_s* op_adj = operator_identity_create(DIMS, data_red_dims);
+	const struct operator_s* op_adj = operator_identity_create(DIMS, coil ? imgs_dims : data_red_dims);
 
 	// This is an asymmetric operator,
 	// forward maps coil images to gridded coil images
@@ -107,11 +127,21 @@ struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], con
 	operator_free(op_frw);
 	operator_free(op_adj);
 
-	const struct nlop_s* nlw1 = nlop_tenmul_create(DIMS, data_red_dims, imgs_dims, coil_dims);
+	const struct linop_s* weights = NULL;
+	const struct nlop_s* nl = NULL;
 
-	const struct linop_s* weights = linop_noir_weights_create(DIMS, coil_dims, coil_dims, NULL, FFT_FLAGS, conf->sobolev_os, conf->a, conf->b, 1.);
-	const struct nlop_s* nlw2 = nlop_from_linop(weights);
-	const struct nlop_s* nl = nlop_chain2_FF(nlw2, 0, nlw1, 1);
+	if (NULL == coil) {
+
+		const struct nlop_s* nlw1 = nlop_tenmul_create(DIMS, data_red_dims, imgs_dims, coil_dims);
+
+		weights = linop_noir_weights_create(DIMS, coil_dims, coil_dims, NULL, FFT_FLAGS, conf->sobolev_os, conf->a, conf->b, 1.);
+		nl = nlop_chain2_FF(nlop_from_linop(weights), 0, nlw1, 1);
+		nl = nlop_chain2_FF(nl, 0, nlop_from_linop_F(trafo), 0);
+
+	} else {
+
+		nl = nlop_from_linop_F(trafo);
+	}
 
 	if (conf->rvc) {
 
@@ -119,10 +149,8 @@ struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], con
 		nl = nlop_chain2_swap_FF(nlop_zreal, 0, nl, 0);
 	}
 
-	const struct nlop_s* nl2 = nlop_chain2_FF(nl, 0, nlop_from_linop_F(trafo), 0);
-
-	struct nlop_s* nlop = (struct nlop_s*)nlop_attach(nl2, (void*)weights, noir_linop_del);
-	nlop_free(nl2);
+	struct nlop_s* nlop = (struct nlop_s*)nlop_attach(nl, (void*)weights, noir_linop_del);
+	nlop_free(nl);
 
 	return (struct noir_s){ .nlop = nlop, .linop = weights };
 }

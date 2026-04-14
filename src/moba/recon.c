@@ -248,7 +248,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 	case MDB_BLOCH:
 	case MDB_IR_MGRE:
 
-		nl = moba_create(dims, TI, TE_IR_MGRE, b1, b0, conf->scale_fB0, conf->mgre_model, conf->fat_spec, pat_dims, pattern, coil_dims, &mconf, data, conf->scaling_M0);
+		nl = moba_create(dims, TI, TE_IR_MGRE, b1, b0, conf->scale_fB0, conf->mgre_model, conf->fat_spec, pat_dims, pattern, coil_dims, (data->other.fixed_coil) ? sens : NULL, &mconf, data, conf->scaling_M0);
 		break;
 	}
 
@@ -276,7 +276,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 	}
 
 	long skip = md_calc_size(DIMS, imgs_dims);
-	long size = skip + md_calc_size(DIMS, coil_dims);
+	long size = skip + (!data->other.fixed_coil ? md_calc_size(DIMS, coil_dims) : 0);
 	long data_size = md_calc_size(DIMS, data_dims);
 
 	long d1[1] = { size };
@@ -285,7 +285,9 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 	complex float* x_ref = md_alloc_sameplace(1, d1, CFL_SIZE, kspace_data);
 
 	md_copy(DIMS, imgs_dims, x, img, CFL_SIZE);
-	md_copy(DIMS, coil_dims, x + skip, sens, CFL_SIZE);
+
+	if (!data->other.fixed_coil)
+		md_copy(DIMS, coil_dims, x + skip, sens, CFL_SIZE);
 
 	//reference
 	md_zsmul(1, MD_DIMS(size), x_ref, x, conf->damping);
@@ -345,7 +347,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 
 	md_copy(DIMS, imgs_dims, img, x, CFL_SIZE);
 
-	if (NULL != sens) {
+	if (NULL != sens && !data->other.fixed_coil) {
 
 		if (data->other.export_ksp_coils) {
 

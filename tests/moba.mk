@@ -613,7 +613,26 @@ tests/test-moba-ir-meco-5para-traj: traj reshape scale phantom signal extract sl
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
-TESTS += tests/test-moba-t1 tests/test-moba-t2
+tests/test-moba-pics: traj calc scale phantom slice zeros moba pics nrmse resize rss mip
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)		;\
+	$(TOOLDIR)/traj -r -x24 -y24 t.ra			;\
+	$(TOOLDIR)/phantom -s4 -k -tt.ra ksp.ra			;\
+	$(TOOLDIR)/resize -c 1 16 t.ra t.ra			;\
+	$(TOOLDIR)/resize -c 1 16 ksp.ra ksp.ra			;\
+	$(TOOLDIR)/phantom -x24 -S4 coil.ra			;\
+	$(TOOLDIR)/rss 8 coil.ra scl.ra				;\
+	$(TOOLDIR)/mip 7 scl.ra scl.ra				;\
+	$(TOOLDIR)/scale 0.0001 scl.ra scl.ra			;\
+	$(TOOLDIR)/calc zdiv coil.ra scl.ra coil.ra		;\
+	$(TOOLDIR)/pics -w1 -t t.ra ksp.ra coil.ra img.ra	;\
+	$(TOOLDIR)/zeros 1 1 TE.ra				;\
+	$(TOOLDIR)/moba -j0. -x24:24:1 --other pinit=0:0 -i20 -l1 -C10 -tt.ra --scale_data=1 --scale_psf=1 --sens coil.ra -T ksp.ra TE.ra img2.ra	;\
+	$(TOOLDIR)/slice 6 0 img2.ra img2.ra			;\
+	$(TOOLDIR)/nrmse -t0.1 img2.ra img.ra			;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
+TESTS += tests/test-moba-t1 tests/test-moba-t2 tests/test-moba-pics
 
 TESTS_SLOW += tests/test-moba-t1-sms tests/test-moba-t1-no-IR
 TESTS_SLOW += tests/test-moba-t1-magn tests/test-moba-t1-nonCartesian

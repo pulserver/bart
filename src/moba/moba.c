@@ -55,6 +55,7 @@ struct moba_conf moba_defaults = {
 
 struct moba_other_conf moba_other_defaults = {
 
+	.fixed_coil = false,
 	.sobolev_os = 1.f,
         .fov_reduction_factor = 1.,
         .scale = { 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1. },
