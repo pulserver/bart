@@ -51,30 +51,13 @@ struct noir_model_conf_s noir_model_conf_defaults = {
 };
 
 
-
-struct noir_op_s {
-
-	nlop_data_t super;
-
-	const struct linop_s* weights;
-	const struct linop_s* frw;
-
-	const struct nlop_s* nl;
-	/*const*/ struct nlop_s* nl2;
-
-	struct noir_model_conf_s conf;
-};
-
-
-DEF_TYPEID(noir_op_s);
-
-static struct noir_op_s* noir_init(const long dims[DIMS], const complex float* mask, const complex float* psf, const struct noir_model_conf_s* conf)
+static void noir_linop_del(const void* _data)
 {
-	PTR_ALLOC(struct noir_op_s, data);
-	SET_TYPEID(noir_op_s, data);
+	linop_free(_data);
+}
 
-
-	data->conf = *conf;
+struct noir_s noir_create(const long dims[DIMS], const complex float* mask, const complex float* psf, const struct noir_model_conf_s* conf)
+{
 
 	long data_dims[DIMS];
 	long coil_dims[DIMS];
@@ -106,7 +89,7 @@ static struct noir_op_s* noir_init(const long dims[DIMS], const complex float* m
 
 	md_free(wghts);
 
-	data->weights = linop_chain_FF(lop_wghts, lop_wghts_ifft);
+	const struct linop_s* weights = linop_chain_FF(lop_wghts, lop_wghts_ifft);
 
 
 
@@ -161,56 +144,29 @@ static struct noir_op_s* noir_init(const long dims[DIMS], const complex float* m
 	linop_free(lop_mask);
 	linop_free(lop_fft);
 
-	data->frw = linop_chain_FF(lop_fft2, lop_pattern);
+	const struct linop_s* frw = linop_chain_FF(lop_fft2, lop_pattern);
 
 
 	const struct nlop_s* nlw1 = nlop_tenmul_create(DIMS, data_dims, imgs_dims, coil_dims);
-	const struct nlop_s* nlw2 = nlop_from_linop(data->weights);
-	data->nl = nlop_chain2_FF(nlw2, 0, nlw1, 1);
+	const struct nlop_s* nlw2 = nlop_from_linop(weights);
+	const struct nlop_s* nl = nlop_chain2_FF(nlw2, 0, nlw1, 1);
 
 	if (conf->rvc) {
 
 		const struct nlop_s* nlop_zreal = nlop_from_linop_F(linop_zreal_create(DIMS, imgs_dims));
-		data->nl = nlop_chain2_swap_FF(nlop_zreal, 0, data->nl, 0);
+		nl = nlop_chain2_swap_FF(nlop_zreal, 0, nl, 0);
 	}
 
-	const struct nlop_s* frw = nlop_from_linop(data->frw);
-	data->nl2 = nlop_chain2(data->nl, 0, frw, 0);
+	const struct nlop_s* nl2 = nlop_chain2_FF(nl, 0, nlop_from_linop_F(frw), 0);
 
-	nlop_free(frw);
+	struct nlop_s* nlop = (struct nlop_s*)nlop_attach(nl2, (void*)weights, noir_linop_del);
+	nlop_free(nl2);
 
-	return PTR_PASS(data);
-}
-
-static void noir_free(struct noir_op_s* data)
-{
-	linop_free(data->frw);
-	linop_free(data->weights);
-
-	nlop_free(data->nl);
-	nlop_free(data->nl2);
-
-	xfree(data);
-}
-
-static void noir_del(const void* _data)
-{
-	noir_free(CAST_DOWN(noir_op_s, (const nlop_data_t*)_data));
+	return (struct noir_s){ .nlop = nlop, .linop = weights };
 }
 
 void noir_forw_coils(const struct linop_s* op, complex float* dst, const complex float* src)
 {
 	linop_forward_unchecked(op, dst, src);
-}
-
-
-
-
-
-struct noir_s noir_create(const long dims[DIMS], const complex float* mask, const complex float* psf, const struct noir_model_conf_s* conf)
-{
-	struct noir_op_s* data = noir_init(dims, mask, psf, conf);
-	struct nlop_s* nlop = (struct nlop_s*)nlop_attach(data->nl2, data, noir_del);
-	return (struct noir_s){ .nlop = nlop, .linop = data->weights, .noir_op = data };
 }
 
