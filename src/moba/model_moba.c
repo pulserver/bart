@@ -50,7 +50,7 @@
 
 
 struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const complex float* TE, const complex float* b1,
-		const complex float* b0, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, const long psf_dims[DIMS], const complex float* psf, const struct noir_model_conf_s* conf, struct moba_conf_s* data,
+		const complex float* b0, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, const long psf_dims[DIMS], const complex float* psf, const long coil_dims[DIMS], const struct noir_model_conf_s* conf, struct moba_conf_s* data,
 		float scaling_M0)
 {
 	long data_dims[DIMS];
@@ -59,7 +59,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 	struct noir_model_conf_s mconf = *conf;
 	mconf.sobolev_os = data->other.sobolev_os;
 
-	struct noir_s nlinv = noir_create(data_dims, psf_dims, psf, &mconf);
+	struct noir_s nlinv = noir_create(data_dims, coil_dims, psf_dims, psf, &mconf);
 	struct mobamod ret;
 
 	// FIXME: unify them more

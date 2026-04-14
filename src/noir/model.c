@@ -43,7 +43,6 @@ struct noir_model_conf_s noir_model_conf_defaults = {
 
 	.sobolev_os = 1.f,
 	.fft_flags = FFT_FLAGS,
-	.cnstcoil_flags = 0u,
 	.rvc = false,
 	.noncart = false,
 	.a = 220.,
@@ -56,15 +55,13 @@ static void noir_linop_del(const void* _data)
 	linop_free(_data);
 }
 
-struct noir_s noir_create(const long dims[DIMS], const long pat_dims[DIMS], const complex float* psf, const struct noir_model_conf_s* conf)
+struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], const long pat_dims[DIMS], const complex float* psf, const struct noir_model_conf_s* conf)
 {
 
 	long data_dims[DIMS];
 	long data_red_dims[DIMS];
-	long coil_dims[DIMS];
 	long imgs_dims[DIMS];
 
-	md_select_dims(DIMS, ~conf->cnstcoil_flags, coil_dims, dims);
 	md_select_dims(DIMS, ~COIL_FLAG, imgs_dims, dims);
 	md_select_dims(DIMS, ~MAPS_FLAG, data_red_dims, dims);
 

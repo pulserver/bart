@@ -10,7 +10,6 @@ struct noir_model_conf_s {
 
 	float sobolev_os;
 	unsigned int fft_flags;
-	unsigned int cnstcoil_flags;
 	bool rvc;
 	bool noncart;
 	float a;
@@ -27,4 +26,4 @@ struct noir_s {
 	const struct linop_s* linop;
 };
 
-extern struct noir_s noir_create(const long dims[DIMS], const long pat_dims[DIMS], const complex float* psf, const struct noir_model_conf_s* conf);
+extern struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], const long pat_dims[DIMS], const complex float* psf, const struct noir_model_conf_s* conf);

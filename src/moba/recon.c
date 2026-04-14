@@ -233,7 +233,6 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 	mconf.fft_flags = fft_flags;
 	mconf.a = conf->sobolev_a;
 	mconf.b = conf->sobolev_b;
-	mconf.cnstcoil_flags = TE_FLAG | CSHIFT_FLAG;
 
 	struct mobamod nl = { };
 
@@ -249,7 +248,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 	case MDB_BLOCH:
 	case MDB_IR_MGRE:
 
-		nl = moba_create(dims, TI, TE_IR_MGRE, b1, b0, conf->scale_fB0, conf->mgre_model, conf->fat_spec, pat_dims, pattern, &mconf, data, conf->scaling_M0);
+		nl = moba_create(dims, TI, TE_IR_MGRE, b1, b0, conf->scale_fB0, conf->mgre_model, conf->fat_spec, pat_dims, pattern, coil_dims, &mconf, data, conf->scaling_M0);
 		break;
 	}
 
@@ -373,21 +372,8 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 }
 
 
-void moba_recon(const struct moba_conf* conf, struct moba_conf_s* data, const long dims[DIMS], complex float* img, complex float* sens, const long pat_dims[DIMS], const complex float* pattern, const complex float* TI, const complex float* TE, const complex float* b1, const complex float* b0, const complex float* kspace_data, const complex float* init)
+void moba_recon(const struct moba_conf* conf, struct moba_conf_s* data, const long dims[DIMS], const long imgs_dims[DIMS], complex float* img, const long coil_dims[DIMS], complex float* sens, const long pat_dims[DIMS], const complex float* pattern, const complex float* TI, const complex float* TE, const complex float* b1, const complex float* b0, const long data_dims[DIMS], const complex float* kspace_data, const complex float* init)
 {
-	long imgs_dims[DIMS];
-	long coil_dims[DIMS];
-	long data_dims[DIMS];
-
-	unsigned long fft_flags = FFT_FLAGS;
-
-	if (conf->sms)
-		fft_flags |= SLICE_FLAG;
-
-	md_select_dims(DIMS, fft_flags|MAPS_FLAG|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, imgs_dims, dims);
-	md_select_dims(DIMS, fft_flags|COIL_FLAG|MAPS_FLAG|TIME_FLAG|TIME2_FLAG, coil_dims, dims);
-	md_select_dims(DIMS, fft_flags|COIL_FLAG|TE_FLAG|MAPS_FLAG|CSHIFT_FLAG|TIME_FLAG|TIME2_FLAG, data_dims, dims);
-
 	switch (conf->mode) {
 
 	case MDB_T1:
