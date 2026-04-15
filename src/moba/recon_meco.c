@@ -298,9 +298,10 @@ void meco_recon(const struct moba_conf* moba_conf, struct moba_conf_s* data,
 
 		struct noir_model_conf_s mconf = noir_model_conf_defaults;
 		mconf.noncart = moba_conf->noncartesian;
-		mconf.fft_flags = fft_flags;
 		mconf.a = moba_conf->sobolev_a;
 		mconf.b = moba_conf->sobolev_b;
+		mconf.sms = moba_conf->sms;
+		mconf.sos = moba_conf->sos;
 
 		struct mobamod nl = moba_create(dims_1s, TE, NULL, NULL, NULL, scale_fB0, sel_model, fat_spec, P_1s_dims, P_ptr, sens_1s_dims, (data->other.fixed_coil) ? sens_ptr : NULL, &mconf, data, 1.0);
 

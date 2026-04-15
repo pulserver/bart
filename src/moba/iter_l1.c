@@ -146,7 +146,7 @@ static void pos_value(iter_op_data* _data, float* dst, const float* src)
 	md_calc_strides(DIMS, strs, img_dims, CFL_SIZE);
 
 	long dims1[DIMS];
-	md_select_dims(DIMS, FFT_FLAGS, dims1, img_dims);
+	md_select_dims(DIMS, ~COEFF_FLAG, dims1, img_dims);
 
 	long pos[DIMS] = { };
 
@@ -159,7 +159,7 @@ static void pos_value(iter_op_data* _data, float* dst, const float* src)
 			strs, &MD_ACCESS(DIMS, strs, pos, (const complex float*)src),
 			data->conf->lower_bound);
 
-	} while (md_next(DIMS, img_dims, ~FFT_FLAGS, pos));
+	} while (md_next(DIMS, img_dims, COEFF_FLAG, pos));
 }
 
 
@@ -337,7 +337,7 @@ static void inverse_admm(iter_op_data* _data, float alpha, float* dst, const flo
 }
 
 
-static const struct operator_p_s* create_prox(const long img_dims[DIMS], unsigned long jflag, float lambda)
+static const struct operator_p_s* create_prox(const long img_dims[DIMS], unsigned long wav_flags, unsigned long jflag, float lambda)
 {
 	bool randshift = true;
 	long minsize[DIMS] = { [0 ... DIMS - 1] = 1 };
@@ -345,7 +345,7 @@ static const struct operator_p_s* create_prox(const long img_dims[DIMS], unsigne
 
 	for (int i = 0; i < DIMS; i++) {
 
-		if ((1 < img_dims[i]) && MD_IS_SET(FFT_FLAGS, i)) {
+		if ((1 < img_dims[i]) && MD_IS_SET(wav_flags, i)) {
 
 			wflags = MD_SET(wflags, i);
 			minsize[i] = MIN(img_dims[i], 16);
@@ -426,13 +426,13 @@ static const struct operator_p_s* T1inv_p_create(const struct mdb_irgnm_l1_conf*
 	red_dims[COEFF_DIM] = bitcount(conf->wavflags & (MD_BIT(img_dims[COEFF_DIM]) - 1));
         debug_printf(DP_DEBUG2, "nr. of penalized maps: %ld\n", red_dims[COEFF_DIM]);
 
-	auto prox1 = create_prox(red_dims, COEFF_FLAG, conf->l1val);
+	auto prox1 = create_prox(red_dims, conf->wav_trans_flags, COEFF_FLAG, conf->l1val);
 	auto prox2 = operator_p_ref(prox1);
 	prox2 = prox_select_maps_F(DIMS, img_dims, conf->wavflags, prox2);
 
 	if (conf->auto_norm) {
 
-		auto prox3 = op_p_auto_normalize(prox2, ~(COEFF_FLAG | TIME_FLAG | TIME2_FLAG | SLICE_FLAG), NORM_L2);
+		auto prox3 = op_p_auto_normalize(prox2, ~((COEFF_FLAG | TIME_FLAG | TIME2_FLAG | SLICE_FLAG) & ~conf->wav_trans_flags), NORM_L2);
 
 		operator_p_free(prox2);
 

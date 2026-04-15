@@ -69,8 +69,8 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 	long TI_dims[DIMS];
 	long TE_dims[DIMS];
 
-	md_select_dims(DIMS, conf->fft_flags|TE_FLAG|CSHIFT_FLAG|TIME_FLAG|TIME2_FLAG, out_dims, dims);
-	md_select_dims(DIMS, conf->fft_flags|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, in_dims, dims);
+	md_select_dims(DIMS, FFT_FLAGS|SLICE_FLAG|TE_FLAG|CSHIFT_FLAG|TIME_FLAG|TIME2_FLAG, out_dims, dims);
+	md_select_dims(DIMS, FFT_FLAGS|SLICE_FLAG|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, in_dims, dims);
 	md_select_dims(DIMS, TE_FLAG|TIME_FLAG|TIME2_FLAG, TI_dims, dims);
 	md_select_dims(DIMS, CSHIFT_FLAG|TIME_FLAG|TIME2_FLAG, TE_dims, dims);
 	md_select_dims(DIMS, ~COEFF_FLAG, map_dims, in_dims);
@@ -96,6 +96,8 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 	for (int i = 0; i < (int)ARRAY_SIZE(ret.linop_sobolev); i++)
 		ret.linop_sobolev[i] = NULL;
 
+	unsigned long sobolev_trafo_flags = mconf.sos ? FFT_FLAGS | SLICE_FLAG : FFT_FLAGS;
+
 	switch (data->model) {
 
 	case MDB_MGRE:
@@ -107,7 +109,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 		}
 
 		if (0. != scale_fB0[0])
-			ret.linop_sobolev[NC - 1] = linop_chain_FF(linop_noir_weights_create(DIMS, map_dims, map_dims, NULL, FFT_FLAGS, data->other.sobolev_os, scale_fB0[0], scale_fB0[1], 1), linop_zreal_create(DIMS, map_dims));
+			ret.linop_sobolev[NC - 1] = linop_chain_FF(linop_noir_weights_create(DIMS, map_dims, map_dims, NULL, sobolev_trafo_flags, data->other.sobolev_os, scale_fB0[0], scale_fB0[1], 1), linop_zreal_create(DIMS, map_dims));
 
 		model = nlop_meco_create(DIMS, out_dims2, in_dims2, TI/*TI is used as TE*/, meco_model, fat_spec);
 
@@ -133,7 +135,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 	case MDB_T1_PHY:
 
 		if (0. != data->other.b1_sobolev_a)
-			ret.linop_sobolev[2] = linop_chain_FF(linop_noir_weights_create(DIMS, map_dims, map_dims, NULL, FFT_FLAGS, data->other.sobolev_os, data->other.b1_sobolev_a, data->other.b1_sobolev_b, 1.), linop_zreal_create(DIMS, map_dims));
+			ret.linop_sobolev[2] = linop_chain_FF(linop_noir_weights_create(DIMS, map_dims, map_dims, NULL, sobolev_trafo_flags, data->other.sobolev_os, data->other.b1_sobolev_a, data->other.b1_sobolev_b, 1.), linop_zreal_create(DIMS, map_dims));
 
 		model = nlop_T1_phy_create(DIMS, out_dims2, in_dims2, TI_dims, TI, data);
 		break;
@@ -141,7 +143,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 	case MDB_IR_MGRE:
 
 		if (0. != scale_fB0[0])
-			ret.linop_sobolev[NC - 1] = linop_chain_FF(linop_noir_weights_create(DIMS, map_dims, map_dims, NULL, FFT_FLAGS, data->other.sobolev_os, scale_fB0[0], scale_fB0[1], 1), linop_zreal_create(DIMS, map_dims));
+			ret.linop_sobolev[NC - 1] = linop_chain_FF(linop_noir_weights_create(DIMS, map_dims, map_dims, NULL, sobolev_trafo_flags, data->other.sobolev_os, scale_fB0[0], scale_fB0[1], 1), linop_zreal_create(DIMS, map_dims));
 
 		model = nlop_ir_meco_create(DIMS, out_dims2, in_dims2, TI_dims, TI, TE_dims, TE, meco_model, fat_spec);
 		break;
@@ -149,7 +151,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 	case MDB_BLOCH:
 
 		if (0. != data->other.b1_sobolev_a)
-			ret.linop_sobolev[3] = linop_chain_FF(linop_noir_weights_create(DIMS, map_dims, map_dims, NULL, FFT_FLAGS, data->other.sobolev_os, data->other.b1_sobolev_a, data->other.b1_sobolev_b, 1.), linop_zreal_create(DIMS, map_dims));
+			ret.linop_sobolev[3] = linop_chain_FF(linop_noir_weights_create(DIMS, map_dims, map_dims, NULL, sobolev_trafo_flags, data->other.sobolev_os, data->other.b1_sobolev_a, data->other.b1_sobolev_b, 1.), linop_zreal_create(DIMS, map_dims));
 
 		// Turn off matching of T2 for IR FLASH
 

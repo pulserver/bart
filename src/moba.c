@@ -236,7 +236,8 @@ int main_moba(int argc, char* argv[argc])
 		OPT_FLOAT('f', &restrict_fov, "FOV", ""),
 		OPT_INFILE('p', &psf_file, "PSF", ""),
 		OPT_SET('J', &conf.stack_frames, "Stack frames for joint recon"),
-		OPT_SET('M', &conf.sms, "Simultaneous Multi-Slice reconstruction"),
+		OPTL_SET('M', "sms", &conf.sms, "Simultaneous Multi-Slice reconstruction"),
+		OPTL_SET(0, "sos", &conf.sos, "SoS reconstruction (FFTuc and Sobolev in slice dimension)"),
 		OPT_SET('O', &conf.out_origin_maps, "(Output original maps from reconstruction without post processing)"),
 		OPT_SET('g', &bart_use_gpu, "use gpu"),
 		OPTL_ULONG(0, "positive-maps", &conf.constrained_maps, "flag", "Maps with positivity constraint as FLAG!"),
@@ -480,6 +481,12 @@ int main_moba(int argc, char* argv[argc])
 			scaling *= sqrt((float)ksp_dims[SLICE_DIM]);
 	}
 
+	if (conf.sos) {
+
+		debug_printf(DP_INFO, "SoS Model-based reconstruction");
+		ifftuc(DIMS, grid_dims, SLICE_FLAG, cim, cim);
+	}
+
 	long img_dims[DIMS];
 
 	md_select_dims(DIMS, FFT_FLAGS|MAPS_FLAG|COEFF_FLAG|TIME_FLAG|SLICE_FLAG|TIME2_FLAG, img_dims, grid_dims);
@@ -697,9 +704,11 @@ int main_moba(int argc, char* argv[argc])
 
 		if (MD_IS_SET(sobolev_flag, i) && (NULL == init)) {
 
-			fftuc(DIMS, tmp_dims, FFT_FLAGS, tmp, tmp);
+			unsigned long flags = FFT_FLAGS | (conf.sos ? SLICE_FLAG : 0);
 
-			float scl = powf(data.other.sobolev_os, bitcount(md_nontriv_dims(DIMS, tmp_dims) & FFT_FLAGS) / 2.);
+			fftuc(DIMS, tmp_dims, flags, tmp, tmp);
+
+			float scl = powf(data.other.sobolev_os, bitcount(md_nontriv_dims(DIMS, tmp_dims) & flags) / 2.);
 			md_zsmul(DIMS, tmp_dims, tmp, tmp, scl);
 		}
 

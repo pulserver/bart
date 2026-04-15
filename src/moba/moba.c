@@ -29,6 +29,7 @@ struct moba_conf moba_defaults = {
 	.sobolev_b = 32.f,
 	.noncartesian = false,
 	.sms = false,
+	.sos = false,
         .k_filter = false,
 	.k_filter_type = EF1,
 	.auto_norm = false,

@@ -42,7 +42,8 @@
 struct noir_model_conf_s noir_model_conf_defaults = {
 
 	.sobolev_os = 1.f,
-	.fft_flags = FFT_FLAGS,
+	.sms = false,
+	.sos = false,
 	.rvc = false,
 	.noncart = false,
 	.a = 220.,
@@ -69,21 +70,30 @@ struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], com
 	md_copy_dims(3, data_dims, pat_dims);
 	assert(md_check_compat(DIMS, md_nontriv_dims(DIMS, data_dims), data_dims, pat_dims));
 
-	const struct linop_s* lop_fft = linop_fft_create(DIMS, data_dims, conf->fft_flags);
+	unsigned long fft_flags = FFT_FLAGS;
+	unsigned long fftuc_flags = FFT_FLAGS;
+
+	if (conf->sms || conf->sos)
+		fft_flags |= SLICE_FLAG;
+
+	if (conf->sos)
+		fftuc_flags |= SLICE_FLAG;
+
+	const struct linop_s* lop_fft = linop_fft_create(DIMS, data_dims, fft_flags);
 
 	if (!md_check_equal_dims(DIMS, data_red_dims, data_dims, ~0UL))
 		lop_fft = linop_chain_FF(linop_resize_center_create(DIMS, data_dims, data_red_dims), lop_fft);
 
 	long fft_dims[DIMS];
-	md_select_dims(DIMS, FFT_FLAGS, fft_dims, data_dims);
+	md_select_dims(DIMS, fftuc_flags, fft_dims, data_dims);
 
 	complex float* fft_mod = md_alloc(DIMS, fft_dims, CFL_SIZE);
 	md_zfill(DIMS, fft_dims, fft_mod, 1.);
-	fftscale(DIMS, fft_dims, FFT_FLAGS, fft_mod, fft_mod);
-	fftmod(DIMS, fft_dims, FFT_FLAGS, fft_mod, fft_mod);
+	fftscale(DIMS, fft_dims, fftuc_flags, fft_mod, fft_mod);
+	fftmod(DIMS, fft_dims, fftuc_flags, fft_mod, fft_mod);
 
 	long fft_red_dims[DIMS];
-	md_select_dims(DIMS, FFT_FLAGS, fft_red_dims, data_red_dims);
+	md_select_dims(DIMS, fftuc_flags, fft_red_dims, data_red_dims);
 
 	complex float* fft_red_mod = md_alloc_sameplace(DIMS, fft_red_dims, CFL_SIZE, coil);
 	md_resize_center(DIMS, fft_red_dims, fft_red_mod, fft_dims, fft_mod, CFL_SIZE);
@@ -91,7 +101,7 @@ struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], com
 
 	if (NULL == coil) {
 
-		lop_fft = linop_chain_FF(linop_cdiag_create(DIMS, data_red_dims, FFT_FLAGS, fft_red_mod), lop_fft);
+		lop_fft = linop_chain_FF(linop_cdiag_create(DIMS, data_red_dims, fftuc_flags, fft_red_mod), lop_fft);
 
 		md_free(fft_red_mod);
 
@@ -134,7 +144,7 @@ struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], com
 
 		const struct nlop_s* nlw1 = nlop_tenmul_create(DIMS, data_red_dims, imgs_dims, coil_dims);
 
-		weights = linop_noir_weights_create(DIMS, coil_dims, coil_dims, NULL, FFT_FLAGS, conf->sobolev_os, conf->a, conf->b, 1.);
+		weights = linop_noir_weights_create(DIMS, coil_dims, coil_dims, NULL, fftuc_flags, conf->sobolev_os, conf->a, conf->b, 1.);
 		nl = nlop_chain2_FF(nlop_from_linop(weights), 0, nlw1, 1);
 		nl = nlop_chain2_FF(nl, 0, nlop_from_linop_F(trafo), 0);
 

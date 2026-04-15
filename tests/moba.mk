@@ -18,6 +18,26 @@ tests/test-moba-t1: phantom signal fft ones index scale moba looklocker fmac nrm
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
+tests/test-moba-t1-sos: phantom signal fft ones index scale moba looklocker fmac nrmse transpose
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)	               		 	;\
+	$(TOOLDIR)/phantom -x16 -c circ.ra 		                  		;\
+	$(TOOLDIR)/signal -I -F -r0.005 -n100 --short-TR-LL-approx -1 1.12:1.12:1 -2 100:100:1 signal.ra	;\
+	$(TOOLDIR)/fmac circ.ra signal.ra image.ra					;\
+	$(TOOLDIR)/fft 3 image.ra k_space.ra						;\
+	$(TOOLDIR)/ones 6 16 16 1 1 1 100 psf.ra					;\
+	$(TOOLDIR)/index 5 100 tmp1.ra   						;\
+	$(TOOLDIR)/scale 0.005 tmp1.ra TI.ra                    	       		;\
+	$(TOOLDIR)/moba -L -i5 -f1 -C10 --other pinit=1:1:2:1 --scale_data=5000. --scale_psf=1000. --normalize_scaling -p psf.ra k_space.ra TI.ra reco1.ra sens1.ra	;\
+	$(TOOLDIR)/transpose 1 13 psf.ra psf.ra						;\
+	$(TOOLDIR)/transpose 1 13 k_space.ra k_space.ra					;\
+	$(TOOLDIR)/moba -L -i5 -f1 -C10 --other pinit=1:1:2:1 --sos --scale_data=5000. --scale_psf=1000. --normalize_scaling -p psf.ra k_space.ra TI.ra reco2.ra sens2.ra	;\
+	$(TOOLDIR)/transpose 1 13 reco2.ra reco2.ra					;\
+	$(TOOLDIR)/transpose 1 13 sens2.ra sens2.ra					;\
+	$(TOOLDIR)/nrmse -t 5.e-6 reco1.ra reco2.ra			    		;\
+	$(TOOLDIR)/nrmse -t 5.e-6 sens1.ra sens2.ra			    		;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
 
 tests/test-moba-t1-tv: phantom signal fft ones index scale moba looklocker fmac nrmse
 	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)	               		 	;\

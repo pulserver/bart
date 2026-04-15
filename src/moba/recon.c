@@ -218,21 +218,14 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 		const complex float* b0,
 		const long data_dims[DIMS], const complex float* kspace_data)
 {
-	unsigned long fft_flags = FFT_FLAGS;
-
-	if (conf->sms)
-		fft_flags |= SLICE_FLAG;
-
-	long img1_dims[DIMS];
-	md_select_dims(DIMS, fft_flags, img1_dims, dims);
-
 
 	struct noir_model_conf_s mconf = noir_model_conf_defaults;
 	mconf.rvc = false;
 	mconf.noncart = conf->noncartesian;
-	mconf.fft_flags = fft_flags;
 	mconf.a = conf->sobolev_a;
 	mconf.b = conf->sobolev_b;
+	mconf.sms = conf->sms;
+	mconf.sos = conf->sos;
 
 	struct mobamod nl = { };
 
@@ -320,6 +313,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 		.constrained_maps = (~0UL != conf->constrained_maps) ? conf->constrained_maps : get_constrained_maps(conf->mode, conf->mgre_model),
 		.auto_norm = conf->auto_norm,
 		.no_sens_l2 = data->other.no_sens_l2,
+		.wav_trans_flags = FFT_FLAGS | (conf->sos ? SLICE_FLAG : 0),
 		.algo = conf->algo,
 		.rho = conf->rho,
 		.ropts = conf->ropts,
@@ -331,13 +325,9 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 	set_regu_flags(&conf2, conf, data, imgs_dims[COEFF_DIM], nl.linop_sobolev);
 
 	long irgnm_conf_dims[DIMS];
-	md_select_dims(DIMS, fft_flags|MAPS_FLAG|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, irgnm_conf_dims, imgs_dims);
+	md_select_dims(DIMS, FFT_FLAGS|SLICE_FLAG|MAPS_FLAG|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, irgnm_conf_dims, imgs_dims);
 
 	irgnm_conf_dims[COIL_DIM] = coil_dims[COIL_DIM];
-
-	debug_printf(DP_INFO, "imgs_dims:\n\t");
-	debug_print_dims(DP_INFO, DIMS, irgnm_conf_dims);
-
 
 	mdb_irgnm_l1(&conf2,
 			irgnm_conf_dims,
