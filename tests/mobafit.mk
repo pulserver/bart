@@ -27,6 +27,7 @@ tests/test-mobafit-wfr2s: phantom signal fmac index scale extract mobafit saxpy 
 	$(TOOLDIR)/index 5 8 tmp1.ra                                      ;\
 	$(TOOLDIR)/scale 1.6 tmp1.ra tmp2.ra                              ;\
 	$(TOOLDIR)/extract 5 1 8 tmp2.ra TE.ra                            ;\
+	$(TOOLDIR)/scale 0.001 TE.ra TE.ra 	                          ;\
 	$(TOOLDIR)/mobafit -G -m1 TE.ra echoes.ra reco.ra                 ;\
 	$(TOOLDIR)/slice 6 0 reco.ra W.ra                                 ;\
 	$(TOOLDIR)/slice 6 1 reco.ra F.ra                                 ;\
@@ -44,10 +45,10 @@ tests/test-mobafit-wfr2s: phantom signal fmac index scale extract mobafit saxpy 
 	$(TOOLDIR)/scale -- 0.2 circ.ra fatfrac_ref.ra                    ;\
 	$(TOOLDIR)/nrmse -t 0.00001 fatfrac_ref.ra fatfrac_masked.ra      ;\
 	$(TOOLDIR)/fmac R2S.ra circ.ra R2S_masked.ra                      ;\
-	$(TOOLDIR)/scale -- 0.05 circ.ra R2S_ref.ra                       ;\
+	$(TOOLDIR)/scale -- 50 circ.ra R2S_ref.ra                         ;\
 	$(TOOLDIR)/nrmse -t 0.00001 R2S_ref.ra R2S_masked.ra         	  ;\
 	$(TOOLDIR)/fmac fB0.ra circ.ra fB0_masked.ra                      ;\
-	$(TOOLDIR)/scale -- 0.02 circ.ra fB0_ref.ra                       ;\
+	$(TOOLDIR)/scale -- 20 circ.ra fB0_ref.ra 	                  ;\
 	$(TOOLDIR)/nrmse -t 0.000002 fB0_ref.ra fB0_masked.ra             ;\
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@

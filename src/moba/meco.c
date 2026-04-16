@@ -207,7 +207,9 @@ static void calc_fat_modu(int N, const long dims[N], complex float* dst, const c
 
 		assert(0. == cimagf(TE[i]));
 
-		dst[i] = calc_fat_modulation(3.0, crealf(TE[i]) * 1.E-3, fat_spec); // FIXME: TE in SI units instead ms
+		float scl = use_compat_to_version("v1.0.00") ? 1.E-3 : 1.;
+
+		dst[i] = calc_fat_modulation(3.0, crealf(TE[i]) * scl, fat_spec); // FIXME: TE in SI units instead ms
 	}
 }
 

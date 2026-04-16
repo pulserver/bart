@@ -118,7 +118,8 @@ static void post_process(enum mdb_t mode, const struct linop_s* op, struct moba_
 			md_copy_block(DIMS, pos, map_dims, tmp, imgs_dims, img, CFL_SIZE);
 
 			// TE is provided in ms, therefore R2s*1000 transforms: [1/ms] -> [1/s]
-			md_zsmul(DIMS, map_dims, tmp, tmp, 1000.);
+			if (use_compat_to_version("v1.0.00"))
+				md_zsmul(DIMS, map_dims, tmp, tmp, 1000.);
 
 			md_copy_block(DIMS, pos, imgs_dims, img, map_dims, tmp, CFL_SIZE);
 		}
@@ -132,7 +133,8 @@ static void post_process(enum mdb_t mode, const struct linop_s* op, struct moba_
 		linop_forward_unchecked(op, tmp, tmp);
 
 		// TE is provided in ms, therefore B0*1000 transforms: [1/ms] -> [1/s]
-		md_zsmul(DIMS, map_dims, tmp, tmp, 1000.);
+		if (use_compat_to_version("v1.0.00"))
+			md_zsmul(DIMS, map_dims, tmp, tmp, 1000.);
 
 		md_copy_block(DIMS, pos, imgs_dims, img, map_dims, tmp, CFL_SIZE);
 		break;

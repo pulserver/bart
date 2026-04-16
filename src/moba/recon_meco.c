@@ -34,6 +34,7 @@
 #include "misc/mri.h"
 #include "misc/utils.h"
 #include "misc/debug.h"
+#include "misc/version.h"
 
 #include "nlops/nlop.h"
 
@@ -102,7 +103,8 @@ static void rescale_maps(int model, double scaling_Y, const struct linop_s* op, 
 
 	} else {
 
-		md_zsmul(DIMS, maps_dims, maps, maps, 1000.); // kHz --> Hz
+		if (use_compat_to_version("v1.0.00"))
+			md_zsmul(DIMS, maps_dims, maps, maps, 1000.); // kHz --> Hz
 
 		long nr_coeff = maps_dims[COEFF_DIM];
 

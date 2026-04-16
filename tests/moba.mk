@@ -167,7 +167,8 @@ tests/test-moba-meco-noncart-r2s: traj scale phantom signal fmac index extract m
 	$(TOOLDIR)/index 5 8 tmp1.ra                                      ;\
 	$(TOOLDIR)/scale 1.6 tmp1.ra tmp2.ra                              ;\
 	$(TOOLDIR)/extract 5 1 8 tmp2.ra TE.ra                            ;\
-	$(TOOLDIR)/moba -G -m3 -rQ:1 -rS:0 -rW:3:64:1 -i14 -C100 -u0.0001 -R3 --temporal_damping 0.9 -o1.5 -k --kfilter-2 -t traj.ra data.ra TE.ra reco.ra   ;\
+	$(TOOLDIR)/scale 0.001 TE.ra TE.ra                            ;\
+	$(TOOLDIR)/moba --other=pscale=1:100:100  -G -m3 -rQ:1 -rS:0 -rW:3:64:1 -i14 -C100 -u0.0001 -R3 --temporal_damping 0.9 -o1.5 -k --kfilter-2 -t traj.ra data.ra TE.ra reco.ra   ;\
 	$(TOOLDIR)/slice 6 1 reco.ra R2S.ra                               ;\
 	$(TOOLDIR)/resize -c 0 8 1 8 R2S.ra R2S_crop.ra                   ;\
 	$(TOOLDIR)/phantom -x8 -c circ.ra                                 ;\
@@ -189,7 +190,8 @@ tests/test-moba-meco-noncart-wfr2s: traj scale phantom signal fmac index extract
 	$(TOOLDIR)/index 5 8 tmp1.ra                                      ;\
 	$(TOOLDIR)/scale 1.6 tmp1.ra tmp2.ra                              ;\
 	$(TOOLDIR)/extract 5 1 8 tmp2.ra TE.ra                            ;\
-	$(TOOLDIR)/moba -G -m1 -rQ:1 -rS:0 -rW:3:64:1 -i12 -C100 -u0.0001 -R3 --temporal_damping 0.9 -o1.5 -k --kfilter-2 -t traj.ra data.ra TE.ra reco.ra   ;\
+	$(TOOLDIR)/scale 0.001 TE.ra TE.ra                            ;\
+	$(TOOLDIR)/moba -G -m1 --other=pscale=1:1:1000:1000  -rQ:1 -rS:0 -rW:3:64:1 -i12 -C100 -u0.0001 -R3 --temporal_damping 0.9 -o1.5 -k --kfilter-2 -t traj.ra data.ra TE.ra reco.ra   ;\
 	$(TOOLDIR)/resize -c 0 8 1 8 reco.ra reco_crop.ra                 ;\
 	$(TOOLDIR)/slice 6 0 reco_crop.ra W.ra                            ;\
 	$(TOOLDIR)/slice 6 1 reco_crop.ra F.ra                            ;\
@@ -538,11 +540,12 @@ tests/test-moba-ir-meco-traj: traj reshape scale phantom signal extract slice tr
 	$(TOOLDIR)/scale 1.6 tmp1.ra tmp2.ra						;\
 	$(TOOLDIR)/ones 10 1 1 1 1 1 1 1 1 1 7 tmp1.ra                                  ;\
 	$(TOOLDIR)/saxpy 1.6 tmp1.ra tmp2.ra out_TE.ra					;\
+	$(TOOLDIR)/scale 0.001 out_TE.ra out_TE.ra				;\
 	$(TOOLDIR)/index 5 54 tmp1.ra							;\
 	$(TOOLDIR)/scale 0.063500 tmp1.ra tmp2.ra					;\
 	$(TOOLDIR)/ones 6 1 1 1 1 1 54 tmp1.ra 						;\
 	$(TOOLDIR)/saxpy 0.0254 tmp1.ra tmp2.ra out_TI.ra				;\
-	$(TOOLDIR)/moba -i12 -d4 -D -g -m7 -R3 -o1.25 -C300 -k --kfilter-2 --normalize_scaling --scale_data 750 --scale_psf 500 -B0. --other pinit=1:1:1:0.5:0.5:1:0.05:0.05,pscale=1:1:1:0.5:0.5:1:0.05:0.05,echo=out_TE.ra -b 1:1 -t out_traj.ra data_0.ra out_TI.ra reco.ra sens.ra ;\
+	$(TOOLDIR)/moba -i12 -d4 -D -g -m7 -R3 -o1.25 -C300 -k --kfilter-2 --normalize_scaling --scale_data 750 --scale_psf 500 -B0. --other pinit=1:1:1:0.5:0.5:1:50:0,pscale=1:1:1:0.5:0.5:1:50:50,echo=out_TE.ra -b 1:1 -t out_traj.ra data_0.ra out_TI.ra reco.ra sens.ra ;\
 	$(TOOLDIR)/phantom -x 8 -c circ.ra						;\
 	$(TOOLDIR)/resize -c 0 8 1 8 reco.ra reco_maps.ra				;\
 	$(TOOLDIR)/extract 6 0 3 reco_maps.ra reco_w_maps.ra				;\
@@ -586,11 +589,12 @@ tests/test-moba-ir-meco-5para-traj: traj reshape scale phantom signal extract sl
 	$(TOOLDIR)/scale 1.6 tmp1.ra tmp2.ra						;\
 	$(TOOLDIR)/ones 10 1 1 1 1 1 1 1 1 1 7 tmp1.ra                                  ;\
 	$(TOOLDIR)/saxpy 1.6 tmp1.ra tmp2.ra out_TE.ra					;\
+	$(TOOLDIR)/scale 0.001 out_TE.ra out_TE.ra					;\
 	$(TOOLDIR)/index 5 54 tmp1.ra							;\
 	$(TOOLDIR)/scale 0.063500 tmp1.ra tmp2.ra					;\
 	$(TOOLDIR)/ones 6 1 1 1 1 1 54 tmp1.ra 						;\
 	$(TOOLDIR)/saxpy 0.0254 tmp1.ra tmp2.ra out_TI.ra				;\
-	$(TOOLDIR)/moba -i10 -d4 -g -D -m6 -R3 -o1.25 -C400 -k --kfilter-2 -e0.008 --normalize_scaling --scale_data 500 --scale_psf 500 -B0. --other pinit=1:1:1:0.05:0.0,pscale=1:1:1:0.05:0.05,echo=out_TE.ra -b 1:1 -t out_traj.ra data_0.ra out_TI.ra reco.ra sens.ra ;\
+	$(TOOLDIR)/moba -i10 -d4 -g -D -m6 -R3 -o1.25 -C400 -k --kfilter-2 -e0.008 --normalize_scaling --scale_data 500 --scale_psf 500 -B0. --other pinit=1:1:1:50:0.0,pscale=1:1:1:50:50,echo=out_TE.ra -b 1:1 -t out_traj.ra data_0.ra out_TI.ra reco.ra sens.ra ;\
 	$(TOOLDIR)/phantom -x 8 -c circ.ra						;\
 	$(TOOLDIR)/resize -c 0 8 1 8 reco.ra reco_maps.ra				;\
 	$(TOOLDIR)/extract 6 0 3 reco_maps.ra reco_w_maps.ra				;\

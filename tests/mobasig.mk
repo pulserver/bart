@@ -30,7 +30,7 @@ tests/test-mobasig-irll: ones scale mobasig zexp nrmse zeros cabs nrmse
 	touch $@
 
 
-tests/test-mobasig-irll-fit: phantom signal reshape fmac index ones saxpy scale mobafit mobasig nrmse 
+tests/test-mobasig-irll-fit: phantom signal reshape fmac index ones saxpy scale mobafit mobasig nrmse
 	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)			;\
 	$(TOOLDIR)/phantom -x32 -T -b tubes.ra				;\
 	$(TOOLDIR)/signal -F -I -1 2:2:1 -3.8:.8:11 -r0.41 -n30 sig.ra	;\
@@ -86,12 +86,13 @@ tests/test-mobasig-wfr2s: phantom signal extract fmac index scale mobafit mobasi
 	$(TOOLDIR)/index 5 8 tmp1.ra							;\
 	$(TOOLDIR)/scale 1.6 tmp1.ra tmp2.ra						;\
 	$(TOOLDIR)/extract 5 1 8 tmp2.ra TE.ra						;\
+	$(TOOLDIR)/scale 0.001 TE.ra TE.ra						;\
 	$(TOOLDIR)/mobafit -G -m1 TE.ra echoes.ra reco.ra				;\
 	$(TOOLDIR)/mobasig -G -m1 reco.ra TE.ra forward.ra				;\
 	$(TOOLDIR)/nrmse -t 0.0001 forward.ra echoes.ra			;\
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
-	
+
 TESTS += tests/test-mobasig-ir
 TESTS += tests/test-mobasig-irll
 TESTS += tests/test-mobasig-irll-fit
