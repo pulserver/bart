@@ -360,35 +360,60 @@ int main_moba(int argc, char* argv[argc])
 			debug_printf(DP_INFO, "Est. image size: %ld %ld %ld\n", img_vec[0], img_vec[1], img_vec[2]);
 		}
 
-		if (!use_compat_to_version("v0.7.00")) {
+		float scl_trj = 1.;
+		float scl_psf = 1.;
 
-			md_zsmul(DIMS, traj_dims, traj, traj, 2.);
+		NESTED(long, dbl, (long x)) { return (x > 1) ? (2 * x) : 1; };
 
-			NESTED(long, dbl, (long x)) { return (x > 1) ? (2 * x) : 1; };
-
-			grid_dims[READ_DIM] = dbl(img_vec[0]);
-			grid_dims[PHS1_DIM] = dbl(img_vec[1]);
-			grid_dims[PHS2_DIM] = dbl(img_vec[2]);
-
-		} else {
+		if (use_compat_to_version("v0.7.00")) {
 
 			long grid_size = ksp_dims[1] * oversampling;
 			grid_dims[READ_DIM] = grid_size;
 			grid_dims[PHS1_DIM] = grid_size;
 			grid_dims[PHS2_DIM] = 1L;
+
+		} else if (use_compat_to_version("v1.0.00")) {
+
+			md_zsmul(DIMS, traj_dims, traj, traj, 2.);
+
+			for (int i = 0; i < 3; i++)
+				grid_dims[i] = dbl(img_vec[i]);
+
+		} else {
+
+			scl_trj = 2.;
+			scl_psf = powf(2., bitcount(md_nontriv_dims(3, img_vec)));
+			data.other.sobolev_os = 2.;
+
+			for (int i = 0; i < 3; i++)
+				grid_dims[i] = img_vec[i];
 		}
 
 		if (-1 == restrict_fov)
-			restrict_fov = 0.5;
+			restrict_fov = 0.5 * scl_trj;
 
 		conf.noncartesian = true;
+
+		// Gridding raw data
 
 		struct nufft_conf_s nufft_conf = nufft_conf_defaults;
 		nufft_conf.toeplitz = false;
 
-		struct linop_s* nufft_op_k = NULL;
+		const struct linop_s* nufft_op_k = nufft_create(DIMS, ksp_dims, grid_dims, traj_dims, traj, NULL, nufft_conf);
+
+		cim = md_alloc_sameplace(DIMS, grid_dims, CFL_SIZE, kspace_data);
+
+		linop_adjoint(nufft_op_k, DIMS, grid_dims, cim, DIMS, ksp_dims, kspace_data);
+
+		linop_free(nufft_op_k);
 
 		md_select_dims(DIMS, FFT_FLAGS|TE_FLAG|CSHIFT_FLAG|TIME_FLAG|SLICE_FLAG|TIME2_FLAG, pat_dims, grid_dims);
+
+		if (2. == scl_trj)
+			for (int i = 0; i < 3; i++)
+				pat_dims[i] = dbl(pat_dims[i]);
+
+		md_zsmul(DIMS, traj_dims, traj, traj, scl_trj);
 
 		pattern = anon_cfl("", DIMS, pat_dims);
 
@@ -405,20 +430,12 @@ int main_moba(int argc, char* argv[argc])
 
 		psf = compute_psf(DIMS, pat_dims, traj_dims, traj, traj_dims, NULL, wgh_dims, wgh, false, false);
 
+		md_zsmul(DIMS, pat_dims, psf, psf, scl_psf);
+
 		fftuc(DIMS, pat_dims, FFT_FLAGS, pattern, psf);
 
 		md_free(wgh);
 		md_free(psf);
-
-		// Gridding raw data
-
-		nufft_op_k = nufft_create(DIMS, ksp_dims, grid_dims, traj_dims, traj, NULL, nufft_conf);
-
-		cim = md_alloc_sameplace(DIMS, grid_dims, CFL_SIZE, kspace_data);
-
-		linop_adjoint(nufft_op_k, DIMS, grid_dims, cim, DIMS, ksp_dims, kspace_data);
-
-		linop_free(nufft_op_k);
 
 		unmap_cfl(DIMS, ksp_dims, kspace_data);
 		unmap_cfl(DIMS, traj_dims, traj);
