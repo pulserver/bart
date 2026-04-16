@@ -412,7 +412,6 @@ void meco_recon(const struct moba_conf* moba_conf, struct moba_conf_s* data,
 			rescale_maps(sel_model, scaling_Y, nl.linop_alpha, maps_1s_dims, maps_ptr);
 
 			noir_forw_coils(nl.linop, sens_ptr, sens_ptr);
-			fftmod(DIMS, sens_1s_dims, mconf.fft_flags, sens_ptr, sens_ptr);
 		}
 
 		nlop_free(nl.nlop);

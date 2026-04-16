@@ -12,7 +12,6 @@
 
 #include "num/multind.h"
 #include "num/flpmath.h"
-#include "num/fft.h"
 
 #include "iter/iter3.h"
 
@@ -379,7 +378,6 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 
 			noir_forw_coils(nl.linop, x + skip, x + skip);
 			md_copy(DIMS, coil_dims, sens, x + skip, CFL_SIZE);
-			fftmod(DIMS, coil_dims, fft_flags, sens, sens);
 		}
 	}
 
