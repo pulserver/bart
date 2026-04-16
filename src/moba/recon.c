@@ -228,7 +228,6 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 		const long imgs_dims[DIMS], complex float* img,
 		const long coil_dims[DIMS], complex float* sens,
 		const complex float* pattern,
-		const complex float* mask,
 		const complex float* TI,
 		const complex float* TE_IR_MGRE,
 		const complex float* b1,
@@ -266,7 +265,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 	case MDB_BLOCH:
 	case MDB_IR_MGRE:
 
-		nl = moba_create(dims, mask, TI, TE_IR_MGRE, b1, b0, conf->scale_fB0, conf->mgre_model, conf->fat_spec, pattern, &mconf, data, conf->scaling_M0);
+		nl = moba_create(dims, TI, TE_IR_MGRE, b1, b0, conf->scale_fB0, conf->mgre_model, conf->fat_spec, pattern, &mconf, data, conf->scaling_M0);
 		break;
 	}
 
@@ -399,7 +398,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 }
 
 
-void moba_recon(const struct moba_conf* conf, struct moba_conf_s* data, const long dims[DIMS], complex float* img, complex float* sens, const complex float* pattern, const complex float* mask, const complex float* TI, const complex float* TE, const complex float* b1, const complex float* b0, const complex float* kspace_data, const complex float* init)
+void moba_recon(const struct moba_conf* conf, struct moba_conf_s* data, const long dims[DIMS], complex float* img, complex float* sens, const complex float* pattern, const complex float* TI, const complex float* TE, const complex float* b1, const complex float* b0, const complex float* kspace_data, const complex float* init)
 {
 	long imgs_dims[DIMS];
 	long coil_dims[DIMS];
@@ -424,12 +423,12 @@ void moba_recon(const struct moba_conf* conf, struct moba_conf_s* data, const lo
 	case MDB_BLOCH:
 	case MDB_IR_MGRE:
 
-		recon(conf, data, dims, imgs_dims, img, coil_dims, sens, pattern, mask, TI, TE, b1, b0, data_dims, kspace_data);
+		recon(conf, data, dims, imgs_dims, img, coil_dims, sens, pattern, TI, TE, b1, b0, data_dims, kspace_data);
 		break;
 
 	case MDB_MGRE:
 
-		meco_recon(conf, data, dims, conf->mgre_model, conf->fat_spec, conf->scale_fB0, true, conf->out_origin_maps, imgs_dims, img, coil_dims, sens, imgs_dims, init, mask, TI, pat_dims, pattern, data_dims, kspace_data);
+		meco_recon(conf, data, dims, conf->mgre_model, conf->fat_spec, conf->scale_fB0, true, conf->out_origin_maps, imgs_dims, img, coil_dims, sens, imgs_dims, init, TI, pat_dims, pattern, data_dims, kspace_data);
 		break;
 
 	default:

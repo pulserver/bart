@@ -50,14 +50,14 @@
 #include "model_moba.h"
 
 
-struct mobamod moba_create(const long dims[DIMS], const complex float* mask, const complex float* TI, const complex float* TE, const complex float* b1,
+struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const complex float* TE, const complex float* b1,
 		const complex float* b0, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, const complex float* psf, const struct noir_model_conf_s* conf, struct moba_conf_s* data,
 		float scaling_M0)
 {
 	long data_dims[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, data_dims, dims);
 
-	struct noir_s nlinv = noir_create(data_dims, mask, psf, conf);
+	struct noir_s nlinv = noir_create(data_dims, psf, conf);
 	struct mobamod ret;
 
 	// FIXME: unify them more

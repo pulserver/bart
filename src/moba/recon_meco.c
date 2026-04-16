@@ -32,6 +32,7 @@
 #include "misc/misc.h"
 #include "misc/types.h"
 #include "misc/mri.h"
+#include "misc/utils.h"
 #include "misc/debug.h"
 
 #include "nlops/nlop.h"
@@ -144,7 +145,6 @@ void meco_recon(const struct moba_conf* moba_conf, struct moba_conf_s* data,
 		const long maps_dims[DIMS], complex float* maps,
 		const long sens_dims[DIMS], complex float* sens,
 		const long init_dims[DIMS], const complex float* init,
-		const complex float* mask,
 		const complex float* TE,
 		const long P_dims[DIMS], const complex float* Pin,
 		const long Y_dims[DIMS], const complex float* Y)
@@ -222,14 +222,15 @@ void meco_recon(const struct moba_conf* moba_conf, struct moba_conf_s* data,
 		md_clear(DIMS, sens_1s_dims, sens_ptr, CFL_SIZE);
 	}
 
-	long mask_dims[DIMS];
-	md_select_dims(DIMS, FFT_FLAGS, mask_dims, maps_dims);
 
-	md_zmul2(DIMS, maps_1s_dims, MD_STRIDES(DIMS, maps_1s_dims, CFL_SIZE), maps_ptr,
-		MD_STRIDES(DIMS, maps_1s_dims, CFL_SIZE), maps_ptr,
-		MD_STRIDES(DIMS, mask_dims, CFL_SIZE), mask);
+	float restrict_dims[DIMS] = { [0 ... DIMS - 1] = 1. };
 
+	for (int i = 0; i < 3; i++)
+		restrict_dims[i] = data->other.fov_reduction_factor;
 
+	complex float* mask = compute_mask(DIMS, maps_1s_dims, restrict_dims);
+	md_zmul(DIMS, maps_1s_dims, maps_ptr, maps_ptr, mask);
+	md_free(mask);
 
 	// scaling of psf
 	//
@@ -299,7 +300,7 @@ void meco_recon(const struct moba_conf* moba_conf, struct moba_conf_s* data,
 		mconf.b = moba_conf->sobolev_b;
 		mconf.cnstcoil_flags = TE_FLAG;
 
-		struct mobamod nl = moba_create(dims_1s, mask, TE, NULL, NULL, NULL, scale_fB0, sel_model, fat_spec, P_ptr, &mconf, data, 1.0);
+		struct mobamod nl = moba_create(dims_1s, TE, NULL, NULL, NULL, scale_fB0, sel_model, fat_spec, P_ptr, &mconf, data, 1.0);
 
 
 		struct iter3_irgnm_conf irgnm_conf = iter3_irgnm_defaults;

@@ -56,7 +56,7 @@ static void noir_linop_del(const void* _data)
 	linop_free(_data);
 }
 
-struct noir_s noir_create(const long dims[DIMS], const complex float* mask, const complex float* psf, const struct noir_model_conf_s* conf)
+struct noir_s noir_create(const long dims[DIMS], const complex float* psf, const struct noir_model_conf_s* conf)
 {
 
 	long data_dims[DIMS];
@@ -67,9 +67,6 @@ struct noir_s noir_create(const long dims[DIMS], const complex float* mask, cons
 	md_select_dims(DIMS, ~conf->cnstcoil_flags, coil_dims, dims);
 	md_select_dims(DIMS, ~COIL_FLAG, imgs_dims, dims);
 	md_select_dims(DIMS, ~MAPS_FLAG, data_dims, dims);
-
-	long mask_dims[DIMS];
-	md_select_dims(DIMS, FFT_FLAGS, mask_dims, dims);
 
 	long wght_dims[DIMS];
 	md_select_dims(DIMS, FFT_FLAGS, wght_dims, dims);
@@ -124,24 +121,18 @@ struct noir_s noir_create(const long dims[DIMS], const complex float* mask, cons
 		lop_pattern = lop_tmp;
 	}
 
-	complex float* msk = md_alloc(DIMS, mask_dims, CFL_SIZE);
+	long fft_dims[DIMS];
+	md_select_dims(DIMS, FFT_FLAGS, fft_dims, dims);
 
-	if (NULL == mask) {
+	complex float* fft_mod = md_alloc(DIMS, fft_dims, CFL_SIZE);
+	md_zfill(DIMS, fft_dims, fft_mod, 1.);
+	fftscale(DIMS, fft_dims, FFT_FLAGS, fft_mod, fft_mod);
 
-		md_zfill(DIMS, mask_dims, msk, 1.);
+	const struct linop_s* lop_fftmod = linop_cdiag_create(DIMS, data_dims, FFT_FLAGS, fft_mod);
+	md_free(fft_mod);
 
-	} else {
-
-		md_copy(DIMS, mask_dims, msk, mask, CFL_SIZE);
-	}
-
-	fftscale(DIMS, mask_dims, FFT_FLAGS, msk, msk);
-
-	const struct linop_s* lop_mask = linop_cdiag_create(DIMS, data_dims, FFT_FLAGS, msk);
-	md_free(msk);
-
-	const struct linop_s* lop_fft2 = linop_chain(lop_mask, lop_fft);
-	linop_free(lop_mask);
+	const struct linop_s* lop_fft2 = linop_chain(lop_fftmod, lop_fft);
+	linop_free(lop_fftmod);
 	linop_free(lop_fft);
 
 	const struct linop_s* frw = linop_chain_FF(lop_fft2, lop_pattern);

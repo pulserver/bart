@@ -389,13 +389,6 @@ int main_moba(int argc, char* argv[argc])
 
 	dims[COEFF_DIM] = img_dims[COEFF_DIM];
 
-	long msk_dims[DIMS];
-	md_select_dims(DIMS, FFT_FLAGS, msk_dims, grid_dims);
-
-	long msk_strs[DIMS];
-	md_calc_strides(DIMS, msk_strs, msk_dims, CFL_SIZE);
-
-	complex float* mask = NULL;
 	bool sensout = (NULL != sens_file);
 	complex float* sens = (sensout ? create_cfl : anon_cfl)(sens_file, DIMS, coil_dims);
 
@@ -603,33 +596,28 @@ int main_moba(int argc, char* argv[argc])
 
 	// mask
 
-	// Idea:        Speed up md-function based nlops by skipping zero parts,
-	//              not required for Bloch model, because other_conf.fov_reduction_factor
-	//              constrains the k-space coverage there
+	if (-1. != restrict_fov) {
 
-	if (-1. == restrict_fov) {
-
-		mask = md_alloc(DIMS, msk_dims, CFL_SIZE);
-
-		md_zfill(DIMS, msk_dims, mask, 1.);
-
-		data.other.fov_reduction_factor = 1;
-
-	} else {
+		// mask is not needed since we compute the model only on the restricted FOV
 
 		float restrict_dims[DIMS] = { [0 ... DIMS - 1] = 1. };
 		restrict_dims[0] = restrict_fov;
 		restrict_dims[1] = restrict_fov;
 		restrict_dims[2] = restrict_fov;
 
-		mask = compute_mask(DIMS, msk_dims, restrict_dims);
+		long msk_dims[DIMS];
+		md_select_dims(DIMS, FFT_FLAGS, msk_dims, img_dims);
+
+		complex float* mask = compute_mask(DIMS, msk_dims, restrict_dims);
 
 		data.other.fov_reduction_factor = restrict_fov;
 
 		//FIXME: this may be bad for any map regularized by Sobolev,
 		// 	 as it will create sharp edges in the initialization
 		if (MDB_BLOCH != conf.mode)
-		        md_zmul2(DIMS, img_dims, img_strs, img, img_strs, img, msk_strs, mask);
+		        md_zmul2(DIMS, img_dims, img_strs, img, img_strs, img, MD_STRIDES(DIMS, msk_dims, CFL_SIZE), mask);
+
+		md_free(mask);
 	}
 
 	// Scale parameter maps
@@ -685,12 +673,12 @@ int main_moba(int argc, char* argv[argc])
 
 		md_copy(DIMS, grid_dims, kspace_gpu, k_grid_data, CFL_SIZE);
 
-		moba_recon(&conf, &data, dims, img, sens, pattern, mask, TI, TE_IR_MGRE, b1, b0, kspace_gpu, init);
+		moba_recon(&conf, &data, dims, img, sens, pattern, TI, TE_IR_MGRE, b1, b0, kspace_gpu, init);
 
 		md_free(kspace_gpu);
 	} else
 #endif
-	moba_recon(&conf, &data, dims, img, sens, pattern, mask, TI, TE_IR_MGRE, b1, b0, k_grid_data, init);
+	moba_recon(&conf, &data, dims, img, sens, pattern, TI, TE_IR_MGRE, b1, b0, k_grid_data, init);
 
 	// Rescale estimated parameter maps
 
@@ -709,7 +697,6 @@ int main_moba(int argc, char* argv[argc])
 	}
 
 	md_free(tmp);
-	md_free(mask);
 
 	unmap_cfl(DIMS, coil_dims, sens);
 	unmap_cfl(DIMS, pat_dims, pattern);
