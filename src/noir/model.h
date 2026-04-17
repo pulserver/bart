@@ -27,4 +27,4 @@ struct noir_s {
 	const struct linop_s* linop;
 };
 
-extern struct noir_s noir_create(const long dims[DIMS], const complex float* psf, const struct noir_model_conf_s* conf);
+extern struct noir_s noir_create(const long dims[DIMS], const long pat_dims[DIMS], const complex float* psf, const struct noir_model_conf_s* conf);

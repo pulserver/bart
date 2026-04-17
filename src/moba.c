@@ -675,7 +675,7 @@ int main_moba(int argc, char* argv[argc])
 	}
 #endif
 
-	moba_recon(&conf, &data, dims, img, sens, pattern, TI, TE_IR_MGRE, b1, b0, cim, init);
+	moba_recon(&conf, &data, dims, img, sens, pat_dims, pattern, TI, TE_IR_MGRE, b1, b0, cim, init);
 
 	// Rescale estimated parameter maps
 

@@ -174,12 +174,16 @@ void meco_recon(const struct moba_conf* moba_conf, struct moba_conf_s* data,
 	long dims_1s[DIMS];
 	md_copy_dims(DIMS, dims_1s, dims);
 
+	long P_1s_dims[DIMS];
+	md_copy_dims(DIMS, P_1s_dims, P_dims);
+
 	if (!moba_conf->stack_frames) {
 
 		maps_1s_dims[TIME_DIM] = 1;
 		sens_1s_dims[TIME_DIM] = 1;
 
 		Y_1s_dims[TIME_DIM] = 1;
+		P_1s_dims[TIME_DIM] = 1;
 		dims_1s[TIME_DIM] = 1;
 	}
 
@@ -300,7 +304,7 @@ void meco_recon(const struct moba_conf* moba_conf, struct moba_conf_s* data,
 		mconf.b = moba_conf->sobolev_b;
 		mconf.cnstcoil_flags = TE_FLAG;
 
-		struct mobamod nl = moba_create(dims_1s, TE, NULL, NULL, NULL, scale_fB0, sel_model, fat_spec, P_ptr, &mconf, data, 1.0);
+		struct mobamod nl = moba_create(dims_1s, TE, NULL, NULL, NULL, scale_fB0, sel_model, fat_spec, P_1s_dims, P_ptr, &mconf, data, 1.0);
 
 
 		struct iter3_irgnm_conf irgnm_conf = iter3_irgnm_defaults;

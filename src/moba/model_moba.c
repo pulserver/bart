@@ -57,7 +57,8 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 	long data_dims[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, data_dims, dims);
 
-	struct noir_s nlinv = noir_create(data_dims, psf, conf);
+
+	struct noir_s nlinv = noir_create(data_dims, psf_dims, psf, conf);
 	struct mobamod ret;
 
 	// FIXME: unify them more
