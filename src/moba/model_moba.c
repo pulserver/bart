@@ -91,12 +91,11 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 
 	struct nlop_s* model = NULL;
 
-	ret.linop_alpha = NULL;
-
 	int NC = in_dims[COEFF_DIM];
-	const struct linop_s* lop_prec[NC];
-	for (int i = 0; i < NC; i++)
-		lop_prec[i] = NULL;
+	assert((int)ARRAY_SIZE(ret.linop_sobolev) >= NC);
+
+	for (int i = 0; i < (int)ARRAY_SIZE(ret.linop_sobolev); i++)
+		ret.linop_sobolev[i] = NULL;
 
 	switch (data->model) {
 
@@ -108,14 +107,8 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 			break;
 		}
 
-		if (0. == scale_fB0[0])
-			ret.linop_alpha = linop_identity_create(DIMS, map_dims);
-		else
-			ret.linop_alpha = linop_noir_weights_create(DIMS, map_dims, map_dims, NULL, FFT_FLAGS, data->other.sobolev_os, scale_fB0[0], scale_fB0[1], 1);
-
-		ret.linop_alpha = linop_chain_FF(ret.linop_alpha, linop_zreal_create(DIMS, map_dims));
-
-		lop_prec[NC - 1] = ret.linop_alpha;
+		if (0. != scale_fB0[0])
+			ret.linop_sobolev[NC - 1] = linop_chain_FF(linop_noir_weights_create(DIMS, map_dims, map_dims, NULL, FFT_FLAGS, data->other.sobolev_os, scale_fB0[0], scale_fB0[1], 1), linop_zreal_create(DIMS, map_dims));
 
 		model = nlop_meco_create(DIMS, out_dims2, in_dims2, TI/*TI is used as TE*/, meco_model, fat_spec);
 
@@ -140,33 +133,24 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 
 	case MDB_T1_PHY:
 
-		ret.linop_alpha = linop_noir_weights_create(DIMS, map_dims, map_dims, NULL, FFT_FLAGS, data->other.sobolev_os, data->other.b1_sobolev_a, data->other.b1_sobolev_b, 1.);
-		ret.linop_alpha = linop_chain_FF(ret.linop_alpha, linop_zreal_create(DIMS, map_dims));
-
-		lop_prec[2] = ret.linop_alpha;
+		if (0. != data->other.b1_sobolev_a)
+			ret.linop_sobolev[2] = linop_chain_FF(linop_noir_weights_create(DIMS, map_dims, map_dims, NULL, FFT_FLAGS, data->other.sobolev_os, data->other.b1_sobolev_a, data->other.b1_sobolev_b, 1.), linop_zreal_create(DIMS, map_dims));
 
 		model = nlop_T1_phy_create(DIMS, out_dims2, in_dims2, TI_dims, TI, data);
 		break;
 
 	case MDB_IR_MGRE:
 
-		if (0. == scale_fB0[0])
-			ret.linop_alpha = linop_identity_create(DIMS, map_dims);
-		else
-			ret.linop_alpha = linop_noir_weights_create(DIMS, map_dims, map_dims, NULL, FFT_FLAGS, data->other.sobolev_os, scale_fB0[0], scale_fB0[1], 1);
-
-		ret.linop_alpha = linop_chain_FF(ret.linop_alpha, linop_zreal_create(DIMS, map_dims));
-
-		lop_prec[NC - 1] = ret.linop_alpha;
+		if (0. != scale_fB0[0])
+			ret.linop_sobolev[NC - 1] = linop_chain_FF(linop_noir_weights_create(DIMS, map_dims, map_dims, NULL, FFT_FLAGS, data->other.sobolev_os, scale_fB0[0], scale_fB0[1], 1), linop_zreal_create(DIMS, map_dims));
 
 		model = nlop_ir_meco_create(DIMS, out_dims2, in_dims2, TI_dims, TI, TE_dims, TE, meco_model, fat_spec);
 		break;
 
 	case MDB_BLOCH:
 
-		ret.linop_alpha = linop_noir_weights_create(DIMS, map_dims, map_dims, NULL, FFT_FLAGS, data->other.sobolev_os, data->other.b1_sobolev_a, data->other.b1_sobolev_b, 1.);
-		ret.linop_alpha = linop_chain_FF(ret.linop_alpha, linop_zreal_create(DIMS, map_dims));
-		lop_prec[3] = ret.linop_alpha;
+		if (0. != data->other.b1_sobolev_a)
+			ret.linop_sobolev[3] = linop_chain_FF(linop_noir_weights_create(DIMS, map_dims, map_dims, NULL, FFT_FLAGS, data->other.sobolev_os, data->other.b1_sobolev_a, data->other.b1_sobolev_b, 1.), linop_zreal_create(DIMS, map_dims));
 
 		// Turn off matching of T2 for IR FLASH
 
@@ -205,7 +189,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 	for (int i = 0; i < NC; i++)
 		debug_printf(DP_DEBUG2, "FP Scale[%d]=%f\n", i, crealf(data->other.scale[i]));
 
-	model = nlop_chain_FF(moba_precond_create(DIMS, in_dims, lop_prec, data->other.scale, data->other.initval), model);
+	model = nlop_chain_FF(moba_precond_create(DIMS, in_dims, ret.linop_sobolev, data->other.scale, data->other.initval), model);
 
 	debug_print_dims(DP_INFO, DIMS, nlop_generic_domain(model, 0)->dims);
 	debug_print_dims(DP_INFO, DIMS, nlop_generic_codomain(model, 0)->dims);

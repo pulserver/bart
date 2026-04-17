@@ -9,6 +9,7 @@
 
 #include "misc/debug.h"
 #include "misc/misc.h"
+#include "misc/mri.h"
 #include "misc/version.h"
 
 #include "num/multind.h"
@@ -34,33 +35,31 @@
 #include "recon.h"
 
 
-static void post_process(enum mdb_t mode, const struct linop_s* op, struct moba_conf_s* data, const long dims[DIMS], complex float* img)
+static void post_process(enum mdb_t mode, struct moba_conf_s* data, const long imgs_dims[DIMS], const struct linop_s* op[], complex float* img)
 {
-	long imgs_dims[DIMS];
-	md_select_dims(DIMS, FFT_FLAGS|MAPS_FLAG|CSHIFT_FLAG|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, imgs_dims, dims);
-
 	long pos[DIMS] = { 0L };
 
 	// Project B1 map back into image space
 
 	long map_dims[DIMS];
-	md_select_dims(DIMS, FFT_FLAGS|TIME_FLAG|TIME2_FLAG, map_dims, dims);
+	md_select_dims(DIMS, ~COEFF_FLAG, map_dims, imgs_dims);
 
 	complex float* tmp = md_alloc_sameplace(DIMS, map_dims, CFL_SIZE, img);
 
-	switch (mode) {
+	for (pos[COEFF_DIM] = 0; pos[COEFF_DIM] < imgs_dims[COEFF_DIM]; pos[COEFF_DIM]++) {
 
-	case MDB_BLOCH:
-
-		assert(NULL != data);
-
-		pos[COEFF_DIM] = 3;
+		if (NULL == op[pos[COEFF_DIM]])
+			continue;
 
 		md_copy_block(DIMS, pos, map_dims, tmp, imgs_dims, img, CFL_SIZE);
-		linop_forward_unchecked(op, tmp, tmp);
-		md_copy_block(DIMS, pos, imgs_dims, img, map_dims, tmp, CFL_SIZE);
 
-		break;
+		linop_forward_unchecked(op[pos[COEFF_DIM]], tmp, tmp);
+
+		md_copy_block(DIMS, pos, imgs_dims, img, map_dims, tmp, CFL_SIZE);
+	}
+
+	switch (mode) {
+
 
 	// Reparameterized Look-Locker Model
 	// Estimate effective flip angle from R1'
@@ -77,8 +76,6 @@ static void post_process(enum mdb_t mode, const struct linop_s* op, struct moba_
 		long map_size = md_calc_size(DIMS, map_dims);
 
 		md_copy_block(DIMS, pos, map_dims, tmp, imgs_dims, img, CFL_SIZE);
-
-		linop_forward_unchecked(op, tmp, tmp);
 
 		md_zreal(DIMS, map_dims, tmp, tmp);
 
@@ -105,38 +102,23 @@ static void post_process(enum mdb_t mode, const struct linop_s* op, struct moba_
 
 		break;
 
-	// IR multi-echo gradient echo model
-
 	case MDB_IR_MGRE:
 
-		// Rescale R2* from ms to s
-		if (3 != imgs_dims[COEFF_DIM]) {
+		if (use_compat_to_version("v1.0.00")) {
 
-			md_set_dims(DIMS, pos, 0);
-			pos[COEFF_DIM] = imgs_dims[COEFF_DIM] - 2;
+			long img_strs[DIMS];
+			md_calc_strides(DIMS, img_strs, imgs_dims, CFL_SIZE);
 
-			md_copy_block(DIMS, pos, map_dims, tmp, imgs_dims, img, CFL_SIZE);
+			complex float* map_B0 = MD_ACCESS_PTR(DIMS, img_strs, (pos[COEFF_DIM] = imgs_dims[COEFF_DIM] - 1, pos), img);
+			md_zsmul2(DIMS, map_dims, img_strs, map_B0, img_strs, map_B0, 1000.);
 
-			// TE is provided in ms, therefore R2s*1000 transforms: [1/ms] -> [1/s]
-			if (use_compat_to_version("v1.0.00"))
-				md_zsmul(DIMS, map_dims, tmp, tmp, 1000.);
+			if (3 != imgs_dims[COEFF_DIM]) {
 
-			md_copy_block(DIMS, pos, imgs_dims, img, map_dims, tmp, CFL_SIZE);
+				complex float* map_R2s = MD_ACCESS_PTR(DIMS, img_strs, (pos[COEFF_DIM] = imgs_dims[COEFF_DIM] - 2, pos), img);
+				md_zsmul2(DIMS, map_dims, img_strs, map_R2s, img_strs, map_R2s, 1000.);
+			}
 		}
 
-		// Transform and rescale B0 to SI units in image space
-		md_set_dims(DIMS, pos, 0);
-		pos[COEFF_DIM] = imgs_dims[COEFF_DIM] - 1;
-
-		md_copy_block(DIMS, pos, map_dims, tmp, imgs_dims, img, CFL_SIZE);
-
-		linop_forward_unchecked(op, tmp, tmp);
-
-		// TE is provided in ms, therefore B0*1000 transforms: [1/ms] -> [1/s]
-		if (use_compat_to_version("v1.0.00"))
-			md_zsmul(DIMS, map_dims, tmp, tmp, 1000.);
-
-		md_copy_block(DIMS, pos, imgs_dims, img, map_dims, tmp, CFL_SIZE);
 		break;
 
 	default:
@@ -289,7 +271,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 
 		md_copy_block(DIMS, pos, map_dims, tmp, imgs_dims, img, CFL_SIZE);
 
-		linop_adjoint_unchecked(nl.linop_alpha, tmp, tmp);
+		linop_adjoint_unchecked(nl.linop_sobolev[pos[COEFF_DIM]], tmp, tmp);
 
 		md_copy_block(DIMS, pos, imgs_dims, img, map_dims, tmp, CFL_SIZE);
 	}
@@ -387,13 +369,11 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 	}
 
 	if (!conf->out_origin_maps)
-		post_process(conf->mode, nl.linop_alpha, data, dims, img);
+		post_process(conf->mode, data, imgs_dims, nl.linop_sobolev, img);
 
 	// Clean up
-
-
-	if ((MDB_T1_PHY == conf->mode) || (MDB_BLOCH == conf->mode) || (MDB_IR_MGRE == conf->mode))
-		linop_free(nl.linop_alpha);
+	for (int i = 0; i < (int)ARRAY_SIZE(nl.linop_sobolev); i++)
+		linop_free(nl.linop_sobolev[i]);
 
 	nlop_free(nl.nlop);
 

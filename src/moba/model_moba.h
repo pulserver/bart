@@ -16,7 +16,7 @@ struct mobamod {
 
 	struct nlop_s* nlop;
 	const struct linop_s* linop;
-        const struct linop_s* linop_alpha;
+        const struct linop_s* linop_sobolev[24];
 };
 #endif
 
