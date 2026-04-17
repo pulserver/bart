@@ -646,6 +646,13 @@ int main_moba(int argc, char* argv[argc])
 
 	assert(img_dims[COEFF_DIM] <= (long)ARRAY_SIZE(data.other.scale));
 
+	// Transform B1 map from image to k-space and add k-space to initialization array (img)
+
+	unsigned long sobolev_flag = 0;
+
+	sobolev_flag |= (MDB_T1_PHY == conf.mode) ? MD_BIT(2) : 0;
+	sobolev_flag |= (MDB_BLOCH == conf.mode) ? MD_BIT(3) : 0;
+
 	for (int i = 0; i < img_dims[COEFF_DIM]; i++) {
 
 		pos[COEFF_DIM] = i;
@@ -654,28 +661,15 @@ int main_moba(int argc, char* argv[argc])
 
 		md_zsmul(DIMS, tmp_dims, tmp, tmp, data.other.initval[i] / (data.other.scale[i] ?: 1));
 
+		if (MD_IS_SET(sobolev_flag, i) && (NULL == init)) {
+
+			fftuc(DIMS, tmp_dims, FFT_FLAGS, tmp, tmp);
+
+			float scl = powf(data.other.sobolev_os, bitcount(md_nontriv_dims(DIMS, tmp_dims) & FFT_FLAGS) / 2.);
+			md_zsmul(DIMS, tmp_dims, tmp, tmp, scl);
+		}
+
 		md_copy_block(DIMS, pos, img_dims, img, tmp_dims, tmp, CFL_SIZE);
-	}
-
-	// Transform B1 map from image to k-space and add k-space to initialization array (img)
-
-	unsigned long sobolev_flag = 0;
-
-	sobolev_flag |= (MDB_T1_PHY == conf.mode) ? MD_BIT(2) : 0;
-	sobolev_flag |= (MDB_BLOCH == conf.mode) ? MD_BIT(3) : 0;
-
-
-	for (pos[COEFF_DIM] = 0; pos[COEFF_DIM] < img_dims[COEFF_DIM]; pos[COEFF_DIM]++) {
-
-		if (!MD_IS_SET(sobolev_flag, pos[COEFF_DIM]))
-			continue;
-
-		float scl = powf(data.other.sobolev_os, bitcount(md_nontriv_dims(DIMS, tmp_dims) & FFT_FLAGS) / 2.);
-
-		complex float* map = MD_ACCESS_PTR(DIMS, img_strs, pos, img);
-
-		fftuc2(DIMS, tmp_dims, FFT_FLAGS, img_strs, map, img_strs, map);
-		md_zsmul2(DIMS, tmp_dims, img_strs, map, img_strs, map, scl);
 	}
 
 #ifdef  USE_CUDA
