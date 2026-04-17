@@ -653,15 +653,12 @@ int main_moba(int argc, char* argv[argc])
 		if (!MD_IS_SET(sobolev_flag, pos[COEFF_DIM]))
 			continue;
 
-		const struct linop_s* linop_fftc = linop_fftc_create(DIMS, tmp_dims, FFT_FLAGS);
+		float scl = powf(data.other.sobolev_os, bitcount(md_nontriv_dims(DIMS, tmp_dims) & FFT_FLAGS) / 2.);
 
-		md_copy_block(DIMS, pos, tmp_dims, tmp, img_dims, img, CFL_SIZE);
+		complex float* map = MD_ACCESS_PTR(DIMS, img_strs, pos, img);
 
-		linop_forward_unchecked(linop_fftc, tmp, tmp);
-
-		md_copy_block(DIMS, pos, img_dims, img, tmp_dims, tmp, CFL_SIZE);
-
-		linop_free(linop_fftc);
+		fftuc2(DIMS, tmp_dims, FFT_FLAGS, img_strs, map, img_strs, map);
+		md_zsmul2(DIMS, tmp_dims, img_strs, map, img_strs, map, scl);
 	}
 
 #ifdef  USE_CUDA

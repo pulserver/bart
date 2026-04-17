@@ -8,9 +8,9 @@ extern void noir_forw_coils(const struct linop_s* op, complex float* dst, const 
 
 struct noir_model_conf_s {
 
+	float sobolev_os;
 	unsigned int fft_flags;
 	unsigned int cnstcoil_flags;
-	unsigned int ptrn_flags;
 	_Bool rvc;
 	_Bool noncart;
 	float a;

@@ -42,6 +42,7 @@
 
 struct noir_model_conf_s noir_model_conf_defaults = {
 
+	.sobolev_os = 1.f,
 	.fft_flags = FFT_FLAGS,
 	.cnstcoil_flags = 0u,
 	.rvc = false,
@@ -60,6 +61,7 @@ struct noir_s noir_create(const long dims[DIMS], const long pat_dims[DIMS], cons
 {
 
 	long data_dims[DIMS];
+	long data_red_dims[DIMS];
 	long coil_dims[DIMS];
 	long imgs_dims[DIMS];
 
@@ -111,7 +113,7 @@ struct noir_s noir_create(const long dims[DIMS], const long pat_dims[DIMS], cons
 
 	const struct nlop_s* nlw1 = nlop_tenmul_create(DIMS, data_red_dims, imgs_dims, coil_dims);
 
-	const struct linop_s* weights = linop_noir_weights_create(DIMS, coil_dims, coil_dims, NULL, FFT_FLAGS, 1., conf->a, conf->b, 1.);
+	const struct linop_s* weights = linop_noir_weights_create(DIMS, coil_dims, coil_dims, NULL, FFT_FLAGS, conf->sobolev_os, conf->a, conf->b, 1.);
 	const struct nlop_s* nlw2 = nlop_from_linop(weights);
 	const struct nlop_s* nl = nlop_chain2_FF(nlw2, 0, nlw1, 1);
 
