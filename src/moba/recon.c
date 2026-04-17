@@ -44,6 +44,9 @@ static void post_process(enum mdb_t mode, struct moba_conf_s* data, const long i
 	long map_dims[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, map_dims, imgs_dims);
 
+	long img_strs[DIMS];
+	md_calc_strides(DIMS, img_strs, imgs_dims, CFL_SIZE);
+
 	complex float* tmp = md_alloc_sameplace(DIMS, map_dims, CFL_SIZE, img);
 
 	for (pos[COEFF_DIM] = 0; pos[COEFF_DIM] < imgs_dims[COEFF_DIM]; pos[COEFF_DIM]++) {
@@ -106,9 +109,6 @@ static void post_process(enum mdb_t mode, struct moba_conf_s* data, const long i
 
 		if (use_compat_to_version("v1.0.00")) {
 
-			long img_strs[DIMS];
-			md_calc_strides(DIMS, img_strs, imgs_dims, CFL_SIZE);
-
 			complex float* map_B0 = MD_ACCESS_PTR(DIMS, img_strs, (pos[COEFF_DIM] = imgs_dims[COEFF_DIM] - 1, pos), img);
 			md_zsmul2(DIMS, map_dims, img_strs, map_B0, img_strs, map_B0, 1000.);
 
@@ -118,6 +118,15 @@ static void post_process(enum mdb_t mode, struct moba_conf_s* data, const long i
 				md_zsmul2(DIMS, map_dims, img_strs, map_R2s, img_strs, map_R2s, 1000.);
 			}
 		}
+
+		break;
+
+	case MDB_BLOCH:
+
+		complex float* map_B1 = MD_ACCESS_PTR(DIMS, img_strs, (pos[COEFF_DIM] = 3, pos), img);
+
+		// Rescale due to scaling in moba.c
+		md_zsadd2(DIMS, map_dims, img_strs, map_B1, img_strs, map_B1, 1. / (data->other.scale[3] ?: 1.));
 
 		break;
 
