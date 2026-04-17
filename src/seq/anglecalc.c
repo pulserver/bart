@@ -42,7 +42,7 @@ void traj_conf_from_seq(struct traj_conf *conf, const struct seq_config* seq)
 		conf->rational = true;
 
 		if (SEQ_ASL_NONE != seq->asl.label_type)
-			conf->aligned_flags = PHS2_FLAG | SLICE_FLAG | AVG_FLAG | BATCH_FLAG;
+			conf->aligned_flags = PHS2_FLAG | SLICE_FLAG | BATCH_FLAG;
 		else
 			conf->aligned_flags = 0;
 
