@@ -392,7 +392,6 @@ static void conf_to_loop_dims(const int D, long dims[D], struct seq_config* seq)
 	if (SEQ_PEMODE_RAGA == seq->enc.pe_mode)
 		dims[TIME_DIM] = (dims[TIME_DIM] - 1) * dims[PHS1_DIM] + seq->loop_dims[ITER_DIM];
 
-	dims[BATCH_DIM] = seq->loop_dims[BATCH_DIM];
 	dims[TE_DIM] = seq->loop_dims[TE_DIM];
 	dims[AVG_DIM] = seq->loop_dims[AVG_DIM];
 }
