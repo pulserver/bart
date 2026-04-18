@@ -210,6 +210,8 @@ int main_moba(int argc, char* argv[argc])
 
 	bool t2_old_flag = false;
 
+	const char* monitor_file = NULL;
+
 	const struct opt_s opts[] = {
 
 		// FIXME: Sort options into optimization and others interface
@@ -269,6 +271,7 @@ int main_moba(int argc, char* argv[argc])
 		OPTL_SUBOPT(0, "seq", "...", "configure sequence parameters", ARRAY_SIZE(seq_opts), seq_opts),
 		OPTL_SUBOPT(0, "sim", "...", "configure simulation parameters", ARRAY_SIZE(sim_opts), sim_opts),
 		OPTL_SUBOPT(0, "other", "...", "configure other parameters", ARRAY_SIZE(other_opts), other_opts),
+		OPTL_OUTFILE(0, "monitor", &monitor_file, "monitor", "File for monitoring output"),
 	};
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
@@ -729,6 +732,12 @@ int main_moba(int argc, char* argv[argc])
 		md_copy_block(DIMS, pos, img_dims, img, tmp_dims, tmp, CFL_SIZE);
 	}
 
+	long monitor_dims[DIMS];
+	md_copy_dims(DIMS, monitor_dims, img_dims);
+	monitor_dims[ITER_DIM] = conf.iter + 1;
+
+	complex float* monitor = (NULL != monitor_file) ? create_async_cfl(monitor_file, ITER_FLAG, DIMS, monitor_dims) : NULL;
+
 #ifdef  USE_CUDA
 	if (bart_use_gpu) {
 
@@ -740,7 +749,7 @@ int main_moba(int argc, char* argv[argc])
 	}
 #endif
 
-	moba_recon(&conf, &data, dims, img_dims, img, coil_dims, sens, pat_dims, pattern, TI, TE_IR_MGRE, b1, b0, grid_dims, cim, init);
+	moba_recon(&conf, &data, dims, img_dims, img, coil_dims, sens, pat_dims, pattern, TI, TE_IR_MGRE, b1, b0, grid_dims, cim, init, monitor_dims, monitor);
 
 	// Rescale estimated parameter maps
 
@@ -758,6 +767,7 @@ int main_moba(int argc, char* argv[argc])
 	md_free(tmp);
 	md_free(cim);
 
+	unmap_cfl(DIMS, monitor_dims, monitor);
 	unmap_cfl(DIMS, coil_dims, sens);
 	unmap_cfl(DIMS, pat_dims, pattern);
 	unmap_cfl(DIMS, img_dims, img);

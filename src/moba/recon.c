@@ -9,12 +9,15 @@
 #include "misc/debug.h"
 #include "misc/misc.h"
 #include "misc/mri.h"
+#include "misc/types.h"
+#include "misc/stream.h"
 #include "misc/version.h"
 
 #include "num/multind.h"
 #include "num/flpmath.h"
 #include "num/vptr.h"
 
+#include "iter/monitor.h"
 #include "iter/iter3.h"
 
 #include "nlops/nlop.h"
@@ -208,6 +211,65 @@ static void set_regu_flags(struct mdb_irgnm_l1_conf* conf2, const struct moba_co
 }
 
 
+struct moba_monitor {
+
+	iter_monitor_t super;
+
+	const long* imgs_dims;
+	const long* expo_dims;
+	complex float* export;
+
+	long steps;
+	enum mdb_t mode;
+	struct moba_conf_s* data;
+	const struct linop_s** linop_sobolev;
+};
+
+DEF_TYPEID(moba_monitor);
+
+static void moba_monitor(struct iter_monitor_s* _data, const struct vec_iter_s* /*ops*/, const float* x)
+{
+	auto data = CAST_DOWN(moba_monitor, _data);
+
+	assert(1 == data->imgs_dims[ITER_DIM]);
+
+	long pos[DIMS] = { 0L };
+	pos[ITER_DIM] = data->steps++;
+
+	complex float* tmp = md_alloc_sameplace(DIMS, data->imgs_dims, CFL_SIZE, x);
+	md_copy(DIMS, data->imgs_dims, tmp, x, CFL_SIZE);
+
+	post_process(data->mode, data->data, data->imgs_dims, data->linop_sobolev, tmp);
+
+	long spos[DIMS] = { 0L };
+
+	for (spos[COEFF_DIM] = 0; spos[COEFF_DIM] < data->imgs_dims[COEFF_DIM]; spos[COEFF_DIM]++) {
+
+		long map_dims[DIMS];
+		md_select_dims(DIMS, ~COEFF_FLAG, map_dims, data->imgs_dims);
+
+		long img_strs[DIMS];
+		md_calc_strides(DIMS, img_strs, data->imgs_dims, CFL_SIZE);
+
+		complex float* map = MD_ACCESS_PTR(DIMS, img_strs, spos, tmp);
+
+		md_zsmul2(DIMS, map_dims, img_strs, map, img_strs, map, (data->data->other.scale[spos[COEFF_DIM]] ?: 1.));
+	}
+
+	md_copy_block(DIMS, pos, data->expo_dims, data->export, data->imgs_dims, tmp, CFL_SIZE);
+
+	stream_t strm = stream_lookup(data->export);
+
+	if (NULL != strm) {
+
+		assert(ITER_FLAG == stream_get_flags(strm));
+		stream_sync_slice(strm, DIMS, data->expo_dims, ITER_FLAG, pos);
+	}
+
+	md_free(tmp);
+}
+
+
 static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
                 const long dims[DIMS],
 		const long imgs_dims[DIMS], complex float* img,
@@ -217,7 +279,8 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 		const complex float* TE_IR_MGRE,
 		const complex float* b1,
 		const complex float* b0,
-		const long data_dims[DIMS], const complex float* kspace_data)
+		const long data_dims[DIMS], const complex float* kspace_data,
+		const long mimg_dims[DIMS], complex float* mimg)
 {
 
 	struct noir_model_conf_s mconf = noir_model_conf_defaults;
@@ -325,6 +388,24 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 	irgnm_conf.cgiter = conf->inner_iter;
 	irgnm_conf.nlinv_legacy = true;
 
+	struct moba_monitor monitor = {
+
+		.super = {
+			.TYPEID = &TYPEID(moba_monitor),
+			.fun = moba_monitor,
+		},
+
+		.imgs_dims = imgs_dims,
+		.expo_dims = mimg_dims,
+		.export = mimg,
+		.mode = conf->mode,
+		.data = data,
+		.steps = 0,
+		.linop_sobolev = nl.linop_sobolev,
+	};
+
+	irgnm_conf.super.monitor = (NULL != mimg) ? CAST_UP(&monitor) : NULL;
+
 	struct mdb_irgnm_l1_conf conf2 = {
 
 		.c2 = &irgnm_conf,
@@ -384,7 +465,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 }
 
 
-void moba_recon(const struct moba_conf* conf, struct moba_conf_s* data, const long dims[DIMS], const long imgs_dims[DIMS], complex float* img, const long coil_dims[DIMS], complex float* sens, const long pat_dims[DIMS], const complex float* pattern, const complex float* TI, const complex float* TE, const complex float* b1, const complex float* b0, const long data_dims[DIMS], const complex float* kspace_data, const complex float* init)
+void moba_recon(const struct moba_conf* conf, struct moba_conf_s* data, const long dims[DIMS], const long imgs_dims[DIMS], complex float* img, const long coil_dims[DIMS], complex float* sens, const long pat_dims[DIMS], const complex float* pattern, const complex float* TI, const complex float* TE, const complex float* b1, const complex float* b0, const long data_dims[DIMS], const complex float* kspace_data, const complex float* init, const long mimgs_dims[DIMS], complex float* mimg)
 {
 	switch (conf->mode) {
 
@@ -394,7 +475,7 @@ void moba_recon(const struct moba_conf* conf, struct moba_conf_s* data, const lo
 	case MDB_BLOCH:
 	case MDB_IR_MGRE:
 
-		recon(conf, data, dims, imgs_dims, img, coil_dims, sens, pat_dims, pattern, TI, TE, b1, b0, data_dims, kspace_data);
+		recon(conf, data, dims, imgs_dims, img, coil_dims, sens, pat_dims, pattern, TI, TE, b1, b0, data_dims, kspace_data, mimgs_dims, mimg);
 		break;
 
 	case MDB_MGRE:
