@@ -147,7 +147,7 @@ void iter4_irgnm(const iter3_conf* _conf,
 
 	irgnm(conf->iter, conf->alpha, conf->alpha_min, conf->redu, N, M, select_vecops(src),
 		frw, adj, inv,
-		dst, ref, src, cb, NULL);
+		dst, ref, src, cb, _conf->monitor);
 
 	nlop_free(nlop);
 }
@@ -176,7 +176,7 @@ void iter4_landweber(const iter3_conf* _conf,
 	struct iter_op_s adj = { nlop_adj_iter, CAST_UP(&data) };
 
 	landweber(conf->iter, conf->epsilon, conf->alpha, N, M,
-		vops, frw, adj, dst, src, cb, NULL);
+		vops, frw, adj, dst, src, cb, _conf->monitor);
 
 	vops->del(tmp);
 }
@@ -219,7 +219,7 @@ void iter4_irgnm2(const iter3_conf* _conf,
 
 	irgnm2(conf->iter, conf->alpha, conf->alpha_min, conf->alpha_min0, conf->redu, N, M, select_vecops(src),
 		frw, der, adj, (NULL == lsqr) ? inv2 : OPERATOR_P2ITOP(vlsqr),
-		dst, ref, src, cb, NULL);
+		dst, ref, src, cb, _conf->monitor);
 
 	nlop_free(nlop);
 	operator_p_free(vlsqr);
@@ -280,6 +280,6 @@ void iter4_levenberg_marquardt(const iter3_conf* _conf,
 
 	levenberg_marquardt(conf->iter, MIN(conf->cgiter, N / conf->Bi / conf->Bo), conf->l2lambda, conf->redu, conf->maxreg,
 				N / 2 / conf->Bi / conf->Bo, M / 2 / conf->Bi / conf->Bo, conf->Bi, conf->Bo,
-				select_vecops(dst), frw, adj, nrm, dst, src, cb, NULL);
+				select_vecops(dst), frw, adj, nrm, dst, src, cb, _conf->monitor);
 }
 

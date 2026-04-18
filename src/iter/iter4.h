@@ -5,6 +5,7 @@ struct operator_p_s;
 struct iter3_conf_s;
 struct iter_op_s;
 struct iter_nlop_s;
+struct iter_monitor_s;
 struct nlop_s;
 
 typedef void iter4_fun_f(const struct iter3_conf_s* _conf,

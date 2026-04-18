@@ -1,7 +1,9 @@
 
 #include "misc/types.h"
 
-typedef struct iter3_conf_s { TYPEID* TYPEID; } iter3_conf;
+struct iter_monitor_s;
+
+typedef struct iter3_conf_s { TYPEID* TYPEID; struct iter_monitor_s* monitor; } iter3_conf;
 
 struct iter_op_s;
 

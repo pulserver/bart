@@ -734,6 +734,8 @@ void irgnm(int iter, float alpha, float alpha_min, float redu, long N, long M,
 			iter_op_call(callback, x, x);
 	}
 
+	iter_monitor(monitor, vops, x);
+
 	vops->del(h);
 	vops->del(p);
 	vops->del(r);
@@ -803,6 +805,8 @@ void irgnm2(int iter, float alpha, float alpha_min, float alpha_min0, float redu
 		if (NULL != callback.fun)
 			iter_op_call(callback, x, x);
 	}
+
+	iter_monitor(monitor, vops, x);
 }
 
 
@@ -876,6 +880,8 @@ void levenberg_marquardt(int maxiter, int cgiter, float l2lambda, float redu, fl
 
 		vops->smin(Bo * Bi, maxreg, l2arr, l2arr);
 	}
+
+	iter_monitor(monitor, vops, x);
 
 	vops->del(d);
 	vops->del(b);
