@@ -163,78 +163,45 @@ static unsigned long get_constrained_maps(enum mdb_t mode, enum meco_model mgre_
 	assert(0);
 }
 
-
-static void set_bloch_conf(enum mdb_t mode, struct mdb_irgnm_l1_conf* conf2, const struct moba_conf* conf, struct moba_conf_s* data, const long img_dims[DIMS])
+static void set_regu_flags(struct mdb_irgnm_l1_conf* conf2, const struct moba_conf* conf, struct moba_conf_s* data, long ncoeffs, const struct linop_s* lop_sobolev[ncoeffs])
 {
-	// T2 estimation turned off for IR FLASH Simulation
+/*
+	Simple rules for model independent default regularization flags:
+	1.) Only active maps (with non-zero scale) are regularized
+	2.) Maps with a Sobolev operator get L2 regularization
+	3.) Remaining active maps get wavelet / L2 depending on conf.opt_reg
+*/
 
-	int not_wav_maps = conf->not_wav_maps;
+	unsigned long act_flags = 0UL;
+	unsigned long sob_flags = 0UL;
 
-	switch (mode) {
+	for (int i = 0; i < ncoeffs; i++) {
 
-	case MDB_BLOCH:
-
-		assert(NULL != data);
-
-		switch (data->sim.seq.seq_type) {
-
-		case SEQ_IRFLASH:
-
-			conf2->l2flags = (0 != data->other.scale[3]) ? ((0 == conf->l2para) ? 8 : conf->l2para) : 0;
-			not_wav_maps = (0 == conf->not_wav_maps) ? 2 : conf->not_wav_maps; // no wavelet for T2 and B1 map
-			break;
-
-		case SEQ_IRBSSFP:
-
-			conf2->l2flags = (0 == conf->l2para) ? 0 : conf->l2para;
-			not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps; // no wavelet for B1 map
-			break;
-
-		default:
+		sob_flags |= (NULL != lop_sobolev[i] && 0. != data->other.scale[i]) ? MD_BIT(i) : 0UL;
+		act_flags |= (0. != data->other.scale[i]) ? MD_BIT(i) : 0UL;
 	}
 
+	unsigned long l2flags = conf->l2para;
+	unsigned long wavflags = ~0UL;
+
+	switch (conf->opt_reg) {
+
+	case 1:
+		l2flags = (~0UL == l2flags) ? sob_flags : l2flags;
+		wavflags = act_flags & ~sob_flags;
 		break;
-
-	// No Wavelet penalty on flip angle map
-
-	case MDB_T1_PHY:
-
-		conf2->l2flags = (0 == conf->l2para) ? 4 : conf->l2para;
-		not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;	// no wavelet for R1' map
-
+	case 2:
+		l2flags = (~0UL == l2flags) ? act_flags : l2flags;
+		wavflags = 0UL;
 		break;
-
-	// No Wavelet penalty on B0 map
-
-	case MDB_IR_MGRE:
-
-		switch (img_dims[COEFF_DIM]) {
-
-		case 3:
-			not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;
-			conf2->l2flags = (0 == conf->l2para) ? 4 : conf->l2para;	// (W, F, B0): bitmask(0 0 1) = 4
-			break;
-		case 4:
-			not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;
-			conf2->l2flags = (0 == conf->l2para) ? 8 : conf->l2para;	// (W, F, R2s, B0): bitmask(0 0 0 1) = 8
-			break;
-		case 5:
-			not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;
-			conf2->l2flags = (0 == conf->l2para) ? 16 : conf->l2para;	// (Ms_w, M0_w, R1s_w, R2s, B0): bitmask(0 0 0 0 1) = 16
-			break;
-		default:
-			not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;
-			conf2->l2flags = (0 == conf->l2para) ? 128 : conf->l2para;	// (Ms_w, M0_w, R1s_w, Ms_f, M0_f, R1s_f, R2s, B0): bitmask(0 0 0 0 0 0 0 1) = 128
-			break;
-		}
-
-		break;
-
 	default:
+		error("Invalid regularization option!\n");
 	}
 
+	wavflags &= MD_BIT(ncoeffs - conf->not_wav_maps) - 1;
 
-	conf2->wavflags = MD_BIT(img_dims[COEFF_DIM] - not_wav_maps) - 1;
+	conf2->l2flags = l2flags;
+	conf2->wavflags = wavflags;
 
 	conf2->tvscales_N = data->other.tvscales_N;
 	conf2->tvscales = data->other.tvscales;
@@ -350,8 +317,6 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 		.c2 = &irgnm_conf,
 		.step = conf->step,
 		.lower_bound = conf->lower_bound,
-		.l2flags = (0 == conf->l2para) ? ((1 == conf->opt_reg) ? (0UL) : ~(0UL)) : conf->l2para,
-		.wavflags = (1 == conf->opt_reg) ? (MD_BIT(imgs_dims[COEFF_DIM] - conf->not_wav_maps) - 1) : 0,
 		.constrained_maps = (~0UL != conf->constrained_maps) ? conf->constrained_maps : get_constrained_maps(conf->mode, conf->mgre_model),
 		.auto_norm = conf->auto_norm,
 		.no_sens_l2 = data->other.no_sens_l2,
@@ -363,7 +328,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 		.ratio = conf->ratio,
 	};
 
-	set_bloch_conf(conf->mode, &conf2, conf, data, imgs_dims);
+	set_regu_flags(&conf2, conf, data, imgs_dims[COEFF_DIM], nl.linop_sobolev);
 
 	long irgnm_conf_dims[DIMS];
 	md_select_dims(DIMS, fft_flags|MAPS_FLAG|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, irgnm_conf_dims, imgs_dims);
