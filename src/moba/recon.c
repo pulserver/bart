@@ -168,6 +168,8 @@ static void set_bloch_conf(enum mdb_t mode, struct mdb_irgnm_l1_conf* conf2, con
 {
 	// T2 estimation turned off for IR FLASH Simulation
 
+	int not_wav_maps = conf->not_wav_maps;
+
 	switch (mode) {
 
 	case MDB_BLOCH:
@@ -179,13 +181,13 @@ static void set_bloch_conf(enum mdb_t mode, struct mdb_irgnm_l1_conf* conf2, con
 		case SEQ_IRFLASH:
 
 			conf2->l2flags = (0 != data->other.scale[3]) ? ((0 == conf->l2para) ? 8 : conf->l2para) : 0;
-			conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 2 : conf->not_wav_maps; // no wavelet for T2 and B1 map
+			not_wav_maps = (0 == conf->not_wav_maps) ? 2 : conf->not_wav_maps; // no wavelet for T2 and B1 map
 			break;
 
 		case SEQ_IRBSSFP:
 
 			conf2->l2flags = (0 == conf->l2para) ? 0 : conf->l2para;
-			conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps; // no wavelet for B1 map
+			not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps; // no wavelet for B1 map
 			break;
 
 		default:
@@ -198,7 +200,7 @@ static void set_bloch_conf(enum mdb_t mode, struct mdb_irgnm_l1_conf* conf2, con
 	case MDB_T1_PHY:
 
 		conf2->l2flags = (0 == conf->l2para) ? 4 : conf->l2para;
-		conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;	// no wavelet for R1' map
+		not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;	// no wavelet for R1' map
 
 		break;
 
@@ -209,19 +211,19 @@ static void set_bloch_conf(enum mdb_t mode, struct mdb_irgnm_l1_conf* conf2, con
 		switch (img_dims[COEFF_DIM]) {
 
 		case 3:
-			conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;
+			not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;
 			conf2->l2flags = (0 == conf->l2para) ? 4 : conf->l2para;	// (W, F, B0): bitmask(0 0 1) = 4
 			break;
 		case 4:
-			conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;
+			not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;
 			conf2->l2flags = (0 == conf->l2para) ? 8 : conf->l2para;	// (W, F, R2s, B0): bitmask(0 0 0 1) = 8
 			break;
 		case 5:
-			conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;
+			not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;
 			conf2->l2flags = (0 == conf->l2para) ? 16 : conf->l2para;	// (Ms_w, M0_w, R1s_w, R2s, B0): bitmask(0 0 0 0 1) = 16
 			break;
 		default:
-			conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;
+			not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;
 			conf2->l2flags = (0 == conf->l2para) ? 128 : conf->l2para;	// (Ms_w, M0_w, R1s_w, Ms_f, M0_f, R1s_f, R2s, B0): bitmask(0 0 0 0 0 0 0 1) = 128
 			break;
 		}
@@ -230,6 +232,9 @@ static void set_bloch_conf(enum mdb_t mode, struct mdb_irgnm_l1_conf* conf2, con
 
 	default:
 	}
+
+
+	conf2->wavflags = MD_BIT(img_dims[COEFF_DIM] - not_wav_maps) - 1;
 
 	conf2->tvscales_N = data->other.tvscales_N;
 	conf2->tvscales = data->other.tvscales;
@@ -343,14 +348,13 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 	struct mdb_irgnm_l1_conf conf2 = {
 
 		.c2 = &irgnm_conf,
-		.opt_reg = conf->opt_reg,
 		.step = conf->step,
 		.lower_bound = conf->lower_bound,
 		.l2flags = (0 == conf->l2para) ? ((1 == conf->opt_reg) ? (0UL) : ~(0UL)) : conf->l2para,
+		.wavflags = (1 == conf->opt_reg) ? (MD_BIT(imgs_dims[COEFF_DIM] - conf->not_wav_maps) - 1) : 0,
 		.constrained_maps = (~0UL != conf->constrained_maps) ? conf->constrained_maps : get_constrained_maps(conf->mode, conf->mgre_model),
 		.auto_norm = conf->auto_norm,
 		.no_sens_l2 = data->other.no_sens_l2,
-		.not_wav_maps = (0 == conf->not_wav_maps) ? 0 : conf->not_wav_maps,
 		.algo = conf->algo,
 		.rho = conf->rho,
 		.ropts = conf->ropts,

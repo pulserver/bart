@@ -179,8 +179,7 @@ static void combined_prox(iter_op_data* _data, float rho, float* dst, const floa
 		pos_value(_data, dst, src);
 	}
 
-	if (1 == data->conf->opt_reg)
-		operator_p_apply_unchecked(data->prox2, rho, (complex float*)dst, (const complex float*)dst);
+	operator_p_apply_unchecked(data->prox2, rho, (complex float*)dst, (const complex float*)dst);
 
 	pos_value(_data, dst, dst);
 }
@@ -347,7 +346,7 @@ static const struct operator_p_s* create_prox(const long img_dims[DIMS], unsigne
 		if ((1 < img_dims[i]) && MD_IS_SET(FFT_FLAGS, i)) {
 
 			wflags = MD_SET(wflags, i);
-			minsize[i] = MIN(img_dims[i], DIMS);
+			minsize[i] = MIN(img_dims[i], 16);
 		}
 	}
 
@@ -420,34 +419,14 @@ static const struct operator_p_s* T1inv_p_create(const struct mdb_irgnm_l1_conf*
 	long img_dims[DIMS];
 	md_select_dims(DIMS, ~COIL_FLAG, img_dims, dims);
 
-        // jointly penalize the first few maps
-        long penalized_dims = MAX(1, img_dims[COEFF_DIM] - conf->not_wav_maps);
+	long red_dims[DIMS];
+	md_copy_dims(DIMS, red_dims, img_dims);
+	red_dims[COEFF_DIM] = bitcount(conf->wavflags & (MD_BIT(img_dims[COEFF_DIM]) - 1));
+        debug_printf(DP_DEBUG2, "nr. of penalized maps: %ld\n", red_dims[COEFF_DIM]);
 
-        debug_printf(DP_DEBUG2, "nr. of penalized maps: %ld\n", penalized_dims);
-
-        img_dims[COEFF_DIM] = penalized_dims;
-
-	auto prox1 = create_prox(img_dims, COEFF_FLAG, conf->l1val);
+	auto prox1 = create_prox(red_dims, COEFF_FLAG, conf->l1val);
 	auto prox2 = operator_p_ref(prox1);
-
-	if (0 < conf->not_wav_maps) {
-
-		long map_dims[DIMS];
-		md_copy_dims(DIMS, map_dims, img_dims);
-		map_dims[COEFF_DIM] = conf->not_wav_maps;
-
-		auto prox3 = prox_zero_create(DIMS, map_dims);
-
-		if (conf->not_wav_maps < dims[COEFF_DIM]) {
-
-			prox2 = operator_p_stack_FF(COEFF_DIM, COEFF_DIM, prox2, prox3);
-
-		} else {
-
-			operator_p_free(prox2);
-			prox2 = prox3;
-		}
-	}
+	prox2 = prox_select_maps_F(DIMS, img_dims, conf->wavflags, prox2);
 
 	if (conf->auto_norm) {
 

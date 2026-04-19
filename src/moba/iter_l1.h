@@ -12,16 +12,15 @@ struct opt_reg_s;
 struct mdb_irgnm_l1_conf {
 
 	struct iter3_irgnm_conf* c2;
-	int opt_reg;
 
 	float step;
 	float lower_bound;
 	unsigned constrained_maps;
 	unsigned long l2flags;
+	unsigned long wavflags;
 	_Bool auto_norm;
 	_Bool no_sens_l2;
 
-	int not_wav_maps;
 	int algo;
 	float rho;
 	struct opt_reg_s* ropts;
