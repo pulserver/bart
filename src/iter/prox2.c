@@ -23,6 +23,7 @@
 #include "num/flpmath.h"
 
 #include "iter/iter.h"
+#include "iter/prox.h"
 
 #include "nlops/nlop.h"
 
@@ -474,3 +475,121 @@ const struct operator_p_s* prox_scale_arg_create_F(const struct operator_p_s* op
 
 	return operator_p_create(cod->N, cod->dims, dom->N, dom->dims, CAST_UP(PTR_PASS(data)), prox_scale_apply, prox_scale_del);
 }
+
+
+struct prox_selction_wrapper_s {
+
+	operator_data_t super;
+
+	const struct operator_p_s* op;
+
+	int N;
+	const long* dims;
+
+	int sdim;
+	unsigned long flags;
+};
+
+DEF_TYPEID(prox_selction_wrapper_s);
+
+static void prox_selection_wrapper_apply(const operator_data_t* _data, float mu, complex float* y, const complex float* x)
+{
+	auto data = CAST_DOWN(prox_selction_wrapper_s, _data);
+
+	long ipos[data->N];
+	long opos[data->N];
+	long mdims[data->N];
+
+	md_set_dims(data->N, ipos, 0);
+	md_set_dims(data->N, opos, 0);
+	md_select_dims(data->N, ~MD_BIT(data->sdim), mdims, data->dims);
+
+	const struct iovec_s* iov = operator_p_domain(data->op);
+
+	complex float* tmp = md_alloc_sameplace(iov->N, iov->dims, CFL_SIZE, x);
+
+	for ( ; ipos[data->sdim] < data->dims[data->sdim]; ipos[data->sdim]++) {
+
+		if (!MD_IS_SET(data->flags, ipos[data->sdim]))
+			continue;
+
+		md_move_block(data->N, mdims, opos, iov->dims, tmp, ipos, data->dims, x, CFL_SIZE);
+
+		opos[data->sdim]++;
+	}
+
+	if (y != x)
+		md_copy(data->N, data->dims, y, x, CFL_SIZE);
+
+	operator_p_apply_unchecked(data->op, mu, tmp, tmp);
+
+	md_set_dims(data->N, ipos, 0);
+	md_set_dims(data->N, opos, 0);
+
+	for ( ; ipos[data->sdim] < data->dims[data->sdim]; ipos[data->sdim]++) {
+
+		if (!MD_IS_SET(data->flags, ipos[data->sdim]))
+			continue;
+
+		md_move_block(data->N, mdims, ipos, data->dims, y, opos, iov->dims, tmp, CFL_SIZE);
+
+		opos[data->sdim]++;
+	}
+
+	md_free(tmp);
+}
+
+static void prox_selection_wrapper_del(const operator_data_t* _data)
+{
+	auto data = CAST_DOWN(prox_selction_wrapper_s, _data);
+
+	operator_p_free(data->op);
+	xfree(data->dims);
+
+	xfree(data);
+}
+
+const struct operator_p_s* prox_select_maps_F(int N, const long dims[__VLA(N)], unsigned long flags, const struct operator_p_s* prox)
+{
+	if (0 == flags) {
+
+		operator_p_free(prox);
+		return prox_zero_create(N, dims);
+	}
+
+	const struct iovec_s* iov = operator_p_domain(prox);
+
+	assert(N == iov->N);
+
+	int sdim = -1;
+
+	for (int i = 0; i < N; i++) {
+
+		if (dims[i] != iov->dims[i]) {
+
+			assert(-1 == sdim);
+			assert(iov->dims[i] == bitcount(flags));
+
+			sdim = i;
+		}
+	}
+
+	if (-1 == sdim)
+		return prox;
+
+	PTR_ALLOC(struct prox_selction_wrapper_s, data);
+	SET_TYPEID(prox_selction_wrapper_s, data);
+
+	data->op = prox;
+	data->sdim = sdim;
+	data->flags = flags;
+
+	data->N = N;
+	data->dims = ARR_CLONE(long[N], dims);
+
+	return operator_p_create(N, dims, N, dims, CAST_UP(PTR_PASS(data)), prox_selection_wrapper_apply, prox_selection_wrapper_del);
+}
+
+
+
+
