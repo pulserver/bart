@@ -237,7 +237,7 @@ int main_moba(int argc, char* argv[argc])
 		OPT_SET('M', &conf.sms, "Simultaneous Multi-Slice reconstruction"),
 		OPT_SET('O', &conf.out_origin_maps, "(Output original maps from reconstruction without post processing)"),
 		OPT_SET('g', &bart_use_gpu, "use gpu"),
-		OPTL_LONG(0, "positive-maps", &conf.constrained_maps, "flag", "Maps with positivity constraint as FLAG!"),
+		OPTL_ULONG(0, "positive-maps", &conf.constrained_maps, "flag", "Maps with positivity constraint as FLAG!"),
 		OPTL_PINT(0, "not-wav-maps", &conf.not_wav_maps, "d", "Maps removed from wavelet denoising (counted from back!)"),
 		OPTL_ULONG(0, "l2-on-parameters", &conf.l2para, "flag", "Flag for parameter maps with l2 norm"),
 		OPTL_PINT(0, "pusteps", &conf.pusteps, "ud", "Number of partial update steps for IRGNM"),

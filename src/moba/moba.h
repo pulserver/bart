@@ -47,7 +47,7 @@ struct moba_conf {
 	bool noncartesian;
         bool sms;
 	int not_wav_maps;
-	long constrained_maps;	// FIXME, this is special, a flag but -1 means uninitialized
+	unsigned long constrained_maps;
 	unsigned long l2para;
 	int pusteps;
 	float ratio;

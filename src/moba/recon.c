@@ -137,6 +137,33 @@ static void post_process(enum mdb_t mode, struct moba_conf_s* data, const long i
 }
 
 
+static unsigned long get_constrained_maps(enum mdb_t mode, enum meco_model mgre_mode)
+{
+	switch (mode) {
+
+	case MDB_T1: return MD_BIT(2);				// T1 map
+	case MDB_T2: return MD_BIT(1);				// T2 map
+	case MDB_BLOCH:	return MD_BIT(0) | MD_BIT(2);		// T1 and T2 map
+	case MDB_T1_PHY: return MD_BIT(1);			// T1 map
+	case MDB_MGRE:
+	case MDB_IR_MGRE:
+		switch (mgre_mode) {
+
+		case MECO_WF: return 0UL;
+		case MECO_WFR2S: return MD_BIT(2);			// R2*
+		case MECO_WF2R2S: return MD_BIT(1) | MD_BIT(3);		// R2*W and R2*F
+		case MECO_R2S: return MD_BIT(1);			// R2*
+		case MECO_PHASEDIFF: return 0UL;
+		case MECO_PI: return 0UL;
+		case IR_MECO_T1_R2S: return MD_BIT(2) | MD_BIT(3);	// R1* and R2*
+		case IR_MECO_W_T1_F_T1_R2S: return MD_BIT(2) | MD_BIT(5) | MD_BIT(6);	// R1*W, R1*F and R2*
+		}
+	}
+
+	assert(0);
+}
+
+
 static void set_bloch_conf(enum mdb_t mode, struct mdb_irgnm_l1_conf* conf2, const struct moba_conf* conf, struct moba_conf_s* data, const long img_dims[DIMS])
 {
 	// T2 estimation turned off for IR FLASH Simulation
@@ -152,14 +179,12 @@ static void set_bloch_conf(enum mdb_t mode, struct mdb_irgnm_l1_conf* conf2, con
 		case SEQ_IRFLASH:
 
 			conf2->l2flags = (0 != data->other.scale[3]) ? ((0 == conf->l2para) ? 8 : conf->l2para) : 0;
-			conf2->constrained_maps = (-1 == conf->constrained_maps) ? 1 : conf->constrained_maps;	// only R1 map: bitmask (1 0 0 0) = 1
 			conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 2 : conf->not_wav_maps; // no wavelet for T2 and B1 map
 			break;
 
 		case SEQ_IRBSSFP:
 
 			conf2->l2flags = (0 == conf->l2para) ? 0 : conf->l2para;
-			conf2->constrained_maps = (-1 == conf->constrained_maps) ? 5 : conf->constrained_maps;	// only T1 and T2: bitmask(1 0 1 0) = 5
 			conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps; // no wavelet for B1 map
 			break;
 
@@ -173,7 +198,6 @@ static void set_bloch_conf(enum mdb_t mode, struct mdb_irgnm_l1_conf* conf2, con
 	case MDB_T1_PHY:
 
 		conf2->l2flags = (0 == conf->l2para) ? 4 : conf->l2para;
-		conf2->constrained_maps = (-1 == conf->constrained_maps) ? 2 : conf->constrained_maps;    // only R1 map: bitmask (0 1 0) = 2
 		conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;	// no wavelet for R1' map
 
 		break;
@@ -185,22 +209,18 @@ static void set_bloch_conf(enum mdb_t mode, struct mdb_irgnm_l1_conf* conf2, con
 		switch (img_dims[COEFF_DIM]) {
 
 		case 3:
-			conf2->constrained_maps = (-1 == conf->constrained_maps) ? 0 : conf->constrained_maps;     // (W, F, B0): bitmask(0 0 0) = 0
 			conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;
 			conf2->l2flags = (0 == conf->l2para) ? 4 : conf->l2para;	// (W, F, B0): bitmask(0 0 1) = 4
 			break;
 		case 4:
-			conf2->constrained_maps = (-1 == conf->constrained_maps) ? 4 : conf->constrained_maps;     // (W, F, R2s, B0): bitmask(0 0 1 0) = 4
 			conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;
 			conf2->l2flags = (0 == conf->l2para) ? 8 : conf->l2para;	// (W, F, R2s, B0): bitmask(0 0 0 1) = 8
 			break;
 		case 5:
-			conf2->constrained_maps = (-1 == conf->constrained_maps) ? 12 : conf->constrained_maps;     // (Ms_w, M0_w, R1s_w, R2s, B0): bitmask(0 0 1 1 0) = 12
 			conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;
 			conf2->l2flags = (0 == conf->l2para) ? 16 : conf->l2para;	// (Ms_w, M0_w, R1s_w, R2s, B0): bitmask(0 0 0 0 1) = 16
 			break;
 		default:
-			conf2->constrained_maps = (-1 == conf->constrained_maps) ? 100 : conf->constrained_maps;     // (Ms_w, M0_w, R1s_w, Ms_f, M0_f, R1s_f, R2s, B0): bitmask(0 0 1 0 0 1 1 0) = 100
 			conf2->not_wav_maps = (0 == conf->not_wav_maps) ? 1 : conf->not_wav_maps;
 			conf2->l2flags = (0 == conf->l2para) ? 128 : conf->l2para;	// (Ms_w, M0_w, R1s_w, Ms_f, M0_f, R1s_f, R2s, B0): bitmask(0 0 0 0 0 0 0 1) = 128
 			break;
@@ -327,7 +347,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 		.step = conf->step,
 		.lower_bound = conf->lower_bound,
 		.l2flags = (0 == conf->l2para) ? ((1 == conf->opt_reg) ? (0UL) : ~(0UL)) : conf->l2para,
-		.constrained_maps = conf->constrained_maps,
+		.constrained_maps = (~0UL != conf->constrained_maps) ? conf->constrained_maps : get_constrained_maps(conf->mode, conf->mgre_model),
 		.auto_norm = conf->auto_norm,
 		.no_sens_l2 = data->other.no_sens_l2,
 		.not_wav_maps = (0 == conf->not_wav_maps) ? 0 : conf->not_wav_maps,
@@ -340,12 +360,6 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 	};
 
 	set_bloch_conf(conf->mode, &conf2, conf, data, imgs_dims);
-
-	// Always constrain last parameter map as default
-	if (-1 == conf2.constrained_maps)
-		conf2.constrained_maps = (1UL << (dims[COEFF_DIM] - 1));
-
-	assert(0 <= conf2.constrained_maps);
 
 	long irgnm_conf_dims[DIMS];
 	md_select_dims(DIMS, fft_flags|MAPS_FLAG|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, irgnm_conf_dims, imgs_dims);

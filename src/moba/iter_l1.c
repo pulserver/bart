@@ -149,7 +149,7 @@ static void pos_value(iter_op_data* _data, float* dst, const float* src)
 	long pos[DIMS] = { };
 
 	do {
-		if (!((1UL << pos[COEFF_DIM]) & (unsigned long)data->conf->constrained_maps))
+		if (!MD_IS_SET(data->conf->constrained_maps, pos[COEFF_DIM]))
 			continue;
 
 		md_zsmax2(DIMS, dims1,
