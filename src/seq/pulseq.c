@@ -537,7 +537,7 @@ void events_to_pulseq(struct pulseq *ps, enum seq_block mode, double tr, struct 
 			.next = 0,
 		};
 
-		struct ext ext = { 2, (int)ev[0].end - 10 };
+		struct ext ext = { 2, (int)((ev[0].end - 10.E-6) / ps->rf_raster_time) };
 		VEC_ADD(ps->extension_spec->data[0].values, ext);
 
 		VEC_ADD(ps->extensions, e);
