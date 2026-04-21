@@ -145,6 +145,16 @@ int prep_rf_hanning(struct seq_event* rf_ev, double start, double phase_shift, c
 	return 1;
 }
 
+long inv_calls(const struct seq_config* seq)
+{
+	long calls = seq->loop_dims[BATCH_DIM] * ((SEQ_ASL_NONE == seq->asl.label_type) ? seq->loop_dims[CSHIFT_DIM] : 1);
+
+	if (SEQ_ORDER_SEQ_MS == seq->enc.order)
+		return calls * seq->loop_dims[SLICE_DIM];
+
+	return calls;
+}
+
 long flash_ex_calls(const struct seq_config* seq)
 {
 	long dims[DIMS];

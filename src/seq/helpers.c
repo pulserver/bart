@@ -69,14 +69,13 @@ double seq_total_measure_time(const struct seq_config* seq)
 	if (SEQ_ASL_NONE != seq->asl.label_type)
 		return calc_asl_duration(seq) + pre_duration;
 
-	pre_duration += seq->phys.tr * (seq->magn.prep_scans * seq->loop_dims[SLICE_DIM] * seq->loop_dims[PHS2_DIM]);
-
 	struct seq_event ev[6];
 	int e = mag_prep(ev, seq);
 
 	double prep_pulse_duration = seq_block_end(e, ev, SEQ_BLOCK_PRE, seq->phys.tr, seq->sys.raster_grad);
-	prep_pulse_duration += seq->magn.inv_delay_time;
-	// prep_pulse_duration *= inv_calls(seq);
+	prep_pulse_duration += seq->magn.inv_delay_time + seq->trigger.delay_time;
+	prep_pulse_duration *= inv_calls(seq);
+
 	if (SEQ_CEST_NONE != seq->cest.sat_type) {
 
 		double sat_time = (SEQ_CEST_GAUSS == seq->cest.sat_type) ? seq->cest.gauss_pulse_duration : 0.1;
