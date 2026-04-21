@@ -743,6 +743,7 @@ endif
 
 .INTERMEDIATE: $$($(1)objs)
 .INTERMEDIATE: $$($(1)objs:.o=.win.o)
+.INTERMEDIATE: $$($(1)objs:.o=.libbart.o)
 
 lib/lib$(1).a: lib$(1).a($$($(1)objs))
 
@@ -972,9 +973,13 @@ gitclean_check:
 
 
 
-# implicit rules
-
 %.o: %.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+%.win.o: %.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+%.libbart.o: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 %.o: %.cc
@@ -1006,11 +1011,6 @@ else
 MINGWCC = x86_64-w64-mingw32-gcc
 endif
 
-
-%.win.o: %.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
-
-
 # BLAS, LAPACK
 WIN_UNSUPPORTED_OBJS=%blas.o %lapack.o %blas_md_wrapper.o %vecops_strided.o %convcorr.o
 WIN_UNSUPPORTED_MODULES=box calib grecon iter lapacke lowrank moba motion networks nlops nn noir nsimu sake sense
@@ -1026,7 +1026,7 @@ bart.dll: $(BARTDLL_OBJS:.o=.win.o)
 
 lib/libbart.a: CFLAGS = -D NO_PNG -D NOLAPACKE -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D BARTDLL -fPIC
 lib/libbart.a: CPPFLAGS = -I$(srcdir)/
-lib/libbart.a: $(BARTDLL_OBJS)
+lib/libbart.a: $(BARTDLL_OBJS:.o=.libbart.o)
 	$(AR) rcs $@ $^
 
 $(UTARGETS_WINE): CC = $(MINGWCC)
