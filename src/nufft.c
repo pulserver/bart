@@ -162,7 +162,7 @@ int main_nufft(int argc, char* argv[argc])
 
 			assert(md_check_compat(DIMS, 1u, timemap_dims, traj_dims));
 			assert(md_check_compat(DIMS, 4u, coilest_dims, fieldmap_dims));
-			assert(1 == dft); /* only implemented for dft for now */
+			assert(dft); /* only implemented for dft for now */
 		}
 	}
 
@@ -172,6 +172,7 @@ int main_nufft(int argc, char* argv[argc])
 	if (NULL != basis_file) {
 
 		basis = load_cfl(basis_file, DIMS, basis_dims);
+
 		assert(!md_check_dimensions(DIMS, basis_dims, COEFF_FLAG | TE_FLAG));
 	}
 

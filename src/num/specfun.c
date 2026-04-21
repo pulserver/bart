@@ -1,4 +1,5 @@
 /* Copyright 2016. Martin Uecker.
+ * Copyright 2022-2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  * 
@@ -395,50 +396,46 @@ double hyp2f1(double a, double b, double c, double x)
 {
 	double eps = 1e-15;
 
-	double out = 0.;
-
 	// Test for special cases
 
 	// Limited number of special cases is tested here.
 	// See:
 	// https://github.com/scipy/scipy/blob/main/scipy/special/special/hyp2f1.h
 	// for detailed special case management
-	if ( (eps > x) && (eps > a) && (eps > b) )
-		out = 1.;
+	if ((eps > x) && (eps > a) && (eps > b))
+		return 1.;
 
-	else if ((eps > fabs(1. - x)) && (0. < (c - a - b)))
-		out = gamma_func(c) * gamma_func(c - a - b) / (gamma_func(c - a) * gamma_func(c - b));
+	if ((eps > fabs(1. - x)) && (0. < (c - a - b)))
+		return gamma_func(c) * gamma_func(c - a - b) / (gamma_func(c - a) * gamma_func(c - b));
 
-	else if ((eps > fabs(1. - x)) && (eps > fabs(c - a + b - 1.)))
-		out = sqrt(M_PI) * pow(2., -a) * gamma_func(c) /
+	if ((eps > fabs(1. - x)) && (eps > fabs(c - a + b - 1.)))
+		return sqrt(M_PI) * pow(2., -a) * gamma_func(c) /
 			(gamma_func(1. + 0.5 * a - b) * gamma_func(0.5 + 0.5 * a));
 
-	else if (1. >= x) {
-
-		if (0. > x) {
-
-			out = hyp2f1_powerseries(a, c - b, c, x / (x - 1.));
-
-			out *= 1. / pow(1. - x, a);
-
-		} else if ((a > c - a) && (b > c - b)) {
-
-			double x00 = pow(1. - x, c - a - b);
-
-			out = hyp2f1_powerseries(c - a, c - b, c, x);
-			out *= x00;
-
-		} else
-			out = hyp2f1_powerseries(a, b, c, x);
-	}
-	else
+	if (1. < x)
 		error("Hyp2f1 function of this case is not implemented.");
 
-	return out;
+	if (0. > x) {
+
+		double out = hyp2f1_powerseries(a, c - b, c, x / (x - 1.));
+
+		out *= 1. / pow(1. - x, a);
+
+		return out;
+	}
+
+	if ((a > c - a) && (b > c - b)) {
+
+		double x00 = pow(1. - x, c - a - b);
+
+		return x00 * hyp2f1_powerseries(c - a, c - b, c, x);
+	}
+
+	return hyp2f1_powerseries(a, b, c, x);
 }
 
 // Orthogonal Polynomials: Evaluation of associated Legendre function first order P_{\lambda}^{\mu}(x)
-static double assoc_legendre(double lambda, double mu, double x)
+static double assoc_legendre(int lambda, int mu, double x)
 {
 	// FIXME: iterative definition faster?
 	double scale = 1. / (gamma_func(1. - mu)) * pow((x + 1.) / (x - 1.), mu / 2.);
@@ -446,9 +443,9 @@ static double assoc_legendre(double lambda, double mu, double x)
 	return scale * hyp2f1(-lambda, lambda + 1., 1. - mu, 0.5 * (1. - x));
 }
 
-double legendre(double lambda, double x)
+double legendre(int lambda, double x)
 {
-	return assoc_legendre(lambda, 0., x);
+	return assoc_legendre(lambda, 0, x);
 	// return hyp2f1(-lambda, lambda + 1, 1., 0.5 * (1 - x)); // Cheaper
 }
 
