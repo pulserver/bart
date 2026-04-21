@@ -734,7 +734,6 @@ define alib
 $(1)srcs := $(wildcard $(srcdir)/$(1)/*.c)
 $(1)cudasrcs := $(wildcard $(srcdir)/$(1)/*.cu)
 $(1)objs := $$($(1)srcs:.c=.o)
-$(1)winobjs := $$($(1)srcs:.c=.win.o)
 $(1)objs += $$($(1)extrasrcs:.c=.o)
 $(1)objs += $$($(1)extracxxsrcs:.cc=.o)
 
@@ -743,7 +742,7 @@ $(1)objs += $$($(1)cudasrcs:.cu=.o)
 endif
 
 .INTERMEDIATE: $$($(1)objs)
-.INTERMEDIATE: $$($(1)winobjs)
+.INTERMEDIATE: $$($(1)objs:.o=.win.o)
 
 lib/lib$(1).a: lib$(1).a($$($(1)objs))
 
@@ -778,24 +777,6 @@ lib/libbox.a: CPPFLAGS += -include src/main.h
 UTARGETS += test_grog test_casorati
 MODULES_test_grog += -lcalib -lnoncart -lsimu -lgeom -lstl
 MODULES_test_casorati+= -lcalib -llinops -liter
-
-
-# shared libraries
-define dlllib
-$(1)srcs := $(wildcard $(srcdir)/$(1)/*.c)
-$(1)objs := $$($(1)srcs:.c=.win.o)
-
-.INTERMEDIATE: $$($(1)objs)
-
-lib/$(1).dll: $$($(1)objs)
-
-endef
-
-DLLS=seq
-
-$(eval $(foreach t,$(DLLS),$(eval $(call dlllib,$(t)))))
-
-
 
 # lib linop
 UTARGETS += test_linop_matrix test_linop test_padding
@@ -1029,19 +1010,23 @@ endif
 %.win.o: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
 
+
 # BLAS, LAPACK
-WIN_NOT_SUPPORTED=%blas.win.o %lapack.win.o %blas_md_wrapper.win.o %vecops_strided.win.o %convcorr.win.o
+WIN_UNSUPPORTED_OBJS=%blas.o %lapack.o %blas_md_wrapper.o %vecops_strided.o %convcorr.o
+WIN_UNSUPPORTED_MODULES=box calib grecon iter lapacke lowrank moba motion networks nlops nn noir nsimu sake sense
+BARTDLL_MODULES=$(foreach t,$(filter-out $(WIN_UNSUPPORTED_MODULES),$(ALIBS)),$tobjs)
+BARTDLL_OBJS=$(filter-out $(WIN_UNSUPPORTED_OBJS),$(foreach t,$(BARTDLL_MODULES),$($t)))
 
 bart.dll: CC = $(MINGWCC)
 bart.dll: CFLAGS = -D NO_PNG -D NOLAPACKE -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D BARTDLL
 bart.dll: CPPFLAGS = -D BARTLIB_EXPORTS -I$(srcdir)/
 bart.dll: LDFLAGS = -shared -Wl,--subsystem,windows -Wl,--out-implib,bart.lib -Wl,--output-def,bart.def -static-libgcc
-bart.dll: $(seqwinobjs) $(miscwinobjs) $(filter-out $(WIN_NOT_SUPPORTED),$(numwinobjs)) $(winwinobjs) $(noncartwinobjs) $(linopswinobjs) $(waveletwinobjs) $(geomwinobjs) $(stlwinobjs) $(simuwinobjs)
+bart.dll: $(BARTDLL_OBJS:.o=.win.o)
 	$(CC) $^ $(LDFLAGS) -o $@
 
 lib/libbart.a: CFLAGS = -D NO_PNG -D NOLAPACKE -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D BARTDLL -fPIC
 lib/libbart.a: CPPFLAGS = -I$(srcdir)/
-lib/libbart.a: $(seqobjs) $(miscobjs) $(filter-out $(WIN_NOT_SUPPORTED:.win.o=.o),$(numobjs)) $(winobjs) $(noncartobjs) $(linopsobjs) $(waveletobjs) $(geomobjs) $(stlobjs) $(simuobjs)
+lib/libbart.a: $(BARTDLL_OBJS)
 	$(AR) rcs $@ $^
 
 $(UTARGETS_WINE): CC = $(MINGWCC)
