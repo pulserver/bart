@@ -408,6 +408,20 @@ debug_print_events:
 
 		seq_rf_count(prepped_rfs, pulse_calls, E, seq->event);
 
+		if (seq_opts.stats) {
+
+			if (!seq_check_gradients(E, seq->event, &seq->conf->sys)) {
+
+				debug_print_dims(DP_INFO, DIMS, seq->state->pos);
+				error("Gradient/Slew rate check of block failed\n");
+			}
+
+			if (!seq_check_timing(E, seq->event, &seq->conf->sys)) {
+
+				debug_print_dims(DP_INFO, DIMS, seq->state->pos);
+				error("Timing check of block failed\n");
+			}
+		}
 
 		for (int i = 0; i < E; i++) {
 
