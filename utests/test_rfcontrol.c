@@ -93,22 +93,26 @@ static bool test_cn_bloch_rf_pulse(void)
 UT_REGISTER_TEST(test_cn_bloch_rf_pulse);
 
 
+static const struct puls_opt_pars puls_simple = {
+	.relax = 0,
+	.T1 = 1,
+	.T2 = 1,
+	.B1c = 1,
+	.M0c = 1,
+	.gamma = 1,
+	.Gz = 0.,
+	.Nx = 50,
+	.a = 0.5,
+	.dt = 0.000001,
+	.B1 = 1,
+	.r1 = 0,
+	.r2 = 0,
+};
+
+
 static bool test_cn_bloch()
 {
-	struct puls_opt_pars p;
-	p.relax = 0;
-	p.T1 = 1;
-	p.T2 = 1;
-	p.B1c = 1;
-	p.M0c = 1.0;
-	p.gamma = 1;
-	p.Gz = 0.;
-	p.Nx = 50;
-	p.dt = 0.000001;
-	p.a = 0.5;
-	p.B1 = p.gamma * p.B1c;
-	p.r1 = p.relax / p.T1;
-	p.r2 = p.relax / p.T2;
+	struct puls_opt_pars p = puls_simple;
 
 	double xdis[p.Nx];
 
@@ -174,20 +178,7 @@ UT_REGISTER_TEST(test_cn_bloch);
 
 static bool test_cn_adjoint()
 {
-	struct puls_opt_pars p;
-	p.relax = 0;
-	p.T1 = 1;
-	p.T2 = 1;
-	p.B1c = 1;
-	p.M0c = 1;
-	p.gamma = 1;
-	p.Gz = 0.;
-	p.Nx = 50;
-	p.a = 0.5;
-	p.dt = 0.000001;
-	p.B1 = p.gamma * p.B1c;
-	p.r1 = p.relax / p.T1;
-	p.r2 = p.relax / p.T2;
+	struct puls_opt_pars p = puls_simple;
 
 	double xdis[p.Nx];
 
@@ -221,12 +212,14 @@ static bool test_cn_adjoint()
 
 	// Part 1: Forward simulation
 	float M0[3][p.Nx];
+
 	for (int z = 0; z < p.Nx; z++) {
 
 		M0[0][z] = 0.;  // Mx
 		M0[1][z] = 0.;  // My
 		M0[2][z] = 1.;  // Mz
 	}
+
 	p.M0 = &M0[0][0];
 
 	float M[p.Nx][p.Nt][3];
@@ -364,33 +357,57 @@ static const float z_gradient[696] = {
 	0., 0.
 };
 
+// TR-CG-Newton parameters
+const struct tr_pars trcg_parm = {
+	.maxit = 5,
+	.reltol = 1e-4,
+	.abstol = 1.2e-7,
+	.rho = 1,
+	.maxrad = 2,
+	.sig1 = 0.03,
+	.sig2 = 0.25,
+	.sig3 = 0.7,
+	.q = 2,
+	.cgtol = 1e-6,
+	.cgits = 50,
+};
+
+
+static const struct puls_opt_pars puls_compl = {
+	.a = 0.05,
+	.z = 0.0025,
+	.Nx = 211,
+	.T = 3.480,
+	.Nt = 697,
+	.Nu = 512,
+	// Model parameters
+	.gamma = 267.51,
+	.T1 = 102,
+	.T2 = 81,
+	.B0 = 3000,
+	.M0c = 1,
+	.B1c = 1e-2,
+	.Gz = 1,
+	.relax = 0,
+	.r1 = 0.,
+	.r2 = 0.,
+	.alpha = 1e-4,
+	.phi = 90.,
+};
 
 static bool test_single(void)
 {
 	// Set parameters
 	// Space discretization
-	struct puls_opt_pars p = {
-		.a = 0.05,
-		.z = 0.0025,
-		.Nx = 211,
-		.T = 3.480,
-		.Nt = 697,
-		.Nu = 512,
-		// Model parameters
-		.gamma = 267.51,
-		.T1 = 102,
-		.T2 = 81,
-		.B0 = 3000,
-		.M0c = 1,
-		.B1c = 1e-2,
-		.Gz = 1,
-		.relax = 0,
-		.B1 = p.gamma * p.B1c,
-		.r1 = p.relax / p.T1,
-		.r2 = p.relax / p.T2,
-		.alpha = 1e-4,
-		.phi = 90.,
-	};
+	struct puls_opt_pars p = puls_compl;
+
+	p.a = 0.05;
+	p.Nx = 211;
+	p.T = 3.480;
+	// Model parameters
+	p.B1c = 1e-2;
+	p.Gz = 1;
+	p.B1 = p.gamma * p.B1c;
 
 	p.xdis = xmalloc(sizeof(double[p.Nx]));
 
@@ -426,21 +443,6 @@ static bool test_single(void)
 	}
 
 	p.M0 = &(*M0)[0][0];
-
-	// TR-CG-Newton parameters
-	struct tr_pars tr = {
-		.maxit = 5,
-		.reltol = 1e-4,
-		.abstol = 1.2e-7,
-		.rho = 1,
-		.maxrad = 2,
-		.sig1 = 0.03,
-		.sig2 = 0.25,
-		.sig3 = 0.7,
-		.q = 2,
-		.cgtol = 1e-6,
-		.cgits = 50,
-	};
 
 	// Define target magnetization
 	float (*inslice)[p.Nx] = xmalloc(sizeof *inslice);
@@ -512,7 +514,7 @@ static bool test_single(void)
 
 	float (*u)[p.Nu] = xmalloc(sizeof *u);
 
-	tr_newton(p.Nu, *u, p, tr, p.u);
+	tr_newton(p.Nu, *u, p, trcg_parm, p.u);
 
 	xfree(p.xdis);
 	xfree(p.tdis);
@@ -624,29 +626,17 @@ static const float multi_u_res[512] = {
 static bool test_multi(void)
 {
 	// Slice selective gradient shape
-	struct puls_opt_pars p = {
-		// Space discretization
-		.a = 0.5,
-		.z = 0.0025,
-		.Nx = 5001,
-		// Time discretization
-		.T = 13.92,
-		.Nt = 697,
-		.Nu = 512,
-		// Model parameters
-		.gamma = 267.51,
-		.T1 = 102.,
-		.T2 = 81.,
-		.B0 = 3000.,
-		.M0c = 1.,
-		.B1c = 0.5e-2,
-		.Gz = 0.25,
-		.relax = 0.,
-		.alpha = 1e-4,
-		.B1 = p.gamma * p.B1c,
-		.r1 = p.relax / p.T1,
-		.r2 = p.relax / p.T2,
-	};
+	struct puls_opt_pars p = puls_compl;
+
+	// Space discretization
+	p.a = 0.5;
+	p.Nx = 5001;
+	// Time discretization
+	p.T = 13.92;
+	// Model parameters
+	p.B1c = 0.5e-2;
+	p.Gz = 0.25;
+	p.B1 = p.gamma * p.B1c;
 
 	p.xdis = xmalloc((size_t)p.Nx * sizeof(double));
 
@@ -687,27 +677,11 @@ static bool test_multi(void)
 
 	p.M0 = &(*M0)[0][0];
 
-	// TR-CG-Newton parameters
-	struct tr_pars tr = {
-		.maxit = 5,
-		.reltol = 1e-4,
-		.abstol = 1.2e-7,
-		.rho = 1.0,
-		.maxrad = 2.0,
-		.sig1 = 0.03,
-		.sig2 = 0.25,
-		.sig3 = 0.7,
-		.q = 2,
-		.cgtol = 1e-6,
-		.cgits = 50,
-	};
-
 	// Define Target magnetization
 	// Problem parameters
 	double phase_shift = 0.;	// Alternating phase (pi) shifted excitation
 	int sms = 6;			// Number of simultaneous slices (2,..,6)
 	double slice_sep = 0.025;	// Multi-slice parameters
-	p.phi = 90.;			// Flip angle in deg
 
 	// Define center positions for all simultaneous slices (different for even/odd slice number)
 	double (*center_pos)[sms] = xmalloc(sizeof *center_pos);
@@ -830,7 +804,7 @@ static bool test_multi(void)
 
 	float (*u)[p.Nu] = xmalloc(sizeof *u);
 
-	tr_newton(p.Nu, *u, p, tr, p.u);
+	tr_newton(p.Nu, *u, p, trcg_parm, p.u);
 
 	xfree(p.xdis);
 	xfree(p.tdis);
