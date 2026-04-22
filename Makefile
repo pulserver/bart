@@ -1241,6 +1241,7 @@ pythontest: ${TESTS_PYTHON}
 
 ismrmrdtest: ${TESTS_ISMRMRD}
 
+testcxx: ${TESTS_CXX}
 
 
 # unit tests

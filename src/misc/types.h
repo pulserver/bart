@@ -7,12 +7,16 @@
 #define _TYPES_H
 
 #include <stddef.h>
+#ifdef NO_NORETURN
+extern void error(const char* str, ...);
+#else
 #include <stdnoreturn.h>
 
 #ifndef __cplusplus
 extern noreturn void error(const char* str, ...);
 #else
 extern __attribute__((noreturn)) void error(const char* str, ...);
+#endif
 #endif
 
 

@@ -13,7 +13,11 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdarg.h>
+
+#ifndef NO_NORETURN
 #include <stdnoreturn.h>
+#endif
+
 #include <setjmp.h>
 
 #include "misc/nested.h"
@@ -85,12 +89,22 @@ extern int parse_long(long res[1], const char* str);
 extern int parse_longlong(long long res[1], const char* str);
 extern int parse_ulonglong(unsigned long long res[1], const char* str);
 extern int parse_int(int res[1], const char* str);
+
+#ifdef NO_NORETURN
+extern void error(const char* str, ...);
+#else
 #ifndef __cplusplus
 extern noreturn void error(const char* str, ...);
 #else
 extern __attribute__((noreturn)) void error(const char* str, ...);
 #endif
+#endif
 
+#ifndef NO_PRINTF_ATTR
+#define PRINTF_ATTR __attribute__((format(printf,1,2)))
+#else
+#define PRINTF_ATTR
+#endif
 
 #ifdef USE_DWARF
 #undef assert
@@ -107,7 +121,7 @@ extern struct error_jumper_s error_jumper;	// FIXME should not be extern
 
 extern int error_catcher(int fun(int argc, char* argv[__VLA(argc)]), int argc, char* argv[__VLA(argc)]);
 
-extern int bart_printf(const char* fmt, ...) __attribute__((format(printf,1,2)));
+extern int bart_printf(const char* fmt, ...) PRINTF_ATTR;
 
 extern void debug_print_bits(int dblevel, int D, unsigned long bitmask);
 
@@ -159,7 +173,7 @@ extern bool safe_isfinite(float x);
 
 extern long io_calc_size(int D, const long dims[__VLA(D?:1)], size_t size);
 
-extern char* ptr_printf(const char* fmt, ...) __attribute__((format(printf,1,2)));
+extern char* ptr_printf(const char* fmt, ...) PRINTF_ATTR;
 extern void ptr_append_printf(const char** prefix, const char* fmt, ...);
 extern char* ptr_vprintf(const char* fmt, va_list ap);
 extern char* ptr_print_dims(int D, const long dims[__VLA(D)]);
@@ -175,6 +189,7 @@ extern char* construct_filename(int D, const long loopdims[__VLA(D)], const long
 #define ffsl(x) __builtin_ffsl(x)
 #endif
 
+#undef PRINTF_ATTR
 
 #include "misc/cppwrap.h"
 
