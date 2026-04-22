@@ -20,6 +20,90 @@
 #endif
 
 
+/*
+ * evaluate gradient/slew rate of single event at time t
+ */
+static void event_sample(double m[3], bool deriv, double t, const struct seq_event* ev)
+{
+	assert(SEQ_EVENT_GRADIENT == ev->type);
+
+	for (int a = 0; a < 3; a++)
+		m[a] = 0.;
+
+	if (ev->start > t)
+		return;
+
+	if (ev->end < t)
+		return;
+
+	double s = ev->start;
+	double e = ev->end;
+	double c = ev->mid;
+
+	for (int a = 0; a < 3; a++) {
+
+		if (c > s) {
+
+			double A = ev->grad.ampl[a] / (c - s);
+
+			if (t <= c)
+				m[a] = A * (deriv ? 1. : (t - s));
+		}
+
+		if (e > c) {
+
+			double B = ev->grad.ampl[a] / (e - c);
+
+			if (c < t)
+				m[a] = B * (deriv ? 1. : (e - t));
+		}
+	}
+}
+
+
+/*
+ * evaluate gradient of all events at time t
+ */
+void seq_gradient(double m[3], double t, int N, const struct seq_event ev[N])
+{
+	for (int a = 0; a < 3; a++)
+		m[a] = 0.;
+
+	for (int j = 0; j < N; j++) {
+
+		if (SEQ_EVENT_GRADIENT != ev[j].type)
+			continue;
+
+		double m0[3];
+		event_sample(m0, false, t, &ev[j]);
+
+		for (int a = 0; a < 3; a++)
+			m[a] += m0[a];
+	}
+}
+
+/*
+ * evaluate slew rate of all events at time t
+ */
+void seq_slew(double m[3], double t, int N, const struct seq_event ev[N])
+{
+	for (int a = 0; a < 3; a++)
+		m[a] = 0.;
+
+	for (int j = 0; j < N; j++) {
+
+		if (SEQ_EVENT_GRADIENT != ev[j].type)
+			continue;
+
+		double m0[3];
+		event_sample(m0, true, t, &ev[j]);
+
+		for (int a = 0; a < 3; a++)
+			m[a] += m0[a];
+	}
+}
+
+
 void seq_linearize_events(int N, struct seq_event ev[__VLA(N)], double* start_block, enum seq_block mode, double tr, double raster)
 {
 	if ((0 >= N) || (0. > *start_block))
