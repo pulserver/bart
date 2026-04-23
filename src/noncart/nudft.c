@@ -280,7 +280,7 @@ static void nudft_delete(const linop_data_t* _data)
 	xfree(data);
 }
 
-const struct linop_s* nudft_create2(int N, unsigned long flags,
+struct linop_s* nudft_create2(int N, unsigned long flags,
 					const long odims[N], const long ostrs[N],
 					const long idims[N], const long istrs[N],
 					const long tdims[N], const complex float* traj,
@@ -340,7 +340,7 @@ const struct linop_s* nudft_create2(int N, unsigned long flags,
 			nudft_apply, nudft_adj, NULL, NULL, nudft_delete);
 }
 
-const struct linop_s* nudft_create(int N, unsigned long flags, const long odims[N], const long idims[N], const long tdims[N], const complex float* traj, const long fmdims[N], const complex float* fieldmap, const long tmdims[N], const complex float* timemap)
+struct linop_s* nudft_create(int N, unsigned long flags, const long odims[N], const long idims[N], const long tdims[N], const complex float* traj, const long fmdims[N], const complex float* fieldmap, const long tmdims[N], const complex float* timemap)
 {
 	return nudft_create2(N, flags, odims, MD_STRIDES(N, odims, CFL_SIZE), idims, MD_STRIDES(N, idims, CFL_SIZE), tdims, traj, fmdims, fieldmap, tmdims, timemap);
 }

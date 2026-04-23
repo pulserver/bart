@@ -31,7 +31,6 @@
 #include "iter/lsqr.h"
 
 #include "noncart/nufft.h"
-#include "noncart/nudft.h"
 #include "noncart/precond.h"
 
 
@@ -57,7 +56,6 @@ int main_nufft(int argc, char* argv[argc])
 	bool adjoint = false;
 	bool inverse = false;
 	bool precond = false;
-	bool dft = false;
 
 	const char* basis_file = NULL;
 	const char* pattern_file = NULL;
@@ -85,7 +83,7 @@ int main_nufft(int argc, char* argv[argc])
 		OPT_FLOAT('l', &lambda, "lambda", "l2 regularization"),
 		OPT_PINT('m', &cgconf.maxiter, "iter", "max. number of iterations (inverse only)"),
 		OPT_SET('P', &nufft_conf_options.periodic, "periodic k-space"),
-		OPT_SET('s', &dft, "DFT"),
+		OPT_SET('s', &nufft_conf_options.dft, "DFT"),
 		OPT_SET('g', &bart_use_gpu, "GPU"),
 		OPT_CLEAR('1', &nufft_conf_options.decomp, "use/return oversampled grid"),
 		OPTL_SET(0, "lowmem", &nufft_conf_options.lowmem, "use low-mem mode of the nuFFT"),
@@ -162,7 +160,7 @@ int main_nufft(int argc, char* argv[argc])
 
 			assert(md_check_compat(DIMS, 1u, timemap_dims, traj_dims));
 			assert(md_check_compat(DIMS, 4u, coilest_dims, fieldmap_dims));
-			assert(dft); /* only implemented for dft for now */
+			assert(nufft_conf_options.dft); /* only implemented for dft for now */
 		}
 	}
 
@@ -218,31 +216,22 @@ int main_nufft(int argc, char* argv[argc])
 
 		const struct linop_s* nufft_op;
 
-		if (!dft) {
 #ifdef USE_CUDA
-			if (bart_use_gpu && !precond && !dft) {
+		if (bart_use_gpu && !precond && !nufft_conf_options.dft) {
 
-				complex float* traj_gpu = md_gpu_move(DIMS, traj_dims, traj, CFL_SIZE);
+			complex float* traj_gpu = md_gpu_move(DIMS, traj_dims, traj, CFL_SIZE);
 
-				auto tmp = nufft_create2(DIMS, ksp_dims, coilim_dims, traj_dims, traj_gpu, pattern_dims, pattern, basis_dims, basis, conf);
-				nufft_op = linop_gpu_wrapper(tmp);
-				linop_free(tmp);
+			auto tmp = nufft_create2(DIMS, ksp_dims, coilim_dims, traj_dims, traj_gpu, pattern_dims, pattern, basis_dims, basis, conf);
+			nufft_op = linop_gpu_wrapper(tmp);
+			linop_free(tmp);
 
-				md_free(traj_gpu);
-
-			} else {
-#else
-			{
-#endif
-				nufft_op = nufft_create2(DIMS, ksp_dims, coilim_dims, traj_dims, traj, pattern_dims, pattern, basis_dims, basis, conf);
-			}
+			md_free(traj_gpu);
 
 		} else {
-
-			assert(NULL == basis);
-			assert(NULL == pattern);
-
-			nufft_op = nudft_create(DIMS, FFT_FLAGS, ksp_dims, coilim_dims, traj_dims, traj, fieldmap_dims, fieldmap, timemap_dims, timemap);
+#else
+		{
+#endif
+			nufft_op = nufft_create2(DIMS, ksp_dims, coilim_dims, traj_dims, traj, pattern_dims, pattern, basis_dims, basis, conf);
 		}
 
 
@@ -290,12 +279,7 @@ int main_nufft(int argc, char* argv[argc])
 
 		complex float* ksp = create_cfl(out_file, DIMS, ksp_dims);
 
-		const struct linop_s* nufft_op;
-
-		if (!dft)
-			nufft_op = nufft_create2(DIMS, ksp_dims, coilim_dims, traj_dims, traj, pattern_dims, pattern, basis_dims, basis, conf);
-		else
-			nufft_op = nudft_create(DIMS, FFT_FLAGS, ksp_dims, coilim_dims, traj_dims, traj, fieldmap_dims, fieldmap, timemap_dims, timemap);
+		const struct linop_s* nufft_op = nufft_create2(DIMS, ksp_dims, coilim_dims, traj_dims, traj, pattern_dims, pattern, basis_dims, basis, conf);
 
 		if (bart_use_gpu) {
 

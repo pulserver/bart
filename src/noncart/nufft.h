@@ -1,4 +1,7 @@
 
+#ifndef _NUFFT_H
+#define _NUFFT_H
+
 #include "misc/cppwrap.h"
 
 struct operator_s;
@@ -10,6 +13,7 @@ struct nufft_conf_s {
 	_Bool pcycle; 	/// < Phase cycling
 	_Bool periodic;
 	_Bool lowmem;
+	_Bool dft;
 
 	unsigned long flags;
 	unsigned long cfft;
@@ -30,7 +34,7 @@ struct nufft_conf_s {
 	float os;
 };
 
-extern struct nufft_conf_s nufft_conf_defaults;
+extern const struct nufft_conf_s nufft_conf_defaults;
 extern struct nufft_conf_s nufft_conf_options;
 
 #include "misc/opts.h"
@@ -98,4 +102,6 @@ extern void nufft_get_psf2(const struct linop_s* nufft, int N, const long psf_di
 extern void nufft_get_psf(const struct linop_s* nufft, int N, const long psf_dims[N], _Complex float* psf);
 
 #include "misc/cppwrap.h"
+
+#endif // __NUFFT_H
 

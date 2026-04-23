@@ -42,7 +42,7 @@ struct network_data_s {
 	_Complex float* basis;
 	_Complex float* scale;
 
-	struct nufft_conf_s* nufft_conf;
+	const struct nufft_conf_s* nufft_conf;
 
 	_Bool create_out;
 	_Bool load_mem;

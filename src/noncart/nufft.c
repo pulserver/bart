@@ -44,17 +44,19 @@
 
 #include "noncart/grid.h"
 #include "noncart/nufft_chain.h"
+#include "noncart/nudft.h"
 
 #include "nufft.h"
 
 #define FFT_FLAGS (MD_BIT(0)|MD_BIT(1)|MD_BIT(2))
 
-struct nufft_conf_s nufft_conf_defaults = {
+const struct nufft_conf_s nufft_conf_defaults = {
 
 	.toeplitz = true,
 	.pcycle = false,
 	.periodic = false,
 	.lowmem = false,
+	.dft = false,
 	.flags = FFT_FLAGS,
 	.cfft = 0u,
 	.decomp = true,
@@ -78,6 +80,7 @@ struct nufft_conf_s nufft_conf_options = {
 	.pcycle = false,
 	.periodic = false,
 	.lowmem = false,
+	.dft = false,
 	.flags = FFT_FLAGS,
 	.cfft = 0u,
 	.decomp = true,
@@ -109,6 +112,8 @@ struct opt_s nufft_conf_opts[] = {
 	OPTL_SET(0, "compress-psf", &(nufft_conf_options.compress_psf), "only store non-zero entries of PSF (lower memory usage and faster in some cases)"),
 	OPTL_SET(0, "decomposed-psf", &(nufft_conf_options.decomposed_psf), "compute even and odd frequencies of PSF independently (lower memory usage but slower)"),
 	OPTL_SET(0, "upper-triag-psf", &(nufft_conf_options.upper_triag), "store only upper triangular part of PSF for subspace (lower memory usage and faster in some cases)"),
+	OPTL_SET(0, "dft", &(nufft_conf_options.dft), "(use dft)"),
+//	OPTL_INFILE(0, "b0map", &(nufft_cob0_file, "[rad/s]", "Input B0 map as cfl file"),
 };
 
 int N_nufft_conf_opts = ARRAY_SIZE(nufft_conf_opts);
@@ -567,7 +572,7 @@ static complex float* compute_psf_int(int N, const long img_dims[N], const long 
 
 	struct nufft_conf_s conf = compute_psf_nufft_conf(periodic, lowmem, is_vptr(traj));
 
-	struct linop_s* lop_nufft = nufft_create2(N, ksp_dims, img_dims2, trj_dims, traj, wgh_dims, sqr_weights, sqr_bas_dims, sqr_basis, conf);
+	const struct linop_s* lop_nufft = nufft_create2(N, ksp_dims, img_dims2, trj_dims, traj, wgh_dims, sqr_weights, sqr_bas_dims, sqr_basis, conf);
 
 	lop_nufft = linop_reshape_in_F(lop_nufft, N, img_dims);
 
@@ -655,7 +660,7 @@ complex float* compute_psf2_decomposed(int N, const long psf_dims[N + 1], unsign
 	md_zadd2(N + 1, trj_dims2, MD_STRIDES(N + 1, trj_dims2, CFL_SIZE), traj2, MD_STRIDES(N + 1, trj_dims, CFL_SIZE), traj, MD_STRIDES(N + 1, sdims, CFL_SIZE), tshift);
 	md_free(tshift);
 
-	struct linop_s* lop_nufft;
+	const struct linop_s* lop_nufft;
 
 	if (lowmem) {
 
@@ -1186,6 +1191,19 @@ struct linop_s* nufft_create2(int N,
 			     const complex float* basis,
 			     struct nufft_conf_s conf)
 {
+	if (conf.dft) {
+
+		assert(NULL == weights);
+		assert(NULL == basis);
+
+		return nudft_create(N, FFT_FLAGS,
+					ksp_dims,
+					cim_dims,
+					traj_dims, traj,
+					NULL, NULL,
+					NULL, NULL);
+	}
+
 	if (2. != conf.os) {
 
 		debug_printf(DP_DEBUG1, "Chained nuFFT!\n");
