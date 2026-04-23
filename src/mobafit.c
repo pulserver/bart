@@ -163,8 +163,6 @@ int main_mobafit(int argc, char* argv[argc])
 	const char* enc_file = NULL;
 	const char* echo_file = NULL;
 	const char* coeff_file = NULL;
-	const char* b1_file = NULL;
-	const char* b0_file = NULL;
 	const char* cov_file = NULL;
 
 	struct arg_s args[] = {
@@ -175,8 +173,12 @@ int main_mobafit(int argc, char* argv[argc])
 		ARG_OUTFILE(false, &cov_file, "covariance matrix"),
 	};
 
+	const char* b1_file = NULL;
+	const char* b0_file = NULL;
+
 	float init0[DIMS] = { };
 	float scale0[DIMS] = { [0 ... DIMS - 1] = 1. };
+	const char* init_file = NULL;
 
 	float bound_min[DIMS] = { };
 	float bound_max[DIMS] = { };
@@ -312,6 +314,7 @@ int main_mobafit(int argc, char* argv[argc])
 		OPT_SET('g', &bart_use_gpu, "use gpu"),
 		OPT_INFILE('B', &basis_file, "file", "temporal (or other) basis"),
 		OPTL_FLVECN(0, "init", init0, "Initial values of parameters in model-based reconstruction"),
+		OPTL_INFILE(0, "init-file", &init_file, "init", "Initial values of parameters in model-based reconstruction"),
 		OPTL_FLVECN(0, "scale", scale0, "Scaling"),
 
 		OPTL_SET(0, "levenberg-marquardt", &(use_lm), "Use Levenberg-Marquardt instead of Gauss-Newton"),
@@ -586,8 +589,25 @@ int main_mobafit(int argc, char* argv[argc])
 	md_calc_strides(DIMS, c_strs, c_dims, CFL_SIZE);
 	md_calc_strides(DIMS, x_strs, x_dims, CFL_SIZE);
 
-	md_zfill(DIMS, x_dims, x, 1.);
-	md_zmul2(DIMS, x_dims, x_strs, x, x_strs, x, c_strs, init);
+	if (NULL != init_file) {
+
+		long init_dims[DIMS];
+		complex float* init = load_cfl(init_file, DIMS, init_dims);
+
+		if (!md_check_equal_dims(DIMS, init_dims, x_dims, ~0UL))
+			error("Dimensions of init file do not match!\n");
+
+		if (fB0_init)
+			error("fB0 initalization and init file are mutually exclusive!\n");
+
+		md_copy(DIMS, x_dims, x, init, CFL_SIZE);
+		unmap_cfl(DIMS, init_dims, init);
+
+	} else {
+
+		md_zfill(DIMS, x_dims, x, 1.);
+		md_zmul2(DIMS, x_dims, x_strs, x, x_strs, x, c_strs, init);
+	}
 
 	if (fB0_init)
 		mobafit_phase_init(seq, x_dims, x, y_dims, y, enc_dims, enc);
