@@ -227,6 +227,7 @@ int main_pics(int argc, char* argv[argc])
 			nuconf.lowmem = false;
 			num_delayed_add_loop_dims(16);	// loop over decomposed phases in nuFFT
 			num_delayed_add_loop_dims(17);	// loop over decomposed phases in nuFFT when computing PSF
+
 		} else {
 
 			nuconf.lowmem = true;
@@ -406,6 +407,7 @@ int main_pics(int argc, char* argv[argc])
 		pattern = load_cfl_sameplace(pat_file, DIMS, pat_dims, kspace);
 
 		assert(md_check_compat(DIMS, md_nontriv_dims(DIMS, ksp_dims), ksp_dims, pat_dims));
+		assert(!nufft_conf_options.dft);
 
 	} else {
 
@@ -436,6 +438,20 @@ int main_pics(int argc, char* argv[argc])
 		debug_printf(DP_INFO, "Size: %ld Samples: %ld Acc: %.2f\n", T, samples, (float)T / (float)samples);
 
 		ifftmod(DIMS, ksp_dims, FFT_FLAGS, kspace, kspace);
+
+	} else {
+
+		if (nufft_conf_options.dft) {
+
+			long T = md_calc_size(DIMS, pat_dims);
+			long samples = (long)pow(md_znorm(DIMS, pat_dims, pattern), 2.);
+
+			if (T != samples)
+				debug_printf(DP_WARN, "Pattern ignored\n");
+
+			md_free(pattern);
+			pattern = NULL;
+		}
 	}
 
 	// apply fov mask to sensitivities
