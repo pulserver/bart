@@ -585,6 +585,7 @@ static const struct nlop_s* affine_reg_nlop_create(
 	if (NULL != msk_static) {
 
 		auto nlop_itmm = nlop_image_transform_affine_create(0, sdims, mdims, trafo);
+
 		nlop_itmm = nlop_set_input_const_F(nlop_itmm, 0, 3, mdims, false, msk_moving);
 
 		if (gpu)
@@ -594,6 +595,7 @@ static const struct nlop_s* affine_reg_nlop_create(
 		nlop_mim = nlop_dup_F(nlop_mim, 0, 1);
 
 		auto nlop_itms = nlop_image_transform_affine_create(0, sdims, sdims, trafo);
+
 		nlop_itms = nlop_set_input_const_F(nlop_itms, 0, 3, sdims, false, msk_static);
 
 		if (gpu)
@@ -665,6 +667,7 @@ void affine_reg(bool gpu, bool cubic, complex float* affine, const struct nlop_s
 		if (0. != sigma[i]) {
 
 			complex float* simg_static = md_alloc(3, sdims, CFL_SIZE);
+
 			gaussian_filter_3D(sigma[i], sdims, simg_static, img_static);
 
 			for (int j = 0; j < 3; j++)
