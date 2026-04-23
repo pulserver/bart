@@ -380,18 +380,19 @@ static void apply_linphases_3D_int(vptr_fun_data_t* _data, int N, int D, const l
 
 static void apply_linphases_3D(int N, const long img_dims[N], const float shifts[3], complex float* dst, const complex float* src, bool conj, bool fmac, bool fftm, float scale)
 {
-	PTR_ALLOC(struct vptr_linphase_s, _d);
-	SET_TYPEID(vptr_linphase_s, _d);
-	_d->super.del = NULL;
-	_d->shifts[0] = shifts[0];
-	_d->shifts[1] = shifts[1];
-	_d->shifts[2] = shifts[2];
-	_d->conj = conj;
-	_d->fmac = fmac;
-	_d->fftm = fftm;
-	_d->scale = scale;
+	PTR_ALLOC(struct vptr_linphase_s, data);
+	SET_TYPEID(vptr_linphase_s, data);
 
-	exec_vptr_zfun(apply_linphases_3D_int, CAST_UP(PTR_PASS(_d)), 2, N, ~7UL, MD_BIT(0), (fmac ? MD_BIT(0) : 0) | MD_BIT(1), (const long*[2]){ img_dims, img_dims },
+	data->super.del = NULL;
+	data->shifts[0] = shifts[0];
+	data->shifts[1] = shifts[1];
+	data->shifts[2] = shifts[2];
+	data->conj = conj;
+	data->fmac = fmac;
+	data->fftm = fftm;
+	data->scale = scale;
+
+	exec_vptr_zfun(apply_linphases_3D_int, CAST_UP(PTR_PASS(data)), 2, N, ~7UL, MD_BIT(0), (fmac ? MD_BIT(0) : 0) | MD_BIT(1), (const long*[2]){ img_dims, img_dims },
 			(const long*[2]){ MD_STRIDES(N, img_dims, CFL_SIZE), MD_STRIDES(N, img_dims, CFL_SIZE) }, (complex float*[2]){ dst, (void*)src });
 }
 
