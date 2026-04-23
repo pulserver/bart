@@ -221,7 +221,14 @@ int main_nufft(int argc, char* argv[argc])
 
 			complex float* traj_gpu = md_gpu_move(DIMS, traj_dims, traj, CFL_SIZE);
 
-			auto tmp = nufft_create2(DIMS, ksp_dims, coilim_dims, traj_dims, traj_gpu, pattern_dims, pattern, basis_dims, basis, conf);
+			auto tmp = nufft_create2(DIMS, ksp_dims, coilim_dims,
+						traj_dims, traj_gpu,
+						pattern_dims, pattern,
+						basis_dims, basis,
+						fieldmap_dims, fieldmap,
+						timemap_dims, timemap,
+						conf);
+
 			nufft_op = linop_gpu_wrapper(tmp);
 			linop_free(tmp);
 
@@ -231,7 +238,13 @@ int main_nufft(int argc, char* argv[argc])
 #else
 		{
 #endif
-			nufft_op = nufft_create2(DIMS, ksp_dims, coilim_dims, traj_dims, traj, pattern_dims, pattern, basis_dims, basis, conf);
+			nufft_op = nufft_create2(DIMS, ksp_dims, coilim_dims,
+						traj_dims, traj,
+						pattern_dims, pattern,
+						basis_dims, basis,
+						fieldmap_dims, fieldmap,
+						timemap_dims, timemap,
+						conf);
 		}
 
 
@@ -279,7 +292,13 @@ int main_nufft(int argc, char* argv[argc])
 
 		complex float* ksp = create_cfl(out_file, DIMS, ksp_dims);
 
-		const struct linop_s* nufft_op = nufft_create2(DIMS, ksp_dims, coilim_dims, traj_dims, traj, pattern_dims, pattern, basis_dims, basis, conf);
+		const struct linop_s* nufft_op = nufft_create2(DIMS, ksp_dims, coilim_dims,
+							traj_dims, traj,
+							pattern_dims, pattern,
+							basis_dims, basis,
+							fieldmap_dims, fieldmap,
+							timemap_dims, timemap,
+							conf);
 
 		if (bart_use_gpu) {
 

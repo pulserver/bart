@@ -71,7 +71,7 @@ static struct linop_s* create_nufft2(bool toeplitz)
 	struct nufft_conf_s conf = nufft_conf_defaults;
 	conf.toeplitz = toeplitz;
 
-	return nufft_create2(N, ks2_dims, ci2_dims, tr2_dims, &traj[0][0], wg2_dims, weights, bas_dims, basis, conf);
+	return nufft_create2(N, ks2_dims, ci2_dims, tr2_dims, &traj[0][0], wg2_dims, weights, bas_dims, basis, NULL, NULL, NULL, NULL, conf);
 }
 
 

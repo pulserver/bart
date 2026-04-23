@@ -51,15 +51,14 @@ extern struct linop_s* nufft_create(int N,				///< Number of dimensions
 				    struct nufft_conf_s conf);		///< NUFFT configuration
 
 extern struct linop_s* nufft_create2(int N,
-			     const long ksp_dims[N],
-			     const long cim_dims[N],
-			     const long traj_dims[N],
-			     const _Complex float* traj,
-			     const long wgh_dims[N],
-			     const _Complex float* weights,
-			     const long bas_dims[N],
-			     const _Complex float* basis,
-			     struct nufft_conf_s conf);
+				const long ksp_dims[N],
+				const long cim_dims[N],
+				const long traj_dims[N], const complex float* traj,
+				const long wgh_dims[N], const complex float* weights,
+				const long bas_dims[N], const complex float* basis,
+				const long fm_dims[N], const complex float* fieldmap,
+				const long tm_dims[N], const complex float* timemap,
+				struct nufft_conf_s conf);
 
 extern _Complex float* compute_psf(int N,
 				   const long img2_dims[__VLA(N)],

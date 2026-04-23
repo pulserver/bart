@@ -253,7 +253,7 @@ struct noir2_s noir2_noncart_create(int N,
 		md_copy_dims(N, mod_wgh_dims, mod_wgh_dims2);
 	}
 
-	ret.lop_fft = nufft_create2(N, ret.ksp_dims, ret.cim_dims, ret.trj_dims, traj, mod_wgh_dims, mod_wgh, basis ? ret.bas_dims : NULL, basis, nufft_conf);
+	ret.lop_fft = nufft_create2(N, ret.ksp_dims, ret.cim_dims, ret.trj_dims, traj, mod_wgh_dims, mod_wgh, basis ? ret.bas_dims : NULL, basis, NULL, NULL, NULL, NULL, nufft_conf);
 
 	ret.lop_nufft = linop_clone(ret.lop_fft);
 
@@ -859,7 +859,7 @@ struct noir2_s noir2_noncart_optimized_create(int N,
 		.basis = NULL,
 	};
 
-	ret.lop_asym = nufft_create2(N, ksp_dims, cim_dims, trj_dims, traj, wgh_dims, weights, MD_SINGLETON_DIMS(N), NULL, nufft_conf);
+	ret.lop_asym = nufft_create2(N, ksp_dims, cim_dims, trj_dims, traj, wgh_dims, weights, MD_SINGLETON_DIMS(N), NULL, NULL, NULL, NULL, NULL, nufft_conf);
 	ret.lop_nufft = linop_clone(ret.lop_asym);
 
 	long swgh_dims[N];

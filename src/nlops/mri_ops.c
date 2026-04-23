@@ -363,7 +363,11 @@ struct sense_model_s* sense_model_create(const struct config_nlop_mri_s* config)
 
 		result->coils = linop_fmac_dims_create(config->N, config->cim_dims, config->img_dims, config->col_dims, NULL);
 
-		result->nufft = nufft_create2(DIMS, config->ksp_dims, config->cim_dims, config->trj_dims, NULL, config->pat_dims, NULL, config->bas_dims, config->basis, config->nufft_conf);
+		result->nufft = nufft_create2(DIMS, config->ksp_dims, config->cim_dims,
+					config->trj_dims, NULL,
+					config->pat_dims, NULL,
+					config->bas_dims, config->basis,
+					NULL, NULL, NULL, NULL, config->nufft_conf);
 
 		result->sense = linop_chain(result->coils, result->nufft);
 
@@ -932,7 +936,11 @@ static const struct nlop_s* nlop_mri_loss_create_s(bool fft, struct sense_model_
 
 			struct nufft_conf_s conf = model->config->nufft_conf;
 			conf.toeplitz = false;
-			model->nufft_loss = nufft_create2(model->config->N, model->config->ksp_dims, model->config->cim_dims, model->config->trj_dims, NULL, MD_SINGLETON_DIMS(model->config->N), NULL, model->config->bas_dims, model->config->basis, conf);
+			model->nufft_loss = nufft_create2(model->config->N, model->config->ksp_dims, model->config->cim_dims,
+						model->config->trj_dims, NULL,
+						MD_SINGLETON_DIMS(model->config->N), NULL,
+						model->config->bas_dims, model->config->basis,
+						NULL, NULL, NULL, NULL, conf);
 		}
 
 		if (model->config->noncart)

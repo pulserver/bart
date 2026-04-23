@@ -52,7 +52,8 @@ const struct linop_s* sense_nc_init(const long max_dims[DIMS], const long map_di
 	const struct linop_s* nufft_op = nufft_create2(DIMS, ksp_dims2, coilim_dims,
 						traj_dims, traj,
 						(weights ? wgs_dims : NULL), weights,
-						(basis ? basis_dims : NULL), basis, conf);
+						(basis ? basis_dims : NULL), basis,
+						NULL, NULL, NULL, NULL, conf);
 
 	const struct linop_s* maps_op = maps2_create(coilim_dims, map_dims, img_dims, maps);
 	const struct linop_s* lop = linop_chain(maps_op, nufft_op);

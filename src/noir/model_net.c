@@ -944,7 +944,10 @@ const struct nlop_s* noir_nufft_create_s(struct noir2_s* model)
 	auto conf = *(model->model_conf.nufft_conf);
 	conf.toeplitz = false;
 
-	data->nufft = nufft_create2(model->N, model->ksp_dims, model->cim_dims, model->trj_dims, NULL, model->pat_dims, NULL, model->bas_dims, multiplace_read(model->basis, NULL), conf);
+	data->nufft = nufft_create2(model->N, model->ksp_dims, model->cim_dims,
+					model->trj_dims, NULL, model->pat_dims, NULL,
+					model->bas_dims, multiplace_read(model->basis, NULL),
+					NULL, NULL, NULL, NULL, conf);
 	data->model = model;
 
 	int N = model->N;

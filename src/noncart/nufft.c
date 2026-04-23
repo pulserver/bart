@@ -572,7 +572,11 @@ static complex float* compute_psf_int(int N, const long img_dims[N], const long 
 
 	struct nufft_conf_s conf = compute_psf_nufft_conf(periodic, lowmem, is_vptr(traj));
 
-	const struct linop_s* lop_nufft = nufft_create2(N, ksp_dims, img_dims2, trj_dims, traj, wgh_dims, sqr_weights, sqr_bas_dims, sqr_basis, conf);
+	const struct linop_s* lop_nufft = nufft_create2(N, ksp_dims, img_dims2,
+						trj_dims, traj,
+						wgh_dims, sqr_weights,
+						sqr_bas_dims, sqr_basis,
+						NULL, NULL, NULL, NULL, conf);
 
 	lop_nufft = linop_reshape_in_F(lop_nufft, N, img_dims);
 
@@ -672,14 +676,30 @@ complex float* compute_psf2_decomposed(int N, const long psf_dims[N + 1], unsign
 		md_select_dims(N + 1, ~MD_BIT(N), psf_dims3, psf_dims2);
 		md_select_dims(N + 1, ~MD_BIT(N), trj_dims3, trj_dims2);
 
-		lop_nufft = nufft_create2(N + 1, ksp_dims2, psf_dims3, trj_dims3, traj2, wgh_dims, sqr_weights, sqr_bas_dims, sqr_basis, conf);
+		lop_nufft = nufft_create2(N + 1, ksp_dims2, psf_dims3,
+						trj_dims3, traj2,
+						wgh_dims, sqr_weights,
+						sqr_bas_dims, sqr_basis,
+						NULL, NULL, NULL, NULL, conf);
 
-		for (int i = 1; i < trj_dims2[N]; i++)
-			lop_nufft = linop_stack_FF(N, N, lop_nufft, nufft_create2(N + 1, ksp_dims2, psf_dims3, trj_dims3, traj2 + i * md_calc_size(N + 1, trj_dims3), wgh_dims, sqr_weights, sqr_bas_dims, sqr_basis, conf));
+		for (int i = 1; i < trj_dims2[N]; i++) {
+
+			auto nufft = nufft_create2(N + 1, ksp_dims2, psf_dims3,
+						trj_dims3, traj2 + i * md_calc_size(N + 1, trj_dims3),
+						wgh_dims, sqr_weights,
+						sqr_bas_dims, sqr_basis,
+						NULL, NULL, NULL, NULL, conf);
+
+			lop_nufft = linop_stack_FF(N, N, lop_nufft, nufft);
+		}
 
 	} else {
 
-		lop_nufft = nufft_create2(N + 1, ksp_dims, psf_dims2, trj_dims2, traj2, wgh_dims, sqr_weights, sqr_bas_dims, sqr_basis, conf);
+		lop_nufft = nufft_create2(N + 1, ksp_dims, psf_dims2,
+						trj_dims2, traj2,
+						wgh_dims, sqr_weights,
+						sqr_bas_dims, sqr_basis,
+						NULL, NULL, NULL, NULL, conf);
 	}
 
 	lop_nufft = linop_reshape_in_F(lop_nufft, N + 1, psf_dims);
@@ -1181,18 +1201,18 @@ static void nufft_apply_forward_zero_overhead(const linop_data_t* _data, complex
 
 
 struct linop_s* nufft_create2(int N,
-			     const long ksp_dims[N],
-			     const long cim_dims[N],
-			     const long traj_dims[N],
-			     const complex float* traj,
-			     const long wgh_dims[N],
-			     const complex float* weights,
-			     const long bas_dims[N],
-			     const complex float* basis,
-			     struct nufft_conf_s conf)
+				const long ksp_dims[N],
+				const long cim_dims[N],
+				const long traj_dims[N], const complex float* traj,
+				const long wgh_dims[N], const complex float* weights,
+				const long bas_dims[N], const complex float* basis,
+				const long fm_dims[N], const complex float* fieldmap,
+				const long tm_dims[N], const complex float* timemap,
+				struct nufft_conf_s conf)
 {
 	if (conf.dft) {
 
+		// FIXME: should build chain
 		assert(NULL == weights);
 		assert(NULL == basis);
 
@@ -1200,8 +1220,14 @@ struct linop_s* nufft_create2(int N,
 					ksp_dims,
 					cim_dims,
 					traj_dims, traj,
-					NULL, NULL,
-					NULL, NULL);
+					fm_dims, fieldmap,
+					tm_dims, timemap);
+	} else {
+
+		// not supported yet
+
+		assert(NULL == fieldmap);
+		assert(NULL == timemap);
 	}
 
 	if (2. != conf.os) {
@@ -1345,7 +1371,7 @@ struct linop_s* nufft_create(int N,				///< Number of dimension
 	long wgh_dims[N];
 	md_select_dims(N, ~MD_BIT(0), wgh_dims, traj_dims);
 
-	return nufft_create2(N, ksp_dims, cim_dims, traj_dims, traj, wgh_dims, weights, NULL, NULL, conf);
+	return nufft_create2(N, ksp_dims, cim_dims, traj_dims, traj, wgh_dims, weights, NULL, NULL, NULL, NULL, NULL, NULL, conf);
 }
 
 
