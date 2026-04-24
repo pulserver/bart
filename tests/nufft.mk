@@ -444,13 +444,12 @@ tests/test-nudft-fieldmap-correction: traj phantom creal normalize scale index r
 	touch $@
 
 
-tests/test-nudft-fieldmap-constant-circshift: traj ones phantom creal normalize scale index reshape transpose ones saxpy nufft circshift nrmse resize
+
+tests/test-nudft-fieldmap-constant-circshift: traj ones phantom creal normalize scale index reshape transpose ones saxpy nufft circshift nrmse
 	set -e ; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)								;\
 	$(TOOLDIR)/traj -x64 -y64 traj_fm.ra									;\
-	$(TOOLDIR)/phantom -S 1 coil_sensitivity_map_pre.ra							;\
-	$(TOOLDIR)/resize -c 0 64 1 64 coil_sensitivity_map_pre.ra coil_sensitivity_map.ra			;\
-	$(TOOLDIR)/phantom shepplogan_pre.ra									;\
-	$(TOOLDIR)/resize -c 0 64 1 64 shepplogan_pre.ra shepplogan.ra						;\
+	$(TOOLDIR)/phantom -x 64 -S 1 coil_sensitivity_map.ra							;\
+	$(TOOLDIR)/phantom -x 64 shepplogan.ra									;\
 	$(TOOLDIR)/ones 2 64 64 fieldmap_ones.ra								;\
 	$(TOOLDIR)/scale 0.09817477042468103 fieldmap_ones.ra fieldmap_const_1px_shift.ra			;\
 	$(TOOLDIR)/index 2 4096 timemap.ra									;\
@@ -458,9 +457,9 @@ tests/test-nudft-fieldmap-constant-circshift: traj ones phantom creal normalize 
 	$(TOOLDIR)/transpose 1 2 timemap.ra timemap.ra								;\
 	$(TOOLDIR)/ones 3 1 64 64 ones.ra									;\
 	$(TOOLDIR)/saxpy -- -32 ones.ra timemap.ra timemap.ra							;\
-	$(TOOLDIR)/nufft -s -F fieldmap_const_1px_shift.ra -T timemap.ra traj_fm.ra shepplogan.ra ksp_fm.ra	;\
-	$(TOOLDIR)/nufft -s -a traj_fm.ra ksp_fm.ra img_fm_shifted.ra						;\
-	$(TOOLDIR)/circshift 1 63 shepplogan.ra shepplogan_shifted.ra						;\
+	$(TOOLDIR)/nufft -s traj_fm.ra shepplogan.ra ksp_fm.ra							;\
+	$(TOOLDIR)/nufft -s -F fieldmap_const_1px_shift.ra -T timemap.ra -a traj_fm.ra ksp_fm.ra img_fm_shifted.ra			;\
+	$(TOOLDIR)/circshift 1 1 shepplogan.ra shepplogan_shifted.ra						;\
 	$(TOOLDIR)/nrmse -t 0.00002 img_fm_shifted.ra shepplogan_shifted.ra					;\
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@

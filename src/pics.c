@@ -111,6 +111,8 @@ int main_pics(int argc, char* argv[argc])
 	const char* image_start_file = NULL;
 
 	const char* basis_file = NULL;
+	const char* fieldmap_file = NULL;
+	const char* timemap_file = NULL;
 
 	struct admm_conf admm = { false, false, false, iter_admm_defaults.rho, iter_admm_defaults.maxitercg, false };
 	struct fista_conf fista = { { -1., -1., -1. }, false };
@@ -196,6 +198,8 @@ int main_pics(int argc, char* argv[argc])
 		OPTL_SET(0, "ist_last", &fista.last, "end iteration with call to data consistency"),
 		OPTL_INFILE(0, "motion-field", &motion_file, "file", "motion field"),
 		OPTL_SUBOPT(0, "nufft-conf", "...", "configure nufft", N_nufft_conf_opts, nufft_conf_opts),
+		OPTL_INFILE(0, "field-map", &fieldmap_file, "file", "field map"),
+		OPTL_INFILE(0, "time-map", &timemap_file, "file", "time map"),
 	};
 
 
@@ -316,6 +320,24 @@ int main_pics(int argc, char* argv[argc])
 
 	if (NULL != traj_file)
 		traj = load_cfl_sameplace(traj_file, DIMS, traj_dims, kspace);
+
+
+	// load field map
+
+	long fieldmap_dims[DIMS] = { };
+
+	complex float* fieldmap =  NULL;
+
+	if (NULL != fieldmap_file)
+		fieldmap = load_cfl_sameplace(fieldmap_file, DIMS, fieldmap_dims, fieldmap);
+
+	long timemap_dims[DIMS] = { };
+
+	complex float* timemap =  NULL;
+
+	if (NULL != timemap_file)
+		timemap = load_cfl_sameplace(timemap_file, DIMS, timemap_dims, timemap);
+
 
 
 	// finalize dimensions
@@ -480,7 +502,9 @@ int main_pics(int argc, char* argv[argc])
 	const struct linop_s* forward_op = pics_model(&pics_conf, img_dims, ksp_dims,
 						traj_dims, traj, basis_dims, basis,
 						map_dims, maps, pat_dims, pattern,
-						motion_dims, motion, &nufft_op);
+						motion_dims, motion,
+						fieldmap_dims, fieldmap,
+						timemap_dims, timemap, &nufft_op);
 
 	// load / write PSF
 

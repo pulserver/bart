@@ -28,5 +28,7 @@ extern const struct linop_s* pics_model(const struct pics_config* conf,
 				const long map_dims[DIMS], const complex float* maps,
 				const long pat_dims[DIMS], const complex float* pattern,
 				const long motion_dims[DIMS], complex float* motion,
+				const long fieldmap_dims[DIMS], complex float* fieldmap,
+				const long timemap_dims[DIMS], complex float* timemap,
 				const struct linop_s** nufft_op);
 

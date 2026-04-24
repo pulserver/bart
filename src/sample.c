@@ -341,7 +341,8 @@ int main_sample(int argc, char* argv[argc])
 		conf.nuconf = &nufft_conf_options;
 
 		linop = pics_model(&conf, img_dims, ksp_dims, trj_dims, traj, NULL, NULL,
-				   map_dims, sens, pat_dims, pat, NULL, NULL, NULL);
+				   map_dims, sens, pat_dims, pat, NULL, NULL, NULL,
+				   NULL, NULL, NULL, NULL);
 
 		unmap_cfl(DIMS, trj_dims, traj);
 

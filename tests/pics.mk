@@ -713,6 +713,28 @@ tests/test-pics-cart-delayed-tgv: bart $(TESTS_OUT)/ksp_usamp_1.ra $(TESTS_OUT)/
 	rm *.cfl ; rm *.hdr ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
+
+tests/test-pics-fieldmap-constant-circshift: traj ones phantom creal normalize scale index reshape transpose ones saxpy nufft pics circshift nrmse
+	set -e ; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)								;\
+	$(TOOLDIR)/traj -x64 -y64 traj_fm.ra									;\
+	$(TOOLDIR)/phantom -x 64 -S 1 coil_sensitivity_map.ra							;\
+	$(TOOLDIR)/phantom -x 64 shepplogan.ra									;\
+	$(TOOLDIR)/ones 2 64 64 fieldmap_ones.ra								;\
+	$(TOOLDIR)/scale 0.09817477042468103 fieldmap_ones.ra fieldmap_const_1px_shift.ra			;\
+	$(TOOLDIR)/index 2 4096 timemap.ra									;\
+	$(TOOLDIR)/reshape 7 1 64 64 timemap.ra timemap.ra							;\
+	$(TOOLDIR)/transpose 1 2 timemap.ra timemap.ra								;\
+	$(TOOLDIR)/ones 3 1 64 64 ones.ra									;\
+	$(TOOLDIR)/saxpy -- -32 ones.ra timemap.ra timemap.ra							;\
+	$(TOOLDIR)/nufft -s traj_fm.ra shepplogan.ra ksp_fm.ra							;\
+	$(TOOLDIR)/ones 2 64 64 ones2.ra									;\
+	$(TOOLDIR)/pics --nufft-conf dft=1 --field-map=fieldmap_const_1px_shift.ra --time-map=timemap.ra -t traj_fm.ra ksp_fm.ra ones2.ra img_fm_shifted.ra	;\
+	$(TOOLDIR)/circshift 1 1 shepplogan.ra shepplogan_shifted.ra						;\
+	$(TOOLDIR)/nrmse -t 0.00002 img_fm_shifted.ra shepplogan_shifted.ra					;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
+
 TESTS += tests/test-pics-pi tests/test-pics-noncart tests/test-pics-cs tests/test-pics-pics
 TESTS += tests/test-pics-poisson-wavl1 tests/test-pics-joint-wavl1 tests/test-pics-bpwavl1
 TESTS += tests/test-pics-weights tests/test-pics-noncart-weights

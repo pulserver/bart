@@ -9,6 +9,8 @@ extern const struct linop_s* sense_nc_init(const long max_dims[DIMS], const long
 		const long traj_dims[DIMS], const complex float* traj, const struct nufft_conf_s* conf,
 		const long wgs_dims[DIMS], const complex float* weights,
 		const long basis_dims[DIMS], const complex float* basis,
+		const long fieldmap_dims[DIMS], const complex float* fieldmap,
+		const long timemap_dims[DIMS], const complex float* timemap,
 		const struct linop_s** fft_opp, unsigned long shared_img_dims);
 
 

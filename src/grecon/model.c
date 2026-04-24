@@ -33,6 +33,8 @@ const struct linop_s* pics_model(const struct pics_config* conf,
 				const long map_dims[DIMS], const complex float* maps,
 				const long pat_dims[DIMS], const complex float* pattern,
 				const long motion_dims[DIMS], complex float* motion,
+				const long fieldmap_dims[DIMS], complex float* fieldmap,
+				const long timemap_dims[DIMS], complex float* timemap,
 				const struct linop_s** nufft_op)
 {
 	const struct linop_s* forward_op = NULL;
@@ -108,8 +110,9 @@ const struct linop_s* pics_model(const struct pics_config* conf,
 
 		forward_op = sense_nc_init(max_dims, map_dims, maps, ksp_dims,
 				traj_dims, traj_tmp, conf->nuconf,
-				pat_dims, pattern, basis_dims, basis, nufft_op,
-				conf->shared_img_flags & ~conf->motion_flags);
+				pat_dims, pattern, basis_dims, basis,
+				fieldmap_dims, fieldmap, timemap_dims, timemap,
+				nufft_op, conf->shared_img_flags & ~conf->motion_flags);
 
 #ifdef USE_CUDA
 		if (conf->gpu_gridding)
