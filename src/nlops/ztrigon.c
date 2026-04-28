@@ -48,6 +48,51 @@ const struct nlop_s* nlop_zsin_create(int N, const long dims[N])
 
 
 
+struct zsinc_s {
+
+	INTERFACE(nlop_data_t);
+};
+
+DEF_TYPEID(zsinc_s);
+
+static void zsinc_free(const nlop_data_t* _data)
+{
+	xfree(_data);
+}
+
+static void zsinc_apply(const nlop_data_t* /*data*/, int N, const long dims[N], complex float* dst, const complex float* src, complex float* der)
+{
+	assert(dst != src);
+
+	md_zsin(N, dims, dst, src);
+	md_zdiv(N, dims, dst, dst, src);
+
+	complex float* zero_case = md_alloc_sameplace(N, dims, CFL_SIZE, der);
+
+	md_zabs(N, dims, zero_case, src);
+	md_zslessequal(N, dims, zero_case, zero_case, 0.);
+	md_zadd(N, dims, dst, dst, zero_case);
+
+	md_free(zero_case);
+
+	if (NULL != der) {
+
+		md_zcos(N, dims, der, src);
+		md_zsub(N, dims, der, der, dst);
+		md_zdiv(N, dims, der, der, src);
+	}
+}
+
+const struct nlop_s* nlop_zsinc_create(int N, const long dims[N])
+{
+	PTR_ALLOC(struct zsinc_s, data);
+	SET_TYPEID(zsinc_s, data);
+
+	return nlop_zdiag_create(N, dims, CAST_UP(PTR_PASS(data)), zsinc_apply, zsinc_free);
+}
+
+
+
 
 
 

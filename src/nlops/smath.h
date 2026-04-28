@@ -14,6 +14,9 @@ extern arg_t snlop_exp_F(arg_t arg);
 extern arg_t snlop_log(arg_t arg);
 extern arg_t snlop_log_F(arg_t arg);
 
+extern arg_t snlop_sinc(arg_t arg);
+extern arg_t snlop_sinc_F(arg_t arg);
+
 extern arg_t snlop_cos(arg_t arg);
 extern arg_t snlop_cos_F(arg_t arg);
 extern arg_t snlop_sin(arg_t arg);

@@ -95,6 +95,16 @@ arg_t snlop_sin_F(arg_t arg)
 	return snlop_diag_append(arg, nlop_zsin_create, false);
 }
 
+arg_t snlop_sinc(arg_t arg)
+{
+	return snlop_diag_append(arg, nlop_zsinc_create, true);
+}
+
+arg_t snlop_sinc_F(arg_t arg)
+{
+	return snlop_diag_append(arg, nlop_zsinc_create, false);
+}
+
 arg_t snlop_acos(arg_t arg)
 {
 	return snlop_diag_append(arg, nlop_zacos_create, true);
