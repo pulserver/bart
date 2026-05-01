@@ -1704,7 +1704,7 @@ static unsigned long queue_compute_loop_flags(long loop_dims[MAX_DIMS], list_t o
 
 				unsigned long rflags = loop_flags & w->read;
 				for (int i = 0; i < op->loop.D; i++)
-					if ((MD_IS_SET(rflags & op->loop.slice_flags, i)) && (w->rpos <= op->loop.slice_pos))
+					if ((MD_IS_SET(rflags & op->loop.slice_flags, i)) && (w->rpos[i] <= op->loop.slice_pos[i]))
 						rflags = MD_CLEAR(rflags, i);
 
 				loop_flags &= ~rflags;
@@ -1714,7 +1714,7 @@ static unsigned long queue_compute_loop_flags(long loop_dims[MAX_DIMS], list_t o
 
 				unsigned long wflags = loop_flags & w->written;
 				for (int i = 0; i < op->loop.D; i++)
-					if ((MD_IS_SET(wflags & op->loop.slice_flags, i)) && (w->wpos <= op->loop.slice_pos))
+					if ((MD_IS_SET(wflags & op->loop.slice_flags, i)) && (w->wpos[i] <= op->loop.slice_pos[i]))
 						wflags = MD_CLEAR(wflags, i);
 
 				loop_flags &= ~wflags;
