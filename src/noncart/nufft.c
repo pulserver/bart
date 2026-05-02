@@ -517,7 +517,7 @@ static complex float* compute_square_weights(int N, const long wgh_dims[N], cons
 	return sqr_weights;
 }
 
-static struct nufft_conf_s compute_psf_nufft_conf(bool periodic, bool lowmem, bool vptr)
+static struct nufft_conf_s compute_psf_nufft_conf(bool periodic, bool lowmem)
 {
 	struct nufft_conf_s conf = nufft_conf_defaults;
 	conf.periodic = periodic;
@@ -525,9 +525,9 @@ static struct nufft_conf_s compute_psf_nufft_conf(bool periodic, bool lowmem, bo
 	conf.lowmem = lowmem;
 
 	//FIXME: do we need this? It was old behavior, but not sure if it is relevant for reproducibility.
-	conf.precomp_linphase = vptr || use_compat_to_version("v0.8.00");
-	conf.precomp_roll = vptr || use_compat_to_version("v0.8.00");
-	conf.precomp_fftmod = vptr || use_compat_to_version("v0.8.00");
+	conf.precomp_linphase = use_compat_to_version("v0.8.00");
+	conf.precomp_roll = use_compat_to_version("v0.8.00");
+	conf.precomp_fftmod = use_compat_to_version("v0.8.00");
 
 	return conf;
 }
@@ -570,7 +570,7 @@ static complex float* compute_psf_int(int N, const long img_dims[N], const long 
 	complex float* ones = md_alloc_sameplace(N, ksp_dims, CFL_SIZE, traj);
 	md_zfill(N, ksp_dims, ones, 1.);
 
-	struct nufft_conf_s conf = compute_psf_nufft_conf(periodic, lowmem, is_vptr(traj));
+	struct nufft_conf_s conf = compute_psf_nufft_conf(periodic, lowmem);
 
 	const struct linop_s* lop_nufft = nufft_create2(N, ksp_dims, img_dims2,
 						trj_dims, traj,
@@ -636,7 +636,7 @@ complex float* compute_psf2_decomposed(int N, const long psf_dims[N + 1], unsign
 		}
 	}
 
-	struct nufft_conf_s conf = compute_psf_nufft_conf(periodic, lowmem, is_vptr(traj));
+	struct nufft_conf_s conf = compute_psf_nufft_conf(periodic, lowmem);
 
 	long trj_dims2[N + 1];
 	md_copy_dims(N + 1, trj_dims2, trj_dims);
