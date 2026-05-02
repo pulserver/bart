@@ -525,6 +525,30 @@ static int check_batched_select(int N, long ndims[N], long nostrs[N], long nistr
 	return MIN(4, i);
 }
 
+static void compute_permutation(int N, int ord[N], const long strs[N])
+{
+	__block const long* strsp = strs; // clang workaround
+
+	for (int i = 0; i < N; i++)
+		ord[i] = i;
+
+	NESTED(int, cmp_strides, (int a, int b))
+	{
+		long da = labs(strsp[a]);
+		long db = labs(strsp[b]);
+
+		return (da > db) - (da < db);
+	};
+
+	quicksort(N, ord, cmp_strides);
+}
+
+static void reorder_long(int N, int ord[N], long dst[N], const long src[N])
+{
+	for (int i = 0; i < N; i++)
+		dst[i] = src[ord[i]];
+}
+
 /**
  * Check if strides arise from md_calc_strides, where ostr is not zero
  * Example:
@@ -535,27 +559,29 @@ static int check_batched_select(int N, long ndims[N], long nostrs[N], long nistr
  */
 static int check_unfold(int N, long ndims[N], long nostrs[N], long nistrs1[N], long nistrs2[N], const long dims[N], const long ostrs[N], const long istrs1[N], const long istrs2[N], size_t size)
 {
+	int ord[N];
+	compute_permutation(N, ord, ostrs);
 
-	if (0 == ostrs[0])
+	reorder_long(N, ord, ndims, dims);
+	reorder_long(N, ord, nostrs, ostrs);
+	reorder_long(N, ord, nistrs1, istrs1);
+	reorder_long(N, ord, nistrs2, istrs2);
+
+	if (0 == nostrs[0])
 		return -1;
 
 	int i = 1;
 
 	while ( i < N
-		&& (ostrs[i] >= ostrs[i - 1] * dims[i - 1])
-		&& (1 != dims[i]))
+		&& (labs(nostrs[i]) >= labs(nostrs[i - 1]) * ndims[i - 1])
+		&& (1 != ndims[i]))
 		i++;
 
 	if (0 == i)
 		return -1;
 
-	if ((1 == i) && ((long)size == ostrs[0]) && ((long)size == istrs1[0]) && ((long)size == istrs2[0]))
+	if ((1 == i) && ((long)size == nostrs[0]) && ((long)size == nistrs1[0]) && ((long)size == nistrs2[0]))
 		return -1; // simple vecop case
-
-	md_copy_dims(N, ndims, dims);
-	md_copy_strides(N, nostrs, ostrs);
-	md_copy_strides(N, nistrs1, istrs1);
-	md_copy_strides(N, nistrs2, istrs2);
 
 	return MIN(3, i);
 }
