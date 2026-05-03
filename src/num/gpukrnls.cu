@@ -1203,6 +1203,21 @@ extern "C" void cuda_zfftmod(long N, _Complex float* dst, const _Complex float* 
 	CUDA_KERNEL_ERROR;
 }
 
+__global__ void kern_zfftmod_1d(long N, cuFloatComplex* dst, const cuFloatComplex* src, _Bool inv, double phase)
+{
+	int start = threadIdx.x + blockDim.x * blockIdx.x;
+	int stride = blockDim.x * gridDim.x;
+
+	for (long i = start; i < N; i += stride)
+		dst[i] = cuDouble2Float(cuCmul(fftmod_phase2(N, i, inv, phase), cuFloat2Double(src[i])));
+}
+
+extern "C" void cuda_zfftmod_1d(long N, _Complex float* dst, const _Complex float* src, _Bool inv, double phase)
+{
+	kern_zfftmod_1d<<<gridsize(N), blocksize(N), 0, cuda_get_stream()>>>(N, (cuFloatComplex*)dst, (const cuFloatComplex*)src, inv, phase);
+	CUDA_KERNEL_ERROR;
+}
+
 
 __global__ void kern_fftmod_3d_4(long X, long Y, long Z, cuFloatComplex* dst, const cuFloatComplex* src, bool inv, cuDoubleComplex scale_1)
 {

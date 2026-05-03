@@ -64,6 +64,7 @@ extern void cuda_zdiv_reg(long N, _Complex float* dst, const _Complex float* src
 extern void cuda_le(long N, float* dst, const float* src1, const float* src2);
 extern void cuda_zfftmod(long N, _Complex float* dst, const _Complex float* src, int n, _Bool inv, double phase);
 extern void cuda_zfftmod_3d(const long dims[3], _Complex float* dst, const _Complex float* src, _Bool inv, double phase);
+extern void cuda_zfftmod_1d(long N, _Complex float* dst, const _Complex float* src, _Bool inv, double phase);
 extern void cuda_zmax(long N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
 extern void cuda_zle(long N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
 extern void cuda_smax(long N, float val, float* dst, const float* src1);
