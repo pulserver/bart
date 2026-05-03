@@ -283,10 +283,10 @@ tests/test-nufft-gpu-forward-3D: traj phantom nufft nrmse
 
 tests/test-nufft-gpu-inverse-precomp: traj phantom nufft nrmse
 	set -e ; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
-	$(TOOLDIR)/traj -r -x128 -y128 traj.ra						;\
+	$(TOOLDIR)/traj -r -o2 -x128 -y514 traj.ra					;\
 	$(TOOLDIR)/phantom -k -t traj.ra ksp.ra						;\
-	$(TOOLDIR)/nufft -l1.    -i -r traj.ra ksp.ra reco1.ra				;\
-	$(TOOLDIR)/nufft --no-precomp -l1. -i -t traj.ra ksp.ra reco2.ra		;\
+	$(TOOLDIR)/nufft              -l0.0001 -g -x512:512:1 -m100 -i -t traj.ra ksp.ra reco1.ra	;\
+	$(TOOLDIR)/nufft --no-precomp -l0.0001 -g -x512:512:1 -m100 -i -t traj.ra ksp.ra reco2.ra	;\
 	$(TOOLDIR)/nrmse -t 0.002 reco1.ra reco2.ra					;\
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@

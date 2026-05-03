@@ -16,6 +16,7 @@
 #include "misc/debug.h"
 #include "misc/misc.h"
 
+#include "num/gpukrnls.h"
 #include "num/flpmath.h"
 #include "num/multind.h"
 #include "num/gpukrnls_misc.h"
@@ -26,7 +27,7 @@
 #include "gpu_grid.h"
 
 
-struct linphase_conf {
+struct linphase_conf_v1 {
 
 	long dims[3];
 	long tot;
@@ -39,7 +40,7 @@ struct linphase_conf {
 };
 
 template <_Bool fmac>
-__global__ void kern_apply_linphases_3D(struct linphase_conf c, cuFloatComplex* dst, const cuFloatComplex* src)
+__global__ void kern_apply_linphases_3D_v1(struct linphase_conf_v1 c, cuFloatComplex* dst, const cuFloatComplex* src)
 {
 	int startX = threadIdx.x + blockDim.x * blockIdx.x;
 	int strideX = blockDim.x * gridDim.x;
@@ -85,9 +86,9 @@ __global__ void kern_apply_linphases_3D(struct linphase_conf c, cuFloatComplex* 
 
 
 
-extern "C" void cuda_apply_linphases_3D(int N, const long img_dims[], const float _shifts[3], _Complex float* dst, const _Complex float* src, _Bool conj, _Bool fmac, _Bool fftm, float scale)
+extern "C" void cuda_apply_linphases_3D_v1(int N, const long img_dims[], const float _shifts[3], _Complex float* dst, const _Complex float* src, _Bool conj, _Bool fmac, _Bool fftm, float scale)
 {
-	struct linphase_conf c;
+	struct linphase_conf_v1 c;
 
 	c.cn = 0;
 	c.tot = 1;
@@ -128,6 +129,120 @@ extern "C" void cuda_apply_linphases_3D(int N, const long img_dims[], const floa
 
 	if (c.fmac) {
 
+		const void* func = (const void*)kern_apply_linphases_3D_v1<true>;
+		kern_apply_linphases_3D_v1<true><<<getGridSize3(c.dims, func), getBlockSize3(c.dims, (const void*)func), 0, cuda_get_stream()>>>(c, (cuFloatComplex*)dst, (const cuFloatComplex*)src);
+	} else {
+
+		const void* func = (const void*)kern_apply_linphases_3D_v1<false>;
+		kern_apply_linphases_3D_v1<false><<<getGridSize3(c.dims, func), getBlockSize3(c.dims, (const void*)func), 0, cuda_get_stream()>>>(c, (cuFloatComplex*)dst, (const cuFloatComplex*)src);
+	}
+
+	CUDA_KERNEL_ERROR;
+}
+
+struct linphase_conf {
+
+	long dims[3];
+	long tot;
+	cuFloatComplex* exp[3];
+	long N;
+	float cn;
+	float scale;
+	_Bool conj;
+	_Bool fmac;
+};
+
+template <_Bool fmac>
+__global__ void kern_apply_linphases_3D(struct linphase_conf c, cuFloatComplex* dst, const cuFloatComplex* src)
+{
+	int startX = threadIdx.x + blockDim.x * blockIdx.x;
+	int strideX = blockDim.x * gridDim.x;
+
+	int startY = threadIdx.y + blockDim.y * blockIdx.y;
+	int strideY = blockDim.y * gridDim.y;
+
+	int startZ = threadIdx.z + blockDim.z * blockIdx.z;
+	int strideZ = blockDim.z * gridDim.z;
+
+	for (long z = startZ; z < c.dims[2]; z += strideZ)
+		for (long y = startY; y < c.dims[1]; y += strideY)
+			for (long x = startX; x < c.dims[0]; x +=strideX) {
+
+				long pos[3] = { x, y, z };
+				long idx = x + c.dims[0] * (y + c.dims[1] * z);
+
+				cuFloatComplex cval = make_cuFloatComplex(c.scale, 0.);
+
+				for (int i = 0; i < 3; i++)
+					cval = cuCmulf(cval, __ldg(c.exp[i] + pos[i]));
+
+				if (c.conj)
+					cval = make_cuFloatComplex(cval.x, -cval.y);
+
+				if (fmac) {
+
+					for (long i = 0; i < c.N; i++)
+						dst[idx + i * c.tot] = cuCaddf(dst[idx + i * c.tot], cuCmulf(src[idx + i * c.tot], cval));
+				} else {
+
+					for (long i = 0; i < c.N; i++)
+						dst[idx + i * c.tot] = cuCmulf(src[idx + i * c.tot], cval);
+				}
+			}
+}
+
+__global__ void kern_prep_linphases(float cn, float shift, long N, cuFloatComplex* dst)
+{
+	int start = threadIdx.x + blockDim.x * blockIdx.x;
+	int stride = blockDim.x * gridDim.x;
+
+	for (long i = start; i < N; i +=stride) {
+
+		float val = cn + i * shift;
+
+		float si;
+		float co;
+		sincosf(val, &si, &co);
+
+		dst[i] = make_cuFloatComplex(co, si);
+	}
+}
+
+extern "C" void cuda_apply_linphases_3D(int N, const long img_dims[], const float shifts[3], _Complex float* dst, const _Complex float* src, _Bool conj, _Bool fmac, _Bool fftm, float scale)
+{
+	struct linphase_conf c;
+
+	c.cn = 0;
+	c.tot = 1;
+	c.N = 1;
+	c.scale = scale;
+	c.conj = conj;
+	c.fmac = fmac;
+
+	for (int n = 0; n < 3; n++) {
+
+		float shift = shifts[n];
+
+		if (1 < img_dims[n])
+			shift += (img_dims[n] / 2. - img_dims[n] / 2);
+
+		shift = 2. * M_PI * (float)(shift) / ((float)img_dims[n]);
+		float cn = - shift * (float)(img_dims[n] / 2);
+
+		c.dims[n] = img_dims[n];
+		c.tot *= c.dims[n];
+
+		c.exp[n] = (cuFloatComplex*)cuda_malloc(img_dims[n] * sizeof(cuFloatComplex));
+		kern_prep_linphases<<<1, 1024, 0, cuda_get_stream()>>>(cn, shift, img_dims[n], c.exp[n]);
+
+		if (fftm)
+			cuda_zfftmod_1d(img_dims[n], (_Complex float*)c.exp[n], (_Complex float*)c.exp[n], false, 0.);
+	}
+
+	c.N = md_calc_size(N - 3, img_dims + 3);
+
+	if (c.fmac) {
+
 		const void* func = (const void*)kern_apply_linphases_3D<true>;
 		kern_apply_linphases_3D<true><<<getGridSize3(c.dims, func), getBlockSize3(c.dims, (const void*)func), 0, cuda_get_stream()>>>(c, (cuFloatComplex*)dst, (const cuFloatComplex*)src);
 	} else {
@@ -137,6 +252,9 @@ extern "C" void cuda_apply_linphases_3D(int N, const long img_dims[], const floa
 	}
 
 	CUDA_KERNEL_ERROR;
+
+	for (int i = 0; i < 3; i++)
+		cuda_free(c.exp[i]);
 }
 
 

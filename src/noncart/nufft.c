@@ -314,7 +314,11 @@ static void apply_linphases_3D_int(vptr_fun_data_t* _data, int N, int D, const l
 
 	if (cuda_ondevice(dst)) {
 
-		cuda_apply_linphases_3D(D, img_dims, data->shifts, dst, src, conj, fmac, fftm, scale);
+		if (use_compat_to_version("v1.0.00"))
+			cuda_apply_linphases_3D_v1(D, img_dims, data->shifts, dst, src, conj, fmac, fftm, scale);
+		else
+			cuda_apply_linphases_3D(D, img_dims, data->shifts, dst, src, conj, fmac, fftm, scale);
+
 		return;
 	}
 #endif
