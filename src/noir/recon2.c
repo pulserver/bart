@@ -707,8 +707,11 @@ void noir2_recon_noncart(
 			else
 				estimate_pattern(N, lksp_dims, COIL_FLAG, l_wgh, l_kspace);
 
-			md_zsmul(N, limg_dims, l_img, l_img_ref, 1. / conf->temp_damp);
-			md_zsmul(N, lkco_dims, l_ksens, l_sens_ref, 1. / conf->temp_damp);
+			if (0 < pos[TIME_DIM]) {
+
+				md_zsmul(N, limg_dims, l_img, l_img_ref, 1. / conf->temp_damp);
+				md_zsmul(N, lkco_dims, l_ksens, l_sens_ref, 1. / conf->temp_damp);
+			}
 		}
 
 		if (NULL != strm_trj)

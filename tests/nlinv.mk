@@ -12,6 +12,44 @@ tests/test-nlinv: normalize nlinv fft fmac nrmse $(TESTS_OUT)/shepplogan_coil_ks
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
+tests/test-nlinv-rt: phantom repmat reshape resize traj nlinv nufft fmac nrmse
+	set -e ; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
+	$(TOOLDIR)/traj -r -t5 -x128 -y13 t.ra						;\
+	$(TOOLDIR)/phantom -s4 -tt.ra -k ksp.ra						;\
+	$(TOOLDIR)/repmat 11 2 ksp.ra ksp.ra						;\
+	$(TOOLDIR)/reshape 3072 10 1 ksp.ra ksp.ra					;\
+	$(TOOLDIR)/resize 10 9 ksp.ra ksp.ra						;\
+	$(TOOLDIR)/nlinv --real-time -tt.ra -S -N -i6 --cgiter=30 ksp.ra r.ra c.ra	;\
+	$(TOOLDIR)/fmac r.ra c.ra cim.ra						;\
+	$(TOOLDIR)/repmat 11 2 t.ra t.ra						;\
+	$(TOOLDIR)/reshape 3072 10 1 t.ra t.ra						;\
+	$(TOOLDIR)/resize 10 9 t.ra t.ra						;\
+	$(TOOLDIR)/nufft t.ra cim.ra kspr.ra						;\
+	$(TOOLDIR)/resize -f 10 2 kspr.ra kspr.ra					;\
+	$(TOOLDIR)/resize -f 10 2 ksp.ra ksp.ra						;\
+	$(TOOLDIR)/nrmse -t 0.03 ksp.ra kspr.ra						;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
+tests/test-nlinv-rt-gpu: phantom repmat reshape resize traj nlinv nufft fmac nrmse
+	set -e ; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
+	$(TOOLDIR)/traj -r -t5 -x128 -y13 t.ra						;\
+	$(TOOLDIR)/phantom -s4 -tt.ra -k ksp.ra						;\
+	$(TOOLDIR)/repmat 11 2 ksp.ra ksp.ra						;\
+	$(TOOLDIR)/reshape 3072 10 1 ksp.ra ksp.ra					;\
+	$(TOOLDIR)/resize 10 9 ksp.ra ksp.ra						;\
+	$(TOOLDIR)/nlinv -g --real-time -tt.ra -S -N -i6 --cgiter=30 ksp.ra r.ra c.ra	;\
+	$(TOOLDIR)/fmac r.ra c.ra cim.ra						;\
+	$(TOOLDIR)/repmat 11 2 t.ra t.ra						;\
+	$(TOOLDIR)/reshape 3072 10 1 t.ra t.ra						;\
+	$(TOOLDIR)/resize 10 9 t.ra t.ra						;\
+	$(TOOLDIR)/nufft t.ra cim.ra kspr.ra						;\
+	$(TOOLDIR)/resize -f 10 2 kspr.ra kspr.ra					;\
+	$(TOOLDIR)/resize -f 10 2 ksp.ra ksp.ra						;\
+	$(TOOLDIR)/nrmse -t 0.03 ksp.ra kspr.ra						;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
 tests/test-nlinv-reg: normalize nlinv fft fmac nrmse $(TESTS_OUT)/shepplogan_coil_ksp.ra
 	set -e ; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
 	$(TOOLDIR)/nlinv -i10 -RW:3:0:0.1 --liniter=50 $(TESTS_OUT)/shepplogan_coil_ksp.ra r.ra c.ra	;\
@@ -449,11 +487,12 @@ TESTS += tests/test-nlinv-psf-noncart tests/test-nlinv-sms-noncart-psf
 TESTS += tests/test-ncalib tests/test-ncalib-noncart
 TESTS += tests/test-nlinv-reg
 TESTS_BART += tests/test-nlinv-cart-delayed
-TESTS_GPU += tests/test-nlinv-gpu tests/test-nlinv-sms-gpu
+TESTS_GPU += tests/test-nlinv-gpu tests/test-nlinv-sms-gpu tests/test-nlinv-rt-gpu
 
 TESTS_SLOW += tests/test-nlinv-sms
 TESTS_SLOW += tests/test-nlinv-reg2 tests/test-nlinv-reg3 tests/test-nlinv-reg4
 TESTS_SLOW += tests/test-nlinv-sms-noncart
 TESTS_SLOW += tests/test-nlinv-noncart-delayed
+TESTS_SLOW += tests/test-nlinv-rt
 
 
