@@ -23,6 +23,7 @@
 #include "num/fft.h"
 #include "num/init.h"
 #include "num/rand.h"
+#include "num/vptr.h"
 
 #include "noncart/nufft.h"
 #include "linops/linop.h"
@@ -121,10 +122,21 @@ int main_ncalib(int argc, char* argv[argc])
 
 	num_init_gpu_support();
 	num_rand_init(0ULL);
+	num_init_delayed();
 	conf.gpu = bart_use_gpu;
 
 	long ksp_dims[DIMS];
 	complex float* kspace = load_cfl(ksp_file, DIMS, ksp_dims);
+
+	struct vptr_hint_s* hint = NULL;
+
+	if (((0 != bart_mpi_split_flags) || bart_delayed_computations))
+		hint = vptr_hint_create(bart_mpi_split_flags, DIMS, ksp_dims, bart_delayed_loop_flags);
+
+	if (NULL != hint)
+		kspace = vptr_wrap_cfl(DIMS, ksp_dims, CFL_SIZE, kspace, hint, true, false);
+
+	vptr_hint_free(hint);
 
 	// The only multimap we understand with is the one we do ourselves, where
 	// we allow multiple images and sensitivities during the reconstruction
@@ -135,12 +147,13 @@ int main_ncalib(int argc, char* argv[argc])
 
 	if (NULL != pat_file) {
 
-		pattern = load_cfl(pat_file, DIMS, pat_dims);
+		pattern = load_cfl_sameplace(pat_file, DIMS, pat_dims, kspace);
 
 	} else {
 
 		md_select_dims(DIMS, ~COIL_FLAG, pat_dims, ksp_dims);
-		pattern = anon_cfl("", DIMS, pat_dims);
+		pattern = anon_cfl_sameplace("", DIMS, pat_dims, kspace);
+
 		estimate_pattern(DIMS, ksp_dims, COIL_FLAG, pattern, kspace);
 	}
 
@@ -149,7 +162,7 @@ int main_ncalib(int argc, char* argv[argc])
 
 	if (NULL != bas_file) {
 
-		basis = load_cfl(bas_file, DIMS, bas_dims);
+		basis = load_cfl_sameplace(bas_file, DIMS, bas_dims, kspace);
 
 	} else {
 
@@ -168,7 +181,7 @@ int main_ncalib(int argc, char* argv[argc])
 
 		conf.noncart = true;
 
-		traj = load_cfl(trj_file, DIMS, trj_dims);
+		traj = load_cfl_sameplace(trj_file, DIMS, trj_dims, kspace);
 
 		long tdims[DIMS];
 		estimate_im_dims(DIMS, FFT_FLAGS, tdims, trj_dims, traj);
@@ -223,8 +236,8 @@ int main_ncalib(int argc, char* argv[argc])
 			npat_dims[i] = MIN(npat_dims[i], calsize[i]);
 		}
 
-		complex float* nksp = anon_cfl(NULL, DIMS, nksp_dims);
-		complex float* npat = anon_cfl(NULL, DIMS, npat_dims);
+		complex float* nksp = anon_cfl_sameplace(NULL, DIMS, nksp_dims, kspace);
+		complex float* npat = anon_cfl_sameplace(NULL, DIMS, npat_dims, kspace);
 
 		complex float* tmp = md_alloc_sameplace(DIMS, nksp_dims, CFL_SIZE, nksp);
 		long tdims[DIMS];
@@ -307,9 +320,9 @@ int main_ncalib(int argc, char* argv[argc])
 	long cim_dims[DIMS];
 	md_select_dims(DIMS, ~MAPS_FLAG, cim_dims, dims);
 
-	complex float* img = (NULL != img_file ? create_cfl : anon_cfl)(img_file, DIMS, img_dims);
+	complex float* img = (NULL != img_file ? create_cfl_sameplace : anon_cfl_sameplace)(img_file, DIMS, img_dims, kspace);
 	complex float* ksens = md_alloc_sameplace(DIMS, ksens_dims, CFL_SIZE, kspace);
-	complex float* sens = create_cfl(out_file, DIMS, sens_dims);
+	complex float* sens = create_cfl_sameplace(out_file, DIMS, sens_dims, kspace);
 
 	float norm_img = sqrtf(md_calc_size(3, my_sens_dims)) / sqrtf(md_calc_size(3, img_dims));
 
