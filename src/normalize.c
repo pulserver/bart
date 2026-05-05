@@ -23,7 +23,7 @@
 
 
 
-
+enum normalize_type { NORMALIZE_NRMSE, NORMALIZE_L1, NORMALIZE_MAX_REAL };
 
 static const char help_str[] = "Normalize along selected dimensions.";
 
@@ -34,6 +34,7 @@ int main_normalize(int argc, char* argv[argc])
 	unsigned long flags = 0;
 	const char* in_file = NULL;
 	const char* out_file = NULL;
+	enum normalize_type type = NORMALIZE_NRMSE;
 
 	struct arg_s args[] = {
 
@@ -42,11 +43,10 @@ int main_normalize(int argc, char* argv[argc])
 		ARG_OUTFILE(true, &out_file, "output"),
 	};
 
-	bool l1 = false;
-
 	const struct opt_s opts[] = {
 
-		OPT_SET('b', &l1, "l1"),
+		OPT_SELECT('b', enum normalize_type, &type, NORMALIZE_L1, "l1"),
+		OPT_SELECT('m', enum normalize_type, &type, NORMALIZE_MAX_REAL, "max of real part"),
 	};
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
@@ -63,7 +63,18 @@ int main_normalize(int argc, char* argv[argc])
 
 	unmap_cfl(N, dims, data);
 
-	(l1 ? normalizel1 : normalize)(N, flags, dims, out);
+	switch (type) {
+
+	case NORMALIZE_NRMSE:
+		normalize(N, flags, dims, out);
+		break;
+	case NORMALIZE_L1:
+		normalizel1(N, flags, dims, out);
+		break;
+	case NORMALIZE_MAX_REAL:
+		normalize_max_real(N, flags, dims, out);
+		break;
+	}
 
 	unmap_cfl(N, dims, out);
 

@@ -110,6 +110,19 @@ void normalizel1(int N, unsigned long flags, const long dims[N], complex float* 
 	md_free(maps_norm);
 }
 
+void normalize_max_real(int N, unsigned long flags, const long dims[N], complex float* x)
+{
+	long ndims[N];
+	md_select_dims(N, ~flags, ndims, dims);
+
+	complex float* norm = md_alloc_sameplace(N, ndims, CFL_SIZE, x);
+
+	md_clear(N, ndims, norm, CFL_SIZE);
+	md_reduce_zmax(N, dims, flags, norm, x);
+	md_zdiv2(N, dims, MD_STRIDES(N, dims, CFL_SIZE), x, MD_STRIDES(N, dims, CFL_SIZE), x, MD_STRIDES(N, ndims, CFL_SIZE), norm);
+
+	md_free(norm);
+}
 
 
 
