@@ -185,12 +185,16 @@ static int bart_exit(int err_no, const char* exit_msg)
 static void parse_bart_opts(int* argcp, char*** argvp, int order[DIMS], stream_t* ref_stream)
 {
 	int omp_threads = 1;
+
 	unsigned long flags = 0;
 	unsigned long pflags = 0;
+
 	long param_start[DIMS] = { [0 ... DIMS - 1] = -1 };
 	long param_end[DIMS] = { [0 ... DIMS - 1] = -1 };
 	long param_order[DIMS] = { [0 ... DIMS - 1] = -1 };
+
 	const char* ref_file = NULL;
+
 	bool use_mpi = false;
 	bool version = false;
 	bool attach = false;
@@ -257,15 +261,15 @@ static void parse_bart_opts(int* argcp, char*** argvp, int order[DIMS], stream_t
 
 	bool flags_set = false;
 
-	if (0 != flags || 0 != pflags)
+	if ((0 != flags) || (0 != pflags))
 		flags_set = true;
 
-	if (0 != flags && 0 != pflags && flags != pflags)
+	if ((0 != flags) && (0 != pflags) && (flags != pflags))
 		error("Inconsistent use of -p and -l!\n");
 
 	flags |= pflags;
 
-	if (1 == omp_threads && 0 != pflags)
+	if ((1 == omp_threads) && (0 != pflags))
 		omp_threads = 0;
 
 	const char* ompi_str;
@@ -290,6 +294,7 @@ static void parse_bart_opts(int* argcp, char*** argvp, int order[DIMS], stream_t
 
 		long ref_dims[DIMS];
 		const void* tmp = load_async_cfl(ref_file, DIMS, ref_dims);
+
 		stream_t s = stream_lookup(tmp);
 
 		if (NULL == s) {
@@ -324,8 +329,11 @@ static void parse_bart_opts(int* argcp, char*** argvp, int order[DIMS], stream_t
 	int nstart = 0;
 	int nend = 0;
 
-	for(; nstart < DIMS && -1 != param_start[nstart]; nstart++);
-	for(; nend < DIMS && -1 != param_end[nend]; nend++);
+	for (; (nstart < DIMS) && (-1 != param_start[nstart]); nstart++)
+		;
+
+	for (; (nend < DIMS) && (-1 != param_end[nend]); nend++)
+		;
 
 	if (0 != nstart && bitcount(flags) != nstart)
 		error("Size of start values does not coincide with number of selected flags!\n");
@@ -343,17 +351,18 @@ static void parse_bart_opts(int* argcp, char*** argvp, int order[DIMS], stream_t
 
 	int norder = 0;
 
-	for (; norder < DIMS && -1 != param_order[norder]; norder++)
+	for (; (norder < DIMS) && (-1 != param_order[norder]); norder++)
 		if (!MD_IS_SET(flags, param_order[norder]))
 			error("Loop order must contain exactly the dimensions specified in the flags (wrong dim).\n");
 
-	if (0 != norder && bitcount(flags) != norder)
+	if ((0 != norder) && (bitcount(flags) != norder))
 		error("Loop order must contain exactly the dimensions specified in the flags (wrong number of dims).\n");
 
 	for (int i = 0, ip = 0; i < DIMS; i++) {
 
 		order[i] = i;
-		if (0 < norder && MD_IS_SET(flags, i))
+
+		if ((0 < norder) && MD_IS_SET(flags, i))
 			order[i] = param_order[ip++];
 	}
 
@@ -389,9 +398,11 @@ static void parse_bart_opts(int* argcp, char*** argvp, int order[DIMS], stream_t
 	init_cfl_loop_desc(DIMS, loop_dims, offs_size, flags, omp_threads, 0);
 }
 
+
 static double time = 0;
 static double time_sq = 0;
 static long count = 0;
+
 
 static int batch_wrapper(main_fun_t* dispatch_func, int argc, char *argv[argc], long pos)
 {
@@ -430,21 +441,23 @@ static int batch_wrapper(main_fun_t* dispatch_func, int argc, char *argv[argc], 
 	return ret;
 }
 
-static bool loop_step(long start, long total, long workers, long* idx, long *idx_p, int final_ret, const int order[DIMS], stream_t ref_stream)
+static bool loop_step(long start, long total, long workers, long* idx, long *idx_p,
+			int final_ret, const int order[DIMS], stream_t ref_stream)
 {
-	debug_printf(DP_DEBUG3, "Enter BART loop_step: start=%ld idx=%ld, idx_p=%ld, final_ret=%d.\n", start, *idx, *idx_p, final_ret);
+	debug_printf(DP_DEBUG3, "Enter BART loop_step: start=%ld idx=%ld, idx_p=%ld, final_ret=%d.\n",
+		     start, *idx, *idx_p, final_ret);
 
-	// initialization
-	if (-1 == *idx)
+	if (-1 == *idx)	// initialization
 		*idx = start;
-	// repetition
 	else
 		*idx += workers;
 
 	// continue?
 	if ((*idx >= total) || (0 != final_ret)) {
 
-		debug_printf(DP_DEBUG3, "BART loop_step finish: idx >= total: %d OR 0 != final_ret: %d.\n", (*idx >= total), (0 != final_ret));
+		debug_printf(DP_DEBUG3, "BART loop_step finish: idx >= total: %d OR 0 != final_ret: %d.\n",
+			     (*idx >= total), (0 != final_ret));
+
 		return false;
 	}
 
@@ -458,12 +471,14 @@ static bool loop_step(long start, long total, long workers, long* idx, long *idx
 		long pos[DIMS];
 
 		unsigned long flags = cfl_loop_get_flags();
-		assert (flags == stream_get_flags(ref_stream));
+
+		assert(flags == stream_get_flags(ref_stream));
 
 		md_set_dims(DIMS, pos, 0);
 
 		cfl_loop_get_dims(DIMS, dims);
 		stream_get_dimensions(ref_stream, DIMS, stream_dims);
+
 		assert(md_check_equal_dims(DIMS, dims, stream_dims, flags));
 
 		if (!stream_receive_serial(ref_stream, DIMS, pos, *idx)) {
@@ -475,24 +490,29 @@ static bool loop_step(long start, long total, long workers, long* idx, long *idx
 		*idx_p = md_ravel_index(DIMS, pos, flags, dims);
 
 		debug_printf(DP_DEBUG3, "BART loop_step stream idx received: idx=%ld;  Pos: \n [ ", *idx);
-		for(int i = 0; i < DIMS; i++)
+
+		for (int i = 0; i < DIMS; i++)
 			debug_printf(DP_DEBUG3, "%ld, ", pos[i]);
+
 		debug_printf(DP_DEBUG3, "].\n");
 
 		return true;
 	}
 
 	debug_printf(DP_DEBUG3, "BART loop_step order:\n [ ");
-	for(int i = 0; i < DIMS; i++)
+
+	for (int i = 0; i < DIMS; i++)
 		debug_printf(DP_DEBUG3, "%d, ", order[i]);
+
+	debug_printf(DP_DEBUG4, "].\n");
 
 	// calculate permuted index
 	long dims[DIMS];
 	long pdims[DIMS];
-	long pos[DIMS];
+	long pos[DIMS] = { };
 	long pstr[DIMS];
+
 	unsigned long flags = cfl_loop_get_flags();
-	md_set_dims(DIMS, pos, 0);
 
 	cfl_loop_get_dims(DIMS, dims);
 
@@ -501,19 +521,21 @@ static bool loop_step(long start, long total, long workers, long* idx, long *idx
 
 	//permute by unraveling with 'wrong' dims
 	md_unravel_index(DIMS, pos, flags, pdims, *idx);
+
 	//calculate correct permuted index
 	*idx_p = md_calc_offset(DIMS, pstr, pos);
-
 
 	debug_printf(DP_DEBUG3, "Leave BART loop_step: start=%ld idx=%ld, idx_p=%ld, final_ret=%d.\n\n", start, *idx, *idx_p, final_ret);
 
 
-	//FIXME : Loop Order breaks random number test.
+	// FIXME: Loop Order breaks random number test.
 	if ((1 < mpi_get_num_procs()) && (*idx_p != *idx))
 		error("Non-Sequential loops not implemented for MPI.\n");
 
 	return true;
 }
+
+
 
 int main_bart(int argc, char* argv[argc])
 {
@@ -554,7 +576,8 @@ int main_bart(int argc, char* argv[argc])
 	if (builtin_found) {
 
 		debug_printf(DP_DEBUG3, "Builtin found: %s\n", bn);
-		double tot_time = -timestamp();
+
+		double start_time = timestamp();
 
 		unsigned int v[5];
 		version_parse(v, bart_version);
@@ -575,7 +598,7 @@ int main_bart(int argc, char* argv[argc])
 			cuda_set_stream_level();
 #endif
 
-#pragma omp parallel num_threads(cfl_loop_num_workers())
+#pragma			omp parallel num_threads(cfl_loop_num_workers())
 			{
 				long start = cfl_loop_worker_id();
 				long total = cfl_loop_desc_total();
@@ -589,7 +612,7 @@ int main_bart(int argc, char* argv[argc])
 
 					if (0 != ret) {
 
-#pragma omp critical (main_end_condition)
+#pragma						omp critical (main_end_condition)
 						final_ret = ret;
 						bart_exit(ret, "Tool exited with error");
 					}
@@ -623,11 +646,13 @@ int main_bart(int argc, char* argv[argc])
 		}
 
 		deinit_mpi();
+
 		bart_exit_cleanup();
 
 		print_vptr_stats(DP_DEBUG1);
 
-		tot_time += timestamp();
+		double tot_time = timestamp() - start_time;
+
 		double time_mean = time / count;
 		double time_std = sqrt(time_sq / count - time_mean * time_mean);
 
@@ -678,29 +703,17 @@ int main_bart(int argc, char* argv[argc])
 
 			int r = snprintf(*cmd, len, "%s/commands/%s", tpath[i], bn);
 
-			if (r >= (int)len) {
-
+			if (r >= (int)len)
 				error("Commandline too long\n");
-				return bart_exit(1, NULL); // not really needed, error calls abort()
-			}
 
 			debug_printf(DP_DEBUG3, "Trying: %s\n", *cmd);
 
-			if (-1 == execv(*cmd, argv)) {
+			execv(*cmd, argv);	// does not return on success
 
-				if (ENOENT != errno) {
-
-					error("Executing bart command failed\n");
-					return bart_exit(1, NULL); // not really needed, error calls abort()
-				}
-
-			} else {
-
-				assert(0); // unreachable
-			}
+			if (ENOENT != errno)
+				error("Executing bart command failed\n");
 
 			xfree(cmd);
-
 		}
 
 		fprintf(stderr, "Unknown bart command: \"%s\".\n", bn);
@@ -735,6 +748,7 @@ int bart_command(int len, char* buf, int argc, char* argv[])
 #endif
 
 		fclose(bart_output);	// write final nul
+
 		bart_output = NULL;
 	}
 
