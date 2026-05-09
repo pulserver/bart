@@ -124,7 +124,9 @@ tests/test-stream: tests/test-pipe tests/test-stream1 tests/test-stream2 tests/t
 	tests/test-stream-loop tests/test-stream-loop-ref tests/test-stream-binary tests/test-stream-binary2 \
 	tests/test-stream-binary3 tests/test-stream-binary4 tests/test-stream-binary5
 
-
-TESTS += tests/test-stream
+TESTS += tests/test-pipe tests/test-stream1 tests/test-stream2 tests/test-stream3 tests/test-stream4
+TESTS += tests/test-stream-binary tests/test-stream-binary2 tests/test-stream-binary3 tests/test-stream-binary4
 TESTS += tests/test-stream-long-header
+
+TESTS_BART += tests/test-stream-loop tests/test-stream-loop-ref tests/test-stream5 tests/test-stream-binary5
 

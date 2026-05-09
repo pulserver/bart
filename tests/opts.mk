@@ -19,4 +19,6 @@ tests/test-opts-bart-loop: bart
 	rm *.ra; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
-TESTS += tests/test-opts-bart-loop tests/test-opts-mix-args
+TESTS += tests/test-opts-mix-args
+TESTS_BART += tests/test-opts-bart-loop
+

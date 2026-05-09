@@ -88,7 +88,7 @@ tests/test-estmotion-optical-flow-img: traj phantom circshift nufft estmotion in
 	rm *.{cfl,hdr} ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
-TESTS += tests/test-affine-rigid
+TESTS_BART += tests/test-affine-rigid
 TESTS += tests/test-estmotion-optical-flow-ksp tests/test-estmotion
 TESTS += tests/test-estmotion-optical-flow-img
 

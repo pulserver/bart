@@ -439,6 +439,19 @@ IntTest:
     - Build
 
 
+
+IntTest_fast:
+  stage: test2
+  script:
+    - rm bart
+    - make testfast
+    - test ! -e bart
+  needs: [Build]
+  dependencies:
+    - Build
+
+
+
 IntTest_riscv:
   stage: test2
   tags:

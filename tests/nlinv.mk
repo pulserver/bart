@@ -448,7 +448,7 @@ TESTS += tests/test-nlinv-ksens
 TESTS += tests/test-nlinv-psf-noncart tests/test-nlinv-sms-noncart-psf
 TESTS += tests/test-ncalib tests/test-ncalib-noncart
 TESTS += tests/test-nlinv-reg
-TESTS += tests/test-nlinv-cart-delayed
+TESTS_BART += tests/test-nlinv-cart-delayed
 TESTS_GPU += tests/test-nlinv-gpu tests/test-nlinv-sms-gpu
 
 TESTS_SLOW += tests/test-nlinv-sms

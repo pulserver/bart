@@ -368,9 +368,10 @@ tests/test-sample-cart-prec: noise phantom ones fft nrmse scale sample zeros
 
 TESTS += tests/test-sample-gmm1d_mean tests/test-sample-gmm1d_weigthing
 TESTS += tests/test-sample-gauss1d_mean_ancestral tests/test-sample-gauss1d_mean_pc
-TESTS += tests/test-sample-gmm2d tests/test-sample-gmm-2D-weighting-prior
-TESTS += tests/test-sample-gmm-2D-weighting-posterior1
-TESTS += tests/test-sample-gmm-2D-weighting-posterior2
+TESTS += tests/test-sample-gmm2d
+TESTS_BART += tests/test-sample-gmm-2D-weighting-prior
+TESTS_BART += tests/test-sample-gmm-2D-weighting-posterior1
+TESTS_BART += tests/test-sample-gmm-2D-weighting-posterior2
 TESTS += tests/test-sample-noncart tests/test-sample-cart tests/test-sample-noncart-prec tests/test-sample-cart-prec
 
 TESTS_GPU += tests/test-sample-gauss1d_mean_gpu

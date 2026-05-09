@@ -97,5 +97,5 @@ tests/test-ccapply-rgc-forward: bart cc ccapply copy nrmse fft transpose traj ph
 TESTS += tests/test-ccapply-forward tests/test-ccapply-backward
 TESTS += tests/test-ccapply-geom-forward tests/test-ccapply-geom-backward
 TESTS += tests/test-ccapply-esp-forward tests/test-ccapply-esp-backward
-TESTS += tests/test-ccapply-rgc-forward
+TESTS_BART += tests/test-ccapply-rgc-forward
 

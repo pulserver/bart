@@ -96,7 +96,8 @@ tests/test-fft-multi-loop-mpi-strided: bart
 
 
 TESTS += tests/test-fft-basic tests/test-fft-unitary tests/test-fft-uncentered tests/test-fft-shift
-TESTS += tests/test-fft-multi-loop-omp
+
+TESTS_BART += tests/test-fft-multi-loop-omp
 
 TESTS_MPI += tests/test-fft-multi-loop-mpi tests/test-fft-multi-loop-mpi-strided
 

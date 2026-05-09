@@ -1101,7 +1101,9 @@ TESTS = $(filter-out $(NOT_SUPPORTED),$(TMP_TESTS))
 endif
 
 
-test:	${TESTS}
+test:	${TESTS} ${TESTS_BART}
+
+testfast: ${TESTS}
 
 testslow: ${TESTS_SLOW}
 

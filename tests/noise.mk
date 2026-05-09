@@ -86,11 +86,9 @@ tests/test-noise-mpi2: bart
 	touch $@
 
 
-TESTS += tests/test-noise-loop  tests/test-noise-loop2 tests/test-noise-random-dims
+TESTS += tests/test-noise tests/test-noise-real tests/test-noise-spike
+
+TESTS_BART += tests/test-noise-loop  tests/test-noise-loop2 tests/test-noise-random-dims
 
 TESTS_MPI += tests/test-noise-mpi
-
-
-
-TESTS += tests/test-noise tests/test-noise-real tests/test-noise-spike
 

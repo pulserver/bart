@@ -102,7 +102,7 @@ tests/test-pics-eulermaruyama-loop-fail: bart
 	touch $@
 
 
-TESTS += tests/test-pics-cart-loop tests/test-pics-cart-loop_range tests/test-pics-cart-slice tests/test-pics-eulermaruyama-loop tests/test-pics-eulermaruyama-loop-fail
+TESTS_BART += tests/test-pics-cart-loop tests/test-pics-cart-loop_range tests/test-pics-cart-slice tests/test-pics-eulermaruyama-loop tests/test-pics-eulermaruyama-loop-fail
 
 ifeq ($(OMP),1)
 TESTS_SLOW += tests/test-pics-cart-loop_range-omp tests/test-pics-eulermaruyama-loop-omp

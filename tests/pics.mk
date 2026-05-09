@@ -744,12 +744,13 @@ TESTS += tests/test-pics-basis-noncart tests/test-pics-basis-noncart-memory test
 #TESTS += tests/test-pics-lowmem
 TESTS += tests/test-pics-noncart-sms tests/test-pics-psf tests/test-pics-tgv tests/test-pics-tgv-denoising tests/test-pics-tgv2
 TESTS += tests/test-pics-wavl1-dau2 tests/test-pics-wavl1-cdf44 tests/test-pics-wavl1-haar
-TESTS += tests/test-pics-noncart-lowmem tests/test-pics-noncart-lowmem-stack0 tests/test-pics-noncart-lowmem-stack1 tests/test-pics-noncart-lowmem-stack2 tests/test-pics-noncart-lowmem-no-toeplitz
+TESTS += tests/test-pics-noncart-lowmem
+TESTS_BART +=tests/test-pics-noncart-lowmem-stack0 tests/test-pics-noncart-lowmem-stack1 tests/test-pics-noncart-lowmem-stack2 tests/test-pics-noncart-lowmem-no-toeplitz
 TESTS += tests/test-pics-phase
 TESTS += tests/test-pics-eulermaruyama tests/test-pics-eulermaruyama2 tests/test-pics-eulermaruyama3
 TESTS += tests/test-pics-fista tests/test-pics-ist
 TESTS += tests/test-pics-pridu-norm tests/test-pics-pridu-admm tests/test-pics-pridu-adaptive-stepsize
-TESTS += tests/test-pics-cart-delayed tests/test-pics-noncart-delayed tests/test-pics-cart-delayed-tgv
+TESTS_BART += tests/test-pics-cart-delayed tests/test-pics-noncart-delayed tests/test-pics-cart-delayed-tgv
 
 TESTS_SLOW += tests/test-pics-basis
 

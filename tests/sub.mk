@@ -7,4 +7,5 @@ tests/test-sub: ones scale sub nrmse bart # bart is called by sub
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
-TESTS += tests/test-sub
+TESTS_BART += tests/test-sub
+

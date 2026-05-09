@@ -9,5 +9,7 @@ tests/test-bart: bart
 	rm ones *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
-TESTS += tests/test-bart
+ifneq ($(BUILDTYPE), WASM)
+TESTS_BART += tests/test-bart
+endif
 
