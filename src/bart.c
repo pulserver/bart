@@ -553,8 +553,12 @@ int main_bart(int argc, char* argv[argc])
 		parse_bart_opts(&argc, &argv, order, &ref_stream);
 
 		bn = basename(argv[0]);
-	}
 
+	} else {
+
+		for (int i = 0; i < DIMS; i++)
+			order[i] = i;
+	}
 
 	main_fun_t* dispatch_func = NULL;
 

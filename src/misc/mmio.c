@@ -150,7 +150,7 @@ struct cfl_loop_desc_s {
 
 static struct cfl_loop_desc_s cfl_loop_desc = {
 
-	.D = 0,
+	.D = DIMS,
 	.omp_threads = 1,
 	.flags = 0UL,
 	.loop_dims =  { [0 ... DIMS - 1] = 1 },
