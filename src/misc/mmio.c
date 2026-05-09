@@ -236,7 +236,7 @@ int cfl_loop_num_workers(void)
 
 
 
-void init_cfl_loop_desc(int D, const long loop_dims[__VLA(D)], long start_dims[__VLA(D)], unsigned long flags, int omp_threads, int index)
+void cfl_loop_init_desc(int D, const long loop_dims[__VLA(D)], long start_dims[__VLA(D)], unsigned long flags, int omp_threads, int index)
 {
 	if (MAX_WORKER < omp_threads)
 		error("Maximum supported number of OMP workers exceeded!\n");
@@ -250,7 +250,7 @@ void init_cfl_loop_desc(int D, const long loop_dims[__VLA(D)], long start_dims[_
 	md_copy_dims(D, cfl_loop_desc.loop_dims, loop_dims);
 	md_copy_dims(D, cfl_loop_desc.offs_dims, start_dims);
 
-	set_cfl_loop_index(index);
+	cfl_loop_set_index(index);
 
 #pragma omp critical(unmap_addrs)
 	if (NULL == unmap_addrs)
@@ -264,7 +264,7 @@ long cfl_loop_desc_total(void)
 }
 
 
-void set_cfl_loop_index(long index)
+void cfl_loop_set_index(long index)
 {
 	if (!cfl_loop_desc_active())
 		return;
@@ -277,7 +277,7 @@ void set_cfl_loop_index(long index)
 	cfl_loop_index[worker_id] = index;
 }
 
-long get_cfl_loop_index()
+long cfl_loop_get_index()
 {
 	int worker_id = cfl_loop_worker_id();
 
@@ -285,6 +285,7 @@ long get_cfl_loop_index()
 		error("Worker id exceeds maximum supported workers!\n");
 
 	debug_printf(DP_DEBUG2, "loop index: %ld\n", cfl_loop_index[worker_id]);
+
 	return cfl_loop_index[worker_id];
 }
 

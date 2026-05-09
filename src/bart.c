@@ -392,7 +392,7 @@ static void parse_bart_opts(int* argcp, char*** argvp, int order[DIMS], stream_t
 	if (1 < mpi_get_num_procs())
 		omp_threads = 1;
 
-	init_cfl_loop_desc(DIMS, loop_dims, offs_size, flags, omp_threads, 0);
+	cfl_loop_init_desc(DIMS, loop_dims, offs_size, flags, omp_threads, 0);
 }
 
 
@@ -414,7 +414,7 @@ static int batch_wrapper(main_fun_t* dispatch_func, int argc, char *argv[argc], 
 
 	thread_argv[argc] = NULL;
 
-	set_cfl_loop_index(pos);
+	cfl_loop_set_index(pos);
 	num_rand_init(0ULL);
 
 	double loctime = -timestamp();
