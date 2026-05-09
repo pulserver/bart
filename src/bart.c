@@ -61,9 +61,6 @@
 
 #include "main.h"
 
-// also check in commands/ subdir at the bart exe location
-#define CHECK_EXE_COMMANDS
-
 #ifndef DIMS
 #define DIMS 16
 #endif
@@ -667,27 +664,7 @@ int main_bart(int argc, char* argv[argc])
 
 		debug_printf(DP_DEBUG3, "No builtin found: %s\n", argv[0]);
 
-#ifdef CHECK_EXE_COMMANDS
-		// also check dirname(PATH_TO_BART)/commands/:
-		char exe_loc[1024] = { };
-		ssize_t exe_loc_size = ARRAY_SIZE(exe_loc);
-		ssize_t rl = readlink("/proc/self/exe", exe_loc, (size_t)exe_loc_size);
-
-		char* exe_dir = NULL;
-
-		if ((-1 != rl) && (exe_loc_size != rl)) {
-
-			// readlink returned without error and did not truncate
-			exe_dir = dirname(exe_loc);
-			// no need to check for NULL, as in that case, we skip it in the loop below
-		}
-#endif
-
 		const char* tpath[] = {
-#ifdef CHECK_EXE_COMMANDS
-			exe_dir,
-#endif
-			getenv("BART_TOOLBOX_PATH"),
 			"/usr/local/lib/bart/",
 			"/usr/lib/bart/",
 		};
