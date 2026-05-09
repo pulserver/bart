@@ -458,22 +458,22 @@ static bool loop_step(long start, long total, long workers, long* idx, long *idx
 		return false;
 	}
 
+	unsigned long flags = cfl_loop_get_flags();
+
+	long dims[DIMS];
+	cfl_loop_get_dims(DIMS, dims);
+
+	long pos[DIMS] = { };
+
+
 	if (NULL != ref_stream) {
 
 		if (1 < mpi_get_num_procs())
 			error("Non-sequential loops not implemented for MPI.\n");
 
-		long dims[DIMS];
-		long stream_dims[DIMS];
-		long pos[DIMS];
-
-		unsigned long flags = cfl_loop_get_flags();
-
 		assert(flags == stream_get_flags(ref_stream));
 
-		md_set_dims(DIMS, pos, 0);
-
-		cfl_loop_get_dims(DIMS, dims);
+		long stream_dims[DIMS];
 		stream_get_dimensions(ref_stream, DIMS, stream_dims);
 
 		assert(md_check_equal_dims(DIMS, dims, stream_dims, flags));
@@ -504,14 +504,8 @@ static bool loop_step(long start, long total, long workers, long* idx, long *idx
 	debug_printf(DP_DEBUG4, "].\n");
 
 	// calculate permuted index
-	long dims[DIMS];
 	long pdims[DIMS];
-	long pos[DIMS] = { };
 	long pstr[DIMS];
-
-	unsigned long flags = cfl_loop_get_flags();
-
-	cfl_loop_get_dims(DIMS, dims);
 
 	md_permute_dims(DIMS, order, pstr, MD_STRIDES(DIMS, dims, 1));
 	md_permute_dims(DIMS, order, pdims, dims);
@@ -584,6 +578,8 @@ int main_bart(int argc, char* argv[argc])
 
 		int final_ret = 0;
 
+		long total = cfl_loop_desc_total();
+		long workers = cfl_loop_num_workers();
 
 		if (cfl_loop_omp()) {
 
@@ -595,11 +591,9 @@ int main_bart(int argc, char* argv[argc])
 			cuda_set_stream_level();
 #endif
 
-#pragma			omp parallel num_threads(cfl_loop_num_workers())
+#pragma			omp parallel num_threads(workers)
 			{
 				long start = cfl_loop_worker_id();
-				long total = cfl_loop_desc_total();
-				long workers = cfl_loop_num_workers();
 				long idx = -1;
 				long idx_p = -1;
 
@@ -619,8 +613,6 @@ int main_bart(int argc, char* argv[argc])
 		} else {
 
 			long start = cfl_loop_worker_id();
-			long total = cfl_loop_desc_total();
-			long workers = cfl_loop_num_workers();
 			long idx = -1;
 			long idx_p = -1;
 
