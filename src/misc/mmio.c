@@ -182,8 +182,7 @@ int cfl_loop_worker_id(void)
 
 		int procno = mpi_get_rank();
 
-		if (MAX_WORKER <= procno)
-			error("Maximum supported number of MPI workers (%d) exceeded!\n", MAX_WORKER);
+		assert(procno < MAX_WORKER);
 
 		return procno;
 	}
@@ -196,8 +195,7 @@ int cfl_loop_worker_id(void)
 		if ((THREAD_BATCH_LVL < omp_get_level()) || (1 < omp_get_team_size(0)))
 			debug_printf(DP_WARN, "File accessed in OMP region! Cannot guarantee thread safety!\n");
 
-		if (MAX_WORKER <= threadno)
-			error("Maximum supported number of MPI workers (%d) exceeded!\n", MAX_WORKER);
+		assert(threadno < MAX_WORKER);
 
 		return MAX(0, threadno);
 	}
@@ -271,18 +269,12 @@ void cfl_loop_set_index(long index)
 
 	int worker_id = cfl_loop_worker_id();
 
-	if (MAX_WORKER < worker_id)
-		error("Worker id exceeds maximum supported workers!\n");
-
 	cfl_loop_index[worker_id] = index;
 }
 
 long cfl_loop_get_index()
 {
 	int worker_id = cfl_loop_worker_id();
-
-	if (MAX_WORKER < worker_id)
-		error("Worker id exceeds maximum supported workers!\n");
 
 	debug_printf(DP_DEBUG2, "loop index: %ld\n", cfl_loop_index[worker_id]);
 
