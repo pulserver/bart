@@ -8,7 +8,7 @@ function _bart()
 
 	if [ $COMP_CWORD -eq 1 ] ; then
 
-		local CMDS=$(bart | tail -n +2)
+		local CMDS=$(bart | tail -n +2 | cut -f2- -d':')
 		COMPREPLY=($(compgen -W "$CMDS" -- "$cur"));
 
 	else
