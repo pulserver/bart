@@ -461,7 +461,7 @@ static bool loop_step(long start, long total, long workers, long* idx, long *idx
 	if (NULL != ref_stream) {
 
 		if (1 < mpi_get_num_procs())
-			error("Non-Sequential loops not implemented for MPI.\n");
+			error("Non-sequential loops not implemented for MPI.\n");
 
 		long dims[DIMS];
 		long stream_dims[DIMS];
@@ -527,7 +527,7 @@ static bool loop_step(long start, long total, long workers, long* idx, long *idx
 
 	// FIXME: Loop Order breaks random number test.
 	if ((1 < mpi_get_num_procs()) && (*idx_p != *idx))
-		error("Non-Sequential loops not implemented for MPI.\n");
+		error("Non-sequential loops not implemented for MPI.\n");
 
 	return true;
 }
@@ -681,7 +681,7 @@ int main_bart(int argc, char* argv[argc])
 			int r = snprintf(*cmd, len, "%s/commands/%s", tpath[i], bn);
 
 			if (r >= (int)len)
-				error("Commandline too long\n");
+				error("Command line too long\n");
 
 			debug_printf(DP_DEBUG3, "Trying: %s\n", *cmd);
 
