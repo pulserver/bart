@@ -82,7 +82,7 @@ void abort_or_print(const char* testname)
 int main(int argc, char* argv[])
 {
 #ifdef USE_MPI
-	init_mpi(&argc, &argv);
+	mpi_init(&argc, &argv);
 #else
 	(void)argc;
 #endif
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
 	debug_printf(good ? DP_INFO : DP_ERROR, "%20s: %2d/%2d passed.\n", argv[0], num_tests_pass, num_tests_run);
 
 #ifndef BARTDLL
-	deinit_mpi();
+	mpi_deinit();
 #endif
 
 	exit(good ? 0 : 1);

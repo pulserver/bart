@@ -281,7 +281,7 @@ static void parse_bart_opts(int* argcp, char*** argvp, int order[DIMS], stream_t
 
 	if (use_mpi) {
 
-		init_mpi(argcp, argvp);
+		mpi_init(argcp, argvp);
 
 		if (1 == mpi_get_num_procs())
 			error("MPI requested but only one rank available!\n");
@@ -642,7 +642,7 @@ int main_bart(int argc, char* argv[argc])
 			}
 		}
 
-		deinit_mpi();
+		mpi_deinit();
 
 		bart_exit_cleanup();
 

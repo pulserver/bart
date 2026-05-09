@@ -55,7 +55,7 @@ static MPI_Comm mpi_get_comm(void)
 #endif
 
 
-void init_mpi(int* argc, char*** argv)
+void mpi_init(int* argc, char*** argv)
 {
 #ifdef USE_MPI
 	if (!mpi_initialized) {
@@ -101,7 +101,7 @@ void init_mpi(int* argc, char*** argv)
 #endif
 }
 
-void deinit_mpi(void)
+void mpi_deinit(void)
 {
 #ifdef USE_MPI
 	if (mpi_initialized)
@@ -109,7 +109,7 @@ void deinit_mpi(void)
 #endif
 }
 
-void abort_mpi(int err_code)
+void mpi_abort(int err_code)
 {
 #ifdef USE_MPI
 	if (1 < mpi_get_num_procs())
