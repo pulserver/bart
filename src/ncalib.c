@@ -115,6 +115,7 @@ int main_ncalib(int argc, char* argv[argc])
 		OPTL_ULONG(0, "shared-col-dims", &cnstcoil_flags, "flags", "deselect coil dims with flags"),
 		OPTL_ULONG(0, "scale-loop-dims", &scale_loop_flags, "flags", "scale parameters as if ncalib was looped over these dims"),
 		OPTL_INT(0, "phase-pole", &(conf.phasepoles), "d", "Use phase pole detection after d iterations (0 for every iteration)"),
+		OPTL_SUBOPT(0, "nufft-conf", "...", "configure nufft", N_nufft_conf_opts, nufft_conf_opts),
 	};
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
@@ -344,11 +345,7 @@ int main_ncalib(int argc, char* argv[argc])
 
 	if (NULL != traj) {
 
-		struct nufft_conf_s nufft_conf = nufft_conf_defaults;
-		nufft_conf.toeplitz = true;
-		nufft_conf.pcycle = false;
-		nufft_conf.periodic = false;
-		nufft_conf.lowmem = true;
+		struct nufft_conf_s nufft_conf = nufft_conf_options;
 		conf.nufft_conf = &nufft_conf;
 
 		noir2_recon_noncart(&conf, DIMS,
