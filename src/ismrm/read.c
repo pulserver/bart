@@ -446,9 +446,6 @@ static bool ismrmrd_convert_acquisition(struct isrmrm_config_s* config, const IS
 	if (MD_IS_SET(acq->head.flags, (ISMRMRD_ACQ_IS_NOISE_MEASUREMENT - 1)))
 		return false;
 
-	if (MD_IS_SET(acq->head.flags, (ISMRMRD_ACQ_IS_PARALLEL_CALIBRATION - 1)))
-		return false;
-
 	if (MD_IS_SET(acq->head.flags, (ISMRMRD_ACQ_IS_NAVIGATION_DATA - 1)))
 		return false;
 
