@@ -11,6 +11,40 @@ tests/test-reshape: phantom reshape repmat slice nrmse
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
+tests/test-reshape-non-factor: index reshape noise repmat transpose nrmse
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
+	$(TOOLDIR)/index 0 105 i.ra							;\
+	$(TOOLDIR)/reshape 31 7 1 3 1 5 i.ra i.ra					;\
+	$(TOOLDIR)/repmat 1 12 i.ra i.ra						;\
+	$(TOOLDIR)/repmat 3 13 i.ra i.ra						;\
+	$(TOOLDIR)/noise i.ra i.ra							;\
+	$(TOOLDIR)/reshape 21 3 5 7 i.ra i2.ra						;\
+	$(TOOLDIR)/transpose 1 6 i.ra i3.ra						;\
+	$(TOOLDIR)/transpose 3 7 i3.ra i3.ra						;\
+	$(TOOLDIR)/reshape 21 3 5 7 i3.ra i3.ra						;\
+	$(TOOLDIR)/transpose 1 6 i3.ra i3.ra						;\
+	$(TOOLDIR)/transpose 3 7 i3.ra i3.ra						;\
+	$(TOOLDIR)/nrmse -t 0. i2.ra i3.ra						;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
+tests/test-reshape-factor: index reshape noise repmat transpose nrmse
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
+	$(TOOLDIR)/index 0 168 i.ra							;\
+	$(TOOLDIR)/reshape 31 2 1 12 1 7 i.ra i.ra					;\
+	$(TOOLDIR)/repmat 1 12 i.ra i.ra						;\
+	$(TOOLDIR)/repmat 3 13 i.ra i.ra						;\
+	$(TOOLDIR)/noise i.ra i.ra							;\
+	$(TOOLDIR)/reshape 21 6 2 14 i.ra i2.ra						;\
+	$(TOOLDIR)/transpose 1 6 i.ra i3.ra						;\
+	$(TOOLDIR)/transpose 3 7 i3.ra i3.ra						;\
+	$(TOOLDIR)/reshape 21 6 2 14 i3.ra i3.ra					;\
+	$(TOOLDIR)/transpose 1 6 i3.ra i3.ra						;\
+	$(TOOLDIR)/transpose 3 7 i3.ra i3.ra						;\
+	$(TOOLDIR)/nrmse -t 0. i2.ra i3.ra						;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
 tests/test-reshape-mpi: bart
 	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
 	$(ROOTDIR)/bart phantom -s 6 x							;\
@@ -27,6 +61,7 @@ tests/test-reshape-mpi: bart
 
 
 TESTS += tests/test-reshape
+TESTS += tests/test-reshape-non-factor tests/test-reshape-factor
 
 TESTS_MPI += tests/test-reshape-mpi
 

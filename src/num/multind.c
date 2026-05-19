@@ -1871,10 +1871,112 @@ void md_flip(int D, const long dims[D], unsigned long flags, void* optr, const v
 
 
 /**
- * Reshape array (with strides)
- *
- * Only flagged dims may flow
+ * Try to factorize dimensions of flagged reshape to single call of md_copy2
  */
+static bool md_reshape_factor(int D, long dims[2 * D], long ostrs[2 * D], long istrs[2 * D], unsigned long flags, const long odims[D], const long idims[D], size_t size)
+{
+	assert(md_calc_size(D, odims) == md_calc_size(D, idims));
+	assert(md_check_equal_dims(D, odims, idims, ~flags));
+
+	long nodims[D];
+	long nidims[D];
+
+	md_copy_dims(D, nodims, odims);
+	md_copy_dims(D, nidims, idims);
+
+	// merge selected dimensions when contiguous
+	long idx = -1;
+	
+	for (int i = 0; i < D; i++) {
+
+		if (-1 < idx && MD_IS_SET(flags, i)) {
+
+			nidims[idx] *= nidims[i];
+			nodims[idx] *= nodims[i];
+			
+			nidims[i] = 1;
+			nodims[i] = 1;
+		}
+
+		if (-1 == idx && MD_IS_SET(flags, i))
+			idx = i;
+
+		if (!MD_IS_SET(flags, i) && (1 != nidims[i]))
+			idx = -1;
+	}
+
+	long nostrs[D];
+	long nistrs[D];
+
+	md_calc_strides(D, nostrs, nodims, size);
+	md_calc_strides(D, nistrs, nidims, size);
+
+	md_singleton_dims(2 * D, dims);
+	md_singleton_strides(2 * D, ostrs);
+	md_singleton_strides(2 * D, istrs);
+
+	int j = 0;
+
+	for (int i = 0; i < D; i++) {
+
+		if (MD_IS_SET(flags, i))
+			continue;
+
+		dims[j] = nidims[i];
+		ostrs[j] = nostrs[i];
+		istrs[j] = nistrs[i];
+		j++;
+	}
+
+	int i = 0;
+	int o = 0;
+
+	do {
+		while ((i < D) && ((1 == nidims[i]) || !MD_IS_SET(flags, i)))
+			i++;
+
+		while ((o < D) && ((1 == nodims[o]) || !MD_IS_SET(flags, o)))
+			o++;
+
+		assert((D == o) == (D == i));
+		
+		if (D == o)
+			return true;
+
+		assert(j < 2 * D);
+
+		if (0 == nidims[i] % nodims[o]) {
+
+			dims[j] = nodims[o];
+			ostrs[j] = nostrs[o];
+			istrs[j] = nistrs[i];
+			j++;
+
+			nidims[i] /= nodims[o];
+			nistrs[i] *= nodims[o];
+			nodims[o] = 1;
+			continue;
+		}
+
+		if (0 == nodims[o] % nidims[i]) {
+
+			dims[j] = nidims[i];
+			ostrs[j] = nostrs[o];
+			istrs[j] = nistrs[i];
+			j++;
+
+			nodims[o] /= nidims[i];
+			nostrs[o] *= nidims[i];
+			nidims[i] = 1;
+			continue;
+		}
+
+		return false;
+
+	} while (true);
+}
+
+
 void md_reshape2(int D, unsigned long flags, const long odims[D], const long ostrs[D], void* optr, const long idims[D], const long istrs[D], const void* iptr, size_t size)
 {
 	assert(md_calc_size(D, odims) == md_calc_size(D, idims));
@@ -1934,6 +2036,28 @@ void md_reshape(int D, unsigned long flags, const long odims[D], void* optr, con
 	assert(md_calc_size(D, odims) == md_calc_size(D, idims));
 	assert(md_check_equal_dims(D, odims, idims, ~flags));
 
+	long fdims[2 * D];
+	long fostrs[2 * D];
+	long fistrs[2 * D];
+
+	if (md_reshape_factor(D, fdims, fostrs, fistrs, flags, odims, idims, size)) {
+
+		void* buf = (void*)iptr;
+
+		if (iptr == optr && !md_check_equal_dims(2 * D, fostrs, fistrs, ~0UL)) {
+
+			buf = md_alloc_sameplace(D, idims, size, iptr);
+			md_copy(D, idims, buf, iptr, size);
+		}
+
+		md_copy2(2 * D, fdims, fostrs, optr, fistrs, buf, size);
+
+		if (buf != iptr)
+			md_free(buf);
+
+		return;
+	}
+
 	long ostrs[D];
 	md_calc_strides(D, ostrs, odims, size);
 
@@ -1941,14 +2065,7 @@ void md_reshape(int D, unsigned long flags, const long odims[D], void* optr, con
 	memset(istrs, 0, sizeof istrs); // warning
 	md_calc_strides(D, istrs, idims, size);
 
-	if (md_check_equal_dims(D, ostrs, istrs, ~flags)) {	// strides consistent!
-
-		md_copy(D, odims, optr, iptr, size);
-
-	} else {
-
-		md_reshape2(D, flags, odims, ostrs, optr, idims, istrs, iptr, size);
-	}
+	md_reshape2(D, flags, odims, ostrs, optr, idims, istrs, iptr, size);
 }
 
 
