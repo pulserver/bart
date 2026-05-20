@@ -92,10 +92,22 @@ tests/test-ccapply-rgc-forward: bart cc ccapply copy nrmse fft transpose traj ph
 	rm *.ra ; cd .. ; rmdir --ignore-fail-on-non-empty $(TESTS_TMP)
 	touch $@
 
+tests/test-ccapply-whiten: cc whiten resize ccapply nrmse $(TESTS_OUT)/shepplogan_coil_ksp.ra
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)							;\
+	$(TOOLDIR)/resize -c 1 1 $(TESTS_OUT)/shepplogan_coil_ksp.ra noise.ra				;\
+	$(TOOLDIR)/whiten $(TESTS_OUT)/shepplogan_coil_ksp.ra noise.ra ksp_white.ra white_mat.ra	;\
+	$(TOOLDIR)/cc -p4 ksp_white.ra ksp-cc.ra							;\
+	$(TOOLDIR)/cc -M ksp_white.ra cc_mat.ra								;\
+	$(TOOLDIR)/ccapply -p4 -W white_mat.ra $(TESTS_OUT)/shepplogan_coil_ksp.ra cc_mat.ra ksp-cc2.ra	;\
+	$(TOOLDIR)/nrmse -t 1.e-6 ksp-cc.ra ksp-cc2.ra							;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
 
 
 TESTS += tests/test-ccapply-forward tests/test-ccapply-backward
 TESTS += tests/test-ccapply-geom-forward tests/test-ccapply-geom-backward
 TESTS += tests/test-ccapply-esp-forward tests/test-ccapply-esp-backward
+TESTS += tests/test-ccapply-whiten
 TESTS_BART += tests/test-ccapply-rgc-forward
 

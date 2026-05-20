@@ -50,6 +50,7 @@ int main_ccapply(int argc, char* argv[argc])
 	long P = -1;
 	enum cc_type { SCC, GCC, ECC } cc_type = SCC;
 	int aligned = -1;
+	const char* white_file = NULL;
 
 	const struct opt_s opts[] = {
 
@@ -60,6 +61,7 @@ int main_ccapply(int argc, char* argv[argc])
 		OPT_SELECT('G', enum cc_type, &cc_type, GCC, "type: Geometric"),
 		OPT_SELECT('E', enum cc_type, &cc_type, ECC, "type: ESPIRiT"),
 		OPT_PINT('A', &aligned, "dim", "Perform alignment of coil sensitivities along dimension A"),
+		OPT_INFILE('W', &white_file, "<optmat>", "pre-whiten k-space before cc"),
 	};
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
@@ -144,6 +146,12 @@ int main_ccapply(int argc, char* argv[argc])
 
 		out_data = create_cfl(out_file, DIMS, out_dims);
 	}
+
+	long opt_dims[DIMS];
+	complex float* opt_mat = NULL;
+
+	if (NULL != white_file)
+		opt_mat = load_cfl(white_file, DIMS, opt_dims);
 
 
 	// transpose for the matrix multiplication
@@ -239,11 +247,35 @@ rt_loop:
 		md_copy_block(DIMS, (long [DIMS]){ }, cc2_dims, rt_tmp, cc_dims, cc_data, CFL_SIZE);
 	}
 
+	complex float* cc_mat = md_alloc(DIMS, cc2_dims, CFL_SIZE);
+	md_copy(DIMS, cc2_dims, cc_mat, cc_data, CFL_SIZE);
+
+	if (NULL != opt_mat) {
+
+		assert(1 == cc2_dims[6]);
+		assert(1 == opt_dims[6]);
+
+		long in1_dims[DIMS];
+		md_transpose_dims(DIMS, COIL_DIM, 6, in1_dims, cc2_dims);
+
+		complex float* tmp = md_alloc_sameplace(DIMS, in1_dims, CFL_SIZE, cc_data);
+		md_transpose(DIMS, COIL_DIM, 6, in1_dims, tmp, cc2_dims, cc_mat, CFL_SIZE);
+
+		long topt_dims[DIMS];
+		md_singleton_dims(DIMS, topt_dims);
+		md_max_dims(DIMS, MD_BIT(6) | MD_BIT(COIL_DIM), topt_dims, in1_dims, opt_dims);
+
+		md_ztenmulc(DIMS, cc2_dims, cc_mat, in1_dims, tmp, topt_dims, opt_mat);
+		md_free(tmp);
+	}
+
 
 	if (forward)
-		md_zmatmulc(DIMS, trp_dims, out_data, cc2_dims, cc_data, in_dims, in_data);
+		md_zmatmulc(DIMS, trp_dims, out_data, cc2_dims, cc_mat, in_dims, in_data);
 	else
-		md_zmatmul(DIMS, out_dims, out_data, cc2_dims, cc_data, trp_dims, in_data);
+		md_zmatmul(DIMS, out_dims, out_data, cc2_dims, cc_mat, trp_dims, in_data);
+
+	md_free(cc_mat);
 
 
 	if (-1 != aligned) {
