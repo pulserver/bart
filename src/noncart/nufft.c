@@ -2084,7 +2084,12 @@ void nufft_get_psf2(const struct linop_s* nufft, int N, const long psf_dims[N], 
 	assert(N == data->N + 1);
 	md_check_equal_dims(N, psf_dims, data->psf_dims, ~0UL);
 
-	md_copy2(N, psf_dims, psf_strs, psf, data->psf_strs, multiplace_read(data->psf, psf), CFL_SIZE);
+	assert(!data->conf.compress_psf);
+
+	if (data->conf.real)
+		md_zcmpl_real2(N, psf_dims, psf_strs, psf, data->psf_strs, multiplace_read(data->psf, psf));
+	else
+		md_copy2(N, psf_dims, psf_strs, psf, data->psf_strs, multiplace_read(data->psf, psf), CFL_SIZE);
 }
 
 
@@ -2119,7 +2124,21 @@ void nufft_update_psf2(const struct linop_s* nufft, int ND, const long psf_dims[
 
 	multiplace_free(data->psf);
 
-	data->psf = multiplace_move2(ND, psf_dims, psf_strs, CFL_SIZE, psf);
+	assert(!data->conf.compress_psf);
+
+	if (data->conf.real) {
+
+		md_calc_strides(ND, data->psf_strs, data->psf_dims, FL_SIZE);
+
+		float* rpsf = md_alloc_sameplace(ND, psf_dims, FL_SIZE, psf);
+		md_real2(ND, psf_dims, data->psf_strs, rpsf, psf_strs, psf);
+
+		data->psf = multiplace_move_F(ND, psf_dims, FL_SIZE, rpsf);
+
+	} else {
+
+		data->psf = multiplace_move2(ND, psf_dims, psf_strs, CFL_SIZE, psf);
+	}
 }
 
 void nufft_update_psf(const struct linop_s* nufft, int ND, const long psf_dims[ND], const complex float* psf)
