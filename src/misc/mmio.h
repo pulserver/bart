@@ -57,6 +57,8 @@ extern _Complex float* load_zra(const char* name, int D, long dims[__VLA(D)]);
 extern _Complex float* create_zshm(const char* name, int D, const long dims[__VLA(D)]);
 extern _Complex float* load_zshm(const char* name, int D, long dims[__VLA(D)]);
 
+extern void unlink_cfl(const char* name);
+
 #ifdef __EMSCRIPTEN__
 extern int wasm_fd_offset;
 void wasm_close_fds(void);

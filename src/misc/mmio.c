@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <errno.h>
 
 #ifdef USE_MPI
 #include <mpi.h>
@@ -1599,3 +1600,51 @@ void unmap_multi_cfl(int N, int D[N], const long* dimensions[N], complex float* 
 #endif
 }
 
+
+void unlink_cfl(const char* name)
+{
+	enum file_types_e type = file_type(name);
+
+	switch (type) {
+
+	case FILE_TYPE_RA:
+	case FILE_TYPE_COO:
+
+		if ((0 != unlink(name) && (ENOENT != errno)))
+			error("Failed to unlink file %s\n", name);
+
+		break;
+
+	case FILE_TYPE_CFL:
+
+		;
+
+		char name_bdy[1024];
+
+		if (1024 <= snprintf(name_bdy, 1024, "%s.cfl", name))
+			error("Failed to unlink cfl file %s\n", name);
+
+		if ((0 != unlink(name_bdy) && (ENOENT != errno)))
+			error("Failed to unlink file %s\n", name);
+
+		char name_hdr[1024];
+
+		if (1024 <= snprintf(name_hdr, 1024, "%s.hdr", name))
+			error("Failed to unlink cfl file %s\n", name);
+
+		if ((0 != unlink(name_hdr) && (ENOENT != errno)))
+			error("Failed to unlink file %s\n", name);
+
+		break;
+
+	case FILE_TYPE_SHM:
+
+		if ((0 != shm_unlink(name) && (ENOENT != errno)))
+			error("Failed to unlink shared memory segment %s\n", name);
+
+		break;
+
+	case FILE_TYPE_PIPE:
+	case FILE_TYPE_MEM:
+	}
+}
