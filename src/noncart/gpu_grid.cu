@@ -292,11 +292,22 @@ struct rolloff_conf {
 	long dims[4];
 	long ostrs[4];
 	long istrs[4];
+	float* rolloff[3];
 	float os;
 	float width;
 	float beta;
 	double bessel_beta;
 };
+
+__global__ void kern_prep_rolloff(struct rolloff_conf c)
+{
+	int start = threadIdx.x;
+	int stride = blockDim.x;
+
+	for (int j = 0; j < 3; j++)
+		for (long i = start; i < c.dims[j]; i +=stride)
+			c.rolloff[j][i] = ((c.dims[j] > 1) ? rolloff(posf(c.dims[j], i, c.os), c.beta, c.width) * c.bessel_beta : 1);
+}
 
 __global__ void kern_apply_rolloff_correction(struct rolloff_conf c, cuFloatComplex* dst, const cuFloatComplex* src)
 {
@@ -316,9 +327,7 @@ __global__ void kern_apply_rolloff_correction(struct rolloff_conf c, cuFloatComp
 				long iidx = x * c.istrs[0] + y * c.istrs[1] + z * c.istrs[2];
 				long oidx = x * c.ostrs[0] + y * c.ostrs[1] + z * c.ostrs[2];
 
-				float val = ((c.dims[0] > 1) ? rolloff(posf(c.dims[0], x, c.os), c.beta, c.width) * c.bessel_beta : 1)
-					  * ((c.dims[1] > 1) ? rolloff(posf(c.dims[1], y, c.os), c.beta, c.width) * c.bessel_beta : 1)
-					  * ((c.dims[2] > 1) ? rolloff(posf(c.dims[2], z, c.os), c.beta, c.width) * c.bessel_beta : 1);
+				float val = c.rolloff[0][x] * c.rolloff[1][y] * c.rolloff[2][z];
 
 				for (long i = 0; i < c.dims[3]; i++) {
 
@@ -343,10 +352,19 @@ extern "C" void cuda_apply_rolloff_correction2(float os, float width, float beta
 	md_copy_dims(4, c.ostrs, ostrs);
 	md_copy_dims(4, c.istrs, istrs);
 
+	for (int i = 0; i < 3; i++)
+		c.rolloff[i] = (float*)cuda_malloc(sizeof(float) * dims[i]);
+
+	kern_prep_rolloff<<<1, 1024, 0, cuda_get_stream()>>>(c);
+	CUDA_KERNEL_ERROR;
+
 	const void* func = (const void*)kern_apply_rolloff_correction;
 	kern_apply_rolloff_correction<<<getGridSize3(c.dims, func), getBlockSize3(c.dims, (const void*)func), 0, cuda_get_stream()>>>(c, (cuFloatComplex*)dst, (const cuFloatComplex*)src);
 
 	CUDA_KERNEL_ERROR;
+
+	for (int i = 0; i < 3; i++)
+		cuda_free(c.rolloff[i]);
 }
 
 
