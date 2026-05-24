@@ -252,7 +252,7 @@ void fftmod2(int N, const long dims[N], unsigned long flags, const long ostrs[N]
 	long bdims[N];
 	md_select_dims(N, ~flags, bdims, dims);
 
-	if (4 < md_calc_size(N, bdims)) {
+	if (4 < md_calc_size(N, bdims) && !is_vptr(dst)) {
 
 		long fdims[N];
 		md_select_dims(N, flags, fdims, dims);
@@ -285,7 +285,7 @@ void ifftmod2(int N, const long dims[N], unsigned long flags, const long ostrs[N
 	long bdims[N];
 	md_select_dims(N, ~flags, bdims, dims);
 
-	if (4 < md_calc_size(N, bdims)) {
+	if (4 < md_calc_size(N, bdims) && !is_vptr(dst)) {
 
 		long fdims[N];
 		md_select_dims(N, flags, fdims, dims);
