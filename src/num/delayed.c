@@ -846,6 +846,7 @@ static struct delayed_op_s* delayed_op_alloc_create(const void* ptr, int N, cons
 	struct delayed_op_arg_s arg[1] = { arg_create(N, dims, strs, ptr, size, false, true) };
 
 	delayed_op_init(CAST_UP(op), N, ~0UL, 1, arg, md_calc_size(N, dims) * (long)size, 0, delayed_op_alloc_fun, NULL, delayed_op_alloc_debug);
+	CAST_UP(op)->loop.loop_flags &= md_nontriv_dims(N, dims);
 
 	op->tmp_buffer = false;
 
@@ -902,6 +903,7 @@ static struct delayed_op_s* delayed_op_free_create(const void* ptr, int N, const
 
 	struct delayed_op_arg_s arg[1] = { arg_create(N, dims, strs, ptr, size, false, true) };
 	delayed_op_init(CAST_UP(op), N, ~0UL, 1, arg, -md_calc_size(N, dims) * (long)size, 0, delayed_op_free_fun, delayed_op_free_del, delayed_op_free_debug);
+	CAST_UP(op)->loop.loop_flags &= md_nontriv_dims(N, dims);
 
 	op->tmp_buffer = false;
 
