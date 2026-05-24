@@ -682,8 +682,8 @@ int main_twixread(int argc, char* argv[argc])
 		assert(1 == dims[2]);
 	}
 
+	unlink_cfl(out_file);
 	complex float* out = create_cfl(out_file, DIMS, odims);
-	md_clear(DIMS, odims, out, CFL_SIZE);
 
 	long pdims[DIMS];
 	long pstrs[DIMS];
