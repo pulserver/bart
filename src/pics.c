@@ -130,11 +130,7 @@ int main_pics(int argc, char* argv[argc])
 
 	unsigned long mpi_flags = 0UL;
 
-	struct pics_config pics_conf;
-	pics_conf.shared_img_flags = 0UL;
-	pics_conf.motion_flags = 0UL;
-	pics_conf.gpu_gridding = false;
-
+	struct pics_config pics_conf = { };
 
 	const struct opt_s opts[] = {
 
