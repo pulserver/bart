@@ -560,6 +560,8 @@ int main_twixread(int argc, char* argv[argc])
 	bool chrono = false;
 	unsigned long ignore_dims_flags = LEVEL_FLAG;
 
+	const char* pat_file = NULL;
+
 	struct opt_s opts[] = {
 
 		OPT_LONG('x', &(dims[READ_DIM]), "X", "number of samples (read-out)"),
@@ -587,6 +589,7 @@ int main_twixread(int argc, char* argv[argc])
 		OPT_SET('M', &mpi, "MPI mode"),
 		OPT_CLEAR('X', &check_read, "no consistency check for number of read acquisitions"),
 		OPT_INT('d', &debug_level, "level", "Debug level"),
+		OPTL_OUTFILE(0, "pattern", &pat_file, "pattern file", "pattern file")
 	};
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
@@ -689,7 +692,8 @@ int main_twixread(int argc, char* argv[argc])
 	long pstrs[DIMS];
 	md_select_dims(DIMS, ~(READ_FLAG | COIL_FLAG), pdims, dims);
 	md_calc_strides(DIMS, pstrs, pdims, CFL_SIZE);
-	complex float* pat = md_calloc(DIMS, pdims, CFL_SIZE);
+	complex float* pat = (pat_file ? create_cfl : anon_cfl)(pat_file, DIMS, pdims);
+	md_clear(DIMS, pdims, pat, CFL_SIZE);
 
 	bool pmu_out = (NULL != pmu_file);
 
@@ -797,7 +801,7 @@ int main_twixread(int argc, char* argv[argc])
 
 	unmap_cfl(DIMS, odims, out);
 	unmap_cfl(DIMS, pmu_dims, pmu);
-	md_free(pat);
+	unmap_cfl(DIMS, pdims, pat);
 
 	return 0;
 }
