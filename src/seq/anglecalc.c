@@ -34,6 +34,7 @@ void traj_conf_from_seq(struct traj_conf *conf, const struct seq_config* seq)
 	case SEQ_PEMODE_MEMS_HYB:
 
 		conf->mems_traj = true;
+		conf->aligned = true;
 		conf->tiny_gold = seq->enc.tiny;
 		break;
 
