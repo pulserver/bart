@@ -32,6 +32,7 @@ static void ifft1(int N, complex float tmp[N], const complex float ext[N])
 void chebpoly(int N, float coeff[N], const float val[N])
 {
 	complex float ext[(N - 1) * 2];
+	memset(ext, 0, sizeof ext); // false positive
 	complex float tmp[(N - 1) * 2];
 
 	for (int i = 0; i < N - 1; i++)
