@@ -293,13 +293,14 @@ int prep_adc(struct seq_event* adc_ev, double start, double rf_spoil_phase,
 	double delta_pe = 0.;
 	if (   ((SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode) || (SEQ_PEMODE_CARTESIAN_LINEAR == seq->enc.pe_mode))
 	    && (0 < seq->geom.shift[seq_state->chrono_slice][1]))
-		delta_pe = (360. * (seq->geom.shift[seq_state->chrono_slice][1] / seq->geom.fov)) * (- 0.5 * seq->loop_dims[PHS1_DIM] + adc_ev->adc.pos[PHS1_DIM]);
+		delta_pe =   (360. * seq->geom.shift[seq_state->chrono_slice][1] / seq->geom.fov) 
+			   * (- 0.5 * seq->loop_dims[PHS1_DIM] + adc_ev->adc.pos[PHS1_DIM]);
 
 	double delta_3d = 0.;
 	if (seq->enc.is3D)
 		delta_3d =   (180. / seq->loop_dims[PHS2_DIM] + 
 			      360. * seq->geom.shift[seq_state->chrono_slice][2] / (seq->geom.slice_thickness * seq->geom.slab_os))
-			   * (seq_state->pos[PHS2_DIM] - 0.5 * seq->loop_dims[PHS2_DIM]);
+			   * (- 0.5 * seq->loop_dims[PHS2_DIM] + adc_ev->adc.pos[PHS2_DIM]);
 
 	adc_ev->adc.phase = phase_clamp(rf_spoil_phase + delta_pe + delta_3d);
 
