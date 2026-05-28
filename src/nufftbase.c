@@ -47,8 +47,13 @@ int main_nufftbase(int argc, char* argv[argc])
 	num_init();
 
 
-	long traj_dims[DIMS];	
-	complex float* traj = load_cfl(traj_file, DIMS, traj_dims);
+	long traj_dims[DIMS];
+	complex float* traj_map = load_cfl(traj_file, DIMS, traj_dims);
+
+	complex float* traj = md_alloc_sameplace(DIMS, traj_dims, CFL_SIZE, traj_map);
+	md_copy(DIMS, traj_dims, traj, traj_map, CFL_SIZE);
+
+	unmap_cfl(DIMS, traj_dims, traj_map);
 
 	long traj_strs[DIMS];
 	md_calc_strides(DIMS, traj_strs, traj_dims, CFL_SIZE);
@@ -59,11 +64,11 @@ int main_nufftbase(int argc, char* argv[argc])
 	md_calc_strides(DIMS, cord_strs, cord_dims, CFL_SIZE);
 
 	switch (base_type) {
-	
+
 	case SINC:
 
 		md_zabs(DIMS, traj_dims, traj, traj);
-		
+
 		complex float inv_dims[3] = { 1. / dims[0], 1. / dims[1], 1. / dims[2] };
 		md_zmul2(DIMS, traj_dims, traj_strs, traj, traj_strs, traj, cord_strs, inv_dims);
 
@@ -81,7 +86,7 @@ int main_nufftbase(int argc, char* argv[argc])
 	for (int i = 0; i < traj_dims[0]; i++)
 		md_zmul2(DIMS, out_dims, out_strs, odata, out_strs, odata, traj_strs, traj + i);
 
-	unmap_cfl(DIMS, traj_dims, traj);
+	md_free(traj);
 	unmap_cfl(DIMS, out_dims, odata);
 
 	return 0;
