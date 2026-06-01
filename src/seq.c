@@ -33,6 +33,30 @@
 #endif
 
 
+static long count_blocks(int* max_E, struct bart_seq* seq) 
+{
+	long blocks = 0;
+
+	seq->state->mode = SEQ_BLOCK_UNDEFINED;
+	for (int i = 0; i < DIMS; i++)
+		seq->state->pos[i] = 0;
+
+	do {
+
+		int E = seq_block(seq->N, seq->event, seq->state, seq->conf);
+
+		if (0 < E)
+			blocks++;
+
+		if (max_E && (E > *max_E))
+			*max_E = E;
+
+	} while (seq_continue(seq->state, seq->conf));
+
+	return blocks;
+}
+
+
 static void position_to_save(int D, long pos_save[D], bool chrono, int E, const struct seq_event ev[E],
 				const long pos[D], const struct seq_config* conf)
 {
@@ -114,8 +138,14 @@ int main_seq(int argc, char* argv[argc])
 
 		E = seq_block(seq->N, seq->event, seq->state, seq->conf);
 
-		seq->state->mode = SEQ_BLOCK_UNDEFINED;
 
+		if (seq_opts.chrono) {
+
+			md_singleton_dims(DIMS, mdims);
+			mdims[TIME_DIM] = count_blocks(NULL, seq);
+		}
+
+		seq->state->mode = SEQ_BLOCK_UNDEFINED;
 		for (int i = 0; i < DIMS; i++)
 			seq->state->pos[i] = 0;
 
