@@ -134,20 +134,20 @@ static void custom_params_to_config(struct seq_config* seq, int nl, const long c
 	// CEST
 	seq->cest.sat_type = (enum cest_saturation_type)custom_long[SEQ_UI_IDX_LONG_CEST_SATURATION];
 	seq->cest.sat_pulses = custom_long[SEQ_UI_IDX_LONG_CEST_SAT_PULSES];
-	seq->cest.sat_pulse_pause = 1.E-3 * custom_double[SEQ_UI_IDX_DOUBLE_CEST_SAT_PULSE_PAUSE_MS];
+	seq->cest.sat_pulse_pause = 1.E-3 * custom_double[SEQ_UI_IDX_LONG_CEST_SAT_PULSE_PAUSE_MS];
 
-	seq->cest.gauss_pulse_duration = 1.E-3 * custom_double[SEQ_UI_IDX_DOUBLE_CEST_GAUSS_duration_MS];
-	seq->cest.gauss_pulse_fa = custom_double[SEQ_UI_IDX_DOUBLE_CEST_GAUSS_FA];
+	seq->cest.gauss_pulse_duration = 1.E-3 * custom_double[SEQ_UI_IDX_LONG_CEST_GAUSS_DURATION_MS];
+	seq->cest.gauss_pulse_fa = custom_double[SEQ_UI_IDX_LONG_CEST_GAUSS_FA];
 	seq->cest.oc_pulse_b1_scaling = custom_double[SEQ_UI_IDX_DOUBLE_CEST_OC_B1_SCALING];
 
 	seq->cest.offset_type = (enum cest_offset_type)custom_long[SEQ_UI_IDX_LONG_CEST_OFFSET_TYPE];
 	seq->cest.offset_first = custom_double[	SEQ_UI_IDX_DOUBLE_CEST_OFFSET_FIRST_PPM];
 	seq->cest.offset_last = custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_LAST_PPM];
 	seq->cest.offset_increment = custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_INCREMENT_PPM];
-	seq->cest.offset_pause = custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_PAUSE_S]; 
+	seq->cest.offset_pause = 1E-3 * custom_double[SEQ_UI_IDX_LONG_CEST_OFFSET_PAUSE_MS]; 
 	
-	seq->asl.ld = 1E-3 * custom_double[SEQ_UI_IDX_DOUBLE_ASL_LD];
-	seq->asl.pld = 1E-3 * custom_double[SEQ_UI_IDX_DOUBLE_ASL_PLD];
+	seq->asl.ld = 1E-3 * custom_double[SEQ_UI_IDX_LONG_ASL_LD_MS];
+	seq->asl.pld = 1E-3 * custom_double[SEQ_UI_IDX_LONG_ASL_PLD_MS];
 }
 
 
@@ -175,21 +175,21 @@ static void config_to_custom_params(int nl, long custom_long[__VLA(nl)], int nd,
 	// CEST
 	custom_long[SEQ_UI_IDX_LONG_CEST_SATURATION] =seq->cest.sat_type;
 	custom_long[SEQ_UI_IDX_LONG_CEST_SAT_PULSES]= seq->cest.sat_pulses;
-	custom_double[SEQ_UI_IDX_DOUBLE_CEST_SAT_PULSE_PAUSE_MS] = 1.E3 * seq->cest.sat_pulse_pause; // s -> ms
+	custom_double[SEQ_UI_IDX_LONG_CEST_SAT_PULSE_PAUSE_MS] = 1.E3 * seq->cest.sat_pulse_pause; // s -> ms
 
-	custom_double[SEQ_UI_IDX_DOUBLE_CEST_GAUSS_duration_MS] = 1.E3 * seq->cest.gauss_pulse_duration; // s -> ms
-	custom_double[SEQ_UI_IDX_DOUBLE_CEST_GAUSS_FA] = seq->cest.gauss_pulse_fa;
+	custom_double[SEQ_UI_IDX_LONG_CEST_GAUSS_DURATION_MS] = 1.E3 * seq->cest.gauss_pulse_duration; // s -> ms
+	custom_double[SEQ_UI_IDX_LONG_CEST_GAUSS_FA] = seq->cest.gauss_pulse_fa;
 	custom_double[SEQ_UI_IDX_DOUBLE_CEST_OC_B1_SCALING] = seq->cest.oc_pulse_b1_scaling;
 
 	custom_long[SEQ_UI_IDX_LONG_CEST_OFFSET_TYPE] = seq->cest.offset_type;
 	custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_FIRST_PPM] = seq->cest.offset_first;
 	custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_LAST_PPM] = seq->cest.offset_last;
 	custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_INCREMENT_PPM] = seq->cest.offset_increment;
-	custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_PAUSE_S] = seq->cest.offset_pause;
+	custom_double[SEQ_UI_IDX_LONG_CEST_OFFSET_PAUSE_MS] = lround(1.E3 * seq->cest.offset_pause);
 
 	custom_long[SEQ_UI_IDX_LONG_ASL_MODE] = seq->asl.label_type;
-	custom_double[SEQ_UI_IDX_DOUBLE_ASL_LD] = lround(1.E3 * seq->asl.ld);
-	custom_double[SEQ_UI_IDX_DOUBLE_ASL_PLD] = lround(1.E3 * seq->asl.pld);
+	custom_double[SEQ_UI_IDX_LONG_ASL_LD_MS] = lround(1.E3 * seq->asl.ld);
+	custom_double[SEQ_UI_IDX_LONG_ASL_PLD_MS] = lround(1.E3 * seq->asl.pld);
 }
 
 

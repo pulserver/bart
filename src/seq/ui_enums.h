@@ -23,7 +23,13 @@
 	M(CEST_SATURATION)		\
 	M(CEST_OFFSET_TYPE)		\
 	M(CEST_SAT_PULSES)		\
-	M(ASL_MODE)
+	M(CEST_OFFSET_PAUSE_MS)		\
+	M(CEST_SAT_PULSE_PAUSE_MS)	\
+	M(CEST_GAUSS_DURATION_MS)	\
+	M(CEST_GAUSS_FA)		\
+	M(ASL_MODE)			\
+	M(ASL_LD_MS)			\
+	M(ASL_PLD_MS)
 
 enum custom_idx_long {
 #define enum_entry(name) SEQ_UI_IDX_LONG_##name,
@@ -35,16 +41,10 @@ SEQ_CUSTOM_UI_IDX_LONG(enum_entry)
 #define SEQ_CUSTOM_UI_IDX_DOUBLE(M)	\
 	M(BWTP)				\
 	M(ASYM_ECHO)			\
-	M(CEST_OFFSET_PAUSE_S)		\
-	M(CEST_SAT_PULSE_PAUSE_MS)	\
-	M(CEST_GAUSS_duration_MS)	\
-	M(CEST_GAUSS_FA)		\
 	M(CEST_OC_B1_SCALING)		\
 	M(CEST_OFFSET_FIRST_PPM)	\
 	M(CEST_OFFSET_LAST_PPM)		\
 	M(CEST_OFFSET_INCREMENT_PPM)	\
-	M(ASL_LD)			\
-	M(ASL_PLD)
 
 enum custom_idx_double {
 #define enum_entry(name) SEQ_UI_IDX_DOUBLE_##name,
