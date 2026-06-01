@@ -10,6 +10,7 @@
 	M(RECO)				\
 	M(SMS)				\
 	/* long */			\
+	M(CMD)				\
 	/* long array */		\
 	M(TINY)				\
 	M(RF_DURATION_US)		\
@@ -27,7 +28,6 @@ SEQ_CUSTOM_UI_IDX_LONG(enum_entry)
 
 
 #define SEQ_CUSTOM_UI_IDX_DOUBLE(M)	\
-	M(CMD)				\
 	M(BWTP)				\
 
 enum custom_idx_double {
