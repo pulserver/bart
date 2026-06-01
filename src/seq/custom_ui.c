@@ -51,6 +51,7 @@ static const struct seq_ui_long custom_bool_defaults[] = {
 
 static const struct seq_ui_long custom_long_defaults[] = {
 
+	{ "seq_wip9", SEQ_UI_IDX_LONG_CMD, "BART cmd", { -1000, 2, 1, 0 }, "BART UI interface.\n1: save info to file\n2: read cmdline from file", "" },
 };
 
 static const struct seq_ui_long custom_longarr_defaults[] = {
@@ -73,7 +74,6 @@ static const struct seq_ui_long custom_longarr_defaults[] = {
 
 static const struct seq_ui_double custom_double_defaults[] = {
 
-	{ "seq_wip9", SEQ_UI_IDX_DOUBLE_CMD, "BART cmd", { -1000., 1000., 0.1, 0. }, "BART UI interface. Get/set config from file.", "" },
 };
 
 static const struct seq_ui_double custom_doublearr_defaults[] = {

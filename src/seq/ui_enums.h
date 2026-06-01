@@ -10,6 +10,7 @@
 	M(RECO)				\
 	M(SMS)				\
 	/* long */			\
+	M(CMD)				\
 	/* long array */		\
 	M(TINY)				\
 	M(PREP_SCANS)			\
@@ -32,7 +33,6 @@ SEQ_CUSTOM_UI_IDX_LONG(enum_entry)
 
 
 #define SEQ_CUSTOM_UI_IDX_DOUBLE(M)	\
-	M(CMD)				\
 	M(BWTP)				\
 	M(ASYM_ECHO)			\
 	M(CEST_OFFSET_PAUSE_S)		\
