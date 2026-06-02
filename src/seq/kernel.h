@@ -22,6 +22,12 @@ extern void seq_pulse_shapes_to_cfl(int D, const long sdims[__VLA(D)], _Complex 
 extern void seq_pulse_shapes_from_cfl(int N, struct rf_shape rf_shapes[__VLA(N)],
 					int D, const long sdims[__VLA(D)], const _Complex float* shapes);
 
+extern void seq_events_to_cfl(int D, const long edims[__VLA(D)], _Complex float* events,
+				long* block_pos, double start_block, int N, const struct seq_event ev[__VLA(N)]);
+
+extern int seq_events_from_cfl(int N, struct seq_event ev[__VLA(N)], double* start_block,
+				int D, const long edims[__VLA(D)], const _Complex float* events);
+
 #include "misc/cppwrap.h"
 
 #endif // _SEQ_KERNEL_H

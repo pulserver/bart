@@ -1,3 +1,4 @@
+#include <complex.h>
 #include <math.h>
 #include <stdio.h>
 
@@ -786,3 +787,91 @@ static bool test_rfshapes_cfl(void)
 }
 
 UT_REGISTER_TEST(test_rfshapes_cfl);
+
+
+static bool test_events_cfl(void)
+{
+	struct seq_state seq_state = { 0 };
+	seq_state.mode = SEQ_BLOCK_KERNEL_IMAGE;
+	struct seq_config seq = seq_config_defaults_flash;
+
+	int E = 200;
+	struct seq_event ev_ref[E] = { };
+	struct seq_event ev_test[E] = { };
+
+	E = flash(E, ev_ref, &seq_state, &seq);
+
+
+	long edims[DIMS];
+	md_singleton_dims(DIMS, edims);
+	edims[READ_DIM] = 26;
+	edims[PHS1_DIM] = E;
+
+	complex float* event_cfl = md_alloc(DIMS, edims, sizeof(complex float));
+	long block_pos  = 0;
+	double start_block  = 0.;
+
+	seq_events_to_cfl(DIMS, edims, event_cfl, &block_pos, start_block, E, ev_ref);
+
+	seq_events_from_cfl(E, ev_test, &start_block, DIMS, edims, event_cfl);
+
+	for (int i = 0; i < E; i++) {
+
+		if (ev_ref[i].type != ev_test[i].type)
+			return false;
+
+		if (   (1E-9 < fabs(ev_ref[i].start - ev_test[i].start))
+		    || (1E-9 < fabs(ev_ref[i].mid - ev_test[i].mid))
+		    || (1E-9 < fabs(ev_ref[i].end - ev_test[i].end)))
+			return false;
+
+		switch (ev_ref[i].type) {
+
+		case SEQ_EVENT_GRADIENT:
+
+			if (   (1E-9 < fabs(ev_ref[i].grad.ampl[0] - ev_test[i].grad.ampl[0]))
+			    || (1E-9 < fabs(ev_ref[i].grad.ampl[1] - ev_test[i].grad.ampl[1]))
+			    || (1E-9 < fabs(ev_ref[i].grad.ampl[2] - ev_test[i].grad.ampl[2])))
+				return false;
+
+			break;
+
+		case SEQ_EVENT_PULSE:
+
+			if (   (ev_ref[i].pulse.shape_id - ev_test[i].pulse.shape_id)
+			    || (ev_ref[i].pulse.type - ev_test[i].pulse.type))
+				return false;
+
+			if (   (1E-9 < fabs(ev_ref[i].pulse.fa - ev_test[i].pulse.fa))
+			    || (1E-9 < fabs(ev_ref[i].pulse.freq - ev_test[i].pulse.freq))
+			    || (1E-5 < fabs(ev_ref[i].pulse.phase - ev_test[i].pulse.phase)))
+				return false;
+
+			break;
+
+		case SEQ_EVENT_ADC:
+
+			if (   (ev_ref[i].adc.dwell_ns - ev_test[i].adc.dwell_ns)
+			    || (ev_ref[i].adc.columns - ev_test[i].adc.columns)
+			    || (ev_ref[i].adc.flags - ev_test[i].adc.flags))
+				return false;
+
+			if (   (1E-9 < fabs(ev_ref[i].adc.os - ev_test[i].adc.os))
+			    || (1E-9 < fabs(ev_ref[i].adc.freq - ev_test[i].adc.freq))
+			    || (1E-5 < fabs(ev_ref[i].adc.phase - ev_test[i].adc.phase)))
+				return false;
+
+			for (int j = 0; j < DIMS; j++)
+				if (ev_ref[i].adc.pos[j] - ev_test[i].adc.pos[j])
+					return false;
+			break;
+
+		default:
+
+		}
+	}
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_events_cfl);

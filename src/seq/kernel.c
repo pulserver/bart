@@ -294,3 +294,119 @@ extern void seq_pulse_shapes_from_cfl(int N, struct rf_shape rf_shapes[N], int D
 	} while (md_next(D, sdims, TIME_FLAG, pos));
 }
 
+
+void seq_events_to_cfl(int D, const long edims[D], complex float* events, long* block_pos, double start_block, int N, const struct seq_event ev[N])
+{
+	long estrs[D];
+	md_calc_strides(D, estrs, edims, CFL_SIZE);
+
+	long pos[DIMS] = { };
+	pos[TIME_DIM] = *block_pos;
+
+	do {
+		if (pos[PHS1_DIM] >=  N)
+			break;
+
+		MD_ACCESS(D, estrs, (pos[READ_DIM] = 0, pos), events) = ev[pos[PHS1_DIM]].start + start_block;
+		MD_ACCESS(D, estrs, (pos[READ_DIM] = 1, pos), events) = ev[pos[PHS1_DIM]].mid + start_block;
+		MD_ACCESS(D, estrs, (pos[READ_DIM] = 2, pos), events) = ev[pos[PHS1_DIM]].end + start_block;
+		MD_ACCESS(D, estrs, (pos[READ_DIM] = 3, pos), events) = ev[pos[PHS1_DIM]].type;
+
+		switch (ev[pos[PHS1_DIM]].type) {
+
+		case SEQ_EVENT_PULSE:
+
+			MD_ACCESS(D, estrs, (pos[READ_DIM] = 4, pos), events) = ev[pos[PHS1_DIM]].pulse.shape_id;
+			MD_ACCESS(D, estrs, (pos[READ_DIM] = 5, pos), events) = ev[pos[PHS1_DIM]].pulse.type;
+			MD_ACCESS(D, estrs, (pos[READ_DIM] = 6, pos), events) = ev[pos[PHS1_DIM]].pulse.fa;
+			MD_ACCESS(D, estrs, (pos[READ_DIM] = 7, pos), events) = ev[pos[PHS1_DIM]].pulse.freq;
+			MD_ACCESS(D, estrs, (pos[READ_DIM] = 8, pos), events) = ev[pos[PHS1_DIM]].pulse.phase;
+			break;
+
+		case SEQ_EVENT_GRADIENT:
+
+			MD_ACCESS(D, estrs, (pos[READ_DIM] = 5, pos), events) = ev[pos[PHS1_DIM]].grad.ampl[0];
+			MD_ACCESS(D, estrs, (pos[READ_DIM] = 6, pos), events) = ev[pos[PHS1_DIM]].grad.ampl[1];
+			MD_ACCESS(D, estrs, (pos[READ_DIM] = 7, pos), events) = ev[pos[PHS1_DIM]].grad.ampl[2];
+			break;
+
+		case SEQ_EVENT_ADC:
+
+			MD_ACCESS(D, estrs, (pos[READ_DIM] = 4, pos), events) = ev[pos[PHS1_DIM]].adc.dwell_ns;
+			MD_ACCESS(D, estrs, (pos[READ_DIM] = 5, pos), events) = ev[pos[PHS1_DIM]].adc.columns;
+			MD_ACCESS(D, estrs, (pos[READ_DIM] = 6, pos), events) = ev[pos[PHS1_DIM]].adc.os;
+			MD_ACCESS(D, estrs, (pos[READ_DIM] = 7, pos), events) = ev[pos[PHS1_DIM]].adc.freq;
+			MD_ACCESS(D, estrs, (pos[READ_DIM] = 8, pos), events) = ev[pos[PHS1_DIM]].adc.phase;
+			MD_ACCESS(D, estrs, (pos[READ_DIM] = 9, pos), events) = ev[pos[PHS1_DIM]].adc.flags;
+			for (int idx = 0; idx < DIMS; idx++)
+				MD_ACCESS(D, estrs, (pos[READ_DIM] = 10 + idx, pos), events) = ev[pos[PHS1_DIM]].adc.pos[idx];
+			break;
+
+		default:
+
+		}
+
+	} while (md_next(D, edims, PHS1_FLAG, pos));
+
+	(*block_pos)++;
+
+}
+
+extern int seq_events_from_cfl(int N, struct seq_event ev[N], double* start_block, int D, const long edims[D], const _Complex float* events)
+{
+	assert(N >= edims[PHS1_DIM]);
+
+	long estrs[D];
+	md_calc_strides(D, estrs, edims, CFL_SIZE);
+
+	long pos[DIMS] = { };
+	*start_block = MD_ACCESS(D, estrs, (pos[READ_DIM] = 0, pos), events); // FIXME
+
+	do {
+
+		ev[pos[PHS1_DIM]].start = MD_ACCESS(D, estrs, (pos[READ_DIM] = 0, pos), events) - *start_block;
+		ev[pos[PHS1_DIM]].mid = MD_ACCESS(D, estrs, (pos[READ_DIM] = 1, pos), events) - *start_block;
+		ev[pos[PHS1_DIM]].end = MD_ACCESS(D, estrs, (pos[READ_DIM] = 2, pos), events) - *start_block;
+		ev[pos[PHS1_DIM]].type = (enum seq_event_type)MD_ACCESS(D, estrs, (pos[READ_DIM] = 3, pos), events);
+
+		if ((0. > ev[pos[PHS1_DIM]].start) && (0 > ev[pos[PHS1_DIM]].mid) && (0. > ev[pos[PHS1_DIM]].end))
+			return pos[PHS1_DIM];
+
+		switch (ev[pos[PHS1_DIM]].type) {
+
+		case SEQ_EVENT_PULSE:
+
+			ev[pos[PHS1_DIM]].pulse.shape_id = (int)MD_ACCESS(D, estrs, (pos[READ_DIM] = 4, pos), events);
+			ev[pos[PHS1_DIM]].pulse.type = (enum rf_type_t)MD_ACCESS(D, estrs, (pos[READ_DIM] = 5, pos), events);
+			ev[pos[PHS1_DIM]].pulse.fa = MD_ACCESS(D, estrs, (pos[READ_DIM] = 6, pos), events);
+			ev[pos[PHS1_DIM]].pulse.freq = MD_ACCESS(D, estrs, (pos[READ_DIM] = 7, pos), events);
+			ev[pos[PHS1_DIM]].pulse.phase = MD_ACCESS(D, estrs, (pos[READ_DIM] = 8, pos), events);
+			break;
+
+		case SEQ_EVENT_GRADIENT:
+
+			ev[pos[PHS1_DIM]].grad.ampl[0] = MD_ACCESS(D, estrs, (pos[READ_DIM] = 5, pos), events);
+			ev[pos[PHS1_DIM]].grad.ampl[1] = MD_ACCESS(D, estrs, (pos[READ_DIM] = 6, pos), events);
+			ev[pos[PHS1_DIM]].grad.ampl[2] = MD_ACCESS(D, estrs, (pos[READ_DIM] = 7, pos), events);
+			break;
+
+		case SEQ_EVENT_ADC:
+
+			ev[pos[PHS1_DIM]].adc.dwell_ns = (long)MD_ACCESS(D, estrs, (pos[READ_DIM] = 4, pos), events);
+			ev[pos[PHS1_DIM]].adc.columns = (long)MD_ACCESS(D, estrs, (pos[READ_DIM] = 5, pos), events);
+			ev[pos[PHS1_DIM]].adc.os = MD_ACCESS(D, estrs, (pos[READ_DIM] = 6, pos), events);
+			ev[pos[PHS1_DIM]].adc.freq = MD_ACCESS(D, estrs, (pos[READ_DIM] = 7, pos), events);
+			ev[pos[PHS1_DIM]].adc.phase = MD_ACCESS(D, estrs, (pos[READ_DIM] = 8, pos), events);
+			ev[pos[PHS1_DIM]].adc.flags = (unsigned long)MD_ACCESS(D, estrs, (pos[READ_DIM] = 9, pos), events);
+			for (int idx = 0; idx < DIMS; idx++)
+				ev[pos[PHS1_DIM]].adc.pos[idx] = (long)MD_ACCESS(D, estrs, (pos[READ_DIM] = 10 + idx, pos), events);
+			break;
+
+		default:
+
+		}
+
+	} while (md_next(D, edims, PHS1_FLAG, pos));
+
+	return edims[PHS1_DIM];
+}
