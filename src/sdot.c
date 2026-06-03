@@ -50,7 +50,7 @@ int main_sdot(int argc, char* argv[argc])
 
 	for (int i = 0; i < N; i++)
 		if (in1_dims[i] != in2_dims[i])
-			error("Dimenions %d does not match", i);
+			error("Dimension %d does not match", i);
 
 	// compute scalar product
 	complex float value = md_zscalar(N, in1_dims, in1_data, in2_data);
