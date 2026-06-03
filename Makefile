@@ -310,6 +310,28 @@ else
 FFTW_BASE ?= /opt/local/
 endif
 
+ifeq ($(BUILDTYPE),WASM)
+ifndef DEPS_FOLDER
+$(error DEPS_FOLDER must be set for WASM builds)
+endif
+FFTW_BASE=$(DEPS_FOLDER)
+BLAS_BASE=$(DEPS_FOLDER)
+CFLAGS+=-O3 -fblocks -sMEMORY64=1
+LDFLAGS=-s EXPORTED_FUNCTIONS=_main,__Block_object_dispose -s ALLOW_MEMORY_GROWTH=1 -s MEMORY64=1 -s MAXIMUM_MEMORY=16GB -s INITIAL_MEMORY=256MB -s STACK_SIZE=64MB $(DEPS_FOLDER)/lib/libfftw3f.a $(DEPS_FOLDER)/lib/libopenblas.a $(DEPS_FOLDER)/usr/local/lib/libBlocksRuntime.a
+OPENBLAS=1
+FORTRAN=0
+FFTWTHREADS=0
+USE_THREAD=1
+PNG=0
+OMP=0
+TENSORFLOW=0
+DEBUG=0
+MKL=0
+ACML=0
+CUDA=0
+CUDNN=0
+ISMRMRD=0
+endif
 
 
 # ISMRM
