@@ -111,11 +111,11 @@ static bool test_bloch_matrix(void)
 
 	float out2[4];
 
-	for (unsigned int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++) {
 
 		out2[i] = 0.;
 
-		for (unsigned int j = 0; j < 4; j++)
+		for (int j = 0; j < 4; j++)
 			out2[i] += m[i][j] * m0[j];
 	}
 
