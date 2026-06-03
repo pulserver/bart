@@ -1,4 +1,4 @@
-/* Copyright 2025. TU Graz. Institute of Biomedical Imaging.
+/* Copyright 2025-2026. TU Graz. Institute of Biomedical Imaging.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  */
@@ -8,9 +8,11 @@
 
 #include "misc/nested.h"
 #include "misc/debug.h"
+
 #include "num/linalg.h"
 #include "num/multind.h"
 #include "num/ode.h"
+
 #include "simu/bloch.h"
 
 #include "rfcontrol.h"
@@ -68,30 +70,35 @@ void cn_adjoint(int Nx, int Nt, float P[Nx][Nt - 1][3], const float u[Nt - 1],
 	const float PT[Nx][3], const struct puls_opt_pars p)
 {
 	float Pz[4] = { 0. };
-	float Bz;
-	int end = Nt - 2;
 
 	// Loop over each voxel in the slice profile
 	for (int z = 0; z < Nx; z++) {
 
-		Bz = p.gamma * p.Gz * p.xdis[z];
+		float Bz = p.gamma * p.Gz * p.xdis[z];
 
 		// Initialize adjoint state
 		vecf_copy(3, Pz, PT[z]);
 
+		int end = Nt - 2;
+
 		for (int k = end; k >= 0; k--) {
 
 			int idx_kp1 = (k < end) ? k + 1 : k;
-			const float* gb_kp1 = (const float[]){ -u[idx_kp1] * p.B1, -p.v[idx_kp1] * p.B1, -p.w[idx_kp1] * Bz };
-			const float* gb_k = (const float[]){ -u[k] * p.B1, -p.v[k] * p.B1, -p.w[k] * Bz };
+
+			const float gb_kp1[] = { -u[idx_kp1] * p.B1, -p.v[idx_kp1] * p.B1, -p.w[idx_kp1] * Bz };
+			const float gb_k[] = { -u[k] * p.B1, -p.v[k] * p.B1, -p.w[k] * Bz };
+
+			// clang workaround
+			const float* gb_kp1p = gb_kp1;
+			const float* gb_kp = gb_k;
 
 			NESTED(void, adjoint_matrix_fun, (int N, float (*Ak)[N][N], float (*Akp1)[N][N], float t))
 			{
 				(void)N;
 				(void)t;
 
-				bloch_matrix_ode((*Akp1), p.r1, p.r2, gb_kp1);
-				bloch_matrix_ode((*Ak), p.r1, p.r2, gb_k);
+				bloch_matrix_ode((*Akp1), p.r1, p.r2, gb_kp1p);
+				bloch_matrix_ode((*Ak), p.r1, p.r2, gb_kp);
 			};
 
 			crank_nicolson_adjoint(p.dt, 4, Pz, k * p.dt, (k + 1) * p.dt, adjoint_matrix_fun);
@@ -111,58 +118,65 @@ void cn_adjoint(int Nx, int Nt, float P[Nx][Nt - 1][3], const float u[Nt - 1],
 float objfun(int Nu, float G[Nu], struct Xk_struct* Xk, const struct puls_opt_pars p, const float iu[Nu])
 {
 	// Zero padding of control to readout time
-	float* u = xmalloc((size_t)(p.Nt - 1) * sizeof(float));
-	memset(u, 0, (size_t)(p.Nt - 1) * sizeof(float));
-	vecf_copy(p.Nu, u, iu);
+	float (*u)[p.Nt - 1] = xmalloc(sizeof *u);
+
+	memset(u, 0, sizeof *u);
+	vecf_copy(p.Nu, *u, iu);
 
 	// Solve state equation
-	float (*M)[p.Nt][3] = xmalloc((size_t)p.Nx * sizeof * M);
-	cn_bloch(p.Nx, p.Nt, M, u, p);
+	float (*M)[p.Nx][p.Nt][3] = xmalloc(sizeof *M);
+
+	cn_bloch(p.Nx, p.Nt, *M, *u, p);
 
 	// Calculate residual at final time
-	float (*res)[3] = xmalloc((size_t)p.Nx * sizeof * res);
+	float (*res)[p.Nx][3] = xmalloc(sizeof *res);
 	float res_norm_sqr = 0.;
 
-	for (int z = 0; z < p.Nx; z++)
+	for (int z = 0; z < p.Nx; z++) {
 		for (int c = 0; c < 3; c++) {
 
-			res[z][c] = M[z][p.Nt - 1][c] - p.Md[c * p.Nx + z];
-			res_norm_sqr += res[z][c] * res[z][c];
+			(*res)[z][c] = (*M)[z][p.Nt - 1][c] - p.Md[c * p.Nx + z];
+			res_norm_sqr += (*res)[z][c] * (*res)[z][c];
 		}
+	}
 
 	// Objective function:
 	//  1. term: penalizes deviation from the desired magnetization
 	//  2. term: penalizes control energy (keeps RF pulse small)
-	float u_norm_sqr = vecf_sdot((p.Nt - 1), u, u);
+	float u_norm_sqr = vecf_sdot(p.Nt - 1, *u, *u);
 	float J = 0.5 * p.dx * res_norm_sqr + p.alpha / 2. * p.dt * u_norm_sqr;
 
 	// Gradient
 	if (G != NULL) {
 
-		float (*P)[p.Nt - 1][3] = xmalloc((size_t)p.Nx * sizeof * P);
-		float (*N)[p.Nt - 1][3] = xmalloc((size_t)p.Nx * sizeof * N);
+		float (*P)[p.Nx][p.Nt - 1][3] = xmalloc(sizeof *P);
+		float (*N)[p.Nx][p.Nt - 1][3] = xmalloc(sizeof *N);
 
-		cn_adjoint(p.Nx, p.Nt, P, u, res, p);
+		cn_adjoint(p.Nx, p.Nt, *P, *u, *res, p);
 		
 		for (int z = 0; z < p.Nx; z++)
 			for (int k = 0; k < p.Nt - 1; k++)
 				for (int c = 0; c < 3; c++)
-					N[z][k][c] = 0.5 * (M[z][k][c] + M[z][k + 1][c]);
-		float sum;
+					(*N)[z][k][c] = 0.5 * ((*M)[z][k][c] + (*M)[z][k + 1][c]);
+
+
 		for (int i = 0; i < p.Nu; i++) {
 
-			sum = 0.;
+			float sum = 0.;
+
 			for (int z = 0; z < p.Nx; z++)
-				sum += N[z][i][2] * P[z][i][1] - N[z][i][1] * P[z][i][2];
-			G[i] = p.alpha * u[i] + p.gamma * p.B1c * p.dx * sum;
+				sum += (*N)[z][i][2] * (*P)[z][i][1] - (*N)[z][i][1] * (*P)[z][i][2];
+
+			G[i] = p.alpha * (*u)[i] + p.gamma * p.B1c * p.dx * sum;
 		}
 
 		// Hessian information
 		if (Xk != NULL) {
 
-			vecf_copy(p.Nt - 1, Xk->u, u);
-			md_copy(3, (long[3]) { p.Nx, p.Nt - 1, 3 }, Xk->N, N, sizeof(float));
-			md_copy(3, (long[3]) { p.Nx, p.Nt - 1, 3 }, Xk->P, P, sizeof(float));
+			vecf_copy(p.Nt - 1, Xk->u, *u);
+
+			md_copy(3, (long[3]) { p.Nx, p.Nt - 1, 3 }, Xk->N, *N, sizeof(float));
+			md_copy(3, (long[3]) { p.Nx, p.Nt - 1, 3 }, Xk->P, *P, sizeof(float));
 		}
 
 		xfree(P);
@@ -185,20 +199,20 @@ float objfun(int Nu, float G[Nu], struct Xk_struct* Xk, const struct puls_opt_pa
 /// @param idu Direction of the Hessian action
 void apply_Hess(int N, float Hdu[N], const struct puls_opt_pars p, const struct Xk_struct* Xk, const float idu[N])
 {
-	float (*dP)[3] = xmalloc((size_t)(p.Nt - 1) * sizeof * dP);
-	float (*dMz)[3] = xmalloc((size_t)p.Nt * sizeof * dMz);
-	float (*dNz)[p.Nu] = xmalloc((size_t)3 * sizeof * dNz);
+	float (*dP)[p.Nt - 1][3] = xmalloc(sizeof *dP);
+	float (*dMz)[p.Nt][3] = xmalloc(sizeof *dMz);
+	float (*dNz)[3][p.Nu] = xmalloc(sizeof *dNz);
 
 	float dPz[4];
 	int end = p.Nt - 2;
 
 	// Zero padding of control to readout time
-	float* du = xmalloc((size_t)(p.Nt - 1) * sizeof(float));
-	memset(du, 0, (size_t)(p.Nt - 1) * sizeof(float));
-	vecf_copy(p.Nu, du, idu);
+	float (*du)[p.Nt - 1] = xmalloc(sizeof *du);
+	memset(*du, 0, sizeof *du);
+	vecf_copy(p.Nu, *du, idu);
 
 	memset(Hdu, 0, (size_t)p.Nu * sizeof(float));
-	vecf_saxpy(p.Nu, Hdu, p.alpha, du); // Hdu = alpha * du
+	vecf_saxpy(p.Nu, Hdu, p.alpha, *du); // Hdu = alpha * du
 
 	// Loop over each voxel in the slice profile
 	for (int z = 0; z < p.Nx; z++) {
@@ -207,69 +221,82 @@ void apply_Hess(int N, float Hdu[N], const struct puls_opt_pars p, const struct 
 		float Mz[4] = { 0., 0., 0., 1. };
 
 		// Initialize first time step
-		vecf_zero(3, dMz[0]);
+		vecf_zero(3, (*dMz)[0]);
 
 		// Step 1: Solve linearized state equation (forward)
 		for (int k = 1; k < p.Nt; k++) {
 
-			const float* gb = (const float[]){ Xk->u[k - 1] * p.B1, -p.v[k - 1] * p.B1, p.w[k - 1] * Bz };
+			const float gb[] = { Xk->u[k - 1] * p.B1, -p.v[k - 1] * p.B1, p.w[k - 1] * Bz };
+
+			// clang workaround
+			const void *gbp = gb;
+			void *dup = du;
 
 			NESTED(void, lin_state_matrix_fun, (int N, float (*A)[N][N], float t))
 			{
 				(void)N;
 				(void)t;
 
+				const float (*du)[p.Nt - 1] = dup;
+				const float *gb = gbp;
+
 				bloch_matrix_ode((*A), p.r1, p.r2, gb);
 
-				(*A)[1][3] = p.B1 * Xk->N[z * (p.Nt - 1) * 3 + (k - 1) * 3 + 2] * du[k - 1];
-				(*A)[2][3] = -p.B1 * Xk->N[z * (p.Nt - 1) * 3 + (k - 1) * 3 + 1] * du[k - 1];
+				(*A)[1][3] = p.B1 * Xk->N[z * (p.Nt - 1) * 3 + (k - 1) * 3 + 2] * (*du)[k - 1];
+				(*A)[2][3] = -p.B1 * Xk->N[z * (p.Nt - 1) * 3 + (k - 1) * 3 + 1] * (*du)[k - 1];
 			};
 
 			crank_nicolson(p.dt, 4, Mz, (k - 1) * p.dt, k * p.dt, lin_state_matrix_fun);
-			vecf_copy(3, dMz[k], Mz);
+			vecf_copy(3, (*dMz)[k], Mz);
 		}
 
 		for (int k = 0; k < p.Nu; k++)
 			for (int i = 0; i < 3; i++)
-				dNz[i][k] = 0.5 * (dMz[k][i] + dMz[k + 1][i]);
+				(*dNz)[i][k] = 0.5 * ((*dMz)[k][i] + (*dMz)[k + 1][i]);
 
 		// Terminal condition for adjoint
-		vecf_copy(3, dPz, dMz[p.Nt - 1]);
+		vecf_copy(3, dPz, (*dMz)[p.Nt - 1]);
 		dPz[3] = 1.;
 
 		// Step 2: Solve linearized adjoint equation (backward)
 		for (int k = end; k >= 0; k--) {
+
+			void *dup = du;
 
 			NESTED(void, lin_adjoint_matrix_fun, (int N, float (*Ak)[N][N], float (*Akp1)[N][N], float t))
 			{
 				(void)N;
 				(void)t;
 
+				float (*du)[p.Nt - 1] = dup;
+
 				int idx_kp1 = (k < end) ? k + 1 : k;
 				float gb_kp1[3] = { -Xk->u[idx_kp1] * p.B1, -p.v[idx_kp1] * p.B1, -p.w[idx_kp1] * Bz };
+
 				bloch_matrix_ode(*Akp1, p.r1, p.r2, gb_kp1);
 
-				(*Akp1)[1][3] = -p.B1 * Xk->P[z * (p.Nt - 1) * 3 + idx_kp1 * 3 + 2] * du[idx_kp1];
-				(*Akp1)[2][3] = p.B1 * Xk->P[z * (p.Nt - 1) * 3 + idx_kp1 * 3 + 1] * du[idx_kp1];
+				(*Akp1)[1][3] = -p.B1 * Xk->P[z * (p.Nt - 1) * 3 + idx_kp1 * 3 + 2] * (*du)[idx_kp1];
+				(*Akp1)[2][3] = p.B1 * Xk->P[z * (p.Nt - 1) * 3 + idx_kp1 * 3 + 1] * (*du)[idx_kp1];
 
 				float gb_k[3] = { -Xk->u[k] * p.B1, -p.v[k] * p.B1, -p.w[k] * Bz };
 				bloch_matrix_ode(*Ak, p.r1, p.r2, gb_k);
 
-				(*Ak)[1][3] = -p.B1 * Xk->P[z * (p.Nt - 1) * 3 + k * 3 + 2] * du[k];
-				(*Ak)[2][3] = p.B1 * Xk->P[z * (p.Nt - 1) * 3 + k * 3 + 1] * du[k];
+				(*Ak)[1][3] = -p.B1 * Xk->P[z * (p.Nt - 1) * 3 + k * 3 + 2] * (*du)[k];
+				(*Ak)[2][3] = p.B1 * Xk->P[z * (p.Nt - 1) * 3 + k * 3 + 1] * (*du)[k];
 			};
 
 			crank_nicolson_adjoint(p.dt, 4, dPz, k * p.dt, (k + 1) * p.dt, lin_adjoint_matrix_fun);
-			vecf_copy(3, dP[k], dPz);
+			vecf_copy(3, (*dP)[k], dPz);
 		}
 
 		// Action of Hessian
 		for (int i = 0; i < p.Nu; i++) {
 
-			float sum = dNz[2][i] * Xk->P[z * (p.Nt - 1) * 3 + i * 3 + 1]
-				- dNz[1][i] * Xk->P[z * (p.Nt - 1) * 3 + i * 3 + 2]
-				+ dP[i][1] * Xk->N[z * (p.Nt - 1) * 3 + i * 3 + 2]
-				- dP[i][2] * Xk->N[z * (p.Nt - 1) * 3 + i * 3 + 1];
+			float sum = (*dNz)[2][i] * Xk->P[z * (p.Nt - 1) * 3 + i * 3 + 1]
+				- (*dNz)[1][i] * Xk->P[z * (p.Nt - 1) * 3 + i * 3 + 2]
+				+ (*dP)[i][1] * Xk->N[z * (p.Nt - 1) * 3 + i * 3 + 2]
+				- (*dP)[i][2] * Xk->N[z * (p.Nt - 1) * 3 + i * 3 + 1];
+
 			Hdu[i] += p.B1 * p.dx * sum;
 		}
 	}
@@ -311,76 +338,79 @@ static float dist2bdy(int N, const float du[N], const float p[N], float trad, fl
 ///		1: TRCG iterated MAXIT times but did not converge
 ///		2: TRCG terminated because the iterate left the trust region
 ///		3: TRCG terminated because negative curvature was encountered
-int tr_cg(int Nu, float du[Nu], int* it, const float g[Nu], float trad, const struct tr_pars np,
+enum TRCG_STATUS tr_cg(int Nu, float du[Nu], int* it, const float g[Nu], float trad, const struct tr_pars np,
 	  void CLOSURE_TYPE(H_func)(int N, float Hp[N], const float p[N]),
 	  float CLOSURE_TYPE(ip)(int N, const float x[N], const float y[N]))
 {
-	int flag;
+	enum TRCG_STATUS flag;
 	float pHp, tau, al, step_norm, nrk, beta;
-	float* Hp = xmalloc((size_t)Nu * sizeof(float));
-	float* temp = xmalloc((size_t)Nu * sizeof(float));
-	float* r = xmalloc((size_t)Nu * sizeof(float));
-	float* p = xmalloc((size_t)Nu * sizeof(float));
+	float (*Hp)[Nu] = xmalloc(sizeof *Hp);
+	float (*temp)[Nu] = xmalloc(sizeof *temp);
+	float (*r)[Nu] = xmalloc(sizeof *r);
+	float (*p)[Nu] = xmalloc(sizeof *p);
 
 	vecf_zero(Nu, du);
-	vecf_zero(Nu, r);
-	vecf_saxpy(Nu, r, -1, g); // r = -g
-	vecf_copy(Nu, p, r); 	  // p = -g
+	vecf_zero(Nu, *r);
+	vecf_saxpy(Nu, *r, -1, g); // r = -g
+	vecf_copy(Nu, *p, *r); 	  // p = -g
 
 	// Compute initial residual norm
-	float nr = NESTED_CALL(ip, (Nu, r, r));
+	float nr = NESTED_CALL(ip, (Nu, *r, *r));
 	float nr0 = sqrtf(nr);
 
 	*it = 1;
 
-	while (1) {
+	while (true) {
 
-		NESTED_CALL(H_func, (Nu, Hp, p));
-		pHp = NESTED_CALL(ip, (Nu, p, Hp));
+		NESTED_CALL(H_func, (Nu, *Hp, *p));
+		pHp = NESTED_CALL(ip, (Nu, *p, *Hp));
 
 		// Check for negative curvature
 		if (pHp < __FLT_MIN__) {
 
-			tau = dist2bdy(Nu, du, p, trad, ip); 	// Go to boundary
-			vecf_saxpy(Nu, du, tau, p); 		// du = du + tau * p
-			flag = 3; 				// Negative curvature
+			tau = dist2bdy(Nu, du, *p, trad, ip); 	// Go to boundary
+			vecf_saxpy(Nu, du, tau, *p); 		// du = du + tau * p
+
+			flag = TRCG_NEGATIVE_CURVATURE;
 			break;
 		}
 
 		al = nr / pHp;
 
 		// Check if step is too large
-		vecf_copy(Nu, temp, du);
-		vecf_saxpy(Nu, temp, al, p);
-		step_norm = NESTED_CALL(ip, (Nu, temp, temp));
+		vecf_copy(Nu, *temp, du);
+		vecf_saxpy(Nu, *temp, al, *p);
+
+		step_norm = NESTED_CALL(ip, (Nu, *temp, *temp));
 
 		if (step_norm >= trad * trad) {
 
-			tau = dist2bdy(Nu, du, p, trad, ip); 	// Go to boundary
-			vecf_saxpy(Nu, du, tau, p); 		// du = du + tau * p
-			flag = 2; 				// Step too large
+			tau = dist2bdy(Nu, du, *p, trad, ip); 	// Go to boundary
+			vecf_saxpy(Nu, du, tau, *p); 		// du = du + tau * p
+
+			flag = TRCG_STEP_TOO_LARGE;
 			break;
 		}
 
-		vecf_saxpy(Nu, du, al, p);  // du = du + al * p
-		vecf_saxpy(Nu, r, -al, Hp); // r = r - al * Hp
+		vecf_saxpy(Nu, du, al, *p);  // du = du + al * p
+		vecf_saxpy(Nu, *r, -al, *Hp); // r = r - al * Hp
 
-		nrk = NESTED_CALL(ip, (Nu, r, r));
+		nrk = NESTED_CALL(ip, (Nu, *r, *r));
 
 		// Check convergence
 		if (nrk < np.cgtol * powf(nr0, 1.3f)) { // Norm of residual small enough
 
-			flag = 0; // Converged
+			flag = TRCG_CONVERGED;
 			break;
-		}
-		else if (*it == np.cgits) { // Too many iterations, but not converged
 
-			flag = 1; // Max iterations
+		} else if (*it == np.cgits) { // Too many iterations, but not converged
+
+			flag = TRCG_MAX_ITERATIONS;
 			break;
 		}
 
 		beta = nrk / nr;
-		vecf_sxpay(Nu, beta, p, r); // p = r + beta * p
+		vecf_sxpay(Nu, beta, *p, *r); // p = r + beta * p
 
 		nr = nrk;
 		(*it)++;
@@ -411,12 +441,14 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 	NESTED(float, ip, (int N, const float x[N], const float y[N]))
 	{
 		float sum = 0.;
+
 		for (int i = 0; i < N; i++)
 			sum += p.dt * x[i] * y[i];
+
 		return sum;
 	};
 
-	float* G = xmalloc((size_t)Nu * sizeof(float));
+	float (*G)[Nu] = xmalloc(sizeof *G);
 	struct Xk_struct Xk;
 	Xk.N = md_alloc(3, (long[3]) { 3, p.Nx, p.Nt - 1 }, sizeof(float));
 	Xk.P = md_alloc(3, (long[3]) { p.Nx, p.Nt - 1, 3 }, sizeof(float));
@@ -424,19 +456,19 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 
 	int it = 0;
 
-	float J = objfun(p.Nu, G, &Xk, p, u0);
-	float nrG0 = sqrtf(NESTED_CALL(ip, (p.Nu, G, G)));
+	float J = objfun(p.Nu, *G, &Xk, p, u0);
+	float nrG0 = sqrtf(NESTED_CALL(ip, (p.Nu, *G, *G)));
 
 	vecf_copy(p.Nu, u, u0);
 
 	debug_printf(DP_DEBUG1, "it \tJ \t\t|g| \t\tflag \trho \t\tdJa/dJm \tcgits\n");
 	debug_printf(DP_DEBUG1, "%d\t%1.3e\t%1.3e\n", it, J, nrG0);
 
-	int flag, cgit;
-	float dJa, dJm, Jratio, nrG;
-	float* du = xmalloc((size_t)p.Nu * sizeof(float));
-	float* udu = xmalloc((size_t)p.Nu * sizeof(float));
-	float* Hmult_res = xmalloc((size_t)p.Nu * sizeof(float));
+	int cgit;
+	float dJm, Jratio, nrG;
+	float (*du)[p.Nu] = xmalloc(sizeof *du);
+	float (*udu)[p.Nu] = xmalloc(sizeof *udu);
+	float (*Hmult_res)[p.Nu] = xmalloc(sizeof *Hmult_res);
 	float rho = np.rho;
 
 	NESTED(void, Hmult, (int N, float Hdu[N], const float du[N]))
@@ -447,26 +479,29 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 	for (; it < np.maxit; it++) {
 
 		// Minimize quadratic model
-		flag = tr_cg(p.Nu, du, &cgit, G, rho, np, Hmult, ip);
+		int flag = tr_cg(p.Nu, *du, &cgit, *G, rho, np, Hmult, ip);
 
-		vecf_axpbz(p.Nu, udu, 1., u, 1., du); // udu = u + du
+		vecf_axpbz(p.Nu, *udu, 1., u, 1., *du); // udu = u + du
 
 		// Test if control is updated
-		dJa = J - objfun(p.Nu, NULL, NULL, p, udu);			// Actual reduction in J
+		float dJa = J - objfun(p.Nu, NULL, NULL, p, *udu);		// Actual reduction in J
 
-		NESTED_CALL(Hmult, (p.Nu, Hmult_res, du));
-		dJm = -(0.5 * NESTED_CALL(ip, (p.Nu, du, Hmult_res)) 		// Predicted reduction in J
-			+ NESTED_CALL(ip, (p.Nu, G, du)));
+		NESTED_CALL(Hmult, (p.Nu, *Hmult_res, *du));
+
+		dJm = -(0.5 * NESTED_CALL(ip, (p.Nu, *du, *Hmult_res)) 		// Predicted reduction in J
+			+ NESTED_CALL(ip, (p.Nu, *G, *du)));
 
 		Jratio = dJa / dJm; 						// Ratio of real and predicted decrease
 
 		if ((dJa > __FLT_MIN__) && (Jratio > np.sig1)) { 		// Actual reduction and mode good -> accept step
 
-			vecf_copy(p.Nu, u, udu);
-			J = objfun(p.Nu, G, &Xk, p, u);
-		}
-		else
+			vecf_copy(p.Nu, u, *udu);
+			J = objfun(p.Nu, *G, &Xk, p, u);
+
+		} else {
+
 			debug_printf(DP_DEBUG1, "R\n");
+		}
 
 		// Test if radius is updated
 		if ((dJa > __FLT_MIN__) && (fabsf(Jratio - 1) <= 1 - np.sig3))	// Step accepted, model good
@@ -476,7 +511,7 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 		else if (Jratio < np.sig2)				 	// Model bad
 			rho = 1. / np.q * rho;				 	// Decrease radius
 
-		nrG = sqrtf(NESTED_CALL(ip, (p.Nu, G, G)));
+		nrG = sqrtf(NESTED_CALL(ip, (p.Nu, *G, *G)));
 
 		debug_printf(DP_DEBUG1, "%d\t%1.3e\t%1.3e\t%d\t%1.3e\t%1.3e\t%d\n", it + 1, J, nrG, flag, rho, Jratio, cgit);
 
@@ -493,3 +528,4 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 	md_free(Xk.P);
 	md_free(Xk.u);
 }
+

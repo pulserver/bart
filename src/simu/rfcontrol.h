@@ -68,8 +68,11 @@ float objfun(int Nu, float G[Nu], struct Xk_struct* Xk, const struct puls_opt_pa
 
 void apply_Hess(int N, float Hdu[N], const struct puls_opt_pars p, const struct Xk_struct* Xk, const float idu[N]);
 
-int tr_cg(int Nu, float du[Nu], int* it, const float g[Nu], float trad, const struct tr_pars np,
+enum TRCG_STATUS { TRCG_CONVERGED, TRCG_NEGATIVE_CURVATURE, TRCG_STEP_TOO_LARGE, TRCG_MAX_ITERATIONS };
+
+enum TRCG_STATUS tr_cg(int Nu, float du[Nu], int* it, const float g[Nu], float trad, const struct tr_pars np,
 	  void CLOSURE_TYPE(H_func)(int N, float Hp[N], const float p[N]),
 	  float CLOSURE_TYPE(ip)(int N, const float x[N], const float y[N]));
 
 void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct tr_pars np, float* u0);
+
