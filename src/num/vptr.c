@@ -418,7 +418,7 @@ static void vptr_debug_mem(int dl, const struct mem_s* mem)
 
 	if (0 < mem->shape.N) {
 
-		debug_printf(dl, "size: %lu, dims: ", mem->shape.size);
+		debug_printf(dl, "size: %zu, dims: ", mem->shape.size);
 		debug_print_dims(dl, mem->shape.N, mem->shape.dims);
 	}
 
@@ -428,7 +428,7 @@ static void vptr_debug_mem(int dl, const struct mem_s* mem)
 
 		for (int i = 0; i < mem->range.D; i++) {
 
-			debug_printf(dl, "%d: %p size: %lu, dims: ", i, mem->range.sub_ptr[i]->ptr, mem->range.sub_ptr[i]->shape.size);
+			debug_printf(dl, "%d: %p size: %zu, dims: ", i, mem->range.sub_ptr[i]->ptr, mem->range.sub_ptr[i]->shape.size);
 			debug_print_dims(dl, mem->range.sub_ptr[i]->shape.N, mem->range.sub_ptr[i]->shape.dims);
 		}
 	}

@@ -20,7 +20,7 @@ enum stream_param { NO_PARAMS = 0, LONG_PARAM };
 struct typeinfo {
 
 	const char* keyword;
-	unsigned int keylen;
+	ssize_t keylen;
 	bool ext;
 	enum stream_param param;
 };
@@ -28,7 +28,7 @@ struct typeinfo {
 #define TOKEN "\n# "
 const int token_len = strlen(TOKEN);
 #define KW_PADDED(x) x "\n"
-#define KW(x) .keyword = KW_PADDED(x), .keylen = (unsigned int)strlen(KW_PADDED(x))
+#define KW(x) .keyword = KW_PADDED(x), .keylen = (ssize_t)strlen(KW_PADDED(x))
 
 // Max keyword len: MSG_HDR_SIZE - 1 - token_len
 static const struct typeinfo types[] = {
@@ -79,7 +79,7 @@ bool stream_decode(struct stream_msg* msg, int l, const char buf[l])
 	memcpy(str, buf + token_len, MSG_HDR_SIZE - token_len - 1);
 
 	for (msg->type = ARRAY_SIZE(types) - 1; msg->type > STREAM_MSG_INVALID; msg->type--)
-		if (0 == strncmp(types[msg->type].keyword, str, types[msg->type].keylen))
+		if (0 == strncmp(types[msg->type].keyword, str, (size_t)types[msg->type].keylen))
 			break;
 
 	if (STREAM_MSG_INVALID == msg->type)

@@ -348,6 +348,7 @@ void debug_delayed_queue(int dl, list_t ops_queue, bool nested)
 
 		queue->compute = false;
 		bart_unlock(queue->lock);
+
 	} else {
 
 		delayed_nested_level++;
@@ -590,6 +591,7 @@ static struct delayed_op_arg_s arg_create(int N, const long dims[N], const long 
 			tsize += (tdims[i] - 1) * tstrs[i];
 
 	assert(tsize <= md_calc_size(arg.N, arg.mdims) * (long)arg.msize);
+
 	if (tsize == md_calc_size(arg.N, arg.mdims) * (long)arg.msize)
 		arg.full_access = true;
 

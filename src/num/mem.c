@@ -233,7 +233,8 @@ void memcache_clear(void (*device_free)(const void* x, bool host))
 
 	while (NULL != nptr) {
 
-		debug_printf(DP_DEBUG3, "Freeing %ld bytes.\n", nptr->len);
+		debug_printf(DP_DEBUG3, "Freeing %zd bytes.\n", nptr->len);
+
 		if (!nptr->host)
 			freed += nptr->len;
 
