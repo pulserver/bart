@@ -406,7 +406,7 @@ UTest_Tensorflow:
 UTest_LTO:
   stage: test1
   script:
-    - AUTOCLEAN=0 CFLAGS="-flto -O2 -g" DEBUG=0 DEBUG_DWARF=0 make utest
+    - AUTOCLEAN=0 CFLAGS="-flto -fsanitize=vla-bound -fsanitize-trap=undefined -O2 -g" DEBUG=0 DEBUG_DWARF=0 make utest
   needs: [Build_LTO]
   dependencies:
     - Build_LTO
