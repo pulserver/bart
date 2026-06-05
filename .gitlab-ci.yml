@@ -210,7 +210,7 @@ Build_MPI:
 Build_LTO:
   stage: build
   script:
-    - CFLAGS="-flto -O2 -g" DEBUG=0 DEBUG_DWARF=0 make
+    - CFLAGS="-flto -fsanitize=vla-bound -fsanitize-trap=undefined -O2 -g" DEBUG=0 DEBUG_DWARF=0 make
   artifacts:
     paths:
       - bart
