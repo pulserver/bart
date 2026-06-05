@@ -731,3 +731,58 @@ static bool test_raga_spokes_full(void)
 
 UT_REGISTER_TEST(test_raga_spokes_full);
 
+
+static bool test_rfshapes_cfl(void)
+{
+	struct bart_seq* seq = bart_seq_alloc("");
+	bart_seq_defaults(seq);
+	seq->conf->magn.mag_prep = SEQ_PREP_IR_NONSELECTIVE;
+
+	int prepped_rfs = bart_seq_prepare(seq);
+
+	long sdims[DIMS];
+	md_singleton_dims(DIMS, sdims);
+
+	long max_len = 0;
+
+	for (int i = 0; i < prepped_rfs; i++)
+		max_len = MAX(max_len, seq->rf_shape[i].samples);
+
+	sdims[READ_DIM] = 2; // 0: shape, 1: additional info (FIXME?)
+	sdims[PHS1_DIM] = max_len;
+	sdims[TIME_DIM] = prepped_rfs;
+
+	complex float* shape_cfl = md_alloc(DIMS, sdims, sizeof(complex float));
+	seq_pulse_shapes_to_cfl(DIMS, sdims, shape_cfl, prepped_rfs, seq->rf_shape);
+
+
+	struct rf_shape rf_test[prepped_rfs] = { };
+
+	seq_pulse_shapes_from_cfl(prepped_rfs, rf_test, DIMS, sdims, shape_cfl);
+
+	for (int i = 0; i < prepped_rfs; i++) {
+
+		if (   (1E-12 < fabs(seq->rf_shape[i].sar_calls - rf_test[i].sar_calls))
+		    || (1E-9  < fabs(seq->rf_shape[i].sar_dur - rf_test[i].sar_dur))
+		    || (1E-12 < fabs(seq->rf_shape[i].fa_prep - rf_test[i].fa_prep))
+		    || (1E-12 < fabs(seq->rf_shape[i].max - rf_test[i].max))
+		    || (1E-12 < fabs(seq->rf_shape[i].integral - rf_test[i].integral)))
+			return false;
+
+		if (seq->rf_shape[i].samples - rf_test[i].samples)
+			return false;
+
+		for (int j = 0; j < rf_test[i].samples; j++) {
+
+			if (   (1E-9 < fabs(creal(seq->rf_shape[i].shape[j]) - creal(rf_test[i].shape[j])))
+			    || (1E-9 < fabs(cimag(seq->rf_shape[i].shape[j]) - cimag(rf_test[i].shape[j]))))
+				return false;
+		}
+	}
+
+	bart_seq_free(seq);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_rfshapes_cfl);

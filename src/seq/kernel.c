@@ -237,3 +237,60 @@ void seq_gradients_support(int M, double gradients[M][6], int N, const struct se
 	}
 }
 
+
+void seq_pulse_shapes_to_cfl(int D, const long sdims[D], complex float* shapes, int N, const struct rf_shape rf_shapes[N])
+{
+	long sstrs[D];
+	md_calc_strides(D, sstrs, sdims, CFL_SIZE);
+
+	md_clear(D, sdims, shapes, CFL_SIZE);
+
+	long pos[DIMS] = { };
+
+	do {
+
+		pos[PHS1_DIM] = 0;
+		do {
+
+			MD_ACCESS(D, sstrs, (pos[READ_DIM] = 0, pos), shapes) = rf_shapes[pos[TIME_DIM]].shape[pos[PHS1_DIM]];
+
+		} while (md_next(D, sdims, PHS1_FLAG, pos));
+
+		pos[READ_DIM] = 1;
+
+		MD_ACCESS(D, sstrs, (pos[PHS1_DIM] = 0, pos), shapes) = rf_shapes[pos[TIME_DIM]].sar_calls;
+		MD_ACCESS(D, sstrs, (pos[PHS1_DIM] = 1, pos), shapes) = rf_shapes[pos[TIME_DIM]].sar_dur;
+		MD_ACCESS(D, sstrs, (pos[PHS1_DIM] = 2, pos), shapes) = rf_shapes[pos[TIME_DIM]].fa_prep;
+		MD_ACCESS(D, sstrs, (pos[PHS1_DIM] = 3, pos), shapes) = rf_shapes[pos[TIME_DIM]].max;
+		MD_ACCESS(D, sstrs, (pos[PHS1_DIM] = 4, pos), shapes) = rf_shapes[pos[TIME_DIM]].integral;
+		MD_ACCESS(D, sstrs, (pos[PHS1_DIM] = 5, pos), shapes) = rf_shapes[pos[TIME_DIM]].samples;
+
+	} while (md_next(D, sdims, TIME_FLAG, pos));
+
+}
+
+extern void seq_pulse_shapes_from_cfl(int N, struct rf_shape rf_shapes[N], int D, const long sdims[D], const _Complex float* shapes)
+{
+	long sstrs[D];
+	md_calc_strides(D, sstrs, sdims, CFL_SIZE);
+
+	long pos[DIMS] = { };
+
+	do {
+
+		pos[READ_DIM] = 1;
+		rf_shapes[pos[TIME_DIM]].sar_calls = MD_ACCESS(D, sstrs, (pos[PHS1_DIM] = 0, pos), shapes);
+		rf_shapes[pos[TIME_DIM]].sar_dur = MD_ACCESS(D, sstrs, (pos[PHS1_DIM] = 1, pos), shapes);
+		rf_shapes[pos[TIME_DIM]].fa_prep = MD_ACCESS(D, sstrs, (pos[PHS1_DIM] = 2, pos), shapes);
+		rf_shapes[pos[TIME_DIM]].max = MD_ACCESS(D, sstrs, (pos[PHS1_DIM] = 3, pos), shapes);
+		rf_shapes[pos[TIME_DIM]].integral = MD_ACCESS(D, sstrs, (pos[PHS1_DIM] = 4, pos), shapes);
+		rf_shapes[pos[TIME_DIM]].samples = (long)MD_ACCESS(D, sstrs, (pos[PHS1_DIM] = 5, pos), shapes);
+
+		pos[READ_DIM] = 0;
+
+		for (int i = 0; i < rf_shapes[pos[TIME_DIM]].samples; i++)
+			rf_shapes[pos[TIME_DIM]].shape[i] = MD_ACCESS(D, sstrs, (pos[PHS1_DIM] = i, pos), shapes);
+
+	} while (md_next(D, sdims, TIME_FLAG, pos));
+}
+

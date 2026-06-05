@@ -16,6 +16,12 @@ extern void seq_compute_moment0_offset(int M, float moments[__VLA(M)][3], double
 extern void seq_compute_adc_samples(int D, const long adc_dims[__VLA(D)], _Complex float* adc, int N, const struct seq_event ev[__VLA(N)]);
 extern void seq_gradients_support(int M, double gradients[__VLA(M)][6], int N, const struct seq_event ev[__VLA(N)]);
 
+extern void seq_pulse_shapes_to_cfl(int D, const long sdims[__VLA(D)], _Complex float* shapes,
+				int N, const struct rf_shape rf_shapes[__VLA(N)]);
+
+extern void seq_pulse_shapes_from_cfl(int N, struct rf_shape rf_shapes[__VLA(N)],
+					int D, const long sdims[__VLA(D)], const _Complex float* shapes);
+
 #include "misc/cppwrap.h"
 
 #endif // _SEQ_KERNEL_H
