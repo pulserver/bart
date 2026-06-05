@@ -27,6 +27,7 @@ struct seq_opts {
 
 
 	const char* raga_file;
+	const char* shapes_file;
 
 	long custom_params_long[SEQ_MAX_PARAMS_LONG];
 	double custom_params_double[SEQ_MAX_PARAMS_DOUBLE];

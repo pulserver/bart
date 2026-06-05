@@ -169,6 +169,9 @@ int main_seq(int argc, char* argv[argc])
 	adims[PHS1_DIM] = lround(seq->conf->geom.baseres * seq->conf->phys.os * (0.5 + seq->conf->phys.asym_echo));
 	adims[READ_DIM] = 5;
 
+	long shape_dims[DIMS]; // after bart_seq_prepare
+	md_singleton_dims(DIMS, shape_dims);
+
 	long adc_dims[DIMS];
 	md_select_dims(DIMS, (READ_FLAG | PHS1_FLAG | TE_FLAG), adc_dims, adims);
 
@@ -188,6 +191,7 @@ int main_seq(int argc, char* argv[argc])
 	complex float* out_mom = NULL;
 	complex float* out_adc = NULL;
 	complex float* out_raga = NULL;
+	complex float* out_shapes = NULL;
 
 	if (NULL != grad_file) {
 
@@ -261,6 +265,22 @@ int main_seq(int argc, char* argv[argc])
 
 		pulseq_init(&ps, seq->conf);
 		pulse_shapes_to_pulseq(&ps, prepped_rfs, seq->rf_shape);
+	}
+
+
+	if (NULL != seq_opts.shapes_file) {
+
+		long max_len = 0;
+
+		for (int i = 0; i < prepped_rfs; i++)
+			max_len = MAX(max_len, seq->rf_shape[i].samples);
+
+		shape_dims[READ_DIM] = 2; // 0: shape, 1: additional info (FIXME?)
+		shape_dims[PHS1_DIM] = max_len;
+		shape_dims[TIME_DIM] = prepped_rfs;
+
+		out_shapes = create_cfl(seq_opts.shapes_file, DIMS, shape_dims);
+		seq_pulse_shapes_to_cfl(DIMS, shape_dims, out_shapes, prepped_rfs, seq->rf_shape);
 	}
 
 	do {

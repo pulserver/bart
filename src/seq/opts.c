@@ -45,6 +45,7 @@ const struct seq_opts seq_opts_defaults = {
 	.stats = false,
 
 	.raga_file = NULL,
+	.shapes_file = NULL,
 
 	.custom_params_long = { 0 },
 	.custom_params_double = { 0. },
@@ -234,6 +235,8 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 		OPTL_VECN(0, "LOOP", conf->loop_dims, "sequence loop dimensions"),
 
 		OPTL_SET(0, "stats", &seq_opts->stats, "Statistics / check of sequence"),
+
+		OPT_OUTFILE('F', &seq_opts->shapes_file, "file", "RF Shapes file"),
 	};
 
 
