@@ -378,7 +378,7 @@ GCCVERSION14 := $(shell expr `$(CC) -dumpversion | cut -f1 -d.` \>= 14)
 # clang
 
 ifeq ($(findstring clang,$(CC)),clang)
-CFLAGS += -fblocks
+CFLAGS += -fblocks -Wno-c23-extensions
 LDFLAGS += -lBlocksRuntime
 ifeq ($(DEBUG_DWARF),1)
 CFLAGS += -gdwarf -gdwarf-aranges
