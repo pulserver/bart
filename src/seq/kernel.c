@@ -410,3 +410,52 @@ extern int seq_events_from_cfl(int N, struct seq_event ev[N], double* start_bloc
 
 	return edims[PHS1_DIM];
 }
+
+
+bool seq_events_is_image_block(int E, struct seq_event ev[E])
+{
+	int adc_idx = events_idx(0, SEQ_EVENT_ADC, E, ev);
+
+	if (0 > adc_idx)
+		return false;
+
+	uint64_t non_image = SEQ_ADC_FLAG_ADJ | SEQ_ADC_FLAG_DUMMY;
+
+	if (ev[adc_idx].adc.flags & non_image)
+		return false;
+
+	return true;
+}
+
+
+double seq_events_cfl_find_tr(int D, const long edims[D], _Complex float* events)
+{
+	long pos[D] = { };
+
+	long strs[D];
+	md_calc_strides(D, strs, edims, 1);
+
+	double time = -1.;
+	double start_block = 0.;
+	long image1_pos = 0;
+
+	struct seq_event ev[edims[PHS1_DIM]] = { };
+
+	do {
+
+		int E = seq_events_from_cfl(edims[PHS1_DIM], ev, &start_block, D, edims, events + md_calc_offset(D, strs, pos));
+
+		if (seq_events_is_image_block(E, ev)) {
+
+			if ((0. < time) && (1 == pos[TIME_DIM] - image1_pos))
+				return start_block - time;
+
+			time = start_block;
+			image1_pos = pos[TIME_DIM];
+		}
+
+
+	} while (md_next(D, edims, TIME_FLAG, pos));
+
+	return -1;
+}

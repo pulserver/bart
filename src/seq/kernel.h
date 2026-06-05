@@ -28,6 +28,9 @@ extern void seq_events_to_cfl(int D, const long edims[__VLA(D)], _Complex float*
 extern int seq_events_from_cfl(int N, struct seq_event ev[__VLA(N)], double* start_block,
 				int D, const long edims[__VLA(D)], const _Complex float* events);
 
+extern _Bool seq_events_is_image_block(int E, struct seq_event ev[__VLA(E)]);
+extern double seq_events_cfl_find_tr(int D, const long edims[__VLA(D)], _Complex float* events);
+
 #include "misc/cppwrap.h"
 
 #endif // _SEQ_KERNEL_H
