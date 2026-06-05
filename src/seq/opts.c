@@ -46,6 +46,7 @@ const struct seq_opts seq_opts_defaults = {
 
 	.raga_file = NULL,
 	.shapes_file = NULL,
+	.events_file = NULL,
 
 	.custom_params_long = { 0 },
 	.custom_params_double = { 0. },
@@ -237,6 +238,7 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 		OPTL_SET(0, "stats", &seq_opts->stats, "Statistics / check of sequence"),
 
 		OPT_OUTFILE('F', &seq_opts->shapes_file, "file", "RF Shapes file"),
+		OPT_OUTFILE('E', &seq_opts->events_file, "file", "Events file"),
 	};
 
 

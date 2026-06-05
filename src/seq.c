@@ -45,7 +45,8 @@ static long count_blocks(int* max_E, struct bart_seq* seq)
 
 		int E = seq_block(seq->N, seq->event, seq->state, seq->conf);
 
-		if (0 < E)
+		if (   (0 < E)
+		    && ((SEQ_BLOCK_KERNEL_IMAGE == seq->state->mode) || (SEQ_BLOCK_PRE == seq->state->mode) || (SEQ_BLOCK_POST == seq->state->mode))) // consistency with moba -> FIXME
 			blocks++;
 
 		if (max_E && (E > *max_E))
@@ -110,7 +111,7 @@ int main_seq(int argc, char* argv[argc])
 	struct bart_seq* seq = bart_seq_alloc("");
 	bart_seq_defaults(seq);
 
-	long stat_counter[4] = { }; // all, all_empty, max_empty, temp
+	long stat_counter[5] = { }; // all, all_empty, max_empty, temp, events_file_pos
 
 	struct seq_opts seq_opts = seq_opts_defaults;
 
@@ -172,6 +173,9 @@ int main_seq(int argc, char* argv[argc])
 	long shape_dims[DIMS]; // after bart_seq_prepare
 	md_singleton_dims(DIMS, shape_dims);
 
+	long event_dims[DIMS]; // after bart_seq_prepare
+	md_singleton_dims(DIMS, event_dims);
+
 	long adc_dims[DIMS];
 	md_select_dims(DIMS, (READ_FLAG | PHS1_FLAG | TE_FLAG), adc_dims, adims);
 
@@ -192,6 +196,7 @@ int main_seq(int argc, char* argv[argc])
 	complex float* out_adc = NULL;
 	complex float* out_raga = NULL;
 	complex float* out_shapes = NULL;
+	complex float* out_events = NULL;
 
 	if (NULL != grad_file) {
 
@@ -283,6 +288,19 @@ int main_seq(int argc, char* argv[argc])
 		seq_pulse_shapes_to_cfl(DIMS, shape_dims, out_shapes, prepped_rfs, seq->rf_shape);
 	}
 
+	if (NULL != seq_opts.events_file) {
+
+		int max_ev = 0;
+		long blocks = count_blocks(&max_ev, seq);
+
+		event_dims[READ_DIM] = 26; // start/mid/end, type, event-specific (DIMS + 6 for adc)
+		event_dims[PHS1_DIM] = max_ev;
+		event_dims[TIME_DIM] = blocks;
+
+		out_events = create_cfl(seq_opts.events_file, DIMS, event_dims);
+		md_clear(DIMS, event_dims, out_events, CFL_SIZE);
+	}
+
 	do {
 		debug_print_dims(DP_DEBUG2, DIMS, seq->state->pos);
 
@@ -307,6 +325,10 @@ int main_seq(int argc, char* argv[argc])
 
 		if (0 > E)
 			error("Sequence execution failed! - check seq_config, %s [ %d ] \n", error_string(E), E);
+
+		if (   (NULL != seq_opts.events_file)
+		    && ((SEQ_BLOCK_KERNEL_IMAGE == seq->state->mode) || (SEQ_BLOCK_PRE == seq->state->mode) || (SEQ_BLOCK_POST == seq->state->mode))) // consistency with moba
+			seq_events_to_cfl(DIMS, event_dims, out_events, &stat_counter[4], seq->state->start_block, E, seq->event);
 
 		if ((NULL != seq_file) && (SEQ_BLOCK_KERNEL_NOISE != seq->state->mode)) // no noise_scan with pulseq
 			events_to_pulseq(&ps, seq->state->mode, seq->conf->phys.tr, seq->conf->sys, prepped_rfs, seq->rf_shape, E, seq->event);
