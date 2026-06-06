@@ -286,14 +286,14 @@ int main_bin(int argc, char* argv[argc])
 
 		if (1 < bitcount(md_nontriv_dims(DIMS, labels_dims))) {
 
-			dim = 2;
+			dim = md_min_idx(md_nontriv_dims(DIMS, labels_dims));
 
 			assert(BIN_REORDER == bin_type);
-			assert(md_check_equal_dims(DIMS, labels_dims, src_dims, md_nontriv_dims(DIMS, labels_dims)));
+			assert(md_check_equal_dims(DIMS, labels_dims, src_dims, md_nontriv_dims(DIMS, labels_dims) & ~MD_BIT(dim)));
 
-			md_select_dims(DIMS, md_nontriv_dims(DIMS, labels_dims) & ~PHS2_FLAG, loop_dims, labels_dims);
+			md_select_dims(DIMS, md_nontriv_dims(DIMS, labels_dims) & ~MD_BIT(dim), loop_dims, labels_dims);
 
-			debug_printf(DP_INFO, "Non 1D label - reordering source: PHS2_DIM!\n");
+			debug_printf(DP_INFO, "Non 1D label - reordering dimension: %d\n", dim);
 
 		} else {
 
