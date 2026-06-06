@@ -276,9 +276,6 @@ int main_bin(int argc, char* argv[argc])
 	case BIN_REORDER: // Reorder: Assign to dst from src according to labels
 	case BIN_LABEL: // Label binning: Bin elements from src according to labels
 
-		md_check_compat(DIMS, ~0u, src_dims, labels_dims);
-		md_check_bounds(DIMS, ~0u, labels_dims, src_dims);
-
 		int dim = -1;
 
 		long loop_dims[DIMS];
