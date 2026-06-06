@@ -669,7 +669,8 @@ int main_mobafit(int argc, char* argv[argc])
 					2 * md_calc_size(DIMS, x_patch_dims), (float*)x_patch, NULL,
 					2 * md_calc_size(DIMS, y_patch_dims), (const float*)y_patch, NULL,
 					(struct iter_op_s){ mobafit_bound, CAST_UP(&bounds) });
-		} else if (reg_agains_init){
+
+		} else if (reg_agains_init) {
 
 			iter4_irgnm(CAST_UP(&irgnm_conf), nlop,
 					2 * md_calc_size(DIMS, x_patch_dims), (float*)x_patch,  (const float*)x_patch,
@@ -692,6 +693,7 @@ int main_mobafit(int argc, char* argv[argc])
 			mobafit_compute_covariance(conjgrad_conf, nlop, cov_patch_dims, cov_patch, y_patch_dims, y_patch, x_patch_dims, x_patch);
 
 			md_copy_block(DIMS, pos, cov_dims, covariance, cov_patch_dims, cov_patch, CFL_SIZE);
+
 			md_free(cov_patch);
 		}
 

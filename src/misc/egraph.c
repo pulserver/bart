@@ -4,7 +4,6 @@
  *
  * Authors:
  * 2026 Moritz Blumenthal
- *
  */
 
 #include <stdbool.h>
@@ -25,7 +24,7 @@ struct enode_s {
 	list_t iedges;
 	list_t oedges;
 
-	_Bool active;
+	bool active;
 	unsigned long flags;
 
 	// for path finding
@@ -33,7 +32,7 @@ struct enode_s {
 	enode_t prev;
 
 	const char* name;
-	const void* data;
+	void* data;
 };
 
 void enode_free(enode_t x)
@@ -54,13 +53,11 @@ void enode_free(enode_t x)
 
 	list_free(x->oedges);
 
-	if (NULL != x->name)
-		xfree(x->name);
-
+	xfree(x->name);
 	xfree(x);
 }
 
-enode_t enode_create(const char* name, const void* data)
+enode_t enode_create(const char* name, void* data)
 {
 	PTR_ALLOC(struct enode_s, x);
 
@@ -83,7 +80,7 @@ bool enode_is_active(enode_t node)
 
 void* enode_get_data(enode_t node)
 {
-	return (NULL != node) ? (void*)node->data : NULL;
+	return (NULL != node) ? node->data : NULL;
 }
 
 long enode_get_count(enode_t node)
@@ -124,7 +121,7 @@ egraph_t egraph_create(void)
 
 void egraph_free(egraph_t graph)
 {
-	while ( 0 < list_count(graph))
+	while (0 < list_count(graph))
 		enode_free(list_pop(graph));
 
 	list_free(graph);
@@ -257,6 +254,7 @@ list_t egraph_shortest_path(egraph_t graph, enode_t dst, enode_t src)
 		return ret;
 
 	enode_t current = dst;
+
 	while (current != NULL) {
 
 		list_push(ret, current);
@@ -593,6 +591,7 @@ void export_egraph_dot(const char* filename, list_t graph)
 	for (int i = 0; i < list_count(graph); i++) {
 
 		enode_t node = list_get_item(graph, i);
+
 		if (!node->active)
 			continue;
 
@@ -604,14 +603,12 @@ void export_egraph_dot(const char* filename, list_t graph)
 		if (sort && NULL != last_node)
 			ptr_append_printf(&edges, "\n%s -> node_%p [style=invis]", last_node, node);
 
-		if (NULL != last_node)
-			xfree(last_node);
+		xfree(last_node);
 
 		last_node = ptr_printf("node_%p", node);
 
 		for (int j = 0; j < list_count(node->oedges); j++)
 			ptr_append_printf(&edges, "\nnode_%p -> node_%p", node, list_get_item(node->oedges, j));
-
 	}
 
 	FILE *fp = fopen(filename, "w+");
@@ -620,11 +617,10 @@ void export_egraph_dot(const char* filename, list_t graph)
 		error("Opening file\n");
 
 	fprintf(fp, "digraph {\n%s\n%s\n}", nodes, edges);
+
 	fclose(fp);
 
-	free((char*)nodes);
-	free((char*)edges);
+	xfree(nodes);
+	xfree(edges);
 }
-
-
 

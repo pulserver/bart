@@ -11,7 +11,7 @@ struct list_s;
 typedef struct list_s* list_t;
 
 void enode_free(enode_t x);
-enode_t enode_create(const char* name, const void* data);
+enode_t enode_create(const char* name, void* data);
 
 extern _Bool enode_is_active(enode_t node);
 extern void* enode_get_data(enode_t node);
