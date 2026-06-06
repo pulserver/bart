@@ -367,11 +367,8 @@ int main_reconet(int argc, char* argv[argc])
 		if (NULL != valid_data_list)
 			named_data_list_free(valid_data_list);
 
-		if (NULL != mask)
-			unmap_cfl(DIMS, mask_dims, mask);
-
-		if (NULL != mask_val)
-			unmap_cfl(DIMS, mask_dims_val, mask_val);
+		unmap_cfl(DIMS, mask_dims, mask);
+		unmap_cfl(DIMS, mask_dims_val, mask_val);
 
 		if (use_valid_data)
 			free_network_data(&valid_data);
