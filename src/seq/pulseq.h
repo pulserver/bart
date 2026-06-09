@@ -99,6 +99,8 @@ struct pulseq {
 	double rf_raster_time;
 	double fov[3];
 	double total_duration;
+	double gamma;
+	double grad_max_ampl;
 
 	unsigned long label_flags;
 	int trigger_count;

@@ -169,6 +169,8 @@ void pulseq_init(struct pulseq *ps, const struct seq_config* seq)
 		.label_flags = ((md_nontriv_dims(DIMS, seq->loop_dims) | PHS1_FLAG) // single-spoke acquistion
 			& (SEQ_FLAGS | TE_FLAG) & ~(COEFF_FLAG | COEFF2_FLAG| ITER_FLAG)), // MDH dimension to write
 		.trigger_count = 0,
+		.gamma = seq->sys.gamma,
+		.grad_max_ampl = seq->sys.grad.max_amplitude
 	};
 }
 
