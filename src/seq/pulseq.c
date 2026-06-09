@@ -563,7 +563,8 @@ void events_to_pulseq(struct pulseq *ps, enum seq_block mode, double tr, struct 
 	if (1 < events_counter(SEQ_EVENT_PULSE, N, ev))
 		error("Multiple RFs per block not supported\n");
 
-	double dur = seq_block_end(N, ev, mode, tr, ps->block_raster_time);	ps->total_duration += dur;
+	double dur = seq_block_end(N, ev, mode, tr, ps->block_raster_time);
+	ps->total_duration += dur;
 
 	double grad_shapes[SEQ_MAX_GRAD_POINTS][3];
 	seq_compute_gradients(SEQ_MAX_GRAD_POINTS, grad_shapes, ps->gradient_raster_time, N, ev);
