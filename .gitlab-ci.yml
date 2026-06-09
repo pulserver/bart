@@ -29,8 +29,9 @@ variables:
 # For gitlab-runner using docker: create diretories as the USER in the docker image, not as root
   FF_DISABLE_UMASK_FOR_DOCKER_EXECUTOR: "true"
   REGISTRY: registry.gitlab.tugraz.at/ibi/reproducibility/gitlab-ci-containers
+  TAG: ':master'
 
-image: $REGISTRY/ibi_bart
+image: $REGISTRY/ibi_bart$TAG
 
 
 default:
@@ -71,7 +72,7 @@ Build_riscv:
   stage: build
   tags:
     - riscv
-  image: $REGISTRY/ibi_riscv_noroot
+  image: $REGISTRY/ibi_riscv_noroot$TAG
   script:
     - make -j 4 all
   artifacts:
@@ -101,7 +102,7 @@ Build_Clang_GPU:
   stage: build
   script:
     - CC=clang-19 CUDA_CC=clang-14 CUDA=1 CUDA_LIB=lib64 GPUARCH_FLAGS="-arch sm_35 -Wno-deprecated-gpu-targets" make all
-  image: $REGISTRY/ibi_cuda_bart
+  image: $REGISTRY/ibi_cuda_bart$TAG
   artifacts:
     paths:
       - bart
@@ -135,7 +136,7 @@ Build_Shared_GPU:
   stage: build
   script:
     - CUDA=1 CUDA_LIB=lib64 GPUARCH_FLAGS="-arch sm_35 -Wno-deprecated-gpu-targets" make libbart.so
-  image: $REGISTRY/ibi_cuda_bart
+  image: $REGISTRY/ibi_cuda_bart$TAG
   artifacts:
     paths:
       - libbart.so
@@ -171,7 +172,7 @@ Build_GPU:
   stage: build
   script:
     - CUDA=1 CUDA_LIB=lib64 GPUARCH_FLAGS="-arch sm_35 -Wno-deprecated-gpu-targets" WERROR=1 make all
-  image: $REGISTRY/ibi_cuda_bart
+  image: $REGISTRY/ibi_cuda_bart$TAG
   artifacts:
     paths:
       - bart
@@ -185,7 +186,7 @@ Build_MPI_GPU:
   stage: build
   script:
     - MPI=1 CUDA=1 CUDA_LIB=lib64 GPUARCH_FLAGS="-arch sm_35 -Wno-deprecated-gpu-targets" make all
-  image: $REGISTRY/ibi_cuda_bart
+  image: $REGISTRY/ibi_cuda_bart$TAG
   artifacts:
     paths:
       - bart
@@ -223,7 +224,7 @@ Build_LTO:
 
 Build_Analyzer:
   stage: build
-  image: $REGISTRY/ibi_gcc-git_bart
+  image: $REGISTRY/ibi_gcc-git_bart$TAG
   script:
     - gcc-git --version
     - CC=gcc-git CFLAGS="-O2 -fanalyzer -Werror -fsanitize=vla-bound -fsanitize-trap=undefined -Wno-maybe-uninitialized -Wno-analyzer-use-of-uninitialized-value -Wno-analyzer-imprecise-fp-arithmetic" DEBUG=0 DEBUG_DWARF=0 make all
@@ -242,7 +243,7 @@ Build_Tensorflow:
 #    - wget --no-verbose https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-gpu-linux-x86_64-2.4.0.tar.gz
 #    - mkdir tensorflow_dir && tar -C tensorflow_dir -xvzf libtensorflow-gpu-linux-x86_64-2.4.0.tar.gz
     - TENSORFLOW=1 TENSORFLOW_BASE=/tensorflow_dir/ CUDA=1 CUDA_LIB=lib64 GPUARCH_FLAGS="-arch sm_35 -Wno-deprecated-gpu-targets" make all
-  image: $REGISTRY/ibi_cuda_bart
+  image: $REGISTRY/ibi_cuda_bart$TAG
   artifacts:
     paths:
       - bart
@@ -271,7 +272,7 @@ Build_Pytorch:
 
 Build_wasm:
   stage: build
-  image: $REGISTRY/ibi_wasm_bart
+  image: $REGISTRY/ibi_wasm_bart$TAG
   variables:
     DEPS_FOLDER: /wasm_libs
   script:
@@ -324,7 +325,7 @@ UTest_riscv:
   stage: test1
   tags:
     - riscv
-  image: $REGISTRY/ibi_riscv_noroot
+  image: $REGISTRY/ibi_riscv_noroot$TAG
   script:
     - AUTOCLEAN=0 make -j 4 utest
   needs: [Build_riscv]
@@ -342,7 +343,7 @@ UTest_Clang:
 
 UTest_Clang_GPU:
   stage: test1
-  image: $REGISTRY/ibi_cuda_bart
+  image: $REGISTRY/ibi_cuda_bart$TAG
   script:
     - if ! nvidia-smi ; then printf "No usable GPU found, skipping GPU tests!\n"; exit 0; fi
     - AUTOCLEAN=0 CC=clang-19 CUDA_CC=clang-14 CUDA=1 CUDA_LIB=lib64 GPUARCH_FLAGS="-arch sm_35 -Wno-deprecated-gpu-targets" make utest_gpu
@@ -372,7 +373,7 @@ UTest_UBSan:
 
 UTest_GPU:
   stage: test1
-  image: $REGISTRY/ibi_cuda_bart
+  image: $REGISTRY/ibi_cuda_bart$TAG
   script:
     - if ! nvidia-smi ; then printf "No usable GPU found, skipping GPU tests!\n"; exit 0; fi
     - AUTOCLEAN=0 CUDA=1 CUDA_LIB=lib64 GPUARCH_FLAGS="-arch sm_35 -Wno-deprecated-gpu-targets" WERROR=1 make utest_gpu
@@ -391,7 +392,7 @@ UTest_MPI:
 
 UTest_Tensorflow:
   stage: test1
-  image: $REGISTRY/ibi_cuda_bart
+  image: $REGISTRY/ibi_cuda_bart$TAG
   script:
 # Already part of the Docker image
 #    - wget --no-verbose https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-gpu-linux-x86_64-2.4.0.tar.gz
@@ -413,7 +414,7 @@ UTest_LTO:
 
 UTest_wasm:
   stage: test1
-  image: $REGISTRY/ibi_wasm_bart
+  image: $REGISTRY/ibi_wasm_bart$TAG
   script:
     - bash -c "source /emsdk/emsdk_env.sh && AUTOCLEAN=0 DEBUG=0 DEBUG_DWARF=0 make utest"
   needs: [Build_wasm]
@@ -457,7 +458,7 @@ IntTest_riscv:
   stage: test2
   tags:
     - riscv
-  image: $REGISTRY/ibi_riscv_noroot
+  image: $REGISTRY/ibi_riscv_noroot$TAG
   script:
     - AUTOCLEAN=0 make -Otarget -j 4 test
   needs: [Build_riscv]
@@ -479,7 +480,7 @@ IntTest_Python:
 
 IntTest_GPU:
   stage: test2
-  image: $REGISTRY/ibi_cuda_bart
+  image: $REGISTRY/ibi_cuda_bart$TAG
   script:
     - if ! nvidia-smi ; then printf "No usable GPU found, skipping GPU tests!\n"; exit 0; fi
     - AUTOCLEAN=0 CUDA=1 CUDA_LIB=lib64 GPUARCH_FLAGS="-arch sm_35 -Wno-deprecated-gpu-targets" WERROR=1 make gputest
@@ -499,7 +500,7 @@ IntTest_Clang:
 
 IntTest_Clang_GPU:
   stage: test2
-  image: $REGISTRY/ibi_cuda_bart
+  image: $REGISTRY/ibi_cuda_bart$TAG
   script:
     - if ! nvidia-smi ; then printf "No usable GPU found, skipping GPU tests!\n"; exit 0; fi
     - AUTOCLEAN=0 CC=clang-19 CUDA_CC=clang-14 CUDA=1 CUDA_LIB=lib64 GPUARCH_FLAGS="-arch sm_35 -Wno-deprecated-gpu-targets" make gputest
@@ -527,7 +528,7 @@ IntTest_MPI:
 
 IntTest_MPI_GPU:
   stage: test2
-  image: $REGISTRY/ibi_cuda_bart
+  image: $REGISTRY/ibi_cuda_bart$TAG
   script:
     - if ! nvidia-smi ; then printf "No usable GPU found, skipping GPU tests!\n"; exit 0; fi
     - AUTOCLEAN=0 CUDA=1 CUDA_LIB=lib64 GPUARCH_FLAGS="-arch sm_35 -Wno-deprecated-gpu-targets" MPI=1 make gputest
@@ -538,7 +539,7 @@ IntTest_MPI_GPU:
 
 IntTest_Tensorflow:
   stage: test2
-  image: $REGISTRY/ibi_cuda_bart
+  image: $REGISTRY/ibi_cuda_bart$TAG
   script:
 # Already part of the Docker image
 #    - wget --no-verbose https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-gpu-linux-x86_64-2.4.0.tar.gz
@@ -561,7 +562,7 @@ IntTest_Tensorflow:
 
 IntTest_wasm:
   stage: test2
-  image: $REGISTRY/ibi_wasm_bart
+  image: $REGISTRY/ibi_wasm_bart$TAG
   script:
     - bash -c "source /emsdk/emsdk_env.sh && AUTOCLEAN=0 DEBUG=0 DEBUG_DWARF=0 make test"
   needs: [Build_wasm]
@@ -605,7 +606,7 @@ Debian_Trixie_CUDA13:
   rules:
     - if: $CI_DISTRO_TESTS == "1"
   stage: distro_build
-  image: $REGISTRY/ibi_cuda13
+  image: $REGISTRY/ibi_cuda13$TAG
   script:
     - apt-get update
     - apt-get install -y gcc make libfftw3-dev liblapacke-dev libpng-dev libopenblas-dev gfortran
