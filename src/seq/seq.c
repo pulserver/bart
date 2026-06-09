@@ -236,7 +236,7 @@ void seq_cfl_to_sample(const struct rf_shape* pulse, int idx, float* mag, float*
 
 double seq_block_end(int N, const struct seq_event ev[N], enum seq_block mode, double tr, double raster)
 {
-	if ((SEQ_BLOCK_PRE == mode) || (SEQ_BLOCK_POST == mode))
+	if ((SEQ_BLOCK_PRE == mode) || (SEQ_BLOCK_POST == mode) || (SEQ_BLOCK_UNDEFINED == mode))
 		return round_up_raster(events_end_time(N, ev, 0, 0), raster);
 
 	return tr;
