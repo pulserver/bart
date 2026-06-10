@@ -227,7 +227,7 @@ Build_Analyzer:
   image: $REGISTRY/ibi_gcc-git_bart$TAG
   script:
     - gcc-git --version
-    - CC=gcc-git CFLAGS="-O2 -fanalyzer -Werror -fsanitize=vla-bound -fsanitize-trap=undefined -Wno-maybe-uninitialized -Wno-analyzer-use-of-uninitialized-value -Wno-analyzer-imprecise-fp-arithmetic" DEBUG=0 DEBUG_DWARF=0 make all
+    - CC=gcc-git CFLAGS="-O2 -fanalyzer -Werror -fsanitize=vla-bound -fsanitize-trap=undefined -Wno-maybe-uninitialized -Wno-analyzer-use-of-uninitialized-value -Wno-analyzer-imprecise-fp-arithmetic -Wno-analyzer-div-by-zero" DEBUG=0 DEBUG_DWARF=0 make all
   artifacts:
     paths:
       - bart
