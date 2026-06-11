@@ -762,7 +762,7 @@ static const struct linop_s* linop_wavereshape_create(long wx, long sx, long sy,
 	long output_dims[DIMS];
 	md_copy_dims(DIMS, output_dims, input_dims);
 	output_dims[0] = wx;
-	struct linop_s* R = linop_resize_create(DIMS, output_dims, input_dims);
+	struct linop_s* R = linop_resize_center_create(DIMS, output_dims, input_dims);
 	return R;
 }
 

@@ -107,7 +107,7 @@ static const struct linop_s* Xlinop_reshape_create(long wx, long sx, long sy, lo
 	md_copy_dims(DIMS, output_dims, input_dims);
 	output_dims[0] = wx;
 
-	struct linop_s* R = linop_resize_create(DIMS, output_dims, input_dims);
+	struct linop_s* R = linop_resize_center_create(DIMS, output_dims, input_dims);
 
 	return R;
 }
