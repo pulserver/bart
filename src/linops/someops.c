@@ -487,7 +487,7 @@ struct linop_s* linop_resize_center_create(int N, const long out_dims[N], const 
 	return linop_copy_block_create(N, pos, out_dims, in_dims);
 }
 
-struct linop_s* linop_expand_create(int N, const long out_dims[N], const long in_dims[N])
+struct linop_s* linop_resize_create(int N, const long out_dims[N], const long in_dims[N])
 {
 	long pos[N];
 	for (int i = 0; i < N; i++)

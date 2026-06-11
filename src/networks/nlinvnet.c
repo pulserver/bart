@@ -600,7 +600,7 @@ static nn_t nlinvnet_create(const struct nlinvnet_s* nlinvnet, struct noir2_net_
 	auto d1 = nlop_generic_codomain(nlop_init, 0);
 	auto d2 = nn_generic_domain(result, 0, NULL);
 
-	nlop_init = nlop_chain2_FF(nlop_init, 0, nlop_from_linop_F(linop_expand_create(d1->N, d2->dims, d1->dims)), 0);
+	nlop_init = nlop_chain2_FF(nlop_init, 0, nlop_from_linop_F(linop_resize_create(d1->N, d2->dims, d1->dims)), 0);
 	result = nn_chain2_FF(nn_from_nlop_F(nlop_init), 0, NULL, result, 0, NULL);
 
 

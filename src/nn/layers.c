@@ -553,7 +553,7 @@ const struct nlop_s* append_maxpool_layer_generic(const struct nlop_s* network, 
 	const struct nlop_s* pool_op = nlop_maxpool_create(N, idims_working, pool_size);
 
 	if (resize_needed)
-		pool_op = nlop_chain_FF(nlop_from_linop_F(linop_expand_create(N, idims_layer, idims_working)), pool_op);
+		pool_op = nlop_chain_FF(nlop_from_linop_F(linop_resize_create(N, idims_layer, idims_working)), pool_op);
 
 	network = nlop_chain2_FF(network, o, pool_op, 0);
 	network = nlop_shift_output_F(network, o, 0);

@@ -529,7 +529,7 @@ static nn_t network_block_create(const struct reconet_s* config, int N, const lo
 
 	if (timg_dims[MAPS_DIM] != img_dims[MAPS_DIM]) {
 
-		result = nn_chain2_FF(nn_from_nlop_F(nlop_from_linop_F(linop_expand_create(N, timg_dims, img_dims))), 0, NULL, result, 0, NULL);
+		result = nn_chain2_FF(nn_from_nlop_F(nlop_from_linop_F(linop_resize_create(N, timg_dims, img_dims))), 0, NULL, result, 0, NULL);
 
 		if (config->network->residual) {
 
@@ -551,7 +551,7 @@ static nn_t network_block_create(const struct reconet_s* config, int N, const lo
 
 		} else {
 
-			result = nn_chain2_FF(result, 0, NULL, nn_from_nlop_F(nlop_from_linop_F(linop_expand_create(N, img_dims, timg_dims))), 0, NULL);
+			result = nn_chain2_FF(result, 0, NULL, nn_from_nlop_F(nlop_from_linop_F(linop_resize_create(N, img_dims, timg_dims))), 0, NULL);
 		}
 	}
 
