@@ -213,9 +213,12 @@ static void seq_bart_to_standard_conf(struct seq_standard_conf* std, struct seq_
 
 	std->fov = seq->geom.fov;
 	std->baseres = seq->geom.baseres;
-	std->slice_thickness = seq->geom.slice_thickness;
-	std->slice_os = seq->geom.slab_os;
+	if (seq->enc.is3D)
+		std->slice_thickness = seq->geom.slice_thickness * seq->loop_dims[PHS2_DIM] / seq->geom.slab_os;
+	else
+		std->slice_thickness = seq->geom.slice_thickness;
 
+	std->slice_os = seq->geom.slab_os;
 	std->is3D = seq->enc.is3D;
 
 	std->gamma = seq->sys.gamma;
@@ -258,7 +261,7 @@ static void seq_standard_conf_to_bart(struct seq_config* seq, struct seq_standar
 
 	seq->geom.fov = std->fov;
 	seq->geom.baseres = std->baseres;
-	seq->geom.slice_thickness = std->slice_thickness;
+	seq->geom.slice_thickness = std->slice_thickness;  // for 3D: changed in loop_dims_to_conf
 	seq->geom.slab_os = std->slice_os;
 
 	seq->enc.is3D = std->is3D;
@@ -327,6 +330,8 @@ static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in
 		seq->loop_dims[PHS2_DIM] = in_dims[PHS2_DIM];
 		seq->loop_dims[SLICE_DIM] = in_dims[SLICE_DIM];
 		seq->geom.mb_factor = 1;
+
+		seq->geom.slice_thickness = seq->geom.slice_thickness / (seq->loop_dims[PHS2_DIM] / seq->geom.slab_os);
 
 	} else {
 
@@ -435,7 +440,10 @@ struct seq_interface_conf seq_get_interface_conf(struct seq_config* conf)
 	ret.radial_views = conf->loop_dims[PHS1_DIM];
 	ret.slices = get_slices(conf);
 	ret.echoes = conf->loop_dims[TE_DIM];
-	ret.slice_thickness = conf->geom.slice_thickness;
+	if (conf->enc.is3D)
+		ret.slice_thickness = conf->geom.slice_thickness * conf->loop_dims[PHS2_DIM];
+	else
+		ret.slice_thickness = conf->geom.slice_thickness;
 
 	ret.trigger_type = conf->trigger.type;
 	ret.trigger_delay_time = conf->trigger.delay_time;

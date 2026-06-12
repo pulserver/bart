@@ -122,11 +122,15 @@ int main_seq(int argc, char* argv[argc])
 		if ((0. < fabs(seq->conf->geom.shift[0][0])) || (0. < fabs(seq->conf->geom.shift[0][1])) || (0. < fabs(seq->conf->geom.shift[0][2])))
 			error("Choose either relative or absolute FOV shift");
 
+		double slab = seq->conf->geom.slice_thickness;
+		if (seq->conf->enc.is3D)
+			slab = seq->conf->geom.slice_thickness * seq->conf->loop_dims[PHS2_DIM] / seq->conf->geom.slab_os;
+
 		for (int i = 0; i < total_slices; i++) {
 
 			seq->conf->geom.shift[i][0] = seq_opts.rel_shift[0] * seq->conf->geom.fov;
 			seq->conf->geom.shift[i][1] = seq_opts.rel_shift[1] * seq->conf->geom.fov;
-			seq->conf->geom.shift[i][2] = seq_opts.rel_shift[2] * seq->conf->geom.slice_thickness;
+			seq->conf->geom.shift[i][2] = seq_opts.rel_shift[2] * slab;
 		}
 	}
 

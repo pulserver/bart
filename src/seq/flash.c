@@ -321,8 +321,7 @@ static int prep_grad_sli_reph(struct grad_trapezoid* grad, long pos_phs2, const 
 
 	if (seq->enc.is3D) {
 
-		// in 3d mode: slice_thickness = slab_thickness = seq->loop_dims[PHS2_DIM]) * thickness
-		double pe_enc = (0.5 * seq->loop_dims[PHS2_DIM] - pos_phs2) / (seq->sys.gamma * seq->geom.slice_thickness * seq->geom.slab_os);
+		double pe_enc = (0.5 * seq->loop_dims[PHS2_DIM] - pos_phs2) / (seq->sys.gamma * seq->geom.slice_thickness * seq->loop_dims[PHS2_DIM]);
 		double moment = - slice_momentum_to_rephase(seq) + pe_enc;
 
 		if (!gradient_prepare_with_timing(grad, moment, seq))
@@ -348,8 +347,7 @@ static int prep_grad_pe3d_rewinder(struct grad_trapezoid* grad, const long pos[D
 	grad->rampdown = tmp_sli_reph.rampdown;
 	grad->flat = tmp_sli_reph.flat;
 
-	// in 3d mode: slice_thickness = slab_thickness = seq->loop_dims[PHS2_DIM]) * thickness
-	double pe_enc = (0.5 * seq->loop_dims[PHS2_DIM] - pos[PHS2_DIM]) / (seq->sys.gamma * seq->geom.slice_thickness * seq->geom.slab_os);
+	double pe_enc = (0.5 * seq->loop_dims[PHS2_DIM] - pos[PHS2_DIM]) / (seq->sys.gamma * seq->geom.slice_thickness * seq->loop_dims[PHS2_DIM]);
 	double moment = - slice_momentum_to_rephase(seq) - pe_enc;
 
 	if (!gradient_prepare_with_timing(grad, moment, seq))

@@ -26,7 +26,11 @@ double ro_amplitude(const struct seq_config* seq)
 
 double slice_amplitude(const struct seq_config* seq)
 {
-	return seq->phys.bwtp / (seq->sys.gamma * seq->phys.rf_duration * seq->geom.slice_thickness);
+	double slab = seq->geom.slice_thickness;
+	if (seq->enc.is3D)
+		slab = seq->geom.slice_thickness * seq->loop_dims[PHS2_DIM] / seq->geom.slab_os;
+
+	return seq->phys.bwtp / (seq->sys.gamma * seq->phys.rf_duration * slab);
 }
 
 int gradient_prepare_with_timing(struct grad_trapezoid* grad, double moment, const struct seq_config* seq)

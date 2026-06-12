@@ -3,6 +3,8 @@
  * a BSD-style license which can be found in the LICENSE file.
  */
 
+#include <math.h>
+
 #include "seq/config.h"
 #include "seq/event.h"
 #include "seq/adc_rf.h"
@@ -23,8 +25,12 @@ int mag_prep(struct seq_event ev[6], const struct seq_config* seq)
 
 	if (SEQ_PREP_IR_SELECTIVE == seq->magn.mag_prep) {
 
+		double slab = seq->geom.slice_thickness;
+		if (seq->enc.is3D)
+			slab = seq->geom.slice_thickness * seq->loop_dims[PHS2_DIM] / seq->geom.slab_os;
+
 		struct grad_trapezoid slice = {
-			.ampl = 18.E-6 / seq->geom.slice_thickness, // FIXME: empirical
+			.ampl = 18.E-6 / slab, // FIXME: empirical
 			.rampup = 0.8E-3,
 			.flat = 10.E-3,
 			.rampdown = 0.8E-3,
