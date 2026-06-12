@@ -1,6 +1,6 @@
 /* Copyright 2015-2017. The Regents of the University of California.
  * Copyright 2016-2017. Martin Uecker.
- * Copyright 2023-2024. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2023-2026. Institute of Biomedical Imaging. TU Graz.
  * Copyright 2026. Department of Radiology. Boston Children's Hospital.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
@@ -27,12 +27,18 @@
 
 static int cmp_float(const void* a, const void* b)
 {
-	return (*(const float*)a - *(const float*)b > 0.) ? 1. : -1.;
+	float av = *(const float*)a;
+	float bv = *(const float*)b;
+
+	return (av > bv) - (av < bv);
 }
 
 static int cmp_complex_float(const void* a, const void* b) // gives sign for 0. (not 0)
 {
-	return (cabsf(*(const complex float*)a) - cabsf(*(const complex float*)b) > 0.) ? 1. : -1.;
+	float av = cabsf(*(const complex float*)a);
+	float bv = cabsf(*(const complex float*)b);
+
+	return (av > bv) - (av < bv);
 }
 
 static void sort_floats(int N, float ar[N])
