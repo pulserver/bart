@@ -71,7 +71,7 @@ static void stl_coordinate_limits(const long dims[3], const double* model, doubl
 	md_calc_strides(3, strs, dims, DL_SIZE);
 
 	for (int j = 0; j < dims[0]; j++) {
-		for (int k = 0; k < dims[1]; j++) {
+		for (int k = 0; k < dims[1]; k++) {
 			for (int l = 0; l < dims[2]; l++) {
 
 				long pos[3] = { j, k, l };
