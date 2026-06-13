@@ -34,7 +34,7 @@
 
 
 
-typedef void CLOSURE_TYPE(interp_update_t)(long ind, float d);
+typedef CLOSURE_TYPE(void, (long ind, float d)) interp_update_t;
 
 #ifndef __clang__
 #define VLA(x) x

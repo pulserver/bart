@@ -39,7 +39,7 @@ static void euler(float h, int N, float x[N], float st, float end,
 #endif
 
 void crank_nicolson(float h, int N, float x[N], float st, float end,
-	void CLOSURE_TYPE(f)(int N, float (*matrix)[N][N], float t))
+	CLOSURE_TYPE(void, (int N, float (*matrix)[N][N], float t)) f)
 {
 	for (float t = st; t < end; ) {
 
@@ -97,7 +97,7 @@ void crank_nicolson_matrix(float h, int N, float x[N], float st, float end, cons
 }
 
 void crank_nicolson_adjoint(float h, int N, float x[N], float st, float end,
-	void CLOSURE_TYPE(f)(int N, float (*matrix_ak)[N][N], float (*matrix_akp1)[N][N], float t))
+	CLOSURE_TYPE(void, (int N, float (*matrix_ak)[N][N], float (*matrix_akp1)[N][N], float t)) f)
 {
 	for (float t = end; t > st; ) {
 
@@ -158,7 +158,7 @@ void crank_nicolson_matrix_adjoint(float h, int N, float x[N], float st, float e
 
 #define tridiag(s) (s * (s + 1) / 2)
 
-static void runge_kutta_step(float h, int s, const float a[tridiag(s)], const float b[s], const float c[s - 1], int N, int K, float k[K][N], float ynp[N], float tmp[N], float tn, const float yn[N], void CLOSURE_TYPE(f)(float* out, float t, const float* yn))
+static void runge_kutta_step(float h, int s, const float a[tridiag(s)], const float b[s], const float c[s - 1], int N, int K, float k[K][N], float ynp[N], float tmp[N], float tn, const float yn[N], CLOSURE_TYPE(void, (float* out, float t, const float* yn)) f)
 {
 	vecf_copy(N, ynp, yn);
 	vecf_saxpy(N, ynp, h * b[0], k[0]);
@@ -179,7 +179,7 @@ static void runge_kutta_step(float h, int s, const float a[tridiag(s)], const fl
 // Runge-Kutta 4
 
 void rk4_step(float h, int N, float ynp[N], float tn, const float yn[N],
-		void CLOSURE_TYPE(f)(float* out, float t, const float* yn))
+		CLOSURE_TYPE(void, (float* out, float t, const float* yn)) f)
 {
 	const float c[3] = { 0.5, 0.5, 1. };
 
@@ -204,7 +204,7 @@ void rk4_step(float h, int N, float ynp[N], float tn, const float yn[N],
  * Journal of Computational and Applied Mathematics 6:19-26 (1980).
  */
 void dormand_prince_step(float h, int N, float ynp[N], float tn, const float yn[N],
-		void CLOSURE_TYPE(f)(float* out, float t, const float* yn))
+		CLOSURE_TYPE(void, (float* out, float t, const float* yn)) f)
 {
 	const float c[6] = { 1. / 5., 3. / 10., 4. / 5., 8. / 9., 1., 1. };
 
@@ -244,7 +244,7 @@ float dormand_prince_scale(float tol, float err)
 
 
 float dormand_prince_step2(float h, int N, float ynp[N], float tn, const float yn[N], float k[6][N],
-		void CLOSURE_TYPE(f)(float* out, float t, const float* yn))
+		CLOSURE_TYPE(void, (float* out, float t, const float* yn)) f)
 {
 	const float c[6] = { 1. / 5., 3. / 10., 4. / 5., 8. / 9., 1., 1. };
 
@@ -268,7 +268,7 @@ float dormand_prince_step2(float h, int N, float ynp[N], float tn, const float y
 
 
 void ode_interval(float h, float tol, int N, float x[N], float st, float end,
-		void CLOSURE_TYPE(f)(float* out, float t, const float* yn))
+		CLOSURE_TYPE(void, (float* out, float t, const float* yn)) f)
 {
 	float k[6][N];
 	f(k[0], st, x);
@@ -307,7 +307,7 @@ void ode_interval(float h, float tol, int N, float x[N], float st, float end,
 void ode_interval2(float h, float tol,
 	int N, const float t[N + 1],
 	int M, float x[N + 1][M],
-	void CLOSURE_TYPE(sys)(float dst[M], float t, const float in[M]))
+	CLOSURE_TYPE(void, (float dst[M], float t, const float in[M])) sys)
 {
 	for (int i = 0; i < N; i++) {
 
@@ -355,9 +355,9 @@ struct seq_data {
 	int N;
 	int P;
 
-	void CLOSURE_TYPE(f)(float* out, float t, const float* yn);
-	void CLOSURE_TYPE(pdy)(float* out, float t, const float* yn);
-	void CLOSURE_TYPE(pdp)(float* out, float t, const float* yn);
+	CLOSURE_TYPE(void, (float* out, float t, const float* yn)) f;
+	CLOSURE_TYPE(void, (float* out, float t, const float* yn)) pdy;
+	CLOSURE_TYPE(void, (float* out, float t, const float* yn)) pdp;
 };
 
 static void seq(const struct seq_data* data, float* out, float t, const float* yn)
@@ -388,9 +388,9 @@ static void seq(const struct seq_data* data, float* out, float t, const float* y
 
 void ode_direct_sa(float h, float tol, int N, int P, float x[P + 1][N],
 	float st, float end,
-	void CLOSURE_TYPE(f)(float* out, float t, const float* yn),
-	void CLOSURE_TYPE(pdy)(float* out, float t, const float* yn),
-	void CLOSURE_TYPE(pdp)(float* out, float t, const float* yn))
+	CLOSURE_TYPE(void, (float* out, float t, const float* yn)) f,
+	CLOSURE_TYPE(void, (float* out, float t, const float* yn)) pdy,
+	CLOSURE_TYPE(void, (float* out, float t, const float* yn)) pdp)
 {
 	struct seq_data data2 = { N, P, f, pdy, pdp };
 
@@ -410,8 +410,8 @@ void ode_direct_sa(float h, float tol, int N, int P, float x[P + 1][N],
 void ode_adjoint_sa_noinit(float h, float tol,
 	int N, const float t[N + 1],
 	int M, float z[N + 1][M],
-	void CLOSURE_TYPE(sysT)(float dst[M], float t, const float in[M]),
-	void CLOSURE_TYPE(cost)(float dst[M], float t))
+	CLOSURE_TYPE(void, (float dst[M], float t, const float in[M])) sysT,
+	CLOSURE_TYPE(void, (float dst[M], float t)) cost)
 {
 	// adjoint state
 
@@ -442,9 +442,9 @@ void ode_adjoint_sa(float h, float tol,
 	int N, const float t[N + 1],
 	int M, float x[N + 1][M], float z[N + 1][M],
 	const float x0[M],
-	void CLOSURE_TYPE(sys)(float dst[M], float t, const float in[M]),
-	void CLOSURE_TYPE(sysT)(float dst[M], float t, const float in[M]),
-	void CLOSURE_TYPE(cost)(float dst[M], float t))
+	CLOSURE_TYPE(void, (float dst[M], float t, const float in[M])) sys,
+	CLOSURE_TYPE(void, (float dst[M], float t, const float in[M])) sysT,
+	CLOSURE_TYPE(void, (float dst[M], float t)) cost)
 {
 	// forward solution
 

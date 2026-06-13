@@ -500,7 +500,7 @@ static long cfl_loop_offset_and_strides(int D, long strs_offset[D], const long d
 }
 
 
-typedef void CLOSURE_TYPE(md_sample_fun_t)(long offset_rand, long N, complex float* dst);
+typedef CLOSURE_TYPE(void, (long offset_rand, long N, complex float* dst)) md_sample_fun_t;
 
 static void md_sample_mpi(int D, const long dims[D], complex float* dst, md_sample_fun_t vec_fun)
 {

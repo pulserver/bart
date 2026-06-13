@@ -4,9 +4,9 @@
 #include "misc/cppwrap.h"
 #include "misc/nested.h"
 
-typedef float CLOSURE_TYPE(sample_fun_t)(const long pos[]);
-typedef complex float CLOSURE_TYPE(zsample_fun_t)(const long pos[]);
-typedef complex double CLOSURE_TYPE(zzsample_fun_t)(const long pos[]);
+typedef CLOSURE_TYPE(float, (const long pos[])) sample_fun_t;
+typedef CLOSURE_TYPE(complex float, (const long pos[])) zsample_fun_t;
+typedef CLOSURE_TYPE(complex double, (const long pos[])) zzsample_fun_t;
 
 
 extern void md_sample(int N, const long dims[__VLA(N)], float* z, sample_fun_t fun);

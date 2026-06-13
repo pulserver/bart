@@ -2,44 +2,44 @@
 #include "misc/nested.h"
 
 extern void rk4_step(float h, int N, float ynp[N], float tn, const float yn[N],
-		void CLOSURE_TYPE(f)(float* out, float t, const float* yn));
+		CLOSURE_TYPE(void, (float* out, float t, const float* yn)) f);
 
 extern void dormand_prince_step(float h, int N, float ynp[N], float tn, const float yn[N],
-		void CLOSURE_TYPE(f)(float* out, float t, const float* yn));
+		CLOSURE_TYPE(void, (float* out, float t, const float* yn)) f);
 
 extern float dormand_prince_step2(float h, int N, float ynp[N], float tn, const float yn[N], float tmp[6][N],
-		void CLOSURE_TYPE(f)(float* out, float t, const float* yn));
+		CLOSURE_TYPE(void, (float* out, float t, const float* yn)) f);
 
 extern float dormand_prince_scale(float tol, float err);
 
 extern void ode_interval(float h, float tol, int N, float x[N], float st, float end,
-		void CLOSURE_TYPE(f)(float* out, float t, const float* yn));
+		CLOSURE_TYPE(void, (float* out, float t, const float* yn)) f);
 
 extern void ode_interval2(float h, float tol,
 	int N, const float t[N + 1], int M, float x[N + 1][M],
-	void CLOSURE_TYPE(sys)(float dst[M], float t, const float in[M]));
+	CLOSURE_TYPE(void, (float dst[M], float t, const float in[M])) sys);
 
 extern void ode_matrix_interval(float h, float tol, int N, float x[N], float st, float end, const float matrix[N][N]);
 
 extern void ode_direct_sa(float h, float tol, int N, int P, float x[P + 1][N],
 	float st, float end,
-	void CLOSURE_TYPE(f)(float* out, float t, const float* yn),
-	void CLOSURE_TYPE(pdy)(float* out, float t, const float* yn),
-	void CLOSURE_TYPE(pdp)(float* out, float t, const float* yn));
+	CLOSURE_TYPE(void, (float* out, float t, const float* yn)) f,
+	CLOSURE_TYPE(void, (float* out, float t, const float* yn)) pdy,
+	CLOSURE_TYPE(void, (float* out, float t, const float* yn)) pdp);
 
 extern void ode_adjoint_sa(float h, float tol,
 	int N, const float t[N + 1],
 	int M, float x[N + 1][M], float z[N + 1][M],
 	const float x0[M],
-	void CLOSURE_TYPE(sys)(float dst[M], float t, const float in[M]),
-	void CLOSURE_TYPE(sysT)(float dst[M], float t, const float in[M]),
-	void CLOSURE_TYPE(cost)(float dst[M], float t));
+	CLOSURE_TYPE(void, (float dst[M], float t, const float in[M])) sys,
+	CLOSURE_TYPE(void, (float dst[M], float t, const float in[M])) sysT,
+	CLOSURE_TYPE(void, (float dst[M], float t)) cost);
 
 void ode_adjoint_sa_noinit(float h, float tol,
 	int N, const float t[N + 1],
 	int M, float z[N + 1][M],
-	void CLOSURE_TYPE(sysT)(float dst[M], float t, const float in[M]),
-	void CLOSURE_TYPE(cost)(float dst[M], float t));
+	CLOSURE_TYPE(void, (float dst[M], float t, const float in[M])) sysT,
+	CLOSURE_TYPE(void, (float dst[M], float t)) cost);
 
 extern void ode_matrix_adjoint_sa(float h, float tol,
 	int N, const float t[N + 1],
@@ -63,10 +63,10 @@ void ode_adjoint_sa_eq_eval(int N, int M, int P, float dj[P],
 		const float Adp[P][M][M]);
 
 void crank_nicolson(float h, int N, float x[N], float st, float end,
-	void CLOSURE_TYPE(f)(int N, float (*matrix)[N][N], float t));
+	CLOSURE_TYPE(void, (int N, float (*matrix)[N][N], float t)) f);
 void crank_nicolson_matrix(float h, int N, float x[N], float st, float end, const float matrix[N][N]);
 
 void crank_nicolson_adjoint(float h, int N, float x[N], float st, float end,
-		void CLOSURE_TYPE(f)(int N, float (*matrix_ak)[N][N], float (*matrix_akp1)[N][N], float t));
+		CLOSURE_TYPE(void, (int N, float (*matrix_ak)[N][N], float (*matrix_akp1)[N][N], float t)) f);
 void crank_nicolson_matrix_adjoint(float h, int N, float x[N], float st, float end, 
 		const float matrix_ak[N][N], const float matrix_akp1[N][N]);

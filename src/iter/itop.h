@@ -16,7 +16,7 @@ struct iter_monitor_s;
  * @param alpha regularization
  */
 
-typedef void CLOSURE_TYPE(itop_continuation_t)(iter_conf* iconf);
+typedef CLOSURE_TYPE(void, (iter_conf* iconf)) itop_continuation_t;
 
 
 const struct operator_s* itop_create(	italgo_fun2_t italgo, iter_conf* iconf,

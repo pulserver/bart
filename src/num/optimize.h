@@ -21,7 +21,7 @@ struct nary_opt_data_s {
 
 
 
-typedef void CLOSURE_TYPE(md_nary_opt_fun_t)(struct nary_opt_data_s* data, void* ptr[]);
+typedef CLOSURE_TYPE(void, (struct nary_opt_data_s* data, void* ptr[])) md_nary_opt_fun_t;
 
 extern void optimized_nop(int N, unsigned long io, int D, const long dim[D], const long (*nstr[N])[D?:1], void* const nptr[N], size_t sizes[N], md_nary_opt_fun_t too);
 

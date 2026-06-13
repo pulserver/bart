@@ -5,10 +5,10 @@
 #include "misc/nested.h"
 
 extern void quadrature_trapezoidal(int N, const float t[static N + 1], int P, float out[P],
-		void CLOSURE_TYPE(sample)(float out[P], int i));
+		CLOSURE_TYPE(void, (float out[P], int i)) sample);
 
 extern void quadrature_simpson_ext(int N, float T, int P, float out[P],
-		void CLOSURE_TYPE(sample)(float out[P], int i));
+		CLOSURE_TYPE(void, (float out[P], int i)) sample);
 
 #endif // _QUADRATURE_H
 

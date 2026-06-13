@@ -307,7 +307,8 @@ void apply_Hess(int N, float Hdu[N], const struct puls_opt_pars p, const struct 
 	xfree(dNz);
 }
 
-static float dist2bdy(int N, const float du[N], const float p[N], float trad, float CLOSURE_TYPE(ip)(int N, const float x[N], const float y[N]))
+static float dist2bdy(int N, const float du[N], const float p[N], float trad,
+		CLOSURE_TYPE(float, (int N, const float x[N], const float y[N])) ip)
 {
 	// find distance to trust-region boundary from du in direction p
 	float dd = 0., xd = 0., xx = 0.;
@@ -339,8 +340,8 @@ static float dist2bdy(int N, const float du[N], const float p[N], float trad, fl
 ///		2: TRCG terminated because the iterate left the trust region
 ///		3: TRCG terminated because negative curvature was encountered
 enum TRCG_STATUS tr_cg(int Nu, float du[Nu], int* it, const float g[Nu], float trad, const struct tr_pars np,
-	  void CLOSURE_TYPE(H_func)(int N, float Hp[N], const float p[N]),
-	  float CLOSURE_TYPE(ip)(int N, const float x[N], const float y[N]))
+	  CLOSURE_TYPE(void, (int N, float Hp[N], const float p[N])) H_func,
+	  CLOSURE_TYPE(float, (int N, const float x[N], const float y[N])) ip)
 {
 	enum TRCG_STATUS flag;
 	float pHp, tau, al, step_norm, nrk, beta;

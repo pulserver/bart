@@ -390,7 +390,7 @@ void grid2H(const struct grid_conf_s* conf, int D, const long trj_dims[D], const
 }
 
 
-typedef void CLOSURE_TYPE(grid_update_t)(long ind, float d);
+typedef CLOSURE_TYPE(void, (long ind, float d)) grid_update_t;
 
 #ifndef __clang__
 #define VLA(x) x

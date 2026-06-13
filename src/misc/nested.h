@@ -2,11 +2,11 @@
 #if defined(__clang__) && !defined(__CUDACC__)
 #define NESTED(RET, NAME, ARGS) \
 	RET (^NAME)ARGS = ^ARGS
-#define CLOSURE_TYPE(x) (^x)
+#define CLOSURE_TYPE(RET, ARGS) typeof(RET (^) ARGS)
 #else
 #define NESTED(RET, NAME, ARGS) \
 	RET NAME ARGS
-#define CLOSURE_TYPE(x) (*x)
+#define CLOSURE_TYPE(RET, ARGS) __typeof(RET (*) ARGS)
 #define __block
 #endif
 

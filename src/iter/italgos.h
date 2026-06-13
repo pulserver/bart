@@ -177,7 +177,7 @@ struct ist_data {
 	float scale;
 };
 
-typedef void CLOSURE_TYPE(ist_continuation_t)(struct ist_data* itrdata);
+typedef CLOSURE_TYPE(void, (struct ist_data* itrdata)) ist_continuation_t;
 
 
 void ist(int maxiter, float epsilon, float tau, _Bool last,

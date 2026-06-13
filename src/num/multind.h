@@ -24,11 +24,11 @@
 #define MD_CLEAR(x, y) ((x) & ~MD_BIT(y))
 #define MD_SET(x, y)	((x) | MD_BIT(y))
 
-typedef void CLOSURE_TYPE(md_nary_fun_t)(void* ptr[]);
-typedef void CLOSURE_TYPE(md_nary_resolve_fun_t)(int C, void* ptr[__VLA(C)], int N, const long dim[__VLA(N)], const long* str[__VLA(C)]);
-typedef void CLOSURE_TYPE(md_trafo_fun_t)(long N, long str, void* ptr);
-typedef void CLOSURE_TYPE(md_loop_fun_t)(const long* pos);
-typedef void CLOSURE_TYPE(md_loop_fun2_t)(unsigned long flags, long* pos);
+typedef CLOSURE_TYPE(void, (void* ptr[])) md_nary_fun_t;
+typedef CLOSURE_TYPE(void, (int C, void* ptr[__VLA(C)], int N, const long dim[__VLA(N)], const long* str[__VLA(C)])) md_nary_resolve_fun_t;
+typedef CLOSURE_TYPE(void, (long N, long str, void* ptr)) md_trafo_fun_t;
+typedef CLOSURE_TYPE(void, (const long* pos)) md_loop_fun_t;
+typedef CLOSURE_TYPE(void, (unsigned long flags, long* pos)) md_loop_fun2_t;
 
 extern void md_unravel_index(int D, long pos[__VLA(D)], unsigned long flags, const long dims[__VLA(D)], long index);
 extern void md_unravel_index_permuted(int D, long pos[__VLA(D)], unsigned long flags, const long dims[__VLA(D)], long index, const int order[__VLA(D)]);

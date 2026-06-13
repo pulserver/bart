@@ -21,7 +21,7 @@
 #define SWAP(x, y)	({ __auto_type __t = (x); (x) = (y); (y) = __t; })
 
 
-typedef void CLOSURE_TYPE(pixel_f)(int x, int y, float c);
+typedef CLOSURE_TYPE(void, (int x, int y, float c) )pixel_f;
 typedef void line_f(pixel_f out, int x0, int y0, int x1, int y1);
 
 static void setup(line_f line, int X, int Y, pixel_f out, int x0, int y0, int x1, int y1)

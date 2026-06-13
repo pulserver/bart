@@ -125,7 +125,7 @@ extern void debug_print_dims_trace(const char* func_name,
 				   int D,
 				   const long dims[__VLA(D)]);
 
-typedef int CLOSURE_TYPE(quicksort_cmp_t)(int a, int b);
+typedef CLOSURE_TYPE(int, (int a, int b)) quicksort_cmp_t;
 
 extern void quicksort(int N, int ord[__VLA(N)], quicksort_cmp_t cmp);
 
