@@ -22,8 +22,8 @@ extern bool mat_inverse(int N, complex float dst[N][N], const complex float src[
 extern void mat_pinv(int A, int B, complex float out[B][A], const complex float in[A][B]);
 extern void mat_pinv_left(int A, int B, complex float out[B][A], const complex float in[A][B]);
 extern void mat_pinv_right(int A, int B, complex float out[B][A], const complex float in[A][B]);
-extern void mat_svd_recov(int A, int B, complex float out[A][B], const complex float U[A][A], const complex float VH[B][B], const float S[A]);
-extern void mat_svd(int A, int B, complex float U[A][A], complex float VH[B][B], float S[A], const complex float in[A][B]);
+extern void mat_svd_recov(int A, int B, complex float out[A][B], const complex float U[A][A], const complex float VH[B][B], const float S[(A > B) ? B : A]);
+extern void mat_svd(int A, int B, complex float U[A][A], complex float VH[B][B], float S[(A > B) ? B : A], const complex float in[A][B]);
 extern void mat_pinv_svd(int A, int B, complex float out[B][A], const complex float in[A][B]);
 extern void mat_schur_recov(int A, complex float out[A][A], const complex float T[A][A], const complex float Z[A][A]);
 extern void mat_schur(int A, complex float T[A][A], complex float Z[A][A], const complex float in[A][A]);

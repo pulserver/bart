@@ -435,7 +435,7 @@ static void mat_vecmul_columnwise(int A, int B, complex float out[A][B], const c
 			out[a][b] = mat[a][b] * in[a];
 }
 
-void mat_svd_recov(int A, int B, complex float out[A][B], const complex float U[A][A], const complex float VH[B][B], const float S[A])
+void mat_svd_recov(int A, int B, complex float out[A][B], const complex float U[A][A], const complex float VH[B][B], const float S[(A > B) ? B : A])
 {
 	complex float VH2[B][B];
 
@@ -446,7 +446,7 @@ void mat_svd_recov(int A, int B, complex float out[A][B], const complex float U[
 
 #ifndef NO_LAPACK
 // Wrapper for lapack including row-major definition of svd
-void mat_svd(int A, int B, complex float U[A][A], complex float VH[B][B], float S[A], const complex float in[A][B])
+void mat_svd(int A, int B, complex float U[A][A], complex float VH[B][B], float S[(A > B) ? B : A], const complex float in[A][B])
 {
 	// Avoid overwriting "in" by lapack call
 	complex float in2[A][B];
@@ -464,7 +464,7 @@ void mat_pinv_svd(int A, int B, complex float out[B][A], const complex float in1
 
 	complex float VH[B][B];
 	complex float U[A][A];
-	float S[A];
+	float S[A] = { }; // as for B < A svd only writes first B values
 
 	//  U S V^H = in
 	mat_svd(A, B, U, VH, S, in);
@@ -639,7 +639,7 @@ complex float vec_dot(int N, const complex float x[N], const complex float y[N])
 	for (int k = 0; k < N; k++)
 		scalar += x[k] * conjf(y[k]);
 
-	return scalar;	
+	return scalar;
 }
 
 
@@ -661,7 +661,7 @@ void gram_matrix(int N, complex float cov[N][N], int L, const complex float data
 {
 #pragma omp parallel for
 	for (int i = 0; i < N; i++) {
-		for (int j = 0; j <= i; j++) {	
+		for (int j = 0; j <= i; j++) {
 
 			complex float val = vec_dot(L, data[i], data[j]);
 
@@ -1232,7 +1232,7 @@ void gram_matrix2(int N, complex float cov[N * (N + 1) / 2], int L, const comple
 	int l = 0;
 
 	for (int i = 0; i < N; i++) {
-		for (int j = 0; j <= i; j++) {	
+		for (int j = 0; j <= i; j++) {
 
 			complex float val = vec_dot(L, data[i], data[j]);
 
@@ -1319,7 +1319,7 @@ void (orthiter_noinit)(int M, int N, int iter, float val[M], complex float out[M
 
 		mat_copy(M, N, tmp, out);
 		mat_mul(M, N, N, out, tmp, matrix);
-		gram_schmidt(M, N, val, out); 
+		gram_schmidt(M, N, val, out);
 	}
 }
 
@@ -1340,7 +1340,7 @@ void cholesky_double(int N, complex double A[N][N])
                         cfl_acu_t sum = A[i][j];
 
                         for (int k = 0; k < j; k++)
-                                sum -= A[i][k] * conj(A[j][k]); 
+                                sum -= A[i][k] * conj(A[j][k]);
 
                         A[i][j] = sum / A[j][j];
                 }
@@ -1358,7 +1358,7 @@ void cholesky_double(int N, complex double A[N][N])
         for (int i = 0; i < N; i++)
                 for (int j = 0; j < i; j++)
 			A[j][i] = conj(A[i][j]);
-	
+
 }
 
 // Tadeusz Banachiewicz
@@ -1377,11 +1377,11 @@ void cholesky(int N, complex float A[N][N])
         for (int i = 0; i < N; i++)
                 for (int j = 0; j < N; j++) //
 			B[i][j] = A[i][j];
-	
+
 	cholesky_double(N, B);
 
         for (int i = 0; i < N; i++)
-                for (int j = 0; j < N; j++) // 
+                for (int j = 0; j < N; j++) //
 			A[i][j] = B[i][j];
 #else
         for (int i = 0; i < N; i++) {
@@ -1422,7 +1422,7 @@ static void backsubst_lower_double(int N, complex double x[N], complex double L[
 
 		for (int j = 0; j < i; j++)
 			sum -= x[j] * L[i][j];
-		
+
 		x[i] = sum / L[i][i];
 	}
 }
@@ -1435,7 +1435,7 @@ static void backsubst_upper_double(int N, complex double x[N], complex double L[
 
 		for (int j = i + 1; j < N; j++)
 			sum -= x[j] * L[i][j];
-		
+
 		x[i] = sum / L[i][i];
 	}
 }
@@ -1470,7 +1470,7 @@ static void backsubst_lower(int N, complex float x[N], const complex float L[N][
 
 		for (int j = 0; j < i; j++)
 			sum -= x[j] * L[j][i];
-		
+
 		x[i] = sum / L[i][i];
 	}
 }
@@ -1483,7 +1483,7 @@ static void backsubst_upper(int N, complex float x[N], const complex float L[N][
 
 		for (int j = i + 1; j < N; j++)
 			sum -= x[j] * L[j][i];
-		
+
 		x[i] = sum / L[i][i];
 	}
 }
@@ -1493,7 +1493,7 @@ static void backsubst_upper(int N, complex float x[N], const complex float L[N][
 void (cholesky_solve)(int N, complex float x[N], const complex float L[N][N], const complex float b[N])
 {
 	complex float y[N];
-	
+
 	backsubst_lower(N, y, L, b);
 	backsubst_upper(N, x, L, y);
 }
