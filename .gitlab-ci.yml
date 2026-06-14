@@ -185,7 +185,7 @@ Build_GPU:
 Build_MPI_GPU:
   stage: build
   script:
-    - CC=gcc-git MPI=1 CUDA=1 CUDA_CC=gcc CUDA_LIB=lib64 GPUARCH_FLAGS="-arch sm_35 -Wno-deprecated-gpu-targets" make all
+    - CC=gcc-git MPI=1 CUDA=1 CUDA_CC=gcc OMPI_CC=gcc-git CUDA_LIB=lib64 GPUARCH_FLAGS="-arch sm_35 -Wno-deprecated-gpu-targets" make all
   image: $REGISTRY/ibi_cuda_bart$TAG
   artifacts:
     paths:
