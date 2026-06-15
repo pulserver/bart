@@ -212,6 +212,13 @@ ifeq ($(MNAME),riscv64)
 	CFLAGS+=-ffp-contract=off
 endif
 
+ifeq ($(MNAME),i386)
+	CFLAGS+=-msse2 -mfpmath=sse
+endif
+ifeq ($(MNAME),i686)
+	CFLAGS+=-msse2 -mfpmath=sse
+endif
+
 
 # openblas
 
