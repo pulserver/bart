@@ -405,7 +405,7 @@ void fmacD_dot(int N, const long dims[__VLA(N)], const long ostr[__VLA(N)], doub
 }
 
 
-void zfmaccD_dot(int N, const long dims[__VLA(N)], const long ostr[__VLA(N)], _Complex double* optr, const long istr1[__VLA(N)], const _Complex float* iptr1, const long istr2[__VLA(N)], const _Complex float* iptr2)
+void zfmaccD_dot(int N, const long dims[__VLA(N)], const long ostr[__VLA(N)], complex double* optr, const long istr1[__VLA(N)], const complex float* iptr1, const long istr2[__VLA(N)], const complex float* iptr2)
 {
 	assert(1 == N);
 	assert(0 == ostr[0]);

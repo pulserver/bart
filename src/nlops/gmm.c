@@ -97,7 +97,7 @@ static void gmm_del(const nlop_data_t* _data)
  * @param var variance of each gaussian in the gaussian mixture model
  * @param wgh weighting of each gaussian in the gaussian mixture model
  */
-struct nlop_s* nlop_gmm_score_create(int N, const long score_dims[N], const long mean_dims[N], const _Complex float* mean, const long var_dims[N], const _Complex float* var, const long wgh_dims[N], const _Complex float* wgh)
+struct nlop_s* nlop_gmm_score_create(int N, const long score_dims[N], const long mean_dims[N], const complex float* mean, const long var_dims[N], const complex float* var, const long wgh_dims[N], const complex float* wgh)
 {
 	PTR_ALLOC(struct gmm_s, data);
 	SET_TYPEID(gmm_s, data);

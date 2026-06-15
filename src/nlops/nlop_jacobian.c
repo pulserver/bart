@@ -1401,7 +1401,7 @@ void nlop_zblock_diag_get_dims(const struct nlop_s* nlop, int N, int OO, long od
 			md_copy_dims(N, ddims[o][i], ((*iov_der)[o][i])->dims);
 }
 
-void nlop_zblock_diag_apply(const struct nlop_s* nlop, int N, int OO, const long odims[OO][N], _Complex float* dst[OO], int II, const long idims[II][N], const _Complex float* src[II], const long ddims[OO][II][N], _Complex float* jac[OO][II])
+void nlop_zblock_diag_apply(const struct nlop_s* nlop, int N, int OO, const long odims[OO][N], complex float* dst[OO], int II, const long idims[II][N], const complex float* src[II], const long ddims[OO][II][N], complex float* jac[OO][II])
 {
 	auto data = CAST_DOWN(block_diag_s, nlop_get_data(nlop));
 

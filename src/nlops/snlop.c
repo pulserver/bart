@@ -488,7 +488,7 @@ arg_t snlop_input(int N, const long dims[N], const char* name)
 	return arg;
 }
 
-arg_t snlop_const(int N, const long dims[N], const _Complex float* data, const char* /*name*/)
+arg_t snlop_const(int N, const long dims[N], const complex float* data, const char* /*name*/)
 {
 	struct snlop_s* snlop = snlop_create();
 	snlop->user = false;

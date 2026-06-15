@@ -185,7 +185,7 @@ bool traj_radial_through_center(int N, const long tdims[N], const complex float*
 	return (1.e-5 > err);
 }
 
-bool traj_is_radial(int N, const long tdims[N], const _Complex float* traj)
+bool traj_is_radial(int N, const long tdims[N], const complex float* traj)
 {
 	return traj_radial_same_dk(N, tdims, traj) && traj_radial_through_center(N, tdims, traj);
 }

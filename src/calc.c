@@ -24,7 +24,7 @@
 #define DIMS 16
 #endif
 
-static void md_zrmax2(int D, const long dim[D], const long ostr[D], complex float* optr, const long istr1[D], const _Complex float* iptr1, const long istr2[D], const _Complex float* iptr2)
+static void md_zrmax2(int D, const long dim[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
 {
 	float* tmp1 = md_alloc_sameplace(D, dim, FL_SIZE, iptr1);
 	float* tmp2 = md_alloc_sameplace(D, dim, FL_SIZE, iptr2);
@@ -41,7 +41,7 @@ static void md_zrmax2(int D, const long dim[D], const long ostr[D], complex floa
 	md_free(tmp2);
 }
 
-static void md_zrmin2(int D, const long dim[D], const long ostr[D], complex float* optr, const long istr1[D], const _Complex float* iptr1, const long istr2[D], const _Complex float* iptr2)
+static void md_zrmin2(int D, const long dim[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
 {
 	float* tmp1 = md_alloc_sameplace(D, dim, FL_SIZE, iptr1);
 	float* tmp2 = md_alloc_sameplace(D, dim, FL_SIZE, iptr2);

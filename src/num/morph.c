@@ -168,7 +168,7 @@ static bool extend_label(int N, const long lstrs[N], complex float* labels, cons
 	return true;
 }
 
-static long md_label_int2(int N, const long dims[N], const long lstrs[N], complex float* labels, const long istrs[N], const _Complex float* in, const long sdims[N], const complex float* structure)
+static long md_label_int2(int N, const long dims[N], const long lstrs[N], complex float* labels, const long istrs[N], const complex float* in, const long sdims[N], const complex float* structure)
 {
 	md_clear2(N, dims, lstrs, labels, CFL_SIZE);
 
@@ -192,7 +192,7 @@ static long md_label_int2(int N, const long dims[N], const long lstrs[N], comple
 }
 
 
-long md_label(int N, const long dims[N], _Complex float* labels, const _Complex float* src, const long sdims[N], const complex float* structure)
+long md_label(int N, const long dims[N], complex float* labels, const complex float* src, const long sdims[N], const complex float* structure)
 {
 	long ndims[N];
 	for (int i = 0; i < N; i++)

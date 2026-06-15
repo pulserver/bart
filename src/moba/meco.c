@@ -59,7 +59,7 @@ DEF_TYPEID(meco_old_phasecontrast_s);
 // ************************************************************* //
 //  Model: rho .* exp(i 2\pi fB0 TE) reproducing wrong scaling from old version
 // ************************************************************* //
-static void meco_fun_phasediff(const nlop_data_t* _data, int N, const long y_dims[N], _Complex float* dst, const long x_dims[N], const _Complex float* src, const long ddims[N], _Complex float* jac)
+static void meco_fun_phasediff(const nlop_data_t* _data, int N, const long y_dims[N], complex float* dst, const long x_dims[N], const complex float* src, const long ddims[N], complex float* jac)
 {
 	struct meco_old_phasecontrast_s* data = CAST_DOWN(meco_old_phasecontrast_s, _data);
 

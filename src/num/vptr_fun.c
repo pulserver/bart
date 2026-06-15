@@ -112,7 +112,7 @@ void exec_vptr_fun_gen(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, unsi
 }
 
 
-void exec_vptr_zfun(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, unsigned long lflags, unsigned long wflags, unsigned long rflags, const long* dims[N], const long* strs[N], _Complex float* cptr[N])
+void exec_vptr_zfun(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, unsigned long lflags, unsigned long wflags, unsigned long rflags, const long* dims[N], const long* strs[N], complex float* cptr[N])
 {
 	size_t sizes[N];
 	void* ptr[N];
@@ -120,7 +120,7 @@ void exec_vptr_zfun(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, unsigne
 	for(int i = 0; i < N; i++) {
 
 		ptr[i] = cptr[i];
-		sizes[i] = sizeof(_Complex float);
+		sizes[i] = sizeof(complex float);
 	}
 
 	exec_vptr_fun_gen(fun, data, N, D, lflags, wflags, rflags, dims, strs, ptr, sizes, true);
