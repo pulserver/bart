@@ -87,7 +87,7 @@ static void bresenham(pixel_f out, int x0, int y0, int x1, int y1)
 
 
 
-extern void bresenham_rgba_fl(int X, int Y, float (*out)[X][Y][4], const float (*val)[4], int x0, int y0, int x1, int y1)
+void bresenham_rgba_fl(int X, int Y, float (*out)[X][Y][4], const float (*val)[4], int x0, int y0, int x1, int y1)
 {
 	void* p = out;	// clang limitation
 
@@ -102,7 +102,7 @@ extern void bresenham_rgba_fl(int X, int Y, float (*out)[X][Y][4], const float (
 	setup(bresenham, X, Y, draw, x0, y0, x1, y1);
 }
 
-extern void bresenham_rgba(int X, int Y, unsigned char (*out)[X][Y][4], const unsigned char (*val)[4], int x0, int y0, int x1, int y1)
+void bresenham_rgba(int X, int Y, unsigned char (*out)[X][Y][4], const unsigned char (*val)[4], int x0, int y0, int x1, int y1)
 {
 	void* p = out;	// clang limitation
 
@@ -117,7 +117,7 @@ extern void bresenham_rgba(int X, int Y, unsigned char (*out)[X][Y][4], const un
 	setup(bresenham, X, Y, draw, x0, y0, x1, y1);
 }
 
-extern void bresenham_cmplx(int X, int Y, complex float (*out)[X][Y], complex float val, int x0, int y0, int x1, int y1)
+void bresenham_cmplx(int X, int Y, complex float (*out)[X][Y], complex float val, int x0, int y0, int x1, int y1)
 {
 	void* p = out;	// clang limitation
 
@@ -170,7 +170,7 @@ static void xiaolin_wu(pixel_f out, int x0, int y0, int x1, int y1)
 }
 
 
-extern void xiaolin_wu_cmplx(int X, int Y, complex float (*out)[X][Y], complex float val, int x0, int y0, int x1, int y1)
+void xiaolin_wu_cmplx(int X, int Y, complex float (*out)[X][Y], complex float val, int x0, int y0, int x1, int y1)
 {
 	void* p = out;	// clang limitation
 
@@ -184,7 +184,7 @@ extern void xiaolin_wu_cmplx(int X, int Y, complex float (*out)[X][Y], complex f
 	setup(xiaolin_wu, X, Y, draw, x0, y0, x1, y1);
 }
 
-extern void xiaolin_wu_rgba_fl(int X, int Y, float (*out)[X][Y][4], const float (*val)[4], int x0, int y0, int x1, int y1)
+void xiaolin_wu_rgba_fl(int X, int Y, float (*out)[X][Y][4], const float (*val)[4], int x0, int y0, int x1, int y1)
 {
 	void* p = out;	// clang limitation
 
@@ -199,7 +199,7 @@ extern void xiaolin_wu_rgba_fl(int X, int Y, float (*out)[X][Y][4], const float 
 	setup(xiaolin_wu, X, Y, draw, x0, y0, x1, y1);
 }
 
-extern void xiaolin_wu_rgba(int X, int Y, unsigned char (*out)[X][Y][4], const unsigned char (*val)[4], int x0, int y0, int x1, int y1)
+void xiaolin_wu_rgba(int X, int Y, unsigned char (*out)[X][Y][4], const unsigned char (*val)[4], int x0, int y0, int x1, int y1)
 {
 	void* p = out;	// clang limitation
 
@@ -243,7 +243,7 @@ static void draw_cspline(int X, int Y, pixel_f out, const double coeff[2][4])
 }
 
 
-extern void cspline_cmplx(int X, int Y, complex float (*out)[X][Y], complex float val, const double coeff[2][4])
+void cspline_cmplx(int X, int Y, complex float (*out)[X][Y], complex float val, const double coeff[2][4])
 {
 	void* p = out;	// clang limitation
 

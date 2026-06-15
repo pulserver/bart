@@ -96,8 +96,8 @@ static void solution(int D, int N, float x[N], /*const*/ float A[D + 1][N + 1])
 	//assert(feasible_p(D, N, x, A));
 }
 
-extern void print_tableaux(int D, int N, /*const*/ float A[D + 1][N + 1]);
-void print_tableaux(int D, int N, /*const*/ float A[D + 1][N + 1])
+
+static void print_tableaux(int D, int N, /*const*/ float A[D + 1][N + 1])
 {
 	float x[N];
 	solution(D, N, x, A);
@@ -153,7 +153,11 @@ static void simplex2(int D, int N, float A[D + 1][N + 1])
 {
 	// 2. Loop over all columns
 
-//	print_tableaux(D, N, A);
+#if 0
+	print_tableaux(D, N, A);
+#else
+	(void)print_tableaux;
+#endif
 
 	while (true) {
 

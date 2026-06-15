@@ -108,7 +108,7 @@ float estimate_scaling_norm(float rescale, int imsize, complex float* tmpnorm, b
 }
 
 
-extern float estimate_scaling_cal(const long dims[DIMS], const complex float* sens, const long cal_dims[DIMS], const complex float* cal_data, bool compat, float p)
+float estimate_scaling_cal(const long dims[DIMS], const complex float* sens, const long cal_dims[DIMS], const complex float* cal_data, bool compat, float p)
 {
 	long img_dims[DIMS];
 	md_select_dims(DIMS, ~COIL_FLAG, img_dims, cal_dims);

@@ -345,7 +345,7 @@ const linop_data_t* linop_get_data_nested(const struct linop_s* ptr)
  * Make a copy of a linear operator
  * @param x linear operator
  */
-extern const struct linop_s* linop_clone(const struct linop_s* x)
+const struct linop_s* linop_clone(const struct linop_s* x)
 {
 	PTR_ALLOC(struct linop_s, lo);
 
@@ -361,7 +361,7 @@ extern const struct linop_s* linop_clone(const struct linop_s* x)
  * Return the adjoint linop
  * @param x linear operator
  */
-extern const struct linop_s* linop_get_adjoint(const struct linop_s* x)
+const struct linop_s* linop_get_adjoint(const struct linop_s* x)
 {
 	PTR_ALLOC(struct linop_s, lo);
 
@@ -377,7 +377,7 @@ extern const struct linop_s* linop_get_adjoint(const struct linop_s* x)
  * Return the normal linop
  * @param x linear operator
  */
-extern const struct linop_s* linop_get_normal(const struct linop_s* x)
+const struct linop_s* linop_get_normal(const struct linop_s* x)
 {
 	PTR_ALLOC(struct linop_s, lo);
 

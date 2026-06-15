@@ -177,7 +177,7 @@ const struct operator_p_s* prox_thresh_create(int D, const long dim[D], const fl
  * @param unitary_op unitary linear operator
  * @param flags bitmask for joint soft-thresholding
  */
-extern const struct operator_p_s* prox_unithresh_create(int D, const struct linop_s* unitary_op, const float lambda, const unsigned long flags)
+const struct operator_p_s* prox_unithresh_create(int D, const struct linop_s* unitary_op, const float lambda, const unsigned long flags)
 {
 	PTR_ALLOC(struct thresh_s, data);
 	SET_TYPEID(thresh_s, data);

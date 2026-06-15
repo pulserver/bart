@@ -244,7 +244,7 @@ static void moving_average(const long state_dims[DIMS], complex float* state, co
 
 
 
-extern int bin_quadrature(const long bins_dims[DIMS], float* bins,
+int bin_quadrature(const long bins_dims[DIMS], float* bins,
 			const long labels_dims[DIMS], complex float* labels,
 			const struct bin_conf_s conf)
 {

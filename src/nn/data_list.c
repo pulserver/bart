@@ -119,7 +119,7 @@ void* named_data_list_get_data(struct named_data_list_s* data_list, const char* 
 	return tensor->data;
 }
 
-extern const struct nlop_s* nn_batchgen_create(struct bat_gen_conf_s* config, nn_t network, struct named_data_list_s* train_data)
+const struct nlop_s* nn_batchgen_create(struct bat_gen_conf_s* config, nn_t network, struct named_data_list_s* train_data)
 {
 	int II = nn_get_nr_in_args(network);
 

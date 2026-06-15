@@ -358,7 +358,7 @@ list_t egraph_split_connected_components(egraph_t graph)
 	return ret;
 }
 
-extern enode_t egraph_find_most_distant(egraph_t graph, enode_t src)
+enode_t egraph_find_most_distant(egraph_t graph, enode_t src)
 {
 	egraph_bfs(graph, src, false);
 

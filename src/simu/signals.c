@@ -247,7 +247,7 @@ void looklocker_model2(const struct signal_model* data, int N, complex float out
  * MOLLI
  */
 
-extern void MOLLI_model(const struct signal_model* data, int N, complex float out[N])
+void MOLLI_model(const struct signal_model* data, int N, complex float out[N])
 {
 	assert(0 == (N % data->Hbeats));
 

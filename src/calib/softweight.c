@@ -73,7 +73,7 @@ static float divergence(long N, const float S[N], const long calmat_dims[2], flo
 }
 
 
-extern void soft_weight_singular_vectors(long N, float variance, const long kernel_dims[3], const long calreg_dims[4], const float S[N], float W[N])
+void soft_weight_singular_vectors(long N, float variance, const long kernel_dims[3], const long calreg_dims[4], const float S[N], float W[N])
 {
 	int idx = 0, jdx = 0;
 

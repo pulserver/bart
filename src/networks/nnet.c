@@ -367,10 +367,10 @@ void apply_nnet_batchwise(	const struct nnet_s* config,
 }
 
 
-extern void eval_nnet(	struct nnet_s* nnet,
-			int NO, const long odims[NO], const complex float* out,
-			int NI, const long idims[NI], const complex float* in,
-			long Nb)
+void eval_nnet(	struct nnet_s* nnet,
+		int NO, const long odims[NO], const complex float* out,
+		int NI, const long idims[NI], const complex float* in,
+		long Nb)
 {
 	complex float* tmp_out = md_alloc(NO, odims, CFL_SIZE);
 

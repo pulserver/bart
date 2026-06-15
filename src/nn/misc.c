@@ -196,7 +196,7 @@ void onehotenc_confusion_matrix(int N, const long dims[N], int class_index, comp
 }
 
 
-extern void print_confusion_matrix(int N, const long dims[N], int class_index, const complex float* pred, const complex float* ref)
+void print_confusion_matrix(int N, const long dims[N], int class_index, const complex float* pred, const complex float* ref)
 {
 	long classes = dims[class_index];
 

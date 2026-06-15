@@ -269,7 +269,7 @@ static void prox_nlgrad_del(const operator_data_t* _data)
 	xfree(data);
 }
 
-extern const struct operator_p_s* prox_nlgrad_create(const struct nlop_s* op, int steps, float step_size, float lambda, bool grad_nlop)
+const struct operator_p_s* prox_nlgrad_create(const struct nlop_s* op, int steps, float step_size, float lambda, bool grad_nlop)
 {
 	PTR_ALLOC(struct prox_nlgrad_data, data);
 	SET_TYPEID(prox_nlgrad_data, data);

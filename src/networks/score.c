@@ -154,7 +154,7 @@ const struct nlop_s* nlop_expectation_to_score(const struct nlop_s* Dx)
 
 
 // flag ambient is used for modified EDM, output of net is scaled with constant
-extern const struct nn_s* nn_denoise_precond_edm(const struct nn_s* network, float /*sigma_min*/, float /*sigma_max*/, float sigma_data, bool ambient)
+const struct nn_s* nn_denoise_precond_edm(const struct nn_s* network, float /*sigma_min*/, float /*sigma_max*/, float sigma_data, bool ambient)
 {
 	auto dom = nn_generic_domain(network, 0, NULL);
 	dom = iovec_create2(dom->N, dom->dims, dom->strs, dom->size);
@@ -219,7 +219,7 @@ extern const struct nn_s* nn_denoise_precond_edm(const struct nn_s* network, flo
 }
 
 
-extern const struct nn_s* nn_denoise_loss_VE(const struct nn_s* network, float sigma_min, float sigma_max, float /*sigma_data*/)
+const struct nn_s* nn_denoise_loss_VE(const struct nn_s* network, float sigma_min, float sigma_max, float /*sigma_data*/)
 {
 	auto dom = nn_generic_domain(network, 0, NULL);
 	auto sdom = nn_generic_domain(network, 1, NULL);
@@ -264,7 +264,7 @@ extern const struct nn_s* nn_denoise_loss_VE(const struct nn_s* network, float s
 }
 
 
-extern const struct nn_s* nn_denoise_loss_EDM(const struct nn_s* network, float /*sigma_min*/, float /*sigma_max*/, float sigma_data)
+const struct nn_s* nn_denoise_loss_EDM(const struct nn_s* network, float /*sigma_min*/, float /*sigma_max*/, float sigma_data)
 {
 	auto dom = nn_generic_domain(network, 0, NULL);
 	auto sdom = nn_generic_domain(network, 1, NULL);

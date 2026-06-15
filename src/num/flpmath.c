@@ -3700,7 +3700,7 @@ void md_zfill2(int D, const long dim[D], const long str[D], complex float* ptr, 
  * Fill complex array with value (without strides).
  *
  */
-extern void md_zfill(int D, const long dim[D], complex float* ptr, complex float val)
+void md_zfill(int D, const long dim[D], complex float* ptr, complex float val)
 {
 	long str[D];
 	md_calc_strides(D, str, dim, CFL_SIZE);
@@ -4664,7 +4664,7 @@ void md_zcmpl2(int D, const long dims[D], const long ostr[D], complex float* dst
 	optimized_threeop_oii(D, dims, ostr, dst, istr1, src_real, istr2, src_imag, (size_t[3]){ CFL_SIZE, FL_SIZE , FL_SIZE }, nary_zcmpl);
 }
 
-extern void md_zcmpl(int D, const long dims[D], complex float* dst, const float* src_real, const float* src_imag)
+void md_zcmpl(int D, const long dims[D], complex float* dst, const float* src_real, const float* src_imag)
 {
 	md_zcmpl2(D, dims, MD_STRIDES(D, dims, CFL_SIZE), dst, MD_STRIDES(D, dims, FL_SIZE), src_real, MD_STRIDES(D, dims, FL_SIZE), src_imag);
 }

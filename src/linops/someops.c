@@ -831,7 +831,7 @@ static void extract_free(const linop_data_t* _data)
 	xfree(data);
 }
 
-extern struct linop_s* linop_extract_create(int N, const long pos[N], const long out_dims[N], const long in_dims[N])
+struct linop_s* linop_extract_create(int N, const long pos[N], const long out_dims[N], const long in_dims[N])
 {
 	PTR_ALLOC(struct extract_op_s, data);
 	SET_TYPEID(extract_op_s, data);
@@ -848,7 +848,7 @@ extern struct linop_s* linop_extract_create(int N, const long pos[N], const long
 	return linop_create(N, out_dims, N, in_dims, CAST_UP(PTR_PASS(data)), extract_forward, extract_adjoint, NULL, NULL, extract_free);
 }
 
-extern struct linop_s* linop_slice_create(int N, unsigned long flags, const long pos[N], const long dims[N])
+struct linop_s* linop_slice_create(int N, unsigned long flags, const long pos[N], const long dims[N])
 {
 	long odim[N];
 	md_select_dims(N, ~flags, odim, dims);
@@ -856,7 +856,7 @@ extern struct linop_s* linop_slice_create(int N, unsigned long flags, const long
 	return linop_extract_create(N, pos, odim, dims);
 }
 
-extern struct linop_s* linop_slice_one_create(int N, int idx, long pos, const long dims[N])
+struct linop_s* linop_slice_one_create(int N, int idx, long pos, const long dims[N])
 {
 	long _pos[N];
 	md_set_dims(N, _pos, 0);

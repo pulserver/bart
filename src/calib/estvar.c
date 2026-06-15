@@ -258,7 +258,7 @@ static float estimate_noise_variance(long L, const float* S, const float* E)
 }
 
 
-extern float estvar_sv(const char* toolbox, long L, const float S[L], const long kernel_dims[3], const long calreg_dims[4])
+float estvar_sv(const char* toolbox, long L, const float S[L], const long kernel_dims[3], const long calreg_dims[4])
 {
 	float E[L];
 
@@ -267,7 +267,7 @@ extern float estvar_sv(const char* toolbox, long L, const float S[L], const long
 	return estimate_noise_variance(L, S, E);
 }
 
-extern float estvar_calreg(const char* toolbox, const long kernel_dims[3], const long calreg_dims[4], const complex float* calreg)
+float estvar_calreg(const char* toolbox, const long kernel_dims[3], const long calreg_dims[4], const complex float* calreg)
 {
 	// Calibration/Hankel matrix dimension.
 	long calmat_dims[2] = {
@@ -293,7 +293,7 @@ extern float estvar_calreg(const char* toolbox, const long kernel_dims[3], const
 	return estvar_sv(toolbox, L, S, kernel_dims, calreg_dims);
 }
 
-extern float estvar_kspace(const char* toolbox, int N, const long kernel_dims[3], const long calib_size[3], const long kspace_dims[N], const complex float* kspace)
+float estvar_kspace(const char* toolbox, int N, const long kernel_dims[3], const long calib_size[3], const long kspace_dims[N], const complex float* kspace)
 {
 	long calreg_dims[N];
 	complex float* calreg = NULL;

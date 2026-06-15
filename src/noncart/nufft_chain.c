@@ -189,7 +189,7 @@ struct linop_s* linop_interpolate_kb_create(int N, unsigned long flags, const lo
 
 
 
-extern struct linop_s* nufft_create_chain(int N,
+struct linop_s* nufft_create_chain(int N,
 			     const long ksp_dims[N],
 			     const long cim_dims[N],
 			     const long traj_dims[N],

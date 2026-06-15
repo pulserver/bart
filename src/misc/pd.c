@@ -263,7 +263,7 @@ out:
 
 
 
-extern int poissondisc(int D, int N, int I, float vardens, float delta, float points[N][D])
+int poissondisc(int D, int N, int I, float vardens, float delta, float points[N][D])
 {
 	PTR_ALLOC(int[N], kind);
 	memset(*kind, 0, sizeof(int[I]));
@@ -312,7 +312,7 @@ static int sort_cmp(const void* _a, const void* _b)
 	return ((a->x < b->x) - (a->x > b->x));
 }
 
-extern void mc_poisson_rmatrix(int D, int T, float rmatrix[T][T], const float delta[T])
+void mc_poisson_rmatrix(int D, int T, float rmatrix[T][T], const float delta[T])
 {
 	assert(T <= 32);
 

@@ -357,12 +357,12 @@ void debug_trace(const char* fmt, ...)
  * leaving any function, if instrumentation is enabled with:
  * -finstrument-functions -finstrument-functions-exclude-file-list=debug.c
  */
-extern void __cyg_profile_func_enter(void *this_fn, void * /*call_site*/)
+void __cyg_profile_func_enter(void *this_fn, void * /*call_site*/)
 {
 	debug_trace("ENTER %p\n", this_fn);
 }
 
-extern void __cyg_profile_func_exit(void *this_fn, void * /*call_site*/)
+void __cyg_profile_func_exit(void *this_fn, void * /*call_site*/)
 {
 	debug_trace("LEAVE %p\n", this_fn);
 }

@@ -117,7 +117,7 @@ void sim_config_set_dims(struct sim_config_s* sim, int N, const long dims[N], in
 	}
 }
 
-extern void sim_config_debug(int dl, struct sim_config_s* sim)
+void sim_config_debug(int dl, struct sim_config_s* sim)
 {
 	debug_printf(dl, "mdims: ");
 	debug_print_dims(dl, sim->N, sim->mdims);
