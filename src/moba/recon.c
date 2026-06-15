@@ -280,7 +280,8 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 		const complex float* b1,
 		const complex float* b0,
 		const long data_dims[DIMS], const complex float* kspace_data,
-		const long mimg_dims[DIMS], complex float* mimg)
+		const long mimg_dims[DIMS], complex float* mimg,
+		const complex float* init)
 {
 
 	struct noir_model_conf_s mconf = noir_model_conf_defaults;
@@ -305,7 +306,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 	case MDB_BLOCH:
 	case MDB_IR_MGRE:
 
-		nl = moba_create(dims, TI, TE_IR_MGRE, b1, b0, conf->scale_fB0, conf->mgre_model, conf->fat_spec, pat_dims, pattern, coil_dims, (data->other.fixed_coil) ? sens : NULL, &mconf, data, conf->scaling_M0);
+		nl = moba_create(dims, TI, TE_IR_MGRE, b1, b0, conf->scale_fB0, conf->mgre_model, conf->fat_spec, pat_dims, pattern, coil_dims, (data->other.fixed_coil) ? sens : NULL, &mconf, data, conf->scaling_M0, init);
 		break;
 	}
 
@@ -475,7 +476,7 @@ void moba_recon(const struct moba_conf* conf, struct moba_conf_s* data, const lo
 	case MDB_BLOCH:
 	case MDB_IR_MGRE:
 
-		recon(conf, data, dims, imgs_dims, img, coil_dims, sens, pat_dims, pattern, TI, TE, b1, b0, data_dims, kspace_data, mimgs_dims, mimg);
+		recon(conf, data, dims, imgs_dims, img, coil_dims, sens, pat_dims, pattern, TI, TE, b1, b0, data_dims, kspace_data, mimgs_dims, mimg, init);
 		break;
 
 	case MDB_MGRE:

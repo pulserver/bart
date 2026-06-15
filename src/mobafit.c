@@ -519,7 +519,7 @@ int main_mobafit(int argc, char* argv[argc])
 
 		nlop = nlop_bloch_create(DIMS, out_dims, in_dims, b1, b0, moba_conf);
 		//FIXME: scale is applied twice and compensated once, but this is needed for init logic if scale=0
-		nlop = nlop_chain_FF(moba_precond_create(DIMS, in_dims, NULL, scale0, init0), nlop);
+		nlop = nlop_chain_FF(moba_precond_create(DIMS, in_dims, NULL, scale0, init0, NULL), nlop);
 		break;
 
 	case PHASE:

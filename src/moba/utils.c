@@ -90,6 +90,7 @@ struct moba_precond_s {
 	struct multiplace_array_s* diag;
 	const struct linop_s** map_linops;
 	const float* init_val;
+	struct multiplace_array_s* init_maps;
 };
 
 DEF_TYPEID(moba_precond_s);
@@ -170,9 +171,17 @@ static void moba_precond_apply(const nlop_data_t* _data, complex float* dst, con
 
 	const complex float* diag = multiplace_read(data->diag, NULL);
 
-	for (; pos[COEFF_DIM] < data->dims[COEFF_DIM]; pos[COEFF_DIM]++)
-		if (0. == cabsf(diag[pos[COEFF_DIM]]) && (0. != data->init_val[pos[COEFF_DIM]]))
-			md_zfill2(data->N, data->map_dims, data->strs, MD_ACCESS_PTR(data->N, data->strs, pos, dst), data->init_val[pos[COEFF_DIM]]);
+	for (; pos[COEFF_DIM] < data->dims[COEFF_DIM]; pos[COEFF_DIM]++) {
+
+		if (0. == cabsf(diag[pos[COEFF_DIM]])) {
+
+			if (NULL == data->init_maps)
+				md_zfill2(data->N, data->map_dims, data->strs, MD_ACCESS_PTR(data->N, data->strs, pos, dst), data->init_val[pos[COEFF_DIM]]);
+			else
+				md_move_block(data->N, data->map_dims, pos, data->dims, dst, pos, data->dims, multiplace_read(data->init_maps, dst), CFL_SIZE);
+		}
+	}
+
 
 }
 
@@ -193,11 +202,12 @@ static void moba_precond_del(const nlop_data_t* _data)
 
 	xfree(data->map_linops);
 	xfree(data->init_val);
+	multiplace_free(data->init_maps);
 
 	xfree(data);
 }
 
-const struct nlop_s* moba_precond_create(int N, const long in_dims[N], const struct linop_s* linops[in_dims[COEFF_DIM]], const float scaling[in_dims[COEFF_DIM]], const float init[in_dims[COEFF_DIM]])
+const struct nlop_s* moba_precond_create(int N, const long in_dims[N], const struct linop_s* linops[in_dims[COEFF_DIM]], const float scaling[in_dims[COEFF_DIM]], const float init[in_dims[COEFF_DIM]], const complex float* init_maps)
 {
 	assert(COEFF_DIM < N);
 
@@ -238,6 +248,7 @@ const struct nlop_s* moba_precond_create(int N, const long in_dims[N], const str
 
 	data->map_linops = ARR_CLONE(const struct linop_s*[in_dims[COEFF_DIM]], map_linops);
 	data->init_val = ARR_CLONE(float[in_dims[COEFF_DIM]], init_val2);
+	data->init_maps = (NULL != init_maps) ? multiplace_move(N, in_dims, CFL_SIZE, init_maps) : NULL;
 
 	return nlop_create(N, in_dims, N, in_dims, CAST_UP(PTR_PASS(data)), moba_precond_apply, moba_precond_derivative, moba_precond_adjoint, NULL, NULL, moba_precond_del);
 }

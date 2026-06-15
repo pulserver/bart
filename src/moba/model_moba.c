@@ -51,7 +51,7 @@
 
 struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const complex float* TE, const complex float* b1,
 		const complex float* b0, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, const long psf_dims[DIMS], const complex float* psf, const long coil_dims[DIMS], complex float* coil, const struct noir_model_conf_s* conf, struct moba_conf_s* data,
-		float scaling_M0)
+		float scaling_M0, const complex float* fixed_maps)
 {
 	long data_dims[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, data_dims, dims);
@@ -190,7 +190,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 	for (int i = 0; i < NC; i++)
 		debug_printf(DP_DEBUG2, "FP Scale[%d]=%f\n", i, crealf(data->other.scale[i]));
 
-	model = nlop_chain_FF(moba_precond_create(DIMS, in_dims, ret.linop_sobolev, data->other.scale, data->other.initval), model);
+	model = nlop_chain_FF(moba_precond_create(DIMS, in_dims, ret.linop_sobolev, data->other.scale, data->other.initval, fixed_maps), model);
 
 	debug_printf(DP_INFO, "Physics-");
 	nlop_debug(DP_INFO, model);
