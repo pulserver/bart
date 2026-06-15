@@ -219,6 +219,9 @@ ifeq ($(MNAME),i686)
 	CFLAGS+=-msse2 -mfpmath=sse
 endif
 
+ifeq ($(GLIB_COMPAT_2_34),1)
+	CFLAGS+=--include=src/misc/symver.h
+endif
 
 # openblas
 
