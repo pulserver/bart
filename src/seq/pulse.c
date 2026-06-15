@@ -357,7 +357,6 @@ void pulse_arb_init(struct pulse_arb* pa, float gamma)
 	pa->super.size = sizeof(struct pulse_arb);
 	pa->gamma = gamma;
 	pa->A = DEG2RAD(pa->super.flipangle) / pulse_arb_integral(pa);
-
 }
 
 

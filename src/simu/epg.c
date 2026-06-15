@@ -38,13 +38,11 @@
 #include "num/linalg.h"
 #include "num/multind.h"
 
-
 #include "epg.h"
 
 #ifndef CFL_SIZE
 #define CFL_SIZE sizeof(complex float)
 #endif
-
 
 void create_relax_matrix_der(complex float ee[3][3], complex float dee[4][3][3], float T1, float T2, float offres, float tau)
 {
