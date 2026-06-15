@@ -55,9 +55,9 @@ struct iter_ist_conf {
 	int maxiter;
 	float step;
 	float continuation;
-	_Bool hogwild;
+	bool hogwild;
 	float tol;
-	_Bool last;
+	bool last;
 	int maxeigen_iter;
 };
 
@@ -88,13 +88,13 @@ struct iter_fista_conf {
 	int maxiter;
 	float step;
 	float continuation;
-	_Bool hogwild;
+	bool hogwild;
 	float tol;
 	int maxeigen_iter;
 	float p;
 	float q;
 	float r;
-	_Bool last;
+	bool last;
 };
 
 
@@ -110,9 +110,9 @@ struct iter_chambolle_pock_conf {
 	float theta;
 	float decay;
 	float tol;
-	_Bool fast;
+	bool fast;
 	int maxeigen_iter;
-	_Bool adapt_stepsize;
+	bool adapt_stepsize;
 };
 
 
@@ -124,11 +124,11 @@ struct iter_admm_conf {
 	int maxitercg;
 	float rho;
 
-	_Bool do_warmstart;
-	_Bool dynamic_rho;
-	_Bool dynamic_tau;
-	_Bool relative_norm;
-	_Bool hogwild;
+	bool do_warmstart;
+	bool dynamic_rho;
+	bool dynamic_tau;
+	bool relative_norm;
+	bool hogwild;
 
 	double ABSTOL;
 	double RELTOL;
@@ -141,7 +141,7 @@ struct iter_admm_conf {
 
 	float cg_eps;
 
-	_Bool fast;
+	bool fast;
 };
 
 
@@ -159,7 +159,7 @@ struct iter_niht_conf {
 
 	int maxiter;
 	float tol;
-	_Bool do_warmstart;
+	bool do_warmstart;
 };
 
 

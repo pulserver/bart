@@ -168,12 +168,12 @@ extern void* md_gpu_move(int D, const long dims[__VLA(D)], const void* ptr, size
 #endif
 extern void* md_alloc_sameplace(int D, const long dimensions[__VLA(D)], size_t size, const void* ptr);
 extern void md_free(const void* p);
-extern _Bool md_is_sameplace(const void* ptr1, const void* ptr2);
+extern bool md_is_sameplace(const void* ptr1, const void* ptr2);
 
 extern void* md_alloc_mpi(int D, unsigned long dist_flags, const long dims[__VLA(D)], size_t size);
 extern void* md_mpi_move(int D, unsigned long dist_flags, const long dims[__VLA(D)], const void* ptr, size_t size);
 extern void* md_mpi_moveF(int D, unsigned long dist_flags, const long dims[__VLA(D)], const void* ptr, size_t size);
-extern void* md_mpi_wrap(int D, unsigned long dist_flags, const long dims[__VLA(D)], const void* ptr, size_t size, _Bool writeback);
+extern void* md_mpi_wrap(int D, unsigned long dist_flags, const long dims[__VLA(D)], const void* ptr, size_t size, bool writeback);
 
 extern long md_calc_offset(int D, const long strides[__VLA(D)], const long position[__VLA(D)]);
 extern int md_calc_blockdim(int D, const long dim[__VLA(D)], const long str[__VLA(D)], size_t size);
@@ -208,7 +208,7 @@ extern void md_permute_invert(int D, int inv_order[__VLA(D)], const int order[__
 extern unsigned long md_nontriv_dims(int D, const long dims[__VLA(D)]);
 extern unsigned long md_nontriv_strides(int D, const long dims[__VLA(D)]);
 
-extern _Bool md_overlap(int D1, const long dims1[__VLA(D1)], const long strs1[__VLA(D1)], const void* ptr1, size_t size1,
+extern bool md_overlap(int D1, const long dims1[__VLA(D1)], const long strs1[__VLA(D1)], const void* ptr1, size_t size1,
 			int D2, const long dims2[__VLA(D2)], const long strs2[__VLA(D2)], const void* ptr2, size_t size2);
 
 

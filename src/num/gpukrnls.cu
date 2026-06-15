@@ -1185,7 +1185,7 @@ static __device__ cuDoubleComplex fftmod_phase2(long n, int j, bool inv, double 
 	return zexpD(make_cuDoubleComplex(0., M_PI * 2. * sgn * rem));
 }
 
-__global__ void kern_zfftmod(long N, cuFloatComplex* dst, const cuFloatComplex* src, int n, _Bool inv, double phase)
+__global__ void kern_zfftmod(long N, cuFloatComplex* dst, const cuFloatComplex* src, int n, bool inv, double phase)
 {
 	int start = threadIdx.x + blockDim.x * blockIdx.x;
 	int stride = blockDim.x * gridDim.x;
@@ -1196,13 +1196,13 @@ __global__ void kern_zfftmod(long N, cuFloatComplex* dst, const cuFloatComplex* 
 						 cuFloat2Double(src[i * n + j])));
 }
 
-extern "C" void cuda_zfftmod(long N, _Complex float* dst, const _Complex float* src, int n, _Bool inv, double phase)
+extern "C" void cuda_zfftmod(long N, _Complex float* dst, const _Complex float* src, int n, bool inv, double phase)
 {
 	kern_zfftmod<<<gridsize(N), blocksize(N), 0, cuda_get_stream()>>>(N, (cuFloatComplex*)dst, (const cuFloatComplex*)src, n, inv, phase);
 	CUDA_KERNEL_ERROR;
 }
 
-__global__ void kern_zfftmod_1d(long N, cuFloatComplex* dst, const cuFloatComplex* src, _Bool inv, double phase)
+__global__ void kern_zfftmod_1d(long N, cuFloatComplex* dst, const cuFloatComplex* src, bool inv, double phase)
 {
 	int start = threadIdx.x + blockDim.x * blockIdx.x;
 	int stride = blockDim.x * gridDim.x;
@@ -1211,7 +1211,7 @@ __global__ void kern_zfftmod_1d(long N, cuFloatComplex* dst, const cuFloatComple
 		dst[i] = cuDouble2Float(cuCmul(fftmod_phase2(N, i, inv, phase), cuFloat2Double(src[i])));
 }
 
-extern "C" void cuda_zfftmod_1d(long N, _Complex float* dst, const _Complex float* src, _Bool inv, double phase)
+extern "C" void cuda_zfftmod_1d(long N, _Complex float* dst, const _Complex float* src, bool inv, double phase)
 {
 	kern_zfftmod_1d<<<gridsize(N), blocksize(N), 0, cuda_get_stream()>>>(N, (cuFloatComplex*)dst, (const cuFloatComplex*)src, inv, phase);
 	CUDA_KERNEL_ERROR;
@@ -1292,7 +1292,7 @@ __global__ void kern_fftmod_3d(long X, long Y, long Z, cuFloatComplex* dst, cons
 	}
 }
 
-extern "C" void cuda_zfftmod_3d(const long dims[3], _Complex float* dst, const _Complex float* src, _Bool inv, double phase)
+extern "C" void cuda_zfftmod_3d(const long dims[3], _Complex float* dst, const _Complex float* src, bool inv, double phase)
 {
 	if (   ((dims[0] == 1) || (dims[0] % 4 == 0))
 	    && ((dims[1] == 1) || (dims[1] % 4 == 0))

@@ -29,7 +29,7 @@ struct iter_dump_s;
 typedef struct iter_op_data_s { TYPEID* TYPEID; } iter_op_data;
 #endif
 typedef void (*iter_op_fun_t)(iter_op_data* data, float* dst, const float* src);
-typedef void (*iter_nlop_fun_t)(iter_op_data* data, int OO, int II, float* args[OO + II], _Bool der_out[OO], _Bool der_in[II]);
+typedef void (*iter_nlop_fun_t)(iter_op_data* data, int OO, int II, float* args[OO + II], bool der_out[OO], bool der_in[II]);
 typedef void (*iter_op_p_fun_t)(iter_op_data* data, float rho, float* dst, const float* src);
 typedef void (*iter_op_arr_fun_t)(iter_op_data* data, int NO, float* dst[NO], int NI, const float* src[NI]);
 
@@ -67,7 +67,7 @@ inline void iter_nlop_call(struct iter_nlop_s op, int OO, int II, float* args[OO
 	op.fun(op.data, OO, II, args, NULL, NULL);
 }
 
-inline void iter_nlop_call_select_der(struct iter_nlop_s op, int OO, int II, float* args[OO + II], _Bool der_out[OO], _Bool der_in[II])
+inline void iter_nlop_call_select_der(struct iter_nlop_s op, int OO, int II, float* args[OO + II], bool der_out[OO], bool der_in[II])
 {
 	op.fun(op.data, OO, II, args, der_out, der_in);
 }
@@ -180,7 +180,7 @@ struct ist_data {
 typedef CLOSURE_TYPE(void, (struct ist_data* itrdata)) ist_continuation_t;
 
 
-void ist(int maxiter, float epsilon, float tau, _Bool last,
+void ist(int maxiter, float epsilon, float tau, bool last,
 	long N,
 	const struct vec_iter_s* vops,
 	ist_continuation_t ist_continuation,
@@ -200,7 +200,7 @@ extern struct ravine_conf ravine_classical;
 extern struct ravine_conf ravine_mod;
 
 void fista(int maxiter, float epsilon, float tau, float alpha,
-	_Bool last,
+	bool last,
 	struct ravine_conf,
 	long N,
 	const struct vec_iter_s* vops,
@@ -265,7 +265,7 @@ double power(int maxiter,
 
 void chambolle_pock(float alpha, int maxiter, float epsilon, float tau, float sigma,
 	float sigma_tau_ratio, float theta,
-	float decay, _Bool adapt_stepsize,
+	float decay, bool adapt_stepsize,
 	int O, long N, long M[O],
 	const struct vec_iter_s* vops,
 	struct iter_op_s op_norm,
@@ -280,7 +280,7 @@ void iPALM(	long NI, long isize[__VLA(NI)], enum IN_TYPE in_type[__VLA(NI)], flo
 		long NO, long osize[__VLA(NO)], enum OUT_TYPE out_type[__VLA(NO)],
 		int numbatches, int epoch_start, int epoch_end,
 		const struct vec_iter_s* vops,
-		float alpha[__VLA(NI)], float beta[__VLA(NI)], _Bool convex[__VLA(NI)], _Bool trivial_stepsize, _Bool reduce_momentum,
+		float alpha[__VLA(NI)], float beta[__VLA(NI)], bool convex[__VLA(NI)], bool trivial_stepsize, bool reduce_momentum,
 		float L[__VLA(NI)], float Lmin, float Lmax, float Lshrink, float Lincrease,
 		struct iter_nlop_s nlop,
 		struct iter_op_arr_s adj,

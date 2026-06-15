@@ -22,14 +22,14 @@ typedef struct list_s* list_t;
 typedef void (*node_del_t)(const struct node_s*);
 typedef struct node_s* (*node_clone_t)(const struct node_s*);
 typedef const char* (*node_print_t)(const struct node_s*);
-typedef _Bool (*vertex_is_out_f)(const struct node_s*, int i);
+typedef bool (*vertex_is_out_f)(const struct node_s*, int i);
 typedef void (*edge_separator_node_f)(node_t ext_nodes[2], struct vertex_s);
 
 struct node_s {
 
 	TYPEID* TYPEID;
 
-	_Bool external;
+	bool external;
 	int N_vertices;
 	list_t* edges;
 
@@ -59,7 +59,7 @@ struct vertex_s {
 typedef struct vertex_s* vertex_t;
 
 void node_free(node_t x);
-void node_init(struct node_s* x, int N_vertices, vertex_is_out_f is_output, const char* name, _Bool external, graph_t subgraph);
+void node_init(struct node_s* x, int N_vertices, vertex_is_out_f is_output, const char* name, bool external, graph_t subgraph);
 
 void graph_free(graph_t x);
 graph_t graph_create(void);
@@ -80,12 +80,12 @@ extern graph_t dup_graphs_F(graph_t graph, int a, int b);
 
 extern const char* print_vertex(node_t node, int idx);
 extern const char* print_node(const struct node_s* node);
-extern const char* print_internl_graph(graph_t graph, _Bool get_ext_nodes, int N, const char* ext_nodes[__VLA2(N)]);
+extern const char* print_internl_graph(graph_t graph, bool get_ext_nodes, int N, const char* ext_nodes[__VLA2(N)]);
 extern void export_graph_dot(const char* filename, graph_t graph);
 
 extern graph_t graph_topological_sort_F(graph_t graph);
 
-typedef _Bool (*node_is_t)(const struct node_s*);
+typedef bool (*node_is_t)(const struct node_s*);
 
 enum node_identic { NODE_NOT_IDENTICAL, NODE_IDENTICAL, NODE_IDENTICAL_SYMMETRIC };
 typedef enum node_identic (*node_cmp_t)(const struct node_s*, const struct node_s*);

@@ -16,7 +16,7 @@ extern struct linop_s* linop_zreal_create(int N, const long dims[N]);
 extern struct linop_s* linop_flip_create(int N, const long dims[N], unsigned long flags);
 
 extern struct linop_s* linop_identity_create(int N, const long dims[__VLA(N)]);
-extern _Bool linop_is_identity(const struct linop_s* lop);
+extern bool linop_is_identity(const struct linop_s* lop);
 
 extern struct linop_s* linop_copy_block_create(int N, const long pos[__VLA(N)], const long odims[__VLA(N)], const long idims[__VLA(N)]);
 extern struct linop_s* linop_resize_center_create(int N, const long out_dims[__VLA(N)], const long in_dims[__VLA(N)]);

@@ -12,25 +12,25 @@ struct reconet_s {
 
 	enum BOOL_SELECT share_weights_select;
 	enum BOOL_SELECT share_lambda_select;
-	_Bool share_weights;
-	_Bool share_lambda;
+	bool share_weights;
+	bool share_lambda;
 
 	struct config_nlop_mri_s* sense_config;
-	_Bool one_channel_per_map;
+	bool one_channel_per_map;
 
-	_Bool external_initialization;	//initialize network with precomputed reconstruction
+	bool external_initialization;	//initialize network with precomputed reconstruction
 
 	//data consistency config
 	float dc_lambda_fixed;
 	float dc_lambda_init;
-	_Bool dc_gradient;
-	_Bool dc_scale_max_eigen;
-	_Bool dc_proxmap;
+	bool dc_gradient;
+	bool dc_scale_max_eigen;
+	bool dc_proxmap;
 	int dc_max_iter;
 
 	//network initialization
-	_Bool normalize;
-	_Bool sense_init;
+	bool normalize;
+	bool sense_init;
 	int init_max_iter;
 	float init_lambda_fixed;
 	float init_lambda_init;
@@ -41,19 +41,19 @@ struct reconet_s {
 	struct loss_config_s* train_loss;
 	struct loss_config_s* valid_loss;
 
-	_Bool low_mem;
-	_Bool gpu;
+	bool low_mem;
+	bool gpu;
 
 	const char* graph_file;
 
-	_Bool coil_image;
-	_Bool ref_is_kspace;
+	bool coil_image;
+	bool ref_is_kspace;
 
-	_Bool normalize_rss;
+	bool normalize_rss;
 
-	_Bool ksp_training;
+	bool ksp_training;
 
-	_Bool precomp;
+	bool precomp;
 };
 
 extern struct reconet_s reconet_config_opts;

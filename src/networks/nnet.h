@@ -19,8 +19,8 @@ struct nnet_s {
 	struct loss_config_s* train_loss;
 	struct loss_config_s* valid_loss;
 
-	_Bool low_mem;
-	_Bool gpu;
+	bool low_mem;
+	bool gpu;
 
 	nnet_get_no_odims_t get_no_odims;
 	nnet_get_odims_t get_odims;

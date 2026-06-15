@@ -5,15 +5,15 @@ struct nlop_s;
 
 struct noir2_model_conf_s {
 
-	_Bool noncart;
+	bool noncart;
 
 	unsigned long fft_flags;
 	unsigned long cfft_flags;
 	unsigned long ufft_flags;
 	unsigned long wght_flags;
 
-	_Bool rvc;
-	_Bool sos;
+	bool rvc;
+	bool sos;
 	float a;
 	float b;
 	float c;
@@ -22,8 +22,8 @@ struct noir2_model_conf_s {
 
 	struct nufft_conf_s* nufft_conf;
 
-	_Bool asymmetric;
-	_Bool ret_os_coils;
+	bool asymmetric;
+	bool ret_os_coils;
 };
 
 extern struct noir2_model_conf_s noir2_model_conf_defaults;

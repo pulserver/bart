@@ -26,7 +26,7 @@ extern void operator_export_graph_dot(const char* filename, const struct operato
 extern graph_t operator_graph_optimize_identity_F(graph_t graph);
 extern graph_t operator_graph_optimize_identify_F(graph_t graph);
 extern graph_t operator_graph_optimize_linops_F(graph_t graph, node_cmp_t linop_identify);
-extern graph_t operator_graph_sum_to_multi_sum_F(graph_t graph, _Bool inverse);
+extern graph_t operator_graph_sum_to_multi_sum_F(graph_t graph, bool inverse);
 
 extern const struct operator_s* get_operator_from_node(const struct node_s* _node);
 

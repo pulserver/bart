@@ -21,9 +21,9 @@ struct seq_opts {
 
 	enum gradient_mode gradient_mode;
 
-	_Bool chrono;
-	_Bool support;
-	_Bool stats;
+	bool chrono;
+	bool support;
+	bool stats;
 
 
 	const char* raga_file;

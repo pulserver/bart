@@ -25,7 +25,7 @@ extern void affine_interpolate(int ord, const _Complex float* affine, const long
 
 extern const struct nlop_s* nlop_affine_compute_pos(int dim, int N, const long sdims[N], const long mdims[N], const struct nlop_s* affine);
 
-extern void affine_reg(_Bool gpu, _Bool cubic, _Complex float* affine, const struct nlop_s* trafo, long sdims[3], const _Complex float* img_static, const _Complex float* msk_static, long mdims[3], const _Complex float* img_moving, const _Complex float* msk_moving,
+extern void affine_reg(bool gpu, bool cubic, _Complex float* affine, const struct nlop_s* trafo, long sdims[3], const _Complex float* img_static, const _Complex float* msk_static, long mdims[3], const _Complex float* img_moving, const _Complex float* msk_moving,
 			int N, float sigma[N], float factor[N]);
 
 

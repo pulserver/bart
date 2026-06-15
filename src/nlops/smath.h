@@ -65,4 +65,4 @@ extern arg_t snlop_add_F(arg_t a, arg_t b);
 extern arg_t snlop_sub(arg_t a, arg_t b);
 extern arg_t snlop_sub_F(arg_t a, arg_t b);
 
-extern arg_t snlop_dump(arg_t arg, const char* name, _Bool frw, _Bool der, _Bool adj);
+extern arg_t snlop_dump(arg_t arg, const char* name, bool frw, bool der, bool adj);

@@ -14,7 +14,7 @@ extern double timestamp(void);
 
 extern int debug_level;
 
-extern _Bool debug_logging;
+extern bool debug_logging;
 
 enum debug_levels { DP_ERROR, DP_WARN, DP_INFO, DP_DEBUG1, DP_DEBUG2, DP_DEBUG3, DP_DEBUG4, DP_TRACE, DP_ALL };
 

@@ -20,11 +20,11 @@ extern void tree_to_array(tree_t tree, int N, void* arr[__VLA(N)]);
 
 extern void tree_insert(tree_t tree, void* item);
 
-extern void* tree_find_min(tree_t tree, const void* ref, tree_rel_f rel, _Bool remove);
-extern void* tree_find_max(tree_t tree, const void* ref, tree_rel_f rel, _Bool remove);
-extern void* tree_find(tree_t tree, const void* ref, tree_rel_f rel, _Bool remove);
+extern void* tree_find_min(tree_t tree, const void* ref, tree_rel_f rel, bool remove);
+extern void* tree_find_max(tree_t tree, const void* ref, tree_rel_f rel, bool remove);
+extern void* tree_find(tree_t tree, const void* ref, tree_rel_f rel, bool remove);
 
-extern void* tree_get_min(tree_t tree, _Bool remove);
-extern void* tree_get_max(tree_t tree, _Bool remove);
+extern void* tree_get_min(tree_t tree, bool remove);
+extern void* tree_get_max(tree_t tree, bool remove);
 
 #include "misc/cppwrap.h"

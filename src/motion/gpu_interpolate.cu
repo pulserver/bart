@@ -252,7 +252,7 @@ __device__ static inline struct intp_data_device get_intp_data_device(const stru
 }
 
 
-template<_Bool adjoint>
+template<bool adjoint>
 __device__ static void intp_point_r(const struct intp_data* id, const struct intp_data_device* idd, cuFloatComplex* dst, const cuFloatComplex* src)
 {
 	assert(3 == INTP_DIMS);
@@ -285,7 +285,7 @@ __device__ static void intp_point_r(const struct intp_data* id, const struct int
 }
 
 
-template<_Bool adjoint>
+template<bool adjoint>
 __global__ static void kern_intp(struct intp_data conf, const cuFloatComplex* coor, cuFloatComplex* dst, const cuFloatComplex* src)
 {
 	int start[3];
@@ -358,7 +358,7 @@ static struct intp_data cuda_intp_get_data(int M,
 	return id;
 }
 
-template<_Bool adjoint>
+template<bool adjoint>
 static void cuda_intp_temp(int M, 
 			const long grid_dims[__VLA(M)], const long grid_strs[__VLA(M)], _Complex float* grid,
 			const long intp_dims[__VLA(M)], const long intp_strs[__VLA(M)], _Complex float* intp,

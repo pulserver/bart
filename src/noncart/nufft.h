@@ -9,26 +9,26 @@ struct linop_s;
 
 struct nufft_conf_s {
 
-	_Bool toeplitz; ///< Toeplitz embedding boolean for A^T A
-	_Bool pcycle; 	/// < Phase cycling
-	_Bool periodic;
-	_Bool lowmem;
-	_Bool dft;
+	bool toeplitz; ///< Toeplitz embedding boolean for A^T A
+	bool pcycle; 	/// < Phase cycling
+	bool periodic;
+	bool lowmem;
+	bool dft;
 
 	unsigned long flags;
 	unsigned long cfft;
-	_Bool decomp;
-	_Bool nopsf;
-	_Bool upper_triag;
-	_Bool real;
-	_Bool compress_psf;
-	_Bool decomposed_psf;
+	bool decomp;
+	bool nopsf;
+	bool upper_triag;
+	bool real;
+	bool compress_psf;
+	bool decomposed_psf;
 
-	_Bool precomp;
-	_Bool precomp_linphase;
-	_Bool precomp_fftmod;
-	_Bool precomp_roll;
-	_Bool zero_overhead;
+	bool precomp;
+	bool precomp_linphase;
+	bool precomp_fftmod;
+	bool precomp_roll;
+	bool zero_overhead;
 
 	float width;
 	float os;
@@ -68,26 +68,26 @@ extern _Complex float* compute_psf(int N,
 				   const _Complex float* basis,
 				   const long wgh_dims[__VLA2(N)],
 				   const _Complex float* weights,
-				   _Bool periodic,
-				   _Bool lowmem);
+				   bool periodic,
+				   bool lowmem);
 
 extern _Complex float* compute_psf2(int N, const long psf_dims[__VLA(N + 1)], unsigned long flags,
 				const long trj_dims[__VLA(N + 1)], const _Complex float* traj,
 				const long bas_dims[__VLA2(N + 1)], const _Complex float* basis,
 				const long wgh_dims[__VLA2(N + 1)], const _Complex float* weights,
-				_Bool periodic, _Bool lowmem, _Bool upper_triag);
+				bool periodic, bool lowmem, bool upper_triag);
 
 extern _Complex float* compute_psf2_decomposed(int N, const long psf_dims[__VLA(N + 1)], unsigned long flags,
 				const long trj_dims[__VLA(N + 1)], const _Complex float* traj,
 				const long bas_dims[__VLA2(N + 1)], const _Complex float* basis,
 				const long wgh_dims[__VLA2(N + 1)], const _Complex float* weights,
-				_Bool periodic, _Bool lowmem, _Bool upper_triag);
+				bool periodic, bool lowmem, bool upper_triag);
 
 extern const struct operator_s* nufft_precond_create(const struct linop_s* nufft_op);
 
 extern struct linop_s* nufft_create_normal(int N, const long cim_dims[__VLA(N)],
 					   int ND, const long psf_dims[__VLA(ND)], const _Complex float* psf,
-					   _Bool basis, struct nufft_conf_s conf);
+					   bool basis, struct nufft_conf_s conf);
 
 extern void nufft_update_traj(const struct linop_s* nufft, int N,
 			const long trj_dims[__VLA(N)], const _Complex float* traj,

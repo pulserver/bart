@@ -1378,7 +1378,7 @@ static void size_to_strs(int N, long ostrs[N + 1], const long istrs[N], size_t /
 /**
  * Returns which dimensions cannot be accessed using the same resolved pointer
  */
-unsigned long vptr_block_loop_flags(int N, const long dims[N], const long strs[N], const void* ptr, size_t size, _Bool contiguous_strs)
+unsigned long vptr_block_loop_flags(int N, const long dims[N], const long strs[N], const void* ptr, size_t size, bool contiguous_strs)
 {
 	ptr = vptr_resolve_range(ptr);
 	struct mem_s* mem = search(ptr, false);

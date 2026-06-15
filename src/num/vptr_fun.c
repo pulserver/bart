@@ -19,7 +19,7 @@
 #include "vptr_fun.h"
 
 
-void exec_vptr_fun_internal(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, unsigned long lflags, const long* dims[N], const long* strs[N], void* ptr[N], size_t sizes[N], _Bool resolve)
+void exec_vptr_fun_internal(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, unsigned long lflags, const long* dims[N], const long* strs[N], void* ptr[N], size_t sizes[N], bool resolve)
 {
 	long ldims[D];
 	md_select_dims(D, lflags, ldims, dims[0]);
@@ -76,7 +76,7 @@ void exec_vptr_fun_internal(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D,
 }
 
 
-void exec_vptr_fun_gen(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, unsigned long lflags, unsigned long wflags, unsigned long rflags, const long* dims[N], const long* strs[N], void* _ptr[N], size_t sizes[N], _Bool resolve)
+void exec_vptr_fun_gen(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, unsigned long lflags, unsigned long wflags, unsigned long rflags, const long* dims[N], const long* strs[N], void* _ptr[N], size_t sizes[N], bool resolve)
 {
 	for (int i = 1; i < N; i++)
 		assert(is_vptr(_ptr[0]) == is_vptr(_ptr[i]));

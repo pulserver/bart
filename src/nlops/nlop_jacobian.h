@@ -13,7 +13,7 @@ extern struct nlop_s* nlop_zrblock_diag_generic_create(nlop_data_t* data, int N,
 						int OO, const long odims[OO][N],
 						int II, const long idims[II][N],
 						unsigned long diag_flags [OO][II],
-						_Bool zr_flags [OO][II],
+						bool zr_flags [OO][II],
 						nlop_zrblock_diag_generic_fun_t forward, nlop_del_diag_fun_t del);
 
 extern struct nlop_s* nlop_zblock_diag_generic_create(nlop_data_t* data, int N,
@@ -28,7 +28,7 @@ extern struct nlop_s* nlop_rblock_diag_generic_create(nlop_data_t* data, int N,
 						unsigned long diag_flags [OO][II],
 						nlop_rblock_diag_generic_fun_t forward, nlop_del_diag_fun_t del);
 
-extern _Bool nlop_block_diag_der_available(const struct nlop_s* op, int o, int i);
+extern bool nlop_block_diag_der_available(const struct nlop_s* op, int o, int i);
 
 typedef void (*nlop_zrdiag_fun_t)(const nlop_data_t* _data, int N, const long dims[N], _Complex float* dst, const _Complex float* src, _Complex float* jac, _Complex float* jacc);
 typedef void (*nlop_zdiag_fun_t)(const nlop_data_t* _data, int N, const long dims[N], _Complex float* dst, const _Complex float* src, _Complex float* jac);
@@ -60,7 +60,7 @@ extern void linop_compute_matrix_zrblock_diag(const struct linop_s* lop, int N, 
 extern struct nlop_s* nlop_zprecomp_jacobian_F(const struct nlop_s* nlop);
 extern struct nlop_s* nlop_zrprecomp_jacobian_F(const struct nlop_s* nlop);
 
-extern _Bool nlop_is_zblock_diag(const struct nlop_s* nlop);
+extern bool nlop_is_zblock_diag(const struct nlop_s* nlop);
 extern const struct nlop_data_s* nlop_zblock_diag_get_data(const struct nlop_s* nlop);
 extern void nlop_zblock_diag_get_dims(const struct nlop_s* nlop, int N, int OO, long odims[OO][N], int II, long idims[II][N], long ddims[OO][II][N]);
 extern void nlop_zblock_diag_apply(const struct nlop_s* nlop, int N, int OO, const long odims[OO][N], _Complex float* dst[OO], int II, const long idims[II][N], const _Complex float* src[II], const long ddims[OO][II][N], _Complex float* jac[OO][II]);

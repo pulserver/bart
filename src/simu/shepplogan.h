@@ -62,10 +62,10 @@ extern complex double krectangle(const double center[2], const double axis[2], d
     
 
 
-extern complex double phantom(int N, const struct ellipsis_s arr[__VLA(N)], const double pos[2], _Bool ksp);
-extern complex double phantomX(int N, const struct ellipsis_s arr[__VLA(N)], const double pos[2], _Bool ksp);
+extern complex double phantom(int N, const struct ellipsis_s arr[__VLA(N)], const double pos[2], bool ksp);
+extern complex double phantomX(int N, const struct ellipsis_s arr[__VLA(N)], const double pos[2], bool ksp);
 
-extern complex double phantom3d(int N, const struct ellipsis3d_s arr[__VLA(N)], const double pos[3], _Bool ksp);
+extern complex double phantom3d(int N, const struct ellipsis3d_s arr[__VLA(N)], const double pos[3], bool ksp);
 
 #include "misc/cppwrap.h"
 

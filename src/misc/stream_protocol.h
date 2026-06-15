@@ -37,11 +37,11 @@ struct stream_msg {
 		long data_long;
 	} data;
 
-	_Bool ext;
+	bool ext;
 };
 
-extern _Bool stream_encode(int l, char buf[__VLA(l)], const struct stream_msg* msg);
-extern _Bool stream_decode(struct stream_msg* msg, int l, const char buf[__VLA(l)]);
+extern bool stream_encode(int l, char buf[__VLA(l)], const struct stream_msg* msg);
+extern bool stream_decode(struct stream_msg* msg, int l, const char buf[__VLA(l)]);
 
 #include "misc/cppwrap.h"
 

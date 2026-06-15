@@ -9,7 +9,7 @@ struct grid_conf_s {
 
 	float os;
 	float width;
-	_Bool periodic;
+	bool periodic;
 	double beta;
 
 	float shift[3];
@@ -29,8 +29,8 @@ extern void grid2(const struct grid_conf_s* conf, int D, const long trj_dims[__V
 extern void grid2H(const struct grid_conf_s* conf, int D, const long trj_dims[__VLA(D)], const _Complex float* traj, const long ksp_dims[__VLA(D)], _Complex float* dst, const long grid_dims[__VLA(D)], const _Complex float* grid);
 
 
-extern void grid_pointH(int ch, int N, const long dims[__VLA(N)], const long strs[__VLA(N)], const float pos[__VLA(N)], _Complex float val[__VLA(ch)], const _Complex float* src, _Bool periodic, float width, int kb_size, const float kb_table[__VLA(kb_size + 1)]);
-extern void grid_point(int ch, int N, const long dims[__VLA(N)], const long strs[__VLA(N)], const float pos[__VLA(N)], _Complex float* dst, const _Complex float val[__VLA(ch)], _Bool periodic, float width, int kb_size, const float kb_table[__VLA(kb_size + 1)]);
+extern void grid_pointH(int ch, int N, const long dims[__VLA(N)], const long strs[__VLA(N)], const float pos[__VLA(N)], _Complex float val[__VLA(ch)], const _Complex float* src, bool periodic, float width, int kb_size, const float kb_table[__VLA(kb_size + 1)]);
+extern void grid_point(int ch, int N, const long dims[__VLA(N)], const long strs[__VLA(N)], const float pos[__VLA(N)], _Complex float* dst, const _Complex float val[__VLA(ch)], bool periodic, float width, int kb_size, const float kb_table[__VLA(kb_size + 1)]);
 
 extern void kb_init(double beta);
 extern double calc_beta(float os, float width);

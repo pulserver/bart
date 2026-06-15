@@ -1,20 +1,20 @@
 
 #include "misc/cppwrap.h"
 
-extern _Bool mmio_file_locking;
+extern bool mmio_file_locking;
 
-extern _Bool stream_create_binary_outputs;
+extern bool stream_create_binary_outputs;
 
 #include <stddef.h>
-extern _Bool mpi_shared_files;
+extern bool mpi_shared_files;
 extern unsigned long cfl_loop_rand_flags;
-extern _Bool strided_cfl_loop;
+extern bool strided_cfl_loop;
 extern void cfl_loop_init_desc(int D, const long loop_dims[__VLA(D)], long start_dims[__VLA(D)], unsigned long flags, int omp_threads, int index);
 extern void cfl_loop_set_index(long index);
 extern long cfl_loop_get_index(void);
-extern _Bool cfl_loop_desc_active(void);
+extern bool cfl_loop_desc_active(void);
 extern void cfl_loop_desc_set_inactive(void);
-extern _Bool cfl_loop_omp(void);
+extern bool cfl_loop_omp(void);
 extern int cfl_loop_worker_id(void);
 extern int cfl_loop_num_workers(void);
 extern long cfl_loop_desc_total(void);

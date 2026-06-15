@@ -50,7 +50,7 @@ extern const struct nlop_s* nlop_phase_wrap_F(struct sim_config_s sim, const str
 extern const struct nlop_s* nlop_rotx_create(struct sim_config_s sim, float angle);
 extern const struct nlop_s* nlop_roty_create(struct sim_config_s sim, float angle);
 extern const struct nlop_s* nlop_rotz_create(struct sim_config_s sim, float angle);
-extern const struct nlop_s* nlop_hard_pulse_create(struct sim_config_s sim, _Bool b1, float angle, float phase);
+extern const struct nlop_s* nlop_hard_pulse_create(struct sim_config_s sim, bool b1, float angle, float phase);
 
 struct list_s;
 extern const struct nlop_s* nlop_simu_jacobian_chain_create(struct sim_config_s sim, struct list_s* nlops);

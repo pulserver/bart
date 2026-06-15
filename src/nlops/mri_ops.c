@@ -80,7 +80,7 @@ struct config_nlop_mri_s {
 
 	const complex float* basis;
 
-	_Bool noncart;
+	bool noncart;
 	struct nufft_conf_s nufft_conf;
 
 	struct shared_obj_s sptr;

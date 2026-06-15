@@ -16,7 +16,7 @@ struct bin_conf_s {
 
 	float offset_angle[2];
 
-	_Bool amplitude;
+	bool amplitude;
 
 };
 

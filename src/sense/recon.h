@@ -18,8 +18,8 @@
  */
 struct sense_conf {
 
-	_Bool rvc;
-	_Bool gpu;
+	bool rvc;
+	bool gpu;
 	int rwiter;	// should be moved into a recon_lad
 	float gamma;	// ..
 	float cclambda;

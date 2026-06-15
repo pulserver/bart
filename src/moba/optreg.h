@@ -5,7 +5,7 @@ struct linop_s;
 struct optreg_conf {
 
 	int moba_model;
-	_Bool use_sobolev_fB0;
+	bool use_sobolev_fB0;
 
 	int tvscales_N;
 	complex float* tvscales;
@@ -29,6 +29,6 @@ extern const struct operator_p_s* moba_nonneg_prox_create(int N, const long maps
 
 extern void help_reg_moba(void);
 
-extern _Bool opt_reg_moba(void* ptr, char c, const char* optarg);
+extern bool opt_reg_moba(void* ptr, char c, const char* optarg);
 
 extern void opt_reg_moba_configure(int N, const long dims[__VLA(N)], struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], struct optreg_conf* optreg_conf);

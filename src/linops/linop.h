@@ -114,7 +114,7 @@ extern struct linop_s* linop_vptr_set_dims_wrapper(const struct linop_s* op, con
 
 extern struct linop_s* linop_null_create2(int NO, const long odims[NO], const long ostrs[NO], int NI, const long idims[NI], const long istrs[NI]);
 extern struct linop_s* linop_null_create(int NO, const long odims[NO], int NI, const long idims[NI]);
-extern _Bool linop_is_null(const struct linop_s* lop);
+extern bool linop_is_null(const struct linop_s* lop);
 
 extern struct linop_s* linop_plus(const struct linop_s* a, const struct linop_s* b);
 extern struct linop_s* linop_plus_FF(const struct linop_s* a, const struct linop_s* b);

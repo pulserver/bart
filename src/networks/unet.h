@@ -57,15 +57,15 @@ struct network_unet_s {
 	long Nl_after; //number of layers per level
 	long Nl_lowest; //number of layers per level
 
-	_Bool real_constraint;
+	bool real_constraint;
 
-	_Bool init_real;		//initialize weights with real numbers
-	_Bool init_zeros_residual;	//initialize weights such that output of each level is initialized with zeros
+	bool init_real;		//initialize weights with real numbers
+	bool init_zeros_residual;	//initialize weights such that output of each level is initialized with zeros
 
-	_Bool use_bn;
-	_Bool use_instnorm;
-	_Bool use_nnunet_last;
-	_Bool use_bias;
+	bool use_bn;
+	bool use_instnorm;
+	bool use_nnunet_last;
+	bool use_bias;
 
 	enum ACTIVATION activation;
 	enum ACTIVATION activation_output;	//output of unet
@@ -76,9 +76,9 @@ struct network_unet_s {
 	enum UNET_UPSAMPLING_METHOD us_method;
 	enum UNET_COMBINE_METHOD combine_method;
 
-	_Bool residual;
+	bool residual;
 
-	_Bool adjoint;
+	bool adjoint;
 };
 
 extern struct network_unet_s network_unet_default_reco;
@@ -86,5 +86,5 @@ extern struct network_unet_s network_unet_default_segm;
 extern struct network_unet_s network_nnunet_default_segm;
 
 extern nn_t network_unet_create(const struct network_s* config, int NO, const long odims[NO], int NI, const long idims[NI], enum NETWORK_STATUS status);
-extern _Bool unet_is_diagonal(const struct network_s* config);
+extern bool unet_is_diagonal(const struct network_s* config);
 

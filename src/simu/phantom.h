@@ -10,7 +10,7 @@ enum phantom_type { SHEPPLOGAN, CIRC, TIME, SENS, GEOM, STAR, BART, BRAIN, TUBES
 struct phantom_opts {
 
 	int D;
-	_Bool kspace;
+	bool kspace;
 	enum phantom_type ptype;
 	long Nc; // number of coefficients for COEFF_DIM
 	void* data;
@@ -22,21 +22,21 @@ extern struct phantom_opts phantom_opts_defaults;
 
 extern void phantom_stl_init(struct phantom_opts* popts, int D, long dims[D], double* model);
 
-extern void calc_ellipsoid(int D, long dims[D], _Complex float* out, _Bool d3, _Bool kspace, long tdims[D], long tstrs[D], _Complex float* traj, float ax[3], long center[3], float rot, struct coil_opts* copts);
+extern void calc_ellipsoid(int D, long dims[D], _Complex float* out, bool d3, bool kspace, long tdims[D], long tstrs[D], _Complex float* traj, float ax[3], long center[3], float rot, struct coil_opts* copts);
 
 extern void calc_sens(const long dims[DIMS], complex float* sens, struct coil_opts* copts);
 
-extern void calc_geo_phantom(const long dims[DIMS], complex float* out, _Bool ksp, int phtype, const long tstrs[DIMS], const _Complex float* traj, struct coil_opts* copts);
+extern void calc_geo_phantom(const long dims[DIMS], complex float* out, bool ksp, int phtype, const long tstrs[DIMS], const _Complex float* traj, struct coil_opts* copts);
 
 extern void calc_phantom_noncart(const long dims[3], complex float* out, const complex float* traj, struct coil_opts* copts);
 extern void calc_geo_phantom_noncart(const long dims[3], complex float* out, const complex float* traj, int phtype, struct coil_opts* copts);
 
-extern void calc_phantom(const long dims[DIMS], _Complex float* out, _Bool d3, _Bool ksp, const long tstrs[DIMS], const _Complex float* traj, struct coil_opts* copts);
-extern void calc_circ(const long dims[DIMS], _Complex float* img, _Bool d3, _Bool ksp, const long tstrs[DIMS], const _Complex float* traj, struct coil_opts* copts);
-extern void calc_ring(const long dims[DIMS], _Complex float* img, _Bool ksp, const long tstrs[DIMS], const _Complex float* traj, struct coil_opts* copts);
+extern void calc_phantom(const long dims[DIMS], _Complex float* out, bool d3, bool ksp, const long tstrs[DIMS], const _Complex float* traj, struct coil_opts* copts);
+extern void calc_circ(const long dims[DIMS], _Complex float* img, bool d3, bool ksp, const long tstrs[DIMS], const _Complex float* traj, struct coil_opts* copts);
+extern void calc_ring(const long dims[DIMS], _Complex float* img, bool ksp, const long tstrs[DIMS], const _Complex float* traj, struct coil_opts* copts);
 
-extern void calc_moving_circ(const long dims[DIMS], _Complex float* out, _Bool ksp, const long tstrs[DIMS], const _Complex float* traj, struct coil_opts* copts);
-extern void calc_heart(const long dims[DIMS], _Complex float* out, _Bool ksp, const long tstrs[DIMS], const _Complex float* traj, struct coil_opts* copts);
+extern void calc_moving_circ(const long dims[DIMS], _Complex float* out, bool ksp, const long tstrs[DIMS], const _Complex float* traj, struct coil_opts* copts);
+extern void calc_heart(const long dims[DIMS], _Complex float* out, bool ksp, const long tstrs[DIMS], const _Complex float* traj, struct coil_opts* copts);
 
 extern void calc_phantom_tubes(const long dims[DIMS], _Complex float* out, bool kspace, bool random, float rotation_angle, int N, const long tstrs[DIMS], const complex float* traj, struct coil_opts* copts);
 

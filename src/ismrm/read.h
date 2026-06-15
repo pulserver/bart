@@ -69,7 +69,7 @@ struct isrmrm_config_s {
 
 	enum ISMRMRD_SLICE_ORDERING slice_ord;
 
-	_Bool check_dims_with_acquisition;
+	bool check_dims_with_acquisition;
 
 	unsigned long merge_dims;
 	unsigned long shift;

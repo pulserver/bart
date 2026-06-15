@@ -80,20 +80,20 @@ extern int nn_get_nr_out_args(nn_t op);
 extern int nn_get_out_arg_index(nn_t op, int o, const char* oname);
 extern int nn_get_in_arg_index(nn_t op, int i, const char* iname);
 
-extern _Bool nn_is_num_in_index(nn_t op, int i);
-extern _Bool nn_is_num_out_index(nn_t op, int o);
+extern bool nn_is_num_in_index(nn_t op, int i);
+extern bool nn_is_num_out_index(nn_t op, int o);
 
-extern void nn_get_in_args_names(nn_t op, int nII, const char* inames[nII], _Bool copy);
-extern void nn_get_out_args_names(nn_t op, int nOO, const char* onames[nOO], _Bool copy);
+extern void nn_get_in_args_names(nn_t op, int nII, const char* inames[nII], bool copy);
+extern void nn_get_out_args_names(nn_t op, int nOO, const char* onames[nOO], bool copy);
 
-extern const char* nn_get_in_name_from_arg_index(nn_t op, int i, _Bool clone);
-extern const char* nn_get_out_name_from_arg_index(nn_t op, int o, _Bool clone);
+extern const char* nn_get_in_name_from_arg_index(nn_t op, int i, bool clone);
+extern const char* nn_get_out_name_from_arg_index(nn_t op, int o, bool clone);
 
 extern int nn_get_in_index_from_arg_index(nn_t op, int i);
 extern int nn_get_out_index_from_arg_index(nn_t op, int o);
 
-extern _Bool nn_is_name_in_in_args(nn_t op, const char* name);
-extern _Bool nn_is_name_in_out_args(nn_t op, const char* name);
+extern bool nn_is_name_in_in_args(nn_t op, const char* name);
+extern bool nn_is_name_in_out_args(nn_t op, const char* name);
 
 extern nn_t nn_set_input_name_F(nn_t op, int i, const char* iname);
 extern nn_t nn_set_output_name_F(nn_t op, int o, const char* oname);
@@ -112,7 +112,7 @@ extern const struct operator_p_s* nn_get_prox_op_arg_index(nn_t op, int i);
 extern void nn_get_prox_ops(nn_t op, int N, const struct operator_p_s* prox_ops[N]);
 
 extern nn_t nn_set_dup_F(nn_t op, int i, const char* iname, bool dup);
-extern _Bool nn_get_dup(nn_t op, int i, const char* iname);
+extern bool nn_get_dup(nn_t op, int i, const char* iname);
 
 extern const char** nn_get_out_names(nn_t op);
 extern const char** nn_get_in_names(nn_t op);
@@ -126,14 +126,14 @@ extern void nn_get_out_types(nn_t op, int N, enum OUT_TYPE out_types[N]);
 extern const struct iovec_s* nn_generic_domain(nn_t op, int i, const char* iname);
 extern const struct iovec_s* nn_generic_codomain(nn_t op, int o, const char* oname);
 
-extern nn_t nn_checkpoint_F(nn_t op, _Bool der_once, _Bool clear_mem);
+extern nn_t nn_checkpoint_F(nn_t op, bool der_once, bool clear_mem);
 
 extern nn_t nn_optimize_graph_F(nn_t op);
 
 extern void nn_debug(enum debug_levels dl, nn_t x);
 extern void nn_export_graph(const char* filename, nn_t op);
 
-extern nn_t nn_dump_input_F(nn_t op, int i, const char* iname, const char* fname, _Bool frw, _Bool der, _Bool adj);
-extern nn_t nn_dump_out_F(nn_t op, int o, const char* oname, const char* fname, _Bool frw, _Bool der, _Bool adj);
+extern nn_t nn_dump_input_F(nn_t op, int i, const char* iname, const char* fname, bool frw, bool der, bool adj);
+extern nn_t nn_dump_out_F(nn_t op, int o, const char* oname, const char* fname, bool frw, bool der, bool adj);
 
 #endif

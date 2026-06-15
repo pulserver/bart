@@ -23,7 +23,7 @@ struct reg_s {
 	int k;
 	const char* graph_file;
 
-	_Bool asl;
+	bool asl;
 };
 
 
@@ -41,8 +41,8 @@ struct opt_reg_s {
 	int tvscales2_N;
 	float tvscales2[NUM_TV_SCALES];
 
-	_Bool asl;
-	_Bool teasl;
+	bool asl;
+	bool teasl;
 
 	float theta[2];
 
@@ -52,16 +52,16 @@ struct opt_reg_s {
 
 
 
-extern _Bool opt_reg_init(struct opt_reg_s* ropts);
+extern bool opt_reg_init(struct opt_reg_s* ropts);
 
 extern void opt_bpursuit_configure(struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], const struct linop_s* model_op, const _Complex float* data, const float eps);
 extern void opt_precond_configure(struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], const struct linop_s* model_op, int N, const long ksp_dims[N], const _Complex float* data, const long pat_dims[N], const _Complex float* pattern);
 
-extern void opt_reg_configure(int N, const long img_dims[__VLA(N)], struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], const long (*sdims[NUM_REGS])[N + 1], int llr_blk, int shift_mode, const char* wtype_str, _Bool use_gpu, int asl_dim);
+extern void opt_reg_configure(int N, const long img_dims[__VLA(N)], struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], const long (*sdims[NUM_REGS])[N + 1], int llr_blk, int shift_mode, const char* wtype_str, bool use_gpu, int asl_dim);
 
 extern void opt_reg_free(struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS]);
 
-extern _Bool opt_reg(void* ptr, char c, const char* optarg);
+extern bool opt_reg(void* ptr, char c, const char* optarg);
 
 extern void help_reg(void);
 

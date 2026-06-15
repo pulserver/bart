@@ -39,8 +39,8 @@ extern void blas_cscal(long N, _Complex float alpha, long incx, _Complex float* 
 extern void blas2_sscal(long N, const float* alpha, long incx, float* x);
 extern void blas_sscal(long N, float alpha, long incx, float* x);
 
-extern void blas_cdgmm(long M, long N, _Bool left_mul, const _Complex float* A, long lda, const _Complex float* x, long incx, _Complex float* C, long ldc);
-extern void blas_sdgmm(long M, long N, _Bool left_mul, const float* A, long lda, const float* x, long incx, float* C, long ldc);
+extern void blas_cdgmm(long M, long N, bool left_mul, const _Complex float* A, long lda, const _Complex float* x, long incx, _Complex float* C, long ldc);
+extern void blas_sdgmm(long M, long N, bool left_mul, const float* A, long lda, const float* x, long incx, float* C, long ldc);
 
 extern void blas2_cdotu(_Complex float* result, long N, long incx, const _Complex float* x, long incy, const _Complex float* y);
 extern void blas2_sdot(float* result, long N, long incx, const float* x, long incy, const float* y);

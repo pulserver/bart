@@ -1,6 +1,6 @@
 struct nlop_norm_inv_conf {
 
-	_Bool store_nlop;
+	bool store_nlop;
 	struct iter_conjgrad_conf* iter_conf;
 };
 

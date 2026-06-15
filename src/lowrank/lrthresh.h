@@ -12,7 +12,7 @@ struct operator_p_s;
 
 
 // Low rank thresholding for arbitrary block sizes
-extern const struct operator_p_s* lrthresh_create(const long dims_lev[DIMS], _Bool randshift, unsigned long mflags, const long blkdims[MAX_LEV][DIMS], float lambda, _Bool noise, int remove_mean, _Bool overlapping_blocks);
+extern const struct operator_p_s* lrthresh_create(const long dims_lev[DIMS], bool randshift, unsigned long mflags, const long blkdims[MAX_LEV][DIMS], float lambda, bool noise, int remove_mean, bool overlapping_blocks);
 
 // Returns nuclear norm using lrthresh operator
 extern float lrnucnorm(const struct operator_p_s* op, const complex float* src);

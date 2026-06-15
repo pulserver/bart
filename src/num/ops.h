@@ -29,11 +29,11 @@ extern const struct operator_s* operator_create2(int ON, const long out_dims[__V
 		operator_data_t* data, operator_fun_t apply, operator_del_t del);
 
 
-extern const struct operator_s* operator_generic_create(int N, const _Bool io_flags[N],
+extern const struct operator_s* operator_generic_create(int N, const bool io_flags[N],
 		const int D[__VLA(N)], const long* out_dims[__VLA(N)],
 		operator_data_t* data, operator_fun_t apply, operator_del_t del, operator_get_graph_t get_graph);
 
-extern const struct operator_s* operator_generic_create2(int N, const _Bool io_flags[N],
+extern const struct operator_s* operator_generic_create2(int N, const bool io_flags[N],
 			const int D[__VLA(N)], const long* out_dims[__VLA(N)], const long* out_strs[__VLA(N)],
 			operator_data_t* data, operator_fun_t apply, operator_del_t del, operator_get_graph_t get_graph);
 
@@ -102,9 +102,9 @@ enum debug_levels;
 void operator_debug(enum debug_levels dl, const struct operator_s* x);
 
 extern operator_data_t* operator_get_data(const struct operator_s* op);
-extern const _Bool* operator_get_io_flags(const struct operator_s* op);
+extern const bool* operator_get_io_flags(const struct operator_s* op);
 
-extern _Bool check_simple_copy(const struct operator_s* op);
+extern bool check_simple_copy(const struct operator_s* op);
 
 extern const struct operator_s* operator_copy_wrapper(int N, const long* strs[N], const struct operator_s* op);
 extern const struct operator_s* operator_copy_wrapper_sameplace(int N, const long* strs[N], const struct operator_s* op, const void* ref);
@@ -144,10 +144,10 @@ extern const struct operator_s* operator_reshape(const struct operator_s* op, in
 extern const struct operator_s* get_in_reshape(const struct operator_s* op);
 
 extern const struct operator_s* operator_zadd_create(int II, int N, const long dims[__VLA(N)]);
-extern _Bool operator_is_zadd(const struct operator_s* op);
+extern bool operator_is_zadd(const struct operator_s* op);
 
 
-extern _Bool operator_identify(const struct operator_s* a, const struct operator_s* b);
+extern bool operator_identify(const struct operator_s* a, const struct operator_s* b);
 
 extern struct list_s* operator_get_list(const struct operator_s* op);
 extern const struct graph_s* operator_get_graph(const struct operator_s* op);
@@ -155,7 +155,7 @@ extern const struct graph_s* operator_get_graph(const struct operator_s* op);
 extern const struct operator_s* operator_nograph_wrapper(const struct operator_s* op);
 extern const struct operator_s* graph_optimize_operator_F(const struct operator_s* op);
 
-extern _Bool operator_zero_or_null_p(const struct operator_s* op);
+extern bool operator_zero_or_null_p(const struct operator_s* op);
 
 extern const struct operator_s* operator_vptr_set_dims_wrapper(const struct operator_s* op, int N, const void* ref[__VLA(N)], struct vptr_hint_s* hint);
 

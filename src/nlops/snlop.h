@@ -11,7 +11,7 @@ struct nlop_arg_s;
 
 typedef struct nlop_arg_s* (*nlop_arg_reshape_f)(const struct nlop_arg_s* arg, long N, const long dims[N]);
 typedef struct nlop_arg_s* (*nlop_arg_dup_f)(const struct nlop_arg_s* a, const struct nlop_arg_s* b);
-typedef struct nlop_arg_s* (*nlop_arg_stack_f)(const struct nlop_arg_s* a, const struct nlop_arg_s* b, int stack_dim, _Bool out);
+typedef struct nlop_arg_s* (*nlop_arg_stack_f)(const struct nlop_arg_s* a, const struct nlop_arg_s* b, int stack_dim, bool out);
 typedef void (*nlop_arg_del_f)(const struct nlop_arg_s* a);
 
 struct nlop_arg_s {
@@ -26,7 +26,7 @@ struct nlop_arg_s {
 
 	struct snlop_s* x;
 	const char* name;
-	_Bool fixed_name;
+	bool fixed_name;
 };
 
 typedef struct nlop_arg_s* arg_t;
@@ -47,8 +47,8 @@ extern arg_t snlop_get_iarg(snlop_t snlop, int i);
 extern arg_t snlop_get_oarg(snlop_t snlop, int i);
 extern arg_t snlop_get_targ(snlop_t snlop, int i);
 
-extern _Bool arg_is_input(arg_t arg);
-extern _Bool arg_is_output(arg_t arg);
+extern bool arg_is_input(arg_t arg);
+extern bool arg_is_output(arg_t arg);
 extern void arg_set_name(arg_t arg, const char* name);
 extern void arg_set_name_F(arg_t arg, const char* name);
 void snlop_replace_iarg(arg_t narg, arg_t oarg);
@@ -61,9 +61,9 @@ extern arg_t snlop_const(int N, const long dims[N], const _Complex float* data, 
 extern arg_t snlop_scalar(_Complex float val);
 extern void add_to_targs(arg_t arg);
 
-extern void snlop_chain(int N, arg_t oargs[N], arg_t iargs[N], _Bool keep);
-extern arg_t snlop_append_nlop_generic_F(int N, arg_t oargs[N], const struct nlop_s* nlop, _Bool keep);
-extern arg_t snlop_append_nlop_F(arg_t oarg, const struct nlop_s* nlop, _Bool keep);
+extern void snlop_chain(int N, arg_t oargs[N], arg_t iargs[N], bool keep);
+extern arg_t snlop_append_nlop_generic_F(int N, arg_t oargs[N], const struct nlop_s* nlop, bool keep);
+extern arg_t snlop_append_nlop_F(arg_t oarg, const struct nlop_s* nlop, bool keep);
 extern arg_t snlop_prepend_nlop_generic_F(int N, arg_t oargs[N], const struct nlop_s* nlop);
 extern arg_t snlop_prepend_nlop_F(arg_t oarg, const struct nlop_s* nlop);
 
@@ -86,8 +86,8 @@ extern arg_t snlop_stack_F(arg_t a, arg_t b, int stack_dim);
 extern arg_t snlop_stack_in(arg_t a, arg_t b, int stack_dim);
 extern arg_t snlop_dup(arg_t a, arg_t b);
 
-extern _Bool snlop_check(snlop_t snlop);
-extern _Bool arg_check(arg_t arg);
+extern bool snlop_check(snlop_t snlop);
+extern bool arg_check(arg_t arg);
 
 extern void snlop_debug(int dl, struct snlop_s* x);
 

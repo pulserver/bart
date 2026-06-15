@@ -1,9 +1,9 @@
 
-extern _Bool bart_use_gpu;
+extern bool bart_use_gpu;
 extern unsigned long bart_mpi_split_flags;
 extern unsigned long bart_delayed_loop_flags;
 extern long bart_delayed_loop_dims[16];
-extern _Bool bart_delayed_computations;
+extern bool bart_delayed_computations;
 
 extern void num_init(void);
 extern void num_init_gpu_support(void);

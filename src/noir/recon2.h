@@ -6,7 +6,7 @@
 struct noir2_conf_s {
 
 	unsigned int iter;
-	_Bool rvc;
+	bool rvc;
 	float alpha;
 	float alpha_min;
 	float redu;
@@ -15,7 +15,7 @@ struct noir2_conf_s {
 	float c;
 
 	float oversampling_coils;
-	_Bool ret_os_coils;
+	bool ret_os_coils;
 
 	unsigned long fft_flags;
 	unsigned long ucfft_flags;
@@ -23,29 +23,29 @@ struct noir2_conf_s {
 
 	int phasepoles;
 
-	_Bool sms;
-	_Bool sos;
+	bool sms;
+	bool sos;
 
 	float scaling;
-	_Bool undo_scaling;
-	_Bool normalize_lowres;
+	bool undo_scaling;
+	bool normalize_lowres;
 
-	_Bool noncart;
+	bool noncart;
 	struct nufft_conf_s* nufft_conf;
 
 	struct opt_reg_s* regs;
 
-	_Bool gpu;
+	bool gpu;
 
 	int cgiter;
 	float cgtol;
 
-	_Bool realtime;
+	bool realtime;
 	float temp_damp;
 
-	_Bool legacy_early_stoppping;
+	bool legacy_early_stoppping;
 
-	_Bool optimized;
+	bool optimized;
 
 	int iter_reg;
 	int liniter;

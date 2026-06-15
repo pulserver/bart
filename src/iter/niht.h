@@ -32,7 +32,7 @@ struct niht_conf_s {
 	float epsilon;
 	long N;
 	int trans;
-	_Bool do_warmstart;
+	bool do_warmstart;
 };
 
 void niht(const struct niht_conf_s* conf, const struct niht_transop* trans, 

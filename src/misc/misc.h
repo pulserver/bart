@@ -99,7 +99,7 @@ extern __attribute__((noreturn)) void error(const char* str, ...);
 
 struct error_jumper_s {
 
-	_Bool initialized;
+	bool initialized;
 	jmp_buf buf;
 };
 
@@ -145,8 +145,8 @@ extern char* stdin_command_line;
 extern char* serialize_command_line(int argc, char* argv[__VLA(argc)]);
 extern void save_command_line(int argc, char* argv[__VLA(argc)]);
 
-extern _Bool safe_isnanf(float x);
-extern _Bool safe_isfinite(float x);
+extern bool safe_isnanf(float x);
+extern bool safe_isfinite(float x);
 
 extern long io_calc_size(int D, const long dims[__VLA(D?:1)], size_t size);
 

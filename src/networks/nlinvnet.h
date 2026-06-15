@@ -16,7 +16,7 @@ struct nlinvnet_s {
 	long avg_coils_loss;
 
 	// Self-Supervised k-Space
-	_Bool ksp_training;
+	bool ksp_training;
 	float ksp_split;
 	unsigned long ksp_shared_dims;
 	float ksp_leaky;
@@ -25,7 +25,7 @@ struct nlinvnet_s {
 	// Network block
 	struct network_s* network;
 	struct nn_weights_s* weights;
-	_Bool share_weights;
+	bool share_weights;
 	float lambda;
 	float lambda_sens;
 	unsigned long filter_flags;
@@ -44,17 +44,17 @@ struct nlinvnet_s {
 	float oversampling_coils;
 	long senssize;
 
-	_Bool fix_coils;
-	_Bool ref_init_img;
-	_Bool ref_init_col;
-	_Bool ref_init_col_rt;
+	bool fix_coils;
+	bool ref_init_img;
+	bool ref_init_col;
+	bool ref_init_col_rt;
 	float scaling;
-	_Bool real_time_init;
+	bool real_time_init;
 	float temp_damp;
 
-	_Bool debug;
+	bool debug;
 
-	_Bool normalize_rss;
+	bool normalize_rss;
 };
 
 extern struct nlinvnet_s nlinvnet_config_opts;

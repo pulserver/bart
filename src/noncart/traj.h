@@ -1,19 +1,19 @@
 
 struct traj_conf {
 
-	_Bool radial;
-	_Bool golden;
-	_Bool aligned;
-	_Bool full_circle;
-	_Bool half_circle_gold;
-	_Bool golden_partition;
-	_Bool d3d;
-	_Bool transverse;
-	_Bool asym_traj;
-	_Bool mems_traj;
-	_Bool mems_legacy;
-	_Bool rational;
-	_Bool double_base;
+	bool radial;
+	bool golden;
+	bool aligned;
+	bool full_circle;
+	bool half_circle_gold;
+	bool golden_partition;
+	bool d3d;
+	bool transverse;
+	bool asym_traj;
+	bool mems_traj;
+	bool mems_legacy;
+	bool rational;
+	bool double_base;
 	unsigned long aligned_flags;
 	int accel;
 	int tiny_gold;
@@ -36,7 +36,7 @@ extern double calc_angle_atom(const struct traj_conf* conf);
 extern void calc_base_angles(double base_angle[DIMS], int Y, int E, struct traj_conf conf);
 extern long raga_increment_from_pos(const int order[DIMS], const long pos[DIMS], unsigned long flags, const long dims[DIMS], const struct traj_conf* conf);
 extern void indices_from_position(long ind[DIMS], const long pos[DIMS], struct traj_conf conf);
-extern _Bool zpartition_skip(long partitions, long z_usamp[2], long partition, long frame);
+extern bool zpartition_skip(long partitions, long z_usamp[2], long partition, long frame);
 extern int gen_fibonacci(int n, int ind);
 extern int recover_gen_fib_ind(int Y, int inc);
 extern int raga_find_index(int Y, int n);

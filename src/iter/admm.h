@@ -54,12 +54,12 @@ struct admm_plan_s {
 
 	float cg_eps;
 
-	_Bool do_warmstart;
-	_Bool dynamic_rho;
-	_Bool dynamic_tau;
-	_Bool relative_norm;
-	_Bool hogwild;
-	_Bool fast;
+	bool do_warmstart;
+	bool dynamic_rho;
+	bool dynamic_tau;
+	bool relative_norm;
+	bool hogwild;
+	bool fast;
 
 	double ABSTOL;
 	double RELTOL;

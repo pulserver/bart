@@ -30,7 +30,6 @@ using numpy_array_t = py::array_t<std::complex<float>,
 #include <complex>
 #include <tuple>
 
-#define _Bool bool
 #include "bart_embed_api.h"
 
 #include "misc/debug.h"

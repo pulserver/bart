@@ -11,8 +11,8 @@ struct noir_model_conf_s {
 	float sobolev_os;
 	unsigned int fft_flags;
 	unsigned int cnstcoil_flags;
-	_Bool rvc;
-	_Bool noncart;
+	bool rvc;
+	bool noncart;
 	float a;
 	float b;
 };

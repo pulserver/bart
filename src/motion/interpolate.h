@@ -17,5 +17,5 @@ struct linop_s;
 extern const struct linop_s* linop_interpolate_create(int d, unsigned long flags, int ord, int N, const long idims[__VLA(N)], const long cdims[__VLA(N)], const _Complex float* coor, const long gdims[__VLA(N)]);
 
 struct nlop_s;
-extern const struct nlop_s* nlop_interpolate_create(int d, unsigned long flags, int ord, _Bool shifted_grad, int N, const long idims[__VLA(N)], const long cdims[__VLA(N)], const long gdims[__VLA(N)]);
+extern const struct nlop_s* nlop_interpolate_create(int d, unsigned long flags, int ord, bool shifted_grad, int N, const long idims[__VLA(N)], const long cdims[__VLA(N)], const long gdims[__VLA(N)]);
 

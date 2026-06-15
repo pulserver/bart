@@ -34,11 +34,11 @@ struct linphase_conf_v1 {
 	long N;
 	float cn;
 	float scale;
-	_Bool conj;
-	_Bool fmac;
+	bool conj;
+	bool fmac;
 };
 
-template <_Bool fmac>
+template <bool fmac>
 __global__ void kern_apply_linphases_3D_v1(struct linphase_conf_v1 c, cuFloatComplex* dst, const cuFloatComplex* src)
 {
 	int startX = threadIdx.x + blockDim.x * blockIdx.x;
@@ -85,7 +85,7 @@ __global__ void kern_apply_linphases_3D_v1(struct linphase_conf_v1 c, cuFloatCom
 
 
 
-extern "C" void cuda_apply_linphases_3D_v1(int N, const long img_dims[], const float _shifts[3], _Complex float* dst, const _Complex float* src, _Bool conj, _Bool fmac, _Bool fftm, float scale)
+extern "C" void cuda_apply_linphases_3D_v1(int N, const long img_dims[], const float _shifts[3], _Complex float* dst, const _Complex float* src, bool conj, bool fmac, bool fftm, float scale)
 {
 	struct linphase_conf_v1 c;
 
@@ -147,11 +147,11 @@ struct linphase_conf {
 	long N;
 	float cn;
 	float scale;
-	_Bool conj;
-	_Bool fmac;
+	bool conj;
+	bool fmac;
 };
 
-template <_Bool fmac>
+template <bool fmac>
 __global__ void kern_apply_linphases_3D(struct linphase_conf c, cuFloatComplex* dst, const cuFloatComplex* src)
 {
 	int startX = threadIdx.x + blockDim.x * blockIdx.x;
@@ -207,7 +207,7 @@ __global__ void kern_prep_linphases(float cn, float shift, long N, cuFloatComple
 	}
 }
 
-extern "C" void cuda_apply_linphases_3D(int N, const long img_dims[], const float shifts[3], _Complex float* dst, const _Complex float* src, _Bool conj, _Bool fmac, _Bool fftm, float scale)
+extern "C" void cuda_apply_linphases_3D(int N, const long img_dims[], const float shifts[3], _Complex float* dst, const _Complex float* src, bool conj, bool fmac, bool fftm, float scale)
 {
 	struct linphase_conf c;
 
@@ -943,7 +943,7 @@ __device__ static __inline__ void dev_atomic_zadd_scl(cuFloatComplex* arg, cuFlo
 
 #define MAX_WIDTH 8
 
-template<_Bool adjoint, _Bool smem>
+template<bool adjoint, bool smem>
 __device__ static void grid_point_r(const struct grid_plan_s* plan, cuFloatComplex* grd, cuFloatComplex* ksp, const float traj[3])
 {
 	if (!adjoint && 0. == ksp[0].x && 0. == ksp[0].y)
@@ -1046,7 +1046,7 @@ __device__ static void grid_point_r(const struct grid_plan_s* plan, cuFloatCompl
 }
 
 
-template<_Bool adjoint>
+template<bool adjoint>
 __global__ static void kern_grid(struct grid_plan_s plan, const cuFloatComplex* traj, cuFloatComplex* dst, const cuFloatComplex* src)
 {
 	int start[3];
@@ -1089,7 +1089,7 @@ __global__ static void kern_grid(struct grid_plan_s plan, const cuFloatComplex* 
 	}
 }
 
-template<_Bool adjoint>
+template<bool adjoint>
 __global__ static void kern_grid_sorted(struct grid_plan_s plan, const cuFloatComplex* traj, cuFloatComplex* dst, const cuFloatComplex* src)
 {
 	extern __shared__ cuFloatComplex grd_local[];

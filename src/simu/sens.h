@@ -13,7 +13,7 @@ typedef void (*co_dstr_t)(void* v);
 
 struct coil_opts {
 
-	_Bool kspace;
+	bool kspace;
 	enum coil_type ctype;
 	unsigned long flags; // flags for channel selection
 	long N; // chosen number of coil channels

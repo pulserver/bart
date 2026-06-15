@@ -32,7 +32,7 @@ extern cudaStream_t cuda_get_stream(void);
 #endif
 
 extern int cuda_set_stream_level(void);
-extern _Bool cuda_is_stream_default(void);
+extern bool cuda_is_stream_default(void);
 
 extern void cuda_sync_device(void);
 extern void cuda_sync_stream(void);
@@ -40,7 +40,7 @@ extern void cuda_sync_stream(void);
 extern void* cuda_malloc(long N);
 extern void* cuda_malloc_host(long N);
 extern void cuda_free(void*);
-extern _Bool cuda_ondevice(const void* ptr);
+extern bool cuda_ondevice(const void* ptr);
 extern void cuda_clear(long size, void* ptr);
 extern void cuda_memcpy(long size, void* dst, const void* src);
 extern void cuda_memcpy_strided(const long dims[2], long ostr, void* dst, long istr, const void* src);

@@ -20,14 +20,14 @@ typedef struct network_s {
 	TYPEID* TYPEID;
 
 	network_create_t create;
-	_Bool low_mem;
+	bool low_mem;
 
 	enum norm norm;
 	unsigned long norm_batch_flag;
 
-	_Bool debug;
-	_Bool residual;
-	_Bool bart_to_channel_first;
+	bool debug;
+	bool residual;
+	bool bart_to_channel_first;
 
 	int loopdim;
 
@@ -37,7 +37,7 @@ typedef struct network_s {
 
 extern nn_t network_create(const struct network_s* config, int NO, const long odims[NO], int NI, const long idims[NI], enum NETWORK_STATUS status);
 
-extern _Bool network_is_diagonal(const struct network_s* config);
+extern bool network_is_diagonal(const struct network_s* config);
 
 
 struct network_resnet_s {
@@ -62,14 +62,14 @@ struct network_resnet_s {
 	unsigned long group_flag;
 	unsigned long batch_flag;
 
-	_Bool batch_norm;
-	_Bool batch_norm_lf;
-	_Bool bias;
+	bool batch_norm;
+	bool batch_norm_lf;
+	bool bias;
 
 	enum ACTIVATION activation;
 	enum ACTIVATION last_activation;
 
-	_Bool zero_init;
+	bool zero_init;
 };
 extern struct network_resnet_s network_resnet_default;
 

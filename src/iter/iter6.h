@@ -36,7 +36,7 @@ typedef struct iter6_conf_s {
 	int epochs_warmup;
 	int learning_rate_epoch_mod;
 
-	_Bool monitor_averaged_objective;
+	bool monitor_averaged_objective;
 
 } iter6_conf;
 
@@ -78,15 +78,15 @@ struct iter6_iPALM_conf {
 
 	float alpha;
 	float beta;
-	_Bool convex;
+	bool convex;
 
-	_Bool trivial_stepsize;
+	bool trivial_stepsize;
 
 	float* alpha_arr;
 	float* beta_arr;
-	_Bool* convex_arr;
+	bool* convex_arr;
 
-	_Bool reduce_momentum;
+	bool reduce_momentum;
 };
 
 extern const struct iter6_sgd_conf iter6_sgd_conf_defaults;

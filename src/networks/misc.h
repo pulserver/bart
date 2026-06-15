@@ -27,7 +27,7 @@ struct network_data_s {
 	const char* filename_basis;
 	const char* filename_out;
 
-	_Bool export;
+	bool export;
 	const char* filename_adjoint;
 	const char* filename_psf;
 
@@ -44,10 +44,10 @@ struct network_data_s {
 
 	const struct nufft_conf_s* nufft_conf;
 
-	_Bool create_out;
-	_Bool load_mem;
-	_Bool gpu;
-	_Bool precomp;
+	bool create_out;
+	bool load_mem;
+	bool gpu;
+	bool precomp;
 
 	unsigned long batch_flags;
 };

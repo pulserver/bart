@@ -15,7 +15,7 @@ extern void fake_kspace(const long dims[DIMS], _Complex float* kspace, const _Co
 extern void replace_kspace(const long dims[DIMS], _Complex float* out, const _Complex float* kspace, const _Complex float* sens, const _Complex float* image);
 extern void replace_kspace2(const long dims[DIMS], _Complex float* out, const _Complex float* kspace, const _Complex float* sens, const _Complex float* image);
 
-extern float estimate_scaling_cal(const long dims[DIMS], const _Complex float* sens, const long cal_dims[DIMS], const _Complex float* cal_data, _Bool compat, float p);
+extern float estimate_scaling_cal(const long dims[DIMS], const _Complex float* sens, const long cal_dims[DIMS], const _Complex float* cal_data, bool compat, float p);
 
 #ifdef __cplusplus
 }

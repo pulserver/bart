@@ -11,5 +11,5 @@ extern const struct nlop_s* nlop_accuracy_create(int N, const long dims[__VLA(N)
 extern const struct nlop_s* nlop_nmse_create(int N, const long dims[N], unsigned long batch_flags);
 extern const struct nlop_s* nlop_nrmse_create(int N, const long dims[N], unsigned long batch_flags);
 
-extern const struct nlop_s* nlop_dice_generic_create(int N, const long dims[N], unsigned long label_flag, unsigned long independent_flag, float weighting_exponent, _Bool square_denominator);
-extern const struct nlop_s* nlop_dice_create(int N, const long dims[N], unsigned long label_flag, unsigned long mean_flag, float weighting_exponent, _Bool square_denominator);
+extern const struct nlop_s* nlop_dice_generic_create(int N, const long dims[N], unsigned long label_flag, unsigned long independent_flag, float weighting_exponent, bool square_denominator);
+extern const struct nlop_s* nlop_dice_create(int N, const long dims[N], unsigned long label_flag, unsigned long mean_flag, float weighting_exponent, bool square_denominator);

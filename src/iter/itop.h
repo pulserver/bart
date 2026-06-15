@@ -20,7 +20,7 @@ typedef CLOSURE_TYPE(void, (iter_conf* iconf)) itop_continuation_t;
 
 
 const struct operator_s* itop_create(	italgo_fun2_t italgo, iter_conf* iconf,
-					_Bool warmstart,
+					bool warmstart,
 					const float* init,
 					const struct operator_s* model_op,
 					int num_funs,
@@ -30,7 +30,7 @@ const struct operator_s* itop_create(	italgo_fun2_t italgo, iter_conf* iconf,
 					itop_continuation_t itop_cont);
 
 const struct operator_p_s* itop_p_create(italgo_fun2_t italgo, iter_conf* iconf,
-					_Bool warmstart,
+					bool warmstart,
 					const float* init,
 					const struct operator_s* model_op,
 					int num_funs,
