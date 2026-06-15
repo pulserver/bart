@@ -184,7 +184,11 @@ async function handle_msg(e) {
         rpc_state = 'running';
         x = await rpc_calls[data[0]](data)
         rpc_state = 'success';
-        postMessage([0, x]);
+        if (x instanceof Uint8Array) {
+            postMessage([0, x], [x.buffer]);
+        } else {
+            postMessage([0, x]);
+        }
     } catch(e) {
 
         rpc_state = 'fail';
