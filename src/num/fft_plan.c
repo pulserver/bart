@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <complex.h>
-#include <stdbool.h>
 
 #ifndef NO_FFTW
 #include <fftw3.h>

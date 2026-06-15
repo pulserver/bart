@@ -1,4 +1,4 @@
-/* Copyright 2022-2024. TU Graz. Institute of Biomedical Imaging.
+/* Copyright 2022-2026. TU Graz. Institute of Biomedical Imaging.
  * Copyright 2026. Department of Radiology. Boston Children's Hospital.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
@@ -11,7 +11,6 @@
 
 #include <complex.h>
 #include <math.h>
-#include <stdbool.h>
 #include <assert.h>
 
 #include "misc/misc.h"

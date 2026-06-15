@@ -5,7 +5,6 @@
  */
 
 #include <assert.h>
-#include <stdbool.h>
 #include <complex.h>
 #include <stdlib.h>
 #include <string.h>

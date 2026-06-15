@@ -2,7 +2,6 @@
 #ifndef _PULSE_H
 #define _PULSE_H
 
-#include <stdbool.h>
 #include <complex.h>
 
 #include "misc/types.h"

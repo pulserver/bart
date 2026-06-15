@@ -9,7 +9,6 @@
  */
 
 #include <complex.h>
-#include <stdbool.h>
 
 #include "misc/misc.h"
 

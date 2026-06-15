@@ -11,7 +11,6 @@
  */
 
 #include <assert.h>
-#include <stdbool.h>
 #include <complex.h>
 #include <stdio.h>
 #include <math.h>

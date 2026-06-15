@@ -9,6 +9,7 @@
 #include <complex.h>
 
 #include "misc/misc.h"
+
 #include "num/multind.h"
 #include "num/flpmath.h"
 #include "num/casorati.h"

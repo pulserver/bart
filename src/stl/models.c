@@ -7,13 +7,15 @@
  * 2024 Martin Heide
  */
 
-#include "models.h"
 #include "misc/debug.h"
 #include "misc/misc.h"
+
 #include "num/multind.h"
 #include "num/flpmath.h"
 
 #include "stl/misc.h"
+
+#include "models.h"
 
 // direction of normal is outward.
 // we don't store the normal vector bc it will be computed in the stl_internal_* function.

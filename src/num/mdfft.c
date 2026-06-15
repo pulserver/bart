@@ -6,7 +6,6 @@
  * 2015 Martin Uecker
  */
 
-#include <stdbool.h>
 #include <assert.h>
 #include <complex.h>
 #include <strings.h>

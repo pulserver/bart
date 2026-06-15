@@ -1,12 +1,11 @@
 /* Copyright 2022. Uecker Lab. University Medical Center Göttingen.
- * Copyright 2022-2025. TU Graz. Institute of Biomedical Imaging.
+ * Copyright 2022-2026. TU Graz. Institute of Biomedical Imaging.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
  * Author: Nick Scholand
  */
 
-#include <stdbool.h>
 #include <complex.h>
 #include <stdio.h>
 

@@ -22,7 +22,6 @@
 #include <sys/mman.h>
 #endif
 #include <complex.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>

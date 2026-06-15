@@ -1,8 +1,6 @@
 #ifndef __NLOP_SEQ_FLASH_H
 #define __NLOP_SEQ_FLASH_H
 
-#include <stdbool.h>
-
 struct nlop_s;
 struct sim_config_s;
 

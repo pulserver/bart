@@ -1,5 +1,5 @@
 /* Copyright 2021. Uecker Lab. University Medical Center Göttingen.
- * Copyright 2022-2025. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2022-2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
@@ -27,7 +27,6 @@
 
 /* order of derivatives: T1, T2, B1, \phi */
 
-#include <stdbool.h>
 #include <complex.h>
 #include <math.h>
 #include <stdio.h>
@@ -35,6 +34,7 @@
 #include "misc/misc.h"
 #include "misc/mri.h"
 #include "misc/debug.h"
+
 #include "num/linalg.h"
 #include "num/multind.h"
 

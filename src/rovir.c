@@ -1,4 +1,4 @@
-/* Copyright 2024-2025. TU Graz. Institute of Biomedical Imaging.
+/* Copyright 2024-2026. TU Graz. Institute of Biomedical Imaging.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
@@ -11,9 +11,7 @@
  * Magn Reson Med 2021; 86:197-212.
  */
 
-
 #include <complex.h>
-#include <stdbool.h>
 
 #include "misc/mri.h"
 #include "num/multind.h"

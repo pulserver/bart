@@ -6,15 +6,18 @@
  */
 
 #include <complex.h>
-#include <stdbool.h>
+
 #include "misc/mmio.h"
 #include "misc/misc.h"
 #include "misc/mri.h"
 #include "misc/debug.h"
+
 #include "iter/italgos.h"
+
 #include "num/flpmath.h"
 #include "num/multind.h"
 #include "num/loop.h"
+
 #include "simu/sens.h"
 #include "simu/grid.h"
 #include "simu/shape.h"

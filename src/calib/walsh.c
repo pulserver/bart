@@ -12,7 +12,6 @@
  * In: ISMRM proceeding; April; Salt Lake City, Utah, USA; 2013. 2672.
  */
 
-
 #include <complex.h>
 #include <math.h>
 #include <assert.h>

@@ -1,5 +1,4 @@
 
-#include <stdbool.h>
 #include <complex.h>
 
 extern void memcfl_register(const char* name, int D, const long dims[D], complex float* data, bool managed);

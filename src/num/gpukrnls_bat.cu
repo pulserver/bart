@@ -6,7 +6,6 @@
  */
 
 #include <stdio.h>
-#include <stdbool.h>
 #include <assert.h>
 
 #include <cuda_runtime_api.h>

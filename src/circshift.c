@@ -5,7 +5,6 @@
  * a BSD-style license which can be found in the LICENSE file.
  */
 
-#include <stdbool.h>
 #include <complex.h>
 
 #include "num/multind.h"

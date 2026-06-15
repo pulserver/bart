@@ -6,8 +6,6 @@
  * Authors: Moritz Blumenthal
  */
 
-
-#include <stdbool.h>
 #include <stddef.h>
 #include <complex.h>
 

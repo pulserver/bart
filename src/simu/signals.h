@@ -3,7 +3,6 @@
 #define _SIGNALS_H 1
 
 #include <complex.h>
-#include <stdbool.h>
 
 
 enum fat_spec {

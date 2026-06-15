@@ -3,8 +3,6 @@
 extern "C" {
 #endif
 
-#include <stdbool.h>
-
 #include "misc/mri.h"
 
 extern void rss_combine(const long dims[DIMS], _Complex float* image, const _Complex float* data);

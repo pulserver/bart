@@ -3,8 +3,6 @@
  * a BSD-style license which can be found in the LICENSE file.
  */
 
-#include "stdbool.h"
-
 #include "misc/debug.h"
 #include "misc/misc.h"
 

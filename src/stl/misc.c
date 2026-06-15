@@ -7,7 +7,6 @@
  * 2024 Martin Heide
  */
 
-#include <stdbool.h>
 #include <complex.h>
 #include <errno.h>
 #include <limits.h>

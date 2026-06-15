@@ -1,6 +1,5 @@
 
 #include <complex.h>
-#include <stdbool.h>
 
 extern void mat_identity(int A, int B, complex float x[A][B]);
 extern void mat_zero(int A, int B, complex float x[A][B]);

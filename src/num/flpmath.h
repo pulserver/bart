@@ -4,7 +4,6 @@
 
 #include "misc/cppwrap.h"
 
-#include <stdbool.h>
 #include <stddef.h>
 
 #define CFL_SIZE	sizeof(_Complex float)

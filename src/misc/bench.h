@@ -1,6 +1,5 @@
 
 #include "misc/nested.h"
-#include <stdbool.h>
 
 typedef CLOSURE_TYPE(void, (void)) bench_f;
 

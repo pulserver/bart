@@ -5,7 +5,6 @@
  **/
 
 #include <assert.h>
-#include <stdbool.h>
 
 #include "misc/mri.h"
 #include "misc/misc.h"

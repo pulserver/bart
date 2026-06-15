@@ -1,6 +1,5 @@
 
 #include <complex.h>
-#include <stdbool.h>
 
 #include "misc/mri.h"
 

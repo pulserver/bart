@@ -12,7 +12,6 @@
  * lifting steps. Journal of Fourier Analysis and Applications 1998;4:247-269.
  */
 
-#include <stdbool.h>
 #include <complex.h>
 #include <assert.h>
 

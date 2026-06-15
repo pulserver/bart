@@ -1,13 +1,12 @@
 /* Copyright 2013-2015. The Regents of the University of California.
  * Copyright 2016. Martin Uecker.
- * Copyright 2023. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2023-2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
  * Authors: Martin Uecker, Moritz Blumenthal
  */
 
-#include <stdbool.h>
 #include <assert.h>
 #include <stdint.h>
 #include <sys/types.h>

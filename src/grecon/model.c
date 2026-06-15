@@ -4,7 +4,6 @@
  **/
 
 #include <complex.h>
-#include <stdbool.h>
 #include <stdlib.h>
 
 #include "misc/mri.h"

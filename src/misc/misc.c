@@ -18,7 +18,6 @@
 #include <stddef.h>
 #include <assert.h>
 #include <complex.h>
-#include <stdbool.h>
 #include <setjmp.h>
 #include <stdio.h>
 #include <string.h>

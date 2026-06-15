@@ -13,7 +13,6 @@
 #include <math.h>
 #include <complex.h>
 #include <assert.h>
-#include <stdbool.h>
 
 #include "misc/misc.h"
 #include "misc/debug.h"

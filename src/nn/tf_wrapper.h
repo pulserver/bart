@@ -1,6 +1,4 @@
 
-#include <stdbool.h>
-
 struct TF_Tensor;
 
 struct nlop_s;

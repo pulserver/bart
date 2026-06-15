@@ -9,7 +9,6 @@
  * 2020 Zhengguo Tan
  */
 
-#include <stdbool.h>
 #include <complex.h>
 #include <math.h>
 

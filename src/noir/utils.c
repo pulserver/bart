@@ -10,14 +10,12 @@
  * Magn Reson Med 2008; 60:674-682.
  */
 
-
-
 #include <complex.h>
 #include <math.h>
 
 #include "misc/debug.h"
-
 #include "misc/misc.h"
+
 #include "num/multind.h"
 #include "num/flpmath.h"
 #include "num/filter.h"

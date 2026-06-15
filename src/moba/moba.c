@@ -1,10 +1,8 @@
 /* Copyright 2019-2021. Uecker Lab, University Medical Center Goettingen.
- * Copyright 2022-2024. Institute of Biomedical Imaging. Graz University of Technology.
+ * Copyright 2022-2026. Institute of Biomedical Imaging. Graz University of Technology.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  **/
-
-#include <stdbool.h>
 
 #include "moba/meco.h"
 

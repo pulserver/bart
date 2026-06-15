@@ -1,5 +1,5 @@
 /* Copyright 2018-2022. Uecker Lab. University Medical Center Göttingen.
- * Copyright 2021-2025. Insitute of Biomedical Imaging. TU Graz.
+ * Copyright 2021-2026. Insitute of Biomedical Imaging. TU Graz.
  * Copyright 2015-2017. Martin Uecker.
  * Copyright 2017-2018. Damien Nguyen.
  * Copyright 2017-2018. Francesco Santini.
@@ -13,13 +13,12 @@
  */
 
 #include "ya_getopt.h"
+
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 #include <ctype.h>
-
 #include <complex.h>
 
 #include "misc/misc.h"

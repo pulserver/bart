@@ -2,12 +2,12 @@
  * Copyright 2016. Martin Uecker.
  * Copyright 2017-2020. Massachusetts Institute of Technology.
  * Copyright 2019-2022. Uecker Lab. University Medical Center Göttingen.
- * Copyright 2024-2025. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2024-2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
  * Authors:
- * 2012-2025 Martin Uecker <martin.uecker@med.uni-goettingen.de>
+ * 2012-2025 Martin Uecker
  * 2013 Dara Bahri <dbahri123@gmail.com>
  * 2015-2020 Siddharth Iyer <sid8795@gmail.com>
  *
@@ -25,7 +25,6 @@
 #include <assert.h>
 #include <complex.h>
 #include <math.h>
-#include <stdbool.h>
 
 #include "linops/linop.h"
 #include "linops/someops.h"

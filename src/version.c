@@ -1,6 +1,6 @@
 /* Copyright 2015-2021. Uecker Lab. University Medical Center Göttingen.
  * Copyright 2016. The Regents of the University of California.
- * Copyright 2021-2025. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2021-2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  * 
@@ -9,7 +9,6 @@
  * 2016 Jonathan Tamir
  */
 
-#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

@@ -2,8 +2,6 @@
 #ifndef _SEQ_GRADIENT_H
 #define _SEQ_GRADIENT_H
 
-#include <stdbool.h>
-
 struct grad_limits {
 
 	double inv_slew_rate;

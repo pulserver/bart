@@ -20,7 +20,6 @@
 
 #include <assert.h>
 #include <complex.h>
-#include <stdbool.h>
 #include <math.h>
 
 #include "misc/types.h"

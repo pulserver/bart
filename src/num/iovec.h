@@ -1,5 +1,4 @@
 
-#include <stdbool.h>
 #include <stdlib.h>
 
 #include "misc/cppwrap.h"

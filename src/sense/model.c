@@ -27,7 +27,6 @@
 #include <string.h>
 #include <complex.h>
 #include <assert.h>
-#include <stdbool.h>
 
 #include "num/multind.h"
 #include "num/flpmath.h"

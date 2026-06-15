@@ -12,7 +12,6 @@
 #include <sys/types.h>
 #include <complex.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <stdarg.h>

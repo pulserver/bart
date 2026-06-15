@@ -7,7 +7,6 @@
  * 2024 - 2026 Martin Heide
  */
 
-#include <stdbool.h>
 #include <complex.h>
 
 #include "num/multind.h"

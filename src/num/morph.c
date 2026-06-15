@@ -1,4 +1,4 @@
-/* Copyright 2025. TU Graz. Institute of Biomedical Imaging.
+/* Copyright 2025-2026. TU Graz. Institute of Biomedical Imaging.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
@@ -8,7 +8,6 @@
 
 #include <assert.h>
 #include <complex.h>
-#include <stdbool.h>
 #include <math.h>
 
 #include "num/multind.h"

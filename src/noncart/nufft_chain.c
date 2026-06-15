@@ -7,7 +7,6 @@
 
 #include <math.h>
 
-#include "linops/someops.h"
 #include "misc/misc.h"
 #include "misc/types.h"
 #include "misc/mri.h"
@@ -22,6 +21,7 @@
 #include "linops/fmac.h"
 
 #include "noncart/grid.h"
+
 #include "nufft_chain.h"
 
 

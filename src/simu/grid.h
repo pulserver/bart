@@ -3,7 +3,6 @@
 #define GRID_H 1
 
 #include <complex.h>
-#include <stdbool.h>
 
 #define VEC_DIM_S READ_DIM
 #define VEC_FLAG_S (1u << VEC_DIM_S)

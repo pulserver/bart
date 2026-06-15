@@ -1,10 +1,9 @@
 /* Copyright 2017-2021. Uecker Lab. Unversity Medical Center Göttingen.
- * Copyright 2021-2025. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2021-2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  */
 
-#include <stdbool.h>
 #include <complex.h>
 
 #include "num/flpmath.h"

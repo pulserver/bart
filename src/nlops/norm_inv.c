@@ -6,7 +6,6 @@
  * Authors: Moritz Blumenthal
  */
 
-
 #include "misc/misc.h"
 #include "misc/types.h"
 #include "misc/debug.h"

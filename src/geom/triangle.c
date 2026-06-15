@@ -4,7 +4,6 @@
  */
 
 #include <math.h>
-#include <stdbool.h>
 
 #include "num/vec3.h"
 
@@ -13,7 +12,7 @@
 
 // Moeller-Trumbore
 
-float (triangle_intersect)(float uv[2], const vec3_t o, const vec3_t d, const vec3_t tri[3])
+float triangle_intersect(float uv[2], const vec3_t o, const vec3_t d, const vec3_t tri[3])
 {
 	vec3_t e1, e2;
 	vec3_sub(e1, tri[1], tri[0]);	
@@ -54,7 +53,7 @@ static float det2d(const float a[2], const float b[2])
 	return a[0] * b[1] - a[1] * b[0];
 }
 
-bool (triangle2d_inside)(const float tri[3][2], const float p[2])
+bool triangle2d_inside(const float tri[3][2], const float p[2])
 {
 	float ab[2] = { tri[1][0] - tri[0][0], tri[1][1] - tri[0][1] };
 	float ac[2] = { tri[2][0] - tri[0][0], tri[2][1] - tri[0][1] };

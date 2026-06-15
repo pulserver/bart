@@ -15,7 +15,6 @@
 #include <stdarg.h>
 #include <stdnoreturn.h>
 #include <setjmp.h>
-#include <stdbool.h>
 
 #include "misc/nested.h"
 

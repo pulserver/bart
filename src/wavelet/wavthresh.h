@@ -1,6 +1,4 @@
 
-#include <stdbool.h>
-
 #ifndef WTYPE
 #define WTYPE
 enum wtype { WAVELET_HAAR, WAVELET_DAU2, WAVELET_CDF44 };

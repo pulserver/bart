@@ -6,8 +6,6 @@
  * 2013 Martin Uecker
  */
 
-#include <stdbool.h>
-
 #include "misc/misc.h"
 #include "misc/debug.h"
 

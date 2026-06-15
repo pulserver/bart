@@ -7,7 +7,6 @@
 
 #include <complex.h>
 #include <math.h>
-#include <stdbool.h>
 
 #include "num/multind.h"
 #include "num/rand.h"

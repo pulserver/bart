@@ -1,6 +1,4 @@
 
-#include <stdbool.h>
-
 #include "simu/signals.h"
 #include "simu/simulation.h"
 

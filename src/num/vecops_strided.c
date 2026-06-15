@@ -31,7 +31,6 @@
  **/
 
 
-#include <stdbool.h>
 #include <complex.h>
 #include <limits.h>
 

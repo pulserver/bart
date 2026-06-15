@@ -1,6 +1,6 @@
 /* Copyright 2013-2018. The Regents of the University of California.
  * Copyright 2017-2022. Uecker Lab. University Medical Center Göttingen.
- * Copryight 2023-2024. Institute of Biomedical Imaging. TU Graz.
+ * Copryight 2023-2026. Institute of Biomedical Imaging. TU Graz.
  * Copyright 2026. Department of Radiology. Boston Children's Hospital.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
@@ -11,7 +11,6 @@
  */
 
 #include <stdio.h>
-#include <stdbool.h>
 #include <assert.h>
 
 #include <cuda_runtime_api.h>

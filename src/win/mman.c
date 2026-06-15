@@ -69,7 +69,6 @@ int shm_unlink(const char *name)
 /* The code below was adapted from GitHub: https://github.com/alitrack/mman-win32 */
 
 #include <io.h>
-#include <stdbool.h>
 
 #ifndef FILE_MAP_EXECUTE
 #define FILE_MAP_EXECUTE    0x0020

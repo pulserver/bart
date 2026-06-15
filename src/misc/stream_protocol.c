@@ -6,7 +6,6 @@
  * 2023-2024 Philip Schaten <philip.schaten@tugraz.at>
  */
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -10,7 +10,6 @@
 #ifdef USE_CUDNN
 
 #include <complex.h>
-#include <stdbool.h>
 #include <cudnn.h>
 
 #include "num/multind.h"

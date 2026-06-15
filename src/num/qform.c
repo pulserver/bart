@@ -5,7 +5,6 @@
  * Authors: Martin Uecker, Sebastian Rosenzweig
  */
 
-
 #include <complex.h>
 #include <math.h>
 

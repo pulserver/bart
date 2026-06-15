@@ -6,7 +6,6 @@
  */
 
 #include <assert.h>
-#include <stdbool.h>
 #include <signal.h>
 #include <stddef.h>
 #include <unistd.h>

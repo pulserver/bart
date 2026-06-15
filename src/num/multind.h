@@ -7,7 +7,6 @@
 #include <assert.h>
 #endif
 #include <stdint.h>
-#include <stdbool.h>
 #ifdef _WIN32
 #include <malloc.h>
 #else

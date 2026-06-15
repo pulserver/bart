@@ -7,7 +7,6 @@
 
 #include <assert.h>
 #include <complex.h>
-#include <stdbool.h>
 
 #include "misc/misc.h"
 

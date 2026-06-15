@@ -1,8 +1,6 @@
 #ifndef _OPTS_H
 #define _OPTS_H
 
-#include <stdbool.h>
-
 // FILE
 #include <stdio.h>
 

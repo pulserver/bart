@@ -10,7 +10,6 @@
  */
 
 #include <complex.h>
-#include <stdbool.h>
 
 #include "misc/mmio.h"
 #include "misc/mri.h"

@@ -9,7 +9,6 @@
 
 #include <assert.h>
 #include <complex.h>
-#include <stdbool.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>

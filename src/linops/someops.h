@@ -2,8 +2,6 @@
 #ifndef _LINOPS_SOMEOPS_H
 #define _LINOPS_SOMEOPS_H
 
-#include <stdbool.h>
-
 #include "misc/cppwrap.h"
 
 extern struct linop_s* linop_cdiag_create(int N, const long dims[__VLA(N)], unsigned long flags, const _Complex float* diag);

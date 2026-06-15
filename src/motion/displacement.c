@@ -5,7 +5,6 @@
  * Authors: Moritz Blumenthal
  */
 
-
 #include <complex.h>
 
 #include "misc/misc.h"

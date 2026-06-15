@@ -1,6 +1,6 @@
 /* Copyright 2014-2017. The Regents of the University of California.
  * Copyright 2016-2021. Uecker. University Medical Center Göttingen.
- * Copyright 2022-2025. Intitute of Biomedical Imaging. TU Graz.
+ * Copyright 2022-2026. Intitute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
@@ -10,7 +10,6 @@
  */
 
 #include <complex.h>
-#include <stdbool.h>
 #include <assert.h>
 #include <math.h>
 

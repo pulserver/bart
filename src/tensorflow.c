@@ -1,4 +1,4 @@
-/* Copyright 2023-2025. TU Graz. Institute of Biomedical Imaging.
+/* Copyright 2023-2026. TU Graz. Institute of Biomedical Imaging.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
@@ -6,7 +6,6 @@
  */
 
 #include <assert.h>
-#include <stdbool.h>
 #include <complex.h>
 #include <string.h>
 #include <unistd.h>
@@ -34,8 +33,7 @@
 #define CFL_SIZE sizeof(complex float)
 #endif
 
-static const char help_str[] =
-	"Load Tensorflow Graph";
+static const char help_str[] = "Load Tensorflow Graph";
 
 
 

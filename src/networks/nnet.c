@@ -1,11 +1,10 @@
-/* Copyright 2021-2024. Uecker Lab. University Medical Center Göttingen.
+/* Copyright 2021-2026. Uecker Lab. University Medical Center Göttingen.
  * Copyright 2024. TU Graz. Institute of Biomedical Imaging.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  **/
 
 #include <assert.h>
-#include <stdbool.h>
 #include <complex.h>
 #include <math.h>
 

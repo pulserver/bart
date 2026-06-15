@@ -1,4 +1,4 @@
-/* Copyright 2023-2024. Institute of Biomedical Imaging. TU Graz.
+/* Copyright 2023-2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
@@ -17,7 +17,6 @@
 
 #include <complex.h>
 #include <assert.h>
-#include <stdbool.h>
 #include <limits.h>
 
 #include "misc/misc.h"

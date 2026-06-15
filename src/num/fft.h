@@ -2,8 +2,6 @@
 #ifndef _FFT_H
 #define _FFT_H
 
-#include <stdbool.h>
-
 #include "misc/cppwrap.h"
 
 // similar to fftshift but modulates in the transform domain

@@ -4,7 +4,6 @@
  */
 
 #include <assert.h>
-#include <stdbool.h>
 #include <complex.h>
 #include <math.h>
 

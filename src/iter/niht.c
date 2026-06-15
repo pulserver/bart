@@ -19,7 +19,6 @@
  */
 
 #include <math.h>
-#include <stdbool.h>
 #include <assert.h>
 #include <complex.h>
 

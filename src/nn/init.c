@@ -1,22 +1,24 @@
 /* Copyright 2020-2022. Uecker Lab. University Medical Center Göttingen.
- * Copyright 2022-2025. Graz University of Technology.
+ * Copyright 2022-2026. Graz University of Technology.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
  * Authors: Moritz Blumenthal
  */
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <complex.h>
 #include <math.h>
+
 #include "misc/debug.h"
 #include "misc/misc.h"
 #include "misc/shrdptr.h"
 #include "misc/types.h"
+
 #include "num/multind.h"
 #include "num/flpmath.h"
 #include "num/rand.h"
+
 #include "init.h"
 
 typedef void (*initializer_del)(const struct initializer_s* conf);

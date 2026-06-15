@@ -6,7 +6,6 @@
  * 2017 Martin Uecker
  */
 
-
 #include <math.h>
 
 #include "vec3.h"

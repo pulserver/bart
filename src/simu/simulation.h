@@ -3,7 +3,6 @@
 #define _SIMULATION_H
 
 #include <complex.h>
-#include <stdbool.h>
 
 #include "seq/pulse.h"
 

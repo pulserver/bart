@@ -1,6 +1,5 @@
 
 #include <complex.h>
-#include <stdbool.h>
 
 extern void lapack_eig(long N, float eigenval[N], complex float matrix[N][N]);
 extern void lapack_geig(long N, float eigenval[N], complex float A[N][N], complex float B[N][N]);

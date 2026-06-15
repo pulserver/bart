@@ -12,7 +12,6 @@
  */
 
 #include <stdlib.h>
-#include <stdbool.h>
 #include <assert.h>
 #include <fenv.h>
 #if 0

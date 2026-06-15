@@ -9,7 +9,6 @@
  * 2015 Jonathan Tamir
  */
 
-#include <stdbool.h>
 #include <complex.h>
 #include <string.h>
 #include <unistd.h>

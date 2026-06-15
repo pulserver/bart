@@ -9,7 +9,6 @@
 
 #include <complex.h>
 #include <signal.h>
-#include <stdbool.h>
 
 #include "misc/debug.h"
 #include "num/multind.h"

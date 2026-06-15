@@ -1,6 +1,4 @@
 
-#include <stdbool.h>
-
 #include "linops/linop.h"
 
 #ifndef _NLOP_H

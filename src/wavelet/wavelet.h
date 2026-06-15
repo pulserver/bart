@@ -1,6 +1,5 @@
 
 #include <complex.h>
-#include <stdbool.h>
 
 extern const float wavelet_haar[2][2][2];
 extern const float wavelet_dau2[2][2][4];

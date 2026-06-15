@@ -1,6 +1,5 @@
 
 #include <complex.h>
-#include <stdbool.h>
 
 #ifndef DIMS
 #define DIMS 16
