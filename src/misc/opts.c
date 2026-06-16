@@ -29,7 +29,7 @@
 #include "opts.h"
 
 #ifdef BARTDLL
-int getsubopt(char **restrict, char *const *restrict, char **restrict) { assert(0); }
+static int getsubopt(char **restrict, char *const *restrict, char **restrict) { assert(0); }
 #endif
 
 list_t str_list = NULL;

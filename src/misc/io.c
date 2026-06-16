@@ -34,7 +34,11 @@
 
 #include "io.h"
 
-
+#ifdef _WIN32
+typedef unsigned int rw_size_t;
+#else
+typedef size_t rw_size_t;
+#endif
 
 static char* node_id = NULL;
 
@@ -63,7 +67,7 @@ int xwrite(int fd, int N, const char buf[N])
 
 	while (w < N) {
 
-		int ww = write(fd, buf + w, (size_t)(N - w));
+		int ww = write(fd, buf + w, (rw_size_t)(N - w));
 
 		if (0 >= ww)
 			return -1;
@@ -80,7 +84,7 @@ int xread(int fd, int N, char buf[N])
 
 	while (r < N) {
 
-		int rr = read(fd, buf + r, (size_t)(N - r));
+		int rr = read(fd, buf + r, (rw_size_t)(N - r));
 
 		if (0 >= rr)
 			return -1;
@@ -97,7 +101,7 @@ static int xread0(int fd, int N, char buf[N])
 
 	while (r < N) {
 
-		int rr = read(fd, buf + r, (size_t)(N - r));
+		int rr = read(fd, buf + r, (rw_size_t)(N - r));
 
 		if (0 > rr)
 			error("io read error\n");
