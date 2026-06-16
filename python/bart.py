@@ -222,7 +222,7 @@ async def run_wasm_cmd(shell_cmd, infiles, infiles_kw, outfiles):
         for f in infiles + infiles_kw:
             await put_wasm_cfl(f)
 
-        non_empty_cmd = [x for x in shell_cmd if len(shell_cmd) > 0]
+        non_empty_cmd = [x for x in shell_cmd if len(x) > 0]
 
         result = await wasm_async_call("bart_cmd('" + ' '.join(non_empty_cmd) + "')")
         ERR, stdout, stderr = result['ret'], result['stdout'], result['stderr']
@@ -236,11 +236,15 @@ async def run_wasm_cmd(shell_cmd, infiles, infiles_kw, outfiles):
         if not 0 == ERR:
             print(f"Function exited with {ERR}", file=sys.stderr)
 
-        for f in outfiles:
-            await get_wasm_cfl(f)
+        if not ERR:
+            for f in outfiles:
+                await get_wasm_cfl(f)
 
-        for f in infiles + infiles_kw + outfiles:
+        for f in infiles + infiles_kw:
             await rm_bart_cfl(f)
+        if not ERR:
+            for f in outfiles:
+                await rm_bart_cfl(f)
 
         return ERR, stdout, stderr
 
