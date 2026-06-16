@@ -1029,20 +1029,20 @@ BARTDLL_MODULES=$(foreach t,$(filter-out $(WIN_UNSUPPORTED_MODULES),$(ALIBS)),$t
 BARTDLL_OBJS=$(filter-out $(WIN_UNSUPPORTED_OBJS),$(foreach t,$(BARTDLL_MODULES),$($t)))
 
 bart.dll: CC = $(MINGWCC)
-bart.dll: CFLAGS = -D NO_PNG -D NOLAPACKE -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D BARTDLL
+bart.dll: CFLAGS += -D NO_PNG -D NOLAPACKE -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D BARTDLL
 bart.dll: CPPFLAGS = -D BARTLIB_EXPORTS -I$(srcdir)/
 bart.dll: LDFLAGS = -shared -Wl,--subsystem,windows -Wl,--out-implib,bart.lib -Wl,--output-def,bart.def -static-libgcc
 bart.dll: $(BARTDLL_OBJS:.o=.win.o)
 	$(CC) $^ $(LDFLAGS) -o $@
 
-lib/libbart.a: CFLAGS = -D NO_PNG -D NOLAPACKE -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D BARTDLL -fPIC
+lib/libbart.a: CFLAGS += -D NO_PNG -D NOLAPACKE -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D BARTDLL -fPIC
 lib/libbart.a: CPPFLAGS = -I$(srcdir)/
 lib/libbart.a: $(BARTDLL_OBJS:.o=.libbart.o)
 	$(AR) rcs $@ $^
 
 $(UTARGETS_WINE): CC = $(MINGWCC)
 $(UTARGETS_WINE): CPPFLAGS = -D BARTLIB_EXPORTS -I$(srcdir)/
-$(UTARGETS_WINE): CFLAGS = -D NO_PNG -D NOLAPACKE -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D BARTDLL
+$(UTARGETS_WINE): CFLAGS += -D NO_PNG -D NOLAPACKE -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D BARTDLL
 
 .SECONDEXPANSION:
 $(CTARGETS): commands/% : src/main.c $(srcdir)/%.o $$(MODULES_%) $(MODULES)
