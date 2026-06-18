@@ -225,6 +225,7 @@ int main_moba(int argc, char* argv[argc])
 		OPT_FLOAT('j', &conf.alpha_min, "minreg", "Minimum regularization parameter"),
 		OPT_FLOAT('u', &conf.rho, "rho", "ADMM rho [default: 0.01]"),
 		OPT_PINT('C', &conf.inner_iter, "iter", "inner iterations"),
+		OPTL_FLOAT(0, "tol", &conf.tolerance, "tol", "tolerance for fista early stopping (default: 0.01)"),
 		OPT_FLOAT('s', &conf.step, "step", "step size"),
 		OPT_FLOAT('B', &conf.lower_bound, "bound", "lower bound for relaxation"),
 		OPT_FLVEC2('b', &conf.scale_fB0, "a:b", "B0 field: sobolev parameter (a=0 means no sobolev) [default: 222.; 32.]"),
