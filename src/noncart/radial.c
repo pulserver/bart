@@ -1,4 +1,5 @@
 /* Copyright 2025. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2026. Department of Radiology. Boston Children's Hospital.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  */
@@ -165,6 +166,34 @@ static void traj_radial_direction_int(int N, long idx, const long ddims[N], comp
 	md_zdiv2(N, ddims, MD_STRIDES(N, ddims, CFL_SIZE), dir, MD_STRIDES(N, ddims, CFL_SIZE), dir, MD_STRIDES(N, ndims, CFL_SIZE), nrm);
 	md_free(nrm);
 }
+
+void traj_radial_dcshifts(int N, const long sdims[__VLA(N)], complex float* shift, const long tdims[__VLA(N)], const _Complex float* traj)
+{
+	long tdims1[N];
+	md_select_dims(N, ~MD_BIT(1), tdims1, tdims);
+
+	assert(md_check_compat(N, MD_BIT(0), sdims, tdims1));
+
+	complex float* traj1 = md_alloc_sameplace(N, tdims1, CFL_SIZE, traj);
+	// Extract what would be the DC component in Cartesian sampling
+	md_resize_center(N, tdims1, traj1, tdims, traj, CFL_SIZE);
+
+	complex float* dir = md_alloc_sameplace(N, tdims1, CFL_SIZE, traj);
+	md_resize(N, tdims1, dir, tdims, traj, CFL_SIZE);
+	md_zsub(N, tdims1, dir, traj1, dir);
+
+	md_zrss(N, tdims1, MD_BIT(0), shift, dir);
+	md_zspow(N, sdims, shift, shift, -1.);
+	md_zmul2(N, tdims1, MD_STRIDES(N, tdims1, CFL_SIZE), dir, MD_STRIDES(N, tdims1, CFL_SIZE), dir, MD_STRIDES(N, sdims, CFL_SIZE), shift);
+
+	md_ztenmul(N, sdims, shift, tdims1, traj1, tdims1, dir);
+
+	md_free(dir);
+	md_free(traj1);
+}
+
+
+
 
 bool traj_radial_through_center(int N, const long tdims[N], const complex float* traj)
 {
