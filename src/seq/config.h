@@ -78,6 +78,7 @@ struct seq_geom {
 
 	double fov;
 	double slice_thickness;
+	double slab_os; // 1.0 no oversampling
 	double shift[SEQ_MAX_SLICES][3]; // [ro, pe, slice]
 
 	int baseres;

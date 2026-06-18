@@ -61,7 +61,7 @@ struct seq_standard_conf {
 	double fov;
 	int baseres;
 	double slice_thickness;
-	double slice_os;
+	double slice_os; // default: 1 (no slice os)
 
 	int is3D;
 

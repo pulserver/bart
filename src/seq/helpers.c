@@ -214,7 +214,7 @@ static void seq_bart_to_standard_conf(struct seq_standard_conf* std, struct seq_
 	std->fov = seq->geom.fov;
 	std->baseres = seq->geom.baseres;
 	std->slice_thickness = seq->geom.slice_thickness;
-	// std->slice_os = 1. + seq->geom.slice_os;
+	std->slice_os = seq->geom.slab_os;
 
 	std->is3D = seq->enc.is3D;
 
@@ -259,7 +259,7 @@ static void seq_standard_conf_to_bart(struct seq_config* seq, struct seq_standar
 	seq->geom.fov = std->fov;
 	seq->geom.baseres = std->baseres;
 	seq->geom.slice_thickness = std->slice_thickness;
-	// seq->geom.slice_os = 1. + std->slice_os;
+	seq->geom.slab_os = std->slice_os;
 
 	seq->enc.is3D = std->is3D;
 
@@ -500,8 +500,8 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 			seq->phys.contrast, seq->phys.rf_duration, seq->phys.flip_angle, seq->phys.bwtp);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr), 
-			"\nFOV/slice-th\t\t\t%.3f/%.3f\nBR/mb_factor/SMS dist\t\t\t%d/%d/%.3f",
-			seq->geom.fov, seq->geom.slice_thickness,
+			"\nFOV/slice-th/slab-os\t\t\t%.3f/%.3f/%.2f\nBR/mb_factor/SMS dist\t\t\t%d/%d/%.3f",
+			seq->geom.fov, seq->geom.slice_thickness, seq->geom.slab_os,
 			seq->geom.baseres, seq->geom.mb_factor, seq->geom.sms_distance);
 	
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),

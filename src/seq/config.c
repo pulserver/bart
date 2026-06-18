@@ -107,6 +107,7 @@ const struct seq_config seq_config_defaults = {
 	.geom = {
 		.fov = .256,
 		.slice_thickness = .006,
+		.slab_os = 1.,
 		.shift = { [0 ... SEQ_MAX_SLICES - 1] = { 0., 0., 0. } },
 		.baseres = 256,
 		.mb_factor = 1,

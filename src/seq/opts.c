@@ -71,6 +71,7 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 		OPTL_DOUBLE(0, "FOV", &conf->geom.fov, "FOV", "Field Of View"),
 		OPTL_PINT(0, "BR", &conf->geom.baseres, "BR", "Base Resolution"),
 		OPTL_DOUBLE(0, "slice_thickness", &conf->geom.slice_thickness, "slice_thickness", "Slice thickness"),
+		OPTL_DOUBLE(0, "slab_os", &conf->geom.slab_os, "slab_os", "Slab oversampling in partition dimension (default: 1.0 = no oversampling)"),
 
 		// basic sequence parameters
 		OPTL_DOUBLE(0, "FA", &conf->phys.flip_angle, "flip angle", "Flip angle [deg]"),
