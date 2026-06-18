@@ -309,7 +309,7 @@ static int prep_grad_sli(struct grad_trapezoid* grad, const struct seq_config* s
 }
 
 
-static int prep_grad_sli_reph(struct grad_trapezoid* grad, const struct seq_config* seq)
+static int prep_grad_sli_reph(struct grad_trapezoid* grad, long pos_phs2, const struct seq_config* seq)
 {
 	*grad = (struct grad_trapezoid){ 0 };
 
@@ -317,6 +317,43 @@ static int prep_grad_sli_reph(struct grad_trapezoid* grad, const struct seq_conf
 	limits.max_amplitude *= SCALE_GRAD;
 
 	if (!grad_soft(grad, available_time_RF_SLI(0, seq), -slice_momentum_to_rephase(seq), limits))
+		return 0;
+
+	if (seq->enc.is3D) {
+
+		// in 3d mode: slice_thickness = slab_thickness = seq->loop_dims[PHS2_DIM]) * thickness
+		double pe_enc = 1. * (pos_phs2 - 0.5 * seq->loop_dims[PHS2_DIM]) / (seq->sys.gamma * seq->geom.slice_thickness);
+		double moment = - slice_momentum_to_rephase(seq) + pe_enc;
+
+		if (!gradient_prepare_with_timing(grad, moment, seq))
+			return 0;
+	}
+
+	return 1;
+}
+
+
+static int prep_grad_pe3d_rewinder(struct grad_trapezoid* grad, const long pos[DIMS], const struct seq_config* seq)
+{
+	*grad = (struct grad_trapezoid){ 0 };
+
+	if (!seq->enc.is3D || (SEQ_CONTRAST_RF_SPOILED != seq->phys.contrast))
+		return 1;
+
+	struct grad_trapezoid tmp_sli_reph;
+	if (!prep_grad_sli_reph(&tmp_sli_reph, pos[PHS2_DIM], seq))
+		return 0;
+
+	grad->rampup = tmp_sli_reph.rampup;
+	grad->rampdown = tmp_sli_reph.rampdown;
+	grad->flat = tmp_sli_reph.flat;
+
+	// in 3d mode: slice_thickness = slab_thickness = seq->loop_dims[PHS2_DIM]) * thickness
+	double pe_enc = 1. * (pos[PHS2_DIM] - 0.5 * seq->loop_dims[PHS2_DIM]) / (seq->sys.gamma * seq->geom.slice_thickness);
+
+	double moment = - slice_momentum_to_rephase(seq) - pe_enc;
+
+	if (!gradient_prepare_with_timing(grad, moment, seq))
 		return 0;
 
 	return 1;
@@ -423,6 +460,7 @@ struct flash_timing {
 	double readout_rephaser;
 	double spoiler_read;
 	double spoiler_slice;
+	double pe3d_rewinder;
 };
 
 
@@ -448,6 +486,8 @@ static struct flash_timing flash_compute_timing(const struct seq_config *seq)
 	timing.spoiler_slice = end_last_ro(0, seq);
 	timing.readout_rephaser = end_last_ro(1, seq);
 	timing.spoiler_read = end_last_ro(1, seq);
+
+	timing.pe3d_rewinder = timing.readout_rephaser;
 
 	return timing;
 }
@@ -478,7 +518,7 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 
 	struct grad_trapezoid slice_rephaser;
 
-	if (!prep_grad_sli_reph(&slice_rephaser, seq))
+	if (!prep_grad_sli_reph(&slice_rephaser, seq_state->pos[PHS2_DIM], seq))
 		return ERROR_PREP_GRAD_SLI_REPH;
 
 	if ((grad_total_time(&slice) - 1.E-9) > timing.slice_rephaser)
@@ -590,6 +630,15 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 		return ERROR_MAX_GRAD_SPOILER;
 
 	i += seq_grad_to_event(ev + i, timing.spoiler_slice, &spoiler_slice, projSLICE);
+
+
+	struct grad_trapezoid pe3d_rewinder;
+
+	if (!prep_grad_pe3d_rewinder(&pe3d_rewinder, seq_state->pos, seq))
+		return ERROR_PREP_GRAD_PE3D_REW;
+
+	i += seq_grad_to_event(ev + i, timing.pe3d_rewinder, &pe3d_rewinder, projSLICE);
+
 
 	if (seq_block_end_flat(i, ev, seq->sys.raster_grad) - 1E-9 > seq->phys.tr)
 		return ERROR_END_FLAT_KERNEL;

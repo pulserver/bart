@@ -93,7 +93,7 @@ double get_rot_angle(const long pos[DIMS], const struct seq_config* seq)
 	long pos2[DIMS] = { 0L };
 
 	pos2[PHS2_DIM] = pos[PHS1_DIM];
-	pos2[SLICE_DIM] = pos[SLICE_DIM];
+	pos2[SLICE_DIM] = (seq->enc.is3D) ? pos[PHS2_DIM] : pos[SLICE_DIM];
 	pos2[TE_DIM] = pos[TE_DIM];
 	pos2[TIME_DIM] = pos[TIME_DIM];
 

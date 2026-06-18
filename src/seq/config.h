@@ -92,6 +92,7 @@ struct seq_enc {
 	int tiny;
 	unsigned long aligned_flags;
 	enum seq_order order;
+	int is3D;
 };
 
 struct seq_magn {

@@ -216,7 +216,7 @@ static void seq_bart_to_standard_conf(struct seq_standard_conf* std, struct seq_
 	std->slice_thickness = seq->geom.slice_thickness;
 	// std->slice_os = 1. + seq->geom.slice_os;
 
-	// std->is3D = seq->dim.is3D;
+	std->is3D = seq->enc.is3D;
 
 	std->gamma = seq->sys.gamma;
 	std->b0 = seq->sys.b0;
@@ -261,7 +261,7 @@ static void seq_standard_conf_to_bart(struct seq_config* seq, struct seq_standar
 	seq->geom.slice_thickness = std->slice_thickness;
 	// seq->geom.slice_os = 1. + std->slice_os;
 
-	// seq->dim.is3D = std->is3D;
+	seq->enc.is3D = std->is3D;
 
 	seq->sys.gamma = std->gamma;
 
@@ -322,21 +322,30 @@ static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in
 		break;
 	}
 
-	long total_slices = in_dims[SLICE_DIM];
+	if (seq->enc.is3D) {
 
-	if (1 < seq->geom.mb_factor) {
-
-		seq->loop_dims[SLICE_DIM] = seq->geom.mb_factor;
-		seq->loop_dims[PHS2_DIM] = total_slices / seq->geom.mb_factor;
+		seq->loop_dims[PHS2_DIM] = in_dims[PHS2_DIM];
+		seq->loop_dims[SLICE_DIM] = 1;
+		seq->geom.mb_factor = 1;
 
 	} else {
 
-		seq->loop_dims[SLICE_DIM] = total_slices;
-		seq->loop_dims[PHS2_DIM] = 1;
-	}
+		long total_slices = in_dims[SLICE_DIM];
 
-	if ((seq->loop_dims[PHS2_DIM] * seq->loop_dims[SLICE_DIM]) != total_slices)
-		seq->loop_dims[PHS2_DIM] = -1; //mb groups
+		if (1 < seq->geom.mb_factor) {
+
+			seq->loop_dims[SLICE_DIM] = seq->geom.mb_factor;
+			seq->loop_dims[PHS2_DIM] = total_slices / seq->geom.mb_factor;
+
+		} else {
+
+			seq->loop_dims[SLICE_DIM] = total_slices;
+			seq->loop_dims[PHS2_DIM] = 1;
+		}
+
+		if ((seq->loop_dims[PHS2_DIM] * seq->loop_dims[SLICE_DIM]) != total_slices)
+			seq->loop_dims[PHS2_DIM] = -1; //mb groups
+	}
 
 	long frames = in_dims[TIME_DIM];
 	seq->loop_dims[TIME_DIM] = frames;
@@ -378,10 +387,18 @@ static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in
 
 static void conf_to_loop_dims(const int D, long dims[D], struct seq_config* seq)
 {
-	dims[SLICE_DIM] = seq->loop_dims[SLICE_DIM];
-	dims[PHS2_DIM] = (seq->geom.mb_factor > 1) ? seq->loop_dims[SLICE_DIM] / seq->geom.mb_factor : 1;
-	if ((dims[PHS2_DIM] * seq->geom.mb_factor != seq->loop_dims[SLICE_DIM]))
-		seq->loop_dims[PHS2_DIM] = -1; //mb groups
+	if (seq->enc.is3D) {
+
+		dims[PHS2_DIM] = seq->loop_dims[PHS2_DIM];
+		dims[SLICE_DIM] = seq->loop_dims[SLICE_DIM];
+
+	} else {
+
+		dims[SLICE_DIM] = seq->loop_dims[SLICE_DIM];
+		dims[PHS2_DIM] = (seq->geom.mb_factor > 1) ? seq->loop_dims[SLICE_DIM] / seq->geom.mb_factor : 1;
+		if ((dims[PHS2_DIM] * seq->geom.mb_factor != seq->loop_dims[SLICE_DIM]))
+			seq->loop_dims[PHS2_DIM] = -1; //mb groups
+	}
 
 	dims[PHS1_DIM] = seq->loop_dims[PHS1_DIM];
 
@@ -408,8 +425,8 @@ struct seq_interface_conf seq_get_interface_conf(struct seq_config* conf)
 {
 	struct seq_interface_conf ret = { };
 
-	// if (conf->enc.is3D)
-	// 	ret.mode |= SEQ_MODE_3D;
+	if (conf->enc.is3D)
+		ret.mode |= SEQ_MODE_3D;
 
 	if (SEQ_ASL_NONE != conf->asl.label_type)
 		ret.mode |= SEQ_MODE_ASL;
@@ -488,8 +505,9 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 			seq->geom.baseres, seq->geom.mb_factor, seq->geom.sms_distance);
 	
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
-			"\nPE_Mode/Turns-GA/aligned flags/order\t%d/%d/%ld/%d",
-			seq->enc.pe_mode, seq->enc.tiny, seq->enc.aligned_flags, seq->enc.order);
+			"\nPE_Mode/Turns-GA/aligned flags/order\t%d/%d/%ld/%d\nis3D\t\t\t\t\t%d",
+			seq->enc.pe_mode, seq->enc.tiny, seq->enc.aligned_flags, seq->enc.order,
+			seq->enc.is3D);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
 			"\ngamma/b0/max grad/inv slew\t\t%.0f/%.3f/%.3f/%.6f\n",

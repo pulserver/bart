@@ -85,6 +85,9 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 		OPTL_DOUBLE(0, "asym_echo", &conf->phys.asym_echo, "asym_echo", "Asymmetric echo [default = 0.5]"),
 		OPTL_DOUBLE(0, "os", &conf->phys.os, "os", "Oversampling factor"),
 
+		//dimension
+		OPTL_INT(0, "is3D", &conf->enc.is3D, "is3D", "3D sequence flag"),
+
 		// encoding
 		OPTL_UINT(0, "pe_mode", &conf->enc.pe_mode, "pe_mode", "(Phase-encoding mode)"),
 		OPTL_SELECT(0, "turn", enum pe_mode, &conf->enc.pe_mode, SEQ_PEMODE_TURN, "turn-based PE (default: RAGA)"),

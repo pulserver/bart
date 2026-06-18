@@ -118,6 +118,7 @@ const struct seq_config seq_config_defaults = {
 		.tiny = 1,
 		.aligned_flags = 0,
 		.order = SEQ_ORDER_AVG_OUTER,
+		.is3D = 0,
 	},
 
 	.magn = {

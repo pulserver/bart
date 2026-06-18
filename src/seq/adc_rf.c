@@ -164,7 +164,7 @@ long flash_ex_calls(const struct seq_config* seq)
 	if (SEQ_PEMODE_RAGA == seq->enc.pe_mode)
 		incomplete_raga_spks = seq->loop_dims[PHS1_DIM] - seq->loop_dims[ITER_DIM];
 
-	if (1 < seq->geom.mb_factor) {
+	if ((1 < seq->geom.mb_factor) || seq->enc.is3D) {
 
 		dims[SLICE_DIM] = 1;
 		incomplete_raga_spks *= dims[PHS2_DIM];
@@ -295,8 +295,11 @@ int prep_adc(struct seq_event* adc_ev, double start, double rf_spoil_phase,
 	    && (0 < seq->geom.shift[seq_state->chrono_slice][1]))
 		delta_pe = (360. * (seq->geom.shift[seq_state->chrono_slice][1] / seq->geom.fov)) * (- 0.5 * seq->loop_dims[PHS1_DIM] + adc_ev->adc.pos[PHS1_DIM]);
 
-	adc_ev->adc.phase = phase_clamp(rf_spoil_phase + delta_pe);
+	double delta_3d = 0.;
+	if (seq->enc.is3D)
+		delta_3d = (180. / seq->loop_dims[PHS2_DIM]) * (seq_state->pos[PHS2_DIM] - 0.5 * seq->loop_dims[PHS2_DIM]);
 
+	adc_ev->adc.phase = phase_clamp(rf_spoil_phase + delta_pe + delta_3d);
 
 	return 1;
 }

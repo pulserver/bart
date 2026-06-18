@@ -412,6 +412,9 @@ static int check_settings(const struct seq_state* seq_state, const struct seq_co
 	if (0 > seq->loop_dims[PHS2_DIM])
 		return ERROR_SETTING_DIM;
 
+	if ((1 < seq->geom.mb_factor) && seq->enc.is3D)
+		return ERROR_SETTING_DIM;
+
 	if (SEQ_MAX_SLICES < get_slices(seq))
 		return ERROR_SETTING_DIM;
 
