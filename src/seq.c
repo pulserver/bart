@@ -230,14 +230,23 @@ int main_seq(int argc, char* argv[argc])
 	complex float* out_adc = NULL;
 	complex float* out_raga = NULL;
 
-	if (NULL != grad_file)
+	if (NULL != grad_file) {
+
 		out_grad = create_cfl(grad_file, DIMS, mdims);
+		md_clear(DIMS, mdims, out_grad, CFL_SIZE);
+	}
 
-	if (NULL != mom_file)
+	if (NULL != mom_file) {
+
 		out_mom = create_cfl(mom_file, DIMS, mdims);
+		md_clear(DIMS, mdims, out_mom, CFL_SIZE);
+	}
 
-	if (NULL != adc_file)
+	if (NULL != adc_file) {
+
 		out_adc = create_cfl(adc_file, DIMS, adims);
+		md_clear(DIMS, adims, out_adc, CFL_SIZE);
+	}
 
 	if (NULL != seq_opts.raga_file) {
 
