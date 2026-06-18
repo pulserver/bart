@@ -61,7 +61,7 @@ static void optimized_threeop_oii(int D, const long dim[D], const long ostr[D], 
 
 	unsigned long io = 1UL + ((iptr1 == optr) ? 2 : 0) + ((iptr2 == optr) ? 4 : 0);
 
-	optimized_nop(3, io, D, dim, nstr, nptr, sizes, too);
+	(optimized_nop)(3, io, D, dim, nstr, nptr, sizes, too);
 }
 
 
@@ -696,7 +696,7 @@ bool zconvcorr_fwd_im2col_cf_cpu(int N,
 
 	optimized_threeop_oii(N - 5, mdims, ostrs + 5, (void*)out, istrs + 5, (void*)in, kstrs + 5, (void*)krn,
 				(size_t[3]){ (size_t)(osize * (long)CFL_SIZE), (size_t)(isize * (long)CFL_SIZE), (size_t)(ksize * (long)CFL_SIZE) },
-				nary_zconvcorr3D_I2C_CF);
+				CLOSURE(md_nary_opt_fun_t, nary_zconvcorr3D_I2C_CF));
 
 	debug_printf(DP_DEBUG3, "conv by %s \n", __func__);
 
@@ -792,7 +792,7 @@ bool zconvcorr_bwd_krn_im2col_cf_cpu(int N,
 
 	optimized_threeop_oii(N - 5, mdims, kstrs + 5, (void*)krn, istrs + 5, (void*)in, ostrs + 5, (void*)out,
 				(size_t[3]){ (size_t)(ksize * (long)CFL_SIZE), (size_t)(isize * (long)CFL_SIZE), (size_t)(osize * (long)CFL_SIZE) },
-				nary_zconvcorr_im2col);
+				CLOSURE(md_nary_opt_fun_t, nary_zconvcorr_im2col));
 
 	debug_printf(DP_DEBUG3, "conv by %s \n", __func__);
 
@@ -891,7 +891,7 @@ bool zconvcorr_bwd_in_im2col_cf_cpu(int N,
 
 	optimized_threeop_oii(N - 5, mdims, istrs + 5, (void*)in, ostrs + 5, (void*)out, kstrs + 5, (void*)krn,
 				(size_t[3]){ (size_t)(osize * (long)CFL_SIZE), (size_t)(isize * (long)CFL_SIZE), (size_t)(ksize * (long)CFL_SIZE) },
-				nary_zconvcorr3D_I2C_CF);
+				CLOSURE(md_nary_opt_fun_t, nary_zconvcorr3D_I2C_CF));
 
 	debug_printf(DP_DEBUG3, "conv by %s \n", __func__);
 

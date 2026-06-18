@@ -235,7 +235,7 @@ int main_denoise(int argc, char* argv[argc])
 	const struct operator_s* normaleq_op = operator_ref(forward_op->normal);
 	const struct operator_s* adjoint = operator_ref(forward_op->adjoint);
 
-	const struct operator_s* itop_op = itop_create(it.italgo, it.iconf, false, NULL, normaleq_op, nr_penalties, thresh_ops, trafos_cond ? trafos : NULL, NULL, NULL);
+	const struct operator_s* itop_op = itop_create(it.italgo, it.iconf, false, NULL, normaleq_op, nr_penalties, thresh_ops, trafos_cond ? trafos : NULL, NULL, (itop_continuation_t){ });
 
 	if (gpu) {
 

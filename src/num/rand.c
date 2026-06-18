@@ -534,7 +534,7 @@ static void md_sample_mpi(int D, const long dims[D], complex float* dst, md_samp
 
 		long offset_rand = md_calc_offset(D, strs_offset_p, pos) + offset_cfl;
 
-		vec_fun(offset_rand, N, vptr_resolve(dst_offset));
+		NESTED_CALL(vec_fun, (offset_rand, N, vptr_resolve(dst_offset)));
 	};
 
 	delayed_compute(dst);
@@ -554,7 +554,7 @@ static void md_gaussian_philox_rand(int D, const long dims[D], complex float* ds
 		 vec_gaussian_philox_rand(worker_state, offset, N, dst);
 	};
 
-	md_sample_mpi(D, dims, dst, vec_fun);
+	md_sample_mpi(D, dims, dst, CLOSURE(md_sample_fun_t, vec_fun));
 }
 
 
@@ -624,7 +624,7 @@ static void md_uniform_philox_rand(int D, const long dims[D], complex float* dst
 		vec_uniform_philox_rand(worker_state, offset, N, dst);
 	};
 
-	md_sample_mpi(D, dims, dst, vec_fun);
+	md_sample_mpi(D, dims, dst, CLOSURE(md_sample_fun_t, vec_fun));
 }
 
 void md_uniform_rand(int D, const long dims[D], complex float* dst)
@@ -685,7 +685,7 @@ static void md_philox_rand_one(int D, const long dims[D], complex float* dst, do
 		vec_philox_rand_one(worker_state, offset, N, dst, p);
 	};
 
-	md_sample_mpi(D, dims, dst, vec_fun);
+	md_sample_mpi(D, dims, dst, CLOSURE(md_sample_fun_t, vec_fun));
 }
 
 void md_rand_one(int D, const long dims[D], complex float* dst, double p)

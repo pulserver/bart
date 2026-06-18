@@ -486,7 +486,7 @@ void grid_point(int ch, int N, const long dims[N], const long strs[N], const flo
 		}
 	};
 
-	grid_point_gen(N, dims, strs, pos, periodic, width, kb_size, kb_table, update);
+	grid_point_gen(N, dims, strs, pos, periodic, width, kb_size, kb_table, CLOSURE(grid_update_t, update));
 }
 
 
@@ -508,7 +508,7 @@ void grid_pointH(int ch, int N, const long dims[N], const long strs[N], const fl
 		}
 	};
 
-	grid_point_gen(N, dims, strs, pos, periodic, width, kb_size, kb_table, update);
+	grid_point_gen(N, dims, strs, pos, periodic, width, kb_size, kb_table, CLOSURE(grid_update_t, update));
 }
 
 

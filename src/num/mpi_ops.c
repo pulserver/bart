@@ -364,7 +364,7 @@ void mpi_copy2(int N, const long dim[N], const long ostr[N], void* optr, const l
 		mpi_copy(ptr[0], size2, ptr[1], sender_rank, recv_rank);
 	};
 
-	optimized_nop(2, MD_BIT(0), N, dim, nstr, (void*[2]){ optr, (void*)iptr }, (size_t[2]){ (size_t)size, (size_t)size }, nary_copy_mpi);
+	optimized_nop(2, MD_BIT(0), N, dim, nstr, ((void*[2]){ optr, (void*)iptr }), ((size_t[2]){ (size_t)size, (size_t)size }), nary_copy_mpi);
 }
 
 

@@ -36,13 +36,28 @@ extern long md_ravel_index_permuted(int D, const long pos[__VLA(D)], unsigned lo
 extern long md_reravel_index(int D, unsigned long rflags, unsigned long uflags, const long dims[__VLA(D)], long index);
 
 extern void md_nary(int C, int D, const long dim[__VLA(D)], const long* str[__VLA(C)], void* ptr[__VLA(C)], md_nary_fun_t fun);
+#define md_nary(C, D, dim, str, ptr, fun) \
+	md_nary(C, D, dim, str, ptr, CLOSURE(md_nary_fun_t, fun))
+
 extern void md_nary_resolve(int C, int D, const long dim[__VLA(D)], const long* str[__VLA(C)], void* ptr[__VLA(C)], md_nary_resolve_fun_t fun);
+#define md_nary_resolve(C, D, dim, str, ptr, fun) \
+	md_nary_resolve(C, D, dim, str, ptr, CLOSURE(md_nary_resolve_fun_t, fun))
 
 extern void md_parallel_nary(int C, int D, const long dim[__VLA(D)], unsigned long flags, const long* str[__VLA(C)], void* ptr[__VLA(C)], md_nary_fun_t fun);
+#define md_parallel_nary(C, D, dim, flags, str, ptr, fun) \
+	md_parallel_nary(C, D, dim, flags, str, ptr, CLOSURE(md_nary_fun_t, fun))
+
 extern void md_parallel_loop(int D, const long dim[__VLA(D)], unsigned long flags, md_loop_fun_t fun);
+#define md_parallel_loop(D, dim, flags, fun) \
+	md_parallel_loop(D, dim, flags, CLOSURE(md_loop_fun_t, fun))
+
 extern void md_parallel_loop_split(int D, const long dim[__VLA(D)], unsigned long flags, md_loop_fun2_t fun);
+#define md_parallel_loop_split(D, dim, flags, fun) \
+	md_parallel_loop_split(D, dim, flags, CLOSURE(md_loop_fun2_t, fun))
 
 extern void md_loop(int D, const long dim[__VLA(D)], md_loop_fun_t fun);
+#define md_loop(D, dim, fun) \
+	md_loop(D, dim, CLOSURE(md_loop_fun_t, fun))
 
 extern void md_septrafo2(int D, const long dimensions[__VLA(D)], unsigned long flags, const long strides[__VLA(D)], void* ptr, md_trafo_fun_t fun);
 extern void md_septrafo(int D, const long dimensions[__VLA(D)], unsigned long flags, void* ptr, size_t size, md_trafo_fun_t fun);

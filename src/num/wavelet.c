@@ -251,36 +251,36 @@ void md_wavtrafoz(int D, const long dims[D], unsigned long flags, complex float*
 
 void md_cdf97z(int D, const long dims[D], unsigned long flags, complex float* data)
 {
-	md_wavtrafoz(D, dims, flags, data, cdf97_line_nosort, false, true);
+	md_wavtrafoz(D, dims, flags, data, CLOSURE(md_trafo_fun_t, cdf97_line_nosort), false, true);
 }
 
 void md_icdf97z(int D, const long dims[D], unsigned long flags, complex float* data)
 {
-	md_wavtrafoz(D, dims, flags, data, icdf97_line_nosort, true, true);
+	md_wavtrafoz(D, dims, flags, data, CLOSURE(md_trafo_fun_t, icdf97_line_nosort), true, true);
 }
 
 void md_cdf97z2(int D, const long dims[D], unsigned long flags, const long strs[D], complex float* data)
 {
-	md_wavtrafoz2(D, dims, flags, strs, data, cdf97_line_nosort, false, true);
+	md_wavtrafoz2(D, dims, flags, strs, data, CLOSURE(md_trafo_fun_t, cdf97_line_nosort), false, true);
 }
 
 void md_icdf97z2(int D, const long dims[D], unsigned long flags, const long strs[D], complex float* data)
 {
-	md_wavtrafoz2(D, dims, flags, strs, data, icdf97_line_nosort, true, true);
+	md_wavtrafoz2(D, dims, flags, strs, data, CLOSURE(md_trafo_fun_t, icdf97_line_nosort), true, true);
 }
 
 
 // FIXME: slow
 void md_resortz(int D, const long dims[D], unsigned long flags, complex float* data)
 {
-	md_wavtrafoz(D, dims, flags, data, icdf97_line_nosort, true, true);
-	md_wavtrafoz(D, dims, flags, data, cdf97_line, false, false);
+	md_wavtrafoz(D, dims, flags, data, CLOSURE(md_trafo_fun_t, icdf97_line_nosort), true, true);
+	md_wavtrafoz(D, dims, flags, data, CLOSURE(md_trafo_fun_t, cdf97_line), false, false);
 }
 
 void md_iresortz(int D, const long dims[D], unsigned long flags, complex float* data)
 {
-	md_wavtrafoz(D, dims, flags, data, icdf97_line, true, false);
-	md_wavtrafoz(D, dims, flags, data, cdf97_line_nosort, false, true);
+	md_wavtrafoz(D, dims, flags, data, CLOSURE(md_trafo_fun_t, icdf97_line), true, false);
+	md_wavtrafoz(D, dims, flags, data, CLOSURE(md_trafo_fun_t, cdf97_line_nosort), false, true);
 }
 
 

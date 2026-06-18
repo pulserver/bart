@@ -297,7 +297,7 @@ void mat_exp_simu(struct sim_data* data, float r2spoil, int N, float st, float e
 		bloch_simu_stm_fun(data, r2spoil, N, out, t, in);
 	};
 
-	mat_to_exp(N, st, end, out, data->other.stm_tol, call);
+	mat_to_exp(N, st, end, out, data->other.stm_tol, CLOSURE(ode_fun_t, call));
 }
 
 static void create_sim_matrix(struct sim_data* data, int N, float matrix[N][N], float st, float end, float r2spoil)

@@ -129,6 +129,7 @@ extern void debug_print_dims_trace(const char* func_name,
 typedef CLOSURE_TYPE(int, (int a, int b)) quicksort_cmp_t;
 
 extern void quicksort(int N, int ord[__VLA(N)], quicksort_cmp_t cmp);
+#define quicksort(N, ord, cmp) quicksort(N, ord, CLOSURE(quicksort_cmp_t, cmp))
 
 extern float quickselect(float *arr, int n, int k);
 extern float quickselect_complex(_Complex float *arr, int n, int k);

@@ -20,10 +20,12 @@
 #define SWAP(x, y)	({ __auto_type __t = (x); (x) = (y); (y) = __t; })
 
 
-typedef CLOSURE_TYPE(void, (int x, int y, float c) )pixel_f;
+typedef CLOSURE_TYPE(void, (int x, int y, float c)) pixel_f;
 typedef void line_f(pixel_f out, int x0, int y0, int x1, int y1);
 
 static void setup(line_f line, int X, int Y, pixel_f out, int x0, int y0, int x1, int y1)
+#define setup(line, X, Y, out, x0, y0, x1, y1) \
+	setup(line, X, Y, CLOSURE(pixel_f, out), x0, y0, x1, y1)
 {
 	if (   ((x0 < 0) && (x1 < 0))
 	    || ((y0 < 0) && (y1 < 0))
@@ -34,7 +36,7 @@ static void setup(line_f line, int X, int Y, pixel_f out, int x0, int y0, int x1
 	NESTED(void, out2, (int x2, int y2, float c))
 	{
 		if ((0 <= x2) && (x2 < X) && (0 <= y2) && (y2 < Y))
-			out(x2, y2, c);
+			NESTED_CALL(out, (x2, y2, c));
 	};
 
 	if (abs(x1 - x0) < abs(y1 - y0)) {
@@ -44,10 +46,10 @@ static void setup(line_f line, int X, int Y, pixel_f out, int x0, int y0, int x1
 			out2(y2, x2, c);
 		};
 
-		return line(outT, y0, x0, y1, x1);
+		return line(CLOSURE(pixel_f, outT), y0, x0, y1, x1);
 	}
 
-	return line(out2, x0, y0, x1, y1);
+	return line(CLOSURE(pixel_f, out2), x0, y0, x1, y1);
 }
 
 static void bresenham(pixel_f out, int x0, int y0, int x1, int y1)
@@ -73,7 +75,7 @@ static void bresenham(pixel_f out, int x0, int y0, int x1, int y1)
 
 	for (int x = x0; x <= x1; x++) {
 
-		out(x, y, 1.);
+		NESTED_CALL(out, (x, y, 1.));
 
 		if (D > 0) {
 
@@ -152,8 +154,8 @@ static void xiaolin_wu(pixel_f out, int x0, int y0, int x1, int y1)
 		float ye = y + grad * (roundf(x) - x);
 		float gp = rfrac(x + 0.5);
 
-		out(roundf(x), floorf(ye) + 0, gp * rfrac(ye));
-		out(roundf(x), floorf(ye) + 1, gp * frac(ye));
+		NESTED_CALL(out, (roundf(x), floorf(ye) + 0, gp * rfrac(ye)));
+		NESTED_CALL(out, (roundf(x), floorf(ye) + 1, gp * frac(ye)));
 	};
 
 	endp(x0, y0);
@@ -163,8 +165,8 @@ static void xiaolin_wu(pixel_f out, int x0, int y0, int x1, int y1)
 
 	for (float x = roundf(x0) + 1; x <= roundf(x1) - 1; x++, yi += grad) {
 #if 1
-		out(x, floorf(yi) + 0, rfrac(yi));
-		out(x, floorf(yi) + 1, frac(yi));
+		NESTED_CALL(out, (x, floorf(yi) + 0, rfrac(yi)));
+		NESTED_CALL(out, (x, floorf(yi) + 1, frac(yi)));
 #endif
 	}
 }
@@ -235,7 +237,7 @@ static void draw_cspline(int X, int Y, pixel_f out, const double coeff[2][4])
 		cur[1] = (int)cspline(t, coeff[1]);
 
 		if (t > 0.)
-			setup(bresenham, X, Y, out, old[0], old[1], cur[0], cur[1]);
+			(setup)(bresenham, X, Y, out, old[0], old[1], cur[0], cur[1]);
 
 		old[0] = cur[0];
 		old[1] = cur[1];
@@ -254,7 +256,7 @@ void cspline_cmplx(int X, int Y, complex float (*out)[X][Y], complex float val, 
 		(*out)[x][y] = c * val;
 	};
 
-	draw_cspline(X, Y, draw, coeff);
+	draw_cspline(X, Y, CLOSURE(pixel_f, draw), coeff);
 }
 
 

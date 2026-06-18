@@ -294,7 +294,6 @@ static void apply_linphases_3D_int(vptr_fun_data_t* _data, int N, int D, const l
 		md_select_dims(D, flags, ldims, dims[0]);
 
 		md_nary(N, D, ldims, strs, args, nary_loop);
-
 		return;
 	}
 

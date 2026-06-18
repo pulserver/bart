@@ -1282,6 +1282,7 @@ complex double* sample_signal(int D, long odims_s[D], const long gdims_s[D], con
 
 			return p;
 		};
+
 		md_parallel_zzsample(D, odims, cdout, funk);
 		md_copy_dims(D, odims_s, odims);
 
@@ -1299,6 +1300,7 @@ complex double* sample_signal(int D, long odims_s[D], const long gdims_s[D], con
 		{
 			return popts->fun(popts, pos[COEFF_DIM], &MD_ACCESS(D, gstrs, pos, grid)) * MD_ACCESS(D, sstrscl, pos, sens);
 		};
+
 		md_parallel_zzsample(D, odims, cdout, funx);
 
 		md_copy_dims(D, odims_s, odims);

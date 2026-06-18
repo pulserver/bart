@@ -60,7 +60,7 @@ static bool test_sinc_integral2(void)
 	};
 
 	float integral[1];
-	quadrature_simpson_ext(N, ps->duration, 1, integral, eval);
+	quadrature_simpson_ext(N, ps->duration, 1, integral, CLOSURE(quadrature_fun_t, eval));
 
         float error = fabs(M_PI - integral[0]);
 

@@ -10,7 +10,7 @@
 #include "quadrature.h"
 
 void quadrature_trapezoidal(int N, const float t[N + 1], int P, float out[P],
-		CLOSURE_TYPE(void, (float out[P], int i)) sample)
+		quadrature_fun_t sample)
 {
 	for (int p = 0; p < P; p++)
 		out[p] = 0.;
@@ -37,7 +37,7 @@ void quadrature_trapezoidal(int N, const float t[N + 1], int P, float out[P],
 	}
 }
 void quadrature_simpson_ext(int N, float T, int P, float out[P],
-		CLOSURE_TYPE(void, (float out[P], int i)) sample)
+		quadrature_fun_t sample)
 {
 	assert(10 <= N);
 
@@ -52,10 +52,10 @@ void quadrature_simpson_ext(int N, float T, int P, float out[P],
 		float coeff[4] = { 17. / 48., 59 / 48., 43 / 48., 49 / 48. };
 
 		float n1[P];
-		sample(n1, i);
+		NESTED_CALL(sample, (n1, i));
 
 		float n2[P];
-		sample(n2, N - i);
+		NESTED_CALL(sample, (n2, N - i));
 
 		for (int p = 0; p < P; p++)
 			out[p] += coeff[i] * (n1[p] + n2[p]);
@@ -64,7 +64,7 @@ void quadrature_simpson_ext(int N, float T, int P, float out[P],
 	for (int i = 4; i <= N - 4; i++) {
 
 		float n[P];
-		sample(n, i);
+		NESTED_CALL(sample, (n, i));
 
 		for (int p = 0; p < P; p++)
 			out[p] += n[p];

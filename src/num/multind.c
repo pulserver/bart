@@ -91,7 +91,7 @@ static void md_nary_int(int C, int D, const long dim[D], const long* str[C], voi
  * Generic functions which loops over all dimensions of a set of
  * multi-dimensional arrays and calls a given function for each position.
  */
-void md_nary(int C, int D, const long dim[D], const long* str[C], void* ptr[C], md_nary_fun_t fun)
+void (md_nary)(int C, int D, const long dim[D], const long* str[C], void* ptr[C], md_nary_fun_t fun)
 {
 	unsigned long block_flags = 0;
 
@@ -129,13 +129,13 @@ void md_nary(int C, int D, const long dim[D], const long* str[C], void* ptr[C], 
  * This functions tries to parallelize over the dimensions indicated
  * with flags.
  */
-void md_parallel_nary(int C, int D, const long dim[D], unsigned long flags, const long* str[C], void* ptr[C], md_nary_fun_t fun)
+void (md_parallel_nary)(int C, int D, const long dim[D], unsigned long flags, const long* str[C], void* ptr[C], md_nary_fun_t fun)
 {
 	flags = flags & md_nontriv_dims(D, dim);
 
 	if (0 == flags) {
 
-		md_nary(C, D, dim, str, ptr, fun);
+		(md_nary)(C, D, dim, str, ptr, fun);
 		return;
 	}
 
@@ -172,7 +172,7 @@ void md_parallel_nary(int C, int D, const long dim[D], unsigned long flags, cons
 		for (int j = 0; j < C; j++)
 			moving_ptr[j] = ptr[j] + md_calc_offset(D, str[j], iter_i);
 
-		md_nary(C, D, dimc, str, moving_ptr, fun);
+		(md_nary)(C, D, dimc, str, moving_ptr, fun);
 	}
 
 #ifdef _OPENMP
@@ -181,7 +181,7 @@ void md_parallel_nary(int C, int D, const long dim[D], unsigned long flags, cons
 }
 
 
-void md_nary_resolve(int C, int D, const long dim[D], const long* str[C], void* ptr[C], md_nary_resolve_fun_t fun)
+void (md_nary_resolve)(int C, int D, const long dim[D], const long* str[C], void* ptr[C], md_nary_resolve_fun_t fun)
 {
 	bool vptr = false;
 	for (int i = 0; i < C; i++)
@@ -264,7 +264,7 @@ static void md_loop_r(int D, const long dim[D], unsigned long flags, long pos[D]
  * Runs fun(data, position) for all position in dim
  *
  */
-void md_parallel_loop(int D, const long _dim[static D], unsigned long flags, md_loop_fun_t fun)
+void (md_parallel_loop)(int D, const long _dim[static D], unsigned long flags, md_loop_fun_t fun)
 {
 	const long *dim = _dim;	// clang
 
@@ -277,7 +277,7 @@ void md_parallel_loop(int D, const long _dim[static D], unsigned long flags, md_
 }
 
 
-void md_parallel_loop_split(int D, const long dim[static D], unsigned long flags, md_loop_fun2_t fun)
+void (md_parallel_loop_split)(int D, const long dim[static D], unsigned long flags, md_loop_fun2_t fun)
 {
 	flags &= md_nontriv_dims(D, dim);
 
@@ -309,7 +309,7 @@ void md_parallel_loop_split(int D, const long dim[static D], unsigned long flags
 		// Recover place in parallel iteration space
 		long pos[D];
 		md_unravel_index(D, pos, ~0UL, pdims, i);
-		fun(flags, pos);
+		NESTED_CALL(fun, (flags, pos));
 	}
 }
 
@@ -321,7 +321,7 @@ void md_parallel_loop_split(int D, const long dim[static D], unsigned long flags
  * Runs fun( position ) for all position in dim
  *
  */
-void md_loop(int D, const long dim[D], md_loop_fun_t fun)
+void (md_loop)(int D, const long dim[D], md_loop_fun_t fun)
 {
 	long pos[D];
 	md_loop_r(D, dim, 0, pos, fun);
@@ -1131,7 +1131,7 @@ out:
 		memcpy(ptr[0], ptr[1], size2);
 	};
 
-	optimized_nop(2, MD_BIT(0), D, dim, nstr, (void*[2]){ optr, (void*)iptr }, (size_t[2]){ size, size }, nary_copy);
+	optimized_nop(2, MD_BIT(0), D, dim, nstr, ((void*[2]){ optr, (void*)iptr }), ((size_t[2]){ size, size }), nary_copy);
 }
 
 
@@ -2090,7 +2090,7 @@ bool md_compare2(int D, const long dims[D], const long str1[D], const void* src1
 		eq &= eq2;
 	};
 
-	optimized_nop(2, 0u, D, dims, nstr, (void*[2]){ (void*)src1, (void*)src2 }, (size_t[2]){ size, size }, nary_cmp);
+	optimized_nop(2, 0u, D, dims, nstr, ((void*[2]){ (void*)src1, (void*)src2 }), ((size_t[2]){ size, size }), nary_cmp);
 
 	if (is_mpi(src1) || is_mpi(src2))
 		mpi_reduce_land(1, &eq);
@@ -2130,7 +2130,7 @@ static void md_septrafo_r(int D, int R, long dimensions[D], unsigned long flags,
 
 		NESTED(void, nary_septrafo, (void* ptr[]))
 		{
-			fun(dimsR, strsR, ptr[0]);
+			NESTED_CALL(fun, (dimsR, strsR, ptr[0]));
 		};
 
                 //md_nary_parallel(1, D, dimensions, nstrides, nptr, &data, nary_septrafo);

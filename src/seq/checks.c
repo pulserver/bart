@@ -38,7 +38,7 @@ bool seq_check_gradients(int N, const struct seq_event ev[N], const struct seq_s
 {
 	for (int i = 0; i < N; i++) {
 
-		NESTED(int, check, (double x[3], double lim))
+		NESTED(int, check, (double x[/*3*/], double lim))
 		{
 			for (int k = 0; k < 3; k++)
 				if (fabs(x[k]) > lim)

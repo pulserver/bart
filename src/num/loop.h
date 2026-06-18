@@ -10,13 +10,19 @@ typedef CLOSURE_TYPE(complex double, (const long pos[])) zzsample_fun_t;
 
 
 extern void md_sample(int N, const long dims[__VLA(N)], float* z, sample_fun_t fun);
+#define md_sample(N, dims, z, fun) md_sample(N, dims, z, CLOSURE(sample_fun_t, fun))
 extern void md_parallel_sample(int N, const long dims[__VLA(N)], float* z, sample_fun_t fun);
+#define md_parallel_sample(N, dims, z, fun) md_parallel_sample(N, dims, z, CLOSURE(sample_fun_t, fun))
 
 extern void md_zsample(int N, const long dims[__VLA(N)], complex float* z, zsample_fun_t fun);
+#define md_zsample(N, dims, z, fun) md_zsample(N, dims, z, CLOSURE(zsample_fun_t, fun))
 extern void md_parallel_zsample(int N, const long dims[__VLA(N)], complex float* z, zsample_fun_t fun);
+#define md_parallel_zsample(N, dims, z, fun) md_parallel_zsample(N, dims, z, CLOSURE(zsample_fun_t, fun))
 
 extern void md_zzsample(int N, const long dims[__VLA(N)], complex double* z, zzsample_fun_t fun);
+#define md_zzsample(N, dims, z, fun) md_zzsample(N, dims, z, CLOSURE(zzsample_fun_t, fun))
 extern void md_parallel_zzsample(int N, const long dims[__VLA(N)], complex double* z, zzsample_fun_t fun);
+#define md_parallel_zzsample(N, dims, z, fun) md_parallel_zzsample(N, dims, z, CLOSURE(zzsample_fun_t, fun))
 
 extern void md_zgradient(int N, const long dims[__VLA(N)], complex float* out, const complex float grad[__VLA(N)]);
 

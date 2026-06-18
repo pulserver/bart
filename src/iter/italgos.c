@@ -204,8 +204,8 @@ void ist(int maxiter, float epsilon, float tau, bool last, long N,
 
 		iter_monitor(monitor, vops, x);
 
-		if (NULL != ist_continuation)
-			ist_continuation(&itrdata);
+		if (!CLOSURE_NULL_P(ist_continuation))
+			NESTED_CALL(ist_continuation, (&itrdata));
 
 		iter_op_p_call(thresh, itrdata.scale * itrdata.tau, x, x);
 
@@ -285,8 +285,8 @@ void fista(int maxiter, float epsilon, float tau, float alpha,
 
 		iter_monitor(monitor, vops, x);
 
-		if (NULL != ist_continuation)
-			ist_continuation(&itrdata);
+		if (!CLOSURE_NULL_P(ist_continuation))
+			NESTED_CALL(ist_continuation, (&itrdata));
 
 		iter_op_p_call(thresh, itrdata.scale * itrdata.tau * alpha, x, x);
 

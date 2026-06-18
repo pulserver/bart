@@ -266,7 +266,7 @@ complex double* sample_coils(long D, long sdims[D], const long gdims[D], const f
 	md_singleton_dims(D, sdims);
 
 	for (int i = 0; i < 3; i++)
-		sdims[i] = gdims[i+1];
+		sdims[i] = gdims[i + 1];
 
 	sdims[COIL_DIM] = copts->N;
 
@@ -278,6 +278,7 @@ complex double* sample_coils(long D, long sdims[D], const long gdims[D], const f
 		get_position(D, p, pos, gdimsp, grid);
 		return copts->fun(copts, pos[COIL_DIM], p);
 	};
+
 	md_parallel_zzsample(D, sdims, sens, fun);
 
 	return sens;

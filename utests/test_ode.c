@@ -145,7 +145,7 @@ static bool test_ode_adjoint(void)
 			out[l] = 1.;
 	};
 
-	ode_adjoint_sa(h, tol, N, t, 2, x, z, x0, sys, sys, cost);
+	ode_adjoint_sa(h, tol, N, t, 2, x, z, x0, CLOSURE(ode_sys_t, sys), CLOSURE(ode_sys_t, sys), CLOSURE(ode_cost_t, cost));
 
 	if (1.E-3 < powf(fabs(x[N][0] - expf(-r1)), 2.))
 	       return false;

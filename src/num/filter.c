@@ -480,7 +480,7 @@ void md_zsample_filter(int N, const long dims[N], unsigned long flags, const flo
 				kpos[i] = (pos[i] - (pos[i] > dimsp[i] / 2 ? dimsp[i] : 0)) * scalep[i];
 		}
 
-		complex float val = fun(pos, kpos);
+		complex float val = NESTED_CALL(fun, (pos, kpos));
 
 		return val;
 	};
@@ -502,7 +502,7 @@ void klaplace_fd_scaled_uncentered(int N, const long dims[N], const float scale[
 		return val;
 	};
 
-	md_zsample_filter(N, dims, ~0UL, NULL, z, filter_kernel_laplace, false);
+	md_zsample_filter(N, dims, ~0UL, NULL, z, CLOSURE(sample_filter_fun, filter_kernel_laplace), false);
 }
 
 void klaplace_fd_uncentered(int N, const long dims[N], complex float* z)

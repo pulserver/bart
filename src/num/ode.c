@@ -38,8 +38,7 @@ static void euler(float h, int N, float x[N], float st, float end,
 }
 #endif
 
-void crank_nicolson(float h, int N, float x[N], float st, float end,
-	CLOSURE_TYPE(void, (int N, float (*matrix)[N][N], float t)) f)
+void (crank_nicolson)(float h, int N, float x[N], float st, float end, ode_cn_f f)
 {
 	for (float t = st; t < end; ) {
 
@@ -96,8 +95,7 @@ void crank_nicolson_matrix(float h, int N, float x[N], float st, float end, cons
 	crank_nicolson(h, N, x, st, end, ode_matrix_fun);
 }
 
-void crank_nicolson_adjoint(float h, int N, float x[N], float st, float end,
-	CLOSURE_TYPE(void, (int N, float (*matrix_ak)[N][N], float (*matrix_akp1)[N][N], float t)) f)
+void (crank_nicolson_adjoint)(float h, int N, float x[N], float st, float end, ode_cn2_f f)
 {
 	for (float t = end; t > st; ) {
 
@@ -158,7 +156,7 @@ void crank_nicolson_matrix_adjoint(float h, int N, float x[N], float st, float e
 
 #define tridiag(s) (s * (s + 1) / 2)
 
-static void runge_kutta_step(float h, int s, const float a[tridiag(s)], const float b[s], const float c[s - 1], int N, int K, float k[K][N], float ynp[N], float tmp[N], float tn, const float yn[N], CLOSURE_TYPE(void, (float* out, float t, const float* yn)) f)
+static void runge_kutta_step(float h, int s, const float a[tridiag(s)], const float b[s], const float c[s - 1], int N, int K, float k[K][N], float ynp[N], float tmp[N], float tn, const float yn[N], ode_fun_t f)
 {
 	vecf_copy(N, ynp, yn);
 	vecf_saxpy(N, ynp, h * b[0], k[0]);
@@ -178,8 +176,7 @@ static void runge_kutta_step(float h, int s, const float a[tridiag(s)], const fl
 
 // Runge-Kutta 4
 
-void rk4_step(float h, int N, float ynp[N], float tn, const float yn[N],
-		CLOSURE_TYPE(void, (float* out, float t, const float* yn)) f)
+void rk4_step(float h, int N, float ynp[N], float tn, const float yn[N], ode_fun_t f)
 {
 	const float c[3] = { 0.5, 0.5, 1. };
 
@@ -203,8 +200,7 @@ void rk4_step(float h, int N, float ynp[N], float tn, const float yn[N],
  * Dormand JR, Prince PJ. A family of embedded Runge-Kutta formulae,
  * Journal of Computational and Applied Mathematics 6:19-26 (1980).
  */
-void dormand_prince_step(float h, int N, float ynp[N], float tn, const float yn[N],
-		CLOSURE_TYPE(void, (float* out, float t, const float* yn)) f)
+void dormand_prince_step(float h, int N, float ynp[N], float tn, const float yn[N], ode_fun_t f)
 {
 	const float c[6] = { 1. / 5., 3. / 10., 4. / 5., 8. / 9., 1., 1. };
 
@@ -243,8 +239,7 @@ float dormand_prince_scale(float tol, float err)
 
 
 
-float dormand_prince_step2(float h, int N, float ynp[N], float tn, const float yn[N], float k[6][N],
-		CLOSURE_TYPE(void, (float* out, float t, const float* yn)) f)
+float dormand_prince_step2(float h, int N, float ynp[N], float tn, const float yn[N], float k[6][N], ode_fun_t f)
 {
 	const float c[6] = { 1. / 5., 3. / 10., 4. / 5., 8. / 9., 1., 1. };
 
@@ -267,11 +262,10 @@ float dormand_prince_step2(float h, int N, float ynp[N], float tn, const float y
 }
 
 
-void ode_interval(float h, float tol, int N, float x[N], float st, float end,
-		CLOSURE_TYPE(void, (float* out, float t, const float* yn)) f)
+void (ode_interval)(float h, float tol, int N, float x[N], float st, float end, ode_fun_t f)
 {
 	float k[6][N];
-	f(k[0], st, x);
+	NESTED_CALL(f, (k[0], st, x));
 
 	if (h > end - st)
 		h = end - st;
@@ -307,14 +301,14 @@ void ode_interval(float h, float tol, int N, float x[N], float st, float end,
 void ode_interval2(float h, float tol,
 	int N, const float t[N + 1],
 	int M, float x[N + 1][M],
-	CLOSURE_TYPE(void, (float dst[M], float t, const float in[M])) sys)
+	ode_fun_t sys)
 {
 	for (int i = 0; i < N; i++) {
 
 		for (int m = 0; m < M; m++)
 			x[i + 1][m] = x[i][m];
 
-		ode_interval(h, tol, M, x[i + 1], t[i], t[i + 1], sys);
+		(ode_interval)(h, tol, M, x[i + 1], t[i], t[i + 1], sys);
 	}
 }
 
@@ -355,9 +349,9 @@ struct seq_data {
 	int N;
 	int P;
 
-	CLOSURE_TYPE(void, (float* out, float t, const float* yn)) f;
-	CLOSURE_TYPE(void, (float* out, float t, const float* yn)) pdy;
-	CLOSURE_TYPE(void, (float* out, float t, const float* yn)) pdp;
+	ode_fun_t f;
+	ode_fun_t pdy;
+	ode_fun_t pdp;
 };
 
 static void seq(const struct seq_data* data, float* out, float t, const float* yn)
@@ -365,13 +359,13 @@ static void seq(const struct seq_data* data, float* out, float t, const float* y
 	int N = data->N;
 	int P = data->P;
 
-	data->f(out, t, yn);
+	NESTED_CALL(data->f, (out, t, yn));
 
 	float dy[N][N];
-	data->pdy(&dy[0][0], t, yn);
+	NESTED_CALL(data->pdy, (&dy[0][0], t, yn));
 
 	float dp[P][N];
-	data->pdp(&dp[0][0], t, yn);
+	NESTED_CALL(data->pdp, (&dp[0][0], t, yn));
 
 	for (int i = 0; i < P; i++) {
 		for (int j = 0; j < N; j++) {
@@ -386,11 +380,11 @@ static void seq(const struct seq_data* data, float* out, float t, const float* y
 	}
 }
 
-void ode_direct_sa(float h, float tol, int N, int P, float x[P + 1][N],
+void (ode_direct_sa)(float h, float tol, int N, int P, float x[P + 1][N],
 	float st, float end,
-	CLOSURE_TYPE(void, (float* out, float t, const float* yn)) f,
-	CLOSURE_TYPE(void, (float* out, float t, const float* yn)) pdy,
-	CLOSURE_TYPE(void, (float* out, float t, const float* yn)) pdp)
+	ode_fun_t f,
+	ode_fun_t pdy,
+	ode_fun_t pdp)
 {
 	struct seq_data data2 = { N, P, f, pdy, pdp };
 
@@ -410,8 +404,8 @@ void ode_direct_sa(float h, float tol, int N, int P, float x[P + 1][N],
 void ode_adjoint_sa_noinit(float h, float tol,
 	int N, const float t[N + 1],
 	int M, float z[N + 1][M],
-	CLOSURE_TYPE(void, (float dst[M], float t, const float in[M])) sysT,
-	CLOSURE_TYPE(void, (float dst[M], float t)) cost)
+	ode_sys_t sysT,
+	ode_cost_t cost)
 {
 	// adjoint state
 
@@ -442,9 +436,9 @@ void ode_adjoint_sa(float h, float tol,
 	int N, const float t[N + 1],
 	int M, float x[N + 1][M], float z[N + 1][M],
 	const float x0[M],
-	CLOSURE_TYPE(void, (float dst[M], float t, const float in[M])) sys,
-	CLOSURE_TYPE(void, (float dst[M], float t, const float in[M])) sysT,
-	CLOSURE_TYPE(void, (float dst[M], float t)) cost)
+	ode_sys_t sys,
+	ode_sys_t sysT,
+	ode_cost_t cost)
 {
 	// forward solution
 
@@ -548,7 +542,7 @@ void ode_adjoint_sa_eval(int N, const float t[N + 1], int M,
 			out[p] = adj_eval(M, x[i], z[i], Adp[p]);
 	};
 
-	quadrature_trapezoidal(N, t, P, dj, eval);
+	quadrature_trapezoidal(N, t, P, dj, CLOSURE(quadrature_fun_t, eval));
 }
 
 
@@ -573,6 +567,6 @@ void ode_adjoint_sa_eq_eval(int N, int M, int P, float dj[P],
 			out[p] = adj_eval(M, x[i], z[i], Adp[p]);
 	};
 
-	quadrature_simpson_ext(N, 1., P, dj, eval);
+	quadrature_simpson_ext(N, 1., P, dj, CLOSURE(quadrature_fun_t, eval));
 }
 

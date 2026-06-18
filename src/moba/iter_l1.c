@@ -237,7 +237,7 @@ static void inverse_fista(iter_op_data* _data, float alpha, float* dst, const fl
 		ravine_classical,
 		data->size_x,
 		vops,
-		continuation,
+		CLOSURE(ist_continuation_t, continuation),
 		(struct iter_op_s){ normal, CAST_UP(data) },
 		(struct iter_op_p_s){ combined_prox, CAST_UP(data) },
 		dst, src, NULL);
@@ -550,7 +550,7 @@ void mdb_irgnm_l1(const struct mdb_irgnm_l1_conf* conf,
 			aconf->cg_eps = iadmm_conf.cg_eps * iconf->alpha;
 		};
 
-		lsqr_conf.icont = lsqr_cont;
+		lsqr_conf.icont = CLOSURE(itop_continuation_t, lsqr_cont);
 		lsqr_conf.include_adjoint = false;
 
 		inv_op = lsqr2_create(&lsqr_conf, iter2_admm, CAST_UP(&iadmm_conf), NULL, &nlop->derivative[0][0],

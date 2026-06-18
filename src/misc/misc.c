@@ -332,7 +332,7 @@ int parse_int(int res[1], const char* str)
 	return 0;
 }
 
-void quicksort(int N, int ord[N], quicksort_cmp_t cmp)
+void (quicksort)(int N, int ord[N], quicksort_cmp_t cmp)
 {
 	if (N < 2)
 		return;
@@ -343,13 +343,13 @@ void quicksort(int N, int ord[N], quicksort_cmp_t cmp)
 
 	while (l <= h) {
 
-		if (cmp(ord[l], pivot) < 0) {
+		if (NESTED_CALL(cmp, (ord[l], pivot)) < 0) {
 
 			l++;
 			continue;
 		}
 
-		if (cmp(ord[h], pivot) > 0) {
+		if (NESTED_CALL(cmp, (ord[h], pivot)) > 0) {
 
 			h--;
 			continue;
@@ -364,10 +364,10 @@ void quicksort(int N, int ord[N], quicksort_cmp_t cmp)
 	}
 
 	if (h + 1 > 0)
-		quicksort(h + 1, ord, cmp);
+		(quicksort)(h + 1, ord, cmp);
 
 	if (N > l)
-		quicksort(N - l, ord + l, cmp);
+		(quicksort)(N - l, ord + l, cmp);
 }
 
 

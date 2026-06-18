@@ -75,7 +75,7 @@ static bool test_threads_rand(md_rand_t function, const char* name)
 	num_rand_init(0xDEADBEEF);
 	if (print_bench)
 		bart_printf("times (%s, %ld elements, ~%.2f GiB, %2d rounds):\tsingle thread: ", name, md_calc_size(N, dims), gibi, rounds);
-	run_bench(rounds, print_bench, sync_gpu, f_st);
+	run_bench(rounds, print_bench, sync_gpu, CLOSURE(bench_f, f_st));
 
 
 
@@ -91,7 +91,7 @@ static bool test_threads_rand(md_rand_t function, const char* name)
 	num_rand_init(0xDEADBEEF);
 	if (print_bench)
 		bart_printf("\t\t\t\t\t\t\t\t%5d threads: ", some_threads);
-	run_bench(rounds, print_bench, sync_gpu, f_mt);
+	run_bench(rounds, print_bench, sync_gpu, CLOSURE(bench_f, f_mt));
 
 	int many_threads = 1;
 #ifdef _OPENMP
@@ -106,7 +106,7 @@ static bool test_threads_rand(md_rand_t function, const char* name)
 	num_rand_init(0xDEADBEEF);
 	if (print_bench)
 		bart_printf("\t\t\t\t\t\t\t\t%5d threads: ", many_threads);
-	run_bench(rounds, print_bench, sync_gpu, f_mt2);
+	run_bench(rounds, print_bench, sync_gpu, CLOSURE(bench_f, f_mt2));
 
 #ifdef _OPENMP
 	omp_set_dynamic(old_omp_dynamic);

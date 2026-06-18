@@ -377,7 +377,7 @@ void meco_recon(const struct moba_conf* moba_conf, struct moba_conf_s* data,
 				aconf->cg_eps = iadmm_conf.cg_eps * iconf->alpha;
 			};
 
-			lsqr_conf.icont = lsqr_cont;
+			lsqr_conf.icont = CLOSURE(itop_continuation_t, lsqr_cont);
 
 			const struct nlop_s* nlop = nl.nlop;
 

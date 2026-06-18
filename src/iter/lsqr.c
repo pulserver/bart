@@ -33,7 +33,7 @@
 #include "lsqr.h"
 
 
-const struct lsqr_conf lsqr_defaults = { .lambda = 0., .it_gpu = false, .warmstart = false, .icont = NULL, .include_adjoint = true };
+const struct lsqr_conf lsqr_defaults = { .lambda = 0., .it_gpu = false, .warmstart = false, .icont = (itop_continuation_t){ }, .include_adjoint = true };
 
 
 struct lsqr_data {

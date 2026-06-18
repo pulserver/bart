@@ -307,8 +307,7 @@ void apply_Hess(int N, float Hdu[N], const struct puls_opt_pars p, const struct 
 	xfree(dNz);
 }
 
-static float dist2bdy(int N, const float du[N], const float p[N], float trad,
-		CLOSURE_TYPE(float, (int N, const float x[N], const float y[N])) ip)
+static float dist2bdy(int N, const float du[N], const float p[N], float trad, tr_cg_dot_t ip)
 {
 	// find distance to trust-region boundary from du in direction p
 	float dd = 0., xd = 0., xx = 0.;
@@ -340,8 +339,7 @@ static float dist2bdy(int N, const float du[N], const float p[N], float trad,
 ///		2: TRCG terminated because the iterate left the trust region
 ///		3: TRCG terminated because negative curvature was encountered
 enum TRCG_STATUS tr_cg(int Nu, float du[Nu], int* it, const float g[Nu], float trad, const struct tr_pars np,
-	  CLOSURE_TYPE(void, (int N, float Hp[N], const float p[N])) H_func,
-	  CLOSURE_TYPE(float, (int N, const float x[N], const float y[N])) ip)
+	  tr_cg_fun1_t H_func, tr_cg_dot_t ip)
 {
 	enum TRCG_STATUS flag;
 	float pHp, tau, al, step_norm, nrk, beta;
@@ -458,7 +456,7 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 	int it = 0;
 
 	float J = objfun(p.Nu, *G, &Xk, p, u0);
-	float nrG0 = sqrtf(NESTED_CALL(ip, (p.Nu, *G, *G)));
+	float nrG0 = sqrtf(ip(p.Nu, *G, *G));
 
 	vecf_copy(p.Nu, u, u0);
 
@@ -472,7 +470,7 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 	float (*Hmult_res)[p.Nu] = xmalloc(sizeof *Hmult_res);
 	float rho = np.rho;
 
-	NESTED(void, Hmult, (int N, float Hdu[N], const float du[N]))
+	NESTED(void, Hmult, (int N, float Hdu[/*N*/], const float du[/*N*/]))
 	{
 		apply_Hess(N, Hdu, p, &Xk, du);
 	};
@@ -480,17 +478,17 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 	for (; it < np.maxit; it++) {
 
 		// Minimize quadratic model
-		int flag = tr_cg(p.Nu, *du, &cgit, *G, rho, np, Hmult, ip);
+		int flag = tr_cg(p.Nu, *du, &cgit, *G, rho, np, CLOSURE(tr_cg_fun1_t, Hmult), CLOSURE(tr_cg_dot_t, ip));
 
 		vecf_axpbz(p.Nu, *udu, 1., u, 1., *du); // udu = u + du
 
 		// Test if control is updated
 		float dJa = J - objfun(p.Nu, NULL, NULL, p, *udu);		// Actual reduction in J
 
-		NESTED_CALL(Hmult, (p.Nu, *Hmult_res, *du));
+		Hmult(p.Nu, *Hmult_res, *du);
 
-		dJm = -(0.5 * NESTED_CALL(ip, (p.Nu, *du, *Hmult_res)) 		// Predicted reduction in J
-			+ NESTED_CALL(ip, (p.Nu, *G, *du)));
+		dJm = -(0.5 * ip(p.Nu, *du, *Hmult_res) 		// Predicted reduction in J
+			+ ip(p.Nu, *G, *du));
 
 		Jratio = dJa / dJm; 						// Ratio of real and predicted decrease
 
@@ -512,7 +510,7 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 		else if (Jratio < np.sig2)				 	// Model bad
 			rho = 1. / np.q * rho;				 	// Decrease radius
 
-		nrG = sqrtf(NESTED_CALL(ip, (p.Nu, *G, *G)));
+		nrG = sqrtf(ip(p.Nu, *G, *G));
 
 		debug_printf(DP_DEBUG1, "%d\t%1.3e\t%1.3e\t%d\t%1.3e\t%1.3e\t%d\n", it + 1, J, nrG, flag, rho, Jratio, cgit);
 

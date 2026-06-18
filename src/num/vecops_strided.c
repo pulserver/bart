@@ -210,13 +210,15 @@ struct simple_s2op_check {
  * @param too three-op multiply function
  */
 static void optimized_threeop_oii(int D, const long dim[D], const long ostr[D], void* optr, const long istr1[D], const void* iptr1, const long istr2[D], const void* iptr2, size_t sizes[3], md_nary_opt_fun_t too)
+#define optimized_threeop_oii(D, dim, ostr, optr, istr1, iptr1, istr2, iptr2, sizes, too) \
+	optimized_threeop_oii(D, dim, ostr, optr, istr1, iptr1, istr2, iptr2, sizes, CLOSURE(md_nary_opt_fun_t, too))
 {
 	const long (*nstr[3])[D?D:1] = { (const long (*)[D?D:1])ostr, (const long (*)[D?D:1])istr1, (const long (*)[D?D:1])istr2 };
 	void *nptr[3] = { optr, (void*)iptr1, (void*)iptr2 };
 
 	unsigned long io = 1UL + ((iptr1 == optr) ? 2 : 0) + ((iptr2 == optr) ? 4 : 0);
 
-	optimized_nop(3, io, D, dim, nstr, nptr, sizes, too);
+	(optimized_nop)(3, io, D, dim, nstr, nptr, sizes, too);
 }
 
 
@@ -914,7 +916,7 @@ static bool simple_z3op(int N_checks, struct simple_z3op_check strided_calls[N_c
 
 	optimized_threeop_oii(	N - N_in, ndims + N_in,
 				nostrs + N_in, (void*)out, nistrs1 + N_in, (void*)tin1, nistrs2 + N_in, (void*)tin2,
-				(size_t[3]){ (size_t)osize, (size_t)isize1, (size_t)isize2 }, nary_inner_z3op);
+				((size_t[3]){ (size_t)osize, (size_t)isize1, (size_t)isize2 }), nary_inner_z3op);
 
 	md_free(conj_in);
 
@@ -1071,7 +1073,7 @@ static bool simple_3op(int N_checks, struct simple_3op_check strided_calls[N_che
 
 	optimized_threeop_oii(	N - N_in, ndims + N_in,
 				nostrs + N_in, (void*)out, nistrs1 + N_in, (void*)tin1, nistrs2 + N_in, (void*)tin2,
-				(size_t[3]){ (size_t)osize, (size_t)isize1, (size_t)isize2 }, nary_inner_3op);
+				((size_t[3]){ (size_t)osize, (size_t)isize1, (size_t)isize2 }), nary_inner_3op);
 
 	while ((N > 1) && (1 == dims[N - 1]))
 		N--;
@@ -1354,7 +1356,8 @@ bool simple_fmacD(int N, const long dims[N], const long ostrs[N], double* out, c
 
 		optimized_threeop_oii(	N - 1, tdims + 1,
 				tostrs + 1, (void*)out, tistrs1 + 1, (void*)in1, tistrs2 + 1, (void*)in2,
-				(size_t[3]){ DL_SIZE, ((size_t)tdims[0] * FL_SIZE), ((size_t)tdims[0] * FL_SIZE) }, nary_inner_3op);
+				((size_t[3]){ DL_SIZE, ((size_t)tdims[0] * FL_SIZE), ((size_t)tdims[0] * FL_SIZE) }),
+				nary_inner_3op);
 
 		return true;
 	}
@@ -1395,7 +1398,8 @@ bool simple_zfmaccD(int N, const long dims[N], const long ostrs[N], complex doub
 
 		optimized_threeop_oii(	N - 1, tdims + 1,
 				tostrs + 1, (void*)out, tistrs1 + 1, (void*)in1, tistrs2 + 1, (void*)in2,
-				(size_t[3]){ CDL_SIZE, ((size_t)tdims[0] * CFL_SIZE), ((size_t)tdims[0] * CFL_SIZE) }, nary_inner_3op);
+				((size_t[3]){ CDL_SIZE, ((size_t)tdims[0] * CFL_SIZE), ((size_t)tdims[0] * CFL_SIZE) }),
+				nary_inner_3op);
 
 		return true;
 	}

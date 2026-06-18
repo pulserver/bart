@@ -36,7 +36,7 @@ struct sim_data {
 
 static void simulate(const struct sim_data* data, float out[3], float st, float en, const struct pulse* ps)
 {
-	NESTED(void, eval, (float out[3], float t, const float in[3]))
+	NESTED(void, eval, (float out/*3*/[], float t, const float in[/*3*/]))
 	{
 		complex float p = pulse_eval(ps, t);
 		float gb[3] = { crealf(p), cimagf(p), data->B0 };

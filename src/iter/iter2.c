@@ -310,7 +310,7 @@ void iter2_ist(const iter_conf* _conf,
 		maxeigen = estimate_maxeigenval_sameplace(t_normaleq_op, conf->maxeigen_iter, image_adj);
 
 	ist(conf->maxiter, eps * conf->tol, conf->super.alpha * conf->step / maxeigen, conf->last, size, select_vecops(image_adj),
-		NULL, OPERATOR2ITOP(t_normaleq_op), OPERATOR_P2ITOP(t_prox), image, image_adj, monitor);
+			(ist_continuation_t){ }, OPERATOR2ITOP(t_normaleq_op), OPERATOR_P2ITOP(t_prox), image, image_adj, monitor);
 
 cleanup:
 	operator_free(t_normaleq_op);
@@ -438,7 +438,8 @@ void iter2_fista(const iter_conf* _conf,
 
 	fista(conf->maxiter, eps * conf->tol, conf->step / maxeigen, conf->super.alpha , conf->last,
 		(struct ravine_conf){ conf->p, conf->q, conf->r }, size, select_vecops(image_adj),
-		continuation, OPERATOR2ITOP(t_normaleq_op), OPERATOR_P2ITOP(t_prox), image, image_adj, monitor);
+		CLOSURE(ist_continuation_t, continuation),
+		OPERATOR2ITOP(t_normaleq_op), OPERATOR_P2ITOP(t_prox), image, image_adj, monitor);
 
 // cleanup:
 	operator_free(t_normaleq_op);

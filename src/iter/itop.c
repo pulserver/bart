@@ -77,8 +77,8 @@ static void itop_apply(const operator_data_t* _data, float alpha, complex float*
 	iconf2->alpha = alpha;
 
 	// callback to change parameters for this run
-	if (NULL != data->icont)
-		data->icont(iconf2);
+	if (!CLOSURE_NULL_P(data->icont))
+		NESTED_CALL(data->icont, (iconf2));
 
 	data->italgo(iconf2, data->op, data->num_funs, data->prox_funs, data->prox_linops, NULL,
 			NULL, data->size, (float*)dst, (const float*)src, data->monitor);

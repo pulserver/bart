@@ -116,13 +116,15 @@ static void make_2op_simple(md_2op_t fun, int D, const long dims[D], float* optr
  * @param too two-op multiply function
  */
 static void optimized_twoop_oi(int D, const long dim[D], const long ostr[D], void* optr, const long istr1[D], const void* iptr1, size_t sizes[2], md_nary_opt_fun_t too)
+#define optimized_twoop_oi(D, dim, ostr, optr, istr1, iptr1, sizes, too) \
+	optimized_twoop_oi(D, dim, ostr, optr, istr1, iptr1, sizes, CLOSURE(md_nary_opt_fun_t, too))
 {
 	const long (*nstr[2])[D?D:1] = { (const long (*)[D?D:1])ostr, (const long (*)[D?D:1])istr1 };
 	void *nptr[2] = { optr, (void*)iptr1 };
 
 	unsigned long io = 1 + ((iptr1 == optr) ? 2 : 0);
 
-	optimized_nop(2, io, D, dim, nstr, nptr, sizes, too);
+	(optimized_nop)(2, io, D, dim, nstr, nptr, sizes, too);
 }
 
 
@@ -145,13 +147,15 @@ static void optimized_twoop_oi(int D, const long dim[D], const long ostr[D], voi
  * @param too three-op multiply function
  */
 static void optimized_threeop_oii(int D, const long dim[D], const long ostr[D], void* optr, const long istr1[D], const void* iptr1, const long istr2[D], const void* iptr2, size_t sizes[3], md_nary_opt_fun_t too)
+#define optimized_threeop_oii(D, dim, ostr, optr, istr1, iptr1, istr2, iptr2, sizes, too) \
+	optimized_threeop_oii(D, dim, ostr, optr, istr1, iptr1, istr2, iptr2, sizes, CLOSURE(md_nary_opt_fun_t, too))
 {
 	const long (*nstr[3])[D?D:1] = { (const long (*)[D?D:1])ostr, (const long (*)[D?D:1])istr1, (const long (*)[D?D:1])istr2 };
 	void *nptr[3] = { optr, (void*)iptr1, (void*)iptr2 };
 
 	unsigned long io = 1UL + ((iptr1 == optr) ? 2 : 0) + ((iptr2 == optr) ? 4 : 0);
 
-	optimized_nop(3, io, D, dim, nstr, nptr, sizes, too);
+	(optimized_nop)(3, io, D, dim, nstr, nptr, sizes, too);
 }
 
 
@@ -254,6 +258,8 @@ static void make_2opd_simple(md_2opd_t fun, int D, const long dims[D], double* o
 }
 
 static bool make_op_map_dims(int C, int D, const long dim[D], const long* str[C], void* ptr[C], const size_t size[C], md_nary_resolve_fun_t fun)
+#define make_op_map_dims(C, D, dim, str, ptr, size, fun) \
+	make_op_map_dims(C, D, dim, str, ptr, size, CLOSURE(md_nary_resolve_fun_t, fun))
 {
 	struct vptr_mapped_dims_s* mdims = vptr_map_dims(D, dim, C, str, size, ptr);
 
@@ -401,7 +407,7 @@ void make_z3opd(size_t offset, int D, const long dim[D], const long ostr[D], com
 	};
 
 	optimized_threeop_oii(D, dim, ostr, optr, istr1, iptr1, istr2, iptr2,
-			(size_t[3]){ CDL_SIZE, CFL_SIZE, CFL_SIZE }, nary_z3opd);
+			((size_t[3]){ CDL_SIZE, CFL_SIZE, CFL_SIZE }), nary_z3opd);
 }
 
 void make_3opd(size_t offset, int D, const long dim[D], const long ostr[D], double* optr, const long istr1[D], const float* iptr1, const long istr2[D], const float* iptr2)
@@ -436,7 +442,7 @@ void make_3opd(size_t offset, int D, const long dim[D], const long ostr[D], doub
 	};
 
 	optimized_threeop_oii(D, dim, ostr, optr, istr1, iptr1, istr2, iptr2,
-			(size_t[3]){ DL_SIZE, FL_SIZE, FL_SIZE }, nary_3opd);
+			((size_t[3]){ DL_SIZE, FL_SIZE, FL_SIZE }), nary_3opd);
 }
 
 void make_z2op(size_t offset, int D, const long dim[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1)
@@ -467,7 +473,7 @@ void make_z2op(size_t offset, int D, const long dim[D], const long ostr[D], comp
 		(*(z2op_t*)(((char*)data->ops) + offset))(data->size, ptr[0], ptr[1]);
 	};
 
-	optimized_twoop_oi(D, dim, ostr, optr, istr1, iptr1, (size_t[2]){ CFL_SIZE, CFL_SIZE }, nary_z2op);
+	optimized_twoop_oi(D, dim, ostr, optr, istr1, iptr1, ((size_t[2]){ CFL_SIZE, CFL_SIZE }), nary_z2op);
 }
 
 void make_2op(size_t offset, int D, const long dim[D], const long ostr[D], float* optr, const long istr1[D], const float* iptr1)
@@ -498,7 +504,7 @@ void make_2op(size_t offset, int D, const long dim[D], const long ostr[D], float
 		(*(r2op_t*)(((char*)data->ops) + offset))(data->size, ptr[0], ptr[1]);
 	};
 
-	optimized_twoop_oi(D, dim, ostr, optr, istr1, iptr1, (size_t[2]){ FL_SIZE, FL_SIZE }, nary_2op);
+	optimized_twoop_oi(D, dim, ostr, optr, istr1, iptr1, ((size_t[2]){ FL_SIZE, FL_SIZE }), nary_2op);
 }
 
 void make_z2opd(size_t offset, int D, const long dim[D], const long ostr[D], complex double* optr, const long istr1[D], const complex float* iptr1)
@@ -563,7 +569,7 @@ void make_2opd(size_t offset, int D, const long dim[D], const long ostr[D], doub
 		(*(r2opd_t*)(((char*)data->ops) + offset))(data->size, ptr[0], ptr[1]);
 	};
 
-	optimized_twoop_oi(D, dim, ostr, optr, istr1, iptr1, (size_t[2]){ DL_SIZE, FL_SIZE }, nary_2opd);
+	optimized_twoop_oi(D, dim, ostr, optr, istr1, iptr1, ((size_t[2]){ DL_SIZE, FL_SIZE }), nary_2opd);
 }
 
 void make_z2opf(size_t offset, int D, const long dim[D], const long ostr[D], complex float* optr, const long istr1[D], const complex double* iptr1)
@@ -627,7 +633,7 @@ void make_2opf(size_t offset, int D, const long dim[D], const long ostr[D], floa
 		(*(r2opf_t*)(((char*)data->ops) + offset))(data->size, ptr[0], ptr[1]);
 	};
 
-	optimized_twoop_oi(D, dim, ostr, optr, istr1, iptr1, (size_t[2]){ FL_SIZE, DL_SIZE }, nary_2opf);
+	optimized_twoop_oi(D, dim, ostr, optr, istr1, iptr1, ((size_t[2]){ FL_SIZE, DL_SIZE }), nary_2opf);
 }
 
 static void make_z2opf_simple(md_z2opf_t fun, int D, const long dims[D], complex float* optr, const complex double* iptr1)
@@ -2007,7 +2013,7 @@ void md_zsadd2(int D, const long dims[D], const long ostr[D], complex float* opt
 	};
 
 	optimized_twoop_oi(D, dims, ostr, optr, istr, iptr,
-		(size_t[2]){ CFL_SIZE, CFL_SIZE }, nary_zsadd);
+		((size_t[2]){ CFL_SIZE, CFL_SIZE }), nary_zsadd);
 }
 
 
@@ -2094,7 +2100,7 @@ void md_sadd2(int D, const long dims[D], const long ostr[D], float* optr, const 
 	};
 
 	optimized_twoop_oi(D, dims, ostr, optr, istr, iptr,
-		(size_t[2]){ FL_SIZE, FL_SIZE }, nary_sadd);
+		((size_t[2]){ FL_SIZE, FL_SIZE }), nary_sadd);
 }
 
 
@@ -3742,7 +3748,7 @@ static void md_zsoftthresh_half2_int(vptr_fun_data_t* _data, int N, int D, const
 		data->ops->zsoftthresh_half(data->size, lambda, ptr[0], ptr[1]);
 	};
 
-	optimized_twoop_oi(D, dims[0], strs[0], args[0], strs[1], args[1], (size_t[2]){ CFL_SIZE, CFL_SIZE }, nary_zsoftthresh_half);
+	optimized_twoop_oi(D, dims[0], strs[0], args[0], strs[1], args[1], ((size_t[2]){ CFL_SIZE, CFL_SIZE }), nary_zsoftthresh_half);
 }
 
 /**
@@ -3772,7 +3778,7 @@ static void md_softthresh_half2_int(vptr_fun_data_t* _data, int N, int D, const 
 		data->ops->softthresh_half(data->size, lambda, ptr[0], ptr[1]);
 	};
 
-	optimized_twoop_oi(D, dims[0], strs[0], args[0], strs[1], args[1], (size_t[2]){ FL_SIZE, FL_SIZE }, nary_softthresh_half);
+	optimized_twoop_oi(D, dims[0], strs[0], args[0], strs[1], args[1], ((size_t[2]){ FL_SIZE, FL_SIZE }), nary_softthresh_half);
 }
 
 /**
@@ -3843,7 +3849,7 @@ void md_softthresh2(int D, const long dims[D], float lambda, unsigned long flags
 
 	if (0 == flags) {
 
-		optimized_twoop_oi(D, dims, ostrs, optr, istrs, iptr, (size_t[2]){ FL_SIZE, FL_SIZE }, nary_softthresh);
+		optimized_twoop_oi(D, dims, ostrs, optr, istrs, iptr, ((size_t[2]){ FL_SIZE, FL_SIZE }), nary_softthresh);
 		return;
 	}
 
@@ -3897,7 +3903,7 @@ static void md_zsoftthresh_int(vptr_fun_data_t* _data, int N, int D, const long*
 		data->ops->zsoftthresh(data->size, lambda, ptr[0], ptr[1]);
 	};
 
-	optimized_twoop_oi(D, dims[0], strs[0], args[0], strs[1], args[1], (size_t[2]){ CFL_SIZE, CFL_SIZE }, nary_zsoftthresh);
+	optimized_twoop_oi(D, dims[0], strs[0], args[0], strs[1], args[1], ((size_t[2]){ CFL_SIZE, CFL_SIZE }), nary_zsoftthresh);
 }
 
 
@@ -3985,7 +3991,7 @@ void md_zhardthresh_mask2(int D, const long dim[D], int k, unsigned long flags, 
 
 	if (0 == flags) {
 
-		optimized_twoop_oi(D, dim, ostr, optr, istr, iptr, (size_t[2]){ CFL_SIZE, CFL_SIZE }, nary_zhardthresh_mask);
+		optimized_twoop_oi(D, dim, ostr, optr, istr, iptr, ((size_t[2]){ CFL_SIZE, CFL_SIZE }), nary_zhardthresh_mask);
 		return;
 	}
 
@@ -3996,7 +4002,7 @@ void md_zhardthresh_mask2(int D, const long dim[D], int k, unsigned long flags, 
 	md_calc_strides(D, norm_strs, norm_dims, CFL_SIZE);
 
 	md_zrss(D, dim, flags, tmp_norm, iptr);
-	optimized_twoop_oi(D, norm_dims, norm_strs, tmp_norm, norm_strs, tmp_norm, (size_t[2]){ CFL_SIZE, CFL_SIZE }, nary_zhardthresh_mask);
+	optimized_twoop_oi(D, norm_dims, norm_strs, tmp_norm, norm_strs, tmp_norm, ((size_t[2]){ CFL_SIZE, CFL_SIZE }), nary_zhardthresh_mask);
 	md_copy2(D, dim, ostr, optr, norm_strs, tmp_norm, CFL_SIZE);
 }
 
@@ -4059,7 +4065,7 @@ void md_zhardthresh_joint2(int D, const long dims[D], int k, unsigned long flags
 		data->ops->zhardthresh_mask(data->size, k, ptr[0], ptr[1]);
 	};
 
-	optimized_twoop_oi(D, norm_dims, norm_strs, tmp_norm, norm_strs, tmp_norm, (size_t[2]){ CFL_SIZE, CFL_SIZE }, nary_zhardthresh_mask);
+	optimized_twoop_oi(D, norm_dims, norm_strs, tmp_norm, norm_strs, tmp_norm, ((size_t[2]){ CFL_SIZE, CFL_SIZE }), nary_zhardthresh_mask);
 	md_zmul2(D, dims, ostrs, optr, norm_strs, tmp_norm, istrs, iptr);
 }
 
@@ -4092,7 +4098,7 @@ void md_zhardthresh2(int D, const long dims[D], int k, unsigned long flags, cons
 
 	if (0 == flags) {
 
-		optimized_twoop_oi(D, dims, ostrs, optr, istrs, iptr, (size_t[2]){ CFL_SIZE, CFL_SIZE }, nary_zhardthresh);
+		optimized_twoop_oi(D, dims, ostrs, optr, istrs, iptr, ((size_t[2]){ CFL_SIZE, CFL_SIZE }), nary_zhardthresh);
 		return;
 	}
 
@@ -4189,7 +4195,7 @@ void md_smax2(int D, const long dim[D], const long ostr[D], float* optr, const l
 	};
 
 	optimized_twoop_oi(D, dim, ostr, optr, istr, iptr,
-		(size_t[2]){ FL_SIZE, FL_SIZE }, nary_smax);
+		((size_t[2]){ FL_SIZE, FL_SIZE }), nary_smax);
 #endif
 }
 
@@ -4223,7 +4229,7 @@ void md_zsmax2(int D, const long dim[D], const long ostr[D], complex float* optr
 	};
 
 	optimized_twoop_oi(D, dim, ostr, optr, istr, iptr,
-		(size_t[2]){ CFL_SIZE, CFL_SIZE }, nary_zsmax);
+		((size_t[2]){ CFL_SIZE, CFL_SIZE }), nary_zsmax);
 #endif
 #endif
 }
@@ -4241,7 +4247,7 @@ void md_zsmin2(int D, const long dim[D], const long ostr[D], complex float* optr
 	};
 
 	optimized_twoop_oi(D, dim, ostr, optr, istr, iptr,
-		(size_t[2]){ CFL_SIZE, CFL_SIZE }, nary_zsmin);
+		((size_t[2]){ CFL_SIZE, CFL_SIZE }), nary_zsmin);
 }
 
 
@@ -4522,7 +4528,7 @@ void md_zfftmod2(int D, const long dims[D], const long ostrs[D], complex float* 
 	};
 
 	optimized_twoop_oi(D - 1, dims + 1, ostrs + 1, optr, istrs + 1, iptr,
-		(size_t[2]){ (size_t)(N * (long)CFL_SIZE), (size_t)(N * (long)CFL_SIZE) }, nary_zfftmod);
+		((size_t[2]){ (size_t)(N * (long)CFL_SIZE), (size_t)(N * (long)CFL_SIZE) }), nary_zfftmod);
 }
 
 void md_zfftmod(int D, const long dims[D], complex float* optr, const complex float* iptr, bool inv, double phase)
@@ -4571,7 +4577,7 @@ void md_real2(int D, const long dims[D], const long ostrs[D], float* dst, const 
 		data->ops->real(data->size, ptr[0], ptr[1]);
 	};
 
-	optimized_twoop_oi(D, dims, ostrs, dst, istrs, src, (size_t[2]){ FL_SIZE, CFL_SIZE }, nary_real);
+	optimized_twoop_oi(D, dims, ostrs, dst, istrs, src, ((size_t[2]){ FL_SIZE, CFL_SIZE }), nary_real);
 }
 
 void md_real(int D, const long dims[D], float* dst, const complex float* src)
@@ -4592,7 +4598,7 @@ void md_imag2(int D, const long dims[D], const long ostrs[D], float* dst, const 
 		data->ops->imag(data->size, ptr[0], ptr[1]);
 	};
 
-	optimized_twoop_oi(D, dims, ostrs, dst, istrs, src, (size_t[2]){ FL_SIZE, CFL_SIZE }, nary_imag);
+	optimized_twoop_oi(D, dims, ostrs, dst, istrs, src, ((size_t[2]){ FL_SIZE, CFL_SIZE }), nary_imag);
 }
 
 void md_imag(int D, const long dims[D], float* dst, const complex float* src)
@@ -4616,7 +4622,7 @@ void md_zcmpl_real2(int D, const long dims[D], const long ostrs[D], complex floa
 		data->ops->zcmpl_real(data->size, ptr[0], ptr[1]);
 	};
 
-	optimized_twoop_oi(D, dims, ostrs, dst, istrs, src, (size_t[2]){ CFL_SIZE, FL_SIZE }, nary_real);
+	optimized_twoop_oi(D, dims, ostrs, dst, istrs, src, ((size_t[2]){ CFL_SIZE, FL_SIZE }), nary_real);
 }
 
 void md_zcmpl_real(int D, const long dims[D], complex float* dst, const float* src)
@@ -4638,7 +4644,7 @@ void md_zcmpl_imag2(int D, const long dims[D], const long ostrs[D], complex floa
 		data->ops->zcmpl_imag(data->size, ptr[0], ptr[1]);
 	};
 
-	optimized_twoop_oi(D, dims, ostrs, dst, istrs, src, (size_t[2]){ CFL_SIZE, FL_SIZE }, nary_imag);
+	optimized_twoop_oi(D, dims, ostrs, dst, istrs, src, ((size_t[2]){ CFL_SIZE, FL_SIZE }), nary_imag);
 }
 
 void md_zcmpl_imag(int D, const long dims[D], complex float* dst, const float* src)
@@ -4661,7 +4667,7 @@ void md_zcmpl2(int D, const long dims[D], const long ostr[D], complex float* dst
 		data->ops->zcmpl(data->size, ptr[0], ptr[1], ptr[2]);
 	};
 
-	optimized_threeop_oii(D, dims, ostr, dst, istr1, src_real, istr2, src_imag, (size_t[3]){ CFL_SIZE, FL_SIZE , FL_SIZE }, nary_zcmpl);
+	optimized_threeop_oii(D, dims, ostr, dst, istr1, src_real, istr2, src_imag, ((size_t[3]){ CFL_SIZE, FL_SIZE , FL_SIZE }), nary_zcmpl);
 }
 
 void md_zcmpl(int D, const long dims[D], complex float* dst, const float* src_real, const float* src_imag)
@@ -4684,7 +4690,7 @@ void md_pdf_gauss2(int D, const long dims[D], const long ostr[D], float* optr, c
 	};
 
 	optimized_twoop_oi(D, dims, ostr, optr, istr, iptr,
-		(size_t[2]){ FL_SIZE, FL_SIZE }, nary_pdf_gauss);
+		((size_t[2]){ FL_SIZE, FL_SIZE }), nary_pdf_gauss);
 }
 
 void md_pdf_gauss(int D, const long dims[D], float* optr, const float* iptr, float mu, float sigma)

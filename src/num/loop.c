@@ -53,23 +53,23 @@ static void md_zsample2(int N, const long dims[N], unsigned long flags, complex 
 
 	NESTED(void, sample_kernel, (const long pos[]))
 	{
-		out[md_calc_offset(N, strsp, pos)] = fun(pos);
+		out[md_calc_offset(N, strsp, pos)] = NESTED_CALL(fun, (pos));
 	};
 
 	md_parallel_loop(N, dims, flags, sample_kernel);
 }
 
-void md_zsample(int N, const long dims[N], complex float* out, zsample_fun_t fun)
+void (md_zsample)(int N, const long dims[N], complex float* out, zsample_fun_t fun)
 {
 	md_zsample2(N, dims, 0U, out, fun);
 }
 
-void md_parallel_zsample(int N, const long dims[N], complex float* out, zsample_fun_t fun)
+void (md_parallel_zsample)(int N, const long dims[N], complex float* out, zsample_fun_t fun)
 {
 	md_zsample2(N, dims, ~0U, out, fun);
 }
 
-static void md_zzsample2(int N, const long dims[N], unsigned long flags, complex double* out, zzsample_fun_t fun)
+static void (md_zzsample2)(int N, const long dims[N], unsigned long flags, complex double* out, zzsample_fun_t fun)
 {
 #ifdef USE_CUDA
 	if (cuda_ondevice(out)) {
@@ -91,18 +91,18 @@ static void md_zzsample2(int N, const long dims[N], unsigned long flags, complex
 
 	NESTED(void, sample_kernel, (const long pos[]))
 	{
-		out[md_calc_offset(N, strsp, pos)] = fun(pos);
+		out[md_calc_offset(N, strsp, pos)] = NESTED_CALL(fun, (pos));
 	};
 
 	md_parallel_loop(N, dims, flags, sample_kernel);
 }
 
-void md_zzsample(int N, const long dims[N], complex double* out, zzsample_fun_t fun)
+void (md_zzsample)(int N, const long dims[N], complex double* out, zzsample_fun_t fun)
 {
 	md_zzsample2(N, dims, 0U, out, fun);
 }
 
-void md_parallel_zzsample(int N, const long dims[N], complex double* out, zzsample_fun_t fun)
+void (md_parallel_zzsample)(int N, const long dims[N], complex double* out, zzsample_fun_t fun)
 {
 	md_zzsample2(N, dims, ~0U, out, fun);
 }
@@ -116,18 +116,18 @@ static void md_sample2(int N, const long dims[N], unsigned long flags, float* ou
 
 	NESTED(void, sample_kernel, (const long pos[]))
 	{
-		out[md_calc_offset(N, strsp, pos)] = fun(pos);
+		out[md_calc_offset(N, strsp, pos)] = NESTED_CALL(fun, (pos));
 	};
 
 	md_parallel_loop(N, dims, flags, sample_kernel);
 }
 
-void md_sample(int N, const long dims[N], float* out, sample_fun_t fun)
+void (md_sample)(int N, const long dims[N], float* out, sample_fun_t fun)
 {
 	md_sample2(N, dims, 0U, out, fun);
 }
 
-void md_parallel_sample(int N, const long dims[N], float* out, sample_fun_t fun)
+void (md_parallel_sample)(int N, const long dims[N], float* out, sample_fun_t fun)
 {
 	md_sample2(N, dims, ~0U, out, fun);
 }

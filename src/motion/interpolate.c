@@ -245,7 +245,7 @@ static void interp_point(int N, const long gdims[VLA(N)], const long gstrs[VLA(N
 		__imag(intp[0]) += __imag(grid[ind]) * d;
 	};
 
-	interp_point_gen(N, gdims, gstrs, coor, ord, width, update);
+	interp_point_gen(N, gdims, gstrs, coor, ord, width, CLOSURE(interp_update_t, update));
 }
 
 static void interp_pointH(int N, const long gdims[VLA(N)], const long gstrs[VLA(N)], complex float* grid, const float coor[VLA(N)], const complex float* intp, int ord, float width)
@@ -259,7 +259,7 @@ static void interp_pointH(int N, const long gdims[VLA(N)], const long gstrs[VLA(
 		__imag(grid[ind]) += __imag(intp[0]) * d;
 	};
 
-	interp_point_gen(N, gdims, gstrs, coor, ord, width, update);
+	interp_point_gen(N, gdims, gstrs, coor, ord, width, CLOSURE(interp_update_t, update));
 }
 
 static void interpolate2(int ord, int M, const long dims[M], const long istrs[M], complex float* intp, const long cstrs[M], long cstrs_dir, const complex float* coor, const long gdims[M], const long gstrs[M], const complex float* grid)
@@ -510,7 +510,7 @@ static void interp_point_adj_coor(int N, const long gdims[VLA(N)], const long gs
 		__real(dcoor[0]) += tmp;
 	};
 
-	interp_point_adj_coor_gen(N, gdims, gstrs, coor, ord, width, dir, update);
+	interp_point_adj_coor_gen(N, gdims, gstrs, coor, ord, width, dir, CLOSURE(interp_update_t, update));
 }
 
 static void interpolate_adj_coor2(int ord, int M, const long dims[M], const long istrs[M], const complex float* dintp, const long cstrs[M], long cstrs_dir, const complex float* coor, complex float* dcoor, const long gdims[M], const long gstrs[M], const complex float* grid)
@@ -627,7 +627,7 @@ static void der_interp_point(int N, const long gdims[VLA(N)], const long gstrs[V
 		__imag(dintp[0]) += __imag(grid[ind]) * d;
 	};
 
-	interp_point_der_gen(N, gdims, gstrs, coor, dcoor, ord, width, update);
+	interp_point_der_gen(N, gdims, gstrs, coor, dcoor, ord, width, CLOSURE(interp_update_t, update));
 }
 
 static void interpolate_der_coor2(int ord, int M, const long dims[M], const long istrs[M], complex float* dintp, const long cstrs[M], long cstrs_dir, const complex float* coor, const complex float* dcoor, const long gdims[M], const long gstrs[M], const complex float* grid)
