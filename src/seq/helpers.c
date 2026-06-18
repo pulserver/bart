@@ -22,6 +22,7 @@
 #include "seq/mag_prep.h"
 #include "seq/opts.h"
 #include "seq/ui_enums.h"
+#include "seq/custom_selections.h"
 #include "seq/seq_asl.h"
 
 #include "helpers.h"
@@ -503,9 +504,10 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 			seq->phys.tr, seq->phys.te, seq->phys.te_delta);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr), 
-			"\ndwell/os/asym\t\t\t\t%.8f/%.2f/%.2f\ncontrast/rf duration/FA/BWTP\t\t%d/%.6f/%.2f/%.2f",
+			"\ndwell/os/asym\t\t\t\t%.8f/%.2f/%.2f\ncontrast/rf duration/FA/BWTP\t\t%d (\"%s\")/%.6f/%.2f/%.2f",
 			seq->phys.dwell, seq->phys.os, seq->phys.asym_echo,
-			seq->phys.contrast, seq->phys.rf_duration, seq->phys.flip_angle, seq->phys.bwtp);
+			seq->phys.contrast, get_contrast_str(seq->phys.contrast),
+			seq->phys.rf_duration, seq->phys.flip_angle, seq->phys.bwtp);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr), 
 			"\nFOV/slice-th/slab-os\t\t\t%.3f/%.3f/%.2f\nBR/mb_factor/SMS dist\t\t\t%d/%d/%.3f",
@@ -513,8 +515,8 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 			seq->geom.baseres, seq->geom.mb_factor, seq->geom.sms_distance);
 	
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
-			"\nPE_Mode/Turns-GA/aligned flags/order\t%d/%d/%ld/%d\nis3D\t\t\t\t\t%d",
-			seq->enc.pe_mode, seq->enc.tiny, seq->enc.aligned_flags, seq->enc.order,
+			"\nPE_Mode/Turns-GA/aligned flags/order\t%d (\"%s\")/%d/%ld/%d\nis3D\t\t\t\t\t%d",
+			seq->enc.pe_mode, get_pemode_str(seq->enc.pe_mode), seq->enc.tiny, seq->enc.aligned_flags, seq->enc.order,
 			seq->enc.is3D);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),

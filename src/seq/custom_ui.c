@@ -5,12 +5,11 @@
 
 #include <string.h>
 
-#include "config.h"
 #include "misc/misc.h"
 
 #include "seq/config.h"
 #include "seq/ui_enums.h"
-#include "ui_enums.h"
+#include "seq/custom_selections.h"
 
 #include "custom_ui.h"
 
@@ -18,23 +17,6 @@
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 #endif
-
-
-static const struct selection_opt pemode_opts[] = {
-
-	{ SEQ_PEMODE_TURN, "1. TURN", },
-	{ SEQ_PEMODE_RAGA, "2. RAGA", },
-	{ SEQ_PEMODE_MEMS_HYB, "3. MEMS", },
-	{ SEQ_PEMODE_CARTESIAN, "4. CARTESIAN (center-out)", },
-	{ SEQ_PEMODE_CARTESIAN_LINEAR, "4. CARTESIAN (linear)", },
-};
-
-
-static const struct selection_opt contrast_opts[] = {
-
-	{ SEQ_CONTRAST_RF_RANDOM, "1. RF Random" },
-	{ SEQ_CONTRAST_RF_SPOILED, "2. RF Spoiled" },
-};
 
 
 static const struct seq_ui_selection custom_selection_defaults[] = {
