@@ -312,11 +312,35 @@ static long get_chrono_slice(const struct seq_state* seq_state, const struct seq
 
 static int check_settings(const struct seq_state* seq_state, const struct seq_config* seq)
 {
+	if (SEQ_PEMODE_TURN != seq->enc.pe_mode)
+		return ERROR_SETTING_ENCODING;
+
+	if (0 != seq->enc.aligned_flags)
+		return ERROR_SETTING_RAGA_AL;
+
+	if (5 != seq->enc.tiny)
+		return ERROR_SETTING_TURNS;
+
+	if (1 < seq->loop_dims[TE_DIM])
+		return ERROR_SETTING_ECHOES;
+
+	if (SEQ_CONTRAST_RF_RANDOM != seq->phys.contrast)
+		return ERROR_SETTING_SPOILING;
+
 	if (0 > seq->loop_dims[PHS2_DIM])
+		return ERROR_SETTING_DIM;
+
+	if ((1 < seq->geom.mb_factor) && (SEQ_ORDER_SEQ_MS == seq->enc.order))
 		return ERROR_SETTING_DIM;
 
 	if (SEQ_MAX_SLICES < get_slices(seq))
 		return ERROR_SETTING_DIM;
+
+	if (seq->enc.is3D)
+		return ERROR_SETTING_3D;
+
+	if ((1 < seq->loop_dims[SLICE_DIM]) && (SEQ_ORDER_SEQ_MS != seq->enc.order))
+		return ERROR_SETTING_NON_SEQUENTIAL_MS;
 
 	if (SEQ_CONTEXT_BINARY != seq_state->context) {
 
