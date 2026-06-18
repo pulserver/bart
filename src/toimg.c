@@ -1,10 +1,10 @@
 /* Copyright 2013-2018 The Regents of the University of California.
  * Copyright 2017-2021. Uecker Lab. Unversity Medical Center Göttingen.
  * Copyright 2023-2026. Institute of Biomedical Imaging. TU Graz.
- * All rights reserved. Use of this source code is governed by 
+ * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
- * Authors: 
+ * Authors:
  * 2013, 2015 Martin Uecker
  * 2015, 2018 Jon Tamir
  */
@@ -98,7 +98,7 @@ static void toimg(bool dicom, bool use_windowing, const char* name, long inum, f
 
 static void toimg_stack(const char* name, bool dicom, bool dim_names, bool single_scale, bool use_windowing, float gamma, float contrast, float window, const long dims[DIMS], const complex float* data)
 {
-	long data_size = md_calc_size(DIMS, dims); 
+	long data_size = md_calc_size(DIMS, dims);
 
 	long sq_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 
@@ -142,7 +142,7 @@ static void toimg_stack(const char* name, bool dicom, bool dim_names, bool singl
 			scale = md_znorm(2, sq_dims, data + i * img_size) / md_calc_size(2, sq_dims);
 		else if (single_scale)
 			scale = max;
-		else 
+		else
 			for (long j = 0; j < md_calc_size(2, sq_dims); j++)
 				scale = MAX(cabsf(data[i * img_size + j]), scale);
 
@@ -211,7 +211,9 @@ int main_toimg(int argc, char* argv[argc])
 
 	num_init();
 
-	char* ext = strrchr(out_prefix, '.');
+	char* prefix = xstrdup(out_prefix);
+
+	char* ext = strrchr(prefix, '.');
 
 	if (NULL != ext) {
 
@@ -228,9 +230,11 @@ int main_toimg(int argc, char* argv[argc])
 	long dims[DIMS];
 	complex float* data = load_cfl(in_file, DIMS, dims);
 
-	toimg_stack(out_prefix, dicom, dim_names, single_scale, use_windowing, gamma, contrast, window, dims, data);
+	toimg_stack(prefix, dicom, dim_names, single_scale, use_windowing, gamma, contrast, window, dims, data);
 
 	unmap_cfl(DIMS, dims, data);
+
+	free(prefix);
 
 	return 0;
 }

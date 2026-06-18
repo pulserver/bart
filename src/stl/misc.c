@@ -514,7 +514,7 @@ double* stl_read(FILE* fp, long dims[3])
 
 bool stl_fileextension(const char* name)
 {
-	char* ext = strrchr(name, '.');
+	const char* ext = strrchr(name, '.');
 
         if (NULL == ext)
 		return false;

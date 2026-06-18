@@ -611,7 +611,7 @@ int parse_cfl_header(long N, const char header[N + 1], char** file, char** cmd, 
 
 		} else if (NULL != cmd && 0 == strcmp(keyword, "Command")) {
 
-			char* last_char = memchr(header + pos, '\n', (size_t)(N - pos));
+			const char* last_char = memchr(header + pos, '\n', (size_t)(N - pos));
 
 			if (NULL == last_char)
 				return -1;
@@ -628,7 +628,7 @@ int parse_cfl_header(long N, const char header[N + 1], char** file, char** cmd, 
 
 		} else if (node && 0 == strcmp(keyword, "Node-ID")) {
 
-			char* last_char = memchr(header + pos, '\n', (size_t)(N - pos));
+			const char* last_char = memchr(header + pos, '\n', (size_t)(N - pos));
 
 			if (NULL == last_char)
 				return -1;
