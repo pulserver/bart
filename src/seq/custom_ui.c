@@ -43,7 +43,7 @@ static const struct seq_ui_selection custom_selection_defaults[] = {
 
 static const struct seq_ui_long custom_bool_defaults[] = {
 
-	{ "seq_wip8", SEQ_UI_IDX_LONG_RECO, "Online Recon", { 0, 0, 0, 1 }, "", "" },
+	{ "seq_wip8", SEQ_UI_IDX_LONG_RECO, "Online Recon", { 0, 0, 0, 2 }, "", "" },
 	{ "seq_wip12", SEQ_UI_IDX_LONG_SMS, "Simultaneous Multi-Slice", { 0, 0, 0, 1 }, "", "" },
 };
 
@@ -55,8 +55,8 @@ static const struct seq_ui_long custom_long_defaults[] = {
 static const struct seq_ui_long custom_longarr_defaults[] = {
 
 	// tiny must be the first one
-	{ "", SEQ_UI_IDX_LONG_TINY, "Turns / Tiny Golden", { 1, 20, 1, 1 }, "Number of turns (repititions) of radial spoke pattern.", ""},
-	{ "", SEQ_UI_IDX_LONG_RF_DURATION_US, "RF pulse duration", { 20, 2560, 20, 400 }, "RF pulse duration.", "us"},
+	{ "", SEQ_UI_IDX_LONG_TINY, "Turns / Tiny Golden", { 1, 20, 1, 5 }, "Number of turns (repititions) of radial spoke pattern.", ""},
+	{ "", SEQ_UI_IDX_LONG_RF_DURATION_US, "RF pulse duration", { 20, 2560, 20, 300 }, "RF pulse duration.", "us"},
 	{ "", SEQ_UI_IDX_LONG_INIT_DELAY, "Delay Measurements", { 0, 300, 1, 0 }, "Delay measurements.", "s"},
 	{ "", SEQ_UI_IDX_LONG_INVERSIONS, "Inversions", { 0, 1000, 1, 1 }, "Number of IR experiments.", ""},
 	{ "", SEQ_UI_IDX_LONG_INV_DELAY, "Inversion Delay", { 0, 2000, 1, 0 }, "Delay between inversions.", "s"},
