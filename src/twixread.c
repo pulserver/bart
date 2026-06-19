@@ -349,6 +349,33 @@ static void skip_to_next(const char* hdr, int fd, off_t offset)
 		error("seeking\n");
 }
 
+static void siemens_dims_mapping(long pos[DIMS], uint16_t sLC[14], unsigned long ignore_dims_flags, bool radial)
+{
+	pos[PHS1_DIM]	= sLC[0];
+	pos[AVG_DIM]	= sLC[1];
+	pos[SLICE_DIM]	= sLC[2];
+	pos[PHS2_DIM]	= sLC[3];
+	pos[TE_DIM]	= sLC[4];
+	pos[COEFF_DIM]	= sLC[5];
+	pos[TIME_DIM]	= sLC[6];
+	pos[TIME2_DIM]	= sLC[7];
+	pos[LEVEL_DIM]	= sLC[8];
+
+	if (radial) {
+
+		if ((0 != pos[SLICE_DIM]) && (0 != pos[PHS2_DIM]))
+			error("Reading radial data with pos[SLICE_DIM]=%ld and pos[PHS2_DIM]=%ld\n", pos[SLICE_DIM], pos[PHS2_DIM]);
+
+		pos[SLICE_DIM] = MAX(pos[SLICE_DIM], pos[PHS2_DIM]);
+		pos[PHS2_DIM] = pos[PHS1_DIM];
+		pos[PHS1_DIM] = 0;
+	}
+
+	for (int i = 0; i < DIMS; i++)
+		if (MD_IS_SET(ignore_dims_flags, i))
+			pos[i] = 0;
+}
+
 
 static enum adc_return siemens_bounds(bool vd, bool noise, bool dummy, bool refscan, bool refscan_ac,
 				      unsigned long ignore_dims_flags, int fd, long min[DIMS], long max[DIMS])
@@ -403,19 +430,7 @@ static enum adc_return siemens_bounds(bool vd, bool noise, bool dummy, bool refs
 			return ADC_SKIP;
 		}
 
-		pos[PHS1_DIM]	= mdh.sLC[0];
-		pos[AVG_DIM]	= mdh.sLC[1];
-		pos[SLICE_DIM]	= mdh.sLC[2];
-		pos[PHS2_DIM]	= mdh.sLC[3];
-		pos[TE_DIM]	= mdh.sLC[4];
-		pos[COEFF_DIM]	= mdh.sLC[5];
-		pos[TIME_DIM]	= mdh.sLC[6];
-		pos[TIME2_DIM]	= mdh.sLC[7];
-		pos[LEVEL_DIM]	= mdh.sLC[8];
-
-		for (int i = 0; i < DIMS; i++)
-			if (MD_IS_SET(ignore_dims_flags, i))
-				pos[i] = 0;
+		siemens_dims_mapping(pos, mdh.sLC, ignore_dims_flags, false);
 
 		for (int i = 0; i < DIMS; i++) {
 
@@ -444,6 +459,8 @@ static enum adc_return siemens_adc_read(bool vd, int fd, bool noise, bool dummy,
 	char scan_hdr[vd ? 192 : 0];
 	xread(fd, scan_hdr, sizeof(scan_hdr));
 
+	int read_dim = radial ? PHS1_DIM : READ_DIM;
+
 	for (pos[COIL_DIM] = 0; pos[COIL_DIM] < dims[COIL_DIM]; pos[COIL_DIM]++) {
 
 		char chan_hdr[vd ? 32 : 128];
@@ -460,7 +477,7 @@ static enum adc_return siemens_adc_read(bool vd, int fd, bool noise, bool dummy,
 			return ADC_END;
 
 		if (adc_to_skip(noise, dummy, refscan, refscan_ac, mdh.evalinfo)
-			|| (dims[READ_DIM] != mdh.samples)) {
+			|| (dims[read_dim] != mdh.samples)) {
 
 			ssize_t offset = sizeof(scan_hdr) + sizeof(chan_hdr);
 
@@ -471,37 +488,20 @@ static enum adc_return siemens_adc_read(bool vd, int fd, bool noise, bool dummy,
 
 		if (0 == pos[COIL_DIM]) {
 
-			pos[PHS1_DIM]	= mdh.sLC[0] - (linectr ? mdh.linectr - dims[PHS1_DIM] / 2 : 0);
-			pos[AVG_DIM]	= mdh.sLC[1];
+			siemens_dims_mapping(pos, mdh.sLC, ignore_dims_flags, radial);
 
-			if (radial) { // reorder for radial
+			if (radial && (linectr | partctr))
+				error("linectr/partctr offset not supported for radial read!\n");
 
-				if (1 < dims[PHS2_DIM])
-					pos[SLICE_DIM]	= mdh.sLC[3]; // only for 3D
-				else
-					pos[SLICE_DIM]	= mdh.sLC[2];
-			} else {
-
-				pos[SLICE_DIM]	= mdh.sLC[2];
-				pos[PHS2_DIM]	= mdh.sLC[3] - (partctr ? mdh.partctr - dims[PHS2_DIM] / 2 : 0);
-			}
-
-			pos[TE_DIM]	= mdh.sLC[4];
-			pos[COEFF_DIM]	= mdh.sLC[5];
-			pos[TIME_DIM]	= mdh.sLC[6];
-			pos[TIME2_DIM]	= mdh.sLC[7];
-			pos[LEVEL_DIM]	= mdh.sLC[8];
-
-			for (int i = 0; i < DIMS; i++)
-				if (MD_IS_SET(ignore_dims_flags, i))
-					pos[i] = 0;
+			pos[PHS1_DIM] -= (linectr ? mdh.linectr - dims[PHS1_DIM] / 2 : 0);
+			pos[PHS2_DIM] -= (partctr ? mdh.partctr - dims[PHS2_DIM] / 2 : 0);
 		}
 
 		debug_print_dims(DP_DEBUG3, DIMS, pos);
 
-		if (dims[READ_DIM] != mdh.samples) {
+		if (dims[read_dim] != mdh.samples) {
 
-			debug_printf(DP_WARN, "Wrong number of samples: %ld != %d.\n", dims[READ_DIM], mdh.samples);
+			debug_printf(DP_WARN, "Wrong number of samples: %ld != %d.\n", dims[read_dim], mdh.samples);
 			return ADC_ERROR;
 		}
 
@@ -511,7 +511,7 @@ static enum adc_return siemens_adc_read(bool vd, int fd, bool noise, bool dummy,
 			return ADC_ERROR;
 		}
 
-		xread(fd, buf + pos[COIL_DIM] * dims[READ_DIM], (size_t)(dims[READ_DIM] * (long)CFL_SIZE));
+		xread(fd, buf + pos[COIL_DIM] * dims[read_dim], (size_t)(dims[read_dim] * (long)CFL_SIZE));
 	}
 
 	pos[COIL_DIM] = 0;
@@ -595,6 +595,7 @@ int main_twixread(int argc, char* argv[argc])
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
 
 	bool radial = false;
+
 	if (-1 != radial_lines) {
 
 		dims[PHS1_DIM] = radial_lines;
@@ -630,7 +631,7 @@ int main_twixread(int argc, char* argv[argc])
 		long min[DIMS] = { }; // min is always 0
 
 		if (chrono)
-			ignore_dims_flags = ~(READ_FLAG|COIL_FLAG);
+			ignore_dims_flags = ~COIL_FLAG;
 
 		adcs = 0;
 
@@ -673,46 +674,43 @@ int main_twixread(int argc, char* argv[argc])
 		siemens_meas_setup(ifd, &hdr); // reset
 	}
 
-	long odims[DIMS];
-	md_copy_dims(DIMS, odims, dims);
+	long adc_dims[DIMS];
 
 	if (-1 != radial_lines) {
 
-		// change output dims (must have identical layout!)
-		odims[0] = 1;
-		odims[1] = dims[0];
-		odims[2] = dims[1];
-		assert(1 == dims[2]);
+		if ((1 != dims[SLICE_DIM]) && (1 != dims[PHS2_DIM]))
+			error("Reading radial data with nontrivial SLICE_DIM and PHS2_DIM not supported!\n");
+
+		dims[SLICE_DIM] = MAX(dims[SLICE_DIM], dims[PHS2_DIM]);
+		dims[PHS2_DIM] = dims[PHS1_DIM];
+		dims[PHS1_DIM] = dims[READ_DIM];
+		dims[READ_DIM] = 1;
+
+		md_select_dims(DIMS, PHS1_FLAG|COIL_FLAG, adc_dims, dims);
+
+	} else {
+
+		md_select_dims(DIMS, READ_FLAG|COIL_FLAG, adc_dims, dims);
 	}
 
 	unlink_cfl(out_file);
-	complex float* out = create_cfl(out_file, DIMS, odims);
+	complex float* out = create_cfl(out_file, DIMS, dims);
 
 	long pdims[DIMS];
 	long pstrs[DIMS];
-	md_select_dims(DIMS, ~(READ_FLAG | COIL_FLAG), pdims, dims);
+
+	md_select_dims(DIMS, ~md_nontriv_dims(DIMS, adc_dims), pdims, dims);
 	md_calc_strides(DIMS, pstrs, pdims, CFL_SIZE);
+
 	complex float* pat = (pat_file ? create_cfl : anon_cfl)(pat_file, DIMS, pdims);
 	md_clear(DIMS, pdims, pat, CFL_SIZE);
 
-	bool pmu_out = (NULL != pmu_file);
-
-	long pmu_dims[DIMS];
-	md_select_dims(DIMS, ~(READ_FLAG|COIL_FLAG), pmu_dims, dims);
-	complex float* pmu = NULL;
-	complex float pmu_val;
-
-	if (pmu_out) {
-
-		pmu = create_cfl(pmu_file, DIMS, pmu_dims);
-		md_clear(DIMS, pmu_dims, pmu, CFL_SIZE);
-	}
+	complex float* pmu = (pmu_file ? create_cfl : anon_cfl)(pmu_file, DIMS, pdims);
+	md_clear(DIMS, pdims, pat, CFL_SIZE);
 
 
 	debug_printf(DP_DEBUG1, "Reading measured data (%ld adcs).\n", adcs);
 
-	long adc_dims[DIMS];
-	md_select_dims(DIMS, READ_FLAG|COIL_FLAG, adc_dims, dims);
 
 	void* buf = md_alloc(DIMS, adc_dims, CFL_SIZE);
 
@@ -725,7 +723,8 @@ int main_twixread(int argc, char* argv[argc])
 		if (mpi && (0 == adcs)) //with MPI, we cannot rely on ADC_END
 			break;
 
-		long pos[DIMS] = { [0 ... DIMS - 1] = 0 };
+		long pos[DIMS] = { };
+		complex float pmu_val = 0;
 
 		sar = siemens_adc_read(vd, ifd, noise, dummy, refscan, refscan_ac, ignore_dims_flags, linectr, partctr, radial, dims, pos, buf, &pmu_val);
 
@@ -756,7 +755,7 @@ int main_twixread(int argc, char* argv[argc])
 				pos[SLICE_DIM] = mpi_slice;
 				pos[LEVEL_DIM] = 0;
 
-				if ((0 == pos[TIME_DIM]) && (0 == pos[PHS1_DIM]))
+				if ((0 == pos[TIME_DIM]) && (0 == pos[radial ? PHS2_DIM : PHS1_DIM]))
 					mpi_slice++;
 
 				if (0 > pos[SLICE_DIM]) { //skip first
@@ -780,8 +779,7 @@ int main_twixread(int argc, char* argv[argc])
 				continue;
 			}
 
-			if (pmu_out)
-				md_copy_block(DIMS, pos, pmu_dims, pmu, MD_SINGLETON_DIMS(DIMS), &pmu_val, CFL_SIZE);
+			MD_ACCESS(DIMS, pstrs, pos, pmu) = pmu_val;
 
 			if (0. != MD_ACCESS(DIMS, pstrs, pos, pat))
 				error("Read same ADC position twice!\n"
@@ -799,8 +797,8 @@ int main_twixread(int argc, char* argv[argc])
 
 	md_free(buf);
 
-	unmap_cfl(DIMS, odims, out);
-	unmap_cfl(DIMS, pmu_dims, pmu);
+	unmap_cfl(DIMS, dims, out);
+	unmap_cfl(DIMS, pdims, pmu);
 	unmap_cfl(DIMS, pdims, pat);
 
 	return 0;
