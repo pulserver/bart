@@ -172,7 +172,7 @@ static void seq_bart_to_standard_conf(struct seq_standard_conf* std, struct seq_
 	std->slice_thickness = seq->geom.slice_thickness;
 	// std->slice_os = 1. + seq->geom.slice_os;
 
-	// std->is3D = seq->dim.is3D;
+	std->is3D = seq->enc.is3D;
 
 	std->gamma = seq->sys.gamma;
 	std->b0 = seq->sys.b0;
@@ -217,7 +217,7 @@ static void seq_standard_conf_to_bart(struct seq_config* seq, struct seq_standar
 	seq->geom.slice_thickness = std->slice_thickness;
 	// seq->geom.slice_os = 1. + std->slice_os;
 
-	// seq->dim.is3D = std->is3D;
+	seq->enc.is3D = std->is3D;
 
 	seq->sys.gamma = std->gamma;
 
@@ -368,8 +368,8 @@ struct seq_interface_conf seq_get_interface_conf(struct seq_config* conf)
 {
 	struct seq_interface_conf ret = { };
 
-	// if (conf->enc.is3D)
-	// 	ret.mode |= SEQ_MODE_3D;
+	if (conf->enc.is3D)
+		ret.mode |= SEQ_MODE_3D;
 
 	ret.tr = conf->phys.tr;
 	ret.radial_views = conf->loop_dims[PHS1_DIM];
