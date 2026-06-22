@@ -415,6 +415,9 @@ static int check_settings(const struct seq_state* seq_state, const struct seq_co
 	if ((1 < seq->geom.mb_factor) && seq->enc.is3D)
 		return ERROR_SETTING_DIM;
 
+	if ((1 < seq->geom.mb_factor) && (SEQ_ORDER_SEQ_MS == seq->enc.order))
+		return ERROR_SETTING_DIM;
+
 	if (SEQ_MAX_SLICES < get_slices(seq))
 		return ERROR_SETTING_DIM;
 
