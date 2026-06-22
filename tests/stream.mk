@@ -118,15 +118,60 @@ tests/test-stream-binary5: bart copy nrmse
 	rm *.ra	; rm phantom.bstrm; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
+tests/test-stream-join1: phantom copy join nrmse
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)				;\
+	$(TOOLDIR)/phantom -s3 k1						;\
+	$(TOOLDIR)/copy k1 k2							;\
+	$(TOOLDIR)/join 3 k1 k2 ref						;\
+	$(TOOLDIR)/copy --stream 8 k1	k1.fifo			&\
+	$(TOOLDIR)/copy --stream 8 k2	k2.fifo			&\
+	$(TOOLDIR)/join -s 3 k1.fifo k2.fifo -					|\
+	$(TOOLDIR)/nrmse -t0 ref -						;\
+	rm *.{cfl,hdr}	; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
+tests/test-stream-join2: phantom join copy nrmse
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)				;\
+	$(TOOLDIR)/phantom -s3 k1						;\
+	$(TOOLDIR)/copy k1 k2							;\
+	$(TOOLDIR)/join 3 k1 k2 ref						;\
+	$(TOOLDIR)/copy --stream 12 k1 k1.fifo		&\
+	$(TOOLDIR)/copy --stream 12 k2 k2.fifo		&\
+	$(TOOLDIR)/join -s 3 k1.fifo k2.fifo -					|\
+	$(TOOLDIR)/nrmse -t0 ref -						;\
+	rm *.{cfl,hdr}	; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
+tests/test-stream-join3: bart phantom join copy nrmse
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)				;\
+	$(TOOLDIR)/phantom -s3 k1						;\
+	$(TOOLDIR)/copy k1 k2							;\
+	$(TOOLDIR)/join 3 k1 k2 ref						;\
+	$(ROOTDIR)/bart -rk1 -l10 -o 3:1 copy k1 k1.fifo			&\
+	$(ROOTDIR)/bart -rk2 -l10 -o 1:3 copy k2 k2.fifo			&\
+	$(TOOLDIR)/join -s 3 k1.fifo k2.fifo -					|\
+	$(TOOLDIR)/nrmse -t0 ref -						;\
+	rm *.{cfl,hdr}	; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
 
 .PHONY: tests/test-stream
 tests/test-stream: tests/test-pipe tests/test-stream1 tests/test-stream2 tests/test-stream3 tests/test-stream4 tests/test-stream5 \
 	tests/test-stream-loop tests/test-stream-loop-ref tests/test-stream-binary tests/test-stream-binary2 \
-	tests/test-stream-binary3 tests/test-stream-binary4 tests/test-stream-binary5
+	tests/test-stream-binary3 tests/test-stream-binary4 tests/test-stream-binary5 \
+	tests/test-stream-join1 tests/test-stream-join2 tests/test-stream-join3
 
 TESTS += tests/test-pipe tests/test-stream1 tests/test-stream2 tests/test-stream3 tests/test-stream4
 TESTS += tests/test-stream-binary tests/test-stream-binary2 tests/test-stream-binary3 tests/test-stream-binary4
 TESTS += tests/test-stream-long-header
+# fifo creation on wasm filesystem is apparently not atomic:
+# Under WASM, these tests fail with "File is not a fifo"
+ifneq ($(BUILDTYPE), WASM)
+TESTS += tests/test-stream-join1 tests/test-stream-join2
+endif
 
 TESTS_BART += tests/test-stream-loop tests/test-stream-loop-ref tests/test-stream5 tests/test-stream-binary5
+ifneq ($(BUILDTYPE), WASM)
+TESTS_BART += tests/test-stream-join3
+endif
 

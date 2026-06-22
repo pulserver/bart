@@ -60,7 +60,11 @@ int main_join(int argc, char* argv[argc])
 	const struct opt_s opts[] = {
 
 		OPT_SET('a', &append, "append - only works for cfl files!"),
-		OPT_SET('s', &stream, "join along streamed dimension!"),
+		OPT_SET('s', &stream, "Stream output along input stream dimensions."),
+		// stream dimensions of output:
+		//   if at least one input is a stream AND all input stream flags contain MD_BIT(join dimension)
+		//   then stream along flags present in all inputs.
+		//   All stream inputs must have same flags.
 	};
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
@@ -108,7 +112,10 @@ int main_join(int argc, char* argv[argc])
 	long offsets[count];
 	long sum = 0;
 
-	// figure out size of output
+	unsigned long any_flags = 0UL;
+	unsigned long all_flags = ~0UL;
+
+	// figure out size and stream flags of output
 	for (int l = 0, i = 0; i < count; i++) {
 
 		const char* name = NULL;
@@ -127,10 +134,15 @@ int main_join(int argc, char* argv[argc])
 		if (stream) {
 
 			in_data[i] = load_async_cfl(name, N, in_dims[i]);
-			stream_t strm = stream_lookup(in_data[i]);
+			stream_t stream_in = stream_lookup(in_data[i]);
 
-			if ((NULL != strm) && (0 != (stream_get_flags(strm) & (~MD_BIT(dim)))))
-				error("Input %s is streamed along dims(flags: %lu) other than the one joined!\n", name, stream_get_flags(strm));
+			if (stream_in) {
+
+				unsigned long iflags = stream_get_flags(stream_in);
+				any_flags |= iflags;
+				all_flags &= iflags;
+			}
+
 
 		} else {
 
@@ -146,6 +158,23 @@ int main_join(int argc, char* argv[argc])
 
 		if (append && (i == 0))
 			unmap_cfl(N, in_dims[i], in_data[i]);
+	}
+
+	unsigned long stream_out_flags = 0UL;
+
+	if (stream && any_flags) {
+
+		if (all_flags != any_flags)
+			error("All input streams must contain the same set of flags.\n");
+
+		if (!(all_flags & MD_BIT(dim)))
+			error("Input streams must contain join dimension.\n");
+
+		stream_out_flags = all_flags;
+
+	} else {
+
+		stream = false;
 	}
 
 	long out_dims[N];
@@ -178,10 +207,11 @@ int main_join(int argc, char* argv[argc])
 	complex float* out_data = NULL;
 
 	if (stream)
-		out_data = create_async_cfl(out_file, stream ? MD_BIT(dim) : 0UL, N, out_dims);
+		out_data = create_async_cfl(out_file, stream_out_flags, N, out_dims);
 	else
 		out_data = create_cfl(out_file, N, out_dims);
 
+	stream_t stream_out = stream_lookup(out_data);
 
 	if (append && md_check_dimensions(N - dim - 1, out_dims + dim + 1, 0UL)) {
 
@@ -191,55 +221,49 @@ int main_join(int argc, char* argv[argc])
 		unmap_cfl(N, in_dims[0], in_data[0]);
 	}
 
-	if (! stream) {
+#pragma omp parallel for num_threads(count)
+	for (int i = 0; i < count; i++) {
 
-#pragma omp parallel for
-		for (int i = 0; i < count; i++) {
+		if (append && (0 == i))
+			continue;
 
-			if (append && (0 == i))
-				continue;
+		stream_t stream_in = stream_lookup(in_data[i]);
+		long counter = 0;
 
-			long pos[N];
-			md_singleton_strides(N, pos);
-			pos[dim] = offsets[i];
-
-			md_copy_block(N, pos, out_dims, out_data, in_dims[i], in_data[i], CFL_SIZE);
-
-			unmap_cfl(N, in_dims[i], in_data[i]);
-
-			debug_printf(DP_DEBUG1, "done copying file %d\n", i);
-		}
-
-	} else {
+		// assert input slices are complete:
+		assert((!stream) || ((!stream_in) || (stream_get_flags(stream_in) == stream_out_flags)));
 
 		long opos[N];
 		long ipos[N];
-
-		md_singleton_strides(N, opos);
 		md_singleton_strides(N, ipos);
+		md_singleton_strides(N, opos);
 
-		stream_t ostrm = stream_lookup(out_data);
+		long slc_dims[DIMS];
+		md_select_dims(DIMS, ~stream_out_flags, slc_dims, in_dims[i]);
 
-		for (int i = 0; i < count; i++) {
+		// join input slices in order of arrival:
 
-			stream_t istrm = stream_lookup(in_data[i]);
+		bool input_loop = stream && stream_in;
+		do {
 
-			for (ipos[dim] = 0; ipos[dim] < in_dims[i][dim]; ipos[dim]++) {
+			if (input_loop && !stream_receive_serial(stream_in, DIMS, ipos, counter))
+				break;
 
-				long slc_dims[DIMS];
-				md_select_dims(DIMS, ~MD_BIT(dim), slc_dims, out_dims);
+			md_copy_dims(N, opos, ipos);
+			opos[dim] += offsets[i];
 
-				if (NULL != istrm)
-					stream_sync_slice(istrm, DIMS, in_dims[i], MD_BIT(dim), ipos);
+			md_move_block(N, slc_dims, opos, out_dims, out_data, ipos, in_dims[i], in_data[i], CFL_SIZE);
 
-				md_move_block(N, slc_dims, opos, out_dims, out_data, ipos, in_dims[i], in_data[i], CFL_SIZE);
+			if (stream)
+				stream_sync_slice(stream_out, DIMS, out_dims, stream_out_flags, opos);
 
-				stream_sync_slice(ostrm, DIMS, out_dims, MD_BIT(dim), opos);
-				opos[dim] ++;
-			}
+			counter++;
 
-			unmap_cfl(N, in_dims[i], in_data[i]);
-		}
+		} while (input_loop || md_next(N, in_dims[i], stream_out_flags, ipos)) ;
+
+		debug_printf(DP_DEBUG1, "done copying file %d\n", i);
+
+		unmap_cfl(N, in_dims[i], in_data[i]);
 	}
 
 	unmap_cfl(N, out_dims, out_data);
