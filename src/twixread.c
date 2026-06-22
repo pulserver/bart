@@ -267,7 +267,7 @@ static bool is_image_adc(uint64_t adc_flag)
 	uint64_t non_image = MD_BIT(ACQEND) | MD_BIT(SYNCDATA) |
 		MD_BIT(RTFEEDBACK) | MD_BIT(HPFEEDBACK) | MD_BIT(REFPHASESTABSCAN) |
 		MD_BIT(PHASESTABSCAN) | MD_BIT(PHASCOR) | MD_BIT(NOISEADJSCAN) |
-		MD_BIT(RETRO_DUMMYSCAN) | (1ULL < unused60);
+		MD_BIT(RETRO_DUMMYSCAN) | (1ULL << unused60);
 
 	if (adc_flag & non_image)
 		return false;
