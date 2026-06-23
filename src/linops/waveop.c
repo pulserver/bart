@@ -1,7 +1,7 @@
 /* Copyright 2015. The Regents of the University of California.
  * Copyright 2016-2018. Martin Uecker.
  * Copyright 2017. University of Oxford.
- * Copyright 2024-2025. Institute of Biomedical Imaging. TU Graz.
+ * Copyright 2024-2026. Institute of Biomedical Imaging. TU Graz.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
  *
@@ -10,8 +10,11 @@
  * 2017 Sofia Dimoudi
  */
 
+#define _GNU_SOURCE
+#include <stddef.h>
 #include <assert.h>
 #include <complex.h>
+#include <limits.h>
 
 #include "num/multind.h"
 #include "num/flpmath.h"
@@ -56,7 +59,9 @@ static void wavelet_forward(const linop_data_t* _data, complex float* dst, const
 			if (MD_IS_SET(data->flags, i)) {
 
 				int levels = wavelet_num_levels(data->N, MD_BIT(i), data->idims, data->minsize, data->flen);
-				data->shifts[i] = rand_range_state(data->rand_state, (1 << levels) + 1u); // +1, as we want to include the limit
+
+				assert((size_t)levels < sizeof(long) * CHAR_BIT - 1);
+				data->shifts[i] = (long)rand_range_state(data->rand_state, (1 << levels) + 1u); // +1, as we want to include the limit
 
 				assert(data->shifts[i] < data->idims[i]);
 			}

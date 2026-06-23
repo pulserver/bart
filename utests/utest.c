@@ -66,7 +66,7 @@ void abort_or_print(const char* testname)
 	}
 
 	if (1 == abort_on_error)
-#ifndef BARTDLL
+#ifndef UTEST_WINE 
 		error("%s failed\n", testname);
 #else
 	{
@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
 
 	debug_printf(good ? DP_INFO : DP_ERROR, "%20s: %2d/%2d passed.\n", argv[0], num_tests_pass, num_tests_run);
 
-#ifndef BARTDLL
+#ifndef USE_MPI
 	deinit_mpi();
 #endif
 

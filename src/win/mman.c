@@ -38,6 +38,11 @@ IN THE SOFTWARE.
 int shm_open(const char *name, int oflag, mode_t mode)
 {
 	(void)mode;
+	const char prefix[] = "Global\\";
+	char pname[strlen(prefix) + strlen(name) + 1];
+	strcpy(pname, prefix);
+	strcat(pname, name);
+
 	HANDLE hMapFile;
 	if ((oflag & _O_CREAT) == 0) {
 		hMapFile = CreateFileMapping(
@@ -46,16 +51,16 @@ int shm_open(const char *name, int oflag, mode_t mode)
 							PAGE_READWRITE,            // read/write access
 							0,                         // maximum object size (high-order DWORD)
 							BUF_SIZE,                  // maximum object size (low-order DWORD)
-							strcat("Global\\", name)); // name of mapping object
+							pname); 		   // name of mapping object
 	} else {
 		hMapFile = OpenFileMapping(
 					FILE_MAP_ALL_ACCESS,               // read/write access
 					FALSE,                             // do not inherit the name
-					strcat("Global\\", name));         // name of mapping object
+					pname);         		   // name of mapping object
 	}
 
 	if (hMapFile == NULL)
-		return GetLastError();
+		return (int)GetLastError();
 
 	return _open_osfhandle((intptr_t)hMapFile, PAGE_READWRITE);
 }
@@ -82,7 +87,7 @@ static int __map_mman_error(const DWORD err, const int deferr)
     if (err == 0)
         return 0;
     //TODO: implement
-    return err;
+    return (int)err;
 }
 
 static DWORD __map_mmap_prot_page(const int prot, const bool write_copy)
@@ -223,7 +228,7 @@ int munmap(void *addr, size_t len)
 	if (UnmapViewOfFile(addr))
 		return 0;
 		
-	int error = GetLastError();
+	DWORD error = GetLastError();
 	
 	// In POSIX, munmap is supposed to throw no errors when trying to unmap a memory address that is not a mapped memory segment.
 	// On the other hand, Windows throws an error in this case that can be ignored when emulating functionality of munmap.

@@ -1379,7 +1379,7 @@ void unmap_shared_cfl(int D, const long dims[D], const complex float* x)
 		error("unmap cfl\n");
 
 #ifdef _WIN32
-	if (-1 == munmap((void*)x, T))
+	if (-1 == munmap((void*)x, (size_t)T))
 		io_error("unmap cfl\n");
 #else
 	if (-1 == munmap_rounded(x, T))
