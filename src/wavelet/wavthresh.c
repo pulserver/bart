@@ -12,6 +12,7 @@
 #include <complex.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <limits.h>
 
 #include "misc/misc.h"
 #include "misc/types.h"
@@ -61,7 +62,9 @@ static void wavelet_thresh_apply(const operator_data_t* _data, float mu, complex
 			if (MD_IS_SET(data->flags, i)) {
 
 				int levels = wavelet_num_levels(data->N, MD_BIT(i), data->dims, data->minsize, data->flen);
-				shift[i] = rand_range_state(data->rand_state, (1 << levels) + 1u); // +1, as we want to include the limit
+
+				assert(levels + 1 < CHAR_BIT * (int)sizeof(long) - 1);
+				shift[i] = (long)rand_range_state(data->rand_state, (1 << levels) + 1u); // +1, as we want to include the limit
 
 				assert(shift[i] < data->dims[i]);
 			}
