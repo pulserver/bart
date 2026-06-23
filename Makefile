@@ -961,24 +961,6 @@ bart: CPPFLAGS += -include src/main.h
 
 
 
-LIBSEQ_NAME = bart_seq_$(shell git diff --quiet && git rev-parse --short=10 HEAD)
-
-
-MINGWDLLTOOL = x86_64-w64-mingw32-dlltool
-
-.PHONY: libseq_deploy
-libseq_deploy: gitclean_check lib/libbart.a bart.dll
-	$(MINGWDLLTOOL) -l lib/$(LIBSEQ_NAME).lib --dllname $(LIBSEQ_NAME).dll -d bart.def
-	cp lib/$(LIBSEQ_NAME).lib $(VM_BART_PATH)/lib/$(LIBSEQ_NAME).lib
-	cp lib/libbart.a $(VM_BART_PATH)/lib/lib$(LIBSEQ_NAME).a
-	cp bart.dll $(VM_BIN_PATH)/$(LIBSEQ_NAME).dll
-
-
-.PHONY: gitclean_check
-gitclean_check:
-	git diff --quiet
-
-
 
 %.o: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
@@ -1025,16 +1007,25 @@ bart.dll: CFLAGS += -D NO_PNG -D NOLAPACKE -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D
 bart.dll: CPPFLAGS = -D BARTLIB_EXPORTS -I$(srcdir)/
 bart.dll: LDFLAGS = -shared -Wl,--subsystem,windows -Wl,--out-implib,bart.lib -Wl,--output-def,bart.def -static-libgcc
 bart.dll: $(BARTDLL_OBJS:.o=.win.o)
+ifeq "$(and $(filter 0,$(OMP)),$(filter 1,$(BARTDLL)))" ""
+	$(error bart.dll requires OMP=0 BARTDLL=1)
+else
 	$(CC) $^ $(LDFLAGS) -o $@
+endif
 
 lib/libbart.a: CFLAGS += -D NO_PNG -D NOLAPACKE -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D NO_SAVECMDLINE -fPIC
 lib/libbart.a: CPPFLAGS = -I$(srcdir)/
 lib/libbart.a: $(BARTDLL_OBJS:.o=.libbart.o)
+ifeq "$(and $(filter 0,$(OMP)))" ""
+	$(error libbart.a requires OMP=0)
+else
 	$(AR) rcs $@ $^
+endif
+
 
 $(UTARGETS_WINE): CC = $(MINGWCC)
 $(UTARGETS_WINE): CPPFLAGS = -D BARTLIB_EXPORTS -I$(srcdir)/
-$(UTARGETS_WINE): CFLAGS += -D NO_PNG -D NOLAPACKE -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D BARTDLL
+$(UTARGETS_WINE): CFLAGS += -D NO_PNG -D NOLAPACKE -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D NO_SAVECMDLINE
 
 .SECONDEXPANSION:
 $(CTARGETS): commands/% : src/main.c $(srcdir)/%.o $$(MODULES_%) $(MODULES)
