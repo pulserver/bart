@@ -28,7 +28,7 @@
 
 #include "opts.h"
 
-#ifdef BARTDLL
+#ifdef WIN32
 static int getsubopt(char **restrict, char *const *restrict, char **restrict) { assert(0); }
 #endif
 
@@ -1479,7 +1479,7 @@ void cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m], 
 
 	int next_opt = options(argcp, argv, buf, help_str, n, opts, m, args, false);
 
-#ifndef  BARTDLL
+#ifndef NO_SAVECMDLINE
 	save_command_line(*argcp, argv);
 #endif
 
