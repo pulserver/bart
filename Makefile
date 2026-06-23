@@ -971,9 +971,7 @@ MINGWDLLTOOL = x86_64-w64-mingw32-dlltool
 endif
 
 .PHONY: libseq_deploy
-libseq_deploy: gitclean_check
-	$(MAKE) lib/libbart.a
-	$(MAKE) BARTDLL=1 bart.dll
+libseq_deploy: gitclean_check lib/libbart.a bart.dll
 	$(MINGWDLLTOOL) -l lib/$(LIBSEQ_NAME).lib --dllname $(LIBSEQ_NAME).dll -d bart.def
 	cp lib/$(LIBSEQ_NAME).lib $(VM_BART_PATH)/lib/$(LIBSEQ_NAME).lib
 	cp lib/libbart.a $(VM_BART_PATH)/lib/lib$(LIBSEQ_NAME).a
@@ -1220,11 +1218,9 @@ endif
 
 # shared library
 .PHONY: shared-lib
-shared-lib:
-	make allclean
-	CFLAGS="-fPIC $(OPT) -Wmissing-prototypes" make
+shared-lib: CFLAGS+=-fPIC
+shared-lib: $(MODULES) src/bart.o
 	gcc -shared -fopenmp src/bart.o -Wl,-whole-archive lib/lib*.a -Wl,-no-whole-archive -Wl,-Bdynamic $(FFTW_L) $(CUDA_L) $(BLAS_L) $(PNG_L) $(ISMRM_L) $(LIBS) -lm -lrt -o libbart.so
-	make allclean
 
 libbart.so: shared-lib
 
