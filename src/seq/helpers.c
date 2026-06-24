@@ -202,6 +202,24 @@ void seq_ui_interface_custom_params(int reverse, struct seq_config* seq, int nl,
 		custom_params_to_config(seq, nl, params_long, nd, params_double);
 }
 
+static void seq_init_standard_conf(struct seq_standard_conf* init_std)
+{
+	init_std->tr = 100E-3;
+	init_std->te[0] = 5E-3;
+	init_std->dwell = 10.6E-6;
+	init_std->flip_angle = 8;
+	init_std->fov = 256E-3;
+	init_std->baseres = 128;
+	init_std->slice_thickness = 5E-3;
+	init_std->enc_order = SEQ_ORDER_AVG_OUTER;
+
+	init_std->is3D = 0;
+	init_std->slice_os = 1.;
+
+	init_std->mag_prep = SEQ_PREP_OFF;
+	init_std->ti = 0.;
+}
+
 static void seq_bart_to_standard_conf(struct seq_standard_conf* std, struct seq_config* seq)
 {
 	std->tr = seq->phys.tr;
@@ -295,10 +313,23 @@ static void seq_standard_conf_to_bart(struct seq_config* seq, struct seq_standar
 
 void seq_ui_interface_standard_conf(int reverse, struct seq_config* conf, struct seq_standard_conf* std_conf)
 {
+	if (2 == reverse) {
+
+		seq_init_standard_conf(std_conf);
+		return;
+	}
+
 	if (reverse)
 		seq_bart_to_standard_conf(std_conf, conf);
 	else
 		seq_standard_conf_to_bart(conf, std_conf);
+}
+
+
+static void seq_init_loop_dims(const int D, long dims[D])
+{
+	for (int i = 0; i < D; i++)
+		dims[i] = 1;
 }
 
 
@@ -420,6 +451,12 @@ static void conf_to_loop_dims(const int D, long dims[D], struct seq_config* seq)
 
 void seq_ui_interface_loop_dims(int reverse, struct seq_config* seq, const int D, long dims[__VLA(D)])
 {
+	if (2 == reverse) {
+
+		seq_init_loop_dims(D, dims);
+		return;
+	}
+
 	if (reverse)
 		conf_to_loop_dims(D, dims, seq);
 	else
