@@ -421,7 +421,7 @@ int main_nlinv(int argc, char* argv[argc])
 
 	if (real_time_stream) {
 
-		img = create_async_cfl(img_file, TIME_FLAG, DIMS, img_dims);
+		img = create_async_cfl(img_file, stream_get_flags(stream_lookup(kspace)) & (~COIL_FLAG) & (~READ_FLAG), DIMS, img_dims);
 
 	} else {
 

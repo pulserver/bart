@@ -598,6 +598,11 @@ void noir2_recon_noncart(
 {
 	unsigned long loop_flags = (conf->realtime ? TIME_FLAG : 0);
 
+	stream_t strm_ksp = stream_lookup(kspace);
+
+	if (NULL != strm_ksp)
+		loop_flags |= stream_get_flags(strm_ksp) & ~(COIL_FLAG | READ_FLAG);
+
 	assert(0 == (loop_flags & md_nontriv_dims(N, bas_dims)));
 	assert(0 == (loop_flags & md_nontriv_dims(N, msk_dims)));
 
@@ -666,24 +671,16 @@ void noir2_recon_noncart(
 	complex float* l_wgh = 		(!conf->realtime && (NULL == weights)) ? NULL : md_alloc_sameplace(N, lwgh_dims, CFL_SIZE, ref);
 	complex float* l_trj = 		md_alloc_sameplace(N, ltrj_dims, CFL_SIZE, ref);
 
-	if (conf->realtime) {
-
-		md_clear(N, limg_dims, l_img_ref, CFL_SIZE);
-		md_clear(N, lkco_dims, l_sens_ref, CFL_SIZE);
-	}
-
 	long pos[N];
 	md_set_dims(N, pos, 0);
 
 	long pos_trj[N];
 	long pos_wgh[N];
 
-	stream_t strm_ksp = stream_lookup(kspace);
 	stream_t strm_img = stream_lookup(img);
 	stream_t strm_trj = stream_lookup(traj);
 
-	if (NULL != strm_ksp)
-		assert(loop_flags == stream_get_flags(strm_ksp));
+	unsigned long trj_flags = loop_flags & md_nontriv_dims(N, trj_dims);
 
 	do {
 		if (NULL != strm_ksp)
@@ -693,7 +690,7 @@ void noir2_recon_noncart(
 		md_slice(N, loop_flags, pos, kco_dims, l_ksens, ksens, CFL_SIZE);
 		md_slice(N, loop_flags, pos, ksp_dims, l_kspace, kspace, CFL_SIZE);
 
-		md_copy_dims(N, pos_trj, pos);
+		md_select_strides(N, trj_flags, pos_trj, pos);
 		md_copy_dims(N, pos_wgh, pos);
 
 		if (conf->realtime) {
@@ -704,6 +701,13 @@ void noir2_recon_noncart(
 				pos_wgh[TIME_DIM] = pos_wgh[TIME_DIM] % wgh_dims[TIME_DIM];
 			else
 				estimate_pattern(N, lksp_dims, COIL_FLAG, l_wgh, l_kspace);
+
+
+			if (0 == pos[TIME_DIM]) {
+
+				md_clear(N, limg_dims, l_img_ref, CFL_SIZE);
+				md_clear(N, lkco_dims, l_sens_ref, CFL_SIZE);
+			}
 
 			if (0 < pos[TIME_DIM]) {
 
