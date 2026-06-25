@@ -964,11 +964,7 @@ bart: CPPFLAGS += -include src/main.h
 LIBSEQ_NAME = bart_seq_$(shell git diff --quiet && git rev-parse --short=10 HEAD)
 
 
-ifeq (32,$(ARCH))
-MINGWDLLTOOL = i686-w64-mingw32-dlltool
-else
 MINGWDLLTOOL = x86_64-w64-mingw32-dlltool
-endif
 
 .PHONY: libseq_deploy
 libseq_deploy: gitclean_check lib/libbart.a bart.dll
@@ -1016,11 +1012,7 @@ else
 %.a : ; $(AR) $(ARFLAGS) $@ $?
 endif
 
-ifeq (32,$(ARCH))
-MINGWCC = i686-w64-mingw32-gcc
-else
 MINGWCC = x86_64-w64-mingw32-gcc
-endif
 
 # BLAS, LAPACK
 WIN_UNSUPPORTED_OBJS=%blas.o %lapack.o %blas_md_wrapper.o %vecops_strided.o %convcorr.o
