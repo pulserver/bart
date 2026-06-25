@@ -74,3 +74,6 @@ compile_commands.json
 bart.def
 bart.dll
 bart.lib
+
+# generated bart pkgconf
+pkg/bart.pc

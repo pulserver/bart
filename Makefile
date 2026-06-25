@@ -823,7 +823,7 @@ endif
 
 .INTERMEDIATE: $$($(1)objs)
 
-lib/lib$(1).a: lib$(1).a($$($(1)objs))
+lib/lib$(1).a: lib$(1).a($$($(1)objs)) | pkg/bart.pc
 
 endef
 
@@ -1033,6 +1033,34 @@ bart: CPPFLAGS += -include src/main.h
 
 
 
+# pkgconf usage for local BART development:
+# PKG_CONFIG_PATH=pkg/ pkgconf --cflags bart
+
+PKGCONF_CFLAGS=-std=gnu2x -I$${includedir} \
+	$(FFTW_H) $(BLAS_H)
+PKGCONF_LIBS=-L${libdir} $${bart_extra_libs} \
+	-lnum -lmisc -lnum -lmisc \
+	$(FFTW_L) $(CUDA_L) $(BLAS_L) $(PNG_L)
+
+pkg/bart.pc: PREFIX=$(ROOTDIR)
+pkg/bart.pc: INCLUDEDIR=$${prefix}/src
+pkg/bart.pc: LIBDIR=$${prefix}/lib
+pkg/bart.pc: pkg/bart.pc.in $(srcdir)/misc/version.inc
+	export PREFIX=$(PREFIX)										;\
+	export BART_VERSION=$$(cat $(srcdir)/misc/version.inc 		|\
+		sed 's/VERSION(\(.*\))/\1/g' | cut -d- -f1-2)			;\
+	export INCLUDEDIR='$(INCLUDEDIR)'							;\
+	export LIBDIR='$(LIBDIR)'									;\
+	export CFLAGS='$(PKGCONF_CFLAGS)'							;\
+	export LIBS='$(PKGCONF_LIBS)'								;\
+	cat $< | envsubst \
+	'$$PREFIX $$BART_VERSION \
+	$$INCLUDEDIR $$LIBDIR \
+	$$CFLAGS $$LIBS $$REQUIRES'\
+	> $@
+
+
+
 
 %.o: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
@@ -1234,6 +1262,7 @@ clean:
 .PHONY: allclean
 allclean: clean
 	rm -f $(libdir)/*.a $(ALLDEPS)
+	rm -f $(libdir)/bart.pc
 	rm -f $(root)/*.dll
 	rm -f $(root)/*.so
 	rm -f $(root)/*.lib

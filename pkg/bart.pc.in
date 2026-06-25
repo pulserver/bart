@@ -1,0 +1,11 @@
+prefix=${PREFIX}
+includedir=${INCLUDEDIR}
+libdir=${LIBDIR}
+bart_extra_libs=
+
+Name: BART
+Description: Free and open-source image-reconstruction framework for Computational Magnetic Resonance Imaging
+Version: ${BART_VERSION}
+Requires: ${REQUIRES}
+Cflags: ${CFLAGS}
+Libs: ${LIBS}
