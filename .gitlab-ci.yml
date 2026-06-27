@@ -26,6 +26,14 @@ variables:
   DEBUG_DWARF: "1"
 # utests give a backtrace + abort on the first error
   BART_UTEST_ABORT: "1"
+# CUDA Config
+  CUDA_BASE: /usr/local/cuda/
+  CUDA_LIB: lib64
+  GPUARCH_FLAGS: "-arch sm_35 -Wno-deprecated-gpu-targets"
+  CUDA_CC: gcc-11
+#  OMPI_CC: gcc
+# Tensorflow
+  TENSORFLOW_BASE: /tensorflow_dir/ 
 # For gitlab-runner using docker: create diretories as the USER in the docker image, not as root
   FF_DISABLE_UMASK_FOR_DOCKER_EXECUTOR: "true"
   REGISTRY: registry.gitlab.tugraz.at/ibi/reproducibility/gitlab-ci-containers
@@ -101,7 +109,7 @@ Build_Clang:
 Build_Clang_GPU:
   stage: build
   script:
-    - CC=clang-19 CUDA_CC=clang-14 make all
+    - CC=clang-19 CUDA_CC=clang-14 CUDA=1 make all
   image: $REGISTRY/ibi_cuda_bart$TAG
   artifacts:
     paths:
@@ -135,7 +143,7 @@ Build_Shared:
 Build_Shared_GPU:
   stage: build
   script:
-    - make libbart.so
+    - CUDA=1 make libbart.so
   image: $REGISTRY/ibi_cuda_bart$TAG
   artifacts:
     paths:
@@ -171,7 +179,7 @@ Build_UBSan:
 Build_GPU:
   stage: build
   script:
-    - WERROR=1 make all
+    - WERROR=1 CUDA=1 make all
   image: $REGISTRY/ibi_cuda_bart$TAG
   artifacts:
     paths:
@@ -185,7 +193,7 @@ Build_GPU:
 Build_MPI_GPU:
   stage: build
   script:
-    - MPI=1 make all
+    - MPI=1 CUDA=1 make all
   image: $REGISTRY/ibi_cuda_bart$TAG
   artifacts:
     paths:
@@ -239,7 +247,7 @@ Build_Analyzer:
 Build_Tensorflow:
   stage: build
   script:
-    - TENSORFLOW=1 TENSORFLOW_BASE=/tensorflow_dir/ make all
+    - TENSORFLOW=1 CUDA=1 make all
   image: $REGISTRY/ibi_cuda_bart$TAG
   artifacts:
     paths:
@@ -343,7 +351,7 @@ UTest_Clang_GPU:
   image: $REGISTRY/ibi_cuda_bart$TAG
   script:
     - if ! nvidia-smi ; then printf "No usable GPU found, skipping GPU tests!\n"; exit 0; fi
-    - AUTOCLEAN=0 CC=clang-19 CUDA_CC=clang-14 make utest_gpu
+    - AUTOCLEAN=0 CC=clang-19 CUDA_CC=clang-14 CUDA=1 make utest_gpu
   needs: [Build_Clang_GPU]
   dependencies:
     - Build_Clang_GPU
@@ -373,7 +381,7 @@ UTest_GPU:
   image: $REGISTRY/ibi_cuda_bart$TAG
   script:
     - if ! nvidia-smi ; then printf "No usable GPU found, skipping GPU tests!\n"; exit 0; fi
-    - AUTOCLEAN=0 WERROR=1 make utest_gpu
+    - AUTOCLEAN=0 WERROR=1 CUDA=1 make utest_gpu
   needs: [Build_GPU]
   dependencies:
     - Build_GPU
@@ -394,7 +402,7 @@ UTest_Tensorflow:
 # Already part of the Docker image
 #    - wget --no-verbose https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-gpu-linux-x86_64-2.4.0.tar.gz
 #    - mkdir tensorflow_dir && tar -C tensorflow_dir -xvzf libtensorflow-gpu-linux-x86_64-2.4.0.tar.gz
-    - AUTOCLEAN=0 TENSORFLOW=1 TENSORFLOW_BASE=/tensorflow_dir/ make utest
+    - AUTOCLEAN=0 TENSORFLOW=1 CUDA=1 make utest
   needs: [Build_Tensorflow]
   dependencies:
     - Build_Tensorflow
@@ -480,7 +488,7 @@ IntTest_GPU:
   image: $REGISTRY/ibi_cuda_bart$TAG
   script:
     - if ! nvidia-smi ; then printf "No usable GPU found, skipping GPU tests!\n"; exit 0; fi
-    - AUTOCLEAN=0 WERROR=1 make gputest
+    - AUTOCLEAN=0 WERROR=1 CUDA=1 make gputest
   needs: [Build_GPU]
   dependencies:
     - Build_GPU
@@ -500,7 +508,7 @@ IntTest_Clang_GPU:
   image: $REGISTRY/ibi_cuda_bart$TAG
   script:
     - if ! nvidia-smi ; then printf "No usable GPU found, skipping GPU tests!\n"; exit 0; fi
-    - AUTOCLEAN=0 CC=clang-19 CUDA_CC=clang-14 make gputest
+    - AUTOCLEAN=0 CC=clang-19 CUDA_CC=clang-14 CUDA=1 make gputest
   needs: [Build_Clang_GPU]
   dependencies:
     - Build_Clang_GPU
@@ -527,7 +535,7 @@ IntTest_MPI_GPU:
   stage: test2
   image: $REGISTRY/ibi_cuda_bart$TAG
   script:
-    - AUTOCLEAN=0 MPI=1 make gputest
+    - AUTOCLEAN=0 MPI=1 CUDA=1 make gputest
   needs: [Build_MPI_GPU]
   dependencies:
     - Build_MPI_GPU
@@ -538,7 +546,7 @@ IntTest_Tensorflow:
   image: $REGISTRY/ibi_cuda_bart$TAG
   script:
     - python3 -m pip install tensorflow --break-system-packages
-    - AUTOCLEAN=0 TENSORFLOW=1 TENSORFLOW_BASE=/tensorflow_dir/ make test
+    - AUTOCLEAN=0 TENSORFLOW=1 CUDA=1 make test
   needs: [Build_Tensorflow]
   dependencies:
     - Build_Tensorflow
