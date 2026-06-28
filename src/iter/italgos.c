@@ -1763,7 +1763,7 @@ void iPALM(	long NI, long isize[NI], enum IN_TYPE in_type[NI], float* x[const NI
 					vops->axpbz(isize[i], tmp[i], 1, y[i], -1./tau, grad[i]); //tmp2 = x^n + alpha*(x^n - x^n-1) - 1/tau grad
 
 					if (NULL != prox[i].fun)
-						iter_op_p_call(prox[i], tau, x_new[i], tmp[i]);
+						iter_op_p_call(prox[i], 1. / tau, x_new[i], tmp[i]);
 					else
 						vops->copy(isize[i],  x_new[i], tmp[i]);
 
@@ -1780,6 +1780,7 @@ void iPALM(	long NI, long isize[NI], enum IN_TYPE in_type[NI], float* x[const NI
 					r_lip_z += vops->dot(isize[i], grad[i], tmp[i]);
 					r_lip_z += L[i] / 2. * vops->dot(isize[i], tmp[i], tmp[i]);
 
+					//FIXME: tolerance only makes sense for positive loss
 					if ((r_lip_z * 1.001 >= r_new) || (L[i] >= Lmax)) { //1.001 for flp errors
 
 						lipshitz_condition = true;
