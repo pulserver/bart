@@ -53,7 +53,6 @@ NON_DETERMINISTIC?=0
 # allow blas calls within omp regions (fails on Debian 9, openblas)
 BLAS_THREADSAFE?=0
 
-# use for ppc64le HPC
 MPI?=0
 OPENBLAS?=0
 MKL?=0
@@ -77,6 +76,9 @@ FORTRAN?=1
 PNG?=1
 DEBUG_DWARF?=0
 WERROR?=0
+BLAS?=1
+LAPACK?=1
+FFTW?=1
 
 LOG_BACKEND?=0
 LOG_SIEMENS_BACKEND?=0
@@ -248,8 +250,23 @@ endif
 endif
 endif
 
-# cuda
 
+ifeq ($(BARTDLL), 1)
+CC=x86_64-w64-mingw32-gcc
+OMP=0
+CUDA=0
+LAPACK=0
+BLAS=0
+FFTW=0
+CFLAGS += -D NO_PNG -D NO_LAPACK -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D NO_SAVECMDLINE
+CPPFLAGS = -D BARTLIB_EXPORTS
+LDFLAGS = -shared -Wl,--subsystem,windows -Wl,--out-implib,bart.lib -Wl,--output-def,bart.def -static-libgcc
+BARTDLL_MODULES  = -lseq -lnoncart -llinops -lwavelet -lnum -lmisc -lwin
+endif
+
+
+
+# cuda
 CUDA_BASE ?= /usr/
 CUDA_LIB ?= lib
 CUDNN_BASE ?= $(CUDA_BASE)
@@ -563,6 +580,7 @@ CC = mpicc
 endif
 
 # BLAS/LAPACK
+ifeq ($(BLAS),1)
 ifeq ($(SCALAPACK),1)
 BLAS_L :=  -lopenblas -lscalapack
 CPPFLAGS += -DUSE_OPENBLAS
@@ -610,6 +628,8 @@ endif
 endif
 endif
 endif
+endif
+
 
 ifeq ($(MKL),1)
 BLAS_H := -I$(MKL_BASE)/include
@@ -630,13 +650,17 @@ NVCCFLAGS += -DNON_DETERMINISTIC
 endif
 
 
-CPPFLAGS += $(FFTW_H) $(BLAS_H)
+CPPFLAGS += $(BLAS_H)
 
 # librt
 ifeq ($(BUILDTYPE), MacOSX)
 	LIBRT :=
 else
+ifeq ($(BARTDLL),1)
+	LIBRT :=
+else
 	LIBRT := -lrt
+endif
 endif
 
 # png
@@ -662,7 +686,7 @@ endif
 
 
 # fftw
-
+ifeq ($(FFTW),1)
 FFTW_H := -I$(FFTW_BASE)/include/
 ifeq ($(BUILDTYPE), WASM)
 	FFTW_L :=  -L$(FFTW_BASE)/lib -lfftw3f
@@ -674,6 +698,7 @@ ifeq ($(FFTWTHREADS),1)
 ifneq ($(BUILDTYPE), MSYS)
 	FFTW_L += -lfftw3f_threads
 	CPPFLAGS += -DFFTWTHREADS
+endif
 endif
 endif
 
@@ -755,8 +780,6 @@ $(1)objs += $$($(1)cudasrcs:.cu=.o)
 endif
 
 .INTERMEDIATE: $$($(1)objs)
-.INTERMEDIATE: $$($(1)objs:.o=.win.o)
-.INTERMEDIATE: $$($(1)objs:.o=.libbart.o)
 
 lib/lib$(1).a: lib$(1).a($$($(1)objs))
 
@@ -994,38 +1017,16 @@ else
 %.a : ; $(AR) $(ARFLAGS) $@ $?
 endif
 
-MINGWCC = x86_64-w64-mingw32-gcc
 
-# BLAS, LAPACK
-WIN_UNSUPPORTED_OBJS=%blas.o %lapack.o %blas_md_wrapper.o %vecops_strided.o %convcorr.o
-WIN_UNSUPPORTED_MODULES=box calib grecon iter lapacke lowrank moba motion networks nlops nn noir nsimu sake sense
-BARTDLL_MODULES=$(foreach t,$(filter-out $(WIN_UNSUPPORTED_MODULES),$(ALIBS)),$tobjs)
-BARTDLL_OBJS=$(filter-out $(WIN_UNSUPPORTED_OBJS),$(foreach t,$(BARTDLL_MODULES),$($t)))
-
-bart.dll: CC = $(MINGWCC)
-bart.dll: CFLAGS += -D NO_PNG -D NOLAPACKE -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D NO_SAVECMDLINE
-bart.dll: CPPFLAGS = -D BARTLIB_EXPORTS -I$(srcdir)/
-bart.dll: LDFLAGS = -shared -Wl,--subsystem,windows -Wl,--out-implib,bart.lib -Wl,--output-def,bart.def -static-libgcc
-bart.dll: $(BARTDLL_OBJS:.o=.win.o)
-ifeq "$(and $(filter 0,$(OMP)),$(filter 1,$(BARTDLL)))" ""
-	$(error bart.dll requires OMP=0 BARTDLL=1)
+bart.dll: $(BARTDLL_MODULES)
+ifeq "$(filter 1,$(BARTDLL))" ""
+	$(error bart.dll requires BARTDLL=1)
 else
-	$(CC) $^ $(LDFLAGS) -o $@
-endif
-
-lib/libbart.a: CFLAGS += -D NO_PNG -D NOLAPACKE -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D NO_SAVECMDLINE -fPIC
-lib/libbart.a: CPPFLAGS = -I$(srcdir)/
-lib/libbart.a: $(BARTDLL_OBJS:.o=.libbart.o)
-ifeq "$(and $(filter 0,$(OMP)))" ""
-	$(error libbart.a requires OMP=0)
-else
-	$(AR) rcs $@ $^
+	$(CC) -Wl,-whole-archive $+ -Wl,-no-whole-archive  $(LDFLAGS) -o $@
 endif
 
 
-$(UTARGETS_WINE): CC = $(MINGWCC)
-$(UTARGETS_WINE): CPPFLAGS = -D BARTLIB_EXPORTS -I$(srcdir)/
-$(UTARGETS_WINE): CFLAGS += -D NO_PNG -D NOLAPACKE -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D NO_SAVECMDLINE
+
 
 .SECONDEXPANSION:
 $(CTARGETS): commands/% : src/main.c $(srcdir)/%.o $$(MODULES_%) $(MODULES)
@@ -1062,9 +1063,11 @@ $(UTARGETS_GPU): % : utests/utest.c utests/%.o $$(MODULES_%) $(MODULES)
 
 UTESTS_WINE=$(shell $(root)/utests/utests-collect.sh ./utests/$(@:.win=).c)
 
+MINGWCC=x86_64-w64-mingw32-gcc
+
 .SECONDEXPANSION:
 $(UTARGETS_WINE): % : utests/utest.c utests/%.o bart.dll
-	$(MINGWCC) $(CFLAGS) $(CPPFLAGS) -lbart -L. -DUTESTS="$(UTESTS_WINE)" -DUTEST_WINE -o $(@:.win=.exe) $+ -lm
+	$(CC) $(CFLAGS) $(CPPFLAGS) -lbart -L. -DUTESTS="$(UTESTS_WINE)" -DUTEST_WINE -o $(@:.win=.exe) $+ -lm
 
 
 # linker script version - does not work on MacOS X
