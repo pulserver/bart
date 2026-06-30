@@ -527,7 +527,9 @@ int seq_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 
 			if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~(BATCH_FLAG | COEFF2_FLAG | SLICE_FLAG | PHS2_FLAG))) {
 
-				if ((0 < seq->magn.prep_scans) && (2 < seq_state->pos[COEFF2_DIM])) {
+				if (   (0 < seq->magn.prep_scans) && (2 < seq_state->pos[COEFF2_DIM])
+				    && (   ((1 == seq->geom.mb_factor) && (0 == seq_state->pos[PHS2_DIM]))
+					|| ((1 <  seq->geom.mb_factor) && (0 == seq_state->pos[SLICE_DIM])))) {
 
 					seq_state->mode = SEQ_BLOCK_KERNEL_DUMMY;
 					seq_state->seq_ut = 1;

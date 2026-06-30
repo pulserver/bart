@@ -183,8 +183,12 @@ long flash_ex_calls(const struct seq_config* seq)
 		dims[BATCH_DIM] = 1;
 	}
 
+	long factor = dims[SLICE_DIM];
+	if (1 < seq->geom.mb_factor)
+		factor = dims[PHS2_DIM];
+
 	return md_calc_size(DIMS, dims) - incomplete_raga_spks
-		+ dims[PHS2_DIM] * dims[SLICE_DIM] * seq->magn.prep_scans;
+		+ factor * seq->magn.prep_scans;
 }
 
 static long cols_to_echo(long echo, const struct seq_config* seq)
