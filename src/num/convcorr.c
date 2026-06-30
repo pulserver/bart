@@ -618,6 +618,9 @@ bool zconvcorr_fwd_im2col_cf_cpu(int N,
 				long kdims[N], long kstrs[N], const complex float* krn,
 				unsigned long flags, const long dilation[N], const long strides[N], bool conv)
 {
+#ifdef NO_BLAS
+	return false;
+#else
 #ifdef USE_CUDA
 	if (cuda_ondevice(out))
 		return false;
@@ -704,6 +707,7 @@ bool zconvcorr_fwd_im2col_cf_cpu(int N,
 	debug_printf(DP_DEBUG3, "conv by %s \n", __func__);
 
 	return true;
+#endif
 }
 
 
@@ -713,6 +717,9 @@ bool zconvcorr_bwd_krn_im2col_cf_cpu(int N,
 				long kdims[N], long kstrs[N], complex float* krn,
 				unsigned long flags, const long dilation[N], const long strides[N], bool conv)
 {
+#ifdef NO_BLAS
+	return false;
+#else
 #ifdef USE_CUDA
 	if (cuda_ondevice(out))
 		return false;
@@ -800,6 +807,7 @@ bool zconvcorr_bwd_krn_im2col_cf_cpu(int N,
 	debug_printf(DP_DEBUG3, "conv by %s \n", __func__);
 
 	return true;
+#endif
 }
 
 
@@ -809,6 +817,9 @@ bool zconvcorr_bwd_in_im2col_cf_cpu(int N,
 				long kdims[N], long kstrs[N], const complex float* krn,
 				unsigned long flags, const long dilation[N], const long strides[N], bool conv)
 {
+#ifdef NO_BLAS
+	return false;
+#else
 #ifdef USE_CUDA
 	if (cuda_ondevice(out))
 		return false;
@@ -899,6 +910,7 @@ bool zconvcorr_bwd_in_im2col_cf_cpu(int N,
 	debug_printf(DP_DEBUG3, "conv by %s \n", __func__);
 
 	return true;
+#endif
 }
 
 

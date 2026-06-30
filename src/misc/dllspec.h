@@ -24,7 +24,7 @@
 #define BARTLIB_CALL __cdecl
 #else
 
-#define BARTLIB_API
+#define BARTLIB_API __attribute__((visibility("default")))
 #define BARTLIB_CALL
 #endif
 

@@ -1,0 +1,27 @@
+#!/bin/bash
+set -eu
+
+SCRIPTDIR=$(dirname $(readlink -f "$0"))
+cd $SCRIPTDIR/..
+
+: "${VM_BIN_PATH:=./sequence_libraries}"
+: "${VM_SO_PATH:=./sequence_libraries}"
+
+error() { echo $1; exit -1; }
+git diff --quiet || error "git status not clean!"
+
+mkdir -p $VM_BIN_PATH
+mkdir -p $VM_SO_PATH
+
+LIBSEQ_NAME=bart_seq_$(git rev-parse --short=10 HEAD)
+
+set -x
+make allclean
+BARTDLL=1 make bart.dll
+cp bart.dll $VM_BIN_PATH/$LIBSEQ_NAME.dll
+
+make allclean
+BARTSO=1 make libbart.so
+cp libbart.so $VM_SO_PATH/lib$LIBSEQ_NAME.so
+
+make allclean

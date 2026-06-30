@@ -77,6 +77,9 @@ FORTRAN?=1
 PNG?=1
 DEBUG_DWARF?=0
 WERROR?=0
+BLAS?=1
+LAPACK?=1
+FFTW?=1
 
 LOG_BACKEND?=0
 LOG_SIEMENS_BACKEND?=0
@@ -212,6 +215,12 @@ ifeq ($(MNAME),riscv64)
 	CFLAGS+=-ffp-contract=off
 endif
 
+ifeq ($(MNAME),i386)
+	CFLAGS+=-msse2 -mfpmath=sse
+endif
+ifeq ($(MNAME),i686)
+	CFLAGS+=-msse2 -mfpmath=sse
+endif
 
 # openblas
 
@@ -237,6 +246,39 @@ ifneq (,$(findstring Red Hat,$(shell gcc --version)))
 endif
 endif
 endif
+
+
+SEQUENCE_MODULES=-lseq -lnoncart -llinops -lwavelet -lnum -lmisc
+
+ifeq ($(BARTDLL), 1)
+CC=x86_64-w64-mingw32-gcc
+OMP=0
+CUDA=0
+LAPACK=0
+BLAS=0
+FFTW=0
+CFLAGS+=-DNO_PNG -DNO_LAPACK -DNO_FFTW -DNO_LAPACK -DNO_BLAS -DNO_FIFO -DNO_SAVECMDLINE
+CPPFLAGS = -DBARTLIB_EXPORTS
+LDFLAGS = -shared -Wl,--subsystem,windows -Wl,--out-implib,bart.lib -Wl,--output-def,bart.def -static-libgcc
+endif
+
+ifeq ($(BARTSO), 1)
+OMP=0
+CUDA=0
+LAPACK=0
+BLAS=0
+FFTW=0
+GLIB_COMPAT_2_34=1
+CFLAGS+=-fPIC -fvisibility=hidden -ffunction-sections -fdata-sections
+CPPFLAGS = -DNOFMOD_SYMVER
+CFLAGS+=-DNO_PNG -DNO_LAPACK -DNO_FFTW -DNO_LAPACK -DNO_BLAS -DNO_FIFO -DNO_SAVECMDLINE
+endif
+
+
+ifeq ($(GLIB_COMPAT_2_34),1)
+	CFLAGS+=--include=src/misc/symver.h
+endif
+
 
 # cuda
 
@@ -553,6 +595,7 @@ CC = mpicc
 endif
 
 # BLAS/LAPACK
+ifeq ($(BLAS),1)
 ifeq ($(SCALAPACK),1)
 BLAS_L :=  -lopenblas -lscalapack
 CPPFLAGS += -DUSE_OPENBLAS
@@ -600,6 +643,7 @@ endif
 endif
 endif
 endif
+endif
 
 ifeq ($(MKL),1)
 BLAS_H := -I$(MKL_BASE)/include
@@ -620,13 +664,17 @@ NVCCFLAGS += -DNON_DETERMINISTIC
 endif
 
 
-CPPFLAGS += $(FFTW_H) $(BLAS_H)
+CPPFLAGS += $(BLAS_H)
 
 # librt
 ifeq ($(BUILDTYPE), MacOSX)
 	LIBRT :=
 else
+ifeq ($(BARTDLL),1)
+	LIBRT :=
+else
 	LIBRT := -lrt
+endif
 endif
 
 # png
@@ -652,7 +700,7 @@ endif
 
 
 # fftw
-
+ifeq ($(FFTW),1)
 FFTW_H := -I$(FFTW_BASE)/include/
 ifeq ($(BUILDTYPE), WASM)
 	FFTW_L :=  -L$(FFTW_BASE)/lib -lfftw3f
@@ -664,6 +712,7 @@ ifeq ($(FFTWTHREADS),1)
 ifneq ($(BUILDTYPE), MSYS)
 	FFTW_L += -lfftw3f_threads
 	CPPFLAGS += -DFFTWTHREADS
+endif
 endif
 endif
 
@@ -746,7 +795,6 @@ $(1)objs += $$($(1)cudasrcs:.cu=.o)
 endif
 
 .INTERMEDIATE: $$($(1)objs)
-.INTERMEDIATE: $$($(1)winobjs)
 
 lib/lib$(1).a: lib$(1).a($$($(1)objs))
 
@@ -781,24 +829,6 @@ lib/libbox.a: CPPFLAGS += -include src/main.h
 UTARGETS += test_grog test_casorati
 MODULES_test_grog += -lcalib -lnoncart -lsimu -lgeom -lstl
 MODULES_test_casorati+= -lcalib -llinops -liter
-
-
-# shared libraries
-define dlllib
-$(1)srcs := $(wildcard $(srcdir)/$(1)/*.c)
-$(1)objs := $$($(1)srcs:.c=.win.o)
-
-.INTERMEDIATE: $$($(1)objs)
-
-lib/$(1).dll: $$($(1)objs)
-
-endef
-
-DLLS=seq
-
-$(eval $(foreach t,$(DLLS),$(eval $(call dlllib,$(t)))))
-
-
 
 # lib linop
 UTARGETS += test_linop_matrix test_linop test_padding
@@ -960,34 +990,13 @@ bart: CPPFLAGS += -include src/main.h
 
 
 
-LIBSEQ_NAME = bart_seq_$(shell git diff --quiet && git rev-parse --short=10 HEAD)
-
-
-ifeq (32,$(ARCH))
-MINGWDLLTOOL = i686-w64-mingw32-dlltool
-else
-MINGWDLLTOOL = x86_64-w64-mingw32-dlltool
-endif
-
-.PHONY: libseq_deploy
-libseq_deploy: gitclean_check
-	$(MAKE) lib/libbart.a
-	$(MAKE) BARTDLL=1 bart.dll
-	$(MINGWDLLTOOL) -l lib/$(LIBSEQ_NAME).lib --dllname $(LIBSEQ_NAME).dll -d bart.def
-	cp lib/$(LIBSEQ_NAME).lib $(VM_BART_PATH)/lib/$(LIBSEQ_NAME).lib
-	cp lib/libbart.a $(VM_BART_PATH)/lib/lib$(LIBSEQ_NAME).a
-	cp bart.dll $(VM_BIN_PATH)/$(LIBSEQ_NAME).dll
-
-
-.PHONY: gitclean_check
-gitclean_check:
-	git diff --quiet
-
-
-
-# implicit rules
-
 %.o: %.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+%.win.o: %.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+%.libbart.o: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 %.o: %.cc
@@ -1013,34 +1022,6 @@ else
 %.a : ; $(AR) $(ARFLAGS) $@ $?
 endif
 
-ifeq (32,$(ARCH))
-MINGWCC = i686-w64-mingw32-gcc
-else
-MINGWCC = x86_64-w64-mingw32-gcc
-endif
-
-
-%.win.o: %.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
-
-# BLAS, LAPACK
-WIN_NOT_SUPPORTED=%blas.win.o %lapack.win.o %blas_md_wrapper.win.o %vecops_strided.win.o %convcorr.win.o
-
-bart.dll: CC = $(MINGWCC)
-bart.dll: CFLAGS = -D NO_PNG -D NOLAPACKE -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D BARTDLL
-bart.dll: CPPFLAGS = -D BARTLIB_EXPORTS -I$(srcdir)/
-bart.dll: LDFLAGS = -shared -Wl,--subsystem,windows -Wl,--out-implib,bart.lib -Wl,--output-def,bart.def -static-libgcc
-bart.dll: $(seqwinobjs) $(miscwinobjs) $(filter-out $(WIN_NOT_SUPPORTED),$(numwinobjs)) $(winwinobjs) $(noncartwinobjs) $(linopswinobjs) $(waveletwinobjs) $(geomwinobjs) $(stlwinobjs) $(simuwinobjs)
-	$(CC) $^ $(LDFLAGS) -o $@
-
-lib/libbart.a: CFLAGS = -D NO_PNG -D NOLAPACKE -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D BARTDLL -fPIC
-lib/libbart.a: CPPFLAGS = -I$(srcdir)/
-lib/libbart.a: $(seqobjs) $(miscobjs) $(filter-out $(WIN_NOT_SUPPORTED:.win.o=.o),$(numobjs)) $(winobjs) $(noncartobjs) $(linopsobjs) $(waveletobjs) $(geomobjs) $(stlobjs) $(simuobjs)
-	$(AR) rcs $@ $^
-
-$(UTARGETS_WINE): CC = $(MINGWCC)
-$(UTARGETS_WINE): CPPFLAGS = -D BARTLIB_EXPORTS -I$(srcdir)/
-$(UTARGETS_WINE): CFLAGS = -D NO_PNG -D NOLAPACKE -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D BARTDLL
 
 .SECONDEXPANSION:
 $(CTARGETS): commands/% : src/main.c $(srcdir)/%.o $$(MODULES_%) $(MODULES)
@@ -1077,9 +1058,11 @@ $(UTARGETS_GPU): % : utests/utest.c utests/%.o $$(MODULES_%) $(MODULES)
 
 UTESTS_WINE=$(shell $(root)/utests/utests-collect.sh ./utests/$(@:.win=).c)
 
+MINGWCC=x86_64-w64-mingw32-gcc
+
 .SECONDEXPANSION:
 $(UTARGETS_WINE): % : utests/utest.c utests/%.o bart.dll
-	$(MINGWCC) $(CFLAGS) $(CPPFLAGS) -lbart -L. -DUTESTS="$(UTESTS_WINE)" -DUTEST_WINE -o $(@:.win=.exe) $+ -lm
+	$(CC) $(CFLAGS) $(CPPFLAGS) -lbart -L. -DUTESTS="$(UTESTS_WINE)" -DUTEST_WINE -o $(@:.win=.exe) $+ -lm
 
 
 # linker script version - does not work on MacOS X
@@ -1178,6 +1161,7 @@ clean:
 allclean: clean
 	rm -f $(libdir)/*.a $(ALLDEPS)
 	rm -f $(root)/*.dll
+	rm -f $(root)/*.so
 	rm -f $(root)/*.lib
 	rm -f $(root)/*.def
 	rm -f bart
@@ -1213,14 +1197,17 @@ endif
 endif
 
 # shared library
-.PHONY: shared-lib
-shared-lib:
-	make allclean
-	CFLAGS="-fPIC $(OPT) -Wmissing-prototypes" make
-	gcc -shared -fopenmp src/bart.o -Wl,-whole-archive lib/lib*.a -Wl,-no-whole-archive -Wl,-Bdynamic $(FFTW_L) $(CUDA_L) $(BLAS_L) $(PNG_L) $(ISMRM_L) $(LIBS) -lm -lrt -o libbart.so
-	make allclean
+libbart.so: $(SEQUENCE_MODULES)
+	gcc -fPIC -shared -lm -lrt -Wl,-whole-archive $+ -Wl,-no-whole-archive -Wl,-gc-sections -o libbart.so
 
-libbart.so: shared-lib
+
+
+bart.dll: $(SEQUENCE_MODULES) -lwin
+ifeq "$(filter 1,$(BARTDLL))" ""
+	$(error bart.dll requires BARTDLL=1)
+else
+	$(CC) -Wl,-whole-archive $+ -Wl,-no-whole-archive  $(LDFLAGS) -o $@
+endif
 
 
 .PHONY: install

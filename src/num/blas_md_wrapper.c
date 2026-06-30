@@ -6,6 +6,8 @@
  * Authors: Moritz Blumenthal
  */
 
+#ifndef NO_BLAS
+
 #include <assert.h>
 #include <complex.h>
 #include <stdbool.h>
@@ -826,4 +828,6 @@ void blas_mul_sscal(int N, const long dims[N], const long ostr[N], float* optr, 
 			optr[i * ostride] = iptr1[i * istride] * val;
 	}
 }
+
+#endif
 
