@@ -12,6 +12,7 @@
 
 #include "misc/misc.h"
 
+#ifndef NO_LAPACK
 #ifdef NOLAPACKE
 #include "lapacke/lapacke.h"
 #elif USE_MKL
@@ -19,13 +20,19 @@
 #else
 #include <lapacke.h>
 #endif
+#endif
 
 #include "lapack.h"
 
-
+#ifdef NO_LAPACK
+#define LAPACKE(x, ...) \
+	if ((__VA_ARGS__, 0))	\
+		error("LAPACK: " # x " failed.\n");
+#else
 #define LAPACKE(x, ...) \
 	if (0 != LAPACKE_##x(LAPACK_COL_MAJOR, __VA_ARGS__))	\
 		error("LAPACK: " # x " failed.\n");
+#endif
 
 /* ATTENTION: blas and lapack use column-major matrices
  * while native C uses row-major. All matrices are

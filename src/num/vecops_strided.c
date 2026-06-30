@@ -1174,6 +1174,7 @@ bool simple_zfmac(int N, const long dims[N], const long ostrs[N], complex float*
 	if (simple_zconvcorr(N, dims, ostrs, out, istrs1, in1, istrs2, in2))
 		return true;
 
+#ifndef NO_BLAS
 	struct simple_z3op_check strided_calls[] = {
 		OPT_Z3OP(check_gemm,	blas_zfmac_cgemm, true, true, false, false, false),
 		OPT_Z3OP(check_gemv,	blas_zfmac_cgemv, true, true, false, false, false),
@@ -1187,6 +1188,11 @@ bool simple_zfmac(int N, const long dims[N], const long ostrs[N], complex float*
 
 	return simple_z3op(	ARRAY_SIZE(strided_calls), strided_calls, "md_zfmac",
 				N, dims, ostrs, out, istrs1, in1, istrs2, in2, true, false);
+#else
+	(void)check_dot_outer; (void)check_dot; (void)check_axpy; (void)check_ger; (void)check_gemm; (void)check_gemv;
+	(void)md_zfmac_transp;
+	return false;
+#endif
 }
 
 bool simple_zfmacc(int N, const long dims[N], const long ostrs[N], complex float* out, const long istrs1[N], const complex float* in1, const long istrs2[N], const complex float* in2)
@@ -1200,6 +1206,7 @@ bool simple_zfmacc(int N, const long dims[N], const long ostrs[N], complex float
 			N, dims, ostrs, out, istrs1, in1, istrs2, in2, false, false))
 		return true;
 
+#ifndef NO_BLAS
 	struct simple_z3op_check strided_calls[] = {
 		OPT_Z3OP(check_gemm,  blas_zfmac_cgemm, true, true, false, false, false),
 		OPT_Z3OP(check_gemv,  blas_zfmac_cgemv, true, true, false, false, false),
@@ -1211,10 +1218,14 @@ bool simple_zfmacc(int N, const long dims[N], const long ostrs[N], complex float
 
 	return simple_z3op(	ARRAY_SIZE(strided_calls), strided_calls, "md_zfmacc",
 				N, dims, ostrs, out, istrs1, in1, istrs2, in2, true, true);
+#else
+	return false;
+#endif
 }
 
 bool simple_fmac(int N, const long dims[N], const long ostrs[N], float* out, const long istrs1[N], const float* in1, const long istrs2[N], const float* in2)
 {
+#ifndef NO_BLAS
 	struct simple_3op_check strided_calls[] = {
 		OPT_3OP(check_gemm,  blas_fmac_sgemm, true, true, false, false, false),
 		OPT_3OP(check_gemv,  blas_fmac_sgemv, true, true, false, false, false),
@@ -1226,10 +1237,15 @@ bool simple_fmac(int N, const long dims[N], const long ostrs[N], float* out, con
 
 	return simple_3op(	ARRAY_SIZE(strided_calls), strided_calls, "md_fmac",
 				N, dims, ostrs, out, istrs1, in1, istrs2, in2, true);
+#else
+	(void)N; (void)dims; (void)ostrs; (void)out; (void)istrs1; (void)in1; (void)istrs2; (void)in2;
+	return false;
+#endif
 }
 
 bool simple_zmul(int N, const long dims[N], const long ostrs[N], complex float* out, const long istrs1[N], const complex float* in1, const long istrs2[N], const complex float* in2)
 {
+#ifndef NO_BLAS
 	struct simple_z3op_check strided_calls[] = {
 		OPT_Z3OP(check_unfold, zmul_gpu_unfold, true, false, true, false, true),
 		OPT_Z3OP(check_ger,   blas_zmul_cgeru, true, true, false, false, false),
@@ -1239,6 +1255,11 @@ bool simple_zmul(int N, const long dims[N], const long ostrs[N], complex float* 
 
 	return simple_z3op(	ARRAY_SIZE(strided_calls), strided_calls, "md_zmul",
 				N, dims, ostrs, out, istrs1, in1, istrs2, in2, true, false);
+#else
+	(void)N; (void)dims; (void)ostrs; (void)out; (void)istrs1; (void)in1; (void)istrs2; (void)in2;
+	(void)check_dgmm;
+	return false;
+#endif
 }
 
 bool simple_zmulc(int N, const long dims[N], const long ostrs[N], complex float* out, const long istrs1[N], const complex float* in1, const long istrs2[N], const complex float* in2)
@@ -1251,6 +1272,7 @@ bool simple_zmulc(int N, const long dims[N], const long ostrs[N], complex float*
 			N, dims, ostrs, out, istrs1, in1, istrs2, in2, false, false))
 		return true;
 
+#ifndef NO_BLAS
 	struct simple_z3op_check strided_calls[] = {
 		OPT_Z3OP(check_ger,   blas_zmul_cgeru, true, true, false, false, false),
 		OPT_Z3OP(check_dgmm,  blas_zmul_cdgmm, true, false, true, false, false),
@@ -1259,10 +1281,15 @@ bool simple_zmulc(int N, const long dims[N], const long ostrs[N], complex float*
 
 	return simple_z3op(	ARRAY_SIZE(strided_calls), strided_calls, "md_zmulc",
 				N, dims, ostrs, out, istrs1, in1, istrs2, in2, true, true);
+#else
+	(void)N; (void)dims; (void)ostrs; (void)out; (void)istrs1; (void)in1; (void)istrs2; (void)in2;
+	return false;
+#endif
 }
 
 bool simple_mul(int N, const long dims[N], const long ostrs[N], float* out, const long istrs1[N], const float* in1, const long istrs2[N], const float* in2)
 {
+#ifndef NO_BLAS
 	struct simple_3op_check strided_calls[] = {
 		OPT_3OP(check_unfold,	mul_gpu_unfold, true, false, true, false, true),
 		OPT_3OP(check_ger,   blas_mul_sger, true, true, false, false, false),
@@ -1272,6 +1299,10 @@ bool simple_mul(int N, const long dims[N], const long ostrs[N], float* out, cons
 
 	return simple_3op(	ARRAY_SIZE(strided_calls), strided_calls, "md_mul",
 				N, dims, ostrs, out, istrs1, in1, istrs2, in2, true);
+#else
+	(void)N; (void)dims; (void)ostrs; (void)out; (void)istrs1; (void)in1; (void)istrs2; (void)in2;
+	return false;
+#endif
 }
 
 bool simple_zadd(int N, const long dims[N], const long ostrs[N], complex float* out, const long istrs1[N], const complex float* in1, const long istrs2[N], const complex float* in2)
