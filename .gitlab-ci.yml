@@ -134,17 +134,7 @@ Build_Static:
 Build_Shared:
   stage: build
   script:
-    - make libbart.so
-  artifacts:
-    paths:
-      - libbart.so
-    expire_in: 45 minutes
-
-Build_Shared_GPU:
-  stage: build
-  script:
-    - CUDA=1 make libbart.so
-  image: $REGISTRY/ibi_cuda_bart$TAG
+    - BARTSO=1 make libbart.so
   artifacts:
     paths:
       - libbart.so

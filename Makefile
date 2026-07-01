@@ -199,6 +199,8 @@ endif
 endif
 
 
+
+
 # for debug backtraces
 ifeq ($(DEBUG_DWARF),1)
 LIBS += -ldw -lunwind
@@ -219,10 +221,6 @@ ifeq ($(MNAME),i386)
 endif
 ifeq ($(MNAME),i686)
 	CFLAGS+=-msse2 -mfpmath=sse
-endif
-
-ifeq ($(GLIB_COMPAT_2_34),1)
-	CFLAGS+=--include=src/misc/symver.h
 endif
 
 # openblas
@@ -251,6 +249,9 @@ endif
 endif
 
 
+
+SEQUENCE_MODULES=-lseq -lnoncart -llinops -lwavelet -lnum -lmisc
+
 ifeq ($(BARTDLL), 1)
 CC=x86_64-w64-mingw32-gcc
 OMP=0
@@ -258,10 +259,26 @@ CUDA=0
 LAPACK=0
 BLAS=0
 FFTW=0
-CFLAGS += -D NO_PNG -D NO_LAPACK -D NO_FFTW -D NO_LAPACK -D NO_BLAS -D NO_FIFO -D NO_SAVECMDLINE
-CPPFLAGS = -D BARTLIB_EXPORTS
+CFLAGS+=-DNO_PNG -DNO_LAPACK -DNO_FFTW -DNO_LAPACK -DNO_BLAS -DNO_FIFO -DNO_SAVECMDLINE
+CPPFLAGS = -DBARTLIB_EXPORTS
 LDFLAGS = -shared -Wl,--subsystem,windows -Wl,--out-implib,bart.lib -Wl,--output-def,bart.def -static-libgcc
-BARTDLL_MODULES  = -lseq -lnoncart -llinops -lwavelet -lnum -lmisc -lwin
+endif
+
+ifeq ($(BARTSO), 1)
+OMP=0
+CUDA=0
+LAPACK=0
+BLAS=0
+FFTW=0
+GLIB_COMPAT_2_34=1
+CFLAGS+=-fPIC -fvisibility=hidden -ffunction-sections -fdata-sections
+CPPFLAGS = -DNOFMOD_SYMVER
+CFLAGS+=-DNO_PNG -DNO_LAPACK -DNO_FFTW -DNO_LAPACK -DNO_BLAS -DNO_FIFO -DNO_SAVECMDLINE
+endif
+
+
+ifeq ($(GLIB_COMPAT_2_34),1)
+	CFLAGS+=--include=src/misc/symver.h
 endif
 
 
@@ -1018,14 +1035,6 @@ else
 endif
 
 
-bart.dll: $(BARTDLL_MODULES)
-ifeq "$(filter 1,$(BARTDLL))" ""
-	$(error bart.dll requires BARTDLL=1)
-else
-	$(CC) -Wl,-whole-archive $+ -Wl,-no-whole-archive  $(LDFLAGS) -o $@
-endif
-
-
 
 
 .SECONDEXPANSION:
@@ -1202,13 +1211,21 @@ ifneq ($(MAKECMDGOALS),allclean)
 endif
 endif
 
-# shared library
-.PHONY: shared-lib
-shared-lib: CFLAGS+=-fPIC
-shared-lib: $(MODULES) src/bart.o
-	gcc -shared -fopenmp src/bart.o -Wl,-whole-archive lib/lib*.a -Wl,-no-whole-archive -Wl,-Bdynamic $(FFTW_L) $(CUDA_L) $(BLAS_L) $(PNG_L) $(ISMRM_L) $(LIBS) -lm -lrt -o libbart.so
 
-libbart.so: shared-lib
+# shared library
+libbart.so: $(SEQUENCE_MODULES)
+	gcc -fPIC -shared -lm -lrt -Wl,-whole-archive $+ -Wl,-no-whole-archive -Wl,-gc-sections -o libbart.so
+
+
+
+bart.dll: $(SEQUENCE_MODULES) -lwin
+ifeq "$(filter 1,$(BARTDLL))" ""
+	$(error bart.dll requires BARTDLL=1)
+else
+	$(CC) -Wl,-whole-archive $+ -Wl,-no-whole-archive  $(LDFLAGS) -o $@
+endif
+
+
 
 
 .PHONY: install
