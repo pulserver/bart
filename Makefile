@@ -1177,6 +1177,7 @@ clean:
 allclean: clean
 	rm -f $(libdir)/*.a $(ALLDEPS)
 	rm -f $(root)/*.dll
+	rm -f $(root)/*.so
 	rm -f $(root)/*.lib
 	rm -f $(root)/*.def
 	rm -f bart
