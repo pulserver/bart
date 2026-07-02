@@ -104,7 +104,7 @@ int bart_seq_version_check(const char* driver_version, const unsigned int min_ba
 	if (!version_parse(vd, driver_version))
 		return -1;
 
-	const unsigned int min_driver[5] = { };
+	const unsigned int min_driver[5] = { 0, 1, 0, 0, 0 };
 	if (version_compare(vd, min_driver) < 0)
 		return -1;
 
