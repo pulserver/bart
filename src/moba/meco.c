@@ -349,13 +349,10 @@ struct nlop_s* nlop_ir_meco_create(int N, const long out_dims[N], const long in_
 
 		tmp[0] = fat_spectrum(args[2], N, TE_dims, TE, fat_spec);
 		tmp[1] = T2s_decay(tmp[0], args[3], N, TE_dims, TE);
+		tmp[2] = T2s_decay(args[0], args[1], N, TE_dims, TE);
+		tmp[3] = snlop_add(tmp[1], tmp[2]);
 
-		tmp[3] = T2s_decay(args[0], args[1], N, TE_dims, TE);
-
-		tmp[4] = snlop_add(tmp[1], tmp[3]);
-		tmp[5] = snlop_add(tmp[3], args[4]);
-
-		out = B0_modulation(tmp[5], args[4], N, TE_dims, TE);
+		out = B0_modulation(tmp[3], args[4], N, TE_dims, TE);
 		break;
 
 	case MECO_R2S:
