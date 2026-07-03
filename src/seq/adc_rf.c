@@ -249,8 +249,12 @@ int prep_adc(struct seq_event* adc_ev, double start, double rf_spoil_phase,
 
 
 	adc_ev->adc.flags = 0;
-	if (SEQ_BLOCK_KERNEL_NOISE == seq_state->mode)
+	if (SEQ_BLOCK_KERNEL_NOISE == seq_state->mode) {
+
 		adc_ev->adc.flags |= SEQ_ADC_FLAG_ADJ;
+		if (0 < seq_state->pos[TE_DIM])
+			return 0;
+	}
 
 	if (SEQ_BLOCK_KERNEL_DUMMY == seq_state->mode) {
 
