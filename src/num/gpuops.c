@@ -382,11 +382,17 @@ void cuda_free(void* ptr)
 
 void* cuda_malloc(long size)
 {
+	if (0 == size)
+		return NULL;
+
 	return mem_device_malloc((size_t)size, cuda_malloc_wrapper, false);
 }
 
 void* cuda_malloc_host(long size)
 {
+	if (0 == size)
+		return NULL;
+
 	return mem_device_malloc((size_t)size, cuda_malloc_host_wrapper, true);
 }
 

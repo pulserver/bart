@@ -325,6 +325,8 @@ void mem_device_free(void* ptr, void (*device_free)(const void* ptr, bool host))
 
 void* mem_device_malloc(size_t size2, void* (*device_alloc)(size_t), bool host)
 {
+	assert(0 < size2);
+
 	int stream = cuda_get_stream_id();
 	long size = (long)size2;
 
