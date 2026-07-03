@@ -2120,22 +2120,22 @@ static void md_septrafo_r(int D, int R, long dimensions[D], unsigned long flags,
 
         if (MD_IS_SET(flags, R)) {
 
-                void* nptr[1] = { ptr };
-                const long* nstrides[1] = { strides };
+		void* nptr[1] = { ptr };
+		const long* nstrides[1] = { strides };
 
 		long dimsR = dimensions[R];
 		long strsR = strides[R]; // because of clang
 
-                dimensions[R] = 1;      // we made a copy in md_septrafo2
+		dimensions[R] = 1;      // we made a copy in md_septrafo2
 
 		NESTED(void, nary_septrafo, (void* ptr[]))
 		{
 			NESTED_CALL(fun, (dimsR, strsR, ptr[0]));
 		};
 
-                //md_nary_parallel(1, D, dimensions, nstrides, nptr, &data, nary_septrafo);
-                md_nary(1, D, dimensions, nstrides, nptr, nary_septrafo);
-                dimensions[R] = dimsR;
+		//md_nary_parallel(1, D, dimensions, nstrides, nptr, &data, nary_septrafo);
+		md_nary(1, D, dimensions, nstrides, nptr, nary_septrafo);
+		dimensions[R] = dimsR;
         }
 }
 
@@ -2145,10 +2145,10 @@ static void md_septrafo_r(int D, int R, long dimensions[D], unsigned long flags,
  */
 void md_septrafo2(int D, const long dimensions[D], unsigned long flags, const long strides[D], void* ptr, md_trafo_fun_t fun)
 {
-        long dimcopy[D];
+	long dimcopy[D];
 	md_copy_dims(D, dimcopy, dimensions);
 
-        md_septrafo_r(D, D, dimcopy, flags, strides, ptr, fun);
+	md_septrafo_r(D, D, dimcopy, flags, strides, ptr, fun);
 }
 
 
@@ -2159,7 +2159,7 @@ void md_septrafo2(int D, const long dimensions[D], unsigned long flags, const lo
  */
 void md_septrafo(int D, const long dims[D], unsigned long flags, void* ptr, size_t size, md_trafo_fun_t fun)
 {
-        md_septrafo2(D, dims, flags, MD_STRIDES(D, dims, size), ptr, fun);
+	md_septrafo2(D, dims, flags, MD_STRIDES(D, dims, size), ptr, fun);
 }
 
 
