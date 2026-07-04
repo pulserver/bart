@@ -120,9 +120,7 @@ const struct linop_s* linop_teasl_extract_label(int N, const long img_dims[N], i
 
 	debug_print_dims(DP_DEBUG3, N, label_img_dims);
 
-	long pos0[N];
-	for (int i = 0; i < N; i++)
-		pos0[i] = 0;
+	long pos0[N] = { };
 	pos0[teasl_dim] = 0;
 
 	return linop_extract_create(N, pos0, label_img_dims, img_dims);
@@ -151,9 +149,7 @@ const struct linop_s* linop_teasl_extract_pwi(int N, const long img_dims[N], int
 
 	debug_print_dims(DP_DEBUG3, N, pwi_img_dims);
 
-	long pos1[N];
-	for (int i = 0; i < N; i++)
-		pos1[i] = 0;
+	long pos1[N] = { };
 	pos1[teasl_dim] = 1;
 
 	return linop_extract_create(N, pos1, pwi_img_dims, img_dims);
