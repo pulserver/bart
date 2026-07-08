@@ -74,6 +74,22 @@ static bool test_get_ui_idx(void)
 
 UT_REGISTER_TEST(test_get_ui_idx);
 
+static bool test_version_check(void)
+{
+	const unsigned int min_bart_version[5] = { 1, 0, 0, 390, 0 };
+
+	struct bart_seq* seq = bart_seq_alloc("v0.1.00-1-g97f2f73");
+
+	if (0 > bart_seq_version_check(seq->driver_version, min_bart_version))
+		return false;
+
+	bart_seq_free(seq);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_version_check);
+
 static int trigger_event_count(const struct seq_config* seq, const struct seq_state* seq_state)
 {
 	return (seq->trigger.trigger_out && (0 == seq_state->pos[PHS1_DIM])) ? 1 : 0;
