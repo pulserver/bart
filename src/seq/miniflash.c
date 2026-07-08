@@ -292,7 +292,7 @@ int miniflash_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq
 	for (; idx < seq->geom.mb_factor; idx++) {
 
 		if (idx >= N)
-			return -1;
+			return ERROR_SAMPLE_RF_IDX_OOB;
 
 		pulse[idx].sar_calls = miniflash_ex_calls(seq);
 		pulse[idx].sar_dur = seq->phys.rf_duration;
@@ -303,7 +303,7 @@ int miniflash_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq
 		pulse[idx].samples = lround(1.E6 * seq->phys.rf_duration);
 
 		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
-			return -1;
+			return ERROR_SAMPLE_RF_LENGTH;
 
 		double dwell = seq->phys.rf_duration / pulse[idx].samples;
 

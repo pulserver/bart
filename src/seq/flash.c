@@ -747,7 +747,7 @@ int flash_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq_con
 	for (; idx < seq->geom.mb_factor; idx++) {
 
 		if (idx >= N)
-			return -1;
+			return ERROR_SAMPLE_RF_IDX_OOB;
 
 		pulse[idx].sar_calls = flash_ex_calls(seq);
 		pulse[idx].sar_dur = seq->phys.rf_duration;
@@ -758,7 +758,7 @@ int flash_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq_con
 		pulse[idx].samples = lround(1.E6 * seq->phys.rf_duration);
 
 		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
-			return -1;
+			return ERROR_SAMPLE_RF_LENGTH;
 
 		double dwell = seq->phys.rf_duration / pulse[idx].samples;
 
@@ -795,7 +795,7 @@ int flash_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq_con
 		pulse[idx].samples = lround(0.5 * 1E6 * pulse[idx].sar_dur);
 
 		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
-			return -1;
+			return ERROR_SAMPLE_RF_LENGTH;
 
 		double dwell = pp->duration / pulse[idx].samples;
 
@@ -823,7 +823,7 @@ int flash_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq_con
 		pulse[idx].samples = lround(1E4 * pulse[idx].sar_dur);
 
 		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
-			return -1;
+			return ERROR_SAMPLE_RF_LENGTH;
 
 		double dwell = pp->duration / pulse[idx].samples;
 
@@ -850,7 +850,7 @@ int flash_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq_con
 		pulse[idx].samples = arb.samples;
 
 		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
-			return -1;
+			return ERROR_SAMPLE_RF_LENGTH;
 
 		double dwell = pp->duration / pulse[idx].samples;
 
@@ -873,7 +873,7 @@ int flash_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq_con
 		pulse[idx].samples = lround(1.E6 * seq->asl.hanning.rf_duration);
 
 		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
-			return -1;
+			return ERROR_SAMPLE_RF_LENGTH;
 
 		double dwell = seq->asl.hanning.rf_duration / pulse[idx].samples;
 
