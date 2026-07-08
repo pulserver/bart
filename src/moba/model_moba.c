@@ -245,7 +245,7 @@ const struct nlop_s* moba_get_nlop(struct mobafit_model_config* config, const lo
 
 	case MGRE:
 
-		nlop = nlop_meco_create(DIMS, out_dims, param_dims, enc, config->mgre_model, FAT_SPEC_1, config->B0);
+		nlop = nlop_meco_create(DIMS, out_dims, param_dims, enc, config->mgre_model, config->fat_spec, config->B0);
 		break;
 
 	case TSE:

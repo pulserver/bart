@@ -36,6 +36,7 @@ int main_mobasig(int argc, char* argv[argc])
 	data.seq = IR_LL;
 	data.mgre_model = MECO_WFR2S;
 	data.B0 = 3.0;
+	data.fat_spec = FAT_SPEC_1;	// FIXME: FAT_SPEC_0 is better default
 
 	const struct opt_s opts[] = {
 
@@ -47,6 +48,8 @@ int main_mobasig(int argc, char* argv[argc])
 		OPT_SELECT('G', enum seq_type, &(data.seq), MGRE, "MGRE"),
 		OPT_PINT('m',  (int*)&(data.mgre_model), "model", "Select the MGRE model from enum { WF = 0, WFR2S, WF2R2S, R2S, PHASEDIFF } [default: WFR2S]"),
 		OPTL_FLOAT(0, "field-strength", &(data.B0), "B0", "B0 field strength for fat spectrum [def: 3T]"),
+		OPTL_SELECT(0, "fat_spec_0", enum fat_spec, &(data.fat_spec), FAT_SPEC_0, "select fat spectrum from ISMRM fat-water tool"),
+
 	};
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);

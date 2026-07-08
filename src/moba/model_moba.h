@@ -2,6 +2,9 @@
 #include <complex.h>
 
 #include "misc/mri.h"
+
+#include "simu/signals.h"
+
 #include "moba/meco.h"
 
 
@@ -36,6 +39,7 @@ struct mobafit_model_config {
 	enum seq_type seq;
 	enum meco_model mgre_model;
 	float B0;
+	enum fat_spec fat_spec;
 };
 
 

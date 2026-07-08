@@ -217,6 +217,8 @@ int main_mobafit(int argc, char* argv[argc])
 	sim.grad = simdata_grad_defaults;
 	sim.other = simdata_other_defaults;
 
+	enum fat_spec fat_spec = FAT_SPEC_1;	// FIXME: FAT_SPEC_0 is better default
+
 	struct opt_s sim_opts[] = {
 
 		OPTL_FLOAT(0, "ode-tol", &(sim.other.ode_tol), "", "ODE tolerance value [def: 1e-5]"),
@@ -335,6 +337,7 @@ int main_mobafit(int argc, char* argv[argc])
 		OPTL_SUBOPT(0, "other", "...", "configure other simulation parameters", ARRAY_SIZE(other_opts), other_opts),
 		OPTL_SUBOPT(0, "pool", "...", "configure pool parameters for BMC simulation", ARRAY_SIZE(pool_opts), pool_opts),
 		OPTL_SUBOPT(0, "cest", "...", "configure parameters for CEST simulation", ARRAY_SIZE(cest_opts), cest_opts),
+		OPTL_SELECT(0, "fat_spec_0", enum fat_spec, &fat_spec, FAT_SPEC_0, "select fat spectrum from ISMRM fat-water tool"),
 		OPTL_SET(0, "fB0-init", &(fB0_init), "Take fB0 average of echos with equal dTE for initialization of fB0"),
 	};
 
@@ -486,6 +489,7 @@ int main_mobafit(int argc, char* argv[argc])
 	config.seq = seq;
 	config.mgre_model = mgre_model;
 	config.B0 = B0;
+	config.fat_spec = fat_spec;
 
 	switch (config.seq) {
 
