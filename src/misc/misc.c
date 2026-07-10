@@ -141,7 +141,7 @@ void error(const char* fmt, ...)
 
 int error_catcher(int fun(int argc, char* argv[argc]), int argc, char* argv[argc])
 {
-	int ret = -1;
+	volatile int ret = -1;
 
 	error_jumper.initialized = true;
 
