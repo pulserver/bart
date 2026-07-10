@@ -15,6 +15,7 @@
 
 #define FLASH_EVENTS 14
 #define FLASH_EVENTS_MECO 68
+#define FLASH_EVENTS_MECO_64 581
 #define FLASH_EVENTS_SPOILED 22
 
 
@@ -360,6 +361,68 @@ static bool test_flash_mom_meco(void)
 }
 
 UT_REGISTER_TEST(test_flash_mom_meco);
+
+
+static bool test_flash_momentum_meco64(void)
+{
+	struct seq_state seq_state = { 0 };
+	struct seq_config seq = seq_config_defaults;
+	seq.enc.pe_mode = SEQ_PEMODE_MEMS_HYB;
+
+
+	seq.loop_dims[TE_DIM] = 64;
+	seq.phys.tr = 10;
+	seq.phys.te =  3.E-3;
+	seq.geom.slice_thickness = 5.E-3;
+
+	long loops[DIMS] =  { [0 ... DIMS - 1] = 1 };
+	loops[READ_DIM] = 10;
+	loops[PHS1_DIM] = 10;
+	loops[PHS2_DIM] = 10;
+	
+	long pos[DIMS] = { };
+
+	do {
+
+		seq.phys.dwell = 5.E-6 + pos[READ_DIM] * 1.E-7;
+		seq.phys.rf_duration = (890 + 2 * pos[PHS1_DIM]) * 1E-6;
+		seq.phys.te_delta =  (100. + 0.11 * pos[PHS2_DIM]) * 1E-3;
+
+		int E = 2048;
+		struct seq_event ev[E];
+
+		seq_state.mode = SEQ_BLOCK_KERNEL_IMAGE;
+		E = flash(E, ev, &seq_state, &seq);
+
+		if (FLASH_EVENTS_MECO_64 != E)
+			return false;
+
+		int e_rf = events_idx(0, SEQ_EVENT_PULSE, E, ev);
+
+		double mom_rf[3];
+		moment_sum(mom_rf, ev[e_rf].mid, E, ev);
+
+		double mom[3];
+
+		for (int i = 0; i < seq.loop_dims[TE_DIM]; i++) {
+
+			int e_adc = events_idx(i, SEQ_EVENT_ADC, E, ev);
+
+			moment_sum(mom, ev[e_adc].mid, E, ev);
+			if (1E-5 * UT_TOL < (fabs(mom[0] - mom_rf[0]) + fabs(mom[1] - mom_rf[1]) + fabs(mom[2] - mom_rf[2])))
+				return false;
+
+			moment_sum(mom, ev[e_adc].start, E, ev);
+			if (1E-5 * UT_TOL < fabs(mom[2] - mom_rf[2]))
+				return false;
+		}
+
+	} while (md_next(DIMS, loops, 1 | 2 | 4, pos));
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_flash_momentum_meco64);
 
 
 static bool test_flash_mom2(void)

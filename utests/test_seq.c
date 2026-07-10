@@ -396,7 +396,7 @@ static bool test_block_prep(void)
 
 	seq->conf->enc.order = SEQ_ORDER_AVG_OUTER;
 	seq->conf->magn.prep_scans = 2;
-	seq->conf->magn.inv_delay_time = 100.E-3;
+	seq->conf->magn.inv_delay_time = 1.E-3;
 
 	seq->conf->loop_dims[BATCH_DIM] = 2;
 	seq->conf->loop_dims[SLICE_DIM] = 2;
@@ -464,7 +464,7 @@ static bool test_block_prep_3d(void)
 
 	seq->conf->enc.order = SEQ_ORDER_AVG_OUTER;
 	seq->conf->magn.prep_scans = 3;
-	seq->conf->magn.inv_delay_time = 100.E-3;
+	seq->conf->magn.inv_delay_time = 10.;
 
 	seq->conf->enc.is3D = 1;
 	seq->conf->loop_dims[BATCH_DIM] = 2;

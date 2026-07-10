@@ -45,12 +45,7 @@ static double ro_shift(long echo, const struct seq_config* seq)
 {
 	double adc_start = start_adc(echo, seq);
 
-	double shift = seq->sys.raster_grad - (round_up_raster(adc_start, seq->sys.raster_grad) - adc_start);
-
-	if (seq->sys.raster_grad <= shift)
-		return 0.;
-
-	return shift;
+	return seq->sys.raster_grad - (round_up_raster(adc_start, seq->sys.raster_grad) - adc_start);
 }
 
 
