@@ -1055,7 +1055,6 @@ void bloch_simulation2(const struct sim_data* _data, int R, int pools, float (*m
 	data.seq.averaged_spokes = 1;
 
 	float off_res[data.seq.rep_num];
-	float ref_scan = 0.;
 
 	if (SEQ_CEST == data.seq.seq_type)
 		calc_off_res(&data, data.seq.rep_num, off_res);
@@ -1165,7 +1164,8 @@ void bloch_simulation2(const struct sim_data* _data, int R, int pools, float (*m
 
 			cest_seq(&data, h, tol, N, P, xp, data.cest.ref_scan_ppm * 2 * M_PI * data.cest.b0 * data.cest.gamma);
 
-			ref_scan = xp[0][2];
+			debug_printf(DP_DEBUG1, "reference-scan=%.15f\n", xp[0][2]);
+
 			reset_xp(P, N, data.voxel.P, xp, data.voxel.m0);
 		}
 
@@ -1199,8 +1199,6 @@ void bloch_simulation2(const struct sim_data* _data, int R, int pools, float (*m
 
 				cest_seq(&data, h, tol, N, P, xp, off_res[r]);
 
-				if (data.cest.ref_scan)
-					xp[0][2] = xp[0][2] / ref_scan;
 				debug_printf(DP_DEBUG3, " iter=%2.1d: offset [ppm] =%2.5f, z-spectra=%.15f\n",
 					     r, off_res[r] / (2. * M_PI * data.cest.b0 * data.cest.gamma), xp[0][2]);
 
