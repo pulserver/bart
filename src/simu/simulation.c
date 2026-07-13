@@ -984,16 +984,16 @@ static void calc_off_res(struct sim_data* data, int N, float off_res[N])
 }
 
 
-static void reset_xp(int N, int P, float xp[P][N], float m0[P])
+static void reset_xp(int P, int N, int pools, float xp[P][N], float m0[pools])
 {
 	for (int p = 0; p < P; p++)
 		for (int n = 0; n < N; n++)
 			xp[p][n] = 0.;
 
-	for (int p = 0; p < P; p++) {
+	for (int p = 0; p < pools; p++) {
 
-		xp[0][2 + p * 3] = m0[p];
-		xp[2 + 2 * P + p][2 + p * 3] = 1.;
+		xp[0][2 + p * 3] = m0[p]; // Set z to M0 for each pool
+		xp[2 + 2 * pools + p][2 + p * 3] = 1.; // Simulate derivatives w.r.t. M0
 	}
 }
 
@@ -1166,7 +1166,7 @@ void bloch_simulation2(const struct sim_data* _data, int R, int pools, float (*m
 			cest_seq(&data, h, tol, N, P, xp, data.cest.ref_scan_ppm * 2 * M_PI * data.cest.b0 * data.cest.gamma);
 
 			ref_scan = xp[0][2];
-			reset_xp(N, data.voxel.P, xp, data.voxel.m0);
+			reset_xp(P, N, data.voxel.P, xp, data.voxel.m0);
 		}
 
                 // Loop over Pulse Blocks
@@ -1201,9 +1201,11 @@ void bloch_simulation2(const struct sim_data* _data, int R, int pools, float (*m
 
 				if (data.cest.ref_scan)
 					xp[0][2] = xp[0][2] / ref_scan;
+				debug_printf(DP_DEBUG3, " iter=%2.1d: offset [ppm] =%2.5f, z-spectra=%.15f\n",
+					     r, off_res[r] / (2. * M_PI * data.cest.b0 * data.cest.gamma), xp[0][2]);
 
 				collect_signal(&data, P, pools, mxy, sa_r1, sa_r2, sa_b1, sa_m0, sa_k, sa_Om, xp);
-				reset_xp(N, data.voxel.P, xp, data.voxel.m0);
+				reset_xp(P, N, data.voxel.P, xp, data.voxel.m0);
 
 			} else {
 
