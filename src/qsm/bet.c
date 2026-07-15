@@ -45,15 +45,14 @@ void threshold(int N, long dims[N], float* img,
 	long n = dims[0] * dims[1] * dims[2];
 	assert(n > 0);
 
-	float* temp = malloc((size_t)n * sizeof(*temp));
-
-	memcpy(temp, img, (size_t)n * sizeof(*temp));
+	float (*tmp)[n] = xmalloc(sizeof(*tmp));
+	memcpy(*tmp, img, sizeof(*tmp));
 
 	int k2 = (int)(0.98f * (n - 1));
 	int k98 = (int)(0.02f * (n - 1));
 
-	*t2  = quickselect(temp, n, k2);
-	*t98 = quickselect(temp, n, k98);
+	*t2  = quickselect(*tmp, n, k2);
+	*t98 = quickselect(*tmp, n, k98);
 	*t = *t2 + 0.1f * (*t98 - *t2);
 
 	for (long i = 0; i < n; i++) {
@@ -64,7 +63,7 @@ void threshold(int N, long dims[N], float* img,
 			new_img[i] = img[i];
 	}
 
-	free(temp);
+	xfree(tmp);
 }
 
 void compute_cog(int N, long dims[N], const float* img, const float res[3], float* t,
