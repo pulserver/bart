@@ -21,17 +21,10 @@
 #include "num/vec3.h"
 
 #include "misc/misc.h"
-#include "misc/debug.h"
 #include "misc/mri.h"
 
-#include "linops/linop.h"
-#include "linops/someops.h"
-#include "linops/grad.h"
-#include "linops/sum.h"
-#include "linops/fmac.h"
 
 #include "stl/misc.h"
-#include "stl/models.h"
 
 #include "bet.h"
 
@@ -41,9 +34,9 @@
 static int cmp_float(const void* a, const void* b)
 {
 	float fa = *(const float*)a;
-    	float fb = *(const float*)b;
+	float fb = *(const float*)b;
 
-    	return (fa > fb) - (fa < fb);
+	return (fa > fb) - (fa < fb);
 }
 
 void threshold(int N, long dims[N], float* img,
@@ -53,21 +46,20 @@ void threshold(int N, long dims[N], float* img,
 	assert(n > 0);
 
 	float* temp = malloc((size_t)n * sizeof(*temp));
-	
+
 	memcpy(temp, img, (size_t)n * sizeof(*temp));
 
 	int k2 = (int)(0.98f * (n - 1));
 	int k98 = (int)(0.02f * (n - 1));
 
-    	*t2  = quickselect(temp, n, k2);
-    	*t98 = quickselect(temp, n, k98);
-    	*t = *t2 + 0.1f * (*t98 - *t2);
+	*t2  = quickselect(temp, n, k2);
+	*t98 = quickselect(temp, n, k98);
+	*t = *t2 + 0.1f * (*t98 - *t2);
 
-    	for (long i = 0; i < n; i++) {
+	for (long i = 0; i < n; i++) {
 
 		if (*t > img[i])
 			new_img[i] = 0.0f;
-
 		else
 			new_img[i] = img[i];
 	}
@@ -104,11 +96,11 @@ void compute_cog(int N, long dims[N], const float* img, const float res[3], floa
 				float value = img[index];
 
 				if (*t < value) {
+
 					number++;
 
 					if (*t98 <= value)
 						w = *t98;
-
 					else
 						w = value;
 
@@ -126,18 +118,18 @@ void compute_cog(int N, long dims[N], const float* img, const float res[3], floa
 	double R = cbrt((3.0 * V) / (4.0 * M_PI));
 
 	COG[0] = sum_x / sum_w;
-    	COG[1] = sum_y / sum_w;
-    	COG[2] = sum_z / sum_w;
+	COG[1] = sum_y / sum_w;
+	COG[2] = sum_z / sum_w;
 
-    	*R_out = (float)R;
+	*R_out = (float)R;
 }
 
 float compute_tm(int N, long dims[N], const float* image, const float voxel_size[3],
 	const float COG[3], float R)
 {
-	 long nx = dims[0];
-	 long ny = dims[1];
-	 long nz = dims[2];
+	long nx = dims[0];
+	long ny = dims[1];
+	long nz = dims[2];
 
 	long max_vals = nx * ny * nz;
 
@@ -164,7 +156,7 @@ float compute_tm(int N, long dims[N], const float* image, const float voxel_size
 				}
 
 			}
-		}	
+		}
 	}
 
 	qsort(vals, n, sizeof(float), cmp_float);
@@ -179,46 +171,46 @@ float compute_tm(int N, long dims[N], const float* image, const float voxel_size
 static void compute_normal(int i, const double* verts, const struct neighbors* neigh,
 	const float COG[3], float n_hat[3])
 {
-    const double* v = &verts[3 * i];
-    const struct neighbors* nb = &neigh[i];
+	const double* v = &verts[3 * i];
+	const struct neighbors* nb = &neigh[i];
 
-    float n[3] = {0, 0, 0};
+	float n[3] = {0, 0, 0};
 
-    for (int k = 0; k < nb->n; k++) {
+	for (int k = 0; k < nb->n; k++) {
 
-        int i1 = nb->v[k];
-        int i2 = nb->v[(k + 1) % nb->n];
+		int i1 = nb->v[k];
+		int i2 = nb->v[(k + 1) % nb->n];
 
-        float v1[3];
-	float v2[3];
+		float v1[3];
+		float v2[3];
 
-        for (int d = 0; d < 3; d++) {
+		for (int d = 0; d < 3; d++) {
 
-            v1[d] = verts[3 * i1 + d] - v[d];
-            v2[d] = verts[3 * i2 + d] - v[d];
-        }
+			v1[d] = verts[3 * i1 + d] - v[d];
+			v2[d] = verts[3 * i2 + d] - v[d];
+		}
 
-        n[0] += v1[1] * v2[2] - v1[2] * v2[1];
-        n[1] += v1[2] * v2[0] - v1[0] * v2[2];
-        n[2] += v1[0] * v2[1] - v1[1] * v2[0];
-    }
+		n[0] += v1[1] * v2[2] - v1[2] * v2[1];
+		n[1] += v1[2] * v2[0] - v1[0] * v2[2];
+		n[2] += v1[0] * v2[1] - v1[1] * v2[0];
+	}
 
-    float norm = sqrtf(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
+	float norm = sqrtf(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
 
-    if (EPS_NORMAL > norm)
-        norm = 1.f;
+	if (EPS_NORMAL > norm)
+		norm = 1.f;
 
-    for (int d = 0; d < 3; d++)
-        n_hat[d] = n[d] / norm;
+	for (int d = 0; d < 3; d++)
+		n_hat[d] = n[d] / norm;
 
-    float dot = 0.f;
+	float dot = 0.f;
 
-    for (int d = 0; d < 3; d++)
-        dot += n_hat[d] * (v[d] - COG[d]);
+	for (int d = 0; d < 3; d++)
+		dot += n_hat[d] * (v[d] - COG[d]);
 
-    if (0.f > dot)
-        for (int d = 0; d < 3; d++)
-            n_hat[d] = - n_hat[d];
+	if (0.f > dot)
+		for (int d = 0; d < 3; d++)
+			n_hat[d] = -n_hat[d];
 }
 
 static float mean_edge_length(const double* verts, int nv, const struct neighbors* neigh)
@@ -240,7 +232,7 @@ static float mean_edge_length(const double* verts, int nv, const struct neighbor
 			count++;
 		}
 	}
-		
+
 	return (float)(sum / count);
 }
 
@@ -349,7 +341,6 @@ static void update_vertex(int N, long dims[N], int i, double* verts, const struc
 
 		for (int d = 0; d < 3; d++)
 			u2[d] = f2 * s_n[d];
-
 	}
 
 	float Imin;
@@ -384,7 +375,6 @@ static void bet_iteration(int N, long dims[N], double* verts, int nv, const stru
 
 		for (int d = 0; d < 3; d++)
 			verts[3 * i + d] += du[d];
-
 	}
 }
 
@@ -392,10 +382,10 @@ void run_bet(int N, long dims[N], double* verts, int nv, const struct neighbors*
 	const float* image, const float voxel_size[3], const float COG[3],
 	float t2, float t, float tm, float bt, int n_iter)
 {
-    float l = mean_edge_length(verts, nv, neigh);
+	float l = mean_edge_length(verts, nv, neigh);
 
-    for (int it = 0; it < n_iter; it++)
-        bet_iteration(N, dims, verts, nv, neigh, image, voxel_size, COG, t2, t, tm, bt, l);
+	for (int it = 0; it < n_iter; it++)
+		bet_iteration(N, dims, verts, nv, neigh, image, voxel_size, COG, t2, t, tm, bt, l);
 
 }
 
@@ -459,9 +449,7 @@ static int intersect_triangle_z(const double v0[3], const double v1[3],
 				seg->b.y = p0[1] + alpha * (p1[1] - p0[1]);
 				return 1;
 			}
-
 		}
-
 	}
 
 	return 0;
