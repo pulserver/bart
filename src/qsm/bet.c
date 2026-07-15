@@ -480,7 +480,7 @@ void mesh_to_mask_slicewise(int N, long dims[N], float* mask, float resolution[3
 	float vy = resolution[1];
 	float vz = resolution[2];
 
-	struct Segment2 segments[4096];
+	struct Segment2 (*segments)[ntris] = xmalloc(sizeof(*segments));
 
 	for (int k = 0; k < nz; k++) {
 
@@ -488,17 +488,13 @@ void mesh_to_mask_slicewise(int N, long dims[N], float* mask, float resolution[3
 		int nseg = 0;
 
 		for (int t = 0; t < ntris; t++) {
+
 			const double* v0 = verts[tris[t][0]];
 			const double* v1 = verts[tris[t][1]];
 			const double* v2 = verts[tris[t][2]];
 
-			if (intersect_triangle_z(v0, v1, v2, z, &segments[nseg])) {
-
-				if (4095 > nseg)
+			if (intersect_triangle_z(v0, v1, v2, z, &(*segments)[nseg]))
 					nseg++;
-
-			}
-
 		}
 
 		if (0 == nseg)
@@ -515,25 +511,24 @@ void mesh_to_mask_slicewise(int N, long dims[N], float* mask, float resolution[3
 
 				for (int s = 0; s < nseg; s++) {
 
-					float y0 = segments[s].a.y;
-					float y1 = segments[s].b.y;
+					float y0 = (*segments)[s].a.y;
+					float y1 = (*segments)[s].b.y;
 
 					if ((y0 > y) != (y1 > y)) {
 
-						float xint = segments[s].a.x + (y - y0) *
-							(segments[s].b.x - segments[s].a.x) / (y1 - y0);
+						float xint = (*segments)[s].a.x + (y - y0) *
+							((*segments)[s].b.x - (*segments)[s].a.x) / (y1 - y0);
 
 						if (xint > x)
 							crossings++;
-
 					}
-
 				}
 
 				if (0 != (crossings & 1))
 					mask[i + nx*j + nx*ny*k] = 1.0f;
-
 			}
 		}
 	}
+
+	xfree(segments);
 }
