@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 #include "num/multind.h"
+#include "num/vec3.h"
 #include "num/linalg.h"
 #include "num/flpmath.h"
 
@@ -299,7 +300,7 @@ void stl_compute_normals(const long dims[3], double* model)
 
 		double nt[3];
 		vec3d_crossproduct(nt, d1, d2);
-		vec3d_saxpy(&MD_ACCESS(3, strs, posn, model), nt, 1. / vec3d_norm(nt), NULL);
+		vec3d_smul(&MD_ACCESS(3, strs, posn, model), nt, 1. / vec3d_norm(nt));
         }
 }
 
@@ -649,13 +650,13 @@ void stl_relative_position(struct triangle* t)
 
 	// compute b0, b1 as orthogonal basis vectors of the plane which contains the triangle
 	double b0[3], tmp[3], b1[3];
-	vec3d_saxpy(b0, t->e0, 1. / vec3d_norm(t->e0), NULL);
-	vec3d_saxpy(tmp, t->e1, 1. / vec3d_norm(t->e1), NULL);
+	vec3d_smul(b0, t->e0, 1. / vec3d_norm(t->e0));
+	vec3d_smul(tmp, t->e1, 1. / vec3d_norm(t->e1));
 
 	// b1 is orthogonal component of tmp wrt b0
 	double f = -1. * vec3d_sdot(b0, tmp) / vec3d_norm(b0);
 	vec3d_saxpy(b1, b0, f, tmp);
-	vec3d_saxpy(b1, b1, 1. / vec3d_norm(b1), NULL);
+	vec3d_smul(b1, b1, 1. / vec3d_norm(b1));
 
 	// compute angle between normal vector and z axis
 	double ez[3] = { 0., 0., 1. };
@@ -673,10 +674,10 @@ void stl_relative_position(struct triangle* t)
 		vec3d_crossproduct(t->rot, t->n, ez);
 	}
 
-	vec3d_saxpy(t->rot, t->rot, 1. / vec3d_norm(t->rot), NULL);
+	vec3d_smul(t->rot, t->rot, 1. / vec3d_norm(t->rot));
 
 	// compute center of triangle
-	vec3d_set(t->ctr, 0);
+	vec3d_clear(t->ctr);
 	vec3d_saxpy(t->ctr, t->v0, 1. / 3., t->ctr);
 	vec3d_saxpy(t->ctr, t->v1, 1. / 3., t->ctr);
 	vec3d_saxpy(t->ctr, t->v2, 1. / 3., t->ctr);

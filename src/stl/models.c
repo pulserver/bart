@@ -16,6 +16,7 @@
 #include "num/multind.h"
 #include "num/flpmath.h"
 #include "num/linalg.h"
+#include "num/vec3.h"
 
 #include "stl/misc.h"
 
