@@ -517,7 +517,17 @@ static int rf_to_pulseq(struct pulseq *ps, int M, const struct rf_shape rf_shape
 	return rf_id;
 }
 
-
+static bool empty_block(struct ps_block* b)
+{
+	return (   (0 == b->dur)
+		&& (0 == b->rf)
+		&& (0 == b->g[0])
+		&& (0 == b->g[1])
+		&& (0 == b->g[2])
+		&& (0 == b->adc)
+		&& (0 == b->ext));
+}
+	
 void events_to_pulseq(struct pulseq *ps, enum seq_block mode, double tr, struct seq_sys sys, int M, const struct rf_shape rf_shapes[M], int N, const struct seq_event ev[N])
 {
 	int ext_id = 0;
@@ -609,6 +619,9 @@ void events_to_pulseq(struct pulseq *ps, enum seq_block mode, double tr, struct 
 		};
 
 		ext_id = 0;
+
+		if (empty_block(&b))
+			continue;
 
 		VEC_ADD(ps->ps_blocks, b);
 	}
