@@ -570,10 +570,15 @@ void events_to_pulseq(struct pulseq *ps, enum seq_block mode, double tr, struct 
 
 		int adc_id = 0;
 
-		if ((SEQ_BLOCK_KERNEL_DUMMY == mode) && (-1 < events_idx(i, SEQ_EVENT_ADC, N, ev)))
-			debug_printf(DP_WARN, "Pulseq: removed ADC from prep scan\n");
-		else
+		if ((SEQ_BLOCK_KERNEL_DUMMY == mode) && (-1 < events_idx(i, SEQ_EVENT_ADC, N, ev))) {
+
+			if (0 == i)
+				debug_printf(DP_WARN, "Pulseq: removed ADC from prep scan\n");
+
+		} else {
+
 			adc_id = adc_to_pulseq(ps, i, grad_start, N, ev);
+		}
 
 		if ((i != (n_blocks - 1)) && (0 < adc_id))
 			dur_split = (round_up_raster((ev[events_idx(i, SEQ_EVENT_ADC, N, ev)].end), ps->block_raster_time) + 2. * ps->block_raster_time) - grad_start;
