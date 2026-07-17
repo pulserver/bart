@@ -307,6 +307,9 @@ int main_sim(int argc, char* argv[argc])
 			data.voxel.m0[i] = M0pools[i - 1];
 			data.voxel.Om[i] = Ompools[i - 1];
 			data.voxel.k[i - 1] = kpools[i - 1];
+
+			if (SEQ_CEST == data.seq.seq_type)
+				data.voxel.Om[i] *= 2. * M_PI * data.cest.b0 * data.cest.gamma; 
 		}
 
 		perform_bloch_simulation(DIMS, &data, tmdims, tm, tddims, td);
