@@ -973,8 +973,14 @@ static void calc_off_res(struct sim_data* data, int N, float off_res[N])
 	float om_larmor = 2 * M_PI * data->cest.b0 * data->cest.gamma;
 	float incr = fabsf(data->cest.off_start - data->cest.off_stop) / (N - 1);
 
-	for (int i = 0; i < N; i++)
-		off_res[i] = (data->cest.off_start - i * incr) * om_larmor;
+	for (int i = 0; i < N; i++) {
+
+		float x = i - (data->seq.rep_num - 1) * 0.5f;
+		off_res[i] = x * incr * om_larmor;
+	}
+
+	off_res[0] = data->cest.off_start * om_larmor;
+	off_res[data->seq.rep_num - 1] = data->cest.off_stop * om_larmor;
 }
 
 
