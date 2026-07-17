@@ -85,6 +85,7 @@ void debug_sim(struct sim_data* data)
 
 	debug_printf(DP_INFO, "Other Parameter:\n");
 	debug_printf(DP_INFO, "\tODE Tolerance:%f\n", data->other.ode_tol);
+	debug_printf(DP_INFO, "\tODE Initial Step Size:%f\n", data->other.ode_h);
 	debug_printf(DP_INFO, "\tPulse Sampling Rate:%f Hz\n", data->other.sampling_rate);
 }
 
@@ -145,6 +146,7 @@ const struct simdata_other simdata_other_defaults = {
 	.ode_tol = 1e-5,
 	.stm_tol = 1e-6,
 	.sampling_rate = 1e+6,
+	.ode_h = 0.0001,
 };
 
 const struct simdata_cest simdata_cest_defaults = {
@@ -1065,7 +1067,7 @@ void bloch_simulation2(const struct sim_data* _data, int R, int pools, float (*m
 
 	for (int s = 0; s < S; s++) {
 
-                float h = 0.0001;
+                float h = data.other.ode_h;
 
 
 		if (1 != S) {
