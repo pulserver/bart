@@ -22,6 +22,7 @@
 
 #include "misc/misc.h"
 #include "misc/mri.h"
+#include "misc/debug.h"
 
 
 #include "stl/misc.h"
@@ -388,8 +389,7 @@ void run_bet(int N, long dims[N], double* verts, int nv, const struct neighbors*
 
 }
 
-static int intersect_triangle_z(const double v0[3], const double v1[3],
-	const double v2[3], float z, struct Segment2* seg)
+static int intersect_triangle_z(const double v0[3], const double v1[3], const double v2[3], float z, struct Segment2* seg)
 {
 	float t[3];
 	const double* v[3] = { v0, v1, v2 };
@@ -424,6 +424,7 @@ static int intersect_triangle_z(const double v0[3], const double v1[3],
 		if ((z0 > 0 && z1 < 0) || (z0 < 0 && z1 > 0)) {
 
 			double alpha = z0 / (z0 - z1);
+
 			seg->a.x = p0[0] + alpha * (p1[0] - p0[0]);
 			seg->a.y = p0[1] + alpha * (p1[1] - p0[1]);
 			break;
@@ -442,6 +443,7 @@ static int intersect_triangle_z(const double v0[3], const double v1[3],
 		if ((z0 > 0 && z1 < 0) || (z0 < 0 && z1 > 0)) {
 
 			double alpha = z0 / (z0 - z1);
+
 			if (fabs(alpha - t[0]) > EPS) {
 
 				seg->b.x = p0[0] + alpha * (p1[0] - p0[0]);
@@ -454,20 +456,46 @@ static int intersect_triangle_z(const double v0[3], const double v1[3],
 	return 0;
 }
 
-void mesh_to_mask_slicewise(int N, long dims[N], float* mask, float resolution[3],
-	const double (*verts)[3], const int (*tris)[3], int ntris)
+static int ray_intersects_segment_2d(float px, float py, const float n[2], const struct Segment2* seg)
+{
+	float sx = seg->b.x - seg->a.x;
+	float sy = seg->b.y - seg->a.y;
+	float den = n[0] * sy - n[1] * sx;
+
+	if (fabsf(den) <= EPS)
+		return 0;
+
+	float ax = seg->a.x - px;
+	float ay = seg->a.y - py;
+
+	float t = (ax * sy - ay * sx) / den;
+	float s = (ax * n[1] - ay * n[0]) / den;
+
+	if ((s < 0.f) || (s >= 1.f))
+		return 0;
+
+	if (t > EPS)
+		return 1;
+
+	if (t < -EPS)
+		return 2;
+
+	return 0;
+}
+
+void mesh_to_mask_slicewise(int N, long dims[N], float* mask, float resolution[3], const double (*verts)[3], const int (*tris)[3], int ntris)
 {
 	int nx = dims[0];
 	int ny = dims[1];
 	int nz = dims[2];
-
-	md_clear(3, dims, mask, FL_SIZE);
 
 	float vx = resolution[0];
 	float vy = resolution[1];
 	float vz = resolution[2];
 
 	struct Segment2 (*segments)[ntris] = xmalloc(sizeof(*segments));
+
+	long count_inconsistent_pixel = 0;
 
 	for (int k = 0; k < nz; k++) {
 
@@ -480,12 +508,13 @@ void mesh_to_mask_slicewise(int N, long dims[N], float* mask, float resolution[3
 			const double* v1 = verts[tris[t][1]];
 			const double* v2 = verts[tris[t][2]];
 
-			if (intersect_triangle_z(v0, v1, v2, z, &(*segments)[nseg]))
-					nseg++;
+			nseg += intersect_triangle_z(v0, v1, v2, z, &(*segments)[nseg]);
 		}
 
 		if (0 == nseg)
 			continue;
+
+		float n[4][2] = { {0.f, 1.f}, {1.f, 0.f}, { sqrtf(2.f), sqrtf(2.f) }, { sqrtf(2.f), -sqrtf(2.f) } };
 
 		for (int j = 0; j < ny; j++) {
 
@@ -494,28 +523,35 @@ void mesh_to_mask_slicewise(int N, long dims[N], float* mask, float resolution[3
 				float x = (i + 0.5f) * vx;
 				float y = (j + 0.5f) * vy;
 
-				int crossings = 0;
+				int crossings_pos[4] = { };
+				int crossings_neg[4] = { };
 
 				for (int s = 0; s < nseg; s++) {
 
-					float y0 = (*segments)[s].a.y;
-					float y1 = (*segments)[s].b.y;
+					for (int d = 0; d < 4; d++) {
 
-					if ((y0 > y) != (y1 > y)) {
+						int cross = ray_intersects_segment_2d(x, y, n[d], &(*segments)[s]);
 
-						float xint = (*segments)[s].a.x + (y - y0) *
-							((*segments)[s].b.x - (*segments)[s].a.x) / (y1 - y0);
-
-						if (xint > x)
-							crossings++;
+						crossings_pos[d] += (1 == cross);
+						crossings_neg[d] += (2 == cross);
 					}
 				}
 
-				if (0 != (crossings & 1))
-					mask[i + nx*j + nx*ny*k] = 1.0f;
+				int count_odd = 0;
+
+				for (int d = 0; d < 4; d++)
+					count_odd += (crossings_pos[d] % 2) + (crossings_neg[d] % 2);
+
+				if (2 < count_odd && count_odd < 6)
+					count_inconsistent_pixel++;
+
+				mask[i + nx * j + nx * ny * k] = (count_odd > 4) ? 1.0f : 0.0f;
 			}
 		}
 	}
+
+	if (0 < count_inconsistent_pixel)
+		debug_printf(DP_WARN, "Warning: %ld of %ld pixels have inconsistent ray crossings.\n", count_inconsistent_pixel, (long)(nx * ny * nz));
 
 	xfree(segments);
 }
