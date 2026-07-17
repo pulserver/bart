@@ -123,6 +123,7 @@ void debug_sim(struct sim_data* data)
 	debug_printf(DP_INFO, "\tT_d:%f\n", data->cest.t_d);
 	debug_printf(DP_INFO, "\tT_pp:%f\n", data->cest.t_pp);
 	debug_printf(DP_INFO, "\tReference scan?:%d at %f ppm\n", data->cest.ref_scan, data->cest.ref_scan_ppm);
+	debug_printf(DP_INFO, "\tGaussian Pulse?:%d\n", data->cest.gauss_pulse);
 	debug_printf(DP_INFO, "\tDouble Precision?:%d\n", data->cest.double_precision);
 }
 
@@ -202,6 +203,8 @@ const struct simdata_cest simdata_cest_defaults = {
 
 	.ref_scan = false,
 	.ref_scan_ppm = -300.,
+
+	.gauss_pulse = false,
 
 	.double_precision = false,
 };
@@ -819,12 +822,22 @@ static void reset_xp(int P, int N, int pools, float xp[P][N], float m0[pools])
 
 static void cest_seq(struct sim_data* data, float h, float tol, int N, int P, float xp[P][N], float offset)
 {	
-	// FIX ME : Allow different pulse types
-	data->pulse.type = PULSE_REC;
-	data->pulse.rect = pulse_rect_defaults;
-	data->pulse.rect.A = data->cest.b1_amp * 2. * M_PI * data->cest.gamma;
+	if (data->cest.gauss_pulse) {
 
-	//debug_printf(DP_INFO, "offset [ppm] : %f\n", offset / (2. * M_PI * data->cest.b0 * data->cest.gamma));
+		data->pulse.type = PULSE_ARB;
+		data->pulse.arb = pulse_arb_bmc_sim_challenge_defaults;
+		data->pulse.rf_start = 0;
+		data->pulse.rf_end = data->pulse.arb.super.duration;
+		data->pulse.arb.A = data->cest.b1_amp * 2. * M_PI * data->cest.gamma;
+	}
+	else {
+
+		data->pulse.type = PULSE_REC;
+		data->pulse.rect = pulse_rect_defaults;
+		data->pulse.rf_end = data->pulse.rf_end;
+		data->pulse.rect.super.duration = data->pulse.rf_end;
+		data->pulse.rect.A = data->cest.b1_amp * 2. * M_PI * data->cest.gamma;
+	}
 
 	for (int p = 0; p < data->cest.n_pulses; p++) {
 

@@ -113,6 +113,8 @@ struct simdata_cest {
 	bool ref_scan;
 	float ref_scan_ppm;
 
+	bool gauss_pulse;
+
 	bool double_precision;
 };
 

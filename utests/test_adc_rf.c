@@ -222,7 +222,7 @@ static bool test_oc(void)
 	const double good_fa = 1482.658888;
 	const double good_fa_prep = 1205.773438;
 	// expected in reference implementation
-	int idx[5] = { 10, 270, 499, 881, 965 };
+	int idx[5] = { 11, 271, 500, 882, 966 };
 	double good[5] = { 0.110344, 0.735732, 0.814455, 1., 0.334938 };
 
 	double s = seq_pulse_scaling(&rf_shape[1]);

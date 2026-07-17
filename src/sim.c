@@ -216,6 +216,7 @@ int main_sim(int argc, char* argv[argc])
 		OPTL_FLOAT(0, "t_pp", &(data.cest.t_pp), "float", "Post-preparation delay [s]"),
 		OPTL_SET(0, "ref_scan", &(data.cest.ref_scan), "Use reference scan"),
 		OPTL_FLOAT(0, "ref_scan_ppm", &(data.cest.ref_scan_ppm), "float", "Offset for ref. scan [ppm]"),
+		OPTL_SET(0, "gauss_pulse", &(data.cest.gauss_pulse), "Use Gaussian pulse instead of rectangular pulse"),
 		OPTL_SET(0, "double_precision", &(data.cest.double_precision), "Use double precision for CEST simulation (default: single precision)"),
 	};
 	const int N_cest_opts = ARRAY_SIZE(cest_opts);

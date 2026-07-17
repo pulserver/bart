@@ -330,7 +330,7 @@ static complex float pulse_arb_eval(const struct pulse* _pa, float t)
 
 	assert((t >= 0.) && (t <= _pa->duration));
 
-	int idx = (int)(t / _pa->duration * pa->samples);
+	int idx = (int)(t / _pa->duration * (pa->samples - 1));
 
 	assert(idx < pa->samples);
 
@@ -349,6 +349,20 @@ const struct pulse_arb pulse_arb_oc_cest_sat_defaults = {
 	.values = oc_cest_sat_pulse,
 	.A = 1.,
 	.gamma =  GYRO,
+};
+
+
+const struct pulse_arb pulse_arb_bmc_sim_challenge_defaults = {
+
+	.super.size = sizeof(struct pulse_arb),
+	.super.duration = 50e-3,
+	.super.eval = pulse_arb_eval,
+	.super.TYPEID = &TYPEID2(pulse_arb),
+
+	.samples = 101000,
+	.values = bmc_sim_challenge_cest_sat_pulse,
+	.A = 1.,
+	.gamma = GYRO,
 };
 
 

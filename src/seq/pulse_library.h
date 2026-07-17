@@ -7,6 +7,7 @@
 #include <complex.h>
 
 extern _Complex float oc_cest_sat_pulse[1000];
+extern _Complex float bmc_sim_challenge_cest_sat_pulse[101000]; 
 
 #include "misc/cppwrap.h"
 

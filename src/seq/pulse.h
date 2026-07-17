@@ -104,6 +104,7 @@ struct pulse_arb {
 };
 
 extern const struct pulse_arb pulse_arb_oc_cest_sat_defaults;
+extern const struct pulse_arb pulse_arb_bmc_sim_challenge_defaults;
 
 extern void pulse_arb_init(struct pulse_arb* pa, float gamma);
 extern float pulse_arb_integral(const struct pulse_arb* pa);
