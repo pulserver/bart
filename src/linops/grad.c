@@ -43,7 +43,7 @@ static void md_zfdiff_core2(int D, const long dims[D], int d, bool dir, bool adj
 
 static void md_zfdiff_f_core2(int D, const long dims[D], int d, bool adj, const long ostr[D], complex float* out, const long istr[D], const complex float* in)
 {
-	md_zfdiff_core2(D, dims, d, true, adj, ostr, out, istr, in);
+	md_zfdiff_core2(D, dims, d, false, adj, ostr, out, istr, in);
 }
 
 static void md_zfdiff_b_core2(int D, const long dims[D], int d, bool adj, const long ostr[D], complex float* out, const long istr[D], const complex float* in)
