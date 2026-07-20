@@ -350,8 +350,9 @@ complex float calc_fat_modulation(float b0, float TE, enum fat_spec fs)
 	
 	case FAT_SPEC_0:
 		/* 
-		 * ISMRM fat-water toolbox v1 (2012)
-		 * Hernando D.
+		 * Middleton MS, Hamilton G, Bydder M, Sirlin CB.
+		 * How Much Fat is Under the Water Peak in Liver Fat MR Spectroscopy?
+		 * Proceedings of the 17th annual meeting of ISMRM, Honolulu, Hawaii, 2009. p 4331.
 		 */
 		ppm[0] = -3.80E-6; amp[0] = 0.087;
 		ppm[1] = -3.40E-6; amp[1] = 0.693;
