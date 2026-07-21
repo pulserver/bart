@@ -397,7 +397,7 @@ stream_t stream_create(int N, const long dims[N], int pipefd, bool input, bool b
 cleanup:
 	stream_free(PTR_PASS(ret));
 
-	return NULL;
+	error("Creating stream.\n");
 }
 
 void stream_free(stream_t s)
