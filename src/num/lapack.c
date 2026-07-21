@@ -8,6 +8,7 @@
  * 2017 Jon Tamir
  */
 
+#include <assert.h>
 #include <complex.h>
 
 #include "misc/misc.h"
@@ -54,7 +55,11 @@ void lapack_geig(long N, float eigenval[N], complex float A[N][N], complex float
 
 void lapack_svd(long M, long N, complex float U[M][M], complex float VH[N][N], float S[(N > M) ? M : N], complex float A[N][M])
 {
+#ifdef NO_LAPACK
+	assert(0);
+#else
 	LAPACKE(cgesdd, 'A', M, N, &A[0][0], M, S, &U[0][0], M, &VH[0][0], N);
+#endif
 }
 
 // AT = VHT ST UT

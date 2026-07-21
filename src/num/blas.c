@@ -10,12 +10,12 @@
  * 2019-2021 Moritz Blumenthal
  */
 
-#ifndef NO_BLAS
-
 #include <assert.h>
 #include <complex.h>
 
 #include "misc/misc.h"
+
+#ifndef NO_BLAS
 
 #ifdef USE_MACPORTS
 #include <cblas_openblas.h>
@@ -808,5 +808,21 @@ void blas_matrix_zfmac(long M, long N, long K, complex float* C, const complex f
 	blas_cgemm(transa, transb, M, N, K, 1., lda, A, ldb, B, 1., M, C);
 }
 
+#else
+
+#include "blas.h"
+
+void blas_csyrk(char uplo, char trans, long N, long K, const complex float alpha, long lda, const complex float A[][lda], complex float beta, long ldc, complex float C[][ldc])
+{
+	assert(0);
+}
+void blas_cgemm(char transa, char transb, long M, long N,  long K, const complex float alpha, long lda, const complex float* A, long ldb, const complex float* B, const complex float beta, long ldc, complex float* C)
+{
+	assert(0);
+}
+void blas_matrix_multiply(long M, long N, long K, complex float C[N][M], const complex float A[K][M], const complex float B[N][K])
+{
+	assert(0);
+}
 #endif
 
