@@ -500,12 +500,7 @@ stream_t stream_load_file(const char* name, int D, long dims[D], char **datname)
 
 	assert (!is_stdin || NULL == stdin_command_line);
 
-	stream_t strm = stream_load_fd(fd, name, D, dims, datname, is_stdin ? &stdin_command_line : NULL);
-
-	if (!strm)
-		error("Reading input from %s\n", name);
-
-	return strm;
+	return stream_load_fd(fd, name, D, dims, datname, is_stdin ? &stdin_command_line : NULL);
 }
 
 stream_t stream_load_fd(int fd, const char* name, int D, long dims[D], char **datname, char** cmdline)
@@ -523,9 +518,6 @@ stream_t stream_load_fd(int fd, const char* name, int D, long dims[D], char **da
 		binary = true;
 
 	stream_t strm = stream_create(D, dims, fd, true, binary, 0, name, false);
-
-	if (!strm)
-		return NULL;
 
 #ifdef __EMSCRIPTEN__
 	if (!binary) {

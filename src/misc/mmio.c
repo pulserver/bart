@@ -703,9 +703,6 @@ static complex float* create_binary_pipe(const char* name, int D, long dimension
 
 	strm = stream_create_file(name, D, dimensions, stream_flags, NULL, false);
 
-	if (NULL == strm)
-		error("Creating stream");
-
 	if (NULL == (ptr = anon_cfl(NULL, D, dimensions)))
 		error("anon cfl\n");
 
@@ -780,9 +777,6 @@ static complex float* create_pipe(const char* name, int D, long dimensions[D], u
 	stream_t strm = stream_create_file(name, D, dimensions, stream_flags, abs_filename, call_msync);
 
 	free(abs_filename);
-
-	if (NULL == strm)
-		error("Creating stream");
 
 	stream_attach(strm, ptr, true, true);
 
@@ -1041,9 +1035,6 @@ static complex float* load_cfl_internal(const char* name, int D, long dimensions
 			}
 
 			strm = stream_load_file(name, D, dimensions, &filename);
-
-			if (NULL == strm)
-				error("Creating stream\n");
 
 			if (stream_is_binary(strm)) {
 
