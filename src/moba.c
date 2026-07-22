@@ -322,12 +322,21 @@ int main_moba(int argc, char* argv[argc])
 	vptr_hint_free(hint);
 
 	long TI_dims[DIMS];
-	complex float* TI = load_cfl_sameplace(TI_file, DIMS, TI_dims, kspace_data);
+	complex float* TI = NULL;
+
+	if ((MDB_IR_MGRE == conf.mode) && (conf.mgre_model < 6)) {
+
+		debug_printf(DP_INFO, "Skip reading of file %s (TI/TE), use \"--other echo\" \n", TI_file);
+
+	} else {
+
+		TI = load_cfl_sameplace(TI_file, DIMS, TI_dims, kspace_data);
+		assert(TI_dims[TE_DIM] == ksp_dims[TE_DIM]);
+	}
 
 	if (t2_old_flag)
 		md_zsmul(DIMS, TI_dims, TI, TI, 10.);
 
-	assert(TI_dims[TE_DIM] == ksp_dims[TE_DIM]);
 	assert(1 == ksp_dims[MAPS_DIM]);
 
 	long grid_dims[DIMS];
