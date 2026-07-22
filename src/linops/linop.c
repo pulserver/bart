@@ -347,6 +347,9 @@ const linop_data_t* linop_get_data_nested(const struct linop_s* ptr)
  */
 const struct linop_s* linop_clone(const struct linop_s* x)
 {
+	if (NULL == x)
+		return NULL;
+
 	PTR_ALLOC(struct linop_s, lo);
 
 	lo->forward = operator_ref(x->forward);
@@ -363,6 +366,9 @@ const struct linop_s* linop_clone(const struct linop_s* x)
  */
 const struct linop_s* linop_get_adjoint(const struct linop_s* x)
 {
+	if (NULL == x)
+		return NULL;
+
 	PTR_ALLOC(struct linop_s, lo);
 
 	lo->forward = operator_ref(x->adjoint);
@@ -604,6 +610,9 @@ struct linop_s* linop_null_create(int NO, const long odims[NO], int NI, const lo
  */
 struct linop_s* linop_chain(const struct linop_s* a, const struct linop_s* b)
 {
+	assert(NULL != a); // analyzer
+	assert(NULL != b); // analyzer
+
 	if (   operator_zero_or_null_p(a->forward)
 	    || operator_zero_or_null_p(b->forward)) {
 
@@ -739,8 +748,8 @@ static void stack_cod_adjoint(const linop_data_t* _data, complex float* dst, con
 	complex float* tmp = md_alloc_sameplace(d->D, d->dims, CFL_SIZE, dst);
 
 	for (int i = 0; i < d->N; i++) {
-		
-		linop_adjoint_unchecked(d->lops[i], tmp, src + d->offset[i]);		
+
+		linop_adjoint_unchecked(d->lops[i], tmp, src + d->offset[i]);
 		md_zadd(d->D, d->dims, dst, dst, tmp);
 	}
 
@@ -844,7 +853,7 @@ struct linop_s* linop_stack_cod(int N, const struct linop_s* lops[N], int stack_
 struct linop_s* linop_stack_cod_F(int N, const struct linop_s* lops[N], int stack_dim)
 {
 	auto ret = linop_stack_cod(N, lops, stack_dim);
-	
+
 	for (int i = 0; i < N; i++)
 		linop_free(lops[i]);
 
@@ -908,9 +917,9 @@ struct linop_s* linop_loop(int D, const long dims[D], struct linop_s* op)
 struct linop_s* linop_loop_F(int D, const long dims[D], struct linop_s* op)
 {
 	auto result = linop_loop(D, dims, op);
-	
+
 	linop_free(op);
-	
+
 	return result;
 }
 
@@ -965,6 +974,9 @@ struct linop_s* linop_gpu_wrapper(const struct linop_s* op)
 
 struct linop_s* linop_vptr_wrapper(struct vptr_hint_s* hint, const struct linop_s* op)
 {
+	if (NULL == op)
+		return NULL;
+
 	PTR_ALLOC(struct linop_s, op2);
 
 	op2->forward = operator_vptr_wrapper(op->forward, hint);
@@ -977,6 +989,9 @@ struct linop_s* linop_vptr_wrapper(struct vptr_hint_s* hint, const struct linop_
 
 struct linop_s* linop_vptr_set_dims_wrapper(const struct linop_s* op, const void* cod_ref, const void* dom_ref, struct vptr_hint_s* hint)
 {
+	if (NULL == op)
+		return NULL;
+
 	PTR_ALLOC(struct linop_s, op2);
 
 	op2->forward = operator_vptr_set_dims_wrapper(op->forward, 2, (const void* [2]){ cod_ref, dom_ref }, hint);
