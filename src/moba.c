@@ -324,11 +324,25 @@ int main_moba(int argc, char* argv[argc])
 	long TI_dims[DIMS];
 	complex float* TI = NULL;
 
-	if ((MDB_IR_MGRE == conf.mode) && (conf.mgre_model < 6)) {
+	const complex float* TE_IR_MGRE = NULL;
+	long TE_IR_MGRE_dims[DIMS];
 
-		debug_printf(DP_INFO, "Skip reading of file %s (TI/TE), use \"--other echo\" \n", TI_file);
+	if (MDB_IR_MGRE == conf.mode) {
+
+		if (NULL == input_TE)
+			error("Please provide echo times for IR multi-echo gradient-echo using \"--other echo\" \n");
+
+		TE_IR_MGRE = load_cfl_sameplace(input_TE, DIMS, TE_IR_MGRE_dims, kspace_data);
+
+		assert(TE_IR_MGRE_dims[CSHIFT_DIM] == ksp_dims[CSHIFT_DIM]);
+		assert(!md_check_dimensions(DIMS, TE_IR_MGRE_dims, CSHIFT_FLAG));
 
 	} else {
+
+		assert(NULL == input_TE);
+	}
+
+	if ((MDB_IR_MGRE != conf.mode) || (5 < conf.mgre_model)) {
 
 		TI = load_cfl_sameplace(TI_file, DIMS, TI_dims, kspace_data);
 		assert(TI_dims[TE_DIM] == ksp_dims[TE_DIM]);
@@ -642,25 +656,6 @@ int main_moba(int argc, char* argv[argc])
 		b0 = load_cfl_sameplace(input_b0, DIMS, b0_dims, cim);
 
 		assert(md_check_compat(DIMS, ~FFT_FLAGS, grid_dims, b0_dims));
-	}
-
-	// Load TE for IR MGRE
-
-	const complex float* TE_IR_MGRE = NULL;
-	long TE_IR_MGRE_dims[DIMS];
-
-	if (MDB_IR_MGRE == conf.mode) {
-
-		assert(NULL != input_TE);
-
-		TE_IR_MGRE = load_cfl_sameplace(input_TE, DIMS, TE_IR_MGRE_dims, cim);
-
-		assert(TE_IR_MGRE_dims[CSHIFT_DIM] == ksp_dims[CSHIFT_DIM]);
-		assert(!md_check_dimensions(DIMS, TE_IR_MGRE_dims, CSHIFT_FLAG));
-
-	} else {
-
-		assert(NULL == input_TE);
 	}
 
 	// scaling
