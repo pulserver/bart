@@ -594,11 +594,9 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 
 		case TGV:
 
-			unsigned long tgvflags = regs[nr].jflags | MD_BIT(DIMS) | MD_BIT(DIMS - 1);
-
 			debug_printf(DP_INFO, "TGV regularization: %f\n", regs[nr].lambda);
 
-			struct reg2 reg2 = tgv_reg(regs[nr].xflags, tgvflags, regs[nr].lambda, DIMS, img_dims, md_calc_size(N, img_dims) + ropts->svars, &ext_shift,
+			struct reg2 reg2 = tgv_reg(regs[nr].xflags, regs[nr].jflags, regs[nr].lambda, DIMS, img_dims, md_calc_size(N, img_dims) + ropts->svars, &ext_shift,
 						   ropts->alpha, ropts->tvscales_N, ropts->tvscales, lop_asl);
 
 			trafos[nr] = reg2.linop[0];
@@ -622,7 +620,7 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 
 			debug_printf(DP_INFO, "ICTV regularization: %f\n", regs[nr].lambda);
 
-			struct reg2 reg3 = ictv_reg(regs[nr].xflags, regs[nr].jflags | MD_BIT(DIMS), regs[nr].lambda, N, img_dims, md_calc_size(N, img_dims) + ropts->svars, &ext_shift,
+			struct reg2 reg3 = ictv_reg(regs[nr].xflags, regs[nr].jflags, regs[nr].lambda, N, img_dims, md_calc_size(N, img_dims) + ropts->svars, &ext_shift,
 						    ropts->gamma, ropts->tvscales_N, ropts->tvscales, ropts->tvscales2_N, ropts->tvscales2, lop_asl);
 
 			trafos[nr] = reg3.linop[0];
@@ -649,9 +647,7 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 
 			debug_printf(DP_INFO, "ICTGV regularization: %f\n", regs[nr].lambda);
 
-			unsigned long ictgvflags = regs[nr].jflags | MD_BIT(DIMS) | MD_BIT(DIMS - 1);
-
-			struct reg4 reg4 = ictgv_reg(regs[nr].xflags, ictgvflags, regs[nr].lambda, N, img_dims, md_calc_size(N, img_dims) + ropts->svars, &ext_shift,
+			struct reg4 reg4 = ictgv_reg(regs[nr].xflags, regs[nr].jflags, regs[nr].lambda, N, img_dims, md_calc_size(N, img_dims) + ropts->svars, &ext_shift,
 						     ropts->alpha, ropts->gamma, ropts->tvscales_N, ropts->tvscales, ropts->tvscales2_N, ropts->tvscales2, lop_asl);
 
 			trafos[nr] = reg4.linop[0];

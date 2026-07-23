@@ -188,8 +188,8 @@ static struct reg2 tgv_reg_int(unsigned long flags, unsigned long jflags, float 
 	grad2e = linop_reshape_out_F(grad2e, N + 2, grd_dims);
 	reg2.linop[1] = linop_chain_FF(grad2e, grad2);
 
-	reg2.prox[0] = prox_thresh_create(N + 1, linop_codomain(reg2.linop[0])->dims, lambda * alpha[0], jflags);
-	reg2.prox[1] = prox_thresh_create(N + 2, linop_codomain(reg2.linop[1])->dims, lambda * alpha[1], jflags);
+	reg2.prox[0] = prox_thresh_create(N + 1, linop_codomain(reg2.linop[0])->dims, lambda * alpha[0], jflags | MD_BIT(N));
+	reg2.prox[1] = prox_thresh_create(N + 2, linop_codomain(reg2.linop[1])->dims, lambda * alpha[1], jflags | MD_BIT(N) | MD_BIT(N + 1));
 
 	*ext_shift += md_calc_size(N + 1, grd_dims);
 
@@ -347,8 +347,8 @@ struct reg2 ictv_reg(unsigned long flags, unsigned long jflags, float lambda, in
 
 	reg2.linop[1] = linop_chain_FF(grad2e, grad2);
 
-	reg2.prox[0] = prox_thresh_create(N + 1, linop_codomain(reg2.linop[0])->dims, lambda*gamma[0], jflags);
-	reg2.prox[1] = prox_thresh_create(N + 1, linop_codomain(reg2.linop[1])->dims, lambda*gamma[1], jflags);
+	reg2.prox[0] = prox_thresh_create(N + 1, linop_codomain(reg2.linop[0])->dims, lambda*gamma[0], jflags | MD_BIT(N));
+	reg2.prox[1] = prox_thresh_create(N + 1, linop_codomain(reg2.linop[1])->dims, lambda*gamma[1], jflags | MD_BIT(N));
 
 	*ext_shift += md_calc_size(N, in2_dims);
 

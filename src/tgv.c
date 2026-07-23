@@ -42,7 +42,7 @@
 static const char help_str[] = "Perform total generalized variation denoising along dims specified by flags.";
 
 
-	
+
 int main_tgv(int argc, char* argv[argc])
 {
 	float lambda = 0.;
@@ -63,7 +63,7 @@ int main_tgv(int argc, char* argv[argc])
 		ARG_OUTFILE(true, &out_file, "output"),
 	};
 
-	const struct opt_s opts[] = { 
+	const struct opt_s opts[] = {
 
 		OPTL_FLVECN(0, "tvscales", tvscales, "Scaling of derivatives"),
 		OPTL_FLVEC2(0, "alpha", &alpha, "alpha1:alpha0", "alpha1 * || grad x - z ||_1, alpha0 * || Eps z ||_1")
@@ -72,7 +72,7 @@ int main_tgv(int argc, char* argv[argc])
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
 
 	num_init();
-	
+
 	long in_dims[DIMS];
 
 	complex float* in_data = load_cfl(in_file, DIMS, in_dims);
@@ -87,11 +87,9 @@ int main_tgv(int argc, char* argv[argc])
 
 	long ext_shift = md_calc_size(DIMS, in_dims);
 
-	unsigned long tgvflags = MD_BIT(DIMS) | MD_BIT(DIMS - 1);
-
 	const struct linop_s* lop_trafo = NULL;
 
-	struct reg2 reg2 = tgv_reg(flags, tgvflags, lambda, DIMS, in_dims, md_calc_size(DIMS, out_dims), &ext_shift, alpha, tvscales_N, tvscales, lop_trafo);
+	struct reg2 reg2 = tgv_reg(flags, 0, lambda, DIMS, in_dims, md_calc_size(DIMS, out_dims), &ext_shift, alpha, tvscales_N, tvscales, lop_trafo);
 
 
 	complex float* out_data = create_cfl(out_file, DIMS, out_dims);
