@@ -281,15 +281,14 @@ int main_seq(int argc, char* argv[argc])
 
 			stat_counter[1]++;
 			stat_counter[3]++;
+
+			goto debug_print_events; // skip empty blocks --> FIXME: probably continue better?
 		}
 
 		if (0 > E)
 			error("Sequence execution failed! - check seq_config, %s [ %d ] \n", error_string(E), E);
 
-		if ((SEQ_BLOCK_KERNEL_NOISE == seq->state->mode) || (0 == E)) // no noise_scan with pulseq
-			goto debug_print_events;
-
-		if (NULL != seq_file)
+		if ((NULL != seq_file) && (SEQ_BLOCK_KERNEL_NOISE != seq->state->mode)) // no noise_scan with pulseq
 			events_to_pulseq(&ps, seq->state->mode, seq->conf->phys.tr, seq->conf->sys, prepped_rfs, seq->rf_shape, E, seq->event);
 
 		if (SEQ_BLOCK_KERNEL_IMAGE != seq->state->mode)
@@ -323,7 +322,8 @@ int main_seq(int argc, char* argv[argc])
 
 		
 		long pos_save_grad[DIMS] = { };
-		position_to_save(DIMS, pos_save_grad, seq_opts.chrono, E, seq->event, seq->state->pos, seq->conf);
+		if (SEQ_BLOCK_KERNEL_IMAGE == seq->state->mode)
+			position_to_save(DIMS, pos_save_grad, seq_opts.chrono, E, seq->event, seq->state->pos, seq->conf);
 
 		do {
 			if (NULL != out_grad)
