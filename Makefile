@@ -1267,10 +1267,12 @@ libbart.so: $(SEQUENCE_MODULES)
 
 
 
-bart.dll: $(SEQUENCE_MODULES) -lwin
 ifeq "$(filter 1,$(BARTDLL))" ""
+.PHONY: bart.dll
+bart.dll:
 	$(error bart.dll requires BARTDLL=1)
 else
+bart.dll: $(SEQUENCE_MODULES) -lwin
 	$(CC) -Wl,-whole-archive $+ -Wl,-no-whole-archive  $(LDFLAGS) -o $@
 endif
 
