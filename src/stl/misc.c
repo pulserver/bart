@@ -228,8 +228,6 @@ static void stl_write_ascii(FILE *fp, const long dims[3], const double* model)
 	assert(3 == dims[0]);
 	assert(4 == dims[1]);
 
-        debug_printf(DP_INFO, "Number of triangles: %ld\n", dims[2]);
-
         long strs[3];
         md_calc_strides(3, strs, dims, DL_SIZE);
 

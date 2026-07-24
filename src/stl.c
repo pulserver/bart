@@ -32,8 +32,6 @@ int main_stl(int argc, char* argv[argc])
         bool stat = false;
         bool ascii = true;
         bool no_nc = false;
-	bool vm = false; // volume measure
-	bool sm = false; // surface measure
         float scale = 0.;
         float shift[3] = { 0., 0., 0. };
 	float transform[7] = { 1., 0., 0., 0., 0., 0., 0. };
@@ -166,11 +164,9 @@ int main_stl(int argc, char* argv[argc])
 			vmv += t[i].svol;
 		}
 
-		if (sm)
-			debug_printf(DP_INFO, "%f\n", smv);
+		debug_printf(DP_INFO, "surface area: %f\n", smv);
 
-		if (vm)
-			debug_printf(DP_INFO, "%f\n", vmv);
+		debug_printf(DP_INFO, "volume: %f\n", vmv);
 
 		md_free(ts);
 	}
