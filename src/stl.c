@@ -47,6 +47,7 @@ int main_stl(int argc, char* argv[argc])
 
 		OPTL_SELECT(0, "TET", enum stl_itype, &stl_choice, STL_TETRAHEDRON, "Tetrahedron."),
 		OPTL_SELECT(0, "HEX", enum stl_itype, &stl_choice, STL_HEXAHEDRON, "Hexahedron (= Cube)."),
+		OPTL_SELECT(0, "ICO", enum stl_itype, &stl_choice, STL_ICOSAHEDRON, "Icosahedron."),
         };
 
 	const struct opt_s opts[] = {
@@ -102,6 +103,9 @@ int main_stl(int argc, char* argv[argc])
 
         if (STL_HEXAHEDRON == stl_choice)
                 model = stl_internal_hexahedron(dims);
+
+        if (STL_ICOSAHEDRON == stl_choice)
+                model = stl_internal_icosahedron(dims);
 
 	if (!no_nc)
 		stl_compute_normals(dims, model);

@@ -5,7 +5,7 @@
 
 #define MAX_NEIGHBORS 32
 
-enum stl_itype { STL_NONE, STL_TETRAHEDRON, STL_HEXAHEDRON };
+enum stl_itype { STL_NONE, STL_TETRAHEDRON, STL_HEXAHEDRON, STL_ICOSAHEDRON };
 
 // contains triangles of stl files and rotation/ shift rel. to origin
 struct triangle {
