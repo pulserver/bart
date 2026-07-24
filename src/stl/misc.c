@@ -89,6 +89,17 @@ static void stl_coordinate_limits(const long dims[3], const double* model, doubl
 // Scales all vertex coordinates by scale vector. It doesnt scale the normal vector.
 void stl_scale_model(const long dims[3], double* model, const double scale[3])
 {
+        double min_v[3];
+	double max_v[3];
+
+        stl_coordinate_limits(dims, model, min_v, max_v);
+
+        double crange[3] = { max_v[0] - min_v[0], max_v[1] - min_v[1], max_v[2] - min_v[2] };
+        double shift[3] = { - min_v[0] - crange[0]/2, - min_v[1] - crange[1]/2, - min_v[2] - crange[2]/2 };
+	double backshift[3] = { -shift[0], -shift[1], -shift[2] };
+
+        stl_shift_model(dims, model, shift);
+
         long strs[3];
         md_calc_strides(3, strs, dims, DL_SIZE);
 
@@ -101,6 +112,8 @@ void stl_scale_model(const long dims[3], double* model, const double scale[3])
                         for (pos[1] = 0; pos[1] < dims[1] - 1; pos[1]++)
                                 MD_ACCESS(3, strs, pos, model) *= scale[pos[0]];
         }
+
+        stl_shift_model(dims, model, backshift);
 }
 
 // Shifts all vertex coordinates by shift vector. It doesn't shift the normal vector (shift invariant)
@@ -126,7 +139,7 @@ void stl_rot_model(const long dims[3], double* model, const double drot[3])
 	// first shift model into origin
         double* model_ = md_alloc(3, dims, DL_SIZE);
 
-	memcpy(model_, model, md_calc_size(3, dims) * DL_SIZE);
+	memcpy(model_, model, (unsigned long) md_calc_size(3, dims) * DL_SIZE);
 
         double min_v[3];
 	double max_v[3];
@@ -182,7 +195,6 @@ void stl_rot_model(const long dims[3], double* model, const double drot[3])
 
 #define TOL 1E-14
 
-
 // shift and scale the model to FOV of size fov_size > 0.
 void stl_center_fov(const long dims[3], double* model, double fov_size)
 {
@@ -205,6 +217,7 @@ void stl_center_fov(const long dims[3], double* model, double fov_size)
 
         stl_shift_model(dims, model, shift);
         stl_scale_model(dims, model, scale);
+	debug_printf(DP_INFO, "%f:%f:%f:%f:0:0:0\n", scale[0], shift[0], shift[1], shift[2]);
 }
 
 void stl_stats(const long dims[3], const double* model)

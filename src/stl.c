@@ -32,6 +32,7 @@ int main_stl(int argc, char* argv[argc])
         bool stat = false;
         bool ascii = true;
         bool no_nc = false;
+	bool centerfov = false;
         float scale = 0.;
         float shift[3] = { 0., 0., 0. };
 	float transform[7] = { 1., 0., 0., 0., 0., 0., 0. };
@@ -53,6 +54,7 @@ int main_stl(int argc, char* argv[argc])
 
 		OPTL_INFILE(0, "input", &in_file, "", "Path to input file (.stl or cfl file format)."),
                 OPTL_SUBOPT2(0, "model", "<tag> ", "Generic geometric structures are available.", "Internal stl model (help: bart stl --model h).\n", ARRAY_SIZE(model_opts), model_opts),
+		OPTL_SET(0, "cfov", &centerfov, "Scale and move model to center of FOV."),
 		OPT_FLOAT('s', &scale, "scale", "Multiplicate all coordinates of model with a scale factor."),
                 OPT_FLVEC3('m', &shift, "move", "Move model by vector.\n"),
 		OPTL_FLVEC7(0, "transform", &transform, "transform", "scale:move_x:move_y:move_z:rot_xy[deg]:rot_xz[deg]:rot_yz[deg]. Rotates the *centered* model.\n"),
@@ -127,6 +129,9 @@ int main_stl(int argc, char* argv[argc])
         double sc[3] = { scale, scale, scale };
 	double rot[3] = { transform[4], transform[5], transform[6] };
 
+	if (centerfov && (btrnsf || bscale || bmove))
+		error("dont use fovnorm and scale, move or transform together.");
+
 	if (btrnsf) {
 
 		sc[0] = transform[0];
@@ -146,6 +151,9 @@ int main_stl(int argc, char* argv[argc])
 
 	if (btrnsf || bscale)
                 stl_scale_model(dims, model, sc);
+
+	if (centerfov)
+		stl_center_fov(dims, model, 0.9);
 
         if (stat) {
 
