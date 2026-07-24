@@ -59,7 +59,8 @@ struct triangle_stack triangle_stack_defaults = {
 // compute minimal and maximal vertex coordinates
 static void stl_coordinate_limits(const long dims[3], const double* model, double min_v[3], double max_v[3])
 {
-	assert(3 == dims[1]);
+	assert(3 == dims[0]);
+	assert(4 == dims[1]);
 
 	for (int i = 0; i < 3; i++) {
 
@@ -665,49 +666,49 @@ void stl_extract_vertices(long N, const long dims[3], const double* model,
 {
 	long strs[3];
 	md_calc_strides(3, strs, dims, DL_SIZE);
-	
+
 	int nv = 0;
 	int nt = dims[2];
-	
+
 	const double eps = 1e-6;
-	
+
 	for (int t = 0; t < nt; t++) {
 		for (int v = 0; v < 3; v++) {
-			
+
 			double p[3];
-			
+
 			for (int d = 0; d < 3; d++) {
-				
+
 				long pos[3] = { d, v, t };
 				p[d] = MD_ACCESS(3, strs, pos, model);
 			}
-			
+
 			int idx = -1;
-			
+
 			for (int i = 0; i < nv; i++) {
-				
+
 				if (fabs(verts[i][0] - p[0]) < eps &&
 				fabs(verts[i][1] - p[1]) < eps &&
 				fabs(verts[i][2] - p[2]) < eps) {
-					
+
 					idx = i;
 					break;
 				}
 			}
-			
+
 			if (idx == -1) {
-				
+
 				idx = nv++;
-				
+
 				verts[idx][0] = p[0];
 				verts[idx][1] = p[1];
 				verts[idx][2] = p[2];
 			}
-			
+
 			tris[t][v] = idx;
 		}
 	}
-	
+
 	*nv_out = nv;
 	*nt_out = nt;
 }
