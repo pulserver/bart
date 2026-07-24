@@ -71,15 +71,16 @@ static void stl_coordinate_limits(const long dims[3], const double* model, doubl
 	long strs[3];
 	md_calc_strides(3, strs, dims, DL_SIZE);
 
-	for (int j = 0; j < dims[0]; j++) {
-		for (int k = 0; k < dims[1]; k++) {
-			for (int l = 0; l < dims[2]; l++) {
+	long pos[3] = { 0, 0, 0 };
 
-				long pos[3] = { j, k, l };
+	for (pos[0] = 0; pos[0] < 3; pos[0]++) {
+		for (pos[1] = 0; pos[1] < 3; pos[1]++) {
+			for (pos[2] = 0; pos[2] < dims[2]; pos[2]++) {
+
 				double val = MD_ACCESS(3, strs, pos, model);
 
-				min_v[j] = MIN(min_v[j], val);
-				max_v[j] = MAX(max_v[j], val);
+				min_v[pos[0]] = MIN(min_v[pos[0]], val);
+				max_v[pos[0]] = MAX(max_v[pos[0]], val);
 			}
 		}
 	}
@@ -117,6 +118,66 @@ void stl_shift_model(const long dims[3], double* model, const double shift[3])
                         for (pos[1] = 0; pos[1] < dims[1] - 1; pos[1]++)
                                 MD_ACCESS(3, strs, pos, model) += shift[pos[0]];
         }
+}
+
+// Rotates all *centered* vertex coordinates by rot vector.
+void stl_rot_model(const long dims[3], double* model, const double drot[3])
+{
+	// first shift model into origin
+        double* model_ = md_alloc(3, dims, DL_SIZE);
+
+	memcpy(model_, model, md_calc_size(3, dims) * DL_SIZE);
+
+        double min_v[3];
+	double max_v[3];
+
+        stl_coordinate_limits(dims, model_, min_v, max_v);
+
+        double crange[3] = { max_v[0] - min_v[0], max_v[1] - min_v[1], max_v[2] - min_v[2] };
+        double shift[3] = { - min_v[0] - crange[0]/2, - min_v[1] - crange[1]/2, - min_v[2] - crange[2]/2 };
+	double backshift[3] = { -shift[0], -shift[1], -shift[2] };
+
+        stl_shift_model(dims, model_, shift);
+
+        long strs[3];
+        md_calc_strides(3, strs, dims, DL_SIZE);
+
+	double rot[3] = { drot[0] / 180. * M_PI, drot[1] / 180. * M_PI, drot[2] / 180. * M_PI };
+
+	double crot0 = cos(rot[0]);
+	double srot0 = sin(rot[0]);
+	double crot1 = cos(rot[1]);
+	double srot1 = sin(rot[1]);
+	double crot2 = cos(rot[2]);
+	double srot2 = sin(rot[2]);
+
+	double rmat[3][3] = {
+		{ crot1 * crot0, -crot1 * srot0, srot1 },
+		{ srot2 * srot1 * crot0 + crot2 * srot0, -srot2 * srot1 * srot0 + crot2 * crot0, -srot2 * crot1 },
+		{ -crot2 * srot1 * crot0 + srot2 * srot0, crot2 * srot1 * srot0 + srot2 * crot0, crot2 * crot1 },
+        };
+
+#pragma omp parallel for
+        for (int i = 0; i < dims[2]; i++) {
+
+                long pos[3] = { [2] = i };
+
+		for (pos[1] = 0; pos[1] < 3; pos[1]++) {
+
+			double v[3];
+
+			for (pos[0] = 0; pos[0] < 3; pos[0]++)
+				v[pos[0]] = MD_ACCESS(3, strs, pos, model_);
+
+			for (pos[0] = 0; pos[0] < 3; pos[0]++)
+				MD_ACCESS(3, strs, pos, model) = rmat[pos[0]][0] * v[0] + rmat[pos[0]][1] * v[1] + rmat[pos[0]][2] * v[2];
+
+		}
+        }
+
+	md_free(model_);
+        stl_shift_model(dims, model, backshift);
+	stl_compute_normals(dims, model);
 }
 
 #define TOL 1E-14

@@ -18,7 +18,7 @@ enum OPT_TYPE {
 	OPT_DOUBLE,
 	OPT_CFL,
 	OPT_VEC2, OPT_VEC3, OPT_VECN,
-	OPT_FLOAT_VEC2, OPT_FLOAT_VEC3, OPT_FLOAT_VEC4, OPT_FLOAT_VECN,
+	OPT_FLOAT_VEC2, OPT_FLOAT_VEC3, OPT_FLOAT_VEC4, OPT_FLOAT_VEC7, OPT_FLOAT_VECN,
 	OPT_DOUBLE_VEC3, OPT_DOUBLE_VECN,
 	OPT_STRING,
 	OPT_INFILE, OPT_OUTFILE, OPT_INOUTFILE,
@@ -71,6 +71,7 @@ typedef float opt_fvec2_t[2];
 typedef long opt_vec3_t[3];
 typedef float opt_fvec3_t[3];
 typedef float opt_fvec4_t[4];
+typedef float opt_fvec7_t[7];
 typedef double opt_dvec3_t[3];
 
 #define OPT_SEL(T, x, v)	&(struct opt_select_s){ (x), &(T){ (v) }, &(T){ *(x) }, sizeof(T) }
@@ -133,6 +134,7 @@ typedef double opt_dvec3_t[3];
 #define OPTL_VECC(c, s, count, ptr, descr)	{ (c), (s), true, OPT_VECN, NULL, OPT_VEC(ptr, 0, count), "", descr }
 #define OPTL_FLVEC3(c, s, ptr, argname, descr)	OPTL_ARG(c, s, OPT_FLOAT_VEC3, opt_fvec3_t, ptr, argname, descr)
 #define OPTL_FLVEC4(c, s, ptr, argname, descr)	OPTL_ARG(c, s, OPT_FLOAT_VEC4, opt_fvec4_t, ptr, argname, descr)
+#define OPTL_FLVEC7(c, s, ptr, argname, descr)	OPTL_ARG(c, s, OPT_FLOAT_VEC7, opt_fvec7_t, ptr, argname, descr)
 #define OPTL_FLVECN(c, s, ptr, descr)	{ (c), (s), true, OPT_FLOAT_VECN, NULL, OPT_VEC(ptr, 0, NULL), "", descr }
 #define OPTL_DOVEC3(c, s, ptr, argname, descr)	OPTL_ARG(c, s, OPT_DOUBLE_VEC3, opt_dvec3_t, ptr, argname, descr)
 #define OPTL_DOVECN(c, s, ptr, descr)	{ (c), (s), true, OPT_DOUBLE_VECN, NULL, OPT_VEC(ptr, 0, NULL), "", descr }

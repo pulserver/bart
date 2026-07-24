@@ -72,6 +72,7 @@ opt_conv_f opt_vec3;
 opt_conv_f opt_vecn;
 opt_conv_f opt_float_vec3;
 opt_conv_f opt_float_vec4;
+opt_conv_f opt_float_vec7;
 opt_conv_f opt_float_vecN;
 opt_conv_f opt_double_vec3;
 opt_conv_f opt_double_vecN;
@@ -128,6 +129,9 @@ static const char* opt_arg_str(enum OPT_TYPE type)
 	case OPT_FLOAT_VEC4:
 		return "f:f:f:f";
 
+	case OPT_FLOAT_VEC7:
+		return "f:f:f:f:f:f:f";
+
 	case OPT_FLOAT_VECN:
 	case OPT_DOUBLE_VECN:
 		return "[f:]*f";
@@ -167,6 +171,7 @@ static const char* opt_type_str(enum OPT_TYPE type)
 	OPT_ARG_TYPE_CASE(OPT_FLOAT_VEC2)
 	OPT_ARG_TYPE_CASE(OPT_FLOAT_VEC3)
 	OPT_ARG_TYPE_CASE(OPT_FLOAT_VEC4)
+	OPT_ARG_TYPE_CASE(OPT_FLOAT_VEC7)
 	OPT_ARG_TYPE_CASE(OPT_FLOAT_VECN)
 	OPT_ARG_TYPE_CASE(OPT_DOUBLE_VEC3)
 	OPT_ARG_TYPE_CASE(OPT_DOUBLE_VECN)
@@ -222,6 +227,8 @@ static bool opt_dispatch(enum OPT_TYPE type, void* ptr, opt_conv_f* conv, char c
 		return opt_float_vec3(ptr, c, optarg);
         case OPT_FLOAT_VEC4:
 		return opt_float_vec4(ptr, c, optarg);
+        case OPT_FLOAT_VEC7:
+		return opt_float_vec7(ptr, c, optarg);
 	case OPT_FLOAT_VECN:
 		return opt_float_vecN(ptr, c, optarg);
 	case OPT_DOUBLE_VEC3:
@@ -1159,6 +1166,15 @@ bool opt_float_vec4(void* ptr, char /*c*/, const char* optarg)
 	int r = sscanf(optarg, "%f:%f:%f:%f", &(*(float(*)[3])ptr)[0], &(*(float(*)[3])ptr)[1], &(*(float(*)[3])ptr)[2], &(*(float(*)[3])ptr)[3]);
 
 	assert(4 == r);
+
+	return false;
+}
+
+bool opt_float_vec7(void* ptr, char /*c*/, const char* optarg)
+{
+	int r = sscanf(optarg, "%f:%f:%f:%f:%f:%f:%f", &(*(float(*)[3])ptr)[0], &(*(float(*)[3])ptr)[1], &(*(float(*)[3])ptr)[2], &(*(float(*)[3])ptr)[3], &(*(float(*)[3])ptr)[4], &(*(float(*)[3])ptr)[5], &(*(float(*)[3])ptr)[6]);
+
+	assert(7 == r);
 
 	return false;
 }

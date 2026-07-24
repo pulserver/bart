@@ -36,6 +36,7 @@ int main_stl(int argc, char* argv[argc])
 	bool sm = false; // surface measure
         float scale = 0.;
         float shift[3] = { 0., 0., 0. };
+	float transform[7] = { 1., 0., 0., 0., 0., 0., 0. };
         enum stl_itype stl_choice = STL_NONE;
 
         struct arg_s args[] = {
@@ -56,6 +57,7 @@ int main_stl(int argc, char* argv[argc])
                 OPTL_SUBOPT2(0, "model", "<tag> ", "Generic geometric structures are available.", "Internal stl model (help: bart stl --model h).\n", ARRAY_SIZE(model_opts), model_opts),
 		OPT_FLOAT('s', &scale, "scale", "Multiplicate all coordinates of model with a scale factor."),
                 OPT_FLVEC3('m', &shift, "move", "Move model by vector.\n"),
+		OPTL_FLVEC7(0, "transform", &transform, "transform", "scale:move_x:move_y:move_z:rot_xy[deg]:rot_xz[deg]:rot_yz[deg]. Rotates the *centered* model.\n"),
 		OPTL_SET(0, "stat", &stat, "Show statistics of model."),
 		OPTL_CLEAR(0, "binary", &ascii, "Output STL files in binary format."),
 		OPTL_SET(0, "no-nc", &no_nc, "(Don't recompute normal vectors with double precision.)"),
@@ -110,14 +112,41 @@ int main_stl(int argc, char* argv[argc])
 	if (!no_nc)
 		stl_compute_normals(dims, model);
 
-        double dshift[3] = { shift[0], shift[1], shift[2] };
+	bool btrnsf = (1. != transform[0] || 0. != transform[1] || 0. != transform[2]
+			|| 0. != transform[3] || 0.!= transform[4] || 0. != transform[5]
+			|| 0. != transform[6]);
 
-        if (0. != shift[0] || 0. != shift[1] || 0. != shift[2])
+	bool bscale = (0. != scale);
+        bool bmove = (0. != shift[0] || 0. != shift[1] || 0. != shift[2]);
+
+	if (bscale && btrnsf)
+		error("use either scale or transform option.");
+
+	if (bmove && btrnsf)
+		error("use either move or transform option.");
+
+        double dshift[3] = { shift[0], shift[1], shift[2] };
+        double sc[3] = { scale, scale, scale };
+	double rot[3] = { transform[4], transform[5], transform[6] };
+
+	if (btrnsf) {
+
+		sc[0] = transform[0];
+		sc[1] = transform[0];
+		sc[2] = transform[0];
+
+		dshift[0] = transform[1];
+		dshift[1] = transform[2];
+		dshift[2] = transform[3];
+	}
+
+	if (btrnsf || bmove)
                 stl_shift_model(dims, model, dshift);
 
-        double sc[3] = { scale, scale, scale };
+	if (btrnsf)
+		stl_rot_model(dims, model, rot);
 
-        if (0. != scale)
+	if (btrnsf || bscale)
                 stl_scale_model(dims, model, sc);
 
         if (stat) {

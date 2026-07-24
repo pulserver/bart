@@ -53,6 +53,7 @@ extern void stl_stats(const long dims[3], const double* model);
 extern void stl_compute_normals(const long dims[3], double* model);
 extern void stl_shift_model(const long dims[3], double* model, const double shift[3]);
 extern void stl_scale_model(const long dims[3], double* model, const double scale[3]);
+extern void stl_rot_model(const long dims[3], double* model, const double drot[3]);
 
 extern bool stl_fileextension(const char* name);
 extern double* stl_read(FILE* name, long dims[3]);
