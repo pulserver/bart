@@ -54,16 +54,6 @@ static int bandsize(int imsize, int flen)
 	return (imsize + flen - 1) / 2;
 }
 
-static complex float* access(const long str[3], complex float* x, long i, long j, long k)
-{
-	return (void*)x + str[2] * i + str[1] * j + str[0] * k;
-}
-
-static const complex float* caccess(const long str[3], const complex float* x, long i, long j, long k)
-{
-	return (const void*)x + str[2] * i + str[1] * j + str[0] * k;
-}
-
 /*
  * l: [3210]		(flen=4)
  * n:    [0123456789]	(dims[1])
@@ -93,14 +83,14 @@ static void wavelet_down3(const long dims[3], const long out_str[3], complex flo
 
 			for (int k = 0; k < dims[0]; k++) {
 
-				*access(out_str, out, i, j, k) = 0.;
+				MD_ACCESS(3, out_str, ((long[3]){ k, j, i }), out) = 0.;
 
 				for (int l = 0; l < flen; l++) {
 
 					int n = coord(j, dims[1], flen, l);
 
-					*access(out_str, out, i, j, k) +=
-						*(caccess(in_str, in, i, n, k)) * filter[flen - l - 1];
+					MD_ACCESS(3, out_str, ((long[3]){ k, j, i }), out) +=
+						MD_ACCESS(3, in_str, ((long[3]){ k, n, i }), in) * filter[flen - l - 1];
 				}
 			}
 		}
@@ -132,8 +122,8 @@ static void wavelet_up3(const long dims[3], const long out_str[3], complex float
 					if ((j < 0) || (bandsize(dims[1], flen) <= j))
 						continue;
 
-					*access(out_str, out, i, n, k) +=
-						*caccess(in_str, in, i, j, k) * filter[flen - l - 1];
+					MD_ACCESS(3, out_str, ((long[3]){ k, n, i }), out) +=
+						MD_ACCESS(3, in_str, ((long[3]){ k, j, i }), in) * filter[flen - l - 1];
 				}
 			}
 		}
