@@ -556,8 +556,8 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 {
 	int ctr = 0;
 
-	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n\nseq_config\nTR/TE0/deltaTE\t\t\t\t%f/%f/%f", 
-			seq->phys.tr, seq->phys.te, seq->phys.te_delta);
+	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n\nseq_config\nsequence type\t\t\t\t%s\nTR/TE0/deltaTE\t\t\t\t%f/%f/%f", 
+			get_seqtype_str(seq->seq_type), seq->phys.tr, seq->phys.te, seq->phys.te_delta);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr), 
 			"\ndwell/os/asym\t\t\t\t%.8f/%.2f/%.2f\ncontrast/rf duration/FA/BWTP\t\t%d (\"%s\")/%.6f/%.2f/%.2f",

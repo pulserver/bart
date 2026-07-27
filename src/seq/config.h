@@ -12,6 +12,11 @@
 
 #define SEQ_FLAGS (PHS1_FLAG|PHS2_FLAG|COEFF_FLAG|COEFF2_FLAG|TIME_FLAG|TIME2_FLAG|SLICE_FLAG|AVG_FLAG|BATCH_FLAG|CSHIFT_FLAG)
 
+enum seq_type {
+
+	SEQ_TYPE_FLASH = 1, // BOOST v0.1
+	SEQ_TYPE_MINIFLASH,
+};
 
 extern const int seq_loop_order_avg_inner[DIMS];
 extern const int seq_loop_order_avg_outer[DIMS];
@@ -165,6 +170,8 @@ struct seq_cest {
 
 
 struct seq_config {
+
+	enum seq_type seq_type;
 
 	struct seq_phys phys;
 	struct seq_geom geom;

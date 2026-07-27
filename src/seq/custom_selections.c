@@ -12,6 +12,12 @@
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 #endif
 
+const struct selection_opt seqtype_opts[] = {
+
+	{ SEQ_TYPE_FLASH, "Flash (BOOST)", },
+	{ SEQ_TYPE_MINIFLASH, "Miniflash", },
+};
+
 const struct selection_opt pemode_opts[] = {
 
 	{ SEQ_PEMODE_TURN, "1. TURN", },
@@ -28,6 +34,15 @@ const struct selection_opt contrast_opts[] = {
 	{ SEQ_CONTRAST_RF_SPOILED, "2. RF Spoiled" }
 };
 
+
+const char* get_seqtype_str(enum seq_type type)
+{
+	for (long unsigned int i = 0; i < ARRAY_SIZE(seqtype_opts); i++)
+		if ((enum seq_type)seqtype_opts[i].id == type)
+			return seqtype_opts[i].label;
+
+	return "unknown seqtype";	
+}
 
 
 const char* get_pemode_str(enum pe_mode mode)

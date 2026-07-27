@@ -115,6 +115,8 @@ void seq_copy_order(struct seq_config* seq)
 
 const struct seq_config seq_config_defaults = {
 
+	.seq_type = SEQ_TYPE_FLASH,
+
 	.phys = {
 		.tr = 3.11E-3,
 		.te = 1.90E-3,
