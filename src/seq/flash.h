@@ -11,6 +11,7 @@ extern double flash_minimum_tr(const struct seq_config* seq);
 extern void flash_minimum_te(const struct seq_config* seq, double* min_te, double* fill_te);
 extern double flash_total_measure_time(const struct seq_config* seq);
 
+extern int flash_sample_rf_shapes(int N, struct rf_shape pulse[__VLA(N)], const struct seq_config* seq);
 extern int flash(int N, struct seq_event ev[__VLA(N)], struct seq_state* seq_state, const struct seq_config* seq);
 
 #include "misc/cppwrap.h"

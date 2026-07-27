@@ -145,51 +145,6 @@ int prep_rf_hanning(struct seq_event* rf_ev, double start, double phase_shift, c
 	return 1;
 }
 
-long inv_calls(const struct seq_config* seq)
-{
-	long calls = seq->loop_dims[BATCH_DIM] * ((SEQ_ASL_NONE == seq->asl.label_type) ? seq->loop_dims[CSHIFT_DIM] : 1);
-
-	if (SEQ_ORDER_SEQ_MS == seq->enc.order)
-		return calls * seq->loop_dims[SLICE_DIM];
-
-	return calls;
-}
-
-long flash_ex_calls(const struct seq_config* seq)
-{
-	long dims[DIMS];
-	md_select_dims(DIMS, SEQ_FLAGS & ~(COEFF_FLAG|COEFF2_FLAG), dims, seq->loop_dims);
-
-	long incomplete_raga_spks = 0;
-	if (SEQ_PEMODE_RAGA == seq->enc.pe_mode)
-		incomplete_raga_spks = seq->loop_dims[PHS1_DIM] - seq->loop_dims[ITER_DIM];
-
-	if ((1 < seq->geom.mb_factor) || seq->enc.is3D) {
-
-		dims[SLICE_DIM] = 1;
-		incomplete_raga_spks *= dims[PHS2_DIM];
-
-	} else {
-
-		dims[SLICE_DIM] = (SEQ_ASL_NONE != seq->asl.label_type) ? seq->loop_dims[SLICE_DIM] - 1 : seq->loop_dims[SLICE_DIM];
-	}
-	
-	if (SEQ_ORDER_SEQ_MS == seq->enc.order)
-		incomplete_raga_spks *= dims[SLICE_DIM];
-
-	if (SEQ_ASL_NONE != seq->asl.label_type) {
-
-		dims[AVG_DIM] = dims[AVG_DIM] * 2 + 1;
-		dims[BATCH_DIM] = 1;
-	}
-
-	long factor = dims[SLICE_DIM];
-	if (1 < seq->geom.mb_factor)
-		factor = dims[PHS2_DIM];
-
-	return md_calc_size(DIMS, dims) - incomplete_raga_spks
-		+ factor * seq->magn.prep_scans;
-}
 
 static long cols_to_echo(long echo, const struct seq_config* seq)
 {

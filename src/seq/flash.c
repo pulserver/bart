@@ -16,6 +16,7 @@
 #include "seq/adc_rf.h"
 #include "seq/gradient.h"
 #include "seq/misc.h"
+#include "seq/pulse.h"
 #include "seq/seq.h"
 #include "seq/cest.h"
 #include "seq/mag_prep.h"
@@ -435,6 +436,51 @@ void flash_minimum_te(const struct seq_config* seq, double* min_te, double* fill
 	}
 }
 
+static long inv_calls(const struct seq_config* seq)
+{
+	long calls = seq->loop_dims[BATCH_DIM] * ((SEQ_ASL_NONE == seq->asl.label_type) ? seq->loop_dims[CSHIFT_DIM] : 1);
+
+	if (SEQ_ORDER_SEQ_MS == seq->enc.order)
+		return calls * seq->loop_dims[SLICE_DIM];
+
+	return calls;
+}
+
+static long flash_ex_calls(const struct seq_config* seq)
+{
+	long dims[DIMS];
+	md_select_dims(DIMS, SEQ_FLAGS & ~(COEFF_FLAG|COEFF2_FLAG), dims, seq->loop_dims);
+
+	long incomplete_raga_spks = 0;
+	if (SEQ_PEMODE_RAGA == seq->enc.pe_mode)
+		incomplete_raga_spks = seq->loop_dims[PHS1_DIM] - seq->loop_dims[ITER_DIM];
+
+	if ((1 < seq->geom.mb_factor) || seq->enc.is3D) {
+
+		dims[SLICE_DIM] = 1;
+		incomplete_raga_spks *= dims[PHS2_DIM];
+
+	} else {
+
+		dims[SLICE_DIM] = (SEQ_ASL_NONE != seq->asl.label_type) ? seq->loop_dims[SLICE_DIM] - 1 : seq->loop_dims[SLICE_DIM];
+	}
+	
+	if (SEQ_ORDER_SEQ_MS == seq->enc.order)
+		incomplete_raga_spks *= dims[SLICE_DIM];
+
+	if (SEQ_ASL_NONE != seq->asl.label_type) {
+
+		dims[AVG_DIM] = dims[AVG_DIM] * 2 + 1;
+		dims[BATCH_DIM] = 1;
+	}
+
+	long factor = dims[SLICE_DIM];
+	if (1 < seq->geom.mb_factor)
+		factor = dims[PHS2_DIM];
+
+	return md_calc_size(DIMS, dims) - incomplete_raga_spks
+		+ factor * seq->magn.prep_scans;
+}
 
 double flash_total_measure_time(const struct seq_config* seq)
 {
@@ -473,6 +519,160 @@ double flash_total_measure_time(const struct seq_config* seq)
 	return pre_duration  + imaging_duration + prep_pulse_duration;
 }
 
+int flash_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq_config* seq)
+{
+	int idx = 0;
+
+	for (; idx < seq->geom.mb_factor; idx++) {
+
+		if (idx >= N)
+			return -1;
+
+		pulse[idx].sar_calls = flash_ex_calls(seq);
+		pulse[idx].sar_dur = seq->phys.rf_duration;
+		pulse[idx].fa_prep = seq->phys.flip_angle;
+
+		const float alpha = 0.5;
+
+		pulse[idx].samples = lround(1.E6 * seq->phys.rf_duration);
+
+		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
+			return -1;
+
+		double dwell = seq->phys.rf_duration / pulse[idx].samples;
+
+		struct pulse_sms ps = pulse_sms_defaults;
+
+		pulse_sms_init(&ps, seq->phys.rf_duration, seq->phys.flip_angle, 0., seq->phys.bwtp, alpha,
+			seq->geom.mb_factor, idx, seq->geom.sms_distance, seq->geom.slice_thickness);
+
+		pulse[idx].max = ps.A; // this is scaled by fa / fa_prep
+		pulse[idx].integral = pulse_sms_integral(&ps);
+
+		struct pulse* pp = CAST_UP(&ps);
+
+		for (int j = 0; j < pulse[idx].samples; j++)
+			pulse[idx].shape[j] = pulse_eval(pp, j * dwell);
+	}
+
+	if (   (SEQ_PREP_IR_NONSELECTIVE == seq->magn.mag_prep)
+	    || (SEQ_PREP_IR_SELECTIVE == seq->magn.mag_prep)) {
+
+		struct pulse_hypsec hs = pulse_hypsec_defaults;
+
+		pulse_hypsec_init(seq->sys.gamma, &hs);
+
+		pulse[idx].max = hs.A;
+		pulse[idx].integral = pulse_hypsec_integral(&hs);
+		pulse[idx].fa_prep = 180.;
+
+		struct pulse* pp = CAST_UP(&hs);
+
+		pulse[idx].sar_calls = seq->loop_dims[BATCH_DIM];
+		pulse[idx].sar_dur = pp->duration;
+
+		pulse[idx].samples = lround(0.5 * 1E6 * pulse[idx].sar_dur);
+
+		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
+			return -1;
+
+		double dwell = pp->duration / pulse[idx].samples;
+
+		for (int j = 0; j < pulse[idx].samples; j++)
+			pulse[idx].shape[j] = pulse_eval(pp, j * dwell);
+
+		idx++;
+	}
+
+	if (SEQ_CEST_GAUSS == seq->cest.sat_type) {
+
+		struct pulse_gauss pg = pulse_gauss_defaults;
+
+		pulse_gauss_init(&pg, seq->cest.gauss_pulse_duration, seq->cest.gauss_pulse_fa, 0., pulse_gauss_defaults.bwtp, pulse_gauss_defaults.alpha);
+
+		pulse[idx].max = pg.A;
+		pulse[idx].integral = pulse_gauss_integral(&pg);
+
+		struct pulse* pp = CAST_UP(&pg);
+
+		pulse[idx].sar_calls = seq->cest.sat_pulses * seq->loop_dims[CSHIFT_DIM];
+		pulse[idx].sar_dur = seq->cest.gauss_pulse_duration;
+		pulse[idx].fa_prep = seq->cest.gauss_pulse_fa;
+
+		pulse[idx].samples = lround(1E4 * pulse[idx].sar_dur);
+
+		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
+			return -1;
+
+		double dwell = pp->duration / pulse[idx].samples;
+
+		for (int j = 0; j < pulse[idx].samples; j++)
+			pulse[idx].shape[j] = pulse_eval(pp, j * dwell);
+
+		idx++;
+	}
+	else if (SEQ_CEST_OC == seq->cest.sat_type) {
+
+		pulse[idx].sar_calls = seq->cest.sat_pulses * seq->loop_dims[CSHIFT_DIM];
+
+		struct pulse_arb arb = pulse_arb_oc_cest_sat_defaults;
+		pulse_arb_init(&arb, seq->sys.gamma);
+		struct pulse* pp = CAST_UP(&arb);
+
+		pulse[idx].sar_dur = pp->duration;
+
+		float scaling = seq->cest.oc_pulse_b1_scaling * sqrt( 1 + seq->cest.sat_pulse_pause / pulse[idx].sar_dur);
+		pulse[idx].fa_prep = arb.super.flipangle / scaling;
+
+		pulse[idx].integral = pulse_arb_integral(&arb);
+
+		pulse[idx].samples = arb.samples;
+
+		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
+			return -1;
+
+		double dwell = pp->duration / pulse[idx].samples;
+
+		for (int j = 0; j < pulse[idx].samples; j++)
+			pulse[idx].shape[j] = pulse_eval(pp, j * dwell);
+
+		pulse[idx].max = arb.A; // default in oc_pulse{[]
+
+		idx++;
+	}
+
+	if (SEQ_ASL_NONE != seq->asl.label_type) {
+
+		pulse[idx].sar_calls = calc_total_num_asl_pulses(seq);
+		pulse[idx].sar_dur = seq->asl.hanning.rf_duration;
+		pulse[idx].fa_prep = seq->asl.hanning.flip_angle;
+
+		const float alpha = 0.5;
+
+		pulse[idx].samples = lround(1.E6 * seq->asl.hanning.rf_duration);
+
+		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
+			return -1;
+
+		double dwell = seq->asl.hanning.rf_duration / pulse[idx].samples;
+
+		struct pulse_sinc ps = pulse_sinc_defaults;
+
+		pulse_sinc_init(&ps, seq->asl.hanning.rf_duration, seq->asl.hanning.flip_angle, 0., seq->phys.bwtp, alpha);
+
+		pulse[idx].max = ps.A; // this is scaled by fa / fa_prep
+		pulse[idx].integral = pulse_sinc_integral(&ps);
+
+		struct pulse* pp = CAST_UP(&ps);
+
+		for (int j = 0; j < pulse[idx].samples; j++)
+			pulse[idx].shape[j] = pulse_eval(pp, j * dwell);
+
+		idx++;
+	}
+
+	return idx;
+}
 
 struct flash_timing {
 

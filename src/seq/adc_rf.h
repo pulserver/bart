@@ -8,8 +8,6 @@
 #include "seq/event.h"
 
 extern double phase_clamp(double phase);
-extern long flash_ex_calls(const struct seq_config* seq);
-extern long inv_calls(const struct seq_config* seq);
 
 double rf_spoiling(int D, const long pos[__VLA(D)], const struct seq_config* seq);
 
