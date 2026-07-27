@@ -40,7 +40,7 @@
 
 #include "nlops/nlop.h"
 
-#include "nn/tf_wrapper.h"
+#include "nn/ext_wrapper.h"
 
 #include "misc/misc.h"
 #include "misc/mri.h"
@@ -841,11 +841,19 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 
 		case TENFL:
 
-			debug_printf(DP_INFO, "TensorFlow Loss: %f %s\n", regs[nr].lambda, regs[nr].graph_file);
+			debug_printf(DP_INFO, "TensorFlow/Pytorch Loss: %f %s\n", regs[nr].lambda, regs[nr].graph_file);
 
 			trafos[nr] = linop_identity_create(DIMS, img_dims);
 
-			const struct nlop_s* tf_ops = nlop_tf_create(regs[nr].graph_file);
+			int DO[1] = { 1 };
+			int DI[1] = { DIMS };
+
+			long odims[1] = { 1 };
+			const long* odims2[1] = { odims };
+			const long* idims2[1] = { img_dims };
+
+			const struct nlop_s* tf_ops = nlop_external_graph_create(regs[nr].graph_file, 1, DO, odims2, 1, DI, idims2, use_gpu, NULL);
+
 			auto dom = nlop_domain(tf_ops);
 
 			if (!md_check_equal_dims(MIN(DIMS, dom->N), dom->dims, img_dims, ~0UL)) {
