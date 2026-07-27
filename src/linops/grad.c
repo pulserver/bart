@@ -240,6 +240,88 @@ struct linop_s* linop_grad_create(long N, const long dims[N], int d, unsigned lo
 	return linop_grad_backward_create(N, dims, d, flags);
 }
 
+struct symmetrize_s {
+
+	linop_data_t super;
+
+	int N;
+	const long* dims;
+	const long* sdims;
+	const long* strs;
+
+	int dim1;
+	int dim2;
+};
+
+static DEF_TYPEID(symmetrize_s);
+
+static void symmetrize_apply(const linop_data_t* _data, complex float* dst, const complex float* src)
+{
+	const auto data = CAST_DOWN(symmetrize_s, _data);
+
+	assert(dst != src);
+	md_copy2(data->N, data->dims, data->strs, dst, data->strs, src, CFL_SIZE);
+
+	long pos[data->N] = { };
+
+	for (int i = 0; i < data->dims[data->dim1]; i++) {
+
+		for (int j = 0; j < data->dims[data->dim2]; j++) {
+
+			pos[data->dim1] = i;
+			pos[data->dim2] = j;
+			const complex float* tmp_in = MD_ACCESS_PTR(data->N, data->strs, pos, src);
+
+			SWAP(pos[data->dim1], pos[data->dim2]);
+
+			complex float* tmp_out = MD_ACCESS_PTR(data->N, data->strs, pos, dst);
+
+			md_zadd2(data->N, data->sdims, data->strs, tmp_out, data->strs, tmp_out, data->strs, tmp_in);
+			md_zsmul2(data->N, data->sdims, data->strs, tmp_out, data->strs, tmp_out, 0.5);
+		}
+	}
+}
+
+static void symmetrize_free(const linop_data_t* _data)
+{
+	const auto data = CAST_DOWN(symmetrize_s, _data);
+
+	xfree(data->dims);
+	xfree(data->sdims);
+	xfree(data->strs);
+	xfree(data);
+}
+
+
+struct linop_s* linop_symmetrize_create(long N, const long dims[N], unsigned long flags)
+{
+	PTR_ALLOC(struct symmetrize_s, data);
+	SET_TYPEID(symmetrize_s, data);
+
+	flags &= (MD_BIT(N) - 1);
+
+	data->N = N;
+	assert(2 == bitcount(flags));
+
+	long strs[N];
+	md_calc_strides(N, strs, dims, CFL_SIZE);
+
+	long sdims[N];
+	md_select_dims(N, ~flags, sdims, dims);
+
+	data->dims = ARR_CLONE(long[N], dims);
+	data->sdims = ARR_CLONE(long[N], sdims);
+	data->strs = ARR_CLONE(long[N], strs);
+
+	data->dim1 = md_min_idx(flags);
+	data->dim2 = md_max_idx(flags);
+
+	assert(dims[data->dim1] == dims[data->dim2]);
+
+	return linop_create(N, dims, N, dims, CAST_UP(PTR_PASS(data)), symmetrize_apply, symmetrize_apply, NULL, NULL, symmetrize_free);
+}
+
+
 
 
 struct laplace_s {
