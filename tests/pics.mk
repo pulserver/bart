@@ -645,6 +645,21 @@ tests/test-pics-fista: phantom upat squeeze fmac pics nrmse
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
+tests/test-pics-pytorch: phantom noise upat squeeze fmac pics nrmse
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)						;\
+	$(TOOLDIR)/phantom -k -s8 k.ra								;\
+	$(TOOLDIR)/noise -n1000 k.ra k.ra							;\
+	$(TOOLDIR)/phantom -S8 s.ra								;\
+	$(TOOLDIR)/upat -y 2 p.ra								;\
+	$(TOOLDIR)/squeeze p.ra p2.ra								;\
+	$(TOOLDIR)/fmac k.ra p2.ra kp.ra							;\
+	python3 $(ROOTDIR)/tests/pics_pytorch_l2prior.py					;\
+	$(TOOLDIR)/pics -w1. -i200 -S -e -R TF:{pytorch_l2.pt}:100000000 --ist kp.ra s.ra x.ra	;\
+	$(TOOLDIR)/pics -w1. -i200 -S -e -l2 -r100000000 		 --ist kp.ra s.ra xI.ra	;\
+	$(TOOLDIR)/nrmse -t 0.001 x.ra xI.ra							;\
+	rm *.ra *.pt ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
 
 tests/test-pics-ist: phantom upat squeeze fmac pics nrmse
 	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)						;\
@@ -754,3 +769,6 @@ TESTS_BART += tests/test-pics-cart-delayed tests/test-pics-noncart-delayed tests
 
 TESTS_SLOW += tests/test-pics-basis
 
+ifeq ($(PYTORCH),1)
+TESTS += tests/test-pics-pytorch
+endif
