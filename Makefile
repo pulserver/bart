@@ -1264,8 +1264,14 @@ endif
 
 
 # shared library
+ifeq "$(filter 1,$(BARTSO))" ""
+.PHONY: libbart.so
+libbart.so:
+	$(error libbart.so requires BARTSO=1)
+else
 libbart.so: $(SEQUENCE_MODULES)
 	gcc -fPIC -shared -lm -lrt -Wl,-whole-archive $+ -Wl,-no-whole-archive -Wl,-gc-sections -o libbart.so
+endif
 
 
 
