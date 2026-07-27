@@ -95,7 +95,7 @@ const struct nlop_s* nlop_external_graph_create(const char* path, int OO, const 
 
 	for (int i = 0; i < OO; i++) {
 
-		auto dom = nlop_generic_domain(nlop, i);
+		auto dom = nlop_generic_codomain(nlop, i);
 
 		if (md_calc_size(DO[i], odims[i]) != md_calc_size(dom->N, dom->dims))
 			error("Cannot find batch size to make graph consistent with requested dimensions!\n");
