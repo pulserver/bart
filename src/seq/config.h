@@ -18,6 +18,7 @@ extern const int seq_loop_order_avg_outer[DIMS];
 extern const int seq_loop_order_multislice[DIMS];
 extern const int seq_loop_order_asl[DIMS];
 
+extern void seq_copy_order(struct seq_config* seq);
 
 enum flash_contrast {
 

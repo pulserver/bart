@@ -5,6 +5,8 @@
 
 #include "misc/mri.h"
 
+#include "num/multind.h"
+
 #include "config.h"
 
 const int seq_loop_order_avg_inner[DIMS] = {
@@ -87,6 +89,28 @@ const int seq_loop_order_asl[DIMS] = {
 	CSHIFT_DIM,
 	LEVEL_DIM
 };
+
+void seq_copy_order(struct seq_config* seq)
+{
+	switch (seq->enc.order) {
+
+	case SEQ_ORDER_AVG_OUTER:
+		md_copy_order(DIMS, seq->order, seq_loop_order_avg_outer);
+		break;
+
+	case SEQ_ORDER_SEQ_MS:
+		md_copy_order(DIMS, seq->order, seq_loop_order_multislice);
+		break;
+
+	case SEQ_ORDER_AVG_INNER:
+		md_copy_order(DIMS, seq->order, seq_loop_order_avg_inner);
+		break;
+
+	case SEQ_ORDER_SEQ_ASL:
+		md_copy_order(DIMS, seq->order, seq_loop_order_asl);
+		break;
+	}
+}
 
 
 const struct seq_config seq_config_defaults = {
