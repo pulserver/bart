@@ -17,6 +17,9 @@
 #include "seq/gradient.h"
 #include "seq/misc.h"
 #include "seq/seq.h"
+#include "seq/cest.h"
+#include "seq/mag_prep.h"
+#include "seq/seq_asl.h"
 
 #include "flash.h"
 
@@ -430,6 +433,44 @@ void flash_minimum_te(const struct seq_config* seq, double* min_te, double* fill
 		time += fill_te[echo - 1];
 		fill_te[echo] = seq->phys.te + echo * seq->phys.te_delta - min_te[echo] - time;
 	}
+}
+
+
+double flash_total_measure_time(const struct seq_config* seq)
+{
+	double pre_duration = seq->magn.init_delay +  seq->phys.tr; // noise scan
+
+	if (SEQ_ASL_NONE != seq->asl.label_type)
+		return calc_asl_duration(seq) + pre_duration;
+
+	struct seq_event ev[6];
+	int e = mag_prep(ev, seq);
+
+	double prep_pulse_duration = seq_block_end(e, ev, SEQ_BLOCK_PRE, seq->phys.tr, seq->sys.raster_grad);
+	prep_pulse_duration += seq->magn.inv_delay_time + seq->trigger.delay_time;
+	prep_pulse_duration *= inv_calls(seq);
+
+	if (SEQ_CEST_NONE != seq->cest.sat_type) {
+
+		double sat_time = (SEQ_CEST_GAUSS == seq->cest.sat_type) ? seq->cest.gauss_pulse_duration : 0.1;
+		sat_time += seq->cest.sat_pulse_pause;
+		sat_time += seq->sys.coil_control_lead * 2;
+		sat_time *= seq->cest.sat_pulses;
+		
+		if (0 == mag_prep(ev, seq)) // spoiler after last pulse only if no inversion
+			sat_time += 10.E-3; 
+		prep_pulse_duration += sat_time;
+		prep_pulse_duration *= cest_offsets(seq);
+		prep_pulse_duration += seq->cest.offset_pause * (cest_offsets(seq) - 1);
+	}
+
+	long img_calls = flash_ex_calls(seq) * seq->geom.mb_factor;
+	double imaging_duration = seq->phys.tr * img_calls;
+
+	if ((SEQ_TRIGGER_OFF != seq->trigger.type) && (1 < seq->trigger.pulses))
+		imaging_duration = 1. * (seq->trigger.delay_time + seq->phys.tr) * img_calls * (seq->trigger.pulses - 1);
+
+	return pre_duration  + imaging_duration + prep_pulse_duration;
 }
 
 
