@@ -7,8 +7,8 @@
 
 struct seq_config;
 
-extern double min_tr_flash(const struct seq_config* seq);
-extern void min_te_flash(const struct seq_config* seq, double* min_te, double* fill_te);
+extern double flash_minimum_tr(const struct seq_config* seq);
+extern void flash_minimum_te(const struct seq_config* seq, double* min_te, double* fill_te);
 
 extern int flash(int N, struct seq_event ev[__VLA(N)], struct seq_state* seq_state, const struct seq_config* seq);
 

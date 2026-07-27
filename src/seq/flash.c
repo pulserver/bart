@@ -362,7 +362,7 @@ static double gradient_time_after_RO(const struct seq_config* seq)
 	return grad_total_time(&grad); // FIXME: only approximately valid
 }
 
-double min_tr_flash(const struct seq_config* seq)
+double flash_minimum_tr(const struct seq_config* seq)
 {
 	double time_gradients_after_RO = ro_amplitude(seq) * seq->sys.grad.inv_slew_rate + gradient_time_after_RO(seq);
 
@@ -380,7 +380,7 @@ double min_tr_flash(const struct seq_config* seq)
 }
 
 
-void min_te_flash(const struct seq_config* seq, double* min_te, double* fill_te)
+void flash_minimum_te(const struct seq_config* seq, double* min_te, double* fill_te)
 {
 	double ro_deph_time = available_time_RF_SLI(1, seq);
 	double inter_duration_READ = MAX(ro_deph_time, seq->sys.grad.max_amplitude * seq->sys.grad.inv_slew_rate);

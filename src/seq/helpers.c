@@ -38,13 +38,32 @@ int seq_raga_spokes(const struct seq_config* seq)
 
 double seq_minimum_tr(const struct seq_config* seq)
 {
-	return min_tr_flash(seq);
+	switch (seq->seq_type) {
+
+	case SEQ_TYPE_FLASH:
+
+		return flash_minimum_tr(seq);
+
+	default:
+
+		assert(0);
+	}
 }
 
 
 void seq_minimum_te(const struct seq_config* seq, double* min_te, double* fill_te)
 {
-	min_te_flash(seq, min_te, fill_te);
+	switch (seq->seq_type) {
+
+	case SEQ_TYPE_FLASH:
+
+		flash_minimum_te(seq, min_te, fill_te);
+		break;
+
+	default:
+
+		assert(0);
+	}
 }
 
 
