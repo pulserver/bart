@@ -248,6 +248,9 @@ endif
 endif
 endif
 
+ifeq ($(MINIFLASH), 1)
+CFLAGS+=-DSEQ_MINIFLASH
+endif
 
 
 SEQUENCE_MODULES=-lseq -lnoncart -llinops -lwavelet -lnum -lmisc

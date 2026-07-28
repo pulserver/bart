@@ -3,6 +3,7 @@
 
 #include "seq/custom_ui.h"
 
+#ifndef SEQ_MINIFLASH
 #define SEQ_CUSTOM_UI_IDX_LONG(M)	\
 	M(PE_MODE)			\
 	M(CONTRAST)			\
@@ -30,6 +31,36 @@
 	M(ASL_MODE)			\
 	M(ASL_LD_MS)			\
 	M(ASL_PLD_MS)
+#else
+#define SEQ_CUSTOM_UI_IDX_LONG(M)	\
+	M(PE_MODE)			\
+	M(CONTRAST)			\
+	/* bool */			\
+	M(RECO)				\
+	/* long */			\
+	M(CMD)				\
+	/* long array */		\
+	M(RF_DURATION_US)		\
+	/* MISC */			\
+	M(SMS)				\
+	M(TINY)				\
+	M(PREP_SCANS)			\
+	M(INIT_DELAY)			\
+	M(INVERSIONS)			\
+	M(INV_DELAY)			\
+	M(MB_FACTOR)			\
+	M(RAGA_ALIGNED_FLAGS)		\
+	M(CEST_SATURATION)		\
+	M(CEST_OFFSET_TYPE)		\
+	M(CEST_SAT_PULSES)		\
+	M(CEST_OFFSET_PAUSE_MS)		\
+	M(CEST_SAT_PULSE_PAUSE_MS)	\
+	M(CEST_GAUSS_DURATION_MS)	\
+	M(CEST_GAUSS_FA)		\
+	M(ASL_MODE)			\
+	M(ASL_LD_MS)			\
+	M(ASL_PLD_MS)
+#endif
 
 enum custom_idx_long {
 #define enum_entry(name) SEQ_UI_IDX_LONG_##name,
@@ -37,14 +68,14 @@ SEQ_CUSTOM_UI_IDX_LONG(enum_entry)
 #undef enum_entry
 }; // max 64
 
-
 #define SEQ_CUSTOM_UI_IDX_DOUBLE(M)	\
 	M(BWTP)				\
 	M(ASYM_ECHO)			\
 	M(CEST_OC_B1_SCALING)		\
 	M(CEST_OFFSET_FIRST_PPM)	\
 	M(CEST_OFFSET_LAST_PPM)		\
-	M(CEST_OFFSET_INCREMENT_PPM)	\
+	M(CEST_OFFSET_INCREMENT_PPM)
+
 
 enum custom_idx_double {
 #define enum_entry(name) SEQ_UI_IDX_DOUBLE_##name,
