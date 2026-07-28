@@ -201,7 +201,7 @@ void print_confusion_matrix(int N, const long dims[N], int class_index, const co
 	long classes = dims[class_index];
 
 	complex float matrix[classes][classes];
-	onehotenc_confusion_matrix(N, dims, class_index, &(matrix[0][0]), pred, ref);
+	onehotenc_confusion_matrix(N, dims, class_index, &matrix[0][0], pred, ref);
 
 	complex float* tmp_cmp = md_alloc_sameplace(N, dims, CFL_SIZE, pred);
 	complex float* tmp_ref = md_alloc_sameplace(N, dims, CFL_SIZE, ref);

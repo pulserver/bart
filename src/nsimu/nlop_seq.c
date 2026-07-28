@@ -700,7 +700,7 @@ static void pulse_fun(const struct nlop_seq_data_s* data, int N,
 	md_max_dims(N, ~(MD_BIT(data->sim.MI_DIM) | MD_BIT(data->sim.MO_DIM) | MD_BIT(data->sim.PI_DIM)), edmpdims, edmpdims, modims);
 
 	complex float* epars = md_alloc_sameplace(N, epdims, CFL_SIZE, pars);
-	pars_add_grad(&(data->sim), d->grad, N, epdims, epars, pdims, pars); // Add gradient to B0 so that B0 + Gz (for slice selection)
+	pars_add_grad(&data->sim, d->grad, N, epdims, epars, pdims, pars); // Add gradient to B0 so that B0 + Gz (for slice selection)
 
 	complex float* edmp = NULL;
 
@@ -918,7 +918,7 @@ const struct nlop_s* nlop_adc_create(struct sim_config_s sim, long index, unsign
 	//assert(3 == md_calc_size(sim.N, wgh_dims));
 	assert(!MD_IS_SET(sflags, sim.MI_DIM));
 	data->wgh_dims = ARR_CLONE(long[sim.N], wgh_dims);
-	data->wgh = multiplace_move(sim.N, wgh_dims, CFL_SIZE, MD_IS_SET(sflags, sim.MO_DIM) ? acc : &(id[0][0]));
+	data->wgh = multiplace_move(sim.N, wgh_dims, CFL_SIZE, MD_IS_SET(sflags, sim.MO_DIM) ? acc : &id[0][0]);
 
 	long signal_dims[1][sim.N];
 	md_select_dims(sim.N, ~sflags, signal_dims[0], sim.mdims);
@@ -1091,7 +1091,7 @@ static void affine_mul(struct sim_config_s sim, int i, int N, const long modims[
 	md_set_dims(N, pos, 0);
 	pos[sim.PI_DIM] = i;
 	assert(i < modims[sim.PI_DIM]);
-	omag = &(MD_ACCESS(N, mostrs, pos, omag));
+	omag = &MD_ACCESS(N, mostrs, pos, omag);
 
 	long tmodims[N];
 	md_select_dims(N, ~MD_BIT(sim.MI_DIM), tmodims, modims);
@@ -1946,7 +1946,7 @@ static void stm_fun(const nlop_data_t* data, int N, int OO, const long odims[OO]
 
 struct nlop_s* nlop_stm_create(struct stm_s* x)
 {
-	shared_obj_ref(&(x->sptr));
+	shared_obj_ref(&x->sptr);
 
 	int N = nlop_generic_codomain(x->nlop, 0)->N;
 

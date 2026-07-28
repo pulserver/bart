@@ -55,7 +55,7 @@ static void rolloff_apply(const linop_data_t* _d, complex float* dst, const comp
 
 	md_clear(d->N, d->odims, dst, CFL_SIZE);
 	apply_rolloff_correction2(d->conf.os, d->conf.width, d->conf.beta, d->N, d->dims,
-				  ostrs, &(MD_ACCESS(d->N, ostrs, pos, dst)),
+				  ostrs, &MD_ACCESS(d->N, ostrs, pos, dst),
 				  istrs, src);
 }
 
@@ -75,7 +75,7 @@ static void rolloff_adjoint(const linop_data_t* _d, complex float* dst, const co
 
 	apply_rolloff_correction2(d->conf.os, d->conf.width, d->conf.beta, d->N, d->dims,
 				  istrs, dst,
-				  ostrs, &(MD_ACCESS(d->N, ostrs, pos, src)));
+				  ostrs, &MD_ACCESS(d->N, ostrs, pos, src));
 }
 
 static void rolloff_normal(const linop_data_t* _d, complex float* dst, const complex float* src)
@@ -143,7 +143,7 @@ static void interpolate_apply(const linop_data_t* _d, complex float* dst, const 
 	auto d = CAST_DOWN(kb_iterpolate_s, _d);
 
 	md_clear(d->N, d->kdims, dst, CFL_SIZE);
-	grid2H(&(d->conf), d->N, d->tdims, multiplace_read(d->traj, dst), d->kdims, dst, d->gdims, src);
+	grid2H(&d->conf, d->N, d->tdims, multiplace_read(d->traj, dst), d->kdims, dst, d->gdims, src);
 }
 
 static void interpolate_adjoint(const linop_data_t* _d, complex float* dst, const complex float* src)
@@ -151,7 +151,7 @@ static void interpolate_adjoint(const linop_data_t* _d, complex float* dst, cons
 	auto d = CAST_DOWN(kb_iterpolate_s, _d);
 
 	md_clear(d->N, d->gdims, dst, CFL_SIZE);
-	grid2(&(d->conf), d->N, d->tdims, multiplace_read(d->traj, dst), d->gdims, dst, d->kdims, src);
+	grid2(&d->conf, d->N, d->tdims, multiplace_read(d->traj, dst), d->gdims, dst, d->kdims, src);
 }
 
 

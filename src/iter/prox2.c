@@ -126,7 +126,7 @@ const struct operator_p_s* prox_normaleq_create(const struct linop_s* op, const 
 
 	pdata->size = 2 * md_calc_size(linop_domain(op)->N, linop_domain(op)->dims);
 
-	pdata->adj = md_alloc_sameplace(1, &(pdata->size), FL_SIZE, y);
+	pdata->adj = md_alloc_sameplace(1, &pdata->size, FL_SIZE, y);
 
 	linop_adjoint_unchecked(op, (complex float*)pdata->adj, y);
 

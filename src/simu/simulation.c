@@ -1018,13 +1018,13 @@ void bloch_simulation2(const struct sim_data* _data, int R, int pools, float (*m
 
                 for (int r = 0; r < data.seq.rep_num; r++) {
 
-			auto mxy = &((*Fmxy)[r][s]);
-			auto sa_r1 = &((*Fsa_r1)[r][s]);
-			auto sa_r2 = &((*Fsa_r2)[r][s]);
-			auto sa_b1 = &((*Fsa_b1)[r][s]);
-			auto sa_m0 = &((*Fsa_m0)[r][s]);
-			auto sa_k = &((*Fsa_k)[r][s]);
-			auto sa_Om = &((*Fsa_Om)[r][s]);
+			auto mxy = &(*Fmxy)[r][s];
+			auto sa_r1 = &(*Fsa_r1)[r][s];
+			auto sa_r2 = &(*Fsa_r2)[r][s];
+			auto sa_b1 = &(*Fsa_b1)[r][s];
+			auto sa_m0 = &(*Fsa_m0)[r][s];
+			auto sa_k = &(*Fsa_k)[r][s];
+			auto sa_Om = &(*Fsa_Om)[r][s];
 
 			bool odd = false;
 

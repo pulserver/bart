@@ -158,7 +158,7 @@ static struct config_nlop_mri_s* sense_model_config_init(int N, int ND)
 		.basis = NULL,
 	};
 
-	shared_obj_init(&(result->sptr), sense_config_del);
+	shared_obj_init(&result->sptr, sense_config_del);
 
 	md_singleton_dims(N, result->img_dims);
 	md_singleton_dims(N, result->col_dims);
@@ -348,7 +348,7 @@ static struct sense_model_s* mri_sense_init(void)
 		.nufft_loss = NULL,
 	};
 
-	shared_obj_init(&(result->sptr), sense_model_del);
+	shared_obj_init(&result->sptr, sense_model_del);
 
 	return PTR_PASS(result);
 }

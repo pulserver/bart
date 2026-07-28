@@ -185,9 +185,9 @@ struct noir2_net_s* noir2_net_create(struct noir2_net_config_s* config, int NB)
 	for (long i = 0; i < NB * NB_model; i++) {
 
 		if (config->noncart)
-			models[i] = noir2_noncart_create(N, trj_dims, NULL, wgh_dims, NULL, bas_dims, config->basis, msk_dims, config->mask, ksp_dims, cim_dims, img_dims, col_dims, img_col_dims, &(config->mconf));
+			models[i] = noir2_noncart_create(N, trj_dims, NULL, wgh_dims, NULL, bas_dims, config->basis, msk_dims, config->mask, ksp_dims, cim_dims, img_dims, col_dims, img_col_dims, &config->mconf);
 		else
-			models[i] = noir2_cart_create(N, wgh_dims, NULL, bas_dims, config->basis, msk_dims, config->mask, ksp_dims, cim_dims, img_dims, col_dims, img_col_dims, &(config->mconf));		
+			models[i] = noir2_cart_create(N, wgh_dims, NULL, bas_dims, config->basis, msk_dims, config->mask, ksp_dims, cim_dims, img_dims, col_dims, img_col_dims, &config->mconf);
 
 		if (NULL != config->basis)
 			models[i].basis = multiplace_move(N, bas_dims, CFL_SIZE, config->basis);
@@ -214,7 +214,7 @@ struct noir2_net_s* noir2_net_create(struct noir2_net_config_s* config, int NB)
 	img_dims[BATCH_DIM] = NB;
 	col_dims[BATCH_DIM] = NB;
 
-	x->config = noir2_net_config_create(N, trj_dims, wgh_dims, bas_dims, config->basis, msk_dims, config->mask, ksp_dims, cim_dims, img_dims, col_dims, config->batch_flag | BATCH_FLAG, &(config->mconf));
+	x->config = noir2_net_config_create(N, trj_dims, wgh_dims, bas_dims, config->basis, msk_dims, config->mask, ksp_dims, cim_dims, img_dims, col_dims, config->batch_flag | BATCH_FLAG, &config->mconf);
 
 	return PTR_PASS(x);
 }
@@ -430,7 +430,7 @@ const struct nlop_s* noir_gauss_newton_step_create(struct noir2_net_s* model, co
 
 	for (int i = 0; i < model->Nb; i++){
 
-		nlops[i] = noir_gauss_newton_step_create_s(&(model->models[i]), iter_conf);
+		nlops[i] = noir_gauss_newton_step_create_s(&model->models[i], iter_conf);
 		nlops[i] = nlop_append_singleton_dim_in_F(nlops[i], 1);
 		nlops[i] = nlop_append_singleton_dim_in_F(nlops[i], 2);
 		nlops[i] = nlop_append_singleton_dim_in_F(nlops[i], 3);
@@ -452,7 +452,7 @@ const struct nlop_s* noir_gauss_newton_iter_create_create(struct noir2_net_s* mo
 
 	for (int i = 0; i < model->Nb; i++){
 
-		nlops[i] = noir_gauss_newton_iter_create_s(&(model->models[i]), iter_conf, iter, redu, alpha_min);
+		nlops[i] = noir_gauss_newton_iter_create_s(&model->models[i], iter_conf, iter, redu, alpha_min);
 		nlops[i] = nlop_append_singleton_dim_in_F(nlops[i], 1);
 		nlops[i] = nlop_append_singleton_dim_in_F(nlops[i], 2);
 		nlops[i] = nlop_append_singleton_dim_in_F(nlops[i], 3);
@@ -582,7 +582,7 @@ const struct nlop_s* noir_decomp_create(struct noir2_net_s* model)
 	const struct nlop_s* nlops[model->Nb];
 
 	for (int i = 0; i < model->Nb; i++)
-		nlops[i] = nlop_append_singleton_dim_in_F(noir_decomp_create_s(&(model->models[i])), 0);
+		nlops[i] = nlop_append_singleton_dim_in_F(noir_decomp_create_s(&model->models[i]), 0);
 
 	int istack_dims[] = { 1 };
 	int ostack_dims[] = { BATCH_DIM, BATCH_DIM };
@@ -621,7 +621,7 @@ const struct nlop_s* noir_split_create(struct noir2_net_s* model)
 	const struct nlop_s* nlops[model->Nb];
 
 	for (int i = 0; i < model->Nb; i++)
-		nlops[i] = nlop_append_singleton_dim_in_F(noir_split_create_s(&(model->models[i])), 0);
+		nlops[i] = nlop_append_singleton_dim_in_F(noir_split_create_s(&model->models[i]), 0);
 
 	int istack_dims[] = { 1 };
 	int ostack_dims[] = { BATCH_DIM, BATCH_DIM };
@@ -668,7 +668,7 @@ const struct nlop_s* noir_join_create(struct noir2_net_s* model)
 	const struct nlop_s* nlops[model->Nb];
 
 	for (int i = 0; i < model->Nb; i++)
-		nlops[i] = nlop_append_singleton_dim_out_F(noir_join_create_s(&(model->models[i])), 0);
+		nlops[i] = nlop_append_singleton_dim_out_F(noir_join_create_s(&model->models[i]), 0);
 
 	int ostack_dims[] = { 1 };
 	int istack_dims[] = { BATCH_DIM, BATCH_DIM };
@@ -801,7 +801,7 @@ const struct nlop_s* noir_adjoint_fft_create(struct noir2_net_s* model)
 	const struct nlop_s* nlops[model->Nb];
 
 	for (int i = 0; i < model->Nb; i++)
-		nlops[i] = noir_adjoint_fft_create_s(&(model->models[i]));
+		nlops[i] = noir_adjoint_fft_create_s(&model->models[i]);
 
 	int istack_dims[] = { BATCH_DIM, BATCH_DIM };
 	int ostack_dims[] = { BATCH_DIM };
@@ -847,7 +847,7 @@ const struct nlop_s* noir_adjoint_nufft_create(struct noir2_net_s* model)
 	const struct nlop_s* nlops[model->Nb];
 
 	for (int i = 0; i < model->Nb; i++)
-		nlops[i] = noir_adjoint_nufft_create_s(&(model->models[i]));
+		nlops[i] = noir_adjoint_nufft_create_s(&model->models[i]);
 
 	int istack_dims[] = { BATCH_DIM, BATCH_DIM, BATCH_DIM };
 	int ostack_dims[] = { BATCH_DIM };
@@ -873,7 +873,7 @@ const struct nlop_s* noir_fft_create(struct noir2_net_s* model)
 	const struct nlop_s* nlops[model->Nb];
 
 	for (int i = 0; i < model->Nb; i++)
-		nlops[i] = noir_fft_create_s(&(model->models[i]));
+		nlops[i] = noir_fft_create_s(&model->models[i]);
 
 	int istack_dims[] = { BATCH_DIM };
 	int ostack_dims[] = { BATCH_DIM };
@@ -971,7 +971,7 @@ const struct nlop_s* noir_nufft_create(struct noir2_net_s* model)
 	const struct nlop_s* nlops[model->Nb];
 
 	for (int i = 0; i < model->Nb; i++)
-		nlops[i] = noir_nufft_create_s(&(model->models[i]));
+		nlops[i] = noir_nufft_create_s(&model->models[i]);
 
 	int istack_dims[] = { BATCH_DIM, BATCH_DIM };
 	int ostack_dims[] = { BATCH_DIM };
@@ -1074,7 +1074,7 @@ const struct nlop_s* noir_sense_recon_create(struct noir2_net_s* model, const st
 
 	for (int i = 0; i < model->Nb; i++){
 
-		nlops[i] = noir_sense_recon_create_s(&(model->models[i]), iter_conf);
+		nlops[i] = noir_sense_recon_create_s(&model->models[i], iter_conf);
 		nlops[i] = nlop_append_singleton_dim_in_F(nlops[i], 1);
 		nlops[i] = nlop_append_singleton_dim_in_F(nlops[i], 2);
 		nlops[i] = nlop_append_singleton_dim_in_F(nlops[i], 3);

@@ -72,12 +72,12 @@ static cublasHandle_t handle_device[CUDA_MAX_STREAMS + 1];
 static omp_lock_t gpulock[CUDA_MAX_STREAMS + 1];;
 static void cublas_set_gpulock(void)
 {
-	omp_set_lock(&(gpulock[cuda_get_stream_id()]));
+	omp_set_lock(&gpulock[cuda_get_stream_id()]);
 }
 
 static void cublas_unset_gpulock(void)
 {
-	omp_unset_lock(&(gpulock[cuda_get_stream_id()]));
+	omp_unset_lock(&gpulock[cuda_get_stream_id()]);
 }
 #else
 static void cublas_set_gpulock(void)
@@ -95,8 +95,8 @@ void cublas_init(void)
 {
 	for (int i = 0; i < CUDA_MAX_STREAMS + 1; i++) {
 
-		CUBLAS_ERROR(cublasCreate(&(handle_host[i])));
-		CUBLAS_ERROR(cublasCreate(&(handle_device[i])));
+		CUBLAS_ERROR(cublasCreate(&handle_host[i]));
+		CUBLAS_ERROR(cublasCreate(&handle_device[i]));
 
 		CUBLAS_ERROR(cublasSetPointerMode(handle_host[i], CUBLAS_POINTER_MODE_HOST));
 		CUBLAS_ERROR(cublasSetPointerMode(handle_device[i], CUBLAS_POINTER_MODE_DEVICE));
@@ -105,7 +105,7 @@ void cublas_init(void)
 		CUBLAS_ERROR(cublasSetStream(handle_device[i], cuda_get_stream_by_id(i)));
 
 #ifdef _OPENMP
-		omp_init_lock(&(gpulock[i]));
+		omp_init_lock(&gpulock[i]);
 #endif
 	}
 }
@@ -118,7 +118,7 @@ void cublas_deinit(void)
 		CUBLAS_ERROR(cublasDestroy(handle_host[i]));
 
 #ifdef _OPENMP
-		omp_destroy_lock(&(gpulock[i]));
+		omp_destroy_lock(&gpulock[i]);
 #endif
 	}
 }

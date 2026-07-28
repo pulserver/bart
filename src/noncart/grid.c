@@ -327,11 +327,11 @@ static void grid_int(vptr_fun_data_t* _data, int N, int D, const long* dims[N], 
 		}
 	}
 
-	const long* ptr_grd_dims = &(grd_dims[0]);
-	const long* ptr_ksp_dims = &(max_dims[0]);
-	const long* ptr_ksp_strs = &(ksp_strs[0]);
-	const long* ptr_trj_strs = &(trj_strs[0]);
-	const long* ptr_grid_strs = &(grd_strs[0]);
+	const long* ptr_grd_dims = &grd_dims[0];
+	const long* ptr_ksp_dims = &max_dims[0];
+	const long* ptr_ksp_strs = &ksp_strs[0];
+	const long* ptr_trj_strs = &trj_strs[0];
+	const long* ptr_grid_strs = &grd_strs[0];
 
 	NESTED(void, nary_grid, (void* ptr[]))
 	{
@@ -340,9 +340,9 @@ static void grid_int(vptr_fun_data_t* _data, int N, int D, const long* dims[N], 
 		const complex float* trj = ptr[2];
 
 		if (data->backward)
-			gridH(&(data->conf), ptr_ksp_dims, ptr_trj_strs, trj, ptr_ksp_strs, ksp, ptr_grd_dims, ptr_grid_strs, grd);
+			gridH(&data->conf, ptr_ksp_dims, ptr_trj_strs, trj, ptr_ksp_strs, ksp, ptr_grd_dims, ptr_grid_strs, grd);
 		else
-			grid(&(data->conf), ptr_ksp_dims, ptr_trj_strs, trj, ptr_grd_dims, ptr_grid_strs, grd, ptr_ksp_strs, ksp);
+			grid(&data->conf, ptr_ksp_dims, ptr_trj_strs, trj, ptr_grd_dims, ptr_grid_strs, grd, ptr_ksp_strs, ksp);
 	};
 
 	const long* lstrs[3] = { grd_strs + 4, ksp_strs + 4, trj_strs + 4 };

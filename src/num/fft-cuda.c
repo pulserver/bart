@@ -248,7 +248,7 @@ static struct fft_cuda_plan_s* fft_cuda_plan0(int D, const long dimensions[D], u
 	CUFFT_ERROR(cufftSetAutoAllocation(plan->cufft, 0));
 	CUFFT_ERROR(cufftMakePlanMany(plan->cufft, k,
 				cudims, cuiemb, istride, idist,
-				cuoemb, ostride, odist, CUFFT_C2C, cubs, &(plan->workspace_size)));
+				cuoemb, ostride, odist, CUFFT_C2C, cubs, &plan->workspace_size));
 
 	plan->cufft_initialized = true;
 

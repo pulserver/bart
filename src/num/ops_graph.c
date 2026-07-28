@@ -57,7 +57,7 @@ static node_t node_operator_create(const struct operator_s* op, const char* name
 	PTR_ALLOC(struct node_operator_s, node);
 	SET_TYPEID(node_operator_s, node);
 
-	node_init(&(node->super), operator_nr_args(op), node_operator_is_output, name, false, NULL);
+	node_init(&node->super, operator_nr_args(op), node_operator_is_output, name, false, NULL);
 
 	node->op = operator_ref(op);
 
@@ -73,7 +73,7 @@ static node_t node_operator_container_create(const struct operator_s* op, const 
 	PTR_ALLOC(struct node_operator_s, node);
 	SET_TYPEID(node_operator_s, node);
 
-	node_init(&(node->super), operator_nr_args(op), node_operator_is_output, name, false, subgraph);
+	node_init(&node->super, operator_nr_args(op), node_operator_is_output, name, false, subgraph);
 
 	node->op = operator_ref(op);
 
@@ -156,7 +156,7 @@ static node_t node_arg_create(bool output, const struct iovec_s* iov)
 	PTR_ALLOC(struct node_arg_s, node);
 	SET_TYPEID(node_arg_s, node);
 
-	node_init(&(node->super), 1, node_arg_is_output, NULL, true, NULL);
+	node_init(&node->super, 1, node_arg_is_output, NULL, true, NULL);
 
 
 	node->super.node_print = print_node_arg;

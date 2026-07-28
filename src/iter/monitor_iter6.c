@@ -201,10 +201,10 @@ static const char* compute_val_monitors(struct monitor_iter6_default_s* monitor,
 			md_calc_strides(4, rstrs, MD_DIMS(monitor->epochs_created, num_batches, 2, monitor->record_dim), CFL_SIZE);
 
 			rpos[2] = 0;
-			md_copy2(4, MD_DIMS(1, 1, 1, N_vals), rstrs, &(MD_ACCESS(4, rstrs, rpos, monitor->record)), MD_STRIDES(4, MD_DIMS(1, 1, 1, N_vals), CFL_SIZE), eval, CFL_SIZE);
+			md_copy2(4, MD_DIMS(1, 1, 1, N_vals), rstrs, &MD_ACCESS(4, rstrs, rpos, monitor->record), MD_STRIDES(4, MD_DIMS(1, 1, 1, N_vals), CFL_SIZE), eval, CFL_SIZE);
 
 			rpos[2] = 1;
-			md_copy2(4, MD_DIMS(1, 1, 1, N_vals), rstrs, &(MD_ACCESS(4, rstrs, rpos, monitor->record)), MD_STRIDES(4, MD_DIMS(1, 1, 1, N_vals), CFL_SIZE), vals, CFL_SIZE);
+			md_copy2(4, MD_DIMS(1, 1, 1, N_vals), rstrs, &MD_ACCESS(4, rstrs, rpos, monitor->record), MD_STRIDES(4, MD_DIMS(1, 1, 1, N_vals), CFL_SIZE), vals, CFL_SIZE);
 
 			rpos[3] += N_vals;
 		}

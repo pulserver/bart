@@ -142,7 +142,7 @@ static bool cuda_try_init(int device)
 		cuda_streams[CUDA_MAX_STREAMS] = cudaStreamLegacy;
 
 		for (int i = 0; i < CUDA_MAX_STREAMS; i++)
-			CUDA_ERROR(cudaStreamCreate(&(cuda_streams[i])));
+			CUDA_ERROR(cudaStreamCreate(&cuda_streams[i]));
 
 		memcache_init();
 		cublas_init();

@@ -60,7 +60,7 @@ static void stack_fun(const nlop_data_t* _data, int N, complex float* args[N])
 	long (*pos)[II][data->N] = (void*)data->pos;
 
 	for (int i = 0; i < II; i++)
-		md_copy2(data->N, (*idims)[i], data->ostrs, &(MD_ACCESS(data->N, data->ostrs, (*pos)[i], args[0])), (*istrs)[i], args[i + 1], CFL_SIZE);
+		md_copy2(data->N, (*idims)[i], data->ostrs, &MD_ACCESS(data->N, data->ostrs, (*pos)[i], args[0]), (*istrs)[i], args[i + 1], CFL_SIZE);
 
 }
 
@@ -77,7 +77,7 @@ static void stack_der(const nlop_data_t* _data, int o, int i, complex float* dst
 	long (*pos)[II][data->N] = (void*)data->pos;
 
 	md_clear(data->N, data->odims, dst, CFL_SIZE);
-	md_copy2(data->N, (*idims)[i], data->ostrs, &(MD_ACCESS(data->N, data->ostrs, (*pos)[i], dst)), (*istrs)[i], src, CFL_SIZE);
+	md_copy2(data->N, (*idims)[i], data->ostrs, &MD_ACCESS(data->N, data->ostrs, (*pos)[i], dst), (*istrs)[i], src, CFL_SIZE);
 }
 
 static void stack_adj(const nlop_data_t* _data, int o, int i, complex float* dst, const complex float* src)
@@ -92,7 +92,7 @@ static void stack_adj(const nlop_data_t* _data, int o, int i, complex float* dst
 	long (*istrs)[II][data->N] = (void*)data->istrs;
 	long (*pos)[II][data->N] = (void*)data->pos;
 
-	md_copy2(data->N, (*idims)[i], (*istrs)[i], dst, data->ostrs, &(MD_ACCESS(data->N, data->ostrs, (*pos)[i], src)), CFL_SIZE);
+	md_copy2(data->N, (*idims)[i], (*istrs)[i], dst, data->ostrs, &MD_ACCESS(data->N, data->ostrs, (*pos)[i], src), CFL_SIZE);
 }
 
 

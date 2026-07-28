@@ -172,7 +172,7 @@ const struct initializer_s* init_const_create(complex float val)
 	PTR_ALLOC(struct initializer_const_s, data);
 	SET_TYPEID(initializer_const_s, data);
 
-	shared_obj_init(&(data->super.sptr), init_del);
+	shared_obj_init(&data->super.sptr, init_del);
 
 	data->super.del = NULL;
 	data->super.fun = init_const_fun;
@@ -222,7 +222,7 @@ const struct initializer_s* init_array_create(int N, const long dims[N], const c
 	PTR_ALLOC(struct initializer_fixed_s, data);
 	SET_TYPEID(initializer_fixed_s, data);
 
-	shared_obj_init(&(data->super.sptr), init_del);
+	shared_obj_init(&data->super.sptr, init_del);
 
 	data->super.del = init_fixed_del;
 	data->super.fun = init_fixed_fun;
@@ -351,7 +351,7 @@ const struct initializer_s* init_xavier_create(unsigned long in_flags, unsigned 
 	PTR_ALLOC(struct initializer_xavier_kaiming_s, data);
 	SET_TYPEID(initializer_xavier_kaiming_s, data);
 
-	shared_obj_init(&(data->super.sptr), init_del);
+	shared_obj_init(&data->super.sptr, init_del);
 
 	data->super.del = NULL;
 	data->super.fun = init_xavier_fun;
@@ -384,7 +384,7 @@ const struct initializer_s* init_kaiming_create(unsigned long in_flags, bool rea
 	PTR_ALLOC(struct initializer_xavier_kaiming_s, data);
 	SET_TYPEID(initializer_xavier_kaiming_s, data);
 
-	shared_obj_init(&(data->super.sptr), init_del);
+	shared_obj_init(&data->super.sptr, init_del);
 
 	data->super.del = NULL;
 	data->super.fun = init_kaiming_fun;
@@ -425,7 +425,7 @@ const struct initializer_s* init_std_normal_create(bool real, float scale, float
 	PTR_ALLOC(struct initializer_std_normal_s, data);
 	SET_TYPEID(initializer_std_normal_s, data);
 
-	shared_obj_init(&(data->super.sptr), init_del);
+	shared_obj_init(&data->super.sptr, init_del);
 
 	data->super.del = NULL;
 	data->super.fun = init_std_normal_fun;
@@ -443,7 +443,7 @@ const struct initializer_s* init_uniform_create(bool real, float scale, float me
 	PTR_ALLOC(struct initializer_std_normal_s, data);
 	SET_TYPEID(initializer_std_normal_s, data);
 
-	shared_obj_init(&(data->super.sptr), init_del);
+	shared_obj_init(&data->super.sptr, init_del);
 
 	data->super.del = NULL;
 	data->super.fun = init_std_normal_fun;
@@ -502,7 +502,7 @@ const struct initializer_s* init_linspace_create(int dim, complex float min_val,
 	PTR_ALLOC(struct initializer_linspace_s, data);
 	SET_TYPEID(initializer_linspace_s, data);
 
-	shared_obj_init(&(data->super.sptr), init_del);
+	shared_obj_init(&data->super.sptr, init_del);
 
 	data->super.del = NULL;
 	data->super.fun = init_linspace_fun;
@@ -554,7 +554,7 @@ const struct initializer_s* init_reshape_create(int N, const long dims[N], const
 	PTR_ALLOC(struct initializer_reshape_s, data);
 	SET_TYPEID(initializer_reshape_s, data);
 
-	shared_obj_init(&(data->super.sptr), init_del);
+	shared_obj_init(&data->super.sptr, init_del);
 
 	data->super.del = init_reshape_del;
 	data->super.fun = init_reshape_fun;
@@ -633,7 +633,7 @@ const struct initializer_s* init_stack_create(int N, int stack_dim, const long d
 	PTR_ALLOC(struct initializer_stack_s, data);
 	SET_TYPEID(initializer_stack_s, data);
 
-	shared_obj_init(&(data->super.sptr), init_del);
+	shared_obj_init(&data->super.sptr, init_del);
 
 	data->super.del = init_stack_del;
 	data->super.fun = init_stack_fun;

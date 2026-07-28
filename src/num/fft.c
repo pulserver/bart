@@ -169,7 +169,7 @@ static void fftmod2_r(int N, const long dims[N], unsigned long flags, const long
 	    || ((7 == flags) && md_check_equal_dims(3, ostrs, istrs, 7) && md_check_equal_dims(3, ostrs, MD_STRIDES(3, dims, CFL_SIZE), 7)) ){
 
 		long tdims[3] = { dims[0], dims[1], (7 == flags) ? dims[2] : 1 };
-		long* tptr = &(tdims[0]);
+		long* tptr = &tdims[0];
 
 		NESTED(void, nary_zfftmod, (void* ptr[]))
 		{

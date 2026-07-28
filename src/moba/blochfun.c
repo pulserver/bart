@@ -158,7 +158,7 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 	complex float* dm0_pools_cpu = md_calloc(data->N, pool_out_dims, CFL_SIZE);
 	complex float* dom_cpu = md_calloc(data->N, pool_out_dims, CFL_SIZE);
 
-	// debug_sim(&(data->moba_data.sim));
+	// debug_sim(&data->moba_data.sim);
 
 #pragma omp parallel for collapse(3)
 	for (int x = 0; x < data->map_dims[0]; x++) {

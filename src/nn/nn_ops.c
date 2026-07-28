@@ -346,7 +346,7 @@ static void noise_fun(const nlop_data_t* _data, int Nargs, complex float* args[N
 		md_zsmul(data->N, noi_dims, tmp2, tmp2, sqrtf(var));
 
 		md_copy2(data->N, noi_dims,
-			MD_STRIDES(data->N, data->noi_dims, CFL_SIZE), &(MD_ACCESS(data->N, MD_STRIDES(data->N, data->noi_dims, CFL_SIZE), pos, tmp)),
+			MD_STRIDES(data->N, data->noi_dims, CFL_SIZE), &MD_ACCESS(data->N, MD_STRIDES(data->N, data->noi_dims, CFL_SIZE), pos, tmp),
 			MD_STRIDES(data->N, noi_dims, CFL_SIZE), tmp2, CFL_SIZE);
 
 		md_free(tmp2);

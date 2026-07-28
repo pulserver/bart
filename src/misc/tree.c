@@ -42,8 +42,8 @@ struct tree_s {
 };
 
 #ifdef _OPENMP
-static void tree_set_lock(tree_t tree) { omp_set_lock(&(tree->lock)); }
-static void tree_unset_lock(tree_t tree) { omp_unset_lock(&(tree->lock)); }
+static void tree_set_lock(tree_t tree) { omp_set_lock(&tree->lock); }
+static void tree_unset_lock(tree_t tree) { omp_unset_lock(&tree->lock); }
 #else
 static void tree_set_lock(tree_t /*tree*/) { }
 static void tree_unset_lock(tree_t /*tree*/) { }
@@ -78,7 +78,7 @@ tree_t tree_create(tree_rel_f rel)
 	result->relation = rel;
 
 #ifdef _OPENMP
-	omp_init_lock(&(result->lock));
+	omp_init_lock(&result->lock);
 #endif
 
 	return PTR_PASS(result);
@@ -92,7 +92,7 @@ void tree_free(tree_t tree)
 	while (NULL != tree_get_min(tree, true));
 
 #ifdef _OPENMP
-	omp_destroy_lock(&(tree->lock));
+	omp_destroy_lock(&tree->lock);
 #endif
 	xfree(tree);
 }

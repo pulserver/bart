@@ -41,12 +41,12 @@ static omp_lock_t cudnn_gpulock[CUDA_MAX_STREAMS + 1];
 
 static void cudnn_set_gpulock(void)
 {
-	omp_set_lock(&(cudnn_gpulock[cuda_get_stream_id()]));
+	omp_set_lock(&cudnn_gpulock[cuda_get_stream_id()]);
 }
 
 static void cudnn_unset_gpulock(void)
 {
-	omp_unset_lock(&(cudnn_gpulock[cuda_get_stream_id()]));
+	omp_unset_lock(&cudnn_gpulock[cuda_get_stream_id()]);
 }
 #else
 static void cudnn_set_gpulock(void)
@@ -66,9 +66,9 @@ void cudnn_init(void)
 {
 	for (int i = 0; i < CUDA_MAX_STREAMS + 1; i++) {
 
-		CUDNN_ERROR(cudnnCreate(&(handle[i])));
+		CUDNN_ERROR(cudnnCreate(&handle[i]));
 #ifdef _OPENMP
-		omp_init_lock(&(cudnn_gpulock[i]));
+		omp_init_lock(&cudnn_gpulock[i]);
 #endif
 	}
 
@@ -92,7 +92,7 @@ void cudnn_deinit(void)
 
 		CUDNN_ERROR(cudnnDestroy(handle[i]));
 #ifdef _OPENMP
-		omp_destroy_lock(&(cudnn_gpulock[i]));
+		omp_destroy_lock(&cudnn_gpulock[i]);
 #endif
 	}
 }
@@ -475,7 +475,7 @@ static struct cudnn_tensor_s get_tensor_descriptor(struct conv_desc_s conv_desc,
 	result.transform_needed = true;
 
 	for (int i = MAX(4, nbDims) - 1; i >=0; i--)
-		if ((strT[i] != strA[i]) &&( 1 != dimA[i]))
+		if ((strT[i] != strA[i]) && (1 != dimA[i]))
 			result.transform_needed = false;
 
 	return result;

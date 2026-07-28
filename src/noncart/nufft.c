@@ -660,7 +660,7 @@ complex float* compute_psf2_decomposed(int N, const long psf_dims[N + 1], unsign
 	long sdims[N + 1];
 	md_select_dims(N + 1, MD_BIT(0) | MD_BIT(N), sdims, trj_dims2);
 	complex float* tshift = md_alloc_sameplace(N + 1, sdims, CFL_SIZE, traj);
-	md_copy(N + 1, sdims, tshift, &(tp[0][0]), CFL_SIZE);
+	md_copy(N + 1, sdims, tshift, &tp[0][0], CFL_SIZE);
 
 	complex float* traj2 = md_alloc_sameplace(N + 1, trj_dims2, CFL_SIZE, traj);
 	md_zadd2(N + 1, trj_dims2, MD_STRIDES(N + 1, trj_dims2, CFL_SIZE), traj2, MD_STRIDES(N + 1, trj_dims, CFL_SIZE), traj, MD_STRIDES(N + 1, sdims, CFL_SIZE), tshift);
@@ -1860,7 +1860,7 @@ static void nufft_apply_adjoint_lowmem(const linop_data_t* _data, complex float*
 	for (; pos_cml[data->N] < md_calc_size(data->N, data->factors); pos_cml[data->N]++) {
 
 		md_clear(data->N, data->cim_dims, grid, CFL_SIZE);
-		grid2_decomp(&(data->grid_conf), pos_cml[data->N], data->N, data->factors, data->trj_dims, multiplace_read(data->traj, dst), data->cim_dims, grid, data->ksp_dims, src);
+		grid2_decomp(&data->grid_conf, pos_cml[data->N], data->N, data->factors, data->trj_dims, multiplace_read(data->traj, dst), data->cim_dims, grid, data->ksp_dims, src);
 
 
 		if (NULL != data->fftmod)
@@ -1950,7 +1950,7 @@ static void nufft_apply_forward_lowmem(const linop_data_t* _data, complex float*
 			fftmod(data->N, data->cim_dims, data->flags, grid, grid);
 
 
-		grid2H_decomp(&(data->grid_conf), pos_cml[data->N], data->N, data->factors, data->trj_dims, multiplace_read(data->traj, src), data->ksp_dims, tmp, data->cim_dims, grid);
+		grid2H_decomp(&data->grid_conf, pos_cml[data->N], data->N, data->factors, data->trj_dims, multiplace_read(data->traj, src), data->ksp_dims, tmp, data->cim_dims, grid);
 	};
 
 	md_free(grid);
@@ -1999,7 +1999,7 @@ static void nufft_apply_adjoint_zero_overhead(const linop_data_t* _data, complex
 		linop_forward(data->cfft_op, data->N, data->cim_dims, dst, data->N, data->cim_dims, dst);
 		fftmod(data->N, data->cim_dims, data->flags, dst, dst);
 
-		grid2_decomp(&(data->grid_conf), pos_cml[data->N], data->N, data->factors, data->trj_dims, multiplace_read(data->traj, dst), data->cim_dims, dst, data->ksp_dims, src);
+		grid2_decomp(&data->grid_conf, pos_cml[data->N], data->N, data->factors, data->trj_dims, multiplace_read(data->traj, dst), data->cim_dims, dst, data->ksp_dims, src);
 
 		//recover src
 		ifftmod(data->N, data->cim_dims, data->flags, dst, dst);
@@ -2042,7 +2042,7 @@ static void nufft_apply_forward_zero_overhead(const linop_data_t* _data, complex
 		linop_forward(data->cfft_op, data->N, data->cim_dims, src, data->N, data->cim_dims, src);
 		fftmod(data->N, data->cim_dims, data->flags, src, src);
 
-		grid2H_decomp(&(data->grid_conf), pos_cml[data->N], data->N, data->factors, data->trj_dims, multiplace_read(data->traj, src), data->ksp_dims, dst, data->cim_dims, src);
+		grid2H_decomp(&data->grid_conf, pos_cml[data->N], data->N, data->factors, data->trj_dims, multiplace_read(data->traj, src), data->ksp_dims, dst, data->cim_dims, src);
 
 		// Recover src
 		ifftmod(data->N, data->cim_dims, data->flags, src, src);

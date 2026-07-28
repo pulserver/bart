@@ -102,7 +102,7 @@ static void norm_inv(const struct norm_inv_s* d, complex float* dst, const compl
 
 	md_clear(d->dom[0]->N, d->dom[0]->dims, dst, CFL_SIZE);
 
-	iter2_conjgrad(	CAST_UP(&(d->iter_conf)), normal_op,
+	iter2_conjgrad(	CAST_UP(&d->iter_conf), normal_op,
 			0, NULL, NULL, NULL, NULL,
 			2 * md_calc_size(d->dom[0]->N, d->dom[0]->dims),
 			(float*)dst,
