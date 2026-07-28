@@ -431,8 +431,7 @@ void noir2_recon(const struct noir2_conf_s* conf, struct noir2_s* noir_ops,
 	}
 
 	for (int i = 0; i < NUM_REGS; i++)
-		if (NULL != sdims[i])
-			xfree(sdims[i]);
+		xfree(sdims[i]);
 
 	if (NULL != img_ref) {
 

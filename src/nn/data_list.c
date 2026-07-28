@@ -197,8 +197,7 @@ nn_t nn_valid_create(nn_t network, struct named_data_list_s* valid_data)
 	}
 
 	for (int i = 0; i < II; i++)
-		if (NULL != names[i])
-			xfree(names[i]);
+		xfree(names[i]);
 
 	return network;
 }

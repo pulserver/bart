@@ -120,9 +120,12 @@ void nn_free(nn_t op)
 	for (int i = 0; i < II; i++){
 
 		xfree(op->in_names[i]);
+
 		initializer_free(op->initializers[i]);
+
 		operator_p_free(op->prox_ops[i]);
 	}
+
 	for (int o = 0; o < OO; o++)
 		xfree(op->out_names[o]);
 
@@ -169,8 +172,7 @@ void nn_set_nlop(nn_t op, const struct nlop_s* nlop)
 
 void nn_clone_arg_i_from_i(nn_t nn1, int i1, nn_t nn2, int i2)
 {
-	if (NULL != nn1->in_names[i1])
-		xfree(nn1->in_names[i1]);
+	xfree(nn1->in_names[i1]);
 
 	if (NULL != nn2->in_names[i2])
 		nn1->in_names[i1] = xstrdup(nn2->in_names[i2]);
@@ -189,8 +191,7 @@ void nn_clone_arg_i_from_i(nn_t nn1, int i1, nn_t nn2, int i2)
 
 void nn_clone_arg_o_from_o(nn_t nn1, int o1, nn_t nn2, int o2)
 {
-	if (NULL != nn1->out_names[o1])
-		xfree(nn1->out_names[o1]);
+	xfree(nn1->out_names[o1]);
 
 	if (NULL != nn2->out_names[o2])
 		nn1->out_names[o1] = xstrdup(nn2->out_names[o2]);
@@ -541,6 +542,7 @@ nn_t nn_unset_output_name_F(nn_t op, const char* name)
 	result = nn_shift_output_index_F(result, nn_get_nr_out_args(op) - 1, i);
 
 	nn_free(op);
+
 	return result;
 }
 

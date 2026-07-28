@@ -49,8 +49,7 @@ void node_free(node_t x)
 	if (NULL != x->node_del)
 		x->node_del(x);
 
-	if (NULL != x->name)
-		xfree(x->name);
+	xfree(x->name);
 
 	if (NULL != x->subgraph)
 		graph_free(x->subgraph);

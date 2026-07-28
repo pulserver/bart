@@ -232,7 +232,7 @@ static void block_diag_del(const nlop_data_t* _data)
 
 	if (NULL != data->del)
 		data->del(data->data);
-	else if (NULL != data->data)
+	else
 		xfree(data->data);
 
 	for (int i = 0; i < data->II; i++)
@@ -618,7 +618,7 @@ static void diag_del(const nlop_data_t* _data)
 
 	if (NULL != data->del)
 		data->del(data->data);
-	else if (NULL != data->data)
+	else
 		xfree(data->data);
 
 	xfree(data);
@@ -761,7 +761,7 @@ static void block_diag_simple_del(const nlop_data_t* _data)
 
 	if (NULL != data->del)
 		data->del(data->data);
-	else if (NULL != data->data)
+	else
 		xfree(data->data);
 
 	xfree(data);

@@ -335,11 +335,8 @@ struct lseg_s extract_phase_poles_2D(struct pole_config_s conf, int N, const lon
 		vec3_copy(ret.pos[i + pos.N][1], neg.pos[i][1]);
 	}
 
-	if (NULL != pos.pos)
-		xfree(pos.pos);
-
-	if (NULL != neg.pos)
-		xfree(neg.pos);
+	xfree(pos.pos);
+	xfree(neg.pos);
 
 	return ret;
 }

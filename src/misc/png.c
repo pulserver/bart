@@ -73,8 +73,7 @@ cleanup:
 	if (NULL != structp)
 		png_destroy_write_struct(&structp, &infop);
 
-	if (NULL != row_ptrs)
-		xfree(row_ptrs);
+	xfree(row_ptrs);
 
 	fclose(fp);
 	return ret;

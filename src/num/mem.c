@@ -288,8 +288,7 @@ void mem_device_free(void* ptr, void (*device_free)(const void* ptr, bool host))
 		if (NULL == nptr)
 			continue;
 
-		if (NULL != nptr->backtrace)
-			xfree(nptr->backtrace);
+		xfree(nptr->backtrace);
 
 		nptr->backtrace = NULL;
 

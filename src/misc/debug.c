@@ -167,8 +167,7 @@ void debug_vprintf(int level, const char* fmt, va_list ap)
 				fprintf(ofp, "%s%s%s%s: ", (level < DP_INFO ? RED : ""), get_level_str(level), rank, cmd?:"");
 			}
 
-			if (NULL != cmd)
-				xfree(cmd);
+			xfree(cmd);
 		}
 
 		vfprintf(ofp, fmt, ap);

@@ -610,8 +610,7 @@ void save_command_line(int argc, char* argv[static argc])
 
 #pragma omp critical (bart_opts_commandline)
 	{
-		if (NULL != command_line)
-			xfree(command_line);
+		xfree(command_line);
 
 		command_line = buf;
 	}

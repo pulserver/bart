@@ -216,11 +216,8 @@ static nn_t add_loss(nn_t loss, nn_t new_loss, bool combine) {
 		result = nn_set_output_name_F(result, 0, nname);
 
 		xfree(nname);
-
-		if (NULL != i_name)
-			xfree(i_name);
-		if (NULL != j_name)
-			xfree(j_name);
+		xfree(i_name);
+		xfree(j_name);
 
 		combine = true;
 	}

@@ -1073,14 +1073,9 @@ bool vptr_free(const void* ptr)
 
 	munmap((void*)ptr, mem->len);
 
-	if (NULL != mem->shape.dims)
-		xfree(mem->shape.dims);
-
-	if (NULL != mem->range.sub_ptr)
-		xfree(mem->range.sub_ptr);
-
-	if (NULL != mem->backtrace)
-		xfree(mem->backtrace);
+	xfree(mem->shape.dims);
+	xfree(mem->range.sub_ptr);
+	xfree(mem->backtrace);
 
 	vptr_hint_free(mem->hint);
 
