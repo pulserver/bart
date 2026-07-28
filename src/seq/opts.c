@@ -11,6 +11,7 @@
 #include "misc/opts.h"
 #include "misc/mri.h"
 #include "misc/misc.h"
+#include "misc/cppmap.h"
 
 #include "seq/config.h"
 #include "seq/helpers.h"
@@ -19,6 +20,14 @@
 
 #include "opts.h"
 
+#define SEQ_LIST FLASH, MINIFLASH, ()
+
+const char* seq_table[] = {
+#define DENTRY(x) # x ,
+	MAP(DENTRY, SEQ_LIST)
+#undef  DENTRY
+	NULL
+};
 
 const struct seq_opts seq_opts_defaults = {
 
@@ -44,12 +53,66 @@ const struct seq_opts seq_opts_defaults = {
 
 static void seq_process_options(struct seq_config* conf, struct seq_opts* seq_opts);
 
+static bool help_func_seq(void* ptr, char c, const char* /*optarg*/)
+{
+	int N = 1024;
+	char info[N];
+
+	int ctr = 0;
+
+	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\nAvailable sequences are:\n");
+
+	for (int i = 0; i < (int)ARRAY_SIZE(seq_table); i++) {
+
+		if (NULL != seq_table[i])
+			ctr += snprintf(info + ctr, (size_t)(N - ctr), "\t - %s\n", seq_table[i]);
+	}
+
+	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n");
+
+	if ('a' == c) {
+
+		memcpy(ptr, info, sizeof(info));
+		return true;
+
+	} else {
+
+		printf("%s", info);
+		exit(0);
+	}
+}
+
 int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m],
 			const char* help_str, struct seq_config* conf, struct seq_opts* seq_opts,
 			int len, char* buf)
 {
+	int off = 0;
+
+	if (0 == len) {
+
+		enum seq_type seq_type = 0;
+
+		for (int i = 0; NULL != seq_table[i]; i++)
+			for (int j = 0; j < *argcp; j++)
+				if ((NULL != argv[j]) && (0 == strcmp(argv[j], seq_table[i])))
+					seq_type = (enum seq_type)(i + 1);
+
+		if (0 == seq_type) {
+
+			debug_printf(DP_INFO, "No supported sequence found: Set to FLASH and move outputs by one\n");
+			seq_type = SEQ_TYPE_FLASH;
+			off = 1;
+		}
+
+		conf->seq_type = seq_type;
+
+		if (SEQ_TYPE_MINIFLASH == conf->seq_type)
+			memcpy(conf, &seq_config_defaults_miniflash, sizeof *conf);
+	}
 
 	const struct opt_s opts[] = {
+
+		{ 'L', NULL, false, OPT_SPECIAL, help_func_seq, NULL, "", "(Print a list of supported sequences)" },
 
 		OPT_DOUBLE('d', &seq_opts->dt, "dt", "time-increment per sample (default: seq->conf->phys.tr / 1000)"),
 		OPT_LONG('N', &seq_opts->samples, "samples", "Number of samples (default: 1000)"),
@@ -177,8 +240,13 @@ int seq_cmdline(int* argcp, char* argv[*argcp], int m, const struct arg_s args[m
 	if (0 != len)
 		return cmdline_synth(NULL, len, buf, ARRAY_SIZE(opts), opts);
 
+	char seqs[1024];
+	help_func_seq(&seqs, 'a', NULL);
 
-	cmdline(argcp, argv, m, args, help_str, ARRAY_SIZE(opts), opts);
+	char help_str2[sizeof(help_str) + sizeof(seqs) + 1];
+	snprintf(help_str2, sizeof(help_str2), "%s\n%s", help_str, seqs);
+
+	cmdline(argcp, argv, m - off, args + off, help_str2, ARRAY_SIZE(opts), opts);
 
 	seq_process_options(conf, seq_opts);
 
@@ -325,10 +393,12 @@ int read_config_from_str(struct seq_config* seq, int N, const char* buffer_in)
 {
 	static const char help[] = "commandline for IDEA\n";
 
+	const char* seqtype = NULL;
 	const char* dummy = NULL;
 
 	struct arg_s args[] = {
 
+		ARG_STRING(false, &seqtype, "seqtype"),
 		ARG_OUTFILE(false, &dummy, "dummy"),
 	};
 

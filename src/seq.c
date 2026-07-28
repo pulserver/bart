@@ -17,16 +17,14 @@
 #include "misc/mmio.h"
 #include "misc/opts.h"
 
+#include "seq/checks.h"
 #include "seq/config.h"
 #include "seq/event.h"
 #include "seq/helpers.h"
+#include "seq/kernel.h"
+#include "seq/misc.h"
 #include "seq/seq.h"
 #include "seq/opts.h"
-
-#include "seq/misc.h"
-#include "seq/checks.h"
-#include "seq/flash.h"
-#include "seq/kernel.h"
 #include "seq/pulseq.h"
 
 
@@ -63,13 +61,14 @@ static void position_to_save(int D, long pos_save[D], bool chrono, int E, const 
 }
 
 
-static const char help_str[] = "Computes a GRE sequence.";
+static const char help_str[] = "Computes a Sequence.";
 
 
 int main_seq(int argc, char* argv[argc])
 {
 	double start_time = timestamp();
 
+	const char* seq_type = NULL;
 	const char* grad_file = NULL;
 	const char* mom_file = NULL;
 	const char* adc_file = NULL;
@@ -77,6 +76,7 @@ int main_seq(int argc, char* argv[argc])
 
 	struct arg_s args[] = {
 
+		ARG_STRING(false, &seq_type, "seq"),
 		ARG_OUTFILE(false, &adc_file, "0th moment (x,y,z) at sample points, sample_points, phase of adc"),
 		ARG_OUTFILE(false, &grad_file, "gradients (x,y,z) per imaging block"),
 		ARG_OUTFILE(false, &mom_file, "0th moment (x,y,z) per imaging block"),
