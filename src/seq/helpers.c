@@ -566,47 +566,52 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 			seq->phys.rf_duration, seq->phys.flip_angle, seq->phys.bwtp);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr), 
-			"\nFOV/slice-th/slab-os\t\t\t%.3f/%.3f/%.2f\nBR/mb_factor/SMS dist\t\t\t%d/%d/%.3f",
-			seq->geom.fov, seq->geom.slice_thickness, seq->geom.slab_os,
+			"\nFOV/slice-th\t\t\t\t%.3f/%.3f\nBR/mb_factor/SMS dist\t\t\t%d/%d/%.3f",
+			seq->geom.fov, seq->geom.slice_thickness,
 			seq->geom.baseres, seq->geom.mb_factor, seq->geom.sms_distance);
 	
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
-			"\nPE_Mode/Turns-GA/aligned flags/order\t%d (\"%s\")/%d/%ld/%d\nis3D\t\t\t\t\t%d",
+			"\nPE_Mode/Turns-GA/aligned flags/order\t%d (\"%s\")/%d/%ld/%d\nis3D/slab-os\t\t\t\t%d/%.2f",
 			seq->enc.pe_mode, get_pemode_str(seq->enc.pe_mode), seq->enc.tiny, seq->enc.aligned_flags, seq->enc.order,
-			seq->enc.is3D);
+			seq->enc.is3D, seq->geom.slab_os);
+
+	ctr += snprintf(info + ctr, (size_t)(N - ctr),
+			"\nmag prep/TI/inv delay\t\t\t%d/%.3f/%.2f",
+			seq->magn.mag_prep, seq->magn.ti, seq->magn.inv_delay_time);
+
+	ctr += snprintf(info + ctr, (size_t)(N - ctr),
+			"\ninit delay/prep scans\t\t\t%.2f/%ld",
+			seq->magn.init_delay, seq->magn.prep_scans);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
 			"\ngamma/b0/max grad/inv slew\t\t%.0f/%.3f/%.3f/%.6f\n",
 			seq->sys.gamma, seq->sys.b0, seq->sys.grad.max_amplitude, seq->sys.grad.inv_slew_rate);
 
-	ctr += snprintf(info + ctr, (size_t)(N - ctr),
-			"\nmag prep/TI/init delay/inv delay\t\t%d/%.6f/%.2f/%.2f\nprep scans/\t\t\t\t%ld",
-			seq->magn.mag_prep, seq->magn.ti, seq->magn.init_delay, seq->magn.inv_delay_time,
-			seq->magn.prep_scans);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
-			"\nloop_dims\t: %ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t",
+			"\nloop_dims\t %ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t\n",
 			seq->loop_dims[READ_DIM], seq->loop_dims[PHS1_DIM], seq->loop_dims[PHS2_DIM], seq->loop_dims[COIL_DIM],
 			seq->loop_dims[MAPS_DIM], seq->loop_dims[TE_DIM], seq->loop_dims[COEFF_DIM], seq->loop_dims[COEFF2_DIM],
 			seq->loop_dims[ITER_DIM], seq->loop_dims[CSHIFT_DIM], seq->loop_dims[TIME_DIM], seq->loop_dims[TIME2_DIM],
 			seq->loop_dims[LEVEL_DIM], seq->loop_dims[SLICE_DIM], seq->loop_dims[AVG_DIM], seq->loop_dims[BATCH_DIM]);
 
+	if (SEQ_TYPE_FLASH == seq->seq_type) {
 
-	ctr += snprintf(info + ctr, (size_t)(N - ctr),
-		"\nCEST sat\t\ttype=%d \t n=%ld \t\t\t (pause: %.4f)",
-		seq->cest.sat_type, seq->cest.sat_pulses, seq->cest.sat_pulse_pause);
-	ctr += snprintf(info + ctr, (size_t)(N - ctr),
-		"\nCEST gauss\t\tdur %f\t fa %.2f \t (OC_B1: %.2f)",
-		seq->cest.gauss_pulse_duration, seq->cest.gauss_pulse_fa, seq->cest.oc_pulse_b1_scaling);
-	ctr += snprintf(info + ctr, (size_t)(N - ctr),
-		"\nCEST offsets\t\ttype=%d \t %.2f / %.2f / %.2f \t (pause: %.2f)",
-		seq->cest.offset_type, seq->cest.offset_first, seq->cest.offset_last, seq->cest.offset_increment,
-		seq->cest.offset_pause);
+		ctr += snprintf(info + ctr, (size_t)(N - ctr),
+			"\nCEST sat\t\ttype=%d \t n=%ld \t\t\t (pause: %.4f)",
+			seq->cest.sat_type, seq->cest.sat_pulses, seq->cest.sat_pulse_pause);
+		ctr += snprintf(info + ctr, (size_t)(N - ctr),
+			"\nCEST gauss\t\tdur %f\t fa %.2f \t (OC_B1: %.2f)",
+			seq->cest.gauss_pulse_duration, seq->cest.gauss_pulse_fa, seq->cest.oc_pulse_b1_scaling);
+		ctr += snprintf(info + ctr, (size_t)(N - ctr),
+			"\nCEST offsets\t\ttype=%d \t %.2f / %.2f / %.2f \t (pause: %.2f)",
+			seq->cest.offset_type, seq->cest.offset_first, seq->cest.offset_last, seq->cest.offset_increment,
+			seq->cest.offset_pause);
 
-	ctr += snprintf(info + ctr, (size_t)(N - ctr),
-		"\n\nASL mode/LD/PLD\t\t%d/%.3f/%.3f\t (label sl idx: %d)",
-		seq->asl.label_type, seq->asl.ld, seq->asl.pld, seq->asl.label_slice_index);
-
+		ctr += snprintf(info + ctr, (size_t)(N - ctr),
+			"\n\nASL mode/LD/PLD\t\t%d/%.3f/%.3f\t (label sl idx: %d)",
+			seq->asl.label_type, seq->asl.ld, seq->asl.pld, seq->asl.label_slice_index);
+	}
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\n\nCrowthers no. of radial Spokes =\t%.2f\n\n", M_PI * seq->geom.baseres);
 
