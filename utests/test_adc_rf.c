@@ -33,7 +33,7 @@ static bool rf_spoiling_spoiled(void)
 		320.,  90.,  270.,  140.,  60.
 	};
 
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.phys.contrast = SEQ_CONTRAST_RF_SPOILED;
 
 	struct seq_state seq_state = { };
@@ -64,7 +64,7 @@ UT_REGISTER_TEST(rf_spoiling_spoiled);
 
 static bool test_sinc(void)
 {
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 
 	struct rf_shape rf_shape[10];
 	int rfs = seq_sample_rf_shapes(10, rf_shape, &seq);
@@ -119,7 +119,7 @@ UT_REGISTER_TEST(test_sinc);
 
 static bool test_sms(void)
 {
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.loop_dims[SLICE_DIM] = 3;
 	seq.geom.mb_factor = 3;
 
@@ -194,7 +194,7 @@ UT_REGISTER_TEST(test_sms);
 
 static bool test_oc(void)
 {
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.cest.sat_type = SEQ_CEST_OC;
 
 	// for fa_prep
@@ -261,7 +261,7 @@ UT_REGISTER_TEST(test_oc);
 
 static bool test_gauss(void)
 {
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.cest.sat_type = SEQ_CEST_GAUSS;
 
 	// for fa_prep
@@ -330,7 +330,7 @@ UT_REGISTER_TEST(test_gauss);
 
 static bool test_hanning(void)
 {
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.asl.label_type = SEQ_ASL_PCASL;
 	
 	struct rf_shape rf_shape[10];

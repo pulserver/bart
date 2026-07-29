@@ -1324,7 +1324,7 @@ UT_REGISTER_TEST(test_ir_flash_seq_to_nlop_sim_pulse);
 
 static bool test_nlop_pulse_shape_create(void)
 {
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.phys.rf_duration = 0.001;
 	seq.phys.flip_angle = 90.;
 	struct rf_shape rf_shapes[1];
@@ -1363,7 +1363,7 @@ UT_REGISTER_TEST(test_nlop_pulse_shape_create);
 
 static bool test_nlop_pulse_shape_create2(void)
 {
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	struct rf_shape rf_shapes[1];
 	seq_sample_rf_shapes(1, rf_shapes, &seq);
 
@@ -1409,7 +1409,7 @@ UT_REGISTER_TEST(test_nlop_pulse_shape_create2);
 
 static bool test_nlop_pulse_shape_create3(void)
 {
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	struct rf_shape rf_shapes[1];
 	seq_sample_rf_shapes(1, rf_shapes, &seq);
 
@@ -1462,7 +1462,7 @@ UT_REGISTER_TEST(test_nlop_pulse_shape_create3);
 
 static bool test_pulse_shape_create_inv_pulse(void)
 {
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.magn.mag_prep = SEQ_PREP_IR_NONSELECTIVE;
 	struct rf_shape rf_shapes[2];
 	seq_sample_rf_shapes(2, rf_shapes, &seq);

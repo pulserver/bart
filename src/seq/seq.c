@@ -48,7 +48,7 @@ struct bart_seq* bart_seq_alloc(const char* driver_version)
 
 void bart_seq_defaults(struct bart_seq* seq)
 {
-	memcpy(seq->conf, &seq_config_defaults, sizeof *seq->conf);
+	memcpy(seq->conf, &seq_config_defaults_flash, sizeof *seq->conf);
 
 	memset(seq->state, 0, sizeof *seq->state);
 	memset(seq->event, 0, (size_t)seq->N * sizeof *seq->event);

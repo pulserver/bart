@@ -320,7 +320,7 @@ static bool test_asl_m0_image(void)
 {
 	struct seq_state seq_state = { };
 
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.asl.ld = 0.02;
 	seq.asl.pulse_spacing = 1.15E-3;
 
@@ -349,7 +349,7 @@ static bool test_asl_label_condition(void)
 	for (int i = 0; i < DIMS; i++)
 		seq_state.pos[i] = pos[i];
 
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.asl.label_type = SEQ_ASL_PCASL;
 	seq.asl.ld = 0.02;
 	seq.asl.pld = 1.8;
@@ -372,7 +372,7 @@ static bool test_asl_label_condition_with_slice_shift(void)
 	struct seq_state seq_state = { };
 	seq_state.pos[15] = 1;
 
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.asl.label_type = SEQ_ASL_PCASL;
 	seq.asl.ld = 0.02;
 	seq.asl.pld = 1.8;
@@ -397,7 +397,7 @@ static bool test_asl_control_condition(void)
 	struct seq_state seq_state = { };
 	seq_state.pos[15] = 2;
 
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.asl.label_type = SEQ_ASL_PCASL;
 	seq.asl.ld = 0.02;
 	seq.asl.pld = 1.8;
@@ -425,7 +425,7 @@ static bool test_asl_control_condition_with_slice_shift(void)
 	struct seq_state seq_state = { };
 	seq_state.pos[15] = 2;
 
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.enc.order = SEQ_ORDER_SEQ_ASL;
 	seq.asl.label_type = SEQ_ASL_PCASL;
 	seq.asl.ld = 0.02;

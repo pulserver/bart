@@ -21,7 +21,7 @@
 
 static bool test_command(void)
 {
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.geom.baseres = 250;
 
 	if (!read_config_from_str(&seq, 200, "bart seq --BR 200 --FOV 0.305\0"))
@@ -40,7 +40,7 @@ UT_REGISTER_TEST(test_command);
 
 static bool test_print_command(void)
 {
-	struct seq_config conf = seq_config_defaults;
+	struct seq_config conf = seq_config_defaults_flash;
 
 	const bool print_debug = false;
 	char config_info_tmp[7852];
@@ -59,7 +59,7 @@ static bool test_print_command(void)
 	if (0 > ctr)
 		return false;
 
-	struct seq_config conf_ref = seq_config_defaults;
+	struct seq_config conf_ref = seq_config_defaults_flash;
 
 	if (0 != memcmp(&conf, &conf_ref, sizeof(struct seq_config)))
 		return false;
@@ -78,7 +78,7 @@ UT_REGISTER_TEST(test_print_command);
 
 static bool test_print(void)
 {
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 
 	static char tooltip[7852]; // 8192 (defined in sequence) - 340 (already used)
 	int a = seq_print_info_config(7852, tooltip, &seq);
@@ -95,7 +95,7 @@ UT_REGISTER_TEST(test_print);
 static bool test_flash_events(void)
 {
 	struct seq_state seq_state = { 0 };
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 
 	int E = 200;
 	struct seq_event ev[E];
@@ -134,7 +134,7 @@ UT_REGISTER_TEST(test_flash_events);
 static bool test_flash_te(void)
 {
 	struct seq_state seq_state = { 0 };
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 
 	int E = 200;
 	struct seq_event ev[E];
@@ -159,7 +159,7 @@ UT_REGISTER_TEST(test_flash_te);
 static bool test_flash_te_meco(void)
 {
 	struct seq_state seq_state = { 0 };
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.enc.pe_mode = SEQ_PEMODE_MEMS_HYB;
 	seq.loop_dims[TE_DIM] = 5;
 	seq.loop_dims[PHS1_DIM] = 7;
@@ -201,7 +201,7 @@ UT_REGISTER_TEST(test_flash_te_meco);
 static bool test_flash_mom1(void)
 {
 	struct seq_state seq_state = { 0 };
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 
 	int E = 200;
 	struct seq_event ev[E];
@@ -236,7 +236,7 @@ UT_REGISTER_TEST(test_flash_mom1);
 static bool test_flash_mom1b(void)
 {
 	struct seq_state seq_state = { 0 };
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.phys.te = 2E-3;
 	seq.phys.dwell = 4.3E-6;
 
@@ -273,7 +273,7 @@ UT_REGISTER_TEST(test_flash_mom1b);
 static bool test_flash_mom1c(void)
 {
 	struct seq_state seq_state = { 0 };
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.phys.te = 2E-3;
 	seq.phys.dwell = 4.1E-6;
 
@@ -310,7 +310,7 @@ UT_REGISTER_TEST(test_flash_mom1c);
 static bool test_flash_mom_meco(void)
 {
 	struct seq_state seq_state = { 0 };
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.enc.pe_mode = SEQ_PEMODE_MEMS_HYB;
 	seq.loop_dims[TE_DIM] = 5;
 	seq.loop_dims[PHS1_DIM] = 7;
@@ -366,7 +366,7 @@ UT_REGISTER_TEST(test_flash_mom_meco);
 static bool test_flash_momentum_meco64(void)
 {
 	struct seq_state seq_state = { 0 };
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.enc.pe_mode = SEQ_PEMODE_MEMS_HYB;
 
 
@@ -429,7 +429,7 @@ static bool test_flash_mom2(void)
 {
 	struct seq_state seq_state = { 0 };
 	seq_state.mode = SEQ_BLOCK_KERNEL_IMAGE;
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 
 	int E = 200;
 	struct seq_event ev[E];
@@ -462,7 +462,7 @@ static bool test_flash_mom_spoiled(void)
 
 	struct seq_state seq_state = { 0 };
 	seq_state.mode = SEQ_BLOCK_KERNEL_IMAGE;
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 
 	seq.phys.tr = 7E-3;
 	seq.phys.contrast = SEQ_CONTRAST_RF_SPOILED;
@@ -500,7 +500,7 @@ static bool test_flash_freq1(void)
 	struct seq_state seq_state = { 0 };
 	seq_state.mode = SEQ_BLOCK_KERNEL_IMAGE;
 
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.loop_dims[PHS1_DIM] = 3;
 	seq.geom.shift[0][0] = 10.E-3;
 
@@ -533,7 +533,7 @@ static bool test_flash_freq2(void)
 	struct seq_state seq_state = { 0 };
 	seq_state.mode = SEQ_BLOCK_KERNEL_IMAGE;
 
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.loop_dims[PHS1_DIM] = 3;
 	seq.geom.shift[0][1] = 20.E-3;
 
@@ -566,7 +566,7 @@ static bool test_flash_freq3(void)
 	struct seq_state seq_state = { 0 };
 	seq_state.mode = SEQ_BLOCK_KERNEL_IMAGE;
 
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	seq.geom.shift[0][2] = 20.E-3;
 
 	//  gamma * shift * slice_amplitude
@@ -594,7 +594,7 @@ static bool test_flash_phase(void)
 	struct seq_state seq_state = { };
 	seq_state.mode = SEQ_BLOCK_KERNEL_IMAGE;
 
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 
 	seq.loop_dims[PHS1_DIM] = 999;
 
@@ -628,7 +628,7 @@ UT_REGISTER_TEST(test_flash_phase);
 static bool test_raga_spokes(void)
 {
 	struct seq_state seq_state = { 0 };
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 
 	const int expected_spokes = 8;
 	const int slices = 3;
@@ -677,7 +677,7 @@ UT_REGISTER_TEST(test_raga_spokes);
 static bool test_raga_spokes_full(void)
 {
 	struct seq_state seq_state = { 0 };;
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 
 	const int spk = 377;
 	seq.loop_dims[PHS1_DIM] = spk;

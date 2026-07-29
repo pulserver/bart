@@ -96,7 +96,7 @@ int main_raga(int argc, char* argv[argc])
 
 
 	char radial_info[300];
-	struct seq_config seq_conf = seq_config_defaults;
+	struct seq_config seq_conf = seq_config_defaults_flash;
 	seq_conf.enc.pe_mode = SEQ_PEMODE_RAGA;
 	seq_conf.enc.tiny = tiny_gold;
 	seq_conf.loop_dims[PHS1_DIM] = Y;

@@ -186,7 +186,8 @@ struct seq_config {
 	long loop_dims[DIMS];
 };
 
-extern const struct seq_config seq_config_defaults;
+extern const struct seq_config seq_config_defaults_flash;
+extern const struct seq_config seq_config_defaults_miniflash;
 
 #include "misc/cppwrap.h"
 

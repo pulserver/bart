@@ -113,7 +113,7 @@ void seq_copy_order(struct seq_config* seq)
 }
 
 
-const struct seq_config seq_config_defaults = {
+const struct seq_config seq_config_defaults_flash = {
 
 	.seq_type = SEQ_TYPE_FLASH,
 
@@ -206,3 +206,70 @@ const struct seq_config seq_config_defaults = {
 };
 
 
+const struct seq_config seq_config_defaults_miniflash = {
+
+	.seq_type = SEQ_TYPE_MINIFLASH,
+
+	.phys = {
+		.tr = 10.E-3,
+		.te = 3.E-3,
+		.dwell = 4.E-6,
+		.os = 2.,
+		.asym_echo = 0.5,
+		.contrast = SEQ_CONTRAST_RF_SPOILED,
+		.rf_duration = 1.E-3,
+		.flip_angle = 6.,
+		.bwtp = 3.8,
+	},
+
+	.geom = {
+		.fov = .256,
+		.slice_thickness = .006,
+		.slab_os = 1.,
+		.shift = { [0 ... SEQ_MAX_SLICES - 1] = { 0., 0., 0. } },
+		.rot = { [0 ... SEQ_MAX_SLICES - 1] = { { 1., 0., 0. }, { 0., 1., 0. }, { 0., 0., 1. } } },
+		.baseres = 256,
+		.mb_factor = 1,
+		.sms_distance = .020,
+	},
+
+	.enc = {
+		.pe_mode = SEQ_PEMODE_CARTESIAN_LINEAR,
+		.tiny = 1,
+		.order = SEQ_ORDER_AVG_OUTER,
+	},
+
+	.magn = {
+		.mag_prep = SEQ_PREP_OFF,
+	},
+
+	.trigger = {
+		.type = SEQ_TRIGGER_OFF,
+		.trigger_out = 1,
+	},
+
+	.cest = {
+		.sat_type = SEQ_CEST_NONE,
+	},
+
+	.asl = {
+		.label_type = SEQ_ASL_NONE,
+	},
+
+	.sys = {
+		.gamma = 42.575575E6,
+		.b0 = 2.893620,
+		.grad.inv_slew_rate = .007848885540911,
+		.grad.max_amplitude = .024,
+		.coil_control_lead = 100.E-6,
+		.min_duration_ro_rf = 213.E-6,
+		.raster_grad = 1.E-5,
+		.raster_rf = 1.E-6,
+		.raster_dwell = 1.E-7,
+	},
+
+	.order = { [0 ... DIMS - 1] = 1 },
+	.loop_dims = { [2 ... DIMS - 1] = 1 },
+	.loop_dims[READ_DIM] = 1,
+	.loop_dims[PHS1_DIM] = 256,
+};

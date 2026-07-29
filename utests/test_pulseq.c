@@ -95,7 +95,7 @@ UT_REGISTER_TEST(test_shape_compression3);
 
 static bool test_rf_shape1(void)
 {
-	const struct seq_config seq = seq_config_defaults;
+	const struct seq_config seq = seq_config_defaults_flash;
 
 	struct rf_shape pulse[1];
 	seq_sample_rf_shapes(1, pulse, &seq);
@@ -137,7 +137,7 @@ UT_REGISTER_TEST(test_rf_shape1);
 
 static bool test_rf_shape2(void)
 {
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 
 	seq.magn.mag_prep = SEQ_PREP_IR_NONSELECTIVE;
 
@@ -189,7 +189,7 @@ UT_REGISTER_TEST(test_rf_shape2);
 static bool test_events_to_pulseq(void)
 {
 	struct seq_event ev[20];
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	struct seq_state seq_state = { };
 	seq_state.mode = SEQ_BLOCK_KERNEL_IMAGE;
 

@@ -20,7 +20,7 @@ static bool test_get_rot_angle(void)
 {
 	double TOL = UT_TOL * 1e-5;
 
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	long pos[DIMS] = { 0 };
 	md_copy_order(DIMS, seq.order, seq_loop_order_avg_outer);
 
@@ -47,7 +47,7 @@ UT_REGISTER_TEST(test_get_rot_angle);
 
 static bool test_cartesian_line(void)
 {
-	struct seq_config seq = seq_config_defaults;
+	struct seq_config seq = seq_config_defaults_flash;
 	long pos[DIMS] = { 0 };
 
 	seq.enc.pe_mode = SEQ_PEMODE_CARTESIAN;
