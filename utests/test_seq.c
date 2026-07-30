@@ -21,6 +21,14 @@
 
 #define FLASH_EVENTS 14
 
+#define CHECK_ID(size, arr, id) { for (int i = 0; i < size; i++) { if (arr[i].id == id) { return 1; } } return 0; }
+
+static int is_wip_id_match_SELECTION(const struct custom_ui* ui, int id) { CHECK_ID(ui->sizes[SEQ_UI_SELECTION], ui->selections, id); }
+static int is_wip_id_match_BOOL(const struct custom_ui* ui, int id) { CHECK_ID(ui->sizes[SEQ_UI_BOOL], ui->checkboxes, id); }
+static int is_wip_id_match_LONG(const struct custom_ui* ui, int id) { CHECK_ID(ui->sizes[SEQ_UI_LONG], ui->longs, id); }
+static int is_wip_id_match_DOUBLE(const struct custom_ui* ui, int id) { CHECK_ID(ui->sizes[SEQ_UI_DOUBLE], ui->doubles, id); }
+
+#define IS_VALID_IDX(pcui, name, index) is_wip_id_match_##name(pcui, index)
 
 // those are actively used in sequence
 static bool test_commands_sequence(void)
@@ -89,6 +97,70 @@ static bool test_version_check(void)
 }
 
 UT_REGISTER_TEST(test_version_check);
+
+
+static bool test_init_prepare(void)
+{
+	struct bart_seq* bart_seq = bart_seq_alloc("");
+	struct custom_ui* custom_ui = seq_custom_ui_init();
+
+	bart_seq_defaults(bart_seq);
+
+	struct seq_standard_conf init_std;
+	seq_ui_interface_standard_conf(2, bart_seq->conf, &init_std);
+
+	seq_ui_interface_standard_conf(0, bart_seq->conf, &init_std);
+
+	// initialize custom UI
+	long custom_long[SEQ_MAX_PARAMS_LONG] = { };
+	double custom_double[SEQ_MAX_PARAMS_DOUBLE] = { };
+
+	for (int i = 0; i < (custom_ui->sizes[SEQ_UI_SELECTION] + custom_ui->sizes[SEQ_UI_BOOL] + custom_ui->sizes[SEQ_UI_LONG] + custom_ui->sizes[SEQ_UI_longarr]); i++) {
+
+		if (IS_VALID_IDX(custom_ui, SELECTION, i))
+			custom_long[i] = custom_ui->selections[i - custom_ui->selections[0].id].val_default;
+		else if (IS_VALID_IDX(custom_ui, BOOL, i))
+			custom_long[i] = custom_ui->checkboxes[i - custom_ui->checkboxes[0].id].limit[3];
+		else if (IS_VALID_IDX(custom_ui, LONG, i))
+			custom_long[i] = custom_ui->longs[i - custom_ui->longs[0].id].limit[3];
+		else
+			custom_long[i] = custom_ui->longarr[i - custom_ui->longarr[0].id].limit[3];
+	}
+
+	for (int i = 0; i < (custom_ui->sizes[SEQ_UI_DOUBLE] + custom_ui->sizes[SEQ_UI_doublearr]); i++) {
+
+		if (IS_VALID_IDX(custom_ui, DOUBLE, i))
+			custom_double[i] = custom_ui->doubles[i -custom_ui->doubles[0].id].limit[3];
+		else
+			custom_double[i] = custom_ui->doublearr[i -custom_ui->doublearr[0].id].limit[3];
+	}
+
+	// get custom params from UI
+	int nl = custom_ui->sizes[SEQ_UI_SELECTION] + custom_ui->sizes[SEQ_UI_BOOL] + custom_ui->sizes[SEQ_UI_LONG] + custom_ui->sizes[SEQ_UI_longarr];
+	int nd = custom_ui->sizes[SEQ_UI_DOUBLE] + custom_ui->sizes[SEQ_UI_doublearr];
+
+	seq_ui_interface_custom_params(0, bart_seq->conf, nl, custom_long, nd, custom_double);
+
+	long init_dims[DIMS];
+	seq_ui_interface_loop_dims(2, bart_seq->conf, DIMS, init_dims);
+	seq_ui_interface_loop_dims(0, bart_seq->conf, DIMS, init_dims);
+
+	// char config_info_tmp[7852];
+	// seq_print_info_config(7852, config_info_tmp, bart_seq->conf);
+	// printf("%s\n", config_info_tmp);
+	// printf("test_prepare: %d\n", bart_seq_prepare(bart_seq));
+
+	if (0 > bart_seq_prepare(bart_seq))
+		return false;
+
+	seq_custom_ui_free(custom_ui);
+	bart_seq_free(bart_seq);
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_init_prepare);
+
 
 static int trigger_event_count(const struct seq_config* seq, const struct seq_state* seq_state)
 {
