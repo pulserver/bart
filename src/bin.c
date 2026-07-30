@@ -138,6 +138,7 @@ int main_bin(int argc, char* argv[argc])
 	struct bin_conf_s conf = bin_defaults;
 	long zero_fill[2] = { 0, 1 };
 	bool is_stream = false;
+	bool nl_out = false;
 
 	const char* label_file = NULL;
 	const char* src_file = NULL;
@@ -165,6 +166,7 @@ int main_bin(int argc, char* argv[argc])
 		OPT_SET('M', &conf.amplitude, "Amplitude binning"),
 		OPTL_VEC2(0, "zero-fill", &zero_fill, "<dim>:<num_of_frames>", "Specify dimension and number of zero filled frames. Zero-filling according to order in label_file."),
 		OPTL_SET(0, "stream", &is_stream, "Stream input/output."),
+		OPTL_SET(0, "nlout", &nl_out, "When re-order binning, stream output in label order."),
 	};
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
@@ -398,6 +400,18 @@ int main_bin(int argc, char* argv[argc])
 			md_copy_dims(DIMS, pos_src, pos_loop);
 			md_copy_dims(DIMS, pos_dst, pos_loop);
 
+			int inv_labels[N] = { };
+
+			if (is_stream) {
+
+				for (int i = 0; i < N; i++) {
+
+					pos_loop[dim] = i;
+					int label = (int)crealf(MD_ACCESS(DIMS, pos_loop, label_strs, labels));
+					inv_labels[label] = i;
+				}
+			}
+
 			for (int i = 0; i < N; i++) {
 
 				pos_loop[dim] = i;
@@ -416,7 +430,17 @@ int main_bin(int argc, char* argv[argc])
 
 				case BIN_REORDER:
 
-					pos_dst[dim] = i;
+					if (nl_out) {
+
+						// Create a non-linear output stream,
+						// simulating RAGA acquisition.
+						pos_src[dim] = i;
+						pos_dst[dim] = inv_labels[i];
+
+					} else {
+
+						pos_dst[dim] = i;
+					}
 					break;
 
 				case BIN_LABEL:

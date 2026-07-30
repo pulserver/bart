@@ -33,7 +33,7 @@ tests/test-bin-label: ones scale zeros join transpose bin resize nrmse
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
-	
+
 tests/test-bin-reorder: ones scale join bin nrmse
 	set -e ; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)				;\
 	$(TOOLDIR)/ones 2 1 1 o1.ra						;\
@@ -190,6 +190,19 @@ tests/test-bin-reorder-multi: vec join zeros noise transpose reshape slice bin n
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
+
+tests/test-bin-reorder-stream: raga bin nrmse traj copy
+	set -e ; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
+	$(TOOLDIR)/raga -s1 21 ind							;\
+	$(TOOLDIR)/traj -r -D -y21 trj							;\
+	$(TOOLDIR)/bin -o ind trj order							;\
+	$(TOOLDIR)/copy --stream 4 trj -						|\
+	$(TOOLDIR)/bin --nlout --stream -o ind - -					|\
+	$(TOOLDIR)/copy - order2							;\
+	$(TOOLDIR)/nrmse -t0 order order2						;\
+	rm *.{cfl,hdr} ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
 TESTS += tests/test-bin-label tests/test-bin-reorder tests/test-bin-quadrature tests/test-bin-quadrature-offset tests/test-bin-amplitude
-TESTS += tests/test-bin-zero-fill tests/test-bin-reorder-multi
+TESTS += tests/test-bin-zero-fill tests/test-bin-reorder-multi tests/test-bin-reorder-stream
 
