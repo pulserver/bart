@@ -218,6 +218,17 @@ static void seq_init_standard_conf(struct seq_standard_conf* init_std)
 
 	init_std->mag_prep = SEQ_PREP_OFF;
 	init_std->ti = 0.;
+	init_std->trigger_type = SEQ_TRIGGER_OFF;
+
+	init_std->gamma = 42.575575E6;
+	init_std->b0 = 2.893620;
+	init_std->grad_max_ampl = .024;
+	init_std->grad_min_rise_time = .007848885540911;
+	init_std->coil_control_lead = 100.E-6;
+	init_std->min_duration_ro_rf = 213.E-6;
+	init_std->raster_grad = 1.E-5;
+	init_std->raster_rf = 1.E-6;
+	init_std->raster_dwell = 1.E-7;
 }
 
 static void seq_bart_to_standard_conf(struct seq_standard_conf* std, struct seq_config* seq)
