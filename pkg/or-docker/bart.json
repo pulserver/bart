@@ -1,0 +1,44 @@
+{
+    "general": {
+        "id": "BART",
+        "version": "1.0.2",
+        "vendor": "IBI",
+        "name": {
+            "en": "BART"
+        },
+        "information": {
+            "en": "BART on OpenRecon"
+        },
+        "regulatory_information": {
+            "device_trade_name": "BART",
+            "gtin": "00000000000000",
+            "made_in": "AT",
+            "manufacture_date": "2026/06/24",
+            "manufacturer_address": "Graz, Austria",
+            "material_number": "BART_1.0.2",
+            "production_identifier": "1.0.2",
+            "safety_advices": "",
+            "udi": "(00)00000000000000(00)1.0.2",
+            "special_operating_instructions": "Prototype. Not for diagnostic use!",
+            "additional_relevant_information": ""
+        }
+    },
+    "reconstruction": {
+        "emitter": "raw",
+        "injector": "compleximage",
+        "transfer_protocol": {
+            "protocol": "ISMRMRD",
+            "version": "1.4.1"
+        },
+        "port": 9002,
+        "min_required_memory": 32768,
+        "min_count_required_cpu_cores": 1,
+        "can_process_adjustment_data": false,
+        "can_use_gpu": true,
+        "min_count_required_gpus": 0,
+        "min_required_gpu_memory": 0,
+        "min_count_required_cpu_cores": 1,
+        "content_qualification_type": "RESEARCH"
+    },
+    "parameters": []
+}

@@ -1,0 +1,17 @@
+To create an OpenRecon-compatible BART package,
+please run the build script at scripts/or-build.sh:
+
+Pre-requisites:
+- podman
+- pandoc
+- BART's .git-folder needs to be in the current directory, i.e.
+  you must have obtained BART via `git clone` to run this script.
+- ISMRMRD's .git-folder must be at ismrmrd/.git, available by running
+  `git clone https://github.com/ismrmrd/ismrmrd`
+- Additionally, you need a folder named "cuda-11-6-2" containing
+  - the cuda .deb local installer available at
+    https://developer.nvidia.com/cuda-11-6-2-download-archive?target_os=Linux&target_arch=x86_64&Distribution=Debian&target_version=11&target_type=deb_local
+  - liburcu6_0.12.2-1_amd64.deb, a cuda dependency available at
+    ftp.at.debian.org/debian/pool/main/libu/liburcu/liburcu6_0.12.2-1_amd64.deb
+
+Deploy the resulting .zip file to scanner, or test it locally by calling: `podman run --rm -it -p 9002:9002 bart-on-fire`.
