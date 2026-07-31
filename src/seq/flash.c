@@ -21,6 +21,7 @@
 #include "seq/cest.h"
 #include "seq/mag_prep.h"
 #include "seq/seq_asl.h"
+#include "seq/ui_enums.h"
 
 #include "flash.h"
 
@@ -347,6 +348,104 @@ static int prep_grad_pe3d_rewinder(struct grad_trapezoid* grad, const long pos[D
 
 	return 1;
 }
+
+
+static void custom_params_to_config(struct seq_config* seq, int nl, const long custom_long[nl], int nd, const double custom_double[nd])
+{
+	seq->enc.pe_mode = (enum pe_mode)custom_long[SEQ_UI_IDX_LONG_PE_MODE];
+	seq->phys.contrast = (enum flash_contrast)custom_long[SEQ_UI_IDX_LONG_CONTRAST];
+
+	seq->geom.mb_factor = 1;
+
+	if (CHECKBOX_ON == custom_long[SEQ_UI_IDX_LONG_SMS])
+		seq->geom.mb_factor = custom_long[SEQ_UI_IDX_LONG_MB_FACTOR];
+
+	seq->phys.os = 2.;
+
+	seq->enc.tiny = custom_long[SEQ_UI_IDX_LONG_TINY];
+	seq->magn.prep_scans = custom_long[SEQ_UI_IDX_LONG_PREP_SCANS];
+	seq->phys.rf_duration = 1E-6 * custom_long[SEQ_UI_IDX_LONG_RF_DURATION_US];
+	seq->magn.init_delay = custom_long[SEQ_UI_IDX_LONG_INIT_DELAY];
+	seq->asl.label_type = (enum asl_label_type)custom_long[SEQ_UI_IDX_LONG_ASL_MODE];
+	seq->loop_dims[BATCH_DIM] = (SEQ_ASL_NONE != seq->asl.label_type) 
+					? ASL_BATCH_DIM_SIZE 
+					: custom_long[SEQ_UI_IDX_LONG_INVERSIONS];
+	seq->magn.inv_delay_time = custom_long[SEQ_UI_IDX_LONG_INV_DELAY];
+	seq->enc.aligned_flags = (unsigned long)custom_long[SEQ_UI_IDX_LONG_RAGA_ALIGNED_FLAGS];
+
+
+	seq->phys.bwtp = custom_double[SEQ_UI_IDX_DOUBLE_BWTP];
+	seq->phys.asym_echo = custom_double[SEQ_UI_IDX_DOUBLE_ASYM_ECHO];
+
+	// CEST
+	seq->cest.sat_type = (enum cest_saturation_type)custom_long[SEQ_UI_IDX_LONG_CEST_SATURATION];
+	seq->cest.sat_pulses = custom_long[SEQ_UI_IDX_LONG_CEST_SAT_PULSES];
+	seq->cest.sat_pulse_pause = 1.E-3 * custom_long[SEQ_UI_IDX_LONG_CEST_SAT_PULSE_PAUSE_MS];
+
+	seq->cest.gauss_pulse_duration = 1.E-3 * custom_long[SEQ_UI_IDX_LONG_CEST_GAUSS_DURATION_MS];
+	seq->cest.gauss_pulse_fa = custom_long[SEQ_UI_IDX_LONG_CEST_GAUSS_FA];
+	seq->cest.oc_pulse_b1_scaling = custom_double[SEQ_UI_IDX_DOUBLE_CEST_OC_B1_SCALING];
+
+	seq->cest.offset_type = (enum cest_offset_type)custom_long[SEQ_UI_IDX_LONG_CEST_OFFSET_TYPE];
+	seq->cest.offset_first = custom_double[	SEQ_UI_IDX_DOUBLE_CEST_OFFSET_FIRST_PPM];
+	seq->cest.offset_last = custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_LAST_PPM];
+	seq->cest.offset_increment = custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_INCREMENT_PPM];
+	seq->cest.offset_pause = 1E-3 * custom_long[SEQ_UI_IDX_LONG_CEST_OFFSET_PAUSE_MS]; 
+	
+	seq->asl.ld = 1E-3 * custom_long[SEQ_UI_IDX_LONG_ASL_LD_MS];
+	seq->asl.pld = 1E-3 * custom_long[SEQ_UI_IDX_LONG_ASL_PLD_MS];
+}
+
+
+static void config_to_custom_params(int nl, long custom_long[nl], int nd, double custom_double[nd], const struct seq_config* seq)
+{
+	custom_long[SEQ_UI_IDX_LONG_PE_MODE] = seq->enc.pe_mode;;
+	custom_long[SEQ_UI_IDX_LONG_CONTRAST] = seq->phys.contrast;
+	custom_long[SEQ_UI_IDX_LONG_RECO] = CHECKBOX_OFF;
+
+	custom_long[SEQ_UI_IDX_LONG_SMS] = CHECKBOX_OFF;
+	if (1 < seq->geom.mb_factor)
+		custom_long[SEQ_UI_IDX_LONG_SMS] = CHECKBOX_ON;
+	custom_long[SEQ_UI_IDX_LONG_MB_FACTOR] = seq->geom.mb_factor;
+
+	custom_long[SEQ_UI_IDX_LONG_TINY] = seq->enc.tiny;
+	custom_long[SEQ_UI_IDX_LONG_PREP_SCANS] = seq->magn.prep_scans;
+	custom_long[SEQ_UI_IDX_LONG_RF_DURATION_US] = lround(1.E6 * seq->phys.rf_duration);
+	custom_long[SEQ_UI_IDX_LONG_INIT_DELAY] = seq->magn.init_delay;
+	custom_long[SEQ_UI_IDX_LONG_INVERSIONS] = seq->loop_dims[BATCH_DIM];
+	custom_long[SEQ_UI_IDX_LONG_INV_DELAY] = seq->magn.inv_delay_time;
+	custom_long[SEQ_UI_IDX_LONG_RAGA_ALIGNED_FLAGS] = (long)seq->enc.aligned_flags;
+	custom_double[SEQ_UI_IDX_DOUBLE_BWTP] = seq->phys.bwtp;
+	custom_double[SEQ_UI_IDX_DOUBLE_ASYM_ECHO] = seq->phys.asym_echo;
+
+	// CEST
+	custom_long[SEQ_UI_IDX_LONG_CEST_SATURATION] =seq->cest.sat_type;
+	custom_long[SEQ_UI_IDX_LONG_CEST_SAT_PULSES]= seq->cest.sat_pulses;
+	custom_long[SEQ_UI_IDX_LONG_CEST_SAT_PULSE_PAUSE_MS] = lround(1.E3 * seq->cest.sat_pulse_pause); // s -> ms
+
+	custom_long[SEQ_UI_IDX_LONG_CEST_GAUSS_DURATION_MS] = lround(1.E3 * seq->cest.gauss_pulse_duration); // s -> ms
+	custom_long[SEQ_UI_IDX_LONG_CEST_GAUSS_FA] = (long)seq->cest.gauss_pulse_fa;
+	custom_double[SEQ_UI_IDX_DOUBLE_CEST_OC_B1_SCALING] = seq->cest.oc_pulse_b1_scaling;
+
+	custom_long[SEQ_UI_IDX_LONG_CEST_OFFSET_TYPE] = seq->cest.offset_type;
+	custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_FIRST_PPM] = seq->cest.offset_first;
+	custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_LAST_PPM] = seq->cest.offset_last;
+	custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_INCREMENT_PPM] = seq->cest.offset_increment;
+	custom_long[SEQ_UI_IDX_LONG_CEST_OFFSET_PAUSE_MS] = lround(1.E3 * seq->cest.offset_pause);
+
+	custom_long[SEQ_UI_IDX_LONG_ASL_MODE] = seq->asl.label_type;
+	custom_long[SEQ_UI_IDX_LONG_ASL_LD_MS] = lround(1.E3 * seq->asl.ld);
+	custom_long[SEQ_UI_IDX_LONG_ASL_PLD_MS] = lround(1.E3 * seq->asl.pld);
+}
+
+void flash_interface_custom_params(int reverse, struct seq_config* seq, int nl, long params_long[nl], int nd, double params_double[nd])
+{
+	if (reverse)
+		config_to_custom_params(nl, params_long, nd, params_double, seq);
+	else
+		custom_params_to_config(seq, nl, params_long, nd, params_double);
+}
+
 
 
 static double gradient_time_after_RO(const struct seq_config* seq)

@@ -7,6 +7,8 @@
 
 struct seq_config;
 
+extern void flash_interface_custom_params(int reverse, struct seq_config* seq, int nl, long params_long[__VLA(nl)], int nd, double params_double[__VLA(nd)]);
+
 extern double flash_minimum_tr(const struct seq_config* seq);
 extern void flash_minimum_te(const struct seq_config* seq, double* min_te, double* fill_te);
 extern double flash_total_measure_time(const struct seq_config* seq);
