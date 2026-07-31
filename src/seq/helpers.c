@@ -13,17 +13,13 @@
 
 #include "noncart/traj.h"
 
-#include "seq/config.h"
 #include "seq/anglecalc.h"
-#include "seq/adc_rf.h"
-#include "seq/flash.h"
-#include "seq/cest.h"
-#include "seq/misc.h"
-#include "seq/mag_prep.h"
-#include "seq/opts.h"
-#include "seq/ui_enums.h"
+#include "seq/config.h"
 #include "seq/custom_selections.h"
-#include "seq/seq_asl.h"
+#include "seq/misc.h"
+#include "seq/opts.h"
+
+#include "seq/flash.h"
 
 #include "helpers.h"
 
@@ -255,122 +251,6 @@ static void seq_init_loop_dims(const int D, long dims[D])
 }
 
 
-static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in_dims[D])
-{
-	if(SEQ_ASL_NONE != seq->asl.label_type)
-		seq->enc.order = SEQ_ORDER_SEQ_ASL;
-
-	switch (seq->enc.order) {
-
-	case SEQ_ORDER_AVG_OUTER:
-		md_copy_order(DIMS, seq->order, seq_loop_order_avg_outer);
-		break;
-
-	case SEQ_ORDER_SEQ_MS:
-		md_copy_order(DIMS, seq->order, seq_loop_order_multislice);
-		break;
-
-	case SEQ_ORDER_AVG_INNER:
-		md_copy_order(DIMS, seq->order, seq_loop_order_avg_inner);
-		break;
-
-	case SEQ_ORDER_SEQ_ASL:
-		md_copy_order(DIMS, seq->order, seq_loop_order_asl);
-		break;
-	}
-
-	if (seq->enc.is3D) {
-
-		seq->loop_dims[PHS2_DIM] = in_dims[PHS2_DIM];
-		seq->loop_dims[SLICE_DIM] = in_dims[SLICE_DIM];
-		seq->geom.mb_factor = 1;
-
-		seq->geom.slice_thickness = seq->geom.slice_thickness / (seq->loop_dims[PHS2_DIM] / seq->geom.slab_os);
-
-	} else {
-
-		long total_slices = in_dims[SLICE_DIM];
-
-		if (1 < seq->geom.mb_factor) {
-
-			seq->loop_dims[SLICE_DIM] = seq->geom.mb_factor;
-			seq->loop_dims[PHS2_DIM] = total_slices / seq->geom.mb_factor;
-
-		} else {
-
-			seq->loop_dims[SLICE_DIM] = total_slices;
-			seq->loop_dims[PHS2_DIM] = 1;
-		}
-
-		if ((seq->loop_dims[PHS2_DIM] * seq->loop_dims[SLICE_DIM]) != total_slices)
-			seq->loop_dims[PHS2_DIM] = -1; //mb groups
-	}
-
-	long frames = in_dims[TIME_DIM];
-	seq->loop_dims[TIME_DIM] = frames;
-
-	seq->loop_dims[BATCH_DIM] = (SEQ_ASL_NONE != seq->asl.label_type) ? ASL_BATCH_DIM_SIZE : seq->loop_dims[BATCH_DIM];
-
-	long radial_views = in_dims[PHS1_DIM];
-
-	if (SEQ_PEMODE_RAGA == seq->enc.pe_mode) {
-
-		seq->loop_dims[TIME_DIM] = (long)ceil(1. * frames / radial_views);
-		seq->loop_dims[ITER_DIM] = frames % radial_views;
-
-		if (0 == seq->loop_dims[ITER_DIM])
-			seq->loop_dims[ITER_DIM] = radial_views;
-	}
-
-	seq->loop_dims[TIME2_DIM] = 1;
-
-	if (SEQ_TRIGGER_OFF != seq->trigger.type)
-		seq->loop_dims[TIME2_DIM] = in_dims[TIME2_DIM];
-
-	seq->loop_dims[AVG_DIM] = in_dims[AVG_DIM];
-	seq->loop_dims[PHS1_DIM] = radial_views;
-	seq->loop_dims[TE_DIM] = in_dims[TE_DIM];
-	seq->loop_dims[CSHIFT_DIM] = cest_offsets(seq);
-
-	int pre_calls = 3; // 3 additional calls for delay_meas + noise_scan + ecg trigger
-	if (SEQ_CEST_NONE != seq->cest.sat_type) 
-		seq->loop_dims[COEFF2_DIM] = seq->cest.sat_pulses + MAX(1, seq->magn.prep_scans) + pre_calls; // no trigger for CEST, but spoiler or mag_prep
-	else if (SEQ_ASL_NONE != seq->asl.label_type)
-		seq->loop_dims[COEFF2_DIM] = calc_asl_coeff2_dim(seq) + pre_calls;
-	else
-		seq->loop_dims[COEFF2_DIM] = MAX(1, seq->magn.prep_scans) + pre_calls;
-
-
-	seq->loop_dims[COEFF_DIM] = 3; // pre-/post- and actual kernel calls
-}
-
-static void conf_to_loop_dims(const int D, long dims[D], struct seq_config* seq)
-{
-	if (seq->enc.is3D) {
-
-		dims[PHS2_DIM] = seq->loop_dims[PHS2_DIM];
-		dims[SLICE_DIM] = seq->loop_dims[SLICE_DIM];
-
-	} else {
-
-		dims[SLICE_DIM] = seq->loop_dims[SLICE_DIM];
-		dims[PHS2_DIM] = (seq->geom.mb_factor > 1) ? seq->loop_dims[SLICE_DIM] / seq->geom.mb_factor : 1;
-		if ((dims[PHS2_DIM] * seq->geom.mb_factor != seq->loop_dims[SLICE_DIM]))
-			seq->loop_dims[PHS2_DIM] = -1; //mb groups
-	}
-
-	dims[PHS1_DIM] = seq->loop_dims[PHS1_DIM];
-
-	dims[BATCH_DIM] = (SEQ_ASL_NONE != seq->asl.label_type) ? ASL_BATCH_DIM_SIZE : seq->loop_dims[BATCH_DIM];
-	dims[TIME_DIM] = seq->loop_dims[TIME_DIM];
-
-	if (SEQ_PEMODE_RAGA == seq->enc.pe_mode)
-		dims[TIME_DIM] = (dims[TIME_DIM] - 1) * dims[PHS1_DIM] + seq->loop_dims[ITER_DIM];
-
-	dims[TE_DIM] = seq->loop_dims[TE_DIM];
-	dims[AVG_DIM] = seq->loop_dims[AVG_DIM];
-}
-
 void seq_ui_interface_loop_dims(int reverse, struct seq_config* seq, const int D, long dims[__VLA(D)])
 {
 	if (2 == reverse) {
@@ -379,10 +259,25 @@ void seq_ui_interface_loop_dims(int reverse, struct seq_config* seq, const int D
 		return;
 	}
 
-	if (reverse)
-		conf_to_loop_dims(D, dims, seq);
-	else
-		loop_dims_to_conf(seq, D, dims);
+	switch (seq->seq_type) {
+
+	case SEQ_TYPE_FLASH:
+
+		flash_interface_loop_dims(reverse, seq, D, dims);
+		break;
+
+	default:
+
+		if (reverse) {
+
+			md_copy_dims(D, dims, seq->loop_dims);
+
+		} else {
+
+			md_select_dims(D, (PHS1_FLAG | PHS2_FLAG | TE_FLAG | TIME_FLAG | TIME2_FLAG | SLICE_FLAG | AVG_FLAG), seq->loop_dims, dims);
+			seq_copy_order(seq);
+		}
+	}
 }
 
 
