@@ -33,6 +33,12 @@ double slice_amplitude(const struct seq_config* seq)
 	return seq->phys.bwtp / (seq->sys.gamma * seq->phys.rf_duration * slab);
 }
 
+double slice_momentum_to_rephase(const struct seq_config* seq)
+{
+	double amp = slice_amplitude(seq);
+	return amp * (0.5 * seq->phys.rf_duration + 0.5 * amp * seq->sys.grad.inv_slew_rate);
+}
+
 int gradient_prepare_with_timing(struct grad_trapezoid* grad, double moment, const struct seq_config* seq)
 {
 	if (2 * seq->sys.raster_grad > (grad->rampup + grad->flat + grad->rampdown))

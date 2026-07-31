@@ -58,6 +58,7 @@ static inline const char *error_string(enum seq_error e) {
 struct seq_config;
 
 extern double slice_amplitude(const struct seq_config* seq);
+extern double slice_momentum_to_rephase(const struct seq_config* seq);
 extern double ro_amplitude(const struct seq_config* seq);
 
 extern double round_up_raster(double time, double raster_time);
