@@ -15,6 +15,10 @@
 #include <mpi-ext.h>
 #endif
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include <complex.h>
 #include <assert.h>
 #include <limits.h>
@@ -51,6 +55,25 @@ static MPI_Comm mpi_get_comm(void)
 {
 	return comm;
 }
+
+static void mpi_error(const char* file, int line, int error_code)
+{
+#ifdef OPENMP
+	if (omp_in_parallel())
+		error("MPI calls are not allowed from OpenMP parallel regions!");
+#endif
+
+	char error_str[MPI_MAX_ERROR_STRING];
+	int str_len;
+	int return_code = MPI_Error_string(error_code, error_str, &str_len);
+
+	if (return_code != MPI_SUCCESS)
+		strcpy(error_str, "Unknown MPI error");
+	
+	error("MPI Error: %s in %s:%d\n", error_str, file, line);
+}
+
+#define MPI_ERROR(x)	({ int errval = (x); if (MPI_SUCCESS != errval) mpi_error(__FILE__, __LINE__, errval); })
 #endif
 
 
@@ -61,10 +84,10 @@ void mpi_init(int* argc, char*** argv)
 
 		mpi_initialized = true;
 
-		MPI_Init(argc, argv);
-		MPI_Comm_dup(MPI_COMM_WORLD, &comm);
-		MPI_Comm_rank(comm, &mpi_rank);
-		MPI_Comm_size(comm, &mpi_nprocs);
+		MPI_ERROR(MPI_Init(argc, argv));
+		MPI_ERROR(MPI_Comm_dup(MPI_COMM_WORLD, &comm));
+		MPI_ERROR(MPI_Comm_rank(comm, &mpi_rank));
+		MPI_ERROR(MPI_Comm_size(comm, &mpi_nprocs));
 
 		if (1 == mpi_nprocs)
 			return;
@@ -74,14 +97,14 @@ void mpi_init(int* argc, char*** argv)
 			cuda_aware_mpi = true;
 #endif
 		MPI_Comm node_comm;
-		MPI_Comm_split_type(comm, MPI_COMM_TYPE_SHARED, mpi_get_num_procs(), MPI_INFO_NULL, &node_comm);
+		MPI_ERROR(MPI_Comm_split_type(comm, MPI_COMM_TYPE_SHARED, mpi_get_num_procs(), MPI_INFO_NULL, &node_comm));
 
 		int rank_on_node;
-		MPI_Comm_rank(node_comm, &rank_on_node);
+		MPI_ERROR(MPI_Comm_rank(node_comm, &rank_on_node));
 
 		int number_of_nodes = (rank_on_node == 0);
 
-		MPI_Allreduce(MPI_IN_PLACE, &number_of_nodes, 1, MPI_INT, MPI_SUM, comm);
+		MPI_ERROR(MPI_Allreduce(MPI_IN_PLACE, &number_of_nodes, 1, MPI_INT, MPI_SUM, comm));
 
 		if ((1 == number_of_nodes) && !mpi_shared_files) {
 
@@ -91,7 +114,7 @@ void mpi_init(int* argc, char*** argv)
 			mpi_shared_files = true;
 		}
 
-		MPI_Comm_free(&node_comm);
+		MPI_ERROR(MPI_Comm_free(&node_comm));
 	}
 #else
 	error("BART was compiled without MPI support!\n");
@@ -104,7 +127,7 @@ void mpi_deinit(void)
 {
 #ifdef USE_MPI
 	if (mpi_initialized)
-		MPI_Finalize();
+		MPI_ERROR(MPI_Finalize());
 #endif
 }
 
@@ -112,7 +135,7 @@ void mpi_abort(int err_code)
 {
 #ifdef USE_MPI
 	if (1 < mpi_get_num_procs())
-		MPI_Abort(comm, err_code);
+		MPI_ERROR(MPI_Abort(comm, err_code));
 #else
 	UNUSED(err_code);
 #endif
@@ -143,15 +166,15 @@ void mpi_signoff_proc(bool signoff)
 		return;
 
 	MPI_Comm new_comm;
-	MPI_Comm_split(comm, !signoff, mpi_get_rank(), &new_comm);
-	MPI_Comm_free(&comm);
+	MPI_ERROR(MPI_Comm_split(comm, !signoff, mpi_get_rank(), &new_comm));
+	MPI_ERROR(MPI_Comm_free(&comm));
 
 	comm = new_comm;
 
 	if (!signoff) {
 
-		MPI_Comm_rank(comm, &mpi_rank);
-		MPI_Comm_size(comm, &mpi_nprocs);
+		MPI_ERROR(MPI_Comm_rank(comm, &mpi_rank));
+		MPI_ERROR(MPI_Comm_size(comm, &mpi_nprocs));
 
 	} else {
 
@@ -181,7 +204,7 @@ void mpi_sync(void)
 {
 #ifdef USE_MPI
 	if (1 < mpi_get_num_procs())
-		MPI_Barrier(mpi_get_comm());
+		MPI_ERROR(MPI_Barrier(mpi_get_comm()));
 #endif
 }
 
@@ -227,15 +250,15 @@ void mpi_bcast_selected(bool tag, void* ptr, long size, int root)
 #endif
 
 	MPI_Comm comm_sub;
-	MPI_Comm_split(mpi_get_comm(), tag, (mpi_get_rank() != root), &comm_sub);
+	MPI_ERROR(MPI_Comm_split(mpi_get_comm(), tag, (mpi_get_rank() != root), &comm_sub));
 
 	if (tag) {
 
 		for (long n = 0; n < size; n += INT_MAX / 2)
-			MPI_Bcast(ptr + n, MIN(size - n, INT_MAX / 2), MPI_BYTE, 0, comm_sub);
+			MPI_ERROR(MPI_Bcast(ptr + n, MIN(size - n, INT_MAX / 2), MPI_BYTE, 0, comm_sub));
 	}
 
-	MPI_Comm_free(&comm_sub);
+	MPI_ERROR(MPI_Comm_free(&comm_sub));
 #else
 	UNUSED(tag);
 	UNUSED(ptr);
@@ -313,7 +336,7 @@ void mpi_copy(void* dst, long size, const void* src, int sender_rank, int recv_r
 #endif
 
 		for (long n = 0; n < size; n += INT_MAX / 2)
-			MPI_Send(src2 + n, MIN(size - n, INT_MAX / 2), MPI_BYTE, recv_rank, 0, mpi_get_comm());
+			MPI_ERROR(MPI_Send(src2 + n, MIN(size - n, INT_MAX / 2), MPI_BYTE, recv_rank, 0, mpi_get_comm()));
 
 #ifdef USE_CUDA
 		if (cuda_ondevice(src) && !cuda_aware_mpi)
@@ -334,7 +357,7 @@ void mpi_copy(void* dst, long size, const void* src, int sender_rank, int recv_r
 #endif
 
 		for (long n = 0; n < size; n += INT_MAX / 2)
-			MPI_Recv(dst2 + n, MIN(size - n, INT_MAX / 2), MPI_BYTE, sender_rank, 0, mpi_get_comm(), MPI_STATUS_IGNORE);
+			MPI_ERROR(MPI_Recv(dst2 + n, MIN(size - n, INT_MAX / 2), MPI_BYTE, sender_rank, 0, mpi_get_comm(), MPI_STATUS_IGNORE));
 
 #ifdef USE_CUDA
 		if (cuda_ondevice(dst) && !cuda_aware_mpi) {
@@ -399,8 +422,8 @@ void mpi_scatter_batch(void* dst, long count, const void* src, size_t size)
 	count *= (long)size;
 	assert(count < INT_MAX);
 
-	MPI_Scatter(src, count, MPI_BYTE, ((0 == mpi_get_rank()) && (dst == src)) ? MPI_IN_PLACE : dst,
-			count, MPI_BYTE, 0, mpi_get_comm());
+	MPI_ERROR(MPI_Scatter(src, count, MPI_BYTE, ((0 == mpi_get_rank()) && (dst == src)) ? MPI_IN_PLACE : dst,
+				count, MPI_BYTE, 0, mpi_get_comm()));
 #else
 	UNUSED(src);
 	UNUSED(count);
@@ -429,8 +452,8 @@ void mpi_gather_batch(void* dst, long count, const void* src, size_t size)
 	count *= (long)size;
 	assert(count < INT_MAX);
 
-	MPI_Gather(((0 == mpi_get_rank()) && (dst == src)) ? MPI_IN_PLACE : src, count,
-			MPI_BYTE, dst, count, MPI_BYTE, 0, mpi_get_comm());
+	MPI_ERROR(MPI_Gather(((0 == mpi_get_rank()) && (dst == src)) ? MPI_IN_PLACE : src, count,
+				MPI_BYTE, dst, count, MPI_BYTE, 0, mpi_get_comm()));
 #else
 	UNUSED(dst);
 	UNUSED(count);
@@ -481,7 +504,7 @@ void mpi_reduce_land(long N, bool vec[__VLA(N)])
 #endif
 
 	for (long n = 0; n < N; n += INT_MAX / 2)
-		MPI_Allreduce(MPI_IN_PLACE, vec + n, MIN(N - n, INT_MAX / 2), MPI_C_BOOL, MPI_LAND, mpi_get_comm());
+		MPI_ERROR(MPI_Allreduce(MPI_IN_PLACE, vec + n, MIN(N - n, INT_MAX / 2), MPI_C_BOOL, MPI_LAND, mpi_get_comm()));
 #else
 	(void)vec;
 #endif
@@ -501,7 +524,7 @@ static void mpi_allreduce_sum_gpu(int N, float vec[N], MPI_Comm comm)
 		float* tmp = xmalloc((size_t)size);
 		cuda_memcpy(size, tmp, vec);
 
-		MPI_Allreduce(MPI_IN_PLACE, tmp, N, MPI_FLOAT, MPI_SUM, comm);
+		MPI_ERROR(MPI_Allreduce(MPI_IN_PLACE, tmp, N, MPI_FLOAT, MPI_SUM, comm));
 
 		cuda_memcpy(size, vec, tmp);
 		xfree(tmp);
@@ -513,7 +536,7 @@ static void mpi_allreduce_sum_gpu(int N, float vec[N], MPI_Comm comm)
 		cuda_sync_stream();
 #endif
 
-	MPI_Allreduce(MPI_IN_PLACE, vec, N, MPI_FLOAT, MPI_SUM, comm);
+	MPI_ERROR(MPI_Allreduce(MPI_IN_PLACE, vec, N, MPI_FLOAT, MPI_SUM, comm));
 }
 #endif
 
@@ -526,7 +549,7 @@ static void mpi_reduce_sum_kernel(long N, float vec[N])
 	int tag = mpi_accessible(vec) ? 1 : 0;
 
 	MPI_Comm comm_sub;
-	MPI_Comm_split(mpi_get_comm(), tag, 0, &comm_sub);
+	MPI_ERROR(MPI_Comm_split(mpi_get_comm(), tag, 0, &comm_sub));
 
 	if (0 < tag) {
 
@@ -536,7 +559,7 @@ static void mpi_reduce_sum_kernel(long N, float vec[N])
 			mpi_allreduce_sum_gpu(MIN(N - n, INT_MAX / 2), vec + n, comm_sub);
 	}
 
-	MPI_Comm_free(&comm_sub);
+	MPI_ERROR(MPI_Comm_free(&comm_sub));
 }
 #endif
 
@@ -565,7 +588,7 @@ static void mpi_allreduce_sumD_gpu(int N, double vec[N], MPI_Comm comm)
 		float* tmp = xmalloc((size_t)size);
 		cuda_memcpy(size, tmp, vec);
 
-		MPI_Allreduce(MPI_IN_PLACE, tmp, N, MPI_DOUBLE, MPI_SUM, comm);
+		MPI_ERROR(MPI_Allreduce(MPI_IN_PLACE, tmp, N, MPI_DOUBLE, MPI_SUM, comm));
 
 		cuda_memcpy(size, vec, tmp);
 		xfree(tmp);
@@ -576,7 +599,7 @@ static void mpi_allreduce_sumD_gpu(int N, double vec[N], MPI_Comm comm)
 	if (cuda_ondevice(vec))
 		cuda_sync_stream();
 #endif
-	MPI_Allreduce(MPI_IN_PLACE, vec, N, MPI_DOUBLE, MPI_SUM, comm);
+	MPI_ERROR(MPI_Allreduce(MPI_IN_PLACE, vec, N, MPI_DOUBLE, MPI_SUM, comm));
 }
 #endif
 
@@ -589,7 +612,7 @@ static void mpi_reduce_sumD_kernel(long N, double vec[N])
 	int tag = mpi_accessible(vec) ? 1 : 0;
 
 	MPI_Comm comm_sub;
-	MPI_Comm_split(mpi_get_comm(), tag, 0, &comm_sub);
+	MPI_ERROR(MPI_Comm_split(mpi_get_comm(), tag, 0, &comm_sub));
 
 	if (0 < tag) {
 
@@ -599,7 +622,7 @@ static void mpi_reduce_sumD_kernel(long N, double vec[N])
 			mpi_allreduce_sumD_gpu(MIN(N - n, INT_MAX / 2), vec2 + n, comm_sub);
 	}
 
-	MPI_Comm_free(&comm_sub);
+	MPI_ERROR(MPI_Comm_free(&comm_sub));
 }
 #endif
 
