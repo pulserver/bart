@@ -157,6 +157,43 @@ static bool test_mpi_transpose(void)
 UT_UNUSED_TEST(test_mpi_transpose);
 
 
+static bool test_mpi_circshift(void)
+{
+	enum { N = 5 };
+	long dims[N] = { 128, 128, 1, 16, 1 };
+	unsigned long mpi_flags = MD_BIT(3);
+	long center[N] = {};
+
+	complex float* a = md_alloc(N, dims, CFL_SIZE);
+	complex float* b = md_alloc(N, dims, CFL_SIZE);
+
+	md_gaussian_rand(N, dims, a);
+	center[3] = 1;
+
+	complex float* a_dist = md_mpi_move(N, mpi_flags, dims, a, CFL_SIZE);
+	complex float* b_dist = md_mpi_move(N, mpi_flags, dims, b, CFL_SIZE);
+
+	
+	md_circ_shift(N, dims, center, b, a, CFL_SIZE);
+	md_circ_shift(N, dims, center, b_dist, a_dist, CFL_SIZE);
+
+	complex float* c = md_mpi_move(N, mpi_flags, dims, b, CFL_SIZE);
+
+	bool equal = md_compare(N, dims, b_dist, c, CFL_SIZE);
+
+	md_free(a);
+	md_free(a_dist);
+	md_free(b);
+	md_free(b_dist);
+	md_free(c);
+
+	UT_RETURN_ASSERT(equal);
+}
+
+
+UT_REGISTER_TEST(test_mpi_circshift)
+
+
 static bool test_mpi_reshape(void)
 {
 	enum { N = 4 };
