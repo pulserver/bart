@@ -963,7 +963,7 @@ void md_copy2(int D, const long dim[D], const long ostr[D], void* optr, const lo
 					if ((sender == receiver) && (mpi_get_rank() == sender))
 						md_copy2(ND, bdims, ocstr, _dst, icstr, _src, size);
 					else
-						mpi_copy2(ND, bdims, ocstr, _dst, icstr, _src, (long)size, sender, receiver);
+						mpi_copy2_nonblocking(ND, bdims, ocstr, _dst, icstr, _src, (long)size, sender, receiver);
 				}
 
 				continue;
@@ -972,6 +972,8 @@ void md_copy2(int D, const long dim[D], const long ostr[D], void* optr, const lo
 			assert(0);
 
 		} while (md_next(D, ldims, ~0UL, pos));
+
+		mpi_waitall();
 
 		return;
 	}

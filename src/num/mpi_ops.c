@@ -41,7 +41,7 @@
 #include "mpi_ops.h"
 
 #define UNUSED(x) (void)x
-
+#define MAX_MPI_REQUESTS 1024
 
 static int mpi_rank = -1;  //ranks are the process ID of MPI
 static int mpi_nprocs = 1; // number of processes
@@ -50,6 +50,16 @@ bool cuda_aware_mpi = false;
 #ifdef USE_MPI
 static bool mpi_initialized = false;
 static MPI_Comm comm = MPI_COMM_NULL;
+
+typedef struct {
+	int next_request;
+	MPI_Request requests[MAX_MPI_REQUESTS];
+} request_pool_t;
+
+static request_pool_t request_pool = {
+	.next_request = 0,
+	.requests = {[0 ... MAX_MPI_REQUESTS -1] = MPI_REQUEST_NULL}
+};
 
 static MPI_Comm mpi_get_comm(void)
 {
@@ -295,12 +305,38 @@ void mpi_bcast2(int N, const long dims[N], const long strs[N], void* ptr, long s
 	md_nary(1, N, tdims, &strs, &ptr, nary_bcast);
 }
 
-
 /**
 * Data transfer API
 **/
 
-void mpi_copy(void* dst, long size, const void* src, int sender_rank, int recv_rank)
+#ifdef USE_MPI
+static MPI_Request* mpi_get_request(void)
+{
+        if (request_pool.next_request >= MAX_MPI_REQUESTS)
+                mpi_waitall();
+
+        return &(request_pool.requests[request_pool.next_request++]);
+}
+
+
+static void mpi_send(void* src, long size, int recv_rank, bool blocking) 
+{
+	if (blocking) 
+		MPI_ERROR(MPI_Send(src, size, MPI_BYTE, recv_rank, 0, mpi_get_comm()));
+	else 
+		MPI_ERROR(MPI_Isend(src, size, MPI_BYTE, recv_rank, 0, mpi_get_comm(), mpi_get_request()));
+}
+
+static void mpi_recv(void* dst, long size, int sender_rank, bool blocking) 
+{
+	if (blocking)
+		MPI_ERROR(MPI_Recv(dst, size, MPI_BYTE, sender_rank, 0, mpi_get_comm(), MPI_STATUS_IGNORE));
+	else
+		MPI_ERROR(MPI_Irecv(dst, size, MPI_BYTE, sender_rank, 0, mpi_get_comm(), mpi_get_request()));
+}
+#endif
+
+static void mpi_copy_kernel(void* dst, long size, const void* src, int sender_rank, int recv_rank, bool blocking)
 {
 	if (sender_rank == recv_rank) {
 
@@ -326,17 +362,14 @@ void mpi_copy(void* dst, long size, const void* src, int sender_rank, int recv_r
 		if (cuda_ondevice(src) && !cuda_aware_mpi) {
 
 			print_cuda_aware_warning();
-
+			blocking = true;
 			src2 = xmalloc((size_t)size);
 			cuda_memcpy(size, src2, src);
 		}
-
-		if (cuda_ondevice(src2))
-			cuda_sync_stream();
 #endif
 
 		for (long n = 0; n < size; n += INT_MAX / 2)
-			MPI_ERROR(MPI_Send(src2 + n, MIN(size - n, INT_MAX / 2), MPI_BYTE, recv_rank, 0, mpi_get_comm()));
+			mpi_send(src2 + n, MIN(size - n, INT_MAX / 2), recv_rank, blocking);
 
 #ifdef USE_CUDA
 		if (cuda_ondevice(src) && !cuda_aware_mpi)
@@ -352,12 +385,13 @@ void mpi_copy(void* dst, long size, const void* src, int sender_rank, int recv_r
 		if (cuda_ondevice(dst) && !cuda_aware_mpi) {
 
 			print_cuda_aware_warning();
+			blocking = true;
 			dst2 = xmalloc((size_t)size);
 		}
 #endif
 
 		for (long n = 0; n < size; n += INT_MAX / 2)
-			MPI_ERROR(MPI_Recv(dst2 + n, MIN(size - n, INT_MAX / 2), MPI_BYTE, sender_rank, 0, mpi_get_comm(), MPI_STATUS_IGNORE));
+			mpi_recv(dst2 + n, MIN(size - n, INT_MAX / 2), sender_rank, blocking);
 
 #ifdef USE_CUDA
 		if (cuda_ondevice(dst) && !cuda_aware_mpi) {
@@ -373,12 +407,30 @@ void mpi_copy(void* dst, long size, const void* src, int sender_rank, int recv_r
 	UNUSED(src);
 	UNUSED(sender_rank);
 	UNUSED(recv_rank);
+	UNUSED(blocking);
 #endif
+}
+
+void mpi_copy(void* dst, long size, const void* src, int sender_rank, int recv_rank)
+{
+	mpi_copy_kernel(dst, size, src, sender_rank, recv_rank, true);
+}
+
+void mpi_copy_nonblocking(void* dst, long size, const void* src, int sender_rank, int recv_rank)
+{
+	mpi_copy_kernel(dst, size, src, sender_rank, recv_rank, false);
 }
 
 void mpi_copy2(int N, const long dim[N], const long ostr[N], void* optr, const long istr[N], const void* iptr, long size, int sender_rank, int recv_rank)
 {
 	const long (*nstr[2])[N] = { (const long (*)[N])ostr, (const long (*)[N])istr };
+	extern bool num_auto_parallelize;
+	bool ap_save = num_auto_parallelize;
+	num_auto_parallelize = false;
+
+#ifdef USE_CUDA
+	cuda_sync_stream();
+#endif
 
 	NESTED(void, nary_copy_mpi, (struct nary_opt_data_s* opt_data, void* ptr[]))
 	{
@@ -388,6 +440,68 @@ void mpi_copy2(int N, const long dim[N], const long ostr[N], void* optr, const l
 	};
 
 	optimized_nop(2, MD_BIT(0), N, dim, nstr, ((void*[2]){ optr, (void*)iptr }), ((size_t[2]){ (size_t)size, (size_t)size }), nary_copy_mpi);
+
+	num_auto_parallelize = ap_save;
+}
+
+
+void mpi_copy2_nonblocking(int N, const long dim[N], const long ostr[N], void* optr, const long istr[N], const void* iptr, long size, int sender_rank, int recv_rank)
+{
+	const long (*nstr[2])[N] = { (const long (*)[N])ostr, (const long (*)[N])istr };
+	extern bool num_auto_parallelize;
+	bool ap_save = num_auto_parallelize;
+	num_auto_parallelize = false;
+
+#ifdef USE_CUDA
+	cuda_sync_stream();
+#endif
+
+	NESTED(void, nary_copy_mpi, (struct nary_opt_data_s* opt_data, void* ptr[]))
+	{
+		long size2 = size * opt_data->size;
+
+		mpi_copy_nonblocking(ptr[0], size2, ptr[1], sender_rank, recv_rank);
+	};
+
+	optimized_nop(2, MD_BIT(0), N, dim, nstr, ((void*[2]){ optr, (void*)iptr }), ((size_t[2]){ (size_t)size, (size_t)size }), nary_copy_mpi);
+
+	mpi_progress_requests();
+
+	num_auto_parallelize = ap_save;
+}
+
+void mpi_waitall(void)
+{
+#ifdef USE_MPI
+	if (0 == request_pool.next_request)
+		return;
+
+	MPI_ERROR(MPI_Waitall(request_pool.next_request, request_pool.requests, MPI_STATUSES_IGNORE));
+	request_pool.next_request = 0;
+#endif
+}
+
+/**
+ * Progresses non-blocking MPI requests.
+ *
+ * Calling this function periodically in intermediate levels of nested loops
+ * can improve communication/computation overlap by giving MPI an opportunity
+ * to make progress on outstanding communication while computation is ongoing.
+ * This is particularly useful when the outer loop performs little or no MPI
+ * communication and most requests are posted in the innermost loops.
+ * Otherwise, communication progress may be deferred until MPI_Waitall is
+ * called.
+ *
+ */
+void mpi_progress_requests(void)
+{
+#ifdef USE_MPI
+	if (0 == request_pool.next_request)
+		return;
+
+	int ready;
+	MPI_ERROR(MPI_Testall(MAX_MPI_REQUESTS, request_pool.requests, &ready, MPI_STATUSES_IGNORE));
+#endif
 }
 
 
