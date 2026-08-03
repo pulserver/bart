@@ -49,6 +49,7 @@ extern void cuda_memcache_off(void);
 extern void cuda_memcache_clear(void);
 
 extern void cuda_use_global_memory(void);
+extern bool cuda_is_memory_global(void);
 extern void print_cuda_meminfo(void);
 
 #include "misc/cppwrap.h"

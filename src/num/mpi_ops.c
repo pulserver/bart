@@ -205,6 +205,9 @@ static void print_cuda_aware_warning(void)
 	if (!printed && !cuda_aware_mpi)
 		debug_printf(DP_WARN, "CUDA aware MPI is not activated. This may decrease performance for multi-GPU operations significantly!.\n");
 
+	if (!printed && cuda_is_memory_global() && cuda_aware_mpi)
+		debug_printf(DP_WARN, "Global GPU memory is active. This may decrease performance for MPI-assisted multi-GPU operations significantly!.\n");
+
 	printed = true;
 }
 #endif

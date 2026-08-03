@@ -401,6 +401,11 @@ void cuda_use_global_memory(void)
 	cuda_global_memory = true;
 }
 
+extern bool cuda_is_memory_global(void)
+{
+	return cuda_global_memory;
+}
+
 void cuda_memcache_off(void)
 {
 	cuda_memcache = false;
