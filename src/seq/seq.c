@@ -13,18 +13,12 @@
 #include "misc/misc.h"
 #include "misc/version.h"
 
+#include "seq/adc_rf.h"
 #include "seq/config.h"
 #include "seq/event.h"
-#include "seq/helpers.h"
 #include "seq/misc.h"
 
-#include "seq/adc_rf.h"
-#include "seq/anglecalc.h"
-#include "seq/pulse.h"
 #include "seq/flash.h"
-#include "seq/mag_prep.h"
-#include "seq/cest.h"
-#include "seq/seq_asl.h"
 
 #include "seq.h"
 
@@ -256,244 +250,19 @@ double seq_block_rdt(int N, const struct seq_event ev[N], double raster)
 	return round_up_raster(events_end_time(N, ev, 1, 0) - seq_block_end_flat(N, ev, raster), raster);
 }
 
-static long get_chrono_slice(const struct seq_state* seq_state, const struct seq_config* seq)
-{
-	if ((SEQ_ASL_NONE != seq->asl.label_type) && (0 == seq_state->pos[COEFF_DIM]))
-		return seq->asl.label_slice_index;
-
-	if (1 < seq->geom.mb_factor)
-		return seq_state->pos[PHS2_DIM] + seq_state->pos[SLICE_DIM] * seq->loop_dims[PHS2_DIM];
-
-	return seq_state->pos[SLICE_DIM];
-}
-
-static int check_settings(const struct seq_state* seq_state, const struct seq_config* seq)
-{
-	if (0 > seq->loop_dims[PHS2_DIM])
-		return ERROR_SETTING_DIM;
-
-	if ((1 < seq->geom.mb_factor) && seq->enc.is3D)
-		return ERROR_SETTING_DIM;
-
-	if ((1 < seq->geom.mb_factor) && (SEQ_ORDER_SEQ_MS == seq->enc.order))
-		return ERROR_SETTING_DIM;
-
-	if (SEQ_MAX_SLICES < get_slices(seq))
-		return ERROR_SETTING_DIM;
-
-	if ((SEQ_TRIGGER_OFF != seq->trigger.type) && (SEQ_CEST_NONE != seq->cest.sat_type))
-		return ERROR_CEST_TRIGGER;
-
-	if (   (SEQ_PREP_SR_SELECTIVE == seq->magn.mag_prep)
-	    || (SEQ_PREP_SR_NONSELECTIVE == seq->magn.mag_prep)
-	    || (SEQ_PREP_SR_ADIABATIC == seq->magn.mag_prep))
-		return ERROR_MAG_PREP;
-
-	if (   (0 < seq->magn.prep_scans)
-	    && ((SEQ_PREP_OFF != seq->magn.mag_prep) || (SEQ_ASL_NONE != seq->asl.label_type)))
-		return ERROR_PREP_SCANS;
-
-	if (SEQ_ASL_NONE != seq->asl.label_type) {
-
-		if (seq->loop_dims[SLICE_DIM] < 2)
-			return ERROR_SETTING_ASL;
-
-		if (SEQ_PREP_OFF != seq->magn.mag_prep)
-			return ERROR_SETTING_ASL;
-
-		if (SEQ_CEST_NONE != seq->cest.sat_type)
-			return ERROR_SETTING_ASL;
-	}
-
-
-	if (SEQ_CONTEXT_BINARY != seq_state->context) {
-
-		if (   (SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode)
-		    || (SEQ_PEMODE_CARTESIAN_LINEAR == seq->enc.pe_mode))
-			return 1;
-
-		if ((SEQ_PEMODE_RAGA == seq->enc.pe_mode)
-		    && !check_gen_fib(seq->loop_dims[PHS1_DIM], seq->enc.tiny))
-			return ERROR_SETTING_SPOKES_RAGA;
-
-		if ((SEQ_PEMODE_RAGA == seq->enc.pe_mode)
-		    && (PHS1_FLAG & seq->enc.aligned_flags))
-				return ERROR_SETTING_RAGA_AL;
-
-		if (0 == (seq->loop_dims[PHS1_DIM] % 2))
-			return ERROR_SETTING_SPOKES_EVEN;
-	}
-
-	if ((1 < seq->loop_dims[TE_DIM]) && (0.5 != seq->phys.asym_echo))
-		return ERROR_SETTING_ASYM_MECO;
-
-	return 1;
-}
-
 int seq_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const struct seq_config* seq)
 {
-	int err = check_settings(seq_state, seq);
-	if (1 > err)
-		return err;
 
-	seq_state->chrono_slice = get_chrono_slice(seq_state, seq);
+	switch (seq->seq_type) {
 
-	if (   (SEQ_BLOCK_KERNEL_PREPARE == seq_state->mode)
-	    || (SEQ_BLOCK_KERNEL_CHECK == seq_state->mode))
-		return flash(N, ev, seq_state, seq);
+	case SEQ_TYPE_FLASH:
 
-	long zeros[DIMS] = { };
-	long last_idx[DIMS];
+		return flash_block(N, ev, seq_state, seq);
 
-	for (int i = 0; i < DIMS; i++)
-		last_idx[i] = seq->loop_dims[i] - 1;
+	default:
 
-	// changed beahvior for sequential multislice
-	unsigned long msm_flag = 0UL;
-
-	// changed behavior for ASL
-	unsigned long asl_flag = 0UL;
-
-	if (md_check_equal_order(DIMS, seq->order, seq_loop_order_multislice, SEQ_FLAGS))
-	       msm_flag = SLICE_FLAG ;
-	
-	if (SEQ_ASL_NONE != seq->asl.label_type)
-		asl_flag = AVG_FLAG;
-
-	if (0 == seq_state->pos[COEFF_DIM]) {
-
-		if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~0UL)) {
-
-			seq_state->mode = SEQ_BLOCK_PRE;
-
-			return wait_time_to_event(ev, 0., seq->magn.init_delay);
-		}
-
-		zeros[COEFF2_DIM] = 1;
-
-		if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~0UL)) {
-
-			seq_state->mode = SEQ_BLOCK_KERNEL_NOISE;
-
-			return flash(N, ev, seq_state, seq);
-		}
-
-		if (1 < seq_state->pos[COEFF2_DIM]) {
-
-			// Skip spoke iterations for ASL
-			if (   (SEQ_ASL_NONE != seq->asl.label_type)
-			    && ((seq_state->pos[BATCH_DIM] == 0) || (seq_state->pos[PHS1_DIM] > 0) || (seq_state->pos[TIME_DIM] > 0)))
-				md_max_dims(DIMS, COEFF2_FLAG, seq_state->pos, seq_state->pos, last_idx);
-
-			if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~(BATCH_FLAG | COEFF2_FLAG | SLICE_FLAG | PHS2_FLAG))) {
-
-				if (   (0 < seq->magn.prep_scans) && (2 < seq_state->pos[COEFF2_DIM])
-				    && (   ((1 == seq->geom.mb_factor) && (0 == seq_state->pos[PHS2_DIM]))
-					|| ((1 <  seq->geom.mb_factor) && (0 == seq_state->pos[SLICE_DIM])))) {
-
-					seq_state->mode = SEQ_BLOCK_KERNEL_DUMMY;
-					seq_state->seq_ut = 1;
-					return flash(N, ev, seq_state, seq);
-				}
-			}
-
-			if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~(BATCH_FLAG | msm_flag | COEFF2_FLAG | asl_flag | CSHIFT_FLAG))) {
-
-
-				if ((SEQ_CEST_NONE != seq->cest.sat_type) && md_check_equal_dims(DIMS, zeros, seq_state->pos, ~(COEFF2_FLAG | CSHIFT_FLAG))) {
-
-					int cest_with_inversion = 0;
-
-					if (0 != mag_prep(ev, seq))
-						cest_with_inversion = 1;
-
-					seq_state->mode = SEQ_BLOCK_PRE;
-
-					if (   (seq_state->pos[COEFF2_DIM] > 1)
-					    && (seq_state->pos[COEFF2_DIM] < (seq->loop_dims[COEFF2_DIM] - (1 + cest_with_inversion))))
-							return cest_block(ev, seq_state, seq);
-				}
-
-				if ((2 == seq_state->pos[COEFF2_DIM]) && (SEQ_TRIGGER_OFF != seq->trigger.type)) {
-
-					seq_state->mode = SEQ_BLOCK_PRE;
-
-					ev[0] = (struct seq_event){ .start = 0., .mid = 0., .end = seq->trigger.delay_time, .type = SEQ_EVENT_TRIGGER };
-
-					return 1;
-				}
-
-				if ((2 < seq_state->pos[COEFF2_DIM]) && (SEQ_ASL_NONE != seq->asl.label_type)) {
-
-					seq_state->mode = SEQ_BLOCK_PRE;
-					return asl(N, ev, seq_state, seq);
-				}
-
-				if (seq->loop_dims[COEFF2_DIM] - 1  == seq_state->pos[COEFF2_DIM]) {
-
-					seq_state->mode = SEQ_BLOCK_PRE;
-					return mag_prep(ev, seq);
-				}
-
-				return 0;
-			}
-
-		} else if (0 < seq_state->pos[PHS1_DIM]) {
-
-			md_max_dims(DIMS, (COEFF2_FLAG | PHS2_FLAG) &  ~msm_flag & ~asl_flag, seq_state->pos, seq_state->pos, last_idx);
-		}
+		assert(0);
 	}
-
-	if (1 == seq_state->pos[COEFF_DIM]) {
-
-		// Skip readout for ASL label slice and only acquire one M0 image at the beginning of the measurement
-		if (SEQ_ASL_NONE != seq->asl.label_type) {
-			
-			if (seq_state->pos[SLICE_DIM] == seq->asl.label_slice_index) {
-
-				md_max_dims(DIMS, COEFF2_FLAG, seq_state->pos, seq_state->pos, last_idx);
-				return 0;
-			}    
-
-			if (seq_state->pos[BATCH_DIM] == 0 && seq_state->pos[AVG_DIM] > 0) {
-				
-				md_max_dims(DIMS, COEFF2_FLAG | SLICE_FLAG | TIME_FLAG | PHS1_FLAG, seq_state->pos, seq_state->pos, last_idx);
-				return 0;
-			}
-		}
-
-		int i = 0;
-
-		seq_state->mode = SEQ_BLOCK_KERNEL_IMAGE;
-		md_max_dims(DIMS, (COEFF2_FLAG), seq_state->pos, seq_state->pos, last_idx);
-
-		if (seq->trigger.trigger_out && md_check_equal_dims(DIMS, (long [DIMS]){ 0 }, seq_state->pos, PHS1_FLAG))
-			ev[i++] = (struct seq_event){ .start = 0., .mid = 0., .end = 1e-3, .type = SEQ_EVENT_OUTPUT, NULL };
-
-		return flash(N - i, ev + i, seq_state, seq) + i;
-	}
-
-	if (2 == seq_state->pos[COEFF_DIM]) {
-
-		md_max_dims(DIMS, (COEFF2_FLAG | PHS2_FLAG) & ~msm_flag & ~asl_flag, seq_state->pos, seq_state->pos, last_idx);
-
-		if (md_check_equal_dims(DIMS, last_idx, seq_state->pos, (SEQ_FLAGS & ~(BATCH_FLAG | msm_flag | asl_flag)))
-			&& (0. < seq->magn.inv_delay_time)) {
-
-				if(SEQ_ASL_NONE != seq->asl.label_type && (seq_state->pos[BATCH_DIM] == 0 && seq_state->pos[AVG_DIM] > 0))
-					return 0;
-
-				seq_state->mode = SEQ_BLOCK_POST;
-
-				ev[0] = (struct seq_event){ .start = 0., .mid = 0., .end = seq->magn.inv_delay_time, .type = SEQ_EVENT_WAIT, NULL };
-
-				return 1;
-		}
-
-		return 0;
-	}
-
-	return 0;
 }
 
 int seq_continue(struct seq_state* seq_state, const struct seq_config* seq)
