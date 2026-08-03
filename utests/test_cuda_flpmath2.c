@@ -502,6 +502,9 @@ static bool test_optimized_md_zadd(unsigned long out_flag, unsigned long in1_fla
 	md_gaussian_rand(D, odims, optr1);
 	md_copy(D, odims, optr2, optr1, size);
 
+	assert(!in1_same || (md_calc_size(D, odims) == md_calc_size(D, idims1)));
+	assert(!in2_same || (md_calc_size(D, odims) == md_calc_size(D, idims2)));
+
 	deactivate_strided_vecops();
 	md_zadd2(D, dims, ostr, optr1, istr1, !in1_same ? iptr1 : optr1, istr2, !in2_same ? iptr2 : optr1);
 	activate_strided_vecops();
@@ -520,22 +523,18 @@ static bool test_optimized_md_zadd(unsigned long out_flag, unsigned long in1_fla
 
 static bool test_optimized_md_zadd2_reduce_inner1(void) { UT_RETURN_ASSERT(test_optimized_md_zadd(~(1ul+4ul), ~(1ul+4ul), ~0ul, true, false, true, 1.e-6)); }
 static bool test_optimized_md_zadd2_reduce_inner2(void) { UT_RETURN_ASSERT(test_optimized_md_zadd(~(1ul+4ul), ~(1ul+4ul), ~0ul, false, false, false, 1.e-6)); }
-static bool test_optimized_md_zadd2_reduce_inner3(void) { UT_RETURN_ASSERT(test_optimized_md_zadd(~(1ul+4ul), ~(1ul), ~0ul, true, false, false, 1.e-6)); }
 static bool test_optimized_md_zadd2_reduce_inner4(void) { UT_RETURN_ASSERT(test_optimized_md_zadd(~(1ul+2ul), ~4ul, ~(1ul + 2ul), false, true, true, 1.e-6)); }
 static bool test_optimized_md_zadd2_reduce_inner5(void) { UT_RETURN_ASSERT(test_optimized_md_zadd(0ul, ~4ul, 0ul, false, true, true, 3.e-6)); }
 UT_GPU_REGISTER_TEST(test_optimized_md_zadd2_reduce_inner1);
 UT_GPU_REGISTER_TEST(test_optimized_md_zadd2_reduce_inner2);
-UT_GPU_REGISTER_TEST(test_optimized_md_zadd2_reduce_inner3);
 UT_GPU_REGISTER_TEST(test_optimized_md_zadd2_reduce_inner4);
 UT_GPU_REGISTER_TEST(test_optimized_md_zadd2_reduce_inner5);
 
 static bool test_optimized_md_zadd2_reduce_outer1(void) { UT_RETURN_ASSERT(test_optimized_md_zadd(~(4ul), ~(4ul), ~0ul, true, false, true, 1.e-6)); }
 static bool test_optimized_md_zadd2_reduce_outer2(void) { UT_RETURN_ASSERT(test_optimized_md_zadd(~(2ul), ~(2ul+4ul), ~0ul, false, false, false, 1.e-6)); }
-static bool test_optimized_md_zadd2_reduce_outer3(void) { UT_RETURN_ASSERT(test_optimized_md_zadd(~(8ul), ~(1ul), ~(8ul), true, false, false, 1.e-6)); }
 static bool test_optimized_md_zadd2_reduce_outer4(void) { UT_RETURN_ASSERT(test_optimized_md_zadd(~(4ul), ~(8ul), ~(4ul), false, true, true, 1.e-6)); }
 UT_GPU_REGISTER_TEST(test_optimized_md_zadd2_reduce_outer1);
 UT_GPU_REGISTER_TEST(test_optimized_md_zadd2_reduce_outer2);
-UT_GPU_REGISTER_TEST(test_optimized_md_zadd2_reduce_outer3);
 UT_GPU_REGISTER_TEST(test_optimized_md_zadd2_reduce_outer4);
 
 static bool test_optimized_md_add(unsigned long out_flag, unsigned long in1_flag, unsigned long in2_flag, bool in1_same, bool in2_same, bool optimization_expected, float err_tol)
@@ -582,6 +581,9 @@ static bool test_optimized_md_add(unsigned long out_flag, unsigned long in1_flag
 	md_gaussian_rand(D, odims, (complex float*)optr1);
 	md_copy(D, odims, optr2, optr1, size);
 
+	assert(!in1_same || (md_calc_size(D, odims) == md_calc_size(D, idims1)));
+	assert(!in2_same || (md_calc_size(D, odims) == md_calc_size(D, idims2)));
+
 	deactivate_strided_vecops();
 	md_add2(D, dims, ostr, optr1, istr1, !in1_same ? iptr1 : optr1, istr2, !in2_same ? iptr2 : optr1);
 	activate_strided_vecops();
@@ -600,22 +602,18 @@ static bool test_optimized_md_add(unsigned long out_flag, unsigned long in1_flag
 
 static bool test_optimized_md_add2_reduce_inner1(void) { UT_RETURN_ASSERT(test_optimized_md_add(~(1ul+4ul), ~(1ul+4ul), ~0ul, true, false, true, 1.e-6)); }
 static bool test_optimized_md_add2_reduce_inner2(void) { UT_RETURN_ASSERT(test_optimized_md_add(~(1ul+4ul), ~(1ul+4ul), ~0ul, false, false, false, 1.e-6)); }
-static bool test_optimized_md_add2_reduce_inner3(void) { UT_RETURN_ASSERT(test_optimized_md_add(~(1ul+4ul), ~(1ul), ~0ul, true, false, false, 1.e-6)); }
 static bool test_optimized_md_add2_reduce_inner4(void) { UT_RETURN_ASSERT(test_optimized_md_add(~(1ul+2ul), ~4ul, ~(1ul + 2ul), false, true, true, 1.e-6)); }
 static bool test_optimized_md_add2_reduce_inner5(void) { UT_RETURN_ASSERT(test_optimized_md_add(0ul, ~4ul, 0ul, false, true, true, 3.e-5)); }
 UT_GPU_REGISTER_TEST(test_optimized_md_add2_reduce_inner1);
 UT_GPU_REGISTER_TEST(test_optimized_md_add2_reduce_inner2);
-UT_GPU_REGISTER_TEST(test_optimized_md_add2_reduce_inner3);
 UT_GPU_REGISTER_TEST(test_optimized_md_add2_reduce_inner4);
 UT_GPU_REGISTER_TEST(test_optimized_md_add2_reduce_inner5);
 
 static bool test_optimized_md_add2_reduce_outer1(void) { UT_RETURN_ASSERT(test_optimized_md_add(~(4ul), ~(4ul), ~0ul, true, false, true, 1.e-6)); }
 static bool test_optimized_md_add2_reduce_outer2(void) { UT_RETURN_ASSERT(test_optimized_md_add(~(2ul), ~(2ul+4ul), ~0ul, false, false, false, 1.e-6)); }
-static bool test_optimized_md_add2_reduce_outer3(void) { UT_RETURN_ASSERT(test_optimized_md_add(~(8ul), ~(1ul), ~(8ul), true, false, false, 1.e-6)); }
 static bool test_optimized_md_add2_reduce_outer4(void) { UT_RETURN_ASSERT(test_optimized_md_add(~(4ul), ~(8ul), ~(4ul), false, true, true, 1.e-6)); }
 UT_GPU_REGISTER_TEST(test_optimized_md_add2_reduce_outer1);
 UT_GPU_REGISTER_TEST(test_optimized_md_add2_reduce_outer2);
-UT_GPU_REGISTER_TEST(test_optimized_md_add2_reduce_outer3);
 UT_GPU_REGISTER_TEST(test_optimized_md_add2_reduce_outer4);
 
 static bool test_optimized_md_zmax(unsigned long out_flag, unsigned long in1_flag, unsigned long in2_flag, bool in1_same, bool in2_same, bool optimization_expected, float err_tol)
@@ -661,6 +659,9 @@ static bool test_optimized_md_zmax(unsigned long out_flag, unsigned long in1_fla
 	md_gaussian_rand(D, odims, optr1);
 	md_copy(D, odims, optr2, optr1, size);
 
+	assert(!in1_same || (md_calc_size(D, odims) == md_calc_size(D, idims1)));
+	assert(!in2_same || (md_calc_size(D, odims) == md_calc_size(D, idims2)));
+
 	deactivate_strided_vecops();
 	md_zmax2(D, dims, ostr, optr1, istr1, !in1_same ? iptr1 : optr1, istr2, !in2_same ? iptr2 : optr1);
 	activate_strided_vecops();
@@ -679,20 +680,16 @@ static bool test_optimized_md_zmax(unsigned long out_flag, unsigned long in1_fla
 
 static bool test_optimized_md_zmax2_reduce_inner1(void) { UT_RETURN_ASSERT(test_optimized_md_zmax(~(1ul+4ul), ~(1ul+4ul), ~0ul, true, false, true, 1.e-8)); }
 static bool test_optimized_md_zmax2_reduce_inner2(void) { UT_RETURN_ASSERT(test_optimized_md_zmax(~(1ul+4ul), ~(1ul+4ul), ~0ul, false, false, false, 1.e-8)); }
-static bool test_optimized_md_zmax2_reduce_inner3(void) { UT_RETURN_ASSERT(test_optimized_md_zmax(~(1ul+4ul), ~(1ul), ~0ul, true, false, false, 1.e-8)); }
 static bool test_optimized_md_zmax2_reduce_inner4(void) { UT_RETURN_ASSERT(test_optimized_md_zmax(~(1ul+2ul), ~4ul, ~(1ul + 2ul), false, true, true, 1.e-8)); }
 static bool test_optimized_md_zmax2_reduce_inner5(void) { UT_RETURN_ASSERT(test_optimized_md_zmax(0ul, ~4ul, 0ul, false, true, true, 2.e-8)); }
 UT_GPU_REGISTER_TEST(test_optimized_md_zmax2_reduce_inner1);
 UT_GPU_REGISTER_TEST(test_optimized_md_zmax2_reduce_inner2);
-UT_GPU_REGISTER_TEST(test_optimized_md_zmax2_reduce_inner3);
 UT_GPU_REGISTER_TEST(test_optimized_md_zmax2_reduce_inner4);
 UT_GPU_REGISTER_TEST(test_optimized_md_zmax2_reduce_inner5);
 
 static bool test_optimized_md_zmax2_reduce_outer1(void) { UT_RETURN_ASSERT(test_optimized_md_zmax(~(4ul), ~(4ul), ~0ul, true, false, true, 1.e-8)); }
 static bool test_optimized_md_zmax2_reduce_outer2(void) { UT_RETURN_ASSERT(test_optimized_md_zmax(~(2ul), ~(2ul+4ul), ~0ul, false, false, false, 1.e-8)); }
-static bool test_optimized_md_zmax2_reduce_outer3(void) { UT_RETURN_ASSERT(test_optimized_md_zmax(~(8ul), ~(1ul), ~(8ul), true, false, false, 1.e-8)); }
 static bool test_optimized_md_zmax2_reduce_outer4(void) { UT_RETURN_ASSERT(test_optimized_md_zmax(~(4ul), ~(8ul), ~(4ul), false, true, true, 1.e-8)); }
 UT_GPU_REGISTER_TEST(test_optimized_md_zmax2_reduce_outer1);
 UT_GPU_REGISTER_TEST(test_optimized_md_zmax2_reduce_outer2);
-UT_GPU_REGISTER_TEST(test_optimized_md_zmax2_reduce_outer3);
 UT_GPU_REGISTER_TEST(test_optimized_md_zmax2_reduce_outer4);
