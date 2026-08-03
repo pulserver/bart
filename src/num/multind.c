@@ -2625,6 +2625,20 @@ void* md_alloc_gpu(int D, const long dimensions[D], size_t size)
 }
 
 
+/**
+ * Allocate distributed GPU memory
+ */
+void* md_alloc_gpu_mpi(int D, unsigned long f, const long dimensions[D], size_t size)
+{
+	auto hint = hint_mpi_create(f, D, dimensions);
+	void* ret = vptr_alloc(D, dimensions, size, hint);
+	vptr_set_gpu(ret);
+
+	vptr_hint_free(hint);
+
+	return ret;
+}
+
 
 /**
  * Allocate GPU memory and copy from CPU pointer
@@ -2651,6 +2665,22 @@ void* md_gpu_move(int D, const long dims[D], const void* ptr, size_t size)
 	md_copy(D, dims, gpu_ptr, ptr, size);
 
 	return gpu_ptr;
+}
+
+
+/**
+ * Allocate MPI memory and copy from pointer
+ */
+void* md_gpu_mpi_move(int D, unsigned long f, const long dims[D], const void* ptr, size_t size)
+{
+	if (NULL == ptr)
+		return NULL;
+
+	void* mpi_ptr = md_alloc_gpu_mpi(D, f, dims, size);
+
+	md_copy(D, dims, mpi_ptr, ptr, size);
+
+	return mpi_ptr;
 }
 #endif
 
