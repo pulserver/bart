@@ -17,3 +17,4 @@ extern float compute_tm(int N, long dims[N], const float* image, const float vox
 extern void run_bet(int N, long dims[N], double* verts, int nv, const struct neighbors* neigh,
 	const float* image, const float voxel_size[3], const float COG[3], float t2, float t, float tm, float bt, int n_iter);
 extern void mesh_to_mask_slicewise(int N, long dims[N], float* mask, float resolution[3], const double (*verts)[3], const int (*tris)[3], int ntris);
+extern void mesh_to_mask_winding_number(int N, long dims[N], float* mask, float resolution[3], const double (*verts)[3], const int (*tris)[3], int ntris);

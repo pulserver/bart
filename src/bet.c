@@ -69,6 +69,8 @@ int main_bet(int argc, char* argv[argc])
 		ARG_OUTFILE(true, &out_file, "output"),
 	};
 
+	bool mesh_to_mask_winding = false;
+
 	const struct opt_s opts[] = {
 
 		OPT_INT('s', &sub, "sub", "number of subdivisons for initialization of the polyedron - default 4 (needs to be in range of 2 - 5)"),
@@ -77,6 +79,7 @@ int main_bet(int argc, char* argv[argc])
 		OPTL_FLVEC3(0, "res", &resolution, "res_x:res_y:res_z", "resolution/voxel size [mm] - default 1.0:1.0:1.0"),
 		OPT_INT('i', &n_iter, "n_iter", "number of iterations for the BET algorithm - default 1000"),
 		OPTL_OUTFILE(0, "stl_out", &stl_ofile, "stl_outfile", "export stl mesh to file"),
+		OPT_SET('w', &mesh_to_mask_winding, "use winding number method for mesh to mask conversion (default: false)"),
 	};
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
@@ -152,7 +155,10 @@ int main_bet(int argc, char* argv[argc])
 	float* mask = md_alloc_sameplace(DIMS, in_dims, FL_SIZE, in_data);
 	md_clear(DIMS, in_dims, mask, FL_SIZE);
 	
-	mesh_to_mask_slicewise(DIMS, in_dims, mask, resolution, verts, tris, num_tris);
+	if (mesh_to_mask_winding)
+		mesh_to_mask_winding_number(DIMS, in_dims, mask, resolution, verts, tris, num_tris);
+	else
+		mesh_to_mask_slicewise(DIMS, in_dims, mask, resolution, verts, tris, num_tris);
 
 	if (erode > 0) {
 

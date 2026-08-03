@@ -9,6 +9,10 @@
  *
  * Smith SM. Fast robust automated brain extraction.
  * Hum Brain Mapp. 2002;17(3):143-155.
+ *
+ *J acobson, Alec & Kavan, Ladislav & Sorkine-Hornung, Olga. (2013).
+ * Robust inside-outside segmentation using generalized winding numbers.
+ * ACM Transactions on Graphics. 32. 1-12. 10.1145/2461912.2461916.
  */
 
 #include <assert.h>
@@ -26,6 +30,10 @@
 
 
 #include "stl/misc.h"
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #include "bet.h"
 
@@ -554,4 +562,77 @@ void mesh_to_mask_slicewise(int N, long dims[N], float* mask, float resolution[3
 		debug_printf(DP_WARN, "Warning: %ld of %ld pixels have inconsistent ray crossings.\n", count_inconsistent_pixel, (long)(nx * ny * nz));
 
 	xfree(segments);
+}
+
+static double compute_solid_angle(const double p[3], const double v0[3], const double v1[3], const double v2[3])
+{
+	float a[3], b[3], c[3];
+
+	for (int d = 0; d < 3; d++) {
+
+		a[d] = v0[d] - p[d];
+		b[d] = v1[d] - p[d];
+		c[d] = v2[d] - p[d];
+	}
+
+	float len_a = sqrtf(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
+	float len_b = sqrtf(b[0] * b[0] + b[1] * b[1] + b[2] * b[2]);
+	float len_c = sqrtf(c[0] * c[0] + c[1] * c[1] + c[2] * c[2]);
+
+	float dot_ab = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+	float dot_bc = b[0] * c[0] + b[1] * c[1] + b[2] * c[2];
+	float dot_ca = c[0] * a[0] + c[1] * a[1] + c[2] * a[2];
+
+
+	float det_abc =  c[0] * (a[1] * b[2] - a[2] * b[1])
+		+ c[1] * (a[2] * b[0] - a[0] * b[2])
+		+ c[2] * (a[0] * b[1] - a[1] * b[0]);
+
+	float denom = len_a * len_b * len_c + dot_ab * len_c + dot_bc * len_a + dot_ca * len_b;
+
+	return 2 * atan2(det_abc, denom);
+}
+
+void mesh_to_mask_winding_number(int N, long dims[N], float* mask, float resolution[3],
+	const double (*verts)[3], const int (*tris)[3], int ntris)
+{
+	for (int d = 3; d < N; d++)
+		assert(dims[d] == 1);
+
+	const float factor = 1.0 / (4.0 * M_PI);
+
+	long strs[N];
+	md_calc_strides(N, strs, dims, sizeof(float));
+
+#ifdef _OPENMP
+#pragma omp parallel for collapse(3)
+#endif
+	for (int k = 0; k < dims[2]; k++)
+	for (int j = 0; j < dims[1]; j++)
+	for (int i = 0; i < dims[0]; i++) {
+
+		double center[3] = { (i + 0.5) * resolution[0], (j + 0.5) * resolution[1], (k + 0.5) * resolution[2] };
+
+		float solid_angle_sum = 0.0;
+
+		for (int t = 0; t < ntris; t++) {
+
+			const double* v0 = verts[tris[t][0]];
+			const double* v1 = verts[tris[t][1]];
+			const double* v2 = verts[tris[t][2]];
+
+			solid_angle_sum += compute_solid_angle(center, v0, v1, v2);
+		}
+
+		long pos[N];
+
+		for (int d = 0; d < N; d++)
+			pos[d] = 0;
+
+		pos[0] = i;
+		pos[1] = j;
+		pos[2] = k;
+
+		MD_ACCESS(N, strs, pos, mask) = (solid_angle_sum * factor) > 0.5 ? 1.f : 0.f;
+	}
 }

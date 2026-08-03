@@ -28,4 +28,13 @@ tests/test-bet-deterministic: phantom bet nrmse
 	rm *.ra; cd ..; rmdir $(TESTS_TMP)
 	touch $@
 
-TESTS += tests/test-bet-phantom tests/test-bet-scale
+tests/test-bet-winding: phantom bet nrmse
+	set -e; mkdir $(TESTS_TMP); cd $(TESTS_TMP)				;\
+	$(TOOLDIR)/phantom -3 -x128 phantom.ra					;\
+	$(TOOLDIR)/bet phantom.ra mask_slicewise.ra				;\
+	$(TOOLDIR)/bet -w phantom.ra mask_winding.ra				;\
+	$(TOOLDIR)/nrmse -t 0.15 mask_slicewise.ra mask_winding.ra		;\
+	rm *.ra; cd ..; rmdir $(TESTS_TMP)
+	touch $@
+
+TESTS += tests/test-bet-phantom tests/test-bet-scale tests/test-bet-winding
