@@ -69,7 +69,7 @@ int main_raga(int argc, char* argv[argc])
 
 		assert(0 == raga_inc);
 
-		for (int idx = 1; idx < 50; idx++)
+		for (int idx = 1; idx < 200; idx++)
 			if (check_gen_fib(Y, idx))
 				debug_printf(DP_INFO, "Possible tiny golden-angle index: %d\n", idx);
 
