@@ -2,7 +2,6 @@
 #define _SEQ_CEST_H
 
 
-#include "config.h"
 #include "misc/cppwrap.h"
 
 #include "seq/event.h"

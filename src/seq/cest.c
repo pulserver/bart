@@ -20,7 +20,7 @@
 #include "seq/adc_rf.h"
 #include "seq/pulse.h"
 #include "seq/gradient.h"
-#include "seq/flash.h"
+#include "seq/misc.h"
 
 #include "cest.h"
 

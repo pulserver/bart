@@ -8,12 +8,12 @@
 
 #include "misc/misc.h"
 
-#include "seq/seq.h"
 #include "seq/gradient.h"
 #include "seq/adc_rf.h"
 #include "seq/event.h"
-#include "seq/flash.h"
-#include "seq/seq_asl.h"
+#include "seq/misc.h"
+
+#include "seq_asl.h"
 
 const int coeff2_dim_offset = 3;
 
