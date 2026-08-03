@@ -19,6 +19,7 @@
 #include "seq/misc.h"
 
 #include "seq/flash.h"
+#include "seq/miniflash.h"
 
 #include "seq.h"
 
@@ -122,10 +123,12 @@ int seq_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq_confi
 
 		return flash_sample_rf_shapes(N, pulse, seq);
 
-	default:
+	case SEQ_TYPE_MINIFLASH:
 
-		assert(0);
+		return miniflash_sample_rf_shapes(N, pulse, seq);
 	}
+
+	return ERROR_SAMPLE_RF;
 }
 
 
@@ -259,10 +262,12 @@ int seq_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 
 		return flash_block(N, ev, seq_state, seq);
 
-	default:
+	case SEQ_TYPE_MINIFLASH:
 
-		assert(0);
+		return miniflash_block(N, ev, seq_state, seq);
 	}
+
+	return ERROR_SEQ_BLOCK;
 }
 
 int seq_continue(struct seq_state* seq_state, const struct seq_config* seq)

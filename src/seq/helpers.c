@@ -20,6 +20,7 @@
 #include "seq/opts.h"
 
 #include "seq/flash.h"
+#include "seq/miniflash.h"
 
 #include "helpers.h"
 
@@ -40,10 +41,12 @@ double seq_minimum_tr(const struct seq_config* seq)
 
 		return flash_minimum_tr(seq);
 
-	default:
+	case SEQ_TYPE_MINIFLASH:
 
-		assert(0);
+		return miniflash_minimum_tr(seq);
 	}
+
+	return 0.;
 }
 
 
@@ -56,9 +59,10 @@ void seq_minimum_te(const struct seq_config* seq, double* min_te, double* fill_t
 		flash_minimum_te(seq, min_te, fill_te);
 		break;
 
-	default:
+	case SEQ_TYPE_MINIFLASH:
 
-		assert(0);
+		miniflash_minimum_te(seq, min_te, fill_te);
+		break;
 	}
 }
 
@@ -86,10 +90,12 @@ double seq_total_measure_time(const struct seq_config* seq)
 
 		return flash_total_measure_time(seq);
 
-	default:
+	case SEQ_TYPE_MINIFLASH:
 
-		assert(0);
+		return miniflash_total_measure_time(seq);
 	}
+
+	return 0.;
 }
 
 
@@ -102,9 +108,10 @@ void seq_ui_interface_custom_params(int reverse, struct seq_config* seq, int nl,
 		flash_interface_custom_params(reverse, seq, nl, params_long, nd, params_double);
 		break;
 
-	default:
+	case SEQ_TYPE_MINIFLASH:
 
-		assert(0);
+		miniflash_interface_custom_params(reverse, seq, nl, params_long, nd, params_double);
+		break;
 	}
 	
 }
