@@ -24,6 +24,10 @@
 #include "num/fft.h"
 #include "num/ode.h"
 #include "num/filter.h"
+#ifdef USE_CUDA
+#include "num/gpuops.h"
+#endif
+#include "num/mpi_ops.h"
 
 #include "wavelet/wavthresh.h"
 
@@ -34,14 +38,42 @@
 
 #define DIMS 8
 
+static bool use_distributed_computing = false;
 
+static void* bench_alloc(int D, unsigned long mpi_flags, const long dimensions[D], size_t size)
+{
+	if (use_distributed_computing) {
+#ifdef USE_CUDA
+		if (bart_use_gpu)
+			return md_alloc_gpu_mpi(D, mpi_flags, dimensions, size);
+		else
+#endif
+			return md_alloc_mpi(D, mpi_flags, dimensions, size);
+	
+	} else {
+#ifdef USE_CUDA
+		if (bart_use_gpu)
+			return md_alloc_gpu(D, dimensions, size);
+		else
+#endif
+			return md_alloc(D, dimensions, size);
+	}
+}
 
+static double bench_timestamp(void)
+{
+	mpi_sync();
+#ifdef USE_CUDA
+	if (bart_use_gpu)
+		cuda_sync_device();
+#endif
+	return timestamp();
+}
 
 static double bench_generic_copy(long dims[DIMS])
 {
 	long strs[DIMS];
 
-	md_calc_strides(DIMS, strs, dims, CFL_SIZE);
 	md_calc_strides(DIMS, strs, dims, CFL_SIZE);
 
 	complex float* x = md_alloc(DIMS, dims, CFL_SIZE);
@@ -49,11 +81,11 @@ static double bench_generic_copy(long dims[DIMS])
 
 	md_gaussian_rand(DIMS, dims, x);
 
-	double tic = timestamp();
+	double tic = bench_timestamp();
 
 	md_copy2(DIMS, dims, strs, y, strs, x, CFL_SIZE);
 
-	double toc = timestamp();
+	double toc = bench_timestamp();
 
 	md_free(x);
 	md_free(y);
@@ -61,6 +93,30 @@ static double bench_generic_copy(long dims[DIMS])
 	return toc - tic;
 }
 
+static double bench_generic_circ_shift(long dims[DIMS], unsigned long mpi_flags, unsigned long shift_dim, long shift)
+{
+	long center[DIMS] = {};
+	long strs[DIMS];
+
+	md_calc_strides(DIMS, strs, dims, CFL_SIZE);
+	center[shift_dim] = shift;
+
+	complex float* x = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
+	complex float* y = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
+
+	md_gaussian_rand(DIMS, dims, x);
+
+	double tic = bench_timestamp();
+
+	md_circ_shift2(DIMS, dims, center, strs, y, strs, x, CFL_SIZE);
+
+	double toc = bench_timestamp();
+
+	md_free(x);
+	md_free(y);
+
+	return toc - tic;
+}
 	
 static double bench_generic_matrix_multiply(long dims[DIMS])
 {
@@ -83,11 +139,11 @@ static double bench_generic_matrix_multiply(long dims[DIMS])
 	md_gaussian_rand(DIMS, dimsX, x);
 	md_gaussian_rand(DIMS, dimsY, y);
 
-	double tic = timestamp();
+	double tic = bench_timestamp();
 
 	md_ztenmul(DIMS, dimsZ, z, dimsX, x, dimsY, y);
 
-	double toc = timestamp();
+	double toc = bench_timestamp();
 
 
 	md_free(x);
@@ -124,7 +180,7 @@ static double bench_generic_add(long dims[DIMS], unsigned long flags, bool forlo
 	long L = md_calc_size(DIMS, dimsC);
 	long T = md_calc_size(DIMS, dimsX);
 
-	double tic = timestamp();
+	double tic = bench_timestamp();
 
 	if (forloop) {
 
@@ -139,7 +195,7 @@ static double bench_generic_add(long dims[DIMS], unsigned long flags, bool forlo
 		md_zaxpy2(DIMS, dims, strsY, y, 1., strsX, x);
 	}
 
-	double toc = timestamp();
+	double toc = bench_timestamp();
 
 
 	md_free(x);
@@ -174,7 +230,7 @@ static double bench_generic_sum(long dims[DIMS], unsigned long flags, bool forlo
 	long L = md_calc_size(DIMS, dimsC);
 	long T = md_calc_size(DIMS, dimsY);
 
-	double tic = timestamp();
+	double tic = bench_timestamp();
 
 	if (forloop) {
 
@@ -189,7 +245,7 @@ static double bench_generic_sum(long dims[DIMS], unsigned long flags, bool forlo
 		md_zaxpy2(DIMS, dims, strsY, y, 1., strsX, x);
 	}
 
-	double toc = timestamp();
+	double toc = bench_timestamp();
 
 
 	md_free(x);
@@ -208,6 +264,14 @@ static double bench_copy2(long scale)
 {
 	long dims[DIMS] = { 262144 * scale, 16, 1, 1, 1, 1, 1, 1 };
 	return bench_generic_copy(dims);
+}
+
+
+static double bench_circ_shift(long scale)
+{
+	long dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 1, 16, 1, 16 };
+	unsigned long mpi_flags = MD_BIT(5);
+	return bench_generic_circ_shift(dims, mpi_flags, 5, 1);
 }
 
 
@@ -244,7 +308,33 @@ static double bench_tall_matmul1(long scale)
 static double bench_tall_matmul2(long scale)
 {
 	long dims[DIMS] = { 1, 100000 * scale, 8, 8, 1, 1, 1, 1 };
-	return bench_generic_matrix_multiply(dims);
+	unsigned long mpi_flags = MD_BIT(3);
+	long dimsX[DIMS];
+	long dimsY[DIMS];
+	long dimsZ[DIMS];
+
+	md_select_dims(DIMS, 2 * 3 + 17, dimsX, dims);	// 1 110 1
+	md_select_dims(DIMS, 2 * 6 + 17, dimsY, dims);	// 1 011 1
+	md_select_dims(DIMS, 2 * 5 + 17, dimsZ, dims);	// 1 101 1
+
+	complex float* x = bench_alloc(DIMS, mpi_flags, dimsX, CFL_SIZE);
+	complex float* y = bench_alloc(DIMS, mpi_flags, dimsY, CFL_SIZE);
+	complex float* z = bench_alloc(DIMS, mpi_flags, dimsZ, CFL_SIZE);
+
+	md_gaussian_rand(DIMS, dimsX, x);
+	md_gaussian_rand(DIMS, dimsY, y);
+
+	double tic = bench_timestamp();
+
+	md_ztenmul(DIMS, dimsZ, z, dimsX, x, dimsY, y);
+
+	double toc = bench_timestamp();
+
+	md_free(x);
+	md_free(y);
+	md_free(z);
+
+	return toc - tic;
 }
 
 
@@ -306,11 +396,11 @@ static double bench_zmul(long scale)
 	md_calc_strides(DIMS, strsy, dimsy, CFL_SIZE);
 	md_calc_strides(DIMS, strsz, dimsz, CFL_SIZE);
 
-	double tic = timestamp();
+	double tic = bench_timestamp();
 
 	md_zmul2(DIMS, dimsx, strsx, x, strsy, y, strsz, z);
 
-	double toc = timestamp();
+	double toc = bench_timestamp();
 
 	md_free(x);
 	md_free(y);
@@ -330,11 +420,11 @@ static double bench_transpose(long scale)
 	md_gaussian_rand(DIMS, dims, x);
 	md_clear(DIMS, dims, y, CFL_SIZE);
 
-	double tic = timestamp();
+	double tic = bench_timestamp();
 
 	md_transpose(DIMS, 0, 1, dims, y, dims, x, CFL_SIZE);
 
-	double toc = timestamp();
+	double toc = bench_timestamp();
 
 	md_free(x);
 	md_free(y);
@@ -342,6 +432,29 @@ static double bench_transpose(long scale)
 	return toc - tic;
 }
 
+
+static double bench_transpose2(long scale)
+{
+	long dims[DIMS] = { 200 * scale, 200 * scale, 1, 1, 1, 16, 1, 1 };
+	unsigned long mpi_flags = MD_BIT(1);
+
+	complex float* x = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
+	complex float* y = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
+	
+	md_gaussian_rand(DIMS, dims, x);
+	md_clear(DIMS, dims, y, CFL_SIZE);
+
+	double tic = bench_timestamp();
+
+	md_transpose(DIMS, 0, 1, dims, y, dims, x, CFL_SIZE);
+
+	double toc = bench_timestamp();
+
+	md_free(x);
+	md_free(y);
+	
+	return toc - tic;
+}
 
 
 static double bench_resize(long scale)
@@ -351,15 +464,15 @@ static double bench_resize(long scale)
 
 	complex float* x = md_alloc(DIMS, dimsX, CFL_SIZE);
 	complex float* y = md_alloc(DIMS, dimsY, CFL_SIZE);
-	
+
 	md_gaussian_rand(DIMS, dimsX, x);
 	md_clear(DIMS, dimsY, y, CFL_SIZE);
 
-	double tic = timestamp();
+	double tic = bench_timestamp();
 
 	md_resize(DIMS, dimsY, y, dimsX, x, CFL_SIZE);
 
-	double toc = timestamp();
+	double toc = bench_timestamp();
 
 	md_free(x);
 	md_free(y);
@@ -371,18 +484,13 @@ static double bench_resize(long scale)
 static double bench_norm(int s, long scale)
 {
 	long dims[DIMS] = { 256 * scale, 256 * scale, 1, 16, 1, 1, 1, 1 };
-#if 0
-	complex float* x = md_alloc_gpu(DIMS, dims, CFL_SIZE);
-	complex float* y = md_alloc_gpu(DIMS, dims, CFL_SIZE);
-#else
 	complex float* x = md_alloc(DIMS, dims, CFL_SIZE);
 	complex float* y = md_alloc(DIMS, dims, CFL_SIZE);
-#endif
 	
 	md_gaussian_rand(DIMS, dims, x);
 	md_gaussian_rand(DIMS, dims, y);
 
-	double tic = timestamp();
+	double tic = bench_timestamp();
 
 	switch (s) {
 	case 0:
@@ -392,14 +500,11 @@ static double bench_norm(int s, long scale)
 		md_zscalar_real(DIMS, dims, x, y);
 		break;
 	case 2:
-		md_znorm(DIMS, dims, x);
-		break;
-	case 3:
 		md_z1norm(DIMS, dims, x);
 		break;
 	}
 
-	double toc = timestamp();
+	double toc = bench_timestamp();
 
 	md_free(x);
 	md_free(y);
@@ -417,20 +522,39 @@ static double bench_zscalar_real(long scale)
 	return bench_norm(1, scale);
 }
 
-static double bench_znorm(long scale)
+static double bench_zl1norm(long scale)
 {
 	return bench_norm(2, scale);
 }
 
-static double bench_zl1norm(long scale)
+static double bench_znorm(long scale)
 {
-	return bench_norm(3, scale);
-}
+	complex float* x;
+	complex float* y;
+	long dims[DIMS] = { 256 * scale, 256 * scale, 1, 16, 1, 1, 1, 1 };
+	unsigned long mpi_flags = MD_BIT(3);
+	x = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
+	y = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
+	
+	md_gaussian_rand(DIMS, dims, x);
+	md_gaussian_rand(DIMS, dims, y);
 
+	double tic = bench_timestamp();
+
+	md_znorm(DIMS, dims, x);
+
+	double toc = bench_timestamp();
+
+	md_free(x);
+	md_free(y);
+	
+	return toc - tic;
+}
 
 static double bench_wavelet(long scale)
 {
 	long dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 16, 1, 1, 1 };
+	unsigned long mpi_flags = MD_BIT(4);
 	long minsize[DIMS] = { [0 ... DIMS - 1] = 1 };
 	minsize[0] = MIN(dims[0], 16);
 	minsize[1] = MIN(dims[1], 16);
@@ -438,14 +562,14 @@ static double bench_wavelet(long scale)
 
 	const struct operator_p_s* p = prox_wavelet_thresh_create(DIMS, dims, 6, 0u, WAVELET_DAU2, minsize, 1.1, true);
 
-	complex float* x = md_alloc(DIMS, dims, CFL_SIZE);
+	complex float* x = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
 	md_gaussian_rand(DIMS, dims, x);
 
-	double tic = timestamp();
+	double tic = bench_timestamp();
 
 	operator_p_apply(p, 0.98, DIMS, dims, x, DIMS, dims, x);
 
-	double toc = timestamp();
+	double toc = bench_timestamp();
 
 	md_free(x);
 	operator_p_free(p);
@@ -454,18 +578,18 @@ static double bench_wavelet(long scale)
 }
 
 
-static double bench_generic_mdfft(long dims[DIMS], unsigned long flags)
+static double bench_generic_mdfft(long dims[DIMS], unsigned long flags, unsigned long mpi_flags)
 {
-	complex float* x = md_alloc(DIMS, dims, CFL_SIZE);
-	complex float* y = md_alloc(DIMS, dims, CFL_SIZE);
+	complex float* x = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
+	complex float* y = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
 
 	md_gaussian_rand(DIMS, dims, x);
 
-	double tic = timestamp();
+	double tic = bench_timestamp();
 
 	md_fft(DIMS, dims, flags, 0u, y, x);
 
-	double toc = timestamp();
+	double toc = bench_timestamp();
 
 	md_free(x);
 	md_free(y);
@@ -476,23 +600,24 @@ static double bench_generic_mdfft(long dims[DIMS], unsigned long flags)
 static double bench_mdfft(long scale)
 {
 	long dims[DIMS] = { 1, 128 * scale, 128 * scale, 1, 1, 4, 1, 4 };
-	return bench_generic_mdfft(dims, 6ul);
+	unsigned long mpi_flags = MD_BIT(5);
+	return bench_generic_mdfft(dims, 6ul, mpi_flags);
 }
 
 
 
-static double bench_generic_fft(long dims[DIMS], unsigned long flags)
+static double bench_generic_fft(long dims[DIMS], unsigned long flags, unsigned long mpi_flags)
 {
-	complex float* x = md_alloc(DIMS, dims, CFL_SIZE);
-	complex float* y = md_alloc(DIMS, dims, CFL_SIZE);
+	complex float* x = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
+	complex float* y = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
 
 	md_gaussian_rand(DIMS, dims, x);
 
-	double tic = timestamp();
+	double tic = bench_timestamp();
 
 	fft(DIMS, dims, flags, y, x);
 
-	double toc = timestamp();
+	double toc = bench_timestamp();
 
 	md_free(x);
 	md_free(y);
@@ -505,7 +630,8 @@ static double bench_generic_fft(long dims[DIMS], unsigned long flags)
 static double bench_fft(long scale)
 {
 	long dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 1, 16, 1, 8 };
-	return bench_generic_fft(dims, 6ul);
+	unsigned long mpi_flags = MD_BIT(5);
+	return bench_generic_fft(dims, 6ul, mpi_flags);
 }
 
 
@@ -518,11 +644,11 @@ static double bench_generic_fftmod(long dims[DIMS], unsigned long flags)
 
 	md_gaussian_rand(DIMS, dims, x);
 
-	double tic = timestamp();
+	double tic = bench_timestamp();
 
 	fftmod(DIMS, dims, flags, y, x);
 
-	double toc = timestamp();
+	double toc = bench_timestamp();
 
 	md_free(x);
 	md_free(y);
@@ -544,12 +670,13 @@ enum bench_typ { BENCH_ZFILL, BENCH_ZSMUL, BENCH_LINPHASE };
 static double bench_generic_expand(enum bench_typ typ, long scale)
 {
 	long dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 1, 16, 1, 16 };
+	unsigned long mpi_flags = MD_BIT(5);
 
 	float linphase_pos[DIMS] = { 0.5, 0.1 };
 
-	complex float* x = md_alloc(DIMS, dims, CFL_SIZE);
+	complex float* x = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
 
-	double tic = timestamp();
+	double tic = bench_timestamp();
 
 	switch (typ) {
 
@@ -570,7 +697,7 @@ static double bench_generic_expand(enum bench_typ typ, long scale)
 		assert(0);
 	}
 
-	double toc = timestamp();
+	double toc = bench_timestamp();
 
 	md_free(x);
 
@@ -603,14 +730,14 @@ static double bench_ode(long scale)
 	float h = 10.;
 	float tol = 1.E-6;
 
-	double tic = timestamp();
+	double tic = bench_timestamp();
 
 	ode_matrix_interval(h, tol, 2, x, 0., scale * 10001. * M_PI, mat);
 
 	double err = pow(fabs(x[0] + 1.), 2.) + pow(fabs(x[1] - 0.), 2.);
 	assert(err < 1.E-2);
 
-	double toc = timestamp();
+	double toc = bench_timestamp();
 
 	return toc - tic;
 }
@@ -623,7 +750,8 @@ typedef double (*bench_fun)(long scale);
 
 static void do_test(const long dims[BENCH_DIMS], complex float* out, long scale, bench_fun fun, const char* str)
 {
-	printf("%30.30s |", str);
+	if (mpi_is_main_proc())
+		printf("%30.30s |", str);
 	
 	int N = (int)dims[REPETITION_IND];
 	double sum = 0.;
@@ -637,52 +765,59 @@ static void do_test(const long dims[BENCH_DIMS], complex float* out, long scale,
 		min = MIN(dt, min);
 		max = MAX(dt, max);
 
-		printf(" %3.4f", (float)dt);
-		fflush(stdout);
+		if (mpi_is_main_proc()) {
+			printf(" %3.5f", (float)dt);
+			fflush(stdout);
+		}
 
 		assert(0 == REPETITION_IND);
 		out[i] = dt;
 	}
 
-	printf(" | Avg: %3.4f Max: %3.4f Min: %3.4f\n", (float)(sum / N), max, min); 
+	if (mpi_is_main_proc())
+		printf(" | Avg: %3.5f Max: %3.5f Min: %3.5f\n", (float)(sum / N), max, min); 
 }
 
 
 const struct benchmark_s {
 
 	bench_fun fun;
+	bool mpi_bench;
+	bool gpu_bench;
 	const char* str;
 
 } benchmarks[] = {
-	{ bench_add,		"add (md_zaxpy)" },
-	{ bench_add2,		"add (md_zaxpy), contiguous" },
-	{ bench_addf,		"add (for loop)" },
-	{ bench_sum,   		"sum (md_zaxpy)" },
-	{ bench_sum2,   	"sum (md_zaxpy), contiguous" },
-	{ bench_sumf,   	"sum (for loop)" },
-	{ bench_zmul,   	"complex mult. (md_zmul2)" },
-	{ bench_transpose,	"complex transpose" },
-	{ bench_resize,   	"complex resize" },
-	{ bench_matrix_mult,	"complex matrix multiply" },
-	{ bench_batch_matmul1,	"batch matrix multiply 1" },
-	{ bench_batch_matmul2,	"batch matrix multiply 2" },
-	{ bench_tall_matmul1,	"tall matrix multiply 1" },
-	{ bench_tall_matmul2,	"tall matrix multiply 2" },
-	{ bench_zscalar,	"complex dot product" },
-	{ bench_zscalar,	"complex dot product" },
-	{ bench_zscalar_real,	"real complex dot product" },
-	{ bench_znorm,		"l2 norm" },
-	{ bench_zl1norm,	"l1 norm" },
-	{ bench_copy1,		"copy 1" },
-	{ bench_copy2,		"copy 2" },
-	{ bench_zfill,		"complex fill" },
-	{ bench_zsmul,		"complex scalar multiplication" },
-	{ bench_linphase,	"linear phase" },
-	{ bench_wavelet,	"wavelet soft thresh" },
-	{ bench_mdfft,		"(MD-)FFT" },
-	{ bench_fft,		"FFT" },
-	{ bench_fftmod,		"fftmod" },
-	{ bench_ode,		"ODE" },
+	{ bench_add,		false, 	false,	"add (md_zaxpy)" },
+	{ bench_add2,		false,	false,	"add (md_zaxpy), contiguous" },
+	{ bench_addf,		false, 	false,	"add (for loop)" },
+	{ bench_sum,   		false, 	false,	"sum (md_zaxpy)" },
+	{ bench_sum2,   	false, 	false,	"sum (md_zaxpy), contiguous" },
+	{ bench_sumf,   	false, 	false,	"sum (for loop)" },
+	{ bench_zmul,   	false, 	false,	"complex mult. (md_zmul2)" },
+	{ bench_transpose,	false, 	false,	"complex transpose 1" },
+	{ bench_transpose2,	true, 	true,	"complex transpose 2" },
+	{ bench_resize,   	false, 	false,	"complex resize" },
+	{ bench_matrix_mult,	false, 	false,	"complex matrix multiply" },
+	{ bench_batch_matmul1,	false, 	false,	"batch matrix multiply 1" },
+	{ bench_batch_matmul2,	false, 	false,	"batch matrix multiply 2" },
+	{ bench_tall_matmul1,	false, 	false,	"tall matrix multiply 1" },
+	{ bench_tall_matmul2,	true, 	true,	"tall matrix multiply 2" },
+	{ bench_zscalar,	false, 	false,	"complex dot product" },
+	{ bench_zscalar,	false, 	false,	"complex dot product" },
+	{ bench_zscalar_real,	false, 	false,	"real complex dot product" },
+	{ bench_znorm,		true, 	false,	"l2 norm" },
+	{ bench_zl1norm,	false, 	false,	"l1 norm" },
+	{ bench_copy1,		false, 	false,	"copy 1" },
+	{ bench_copy2,		false, 	false,	"copy 2" },
+	{ bench_circ_shift,	true, 	true,	"circ shift" },
+	{ bench_zfill,		true, 	true,	"complex fill" },
+	{ bench_zsmul,		true, 	true,	"complex scalar multiplication" },
+	{ bench_linphase,	false, 	false,	"linear phase" },
+	{ bench_wavelet,	true, 	true,	"wavelet soft thresh" },
+	{ bench_mdfft,		true, 	false,	"(MD-)FFT" },
+	{ bench_fft,		false, 	true,	"FFT" },
+	{ bench_fftmod,		false, 	false,	"fftmod" },
+	{ bench_ode,		false, 	false,	"ODE" },
 };
 
 
@@ -704,10 +839,10 @@ int main_bench(int argc, char* argv[argc])
 	unsigned long flags = ~0UL;
 
 	const struct opt_s opts[] = {
-
 		OPT_SET('T', &threads, "varying number of threads"),
 		OPT_SET('S', &scaling, "varying problem size"),
 		OPT_ULONG('s', &flags, "flags", "select benchmarks"),
+		OPT_SET('g', &bart_use_gpu,  "perform benchmark on GPU"),
 	};
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
@@ -726,12 +861,27 @@ int main_bench(int argc, char* argv[argc])
 	bool outp = (NULL != out_file);
 	complex float* out = (outp ? create_cfl : anon_cfl)(out_file, BENCH_DIMS, dims);
 
+	if ((mpi_get_num_procs() > 1))
+		 use_distributed_computing = true;
+
+#ifdef USE_CUDA
+	num_init_gpu_support();
+#else
 	num_init();
+	if (bart_use_gpu)
+		error("Copmiled without GPU support!");
+#endif
+
+	debug_printf(DP_INFO, "Running benchmarks on %d process(es)\n", mpi_get_num_procs());
 
 	md_clear(BENCH_DIMS, dims, out, CFL_SIZE);
 
 	do {
 		if (!(flags & MD_BIT(pos[TESTS_IND])))
+			continue;
+
+		if ((bart_use_gpu && !benchmarks[pos[TESTS_IND]].gpu_bench) ||
+		    (use_distributed_computing && !benchmarks[pos[TESTS_IND]].mpi_bench))
 			continue;
 
 		if (threads) {
@@ -749,5 +899,3 @@ int main_bench(int argc, char* argv[argc])
 
 	return 0;
 }
-
-
