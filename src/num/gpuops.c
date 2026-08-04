@@ -93,10 +93,8 @@ void cuda_gpu_check(const char* file, int line, const char* note)
 void cuda_check_ptr(const char* file, int line, int N, const void* ptr[N])
 {
 #ifdef GPU_ASSERTS
-	bool same_device = true;
-
 	for (int i = 0; i < N; i++)
-		if (!cuda_ondevice(ptr[i]))
+		if ((NULL != ptr[i]) && !cuda_ondevice(ptr[i]))
 			error("CUDA Error: Pointer not on device in %s:%d", file, line);
 #else
 	(void)file;
