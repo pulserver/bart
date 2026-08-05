@@ -229,15 +229,20 @@ static bool test_mpi_r3opd(r3opd_t test_fun, unsigned long mpi_flags)
 	
 	double* ret_copy = md_alloc(N, dims, DL_SIZE);
 	md_copy(N, dims, ret_copy, ret, DL_SIZE);
-	
-	//Because their memory layout it the same
-	float err = md_znrmse(N, dims, (complex float*)ref, (complex float*)ret_copy);
+
+	float* fref = md_alloc(N, dims, CFL_SIZE);
+	float* fret = md_alloc(N, dims, CFL_SIZE);
+	md_double2float(N, dims, fref, ref);
+	md_double2float(N, dims, fret, ret_copy);
+	float err = md_nrmse(N, dims, fref, fret);
 
 	md_free(in1);
 	md_free(in2);
 	md_free(ret);
 	md_free(ref);
 	md_free(ret_copy);
+	md_free(fret);
+	md_free(fref);
 
 	UT_RETURN_ASSERT(err < UT_TOL);
 }
