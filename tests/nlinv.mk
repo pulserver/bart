@@ -185,7 +185,7 @@ tests/test-nlinv-psf-noncart: traj phantom nufft resize nlinv fmac nrmse
 	touch $@
 
 
-tests/test-nlinv-gpu: normalize fft fmac nrmse $(TESTS_OUT)/shepplogan_coil_ksp.ra
+tests/test-nlinv-gpu: nlinv normalize fft fmac nrmse $(TESTS_OUT)/shepplogan_coil_ksp.ra
 	set -e ; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
 	$(TOOLDIR)/nlinv -g $(TESTS_OUT)/shepplogan_coil_ksp.ra r.ra c.ra		;\
 	$(TOOLDIR)/normalize 8 c.ra c_norm.ra						;\
