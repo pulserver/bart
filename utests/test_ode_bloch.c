@@ -28,7 +28,7 @@ static void ode_direct_sa_wrap(float h, float tol, int N, int P, float x[P + 1][
 	NESTED(void, call_pdy, (float* out, float t, const float* in)) { pdy(data, out, t, in); };
 	NESTED(void, call_pdp, (float* out, float t, const float* in)) { pdp(data, out, t, in); };
 
-	ode_direct_sa(h, tol, N, P, x, st, end, call_der, call_pdy, call_pdp);
+	ode_direct_sa(h, -1, tol, N, P, x, st, end, call_der, call_pdy, call_pdp);
 }
 
 
@@ -73,12 +73,13 @@ static bool test_ode_bloch(void)
 	float x0[3] = { 1., 0., 0. };
 	float x2[3];
 	float h = 0.1;
+	float h_min = -1; // No minimum step size is applied
 	float tol = 0.000001;
 	float end = 0.2;
 
 	NESTED(void, call_fun, (float* out, float t, const float* in)) { bloch_fun(&data, out, t, in); };
 
-	ode_interval(h, tol, 3, x, 0., end, call_fun);
+	ode_interval(h, h_min, tol, 3, x, 0., end, call_fun);
 	bloch_relaxation(x2, end, x0, data.r1, data.r2, data.gb);
 
 	float err2 = 0.;
@@ -94,6 +95,37 @@ static bool test_ode_bloch(void)
 }
 
 UT_REGISTER_TEST(test_ode_bloch);
+
+static bool test_ode_bloch_with_h_min(void)
+{
+	__block struct bloch_s data = { 1. / WATER_T1, 1. / WATER_T2, { 0., 0., GAMMA_H1 * SKYRA_GRADIENT * 0.0001 } };
+
+	float x[3] = { 1., 0., 0. };
+	float x0[3] = { 1., 0., 0. };
+	float x2[3];
+	float h = 0.1;
+	float h_min = 1e-6;
+	float tol = 0.000001;
+	float end = 0.2;
+
+	NESTED(void, call_fun, (float* out, float t, const float* in)) { bloch_fun(&data, out, t, in); };
+
+	ode_interval(h, h_min, tol, 3, x, 0., end, call_fun);
+	bloch_relaxation(x2, end, x0, data.r1, data.r2, data.gb);
+
+	float err2 = 0.;
+
+	for (int i = 0; i < 3; i++)
+		err2 += powf(x[i] - x2[i], 2.);
+
+#if __GNUC__ >= 10
+	return (err2 < 1.E-6);
+#else
+	return (err2 < 1.E-7);
+#endif
+}
+
+UT_REGISTER_TEST(test_ode_bloch_with_h_min);
 
 
 

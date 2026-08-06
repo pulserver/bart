@@ -44,7 +44,7 @@ static void zode_matrix_interval(float h, float tol, int N, complex float x[N], 
 		mat_vecmul(N, N, (complex float*)x, matrix, (const complex float *)in);
 	};
 
-	ode_interval(h, tol, 2 * N, (float*)x, st, end, zode_matrix_fun);
+	ode_interval(h, -1, tol, 2 * N, (float*)x, st, end, zode_matrix_fun);
 }
 
 void zmat_exp(int N, float t, complex float out[N][N], const complex float in[N][N])
@@ -76,7 +76,7 @@ void mat_to_exp(int N, float st, float en, float out[N][N], float tol, ode_fun_t
 		for (int j = 0; j < N; j++)
 			out[i][j] = (i == j) ? 1. : 0.;
 
-		(ode_interval)(h, tol, N, out[i], st, en, f);
+		(ode_interval)(h, -1, tol, N, out[i], st, en, f);
 	}
 }
 

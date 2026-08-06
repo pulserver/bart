@@ -2009,3 +2009,502 @@ static bool test_mcconnell_CEST_ode_sim(void)
 
 UT_REGISTER_TEST(test_mcconnell_CEST_ode_sim)
 
+
+// Test BMC 5 pool CEST simulation with a 5 ms long block pulse for saturation
+//	Compare with the BART submission to the BMC simulation challenge for case 4
+//	See : https://github.com/pulseq-cest/BMsim_challenge
+static bool test_ode_bloch_cest_simulation_with_single_precision_case4(void)
+{
+	// Define default sim data
+	struct sim_data sim_data;
+	sim_data.seq = simdata_seq_defaults;
+	sim_data.pulse = simdata_pulse_defaults;
+	sim_data.grad = simdata_grad_defaults;
+	sim_data.other = simdata_other_defaults;
+	sim_data.voxel = simdata_voxel_defaults;
+	sim_data.seq.model = MODEL_BMC;
+	sim_data.voxel.P = 5;
+
+	// Define CEST parameters
+	sim_data.seq.seq_type = SEQ_CEST;
+	sim_data.seq.rep_num = 81; // Number of offsets
+	sim_data.cest = simdata_cest_defaults;
+	sim_data.cest.n_pulses = 1;
+	sim_data.pulse.rf_end = 0.005;
+	sim_data.cest.off_start = -2.;
+	sim_data.cest.off_stop = 2.;
+	sim_data.cest.t_pp = 0.0065;
+	sim_data.cest.b1_amp = 3.7;
+	sim_data.cest.b0 = 3.;
+	sim_data.cest.ref_scan = true;
+	sim_data.cest.ref_scan_ppm = -300.;
+	float om_larmor = sim_data.cest.b0 * 2 * M_PI * sim_data.cest.gamma;
+
+	// Define pool settings
+	// * Water pool
+	sim_data.voxel.r1[0] = 1.;
+	sim_data.voxel.r2[0] = 1. / 0.040;
+	sim_data.voxel.m0[0] = 1.;
+
+	// * MT pool
+	sim_data.voxel.r1[1] = 1.;
+	sim_data.voxel.r2[1] = 1. / 4.0e-5;
+	sim_data.voxel.Om[1] = 3.0 * om_larmor;
+	sim_data.voxel.m0[1] = 0.1351;
+	sim_data.voxel.k[0] = 30.;
+
+	// * CEST pool
+	sim_data.voxel.r1[2] = 1.;
+	sim_data.voxel.r2[2] = 1. / 0.1;
+	sim_data.voxel.Om[2] = -3.5 * om_larmor;
+	sim_data.voxel.m0[2] = 0.0009009;
+	sim_data.voxel.k[1] = 50.;
+
+	// * Guanidine
+	sim_data.voxel.r1[3] = 1.;
+	sim_data.voxel.r2[3] = 1. / 0.1;
+	sim_data.voxel.Om[3] = -2. * om_larmor;
+	sim_data.voxel.m0[3] = 0.0009009;
+	sim_data.voxel.k[2] = 1000.;
+
+	// * NOE
+	sim_data.voxel.r1[4] = 1. / 1.3;
+	sim_data.voxel.r2[4] = 1. / 0.005;
+	sim_data.voxel.Om[4] = 3. * om_larmor;
+	sim_data.voxel.m0[4] = 0.0045;
+	sim_data.voxel.k[3] = 20.;
+
+	// Define ODE solver settings
+	sim_data.other.ode_tol = 1.e-5;
+	sim_data.other.ode_h = 1.e-7;
+	sim_data.other.ode_h_min = -1;
+
+	int R = sim_data.seq.rep_num;
+
+	float mxy_pools[R][sim_data.voxel.P][3];
+	float sa_r1_pools[R][sim_data.voxel.P][3];
+	float sa_r2_pools[R][sim_data.voxel.P][3];
+	float sa_m0_pools[R][sim_data.voxel.P][3];
+	float sa_b1_pools[R][1][3];
+	float sa_k_pools[R][sim_data.voxel.P][3];
+	float sa_om_pools[R][sim_data.voxel.P][3];
+
+	// Reference spectrum that was submitted to the BMsim challenge (BART (SP))
+	static const float ref_spec[] = 
+	{
+		0.469944298267365, 0.454959988594055, 0.446434348821640, 0.444657504558563,
+		0.449727147817612, 0.461542189121246, 0.479801505804062, 0.504008412361145,
+		0.533477306365967, 0.567357420921326, 0.604647994041443, 0.644228518009186,
+		0.684890627861023, 0.725368559360504, 0.764380991458893, 0.800662517547607,
+		0.833008706569672, 0.860309004783630, 0.881579458713531, 0.895996987819672,
+		0.902927398681641, 0.901940643787384, 0.892833411693573, 0.875633955001831,
+		0.850605070590973, 0.818240761756897, 0.779253661632538, 0.734557747840881,
+		0.685242176055908, 0.632540225982666, 0.577801406383514, 0.522444486618042,
+		0.467925548553467, 0.415690332651138, 0.367134004831314, 0.323564022779465,
+		0.286156445741653, 0.255924284458160, 0.233694598078728, 0.220071539282799,
+		0.215424939990044, 0.219884172081947, 0.233327031135559, 0.255388587713242,
+		0.285466194152832, 0.322739720344543, 0.366201847791672, 0.414675414562225,
+		0.466857969760895, 0.521354794502258, 0.576720416545868, 0.631498098373413,
+		0.684265911579132, 0.733676254749298, 0.778487384319305, 0.817609012126923,
+		0.850120306015015, 0.875305652618408, 0.892664968967438, 0.901928722858429,
+		0.903063952922821, 0.896271288394928, 0.881971001625061, 0.860796213150024,
+		0.833568334579468, 0.801265239715576, 0.764997363090515, 0.725967884063721,
+		0.685442328453064, 0.644704520702362, 0.605018734931946, 0.567599058151245,
+		0.533569335937500, 0.503932297229767, 0.479547083377838, 0.461102902889252,
+		0.449099659919739, 0.443846613168716, 0.445449531078339, 0.453814208507538,
+		0.468657284975052
+	};
+
+	bloch_simulation2(&sim_data, R, sim_data.voxel.P, &mxy_pools, &sa_r1_pools, &sa_r2_pools,
+			  &sa_m0_pools, &sa_b1_pools, &sa_k_pools, &sa_om_pools);
+
+	for (int i = 0; i < R; i++) {
+
+		debug_printf(DP_DEBUG3, " iter=%2.1d: offset=%2.5f, z-spectra=%.13f \n",
+			     i,
+			     sim_data.cest.off_start + i * (sim_data.cest.off_stop - sim_data.cest.off_start) / (R - 1),
+			     mxy_pools[i][0][2]);
+
+		float err = fabsf(mxy_pools[i][0][2] - ref_spec[i]);
+		UT_RETURN_ON_FAILURE_TOL(err, 1E-5);
+	}
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_ode_bloch_cest_simulation_with_single_precision_case4)
+
+// Test BMC 5 pool CEST simulation with a 5 ms long block pulse for saturation
+//	Compare with the BART submission to the BMC simulation challenge for case 4
+//	See : https://github.com/pulseq-cest/BMsim_challenge
+static bool test_ode_bloch_cest_simulation_with_single_precision_h_min_case4(void)
+{
+	// Define default sim data
+	struct sim_data sim_data;
+	sim_data.seq = simdata_seq_defaults;
+	sim_data.pulse = simdata_pulse_defaults;
+	sim_data.grad = simdata_grad_defaults;
+	sim_data.other = simdata_other_defaults;
+	sim_data.voxel = simdata_voxel_defaults;
+	sim_data.seq.model = MODEL_BMC;
+	sim_data.voxel.P = 5;
+
+	// Define CEST parameters
+	sim_data.seq.seq_type = SEQ_CEST;
+	sim_data.seq.rep_num = 81; // Number of offsets
+	sim_data.cest = simdata_cest_defaults;
+	sim_data.cest.n_pulses = 1;
+	sim_data.pulse.rf_end = 0.005;
+	sim_data.cest.off_start = -2.;
+	sim_data.cest.off_stop = 2.;
+	sim_data.cest.t_pp = 0.0065;
+	sim_data.cest.b1_amp = 3.7;
+	sim_data.cest.b0 = 3.;
+	sim_data.cest.ref_scan = true;
+	sim_data.cest.ref_scan_ppm = -300.;
+	float om_larmor = sim_data.cest.b0 * 2 * M_PI * sim_data.cest.gamma;
+
+	// Define pool settings
+	// * Water pool
+	sim_data.voxel.r1[0] = 1.;
+	sim_data.voxel.r2[0] = 1. / 0.040;
+	sim_data.voxel.m0[0] = 1.;
+
+	// * MT pool
+	sim_data.voxel.r1[1] = 1.;
+	sim_data.voxel.r2[1] = 1. / 4.0e-5;
+	sim_data.voxel.Om[1] = 3.0 * om_larmor;
+	sim_data.voxel.m0[1] = 0.1351;
+	sim_data.voxel.k[0] = 30.;
+
+	// * CEST pool
+	sim_data.voxel.r1[2] = 1.;
+	sim_data.voxel.r2[2] = 1. / 0.1;
+	sim_data.voxel.Om[2] = -3.5 * om_larmor;
+	sim_data.voxel.m0[2] = 0.0009009;
+	sim_data.voxel.k[1] = 50.;
+
+	// * Guanidine
+	sim_data.voxel.r1[3] = 1.;
+	sim_data.voxel.r2[3] = 1. / 0.1;
+	sim_data.voxel.Om[3] = -2. * om_larmor;
+	sim_data.voxel.m0[3] = 0.0009009;
+	sim_data.voxel.k[2] = 1000.;
+
+	// * NOE
+	sim_data.voxel.r1[4] = 1. / 1.3;
+	sim_data.voxel.r2[4] = 1. / 0.005;
+	sim_data.voxel.Om[4] = 3. * om_larmor;
+	sim_data.voxel.m0[4] = 0.0045;
+	sim_data.voxel.k[3] = 20.;
+
+	// Define ODE solver settings
+	sim_data.other.ode_tol = 1.e-5;
+	sim_data.other.ode_h = 1.e-7;
+	sim_data.other.ode_h_min = 1.e-6;
+
+	int R = sim_data.seq.rep_num;
+
+	float mxy_pools[R][sim_data.voxel.P][3];
+	float sa_r1_pools[R][sim_data.voxel.P][3];
+	float sa_r2_pools[R][sim_data.voxel.P][3];
+	float sa_m0_pools[R][sim_data.voxel.P][3];
+	float sa_b1_pools[R][1][3];
+	float sa_k_pools[R][sim_data.voxel.P][3];
+	float sa_om_pools[R][sim_data.voxel.P][3];
+
+	// Reference spectrum that was submitted to the BMsim challenge (BART (SP))
+	static const float ref_spec[] = 
+	{
+		0.469944298267365, 0.454959988594055, 0.446434348821640, 0.444657504558563,
+		0.449727147817612, 0.461542189121246, 0.479801505804062, 0.504008412361145,
+		0.533477306365967, 0.567357420921326, 0.604647994041443, 0.644228518009186,
+		0.684890627861023, 0.725368559360504, 0.764380991458893, 0.800662517547607,
+		0.833008706569672, 0.860309004783630, 0.881579458713531, 0.895996987819672,
+		0.902927398681641, 0.901940643787384, 0.892833411693573, 0.875633955001831,
+		0.850605070590973, 0.818240761756897, 0.779253661632538, 0.734557747840881,
+		0.685242176055908, 0.632540225982666, 0.577801406383514, 0.522444486618042,
+		0.467925548553467, 0.415690332651138, 0.367134004831314, 0.323564022779465,
+		0.286156445741653, 0.255924284458160, 0.233694598078728, 0.220071539282799,
+		0.215424939990044, 0.219884172081947, 0.233327031135559, 0.255388587713242,
+		0.285466194152832, 0.322739720344543, 0.366201847791672, 0.414675414562225,
+		0.466857969760895, 0.521354794502258, 0.576720416545868, 0.631498098373413,
+		0.684265911579132, 0.733676254749298, 0.778487384319305, 0.817609012126923,
+		0.850120306015015, 0.875305652618408, 0.892664968967438, 0.901928722858429,
+		0.903063952922821, 0.896271288394928, 0.881971001625061, 0.860796213150024,
+		0.833568334579468, 0.801265239715576, 0.764997363090515, 0.725967884063721,
+		0.685442328453064, 0.644704520702362, 0.605018734931946, 0.567599058151245,
+		0.533569335937500, 0.503932297229767, 0.479547083377838, 0.461102902889252,
+		0.449099659919739, 0.443846613168716, 0.445449531078339, 0.453814208507538,
+		0.468657284975052
+	};
+
+	bloch_simulation2(&sim_data, R, sim_data.voxel.P, &mxy_pools, &sa_r1_pools, &sa_r2_pools,
+			  &sa_m0_pools, &sa_b1_pools, &sa_k_pools, &sa_om_pools);
+
+	for (int i = 0; i < R; i++) {
+
+		debug_printf(DP_DEBUG3, " iter=%2.1d: offset=%2.5f, z-spectra=%.13f \n",
+			     i,
+			     sim_data.cest.off_start + i * (sim_data.cest.off_stop - sim_data.cest.off_start) / (R - 1),
+			     mxy_pools[i][0][2]);
+
+		float err = fabsf(mxy_pools[i][0][2] - ref_spec[i]);
+		UT_RETURN_ON_FAILURE_TOL(err, 1E-5);
+	}
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_ode_bloch_cest_simulation_with_single_precision_h_min_case4)
+
+
+// Test BMC 5 pool CEST simulation with a 5 ms long block pulse for saturation
+//	Compare with the BART submission to the BMC simulation challenge for case 4
+//	See : https://github.com/pulseq-cest/BMsim_challenge
+static bool test_ode_bloch_cest_simulation_with_single_precision_case8(void)
+{
+	// Define default sim data
+	struct sim_data sim_data;
+	sim_data.seq = simdata_seq_defaults;
+	sim_data.pulse = simdata_pulse_defaults;
+	sim_data.grad = simdata_grad_defaults;
+	sim_data.other = simdata_other_defaults;
+	sim_data.voxel = simdata_voxel_defaults;
+	sim_data.seq.model = MODEL_BMC;
+	sim_data.voxel.P = 5;
+
+	// Define CEST parameters
+	sim_data.seq.seq_type = SEQ_CEST;
+	sim_data.seq.rep_num = 81; // Number of offsets
+	sim_data.cest = simdata_cest_defaults;
+	sim_data.cest.n_pulses = 2;
+	sim_data.pulse.rf_end = 5.e-3;
+	sim_data.cest.off_start = -2.;
+	sim_data.cest.off_stop = 2.;
+	sim_data.cest.t_pp = 0.0065;
+	sim_data.cest.t_d = 100e-6;
+	sim_data.cest.b1_amp = 3.7;
+	sim_data.cest.b0 = 3.;
+	sim_data.cest.ref_scan = true;
+	sim_data.cest.ref_scan_ppm = -300.;
+	float om_larmor = sim_data.cest.b0 * 2 * M_PI * sim_data.cest.gamma;
+
+	// Define pool settings
+	// * Water pool
+	sim_data.voxel.r1[0] = 1.;
+	sim_data.voxel.r2[0] = 1. / 0.040;
+	sim_data.voxel.m0[0] = 1.;
+
+	// * MT pool
+	sim_data.voxel.r1[1] = 1.;
+	sim_data.voxel.r2[1] = 1. / 4.0e-5;
+	sim_data.voxel.Om[1] = 3.0 * om_larmor;
+	sim_data.voxel.m0[1] = 0.1351;
+	sim_data.voxel.k[0] = 30.;
+
+	// * CEST pool
+	sim_data.voxel.r1[2] = 1.;
+	sim_data.voxel.r2[2] = 1. / 0.1;
+	sim_data.voxel.Om[2] = -3.5 * om_larmor;
+	sim_data.voxel.m0[2] = 0.0009009;
+	sim_data.voxel.k[1] = 50.;
+
+	// * Guanidine
+	sim_data.voxel.r1[3] = 1.;
+	sim_data.voxel.r2[3] = 1. / 0.1;
+	sim_data.voxel.Om[3] = -2. * om_larmor;
+	sim_data.voxel.m0[3] = 0.0009009;
+	sim_data.voxel.k[2] = 1000.;
+
+	// * NOE
+	sim_data.voxel.r1[4] = 1. / 1.3;
+	sim_data.voxel.r2[4] = 1. / 0.005;
+	sim_data.voxel.Om[4] = 3. * om_larmor;
+	sim_data.voxel.m0[4] = 0.0045;
+	sim_data.voxel.k[3] = 20.;
+
+	// Define ODE solver settings
+	sim_data.other.ode_tol = 1.e-5;
+	sim_data.other.ode_h = 1.e-7;
+	sim_data.other.ode_h_min = -1;
+
+	int R = sim_data.seq.rep_num;
+
+	float mxy_pools[R][sim_data.voxel.P][3];
+	float sa_r1_pools[R][sim_data.voxel.P][3];
+	float sa_r2_pools[R][sim_data.voxel.P][3];
+	float sa_m0_pools[R][sim_data.voxel.P][3];
+	float sa_b1_pools[R][1][3];
+	float sa_k_pools[R][sim_data.voxel.P][3];
+	float sa_om_pools[R][sim_data.voxel.P][3];
+
+	// Reference spectrum that was submitted to the BMsim challenge (BART (SP))
+	static const float ref_spec[81] =
+	{
+	       0.877631545066833, 0.861599326133728, 0.821091473102570, 0.758129656314850,
+	       0.677306950092316, 0.585322320461273, 0.490283548831940, 0.400843769311905,
+	       0.325269579887390, 0.270566225051880, 0.241746604442596, 0.241310924291611,
+	       0.269008845090866, 0.321885615587234, 0.394608795642853, 0.480016231536865,
+	       0.569832146167755, 0.655451893806458, 0.728728473186493, 0.782657861709595,
+	       0.811926722526550, 0.813245415687561, 0.785484731197357, 0.729596614837646,
+	       0.648358762264252, 0.545981764793396, 0.427639037370682, 0.298968881368637,
+	       0.165608033537865, 0.032781865447760, -0.094990096986294, -0.214094057679176,
+	       -0.321892738342285, -0.416712522506714, -0.497730165719986, -0.564810395240784,
+	       -0.618309795856476, -0.658869028091431, -0.687214910984039, -0.703996300697327,
+	       -0.709661483764648, -0.704363584518433, -0.687947809696198, -0.659970760345459,
+	       -0.619783043861389, -0.566654384136200, -0.499933272600174, -0.419256031513214,
+	       -0.324740201234818, -0.217192918062210, -0.098269999027252, 0.029411716386676,
+	       0.162254586815834, 0.295751929283142, 0.424683153629303, 0.543409585952759,
+	       0.646279752254486, 0.728093206882477, 0.784607946872711, 0.813001811504364,
+	       0.812276363372803, 0.783510744571686, 0.729947686195374, 0.656862437725067,
+	       0.571234822273254, 0.481201976537704, 0.395379275083542, 0.322068154811859,
+	       0.268478840589523, 0.240002304315567, 0.239661306142807, 0.267773151397705,
+	       0.321903258562088, 0.397090971469879, 0.486366331577301, 0.581469058990479,
+	       0.673740625381470, 0.755044937133789, 0.818621873855591, 0.859817385673523,
+	       0.876543283462524
+	};
+
+	bloch_simulation2(&sim_data, R, sim_data.voxel.P, &mxy_pools, &sa_r1_pools, &sa_r2_pools,
+			  &sa_m0_pools, &sa_b1_pools, &sa_k_pools, &sa_om_pools);
+
+	for (int i = 0; i < R; i++) {
+
+		debug_printf(DP_DEBUG3, " iter=%2.1d: offset=%2.5f, z-spectra=%.13f \n",
+			     i,
+			     sim_data.cest.off_start + i * (sim_data.cest.off_stop - sim_data.cest.off_start) / (R - 1),
+			     mxy_pools[i][0][2]);
+
+		float err = fabsf(mxy_pools[i][0][2] - ref_spec[i]);
+		UT_RETURN_ON_FAILURE_TOL(err, 1E-5);
+	}
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_ode_bloch_cest_simulation_with_single_precision_case8)
+
+// Test BMC 5 pool CEST simulation with a 5 ms long block pulse for saturation
+//	Compare with the BART submission to the BMC simulation challenge for case 8
+//	See : https://github.com/pulseq-cest/BMsim_challenge
+static bool test_ode_bloch_cest_simulation_with_single_precision_h_min_case8(void)
+{
+	// Define default sim data
+	struct sim_data sim_data;
+	sim_data.seq = simdata_seq_defaults;
+	sim_data.pulse = simdata_pulse_defaults;
+	sim_data.grad = simdata_grad_defaults;
+	sim_data.other = simdata_other_defaults;
+	sim_data.voxel = simdata_voxel_defaults;
+	sim_data.seq.model = MODEL_BMC;
+	sim_data.voxel.P = 5;
+
+	// Define CEST parameters
+	sim_data.seq.seq_type = SEQ_CEST;
+	sim_data.seq.rep_num = 81; // Number of offsets
+	sim_data.cest = simdata_cest_defaults;
+	sim_data.cest.n_pulses = 2;
+	sim_data.pulse.rf_end = 5.e-3;
+	sim_data.cest.off_start = -2.;
+	sim_data.cest.off_stop = 2.;
+	sim_data.cest.t_pp = 0.0065;
+	sim_data.cest.t_d = 100e-6;
+	sim_data.cest.b1_amp = 3.7;
+	sim_data.cest.b0 = 3.;
+	sim_data.cest.ref_scan = true;
+	sim_data.cest.ref_scan_ppm = -300.;
+	float om_larmor = sim_data.cest.b0 * 2 * M_PI * sim_data.cest.gamma;
+
+	// Define pool settings
+	// * Water pool
+	sim_data.voxel.r1[0] = 1.;
+	sim_data.voxel.r2[0] = 1. / 0.040;
+	sim_data.voxel.m0[0] = 1.;
+
+	// * MT pool
+	sim_data.voxel.r1[1] = 1.;
+	sim_data.voxel.r2[1] = 1. / 4.0e-5;
+	sim_data.voxel.Om[1] = 3.0 * om_larmor;
+	sim_data.voxel.m0[1] = 0.1351;
+	sim_data.voxel.k[0] = 30.;
+
+	// * CEST pool
+	sim_data.voxel.r1[2] = 1.;
+	sim_data.voxel.r2[2] = 1. / 0.1;
+	sim_data.voxel.Om[2] = -3.5 * om_larmor;
+	sim_data.voxel.m0[2] = 0.0009009;
+	sim_data.voxel.k[1] = 50.;
+
+	// * Guanidine
+	sim_data.voxel.r1[3] = 1.;
+	sim_data.voxel.r2[3] = 1. / 0.1;
+	sim_data.voxel.Om[3] = -2. * om_larmor;
+	sim_data.voxel.m0[3] = 0.0009009;
+	sim_data.voxel.k[2] = 1000.;
+
+	// * NOE
+	sim_data.voxel.r1[4] = 1. / 1.3;
+	sim_data.voxel.r2[4] = 1. / 0.005;
+	sim_data.voxel.Om[4] = 3. * om_larmor;
+	sim_data.voxel.m0[4] = 0.0045;
+	sim_data.voxel.k[3] = 20.;
+
+	// Define ODE solver settings
+	sim_data.other.ode_tol = 1.e-5;
+	sim_data.other.ode_h = 1.e-7;
+	sim_data.other.ode_h_min = 1.e-6;
+
+	int R = sim_data.seq.rep_num;
+
+	float mxy_pools[R][sim_data.voxel.P][3];
+	float sa_r1_pools[R][sim_data.voxel.P][3];
+	float sa_r2_pools[R][sim_data.voxel.P][3];
+	float sa_m0_pools[R][sim_data.voxel.P][3];
+	float sa_b1_pools[R][1][3];
+	float sa_k_pools[R][sim_data.voxel.P][3];
+	float sa_om_pools[R][sim_data.voxel.P][3];
+
+	// Reference spectrum that was submitted to the BMsim challenge (BART (SP))
+	static const float ref_spec[81] =
+	{
+	       0.877631545066833, 0.861599326133728, 0.821091473102570, 0.758129656314850,
+	       0.677306950092316, 0.585322320461273, 0.490283548831940, 0.400843769311905,
+	       0.325269579887390, 0.270566225051880, 0.241746604442596, 0.241310924291611,
+	       0.269008845090866, 0.321885615587234, 0.394608795642853, 0.480016231536865,
+	       0.569832146167755, 0.655451893806458, 0.728728473186493, 0.782657861709595,
+	       0.811926722526550, 0.813245415687561, 0.785484731197357, 0.729596614837646,
+	       0.648358762264252, 0.545981764793396, 0.427639037370682, 0.298968881368637,
+	       0.165608033537865, 0.032781865447760, -0.094990096986294, -0.214094057679176,
+	       -0.321892738342285, -0.416712522506714, -0.497730165719986, -0.564810395240784,
+	       -0.618309795856476, -0.658869028091431, -0.687214910984039, -0.703996300697327,
+	       -0.709661483764648, -0.704363584518433, -0.687947809696198, -0.659970760345459,
+	       -0.619783043861389, -0.566654384136200, -0.499933272600174, -0.419256031513214,
+	       -0.324740201234818, -0.217192918062210, -0.098269999027252, 0.029411716386676,
+	       0.162254586815834, 0.295751929283142, 0.424683153629303, 0.543409585952759,
+	       0.646279752254486, 0.728093206882477, 0.784607946872711, 0.813001811504364,
+	       0.812276363372803, 0.783510744571686, 0.729947686195374, 0.656862437725067,
+	       0.571234822273254, 0.481201976537704, 0.395379275083542, 0.322068154811859,
+	       0.268478840589523, 0.240002304315567, 0.239661306142807, 0.267773151397705,
+	       0.321903258562088, 0.397090971469879, 0.486366331577301, 0.581469058990479,
+	       0.673740625381470, 0.755044937133789, 0.818621873855591, 0.859817385673523,
+	       0.876543283462524
+	};
+
+	bloch_simulation2(&sim_data, R, sim_data.voxel.P, &mxy_pools, &sa_r1_pools, &sa_r2_pools,
+			  &sa_m0_pools, &sa_b1_pools, &sa_k_pools, &sa_om_pools);
+
+	for (int i = 0; i < R; i++) {
+
+		debug_printf(DP_DEBUG3, " iter=%2.1d: offset=%2.5f, z-spectra=%.13f \n",
+			     i,
+			     sim_data.cest.off_start + i * (sim_data.cest.off_stop - sim_data.cest.off_start) / (R - 1),
+			     mxy_pools[i][0][2]);
+
+		float err = fabsf(mxy_pools[i][0][2] - ref_spec[i]);
+		UT_RETURN_ON_FAILURE_TOL(err, 1E-5);
+	}
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_ode_bloch_cest_simulation_with_single_precision_h_min_case8)

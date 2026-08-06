@@ -71,6 +71,7 @@ struct simdata_other {
 	float stm_tol;
 	float sampling_rate;
 	float ode_h;
+	float ode_h_min;
 };
 
 extern const struct simdata_other simdata_other_defaults;

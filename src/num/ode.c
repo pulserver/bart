@@ -262,7 +262,7 @@ float dormand_prince_step2(float h, int N, float ynp[N], float tn, const float y
 }
 
 
-void (ode_interval)(float h, float tol, int N, float x[N], float st, float end, ode_fun_t f)
+void (ode_interval)(float h, float h_min, float tol, int N, float x[N], float st, float end, ode_fun_t f)
 {
 	float k[6][N];
 	NESTED_CALL(f, (k[0], st, x));
@@ -279,7 +279,10 @@ void (ode_interval)(float h, float tol, int N, float x[N], float st, float end, 
 
 		float h_new = h * dormand_prince_scale(tol, err);
 
-		if (err > tol) {
+		if (0. < h_min)
+			h_new = fmax(h_new, h_min);
+
+		if (err > tol && (h_min <= 0. || h > h_min)) {
 
 			h = h_new;
 			NESTED_CALL(f, (k[0], t, x));	// recreate correct k[0] which has been overwritten
@@ -308,7 +311,7 @@ void ode_interval2(float h, float tol,
 		for (int m = 0; m < M; m++)
 			x[i + 1][m] = x[i][m];
 
-		(ode_interval)(h, tol, M, x[i + 1], t[i], t[i + 1], sys);
+		(ode_interval)(h, -1, tol, M, x[i + 1], t[i], t[i + 1], sys);
 	}
 }
 
@@ -334,7 +337,7 @@ void ode_matrix_interval(float h, float tol, int N, float x[N], float st, float 
 		}
 	};
 
-	ode_interval(h, tol, N, x, st, end, ode_matrix_fun);
+	ode_interval(h, -1, tol, N, x, st, end, ode_matrix_fun);
 }
 
 
@@ -380,7 +383,7 @@ static void seq(const struct seq_data* data, float* out, float t, const float* y
 	}
 }
 
-void (ode_direct_sa)(float h, float tol, int N, int P, float x[P + 1][N],
+void (ode_direct_sa)(float h, float h_min, float tol, int N, int P, float x[P + 1][N],
 	float st, float end,
 	ode_fun_t f,
 	ode_fun_t pdy,
@@ -393,7 +396,7 @@ void (ode_direct_sa)(float h, float tol, int N, int P, float x[P + 1][N],
 		seq(&data2, out, t, yn);
 	};
 
-	ode_interval(h, tol, N * (1 + P), &x[0][0], st, end, seq2);
+	ode_interval(h, h_min, tol, N * (1 + P), &x[0][0], st, end, seq2);
 }
 
 
@@ -427,7 +430,7 @@ void ode_adjoint_sa_noinit(float h, float tol,
 				out[m] += off[m];
 		};
 
-		ode_interval(h, tol, M, z[i - 1], -t[i], -t[i - 1], asa_eval);
+		ode_interval(h, -1, tol, M, z[i - 1], -t[i], -t[i - 1], asa_eval);
 	}
 }
 
@@ -505,7 +508,7 @@ void ode_matrix_adjoint_sa(float h, float tol,
 			}
 		};
 
-		ode_interval(h, tol, M, z[i - 1], -t[i], -t[i - 1], matrix_fun);
+		ode_interval(h, -1, tol, M, z[i - 1], -t[i], -t[i - 1], matrix_fun);
 	}
 }
 

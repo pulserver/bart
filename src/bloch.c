@@ -43,7 +43,7 @@ static void simulate(const struct sim_data* data, float out[3], float st, float 
 		bloch_ode(out, in, data->R1, data->R2, gb);
 	};
 
-	ode_interval(data->h, data->tol, 3, out, st, en, eval);
+	ode_interval(data->h, -1, data->tol, 3, out, st, en, eval);
 }
 
 static const char help_str[] = "simulation tool";

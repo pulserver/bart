@@ -86,6 +86,7 @@ void debug_sim(struct sim_data* data)
 	debug_printf(DP_INFO, "Other Parameter:\n");
 	debug_printf(DP_INFO, "\tODE Tolerance:%f\n", data->other.ode_tol);
 	debug_printf(DP_INFO, "\tODE Initial Step Size:%f\n", data->other.ode_h);
+	debug_printf(DP_INFO, "\tODE Minimum Step Size:%f\n", data->other.ode_h_min);
 	debug_printf(DP_INFO, "\tPulse Sampling Rate:%f Hz\n", data->other.sampling_rate);
 }
 
@@ -147,6 +148,7 @@ const struct simdata_other simdata_other_defaults = {
 	.stm_tol = 1e-6,
 	.sampling_rate = 1e+6,
 	.ode_h = 0.0001,
+	.ode_h_min = -1., // -1 -> no minimum step size applied
 };
 
 const struct simdata_cest simdata_cest_defaults = {
@@ -577,7 +579,7 @@ void rf_pulse(struct sim_data* data, float h, float tol, int N, int P, float xp[
 		};
 
 		// Choose P-1 because ODE interface treats signal separate and P only describes the number of parameters
-		ode_direct_sa(h, tol, N, P - 1, xp, data->pulse.rf_start, data->pulse.rf_end, call_fun, call_pdy2, call_pdp2);
+		ode_direct_sa(h, data->other.ode_h_min, tol, N, P - 1, xp, data->pulse.rf_start, data->pulse.rf_end, call_fun, call_pdy2, call_pdp2);
 		break;
 
         case SIM_STM:
@@ -698,7 +700,7 @@ void relaxation2(struct sim_data* data, float h, float tol, int N, int P, float 
 		};
 
 		// Choose P-1 because ODE interface treats signal separate and P only describes the number of parameters
-		ode_direct_sa(h, tol, N, P - 1, xp, st, end, call_fun, call_pdy2, call_pdp2);
+		ode_direct_sa(h, data->other.ode_h_min, tol, N, P - 1, xp, st, end, call_fun, call_pdy2, call_pdp2);
 
 		break;
 

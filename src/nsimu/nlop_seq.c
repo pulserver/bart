@@ -492,10 +492,10 @@ static void simulate(float h, float tol, float r1, float r2, float B0, float B1,
 
 	if (dini || dpars)
 		// Solve with sensitivity analysis
-		ode_direct_sa(h, tol, 3, P, state, 0, dur, call_fun, call_pdy2, call_pdp2);
+		ode_direct_sa(h, -1, tol, 3, P, state, 0, dur, call_fun, call_pdy2, call_pdp2);
 	else
 		// Solve without sensitivity analysis (only bloch equation)
-		ode_interval(h, tol, 3, state[0], 0, dur, call_fun);
+		ode_interval(h, -1, tol, 3, state[0], 0, dur, call_fun);
 }
 
 static void seq_check_dims(struct sim_config_s* conf, int N, int OO, const long odims[OO][N], int II, const long idims[II][N], const long /*ddims*/[OO][II][N])

@@ -17,9 +17,9 @@ extern float dormand_prince_step2(float h, int N, float ynp[N], float tn, const 
 
 extern float dormand_prince_scale(float tol, float err);
 
-extern void ode_interval(float h, float tol, int N, float x[N], float st, float end, ode_fun_t f);
-#define ode_interval(h, tol, N, x, st, end, f) \
-	ode_interval(h, tol, N, x, st, end, CLOSURE(ode_fun_t, f))
+extern void ode_interval(float h, float h_min, float tol, int N, float x[N], float st, float end, ode_fun_t f);
+#define ode_interval(h, h_min, tol, N, x, st, end, f) \
+	ode_interval(h, h_min, tol, N, x, st, end, CLOSURE(ode_fun_t, f))
 
 
 extern void ode_interval2(float h, float tol,
@@ -27,11 +27,11 @@ extern void ode_interval2(float h, float tol,
 
 extern void ode_matrix_interval(float h, float tol, int N, float x[N], float st, float end, const float matrix[N][N]);
 
-extern void ode_direct_sa(float h, float tol, int N, int P, float x[P + 1][N],
+extern void ode_direct_sa(float h, float h_min, float tol, int N, int P, float x[P + 1][N],
 	float st, float end,
 	ode_fun_t f, ode_fun_t pdy, ode_fun_t pdp);
-#define ode_direct_sa(h, tol, N, P, x, st, end, f, pdy, pdp) \
-	ode_direct_sa(h, tol, N, P, x, st, end, CLOSURE(ode_fun_t, f), CLOSURE(ode_fun_t, pdy), CLOSURE(ode_fun_t, pdp))
+#define ode_direct_sa(h, h_min, tol, N, P, x, st, end, f, pdy, pdp) \
+	ode_direct_sa(h, h_min, tol, N, P, x, st, end, CLOSURE(ode_fun_t, f), CLOSURE(ode_fun_t, pdy), CLOSURE(ode_fun_t, pdp))
 
 
 
