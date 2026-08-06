@@ -403,13 +403,13 @@ void noir2_recon(const struct noir2_conf_s* conf, struct noir2_s* noir_ops,
 		void* range[NUM_REGS + 2];
 
 		int R = 0;
-		range[R++] = (is_vptr_gpu(kspace) ? vptr_move_gpu : vptr_move_cpu)(img);
+		range[R++] = (is_vptr_gpu(data) ? vptr_move_gpu : vptr_move_cpu)(img);
 
 		for (int i = 0; i < NUM_REGS; i++)
 			if (NULL != sdims[i])
 				range[R++] = md_alloc_sameplace(N + 1, (*sdims[i]), CFL_SIZE, range[0]);
 
-		range[R++] = (is_vptr_gpu(kspace) ? vptr_move_gpu : vptr_move_cpu)(ksens);
+		range[R++] = (is_vptr_gpu(data) ? vptr_move_gpu : vptr_move_cpu)(ksens);
 
 		x = vptr_wrap_range(R, range, true);
 
