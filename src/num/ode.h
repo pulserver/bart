@@ -6,6 +6,11 @@
 typedef CLOSURE_TYPE(void, (float* out, float t, const float* yn)) ode_fun_t;
 #endif
 
+#ifndef ODE_FUN_T_d
+#define ODE_FUN_T_d
+typedef CLOSURE_TYPE(void, (double* out, double t, const double* yn)) ode_fun_t_d;
+#endif
+
 typedef ode_fun_t ode_sys_t;
 typedef CLOSURE_TYPE(void, (float dst[], float t)) ode_cost_t;
 
@@ -15,12 +20,19 @@ extern void dormand_prince_step(float h, int N, float ynp[N], float tn, const fl
 
 extern float dormand_prince_step2(float h, int N, float ynp[N], float tn, const float yn[N], float tmp[6][N], ode_fun_t f);
 
+extern double dormand_prince_step2_d(double h, int N, double ynp[N], double tn, const double yn[N], double tmp[6][N], ode_fun_t_d f);
+
 extern float dormand_prince_scale(float tol, float err);
+
+extern double dormand_prince_scale_d(double tol, double err);
 
 extern void ode_interval(float h, float h_min, float tol, int N, float x[N], float st, float end, ode_fun_t f);
 #define ode_interval(h, h_min, tol, N, x, st, end, f) \
 	ode_interval(h, h_min, tol, N, x, st, end, CLOSURE(ode_fun_t, f))
 
+extern void ode_interval_d(double h, double h_min, double tol, int N, double x[N], double st, double end, ode_fun_t_d f);
+#define ode_interval_d(h, h_min, tol, N, x, st, end, f) \
+	ode_interval_d(h, h_min, tol, N, x, st, end, CLOSURE(ode_fun_t_d, f))
 
 extern void ode_interval2(float h, float tol,
 	int N, const float t[N + 1], int M, float x[N + 1][M], ode_fun_t sys);
@@ -33,8 +45,12 @@ extern void ode_direct_sa(float h, float h_min, float tol, int N, int P, float x
 #define ode_direct_sa(h, h_min, tol, N, P, x, st, end, f, pdy, pdp) \
 	ode_direct_sa(h, h_min, tol, N, P, x, st, end, CLOSURE(ode_fun_t, f), CLOSURE(ode_fun_t, pdy), CLOSURE(ode_fun_t, pdp))
 
-
-
+extern void ode_direct_sa_d(double h, double h_min, double tol, int N, int P, double x[P + 1][N],
+	double st, double end,
+	ode_fun_t_d f, ode_fun_t_d pdy, ode_fun_t_d pdp);
+#define ode_direct_sa_d(h, h_min, tol, N, P, x, st, end, f, pdy, pdp) \
+	ode_direct_sa_d(h, h_min, tol, N, P, x, st, end, CLOSURE(ode_fun_t_d, f), CLOSURE(ode_fun_t_d, pdy), CLOSURE(ode_fun_t_d, pdp))
+	
 extern void ode_adjoint_sa(float h, float tol,
 	int N, const float t[N + 1],
 	int M, float x[N + 1][M], float z[N + 1][M],

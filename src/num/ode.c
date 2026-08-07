@@ -14,6 +14,30 @@
 
 #include "ode.h"
 
+#define ode_type float
+#define ODE_SUFFIX(x) x
+#define ODE_FUN ode_fun_t
+#define ODE_POW powf
+#define ODE_VEC_COPY vecf_copy
+#define ODE_VEC_SAXPY vecf_saxpy
+#define ODE_VEC_NORM vecf_norm
+#include "ode.inc"
+
+#undef ode_type
+#define ode_type double
+#undef ODE_SUFFIX
+#define ODE_SUFFIX(x) x##_d
+#undef ODE_FUN
+#define ODE_FUN ode_fun_t_d
+#undef ODE_POW
+#define ODE_POW pow
+#undef ODE_VEC_COPY
+#define ODE_VEC_COPY vecd_copy
+#undef ODE_VEC_SAXPY
+#define ODE_VEC_SAXPY vecd_saxpy
+#undef ODE_VEC_NORM
+#define ODE_VEC_NORM vecd_norm
+#include "ode.inc"
 
 #if 0
 static void euler(float h, int N, float x[N], float st, float end,
@@ -154,26 +178,6 @@ void crank_nicolson_matrix_adjoint(float h, int N, float x[N], float st, float e
 	crank_nicolson_adjoint(h, N, x, st, end, ode_matrix_fun);
 }
 
-#define tridiag(s) (s * (s + 1) / 2)
-
-static void runge_kutta_step(float h, int s, const float a[tridiag(s)], const float b[s], const float c[s - 1], int N, int K, float k[K][N], float ynp[N], float tmp[N], float tn, const float yn[N], ode_fun_t f)
-{
-	vecf_copy(N, ynp, yn);
-	vecf_saxpy(N, ynp, h * b[0], k[0]);
-
-	for (int l = 0, t = 1; t < s; t++) {
-
-		vecf_copy(N, tmp, yn);
-
-		for (int r = 0; r < t; r++, l++)
-			vecf_saxpy(N, tmp, h * a[l], k[r % K]);
-
-		NESTED_CALL(f, (k[t % K], tn + h * c[t - 1], tmp));
-
-		vecf_saxpy(N, ynp, h * b[t], k[t % K]);
-	}
-}
-
 // Runge-Kutta 4
 
 void rk4_step(float h, int N, float ynp[N], float tn, const float yn[N], ode_fun_t f)
@@ -223,84 +227,6 @@ void dormand_prince_step(float h, int N, float ynp[N], float tn, const float yn[
 }
 
 
-
-float dormand_prince_scale(float tol, float err)
-{
-#if 0
-	float sc = 0.75 * powf(tol / err, 1. / 5.);
-
-	return (sc < 2.) ? sc : 2.;
-#else
-	float sc = 1.25 * powf(err / tol, 1. / 5.);
-
-	return 1. / ((sc > 1. / 2.) ? sc : (1. / 2.));
-#endif
-}
-
-
-
-float dormand_prince_step2(float h, int N, float ynp[N], float tn, const float yn[N], float k[6][N], ode_fun_t f)
-{
-	const float c[6] = { 1. / 5., 3. / 10., 4. / 5., 8. / 9., 1., 1. };
-
-	const float a[tridiag(7)] = {
-		1. / 5.,
-		3. / 40.,	9. / 40.,
-		44. / 45.,	-56. / 15.,	32. / 9.,
-		19372. / 6561.,	-25360. / 2187., 64448. / 6561., -212. / 729.,
-		9017. / 3168.,  -355. / 33.,	46732. / 5247.,	49. / 176.,	-5103. / 18656.,
-		35. / 384.,	0.,		500. / 1113.,	125. / 192.,	-2187. / 6784.,	11. / 84.,
-	};
-
-	const float b[7] = { 5179. / 57600., 0.,  7571. / 16695., 393. / 640., -92097. / 339200., 187. / 2100., 1. / 40. };
-
-	float tmp[N];
-	runge_kutta_step(h, 7, a, b, c, N, 6, k, ynp, tmp, tn, yn, f);
-
-	vecf_saxpy(N, tmp, -1., ynp);
-	return vecf_norm(N, tmp);
-}
-
-
-void (ode_interval)(float h, float h_min, float tol, int N, float x[N], float st, float end, ode_fun_t f)
-{
-	float k[6][N];
-	NESTED_CALL(f, (k[0], st, x));
-
-	if (h > end - st)
-		h = end - st;
-
-	for (float t = st; t < end; ) {
-
-		float ynp[N];
-	repeat:
-		;
-		float err = dormand_prince_step2(h, N, ynp, t, x, k, f);
-
-		float h_new = h * dormand_prince_scale(tol, err);
-
-		if (0. < h_min)
-			h_new = fmax(h_new, h_min);
-
-		if (err > tol && (h_min <= 0. || h > h_min)) {
-
-			h = h_new;
-			NESTED_CALL(f, (k[0], t, x));	// recreate correct k[0] which has been overwritten
-			goto repeat;
-		}
-
-		t += h;
-		h = h_new;
-
-		if (t + h > end)
-			h = end - t;
-
-		for (int i = 0; i < N; i++)
-			x[i] = ynp[i];
-	}
-}
-
-
 void ode_interval2(float h, float tol,
 	int N, const float t[N + 1],
 	int M, float x[N + 1][M],
@@ -338,65 +264,6 @@ void ode_matrix_interval(float h, float tol, int N, float x[N], float st, float 
 	};
 
 	ode_interval(h, -1, tol, N, x, st, end, ode_matrix_fun);
-}
-
-
-
-// the direct method for sensitivity analysis
-// ode: d/dt y_i = f_i(y, t, p_j), y_i(0) = a_i
-// d/dp_j y_i(0) = ...
-// d/dt d/dp_j y_i(t) = d/dp_j f_i(y, t, p) = \sum_k d/dy_k f_i(y, t, p) * dy_k/dp_j + df_i / dp_j
-
-struct seq_data {
-
-	int N;
-	int P;
-
-	ode_fun_t f;
-	ode_fun_t pdy;
-	ode_fun_t pdp;
-};
-
-static void seq(const struct seq_data* data, float* out, float t, const float* yn)
-{
-	int N = data->N;
-	int P = data->P;
-
-	NESTED_CALL(data->f, (out, t, yn));
-
-	float dy[N][N];
-	NESTED_CALL(data->pdy, (&dy[0][0], t, yn));
-
-	float dp[P][N];
-	NESTED_CALL(data->pdp, (&dp[0][0], t, yn));
-
-	for (int i = 0; i < P; i++) {
-		for (int j = 0; j < N; j++) {
-
-			out[(1 + i) * N + j] = 0.;
-
-			for (int k = 0; k < N; k++)
-				out[(1 + i) * N + j] += dy[k][j] * yn[(1 + i) * N + k];
-
-			out[(1 + i) * N + j] += dp[i][j];
-		}
-	}
-}
-
-void (ode_direct_sa)(float h, float h_min, float tol, int N, int P, float x[P + 1][N],
-	float st, float end,
-	ode_fun_t f,
-	ode_fun_t pdy,
-	ode_fun_t pdp)
-{
-	struct seq_data data2 = { N, P, f, pdy, pdp };
-
-	NESTED(void, seq2, (float* out, float t, const float* yn))
-	{
-		seq(&data2, out, t, yn);
-	};
-
-	ode_interval(h, h_min, tol, N * (1 + P), &x[0][0], st, end, seq2);
 }
 
 
