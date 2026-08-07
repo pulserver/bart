@@ -141,3 +141,12 @@ void vec3d_copy(vec3d_t o, const vec3d_t x)
 	for (int i = 0; i < 3; i++)
 		o[i] = x[i];
 }
+
+void vec3d_rot(vec3d_t dst, const vec3d_t src1, const vec3d_t src2)
+{
+	vec3d_t tmp;
+	tmp[0] = src1[1] * src2[2] - src1[2] * src2[1];
+	tmp[1] = src1[2] * src2[0] - src1[0] * src2[2];
+	tmp[2] = src1[0] * src2[1] - src1[1] * src2[0];
+	vec3d_copy(dst, tmp);
+}

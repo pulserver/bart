@@ -22,3 +22,4 @@ extern void vec3d_crossproduct(vec3d_t o, const vec3d_t v0, const vec3d_t v1);
 extern void vec3d_rotax(vec3d_t o, const double theta, const vec3d_t ax, const vec3d_t x);
 extern void vec3d_copy(vec3d_t o, const vec3d_t x);
 extern double vec3d_angle(const vec3d_t x, const vec3d_t y);
+extern void vec3d_rot(vec3d_t dst, const vec3d_t src1, const vec3d_t src2);
