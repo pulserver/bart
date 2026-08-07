@@ -75,3 +75,9 @@ extern void thomas_algorithm(int N, complex float f[N], const complex float A[N]
 
 extern void mat_band_reorder(int A, int B, double mat[A][A], double band[B][A], bool upper);
 
+extern void vecd_saxpy(int N, double x[N], double alpha, const double y[N]);
+extern void vecd_copy(int N, double x[N], const double y[N]);
+extern double vecd_norm(int N, const double x[N]);
+extern double vecd_sdot(int N, const double a[N], const double b[N]);
+extern void matd_copy(int N, int M, double out[N][M], const double in[N][M]);
+extern void matd_vecmul(int A, int B, double out[A], const double mat[A][B], const double in[B]);

@@ -86,6 +86,12 @@ void vecf_copy(int N, float x[N], const float y[N])
 		x[i] = y[i];
 }
 
+void vecd_copy(int N, double x[N], const double y[N])
+{
+	for (int i = 0; i < N; i++)
+		x[i] = y[i];
+}
+
 void vecf_sxpay(int N, float beta, float x[N], const float y[N])
 {
 	for (int i = 0; i < N; i++)
@@ -93,6 +99,12 @@ void vecf_sxpay(int N, float beta, float x[N], const float y[N])
 }
 
 void vecf_saxpy(int N, float dst[N], float alpha, const float b[N])
+{
+	for (int i = 0; i < N; i++)
+		dst[i] += alpha * b[i];
+}
+
+void vecd_saxpy(int N, double dst[N], double alpha, const double b[N])
 {
 	for (int i = 0; i < N; i++)
 		dst[i] += alpha * b[i];
@@ -114,9 +126,24 @@ float vecf_sdot(int N, const float a[N], const float b[N])
 	return ret;
 }
 
+double vecd_sdot(int N, const double a[N], const double b[N])
+{
+	double ret = 0.;
+
+	for (int i = 0; i < N; i++)
+		ret += a[i] * b[i];
+
+	return ret;
+}
+
 float vecf_norm(int N, const float x[N])
 {
 	return sqrtf(vecf_sdot(N, x, x));
+}
+
+double vecd_norm(int N, const double x[N])
+{
+	return sqrt(vecd_sdot(N, x, x));
 }
 
 #ifndef NO_LAPACK
@@ -536,7 +563,21 @@ void matf_vecmul(int A, int B, float out[A], const float mat[A][B], const float 
 {
 	for (int a = 0; a < A; a++) {
 
-		fl_acu_t tmp = 0.;
+		float tmp = 0.;
+
+		for (int b = 0; b < B; b++)
+			tmp += mat[a][b] * in[b];
+
+		out[a] = tmp;
+	}
+}
+
+
+void matd_vecmul(int A, int B, double out[A], const double mat[A][B], const double in[B])
+{
+	for (int a = 0; a < A; a++) {
+
+		double tmp = 0.;
 
 		for (int b = 0; b < B; b++)
 			tmp += mat[a][b] * in[b];
@@ -1230,6 +1271,13 @@ void (mat_copy)(int A, int B, complex float dst[A][B], const complex float src[A
 
 
 void matf_copy(int N, int M, float out[N][M], const float in[N][M])
+{
+	for (int i = 0; i < N; i++)
+		for (int j = 0; j < M; j++)
+			out[i][j] = in[i][j];
+}
+
+void matd_copy(int N, int M, double out[N][M], const double in[N][M])
 {
 	for (int i = 0; i < N; i++)
 		for (int j = 0; j < M; j++)
