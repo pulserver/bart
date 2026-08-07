@@ -208,7 +208,7 @@ int main_sim(int argc, char* argv[argc])
 
 		OPTL_FLOAT(0, "b1", &(data.cest.b1_amp), "float", "B1 amplitude [mu T (RMS)]"),
 		OPTL_FLOAT(0, "b0", &(data.cest.b0), "float", "B0 [T]"),
-		OPTL_FLOAT(0, "gamma", &(data.cest.gamma), "float", "Gyromagnetic ratio [Mhz/T]"),
+		OPTL_DOUBLE(0, "gamma", &(data.cest.gamma), "double", "Gyromagnetic ratio [Mhz/T]"),
 		OPTL_FLOAT(0, "min", &(data.cest.off_start), "float", "Min offset [ppm]"),
 		OPTL_FLOAT(0, "max", &(data.cest.off_stop), "float", "Max offset [ppm]"),
 		OPTL_PINT(0, "n_p", &(data.cest.n_pulses), "int", "Number of pulses"),
@@ -216,6 +216,7 @@ int main_sim(int argc, char* argv[argc])
 		OPTL_FLOAT(0, "t_pp", &(data.cest.t_pp), "float", "Post-preparation delay [s]"),
 		OPTL_SET(0, "ref_scan", &(data.cest.ref_scan), "Use reference scan"),
 		OPTL_FLOAT(0, "ref_scan_ppm", &(data.cest.ref_scan_ppm), "float", "Offset for ref. scan [ppm]"),
+		OPTL_SET(0, "double_precision", &(data.cest.double_precision), "Use double precision for CEST simulation (default: single precision)"),
 	};
 	const int N_cest_opts = ARRAY_SIZE(cest_opts);
 

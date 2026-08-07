@@ -279,7 +279,7 @@ int main_mobafit(int argc, char* argv[argc])
 
 		OPTL_FLOAT(0, "b1", &(sim.cest.b1_amp), "float", "B1 amplitude [mu T]"),
 		OPTL_FLOAT(0, "b0", &(sim.cest.b0), "float", "B0 [T]"),
-		OPTL_FLOAT(0, "gamma", &(sim.cest.gamma), "float", "Gyromagnetic ratio [Mhz/T]"),
+		OPTL_DOUBLE(0, "gamma", &(sim.cest.gamma), "double", "Gyromagnetic ratio [Mhz/T]"),
 		OPTL_FLOAT(0, "max", &(sim.cest.off_start), "float", "Max offset [ppm]"),
 		OPTL_FLOAT(0, "min", &(sim.cest.off_stop), "float", "Min offset [ppm]"),
 		OPTL_PINT(0, "n_p", &(sim.cest.n_pulses), "int", "Number of pulses"),

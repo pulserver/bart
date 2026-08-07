@@ -103,7 +103,7 @@ struct simdata_cest {
 	int n_pulses;
 	float t_d;
 	float t_pp;
-	float gamma;
+	double gamma;
 	float b1_amp;
 	float b0;
 
@@ -112,6 +112,8 @@ struct simdata_cest {
 
 	bool ref_scan;
 	float ref_scan_ppm;
+
+	bool double_precision;
 };
 
 extern const struct simdata_cest simdata_cest_defaults;
@@ -133,7 +135,9 @@ struct sim_data {
 extern void debug_sim(struct sim_data* data);
 
 extern void rf_pulse(struct sim_data* data, float h, float tol, int N, int P, float xp[P][N], float stm_matrix[P * N][P * N]);
+extern void rf_pulse_d(struct sim_data* data, float h, float tol, int N, int P, float xp[P][N], float stm_matrix[P * N][P * N]);
 extern void relaxation2(struct sim_data* data, float h, float tol, int N, int P, float xp[P][N], float st, float end, float stm_matrix[P * N][P * N], float r2spoil);
+extern void relaxation2_d(struct sim_data* data, float h, float tol, int N, int P, float xp[P][N], float st, float end, float stm_matrix[P * N][P * N], float r2spoil);
 
 extern void inversion(const struct sim_data* data, float h, float tol, int N, int P, float xp[P][N], float st, float end);
 extern void bloch_simulation(const struct sim_data* _data, int R, float (*m_state)[R][3], float (*sa_r1_state)[R][3], float (*sa_r2_state)[R][3], float (*sa_m0_state)[R][3],	float (*sa_b1_state)[R][3]);

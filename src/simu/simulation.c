@@ -26,6 +26,30 @@
 
 #include "simulation.h"
 
+static struct pulse* get_pulse(struct sim_data* data);
+static void rot_pulse(struct sim_data* data, int N, int P, float xp[P][N]);
+static void create_sim_matrix(struct sim_data* data, int N, float matrix[N][N], float st, float end, float r2spoil);
+static void hard_relaxation(struct sim_data* data, int N, int P, float xp[P][N], float st, float end, float r2spoil);
+
+#define sim_type float
+#define SIM_SUFFIX(x) x
+#define SIM_CREAL crealf
+#define SIM_CIMAG cimagf
+#define SIM_CEXP cexpf
+#include "simulation.inc"
+
+#undef sim_type
+#define sim_type double
+#undef SIM_SUFFIX
+#define SIM_SUFFIX(x) x##_d
+#undef SIM_CREAL
+#define SIM_CREAL creal
+#undef SIM_CIMAG
+#define SIM_CIMAG cimag
+#undef SIM_CEXP
+#define SIM_CEXP cexp
+#include "simulation.inc"
+
 
 void debug_sim(struct sim_data* data)
 {
@@ -88,6 +112,18 @@ void debug_sim(struct sim_data* data)
 	debug_printf(DP_INFO, "\tODE Initial Step Size:%f\n", data->other.ode_h);
 	debug_printf(DP_INFO, "\tODE Minimum Step Size:%f\n", data->other.ode_h_min);
 	debug_printf(DP_INFO, "\tPulse Sampling Rate:%f Hz\n", data->other.sampling_rate);
+
+	debug_printf(DP_INFO, "CEST parameters:\n");
+	debug_printf(DP_INFO, "\tNumber of Pulses:%d\n", data->cest.n_pulses);
+	debug_printf(DP_INFO, "\tB1:%f\n", data->cest.b1_amp);
+	debug_printf(DP_INFO, "\tB0:%f\n", data->cest.b0);
+	debug_printf(DP_INFO, "\tgamma:%f\n", data->cest.gamma);
+	debug_printf(DP_INFO, "\toff_start:%f\n", data->cest.off_start);
+	debug_printf(DP_INFO, "\toff_stop:%f\n", data->cest.off_stop);
+	debug_printf(DP_INFO, "\tT_d:%f\n", data->cest.t_d);
+	debug_printf(DP_INFO, "\tT_pp:%f\n", data->cest.t_pp);
+	debug_printf(DP_INFO, "\tReference scan?:%d at %f ppm\n", data->cest.ref_scan, data->cest.ref_scan_ppm);
+	debug_printf(DP_INFO, "\tDouble Precision?:%d\n", data->cest.double_precision);
 }
 
 
@@ -166,6 +202,8 @@ const struct simdata_cest simdata_cest_defaults = {
 
 	.ref_scan = false,
 	.ref_scan_ppm = -300.,
+
+	.double_precision = false,
 };
 
 
@@ -191,52 +229,30 @@ void pulse_init(struct simdata_pulse* pulse, float rf_start, float rf_end, float
 
 /* ------------ Bloch Equations -------------- */
 
-static void compute_fields(struct sim_data* data, float gb_eff[3], float t)
+static struct pulse* get_pulse(struct sim_data* data)
 {
-	// Units: [gb] = rad/s
-	gb_eff[0] = data->grad.gb[0];
-	gb_eff[1] = data->grad.gb[1];
-	gb_eff[2] = data->grad.gb[2];
+	switch (data->pulse.type) {
 
-	complex float w1 = 0.;
+	case PULSE_SINC:
+		return CAST_UP(&data->pulse.sinc);
 
-	if (data->seq.pulse_applied) {
+	case PULSE_SINC_SMS:
+		return CAST_UP(&data->pulse.sms);
 
-		struct pulse* ps = NULL;
+	case PULSE_HS:
+		return CAST_UP(&data->pulse.hs);
 
-		switch (data->pulse.type) {
+	case PULSE_REC:
+		return CAST_UP(&data->pulse.rect);
 
-		case PULSE_SINC:
-			ps = CAST_UP(&data->pulse.sinc);
-			break;
+	case PULSE_ARB:
+		return CAST_UP(&data->pulse.arb);
 
-		case PULSE_SINC_SMS:
-			ps = CAST_UP(&data->pulse.sms);
-			break;
+	case PULSE_GAUSS:
+		return CAST_UP(&data->pulse.gauss);
 
-		case PULSE_HS:
-			ps = CAST_UP(&data->pulse.hs);
-			break;
-
-		case PULSE_REC:
-			ps = CAST_UP(&data->pulse.rect);
-			break;
-
-		case PULSE_ARB:
-			ps = CAST_UP(&data->pulse.arb);
-			break;
-
-		case PULSE_GAUSS:
-			ps = CAST_UP(&data->pulse.gauss);
-			break;
-		}
-
-		w1 = cexpf(1.i * data->pulse.phase) * pulse_eval(ps, t);
-
-                // Definition from Bernstein et al., Handbook of MRI Pulse Sequences, p. 26f
-                // dM/dt = M x (e_x*B_1*sin(phase)-e_y*B_1*sin(phase) +e_z* B_0)) - ...
-		gb_eff[0] = crealf(w1);
-		gb_eff[1] = -cimagf(w1);
+	default:
+		return NULL;
 	}
 }
 
@@ -497,101 +513,6 @@ static void rot_pulse(struct sim_data* data, int N, int P, float xp[P][N])
 }
 
 
-void rf_pulse(struct sim_data* data, float h, float tol, int N, int P, float xp[P][N], float stm_matrix[P * N][P * N])
-{
-	data->seq.pulse_applied = true;
-
-        // Single hard pulse is special case of homogeneously sampled sinc pulse
-        if (0. == data->pulse.rf_end)
-                data->seq.type = SIM_ROT;
-
-        // Define effective z Gradient = Slice-selection gradient + off-resonance [rad/s]
-	data->grad.gb[2] = data->grad.mom_sl + data->voxel.w;
-
-	__block complex float w1;	// clang workaround (needs to be outside switch)
-					//
-        switch (data->seq.type) {
-
-        case SIM_ROT:
-
-                rot_pulse(data, N, P, xp);
-                break;
-
-        case SIM_ODE:
-
-		float gb_eff[3];
-		void *gb_eff_p = gb_eff;	// clang workaround
-
-		NESTED(void, call_fun, (float* out, float t, const float* in))
-		{
-			float *gb_eff = gb_eff_p;
-			compute_fields(data, gb_eff, t);
-
-			w1 = gb_eff[0] - 1.i * gb_eff[1];
-
-			gb_eff[0] *= data->voxel.b1;
-			gb_eff[1] *= data->voxel.b1;
-
-
-			float r2[data->voxel.P];
-
-			if (MODEL_BMC == data->seq.model) {
-
-				for (int i = 0; i < data->voxel.P; i++)
-					r2[i] = data->voxel.r2[i];
-
-				bloch_mcconnell_ode(data->voxel.P, out, in, data->voxel.r1, r2, data->voxel.k, data->voxel.m0, data->voxel.Om, gb_eff);
-
-			} else {
-
-				bloch_ode(out, in, data->voxel.r1[0], data->voxel.r2[0], gb_eff);
-			}
-		};
-
-		NESTED(void, call_pdy2, (float* out, float t, const float* in))
-		{
-			float *gb_eff = gb_eff_p;
-			(void)t;
-
-			if (MODEL_BMC == data->seq.model) {
-
-				bloch_mcc_pdy(data->voxel.P, (float(*)[N])out, in, data->voxel.r1, data->voxel.r2, data->voxel.k, data->voxel.m0, data->voxel.Om, gb_eff);
-
-			} else {
-
-				bloch_pdy((float(*)[3])out, in, data->voxel.r1[0], data->voxel.r2[0], gb_eff);
-			}
-		};
-
-		NESTED(void, call_pdp2, (float* out, float t, const float* in))
-		{
-			float *gb_eff = gb_eff_p;
-			(void)t;
-
-			if (MODEL_BMC == data->seq.model) {
-
-				bloch_mcc_b1_pdp(data->voxel.P, (float(*)[N])out, in, data->voxel.r1, data->voxel.r2, data->voxel.k, data->voxel.m0, gb_eff, w1);
-
-			} else {
-
-				bloch_b1_pdp((float(*)[3])out, in, data->voxel.r1[0], data->voxel.r2[0], gb_eff, w1);
-			}
-		};
-
-		// Choose P-1 because ODE interface treats signal separate and P only describes the number of parameters
-		ode_direct_sa(h, data->other.ode_h_min, tol, N, P - 1, xp, data->pulse.rf_start, data->pulse.rf_end, call_fun, call_pdy2, call_pdp2);
-		break;
-
-        case SIM_STM:
-
-                create_sim_matrix(data, P * N, stm_matrix, data->pulse.rf_start, data->pulse.rf_end, 0.);
-                break;
-        }
-
-        data->grad.gb[2] = 0.;
-}
-
-
 /* ------------ Relaxation -------------- */
 
 static void hard_relaxation(struct sim_data* data, int N, int P, float xp[P][N], float st, float end, float r2spoil)
@@ -608,110 +529,6 @@ static void hard_relaxation(struct sim_data* data, int N, int P, float xp[P][N],
 	}
 }
 
-
-void relaxation2(struct sim_data* data, float h, float tol, int N, int P, float xp[P][N], float st, float end, float stm_matrix[P * N][P * N], float r2spoil)
-{
-	data->seq.pulse_applied = false;
-
-        // Single hard pulse is special case of homogeneously sampled sinc pulse
-        if (0. == data->pulse.rf_end)
-                data->seq.type = SIM_ROT;
-
-        // Define effective z Gradient =Gradient Moments + off-resonance [rad/s]
-        data->grad.gb[2] = data->grad.mom + data->voxel.w;
-		
-	__block complex float w1;	// clang workaround (needs to be outside switch)
-
-        switch (data->seq.type) {
-
-        case SIM_ROT:
-
-                hard_relaxation(data, N, P, xp, st, end, r2spoil);
-                break;
-
-        case SIM_ODE:
-
-		float gb_eff[3];
-		void *gb_eff_p = gb_eff;	// clang workaround
-
-		NESTED(void, call_fun, (float* out, float t, const float* in))
-		{
-			float *gb_eff = gb_eff_p;
-			compute_fields(data, gb_eff, t);
-
-			w1 = gb_eff[0] - 1.i * gb_eff[1];
-
-			gb_eff[0] *= data->voxel.b1;
-			gb_eff[1] *= data->voxel.b1;
-
-			float r2[data->voxel.P];
-
-			if (MODEL_BMC == data->seq.model) {
-
-				for (int i = 0; i < data->voxel.P; i++)
-					r2[i] = data->voxel.r2[i] + r2spoil;
-
-				bloch_mcconnell_ode(data->voxel.P, out, in, data->voxel.r1, r2, data->voxel.k, data->voxel.m0, data->voxel.Om, gb_eff);
-
-			} else {
-
-				bloch_ode(out, in, data->voxel.r1[0], data->voxel.r2[0] + r2spoil, gb_eff);
-			}
-		};
-
-		NESTED(void, call_pdy2, (float* out, float t, const float* in))
-		{
-			float *gb_eff = gb_eff_p;
-			(void)t;
-
-			float r2[data->voxel.P];
-
-			if (MODEL_BMC == data->seq.model) {
-
-				for (int i = 0; i < data->voxel.P; i++)
-					r2[i] = data->voxel.r2[i] + r2spoil;
-
-				bloch_mcc_pdy(data->voxel.P, (float(*)[N])out, in, data->voxel.r1, r2, data->voxel.k, data->voxel.m0, data->voxel.Om, gb_eff);
-
-			} else {
-
-				bloch_pdy((float(*)[3])out, in, data->voxel.r1[0], data->voxel.r2[0] + r2spoil, gb_eff);
-			}
-		};
-
-		NESTED(void, call_pdp2, (float* out, float t, const float* in))
-		{
-			float *gb_eff = gb_eff_p;
-			(void)t;
-
-			float r2[data->voxel.P];
-
-			if (MODEL_BMC == data->seq.model) {
-
-				for (int i = 0; i < data->voxel.P; i++)
-					r2[i] = data->voxel.r2[i] + r2spoil;
-
-				bloch_mcc_b1_pdp(data->voxel.P, (float(*)[N])out, in, data->voxel.r1, r2, data->voxel.k, data->voxel.m0, gb_eff, w1);
-
-			} else {
-
-				bloch_b1_pdp((float(*)[3])out, in, data->voxel.r1[0], data->voxel.r2[0] + r2spoil, gb_eff, w1);
-			}
-		};
-
-		// Choose P-1 because ODE interface treats signal separate and P only describes the number of parameters
-		ode_direct_sa(h, data->other.ode_h_min, tol, N, P - 1, xp, st, end, call_fun, call_pdy2, call_pdp2);
-
-		break;
-
-        case SIM_STM:
-
-                create_sim_matrix(data, P * N, stm_matrix, st, end, r2spoil);
-                break;
-        }
-
-        data->grad.gb[2] = 0.;
-}
 
 
 /* ------------ Conversion ODE -> STM -------------- */
@@ -1012,14 +829,27 @@ static void cest_seq(struct sim_data* data, float h, float tol, int N, int P, fl
 	for (int p = 0; p < data->cest.n_pulses; p++) {
 
 		data->voxel.w = offset;
-		rf_pulse(data, h, tol, N, P, xp, NULL);
+
+		if (data->cest.double_precision)
+			rf_pulse_d(data, h, tol, N, P, xp, NULL);
+		else
+			rf_pulse(data, h, tol, N, P, xp, NULL);
+
 		data->voxel.w = 0.;
 
-		if ((data->cest.n_pulses - 1 > p) && (0. < data->cest.t_d))
-			relaxation2(data, h, tol, N, P, xp, 0, data->cest.t_d, NULL, 0.);
+		if ((data->cest.n_pulses - 1 > p) && (0. < data->cest.t_d)) {
+
+			if (data->cest.double_precision)
+				relaxation2_d(data, h, tol, N, P, xp, 0, data->cest.t_d, NULL, 0.);
+			else
+				relaxation2(data, h, tol, N, P, xp, 0, data->cest.t_d, NULL, 0.);
+		}
 	}
 
-	relaxation2(data, h, tol, N, P, xp, 0, data->cest.t_pp, NULL, 10000.);
+	if (data->cest.double_precision)
+		relaxation2_d(data, h, tol, N, P, xp, 0, data->cest.t_pp, NULL, 10000.);
+	else
+		relaxation2(data, h, tol, N, P, xp, 0, data->cest.t_pp, NULL, 10000.);
 }
 
 
