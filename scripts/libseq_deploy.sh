@@ -17,11 +17,11 @@ LIBSEQ_NAME=bart_seq_$(git rev-parse --short=10 HEAD)
 
 set -x
 make allclean
-BARTDLL=1 make bart.dll
+WERROR=1 BARTDLL=1 make bart.dll
 cp bart.dll $VM_BIN_PATH/$LIBSEQ_NAME.dll
 
 make allclean
-BARTSO=1 make libbart.so
+WERROR=1 BARTSO=1 make libbart.so
 cp libbart.so $VM_SO_PATH/lib$LIBSEQ_NAME.so
 
 make allclean

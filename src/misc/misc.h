@@ -128,7 +128,15 @@ extern void debug_print_dims_trace(const char* func_name,
 
 typedef CLOSURE_TYPE(int, (int a, int b)) quicksort_cmp_t;
 
+/* avoid mingw-gcc warning: "bound argument 1 value -2147483648
+ * is negative for a variable length array (...)",
+ * triggered by quicksort usage in num/delayed.c:2052
+ */
+#ifdef _WIN32
+extern void quicksort(int N, int ord[], quicksort_cmp_t cmp);
+#else
 extern void quicksort(int N, int ord[__VLA(N)], quicksort_cmp_t cmp);
+#endif
 #define quicksort(N, ord, cmp) quicksort(N, ord, CLOSURE(quicksort_cmp_t, cmp))
 
 extern float quickselect(float *arr, int n, int k);
