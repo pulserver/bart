@@ -76,8 +76,16 @@ bool grad_soft(struct grad_trapezoid* grad, double dur, double moment, struct gr
 	double flat = dur - 2. * rise;
 	double ampl = moment / (rise + flat);
 
-	if (0. > flat)
-		return false;
+	if (0. > flat) {
+
+		ampl = 2. * moment / dur;
+
+		if ((fabs(ampl) > sys.max_amplitude))
+			return false;
+
+		rise = dur / 2.;
+		flat = 0.;
+	}
 
 	if (rise < (fabs(ampl) * sys.inv_slew_rate))
 		return false;
