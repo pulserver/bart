@@ -180,7 +180,7 @@ static int prep_grad_ro_blip(struct grad_trapezoid* gradPHASE, struct grad_trape
 		ro_blip_moment(moment, pos, seq);
 
 		double time = seq->phys.te_delta - (ro_time_after_echo(pos[TE_DIM] - 1, seq)
-				+ ro_time_to_echo(pos[TE_DIM], seq) + 2. * ro_amplitude(seq) * seq->sys.grad.inv_slew_rate);
+				+ ro_time_to_echo(pos[TE_DIM], seq));
 
 		if (!grad_soft(gradPHASE, time, moment[0], seq->sys.grad))
 			return 0;
@@ -202,9 +202,11 @@ int prep_grad_ro(struct grad_trapezoid* grad, long echo, const struct seq_config
 	if (seq->sys.grad.max_amplitude < ampl)
 		return 0;
 
-	grad->rampup = ampl * seq->sys.grad.inv_slew_rate;
+	if (0 == echo)
+		grad->rampup = ampl * seq->sys.grad.inv_slew_rate;
 	grad->flat = round_up_raster(adc_duration(seq) + ro_shift(echo, seq), seq->sys.raster_grad);
-	grad->rampdown = ampl * seq->sys.grad.inv_slew_rate;
+	if (seq->loop_dims[TE_DIM] - 1 == echo)
+		grad->rampdown = ampl * seq->sys.grad.inv_slew_rate;
 	grad->ampl = ampl;
 
 	return 1;
@@ -584,11 +586,8 @@ void flash_minimum_te(const struct seq_config* seq, double* min_te, double* fill
 	double ro_deph_time = available_time_RF_SLI(1, seq);
 	double inter_duration_READ = MAX(ro_deph_time, seq->sys.grad.max_amplitude * seq->sys.grad.inv_slew_rate);
 
-	double ro_amp = ro_amplitude(seq); //FIXME
-	double sl_amp = slice_amplitude(seq);
-
 	double inter_duration_SLICE = available_time_RF_SLI(0, seq)
-		+ sl_amp * seq->sys.grad.inv_slew_rate;
+		+ slice_amplitude(seq) * seq->sys.grad.inv_slew_rate;
 
 	double inter_duration_RF_RO = MAX(inter_duration_READ, inter_duration_SLICE);
 
@@ -604,22 +603,22 @@ void flash_minimum_te(const struct seq_config* seq, double* min_te, double* fill
 		ro_blip_moment(moment, pos0, seq);
 		grad_hard(&grad, vec3d_norm(moment), seq->sys.grad);
 
-		blip_time = grad_total_time(&grad);
+		blip_time = 1.3 * grad_total_time(&grad); // FIXME: completely arbitrary
 	}
 
 	for (long echo = 0; echo < seq->loop_dims[TE_DIM]; echo++) {
 
 		if (0 < echo)
 			time += blip_time;
+		else
+			time += ro_amplitude(seq) * seq->sys.grad.inv_slew_rate;
 
-		time += ro_amp * seq->sys.grad.inv_slew_rate; //FIXME
 		time += ro_time_to_echo(echo, seq);
 		time = round_up_raster(time, seq->sys.raster_grad) - seq->sys.raster_grad;
 
 		min_te[echo] = time;
 
 		time += ro_time_after_echo(echo, seq);
-		time += ro_amp * seq->sys.grad.inv_slew_rate; //FIXME
 	}
 
 	time = 0;
@@ -900,8 +899,8 @@ static struct flash_timing flash_compute_timing(const struct seq_config *seq)
 	for (int i = 0; i < seq->loop_dims[TE_DIM]; i++) {
 
 		timing.readout[i] = timing.readout_dephaser + available_time_RF_SLI(1, seq)
-				+ i * seq->phys.te_delta; // available_time_RF_SLI only adds first echo, but we need te[echo]
-
+				+ i * seq->phys.te_delta // available_time_RF_SLI only adds first echo, but we need te[echo]
+				+ MIN(i, 1) * ro_amplitude(seq) * seq->sys.grad.inv_slew_rate; // rampup for later echoes in blip gradient
 		timing.adc[i] = start_adc(i, seq);
 	}
 
@@ -991,7 +990,7 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 			timing.readout_blip = timing.readout[seq_state->pos[TE_DIM] - 1] + grad_total_time(&readout) + 1E-15;
 
 		if (   (1 < seq_state->pos[TE_DIM])
-		    && (timing.readout_blip < timing.adc[seq_state->pos[TE_DIM] - 1] + adc_duration(seq) + ro_amplitude(seq) * seq->sys.grad.inv_slew_rate))
+		    && (timing.readout_blip < timing.adc[seq_state->pos[TE_DIM] - 1] + adc_duration(seq)))
 			return ERROR_BLIP_TIMING;
 
 		i += seq_grad_to_event(ev + i, timing.readout_blip, &readout_blipPHASE, projPHASE);
