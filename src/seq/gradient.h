@@ -2,6 +2,8 @@
 #ifndef _SEQ_GRADIENT_H
 #define _SEQ_GRADIENT_H
 
+#include "seq/event.h"
+
 struct grad_limits {
 
 	double inv_slew_rate;
@@ -16,6 +18,15 @@ struct grad_trapezoid {
 
 	double ampl;
 };
+
+struct grad_support {
+
+	double time;
+	double ampl;
+};
+
+extern int seq_grad_support_to_event(int E, struct seq_event ev[__VLA(E)], double start_offset, int N, const struct grad_support grad[__VLA(N)], double proj[3]);
+
 
 extern double grad_duration(const struct grad_trapezoid* grad);
 extern double grad_total_time(const struct grad_trapezoid* grad);

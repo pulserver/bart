@@ -9,6 +9,8 @@
 #include "misc/mri.h"
 #include "misc/misc.h"
 
+#include "seq/event.h"
+
 #include "gradient.h"
 
 double grad_duration(const struct grad_trapezoid* grad)
@@ -26,6 +28,40 @@ double grad_total_time(const struct grad_trapezoid* grad)
 double grad_momentum(struct grad_trapezoid* grad)
 {
 	return grad->ampl * (0.5 * grad->rampup + grad->flat + 0.5 * grad->rampdown);
+}
+
+/*
+ * arbitrary gradient support points to triangular event list
+ *
+ */
+int seq_grad_support_to_event(int E, struct seq_event ev[E], double start_offset, int N, const struct grad_support grad[N], double proj[3])
+{
+	if (2 > E)
+		return -1;
+
+	int e = 0;
+
+	for (int n = 0; n < N; n++) {
+
+		if (grad[MIN(n, n + 1)].time < grad[n].time)
+			return -1;
+
+		if (0. == grad[n].ampl)
+			continue;
+
+		ev[e].type = SEQ_EVENT_GRADIENT;
+		ev[e].start = start_offset + grad[MAX(0, n - 1)].time;
+		ev[e].mid = start_offset + grad[n].time;
+		ev[e].end = start_offset + grad[MIN(N - 1, n + 1)].time;
+
+		for (int a = 0; a < 3; a++)
+			ev[e].grad.ampl[a] = proj[a] * grad[n].ampl;
+
+		if (E <= e++)
+			return -1;
+	}
+
+	return e;
 }
 
 
