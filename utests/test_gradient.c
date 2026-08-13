@@ -15,6 +15,7 @@
 #include "misc/debug.h"
 
 #include "seq/gradient.h"
+#include "seq/event.h"
 
 #include "utest.h"
 
@@ -22,6 +23,137 @@ static struct grad_limits sys = {
 	.inv_slew_rate = 1000.,
 	.max_amplitude = 1.,
 };
+
+
+static bool test_support_triangle(void)
+{
+	struct grad_support grad[2] = {
+		{ 0., 0. },
+		{ 10., 10. }
+	};
+
+	struct seq_event ev[2];
+
+	int e = seq_grad_support_to_event(2, ev, 0., 2, grad, (double[3]){1., 0., 0.});
+
+	double m0[3];
+	moment_sum(m0, 10, e, ev);
+
+	if (1 != e)
+		return false;
+
+	if (50. != m0[0])
+		return false;
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_support_triangle);
+
+
+static bool test_support_triangle2(void)
+{
+	struct grad_support grad[2] = {
+		{ 0., -10. },
+		{ 10., 0. }
+	};
+
+	struct seq_event ev[2];
+
+	int e = seq_grad_support_to_event(2, ev, 0., 2, grad, (double[3]){1., 0., 0.});
+
+	double m0[3];
+	moment_sum(m0, 10, e, ev);
+
+	if (1 != e)
+		return false;
+
+	if (-50. != m0[0])
+		return false;
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_support_triangle2);
+
+
+static bool test_support_rect(void)
+{
+	struct grad_support grad[2] = {
+		{ 0., 10. },
+		{ 10., 10. }
+	};
+
+	struct seq_event ev[2];
+
+	int e = seq_grad_support_to_event(2, ev, 0., 2, grad, (double[3]){1., 0., 0.});
+
+	double m0[3];
+	moment_sum(m0, 10, e, ev);
+
+	if (2 != e)
+		return false;
+
+	if (100. != m0[0])
+		return false;
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_support_rect);
+
+
+static bool test_support_M(void)
+{
+	struct grad_support grad[3] = {
+		{ 0., 10. },
+		{ 10., 0. },
+		{ 20., 10. }
+	};
+
+	struct seq_event ev[4];
+
+	int e = seq_grad_support_to_event(4, ev, 0., 3, grad, (double[3]){1., 0., 0.});
+
+	double m0[3];
+	moment_sum(m0, 20, e, ev);
+
+	if (2 != e)
+		return false;
+
+	if (100. != m0[0])
+		return false;
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_support_M);
+
+
+static bool test_support_posneg(void)
+{
+	struct grad_support grad[2] = {
+		{ 0., 10. },
+		{ 20., -10. }
+	};
+
+	struct seq_event ev[2];
+
+	int e = seq_grad_support_to_event(2, ev, 0., 2, grad, (double[3]){1., 0., 0.});
+
+	double m0[3];
+	moment_sum(m0, 20, e, ev);
+
+	if (2 != e)
+		return false;
+
+	if (0. != m0[0])
+		return false;
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_support_posneg);
 
 
 static bool test_softest_gradient1(void)
