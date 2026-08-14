@@ -73,7 +73,7 @@ static const struct seq_ui_long custom_long_defaults_miniflash[] = {
 #endif
 static const struct seq_ui_long custom_longarr_defaults_flash[] = {
 
-	ENTRY("", SEQ_UI_IDX_LONG_TINY, "Turns / Tiny Golden", { 1, 50, 1, 1 }, "Tiny Golden angle approximation / Number of turns (=repetitions) of sampling pattern.", ""),
+	ENTRY("", SEQ_UI_IDX_LONG_TINY, "Turns / Tiny Golden", { 1, 200, 1, 1 }, "Tiny Golden angle approximation / Number of turns (=repetitions) of sampling pattern.", ""),
 	ENTRY("", SEQ_UI_IDX_LONG_PREP_SCANS, "Prep Scans", { 0, 1000, 1, 0 }, "Number of Preparation Scans (per slice/slab/SMS group)", ""),
 	ENTRY("", SEQ_UI_IDX_LONG_RF_DURATION_US, "RF pulse duration", { 20, 2560, 20, 400 }, "RF pulse duration.", "us"),
 	ENTRY("", SEQ_UI_IDX_LONG_INIT_DELAY, "Delay Measurements", { 0, 300, 1, 0 }, "Delay measurements.", "s"),
