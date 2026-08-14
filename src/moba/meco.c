@@ -198,7 +198,7 @@ unsigned long get_fB0_flag(enum meco_model sel_model)
 	return MD_BIT(get_num_of_coeff(sel_model) - 1);
 }
 
-static void calc_fat_modu(int N, const long dims[N], complex float* dst, const complex float* TE, enum fat_spec fat_spec)
+static void calc_fat_modu(int N, const long dims[N], complex float* dst, const complex float* TE, enum fat_spec fat_spec, float B0)
 {
 	assert(1 == bitcount(md_nontriv_dims(N, dims)));
 	md_clear(N, dims, dst, CFL_SIZE);
@@ -214,7 +214,7 @@ static void calc_fat_modu(int N, const long dims[N], complex float* dst, const c
 
 		float scl = use_compat_to_version("v1.0.00") ? 1.E-3 : 1.;
 
-		tmp_dst[i] = calc_fat_modulation(3.0, crealf(tmp_TE[i]) * scl, fat_spec); // FIXME: TE in SI units instead ms
+		tmp_dst[i] = calc_fat_modulation(B0, crealf(tmp_TE[i]) * scl, fat_spec); // FIXME: TE in SI units instead ms
 	}
 
 	md_copy(N, dims, dst, tmp_dst, CFL_SIZE);
@@ -228,11 +228,11 @@ static void calc_fat_modu(int N, const long dims[N], complex float* dst, const c
 
 
 // F .* zm
-static arg_t fat_spectrum(arg_t F, int N, const long TE_dims[N], const complex float* TE, enum fat_spec fat_spec)
+static arg_t fat_spectrum(arg_t F, int N, const long TE_dims[N], const complex float* TE, enum fat_spec fat_spec, float B0)
 {
 	complex float* cshift = md_alloc(N, TE_dims, CFL_SIZE);
 
-	calc_fat_modu(N, TE_dims, cshift, TE, fat_spec);
+	calc_fat_modu(N, TE_dims, cshift, TE, fat_spec, B0);
 
 	arg_t arg_cshift = snlop_const(N, TE_dims, cshift, "cshift");
 
@@ -296,7 +296,7 @@ static arg_t inversion_recovery(arg_t MS, arg_t M0, arg_t R1s, int N, const long
 
 
 struct nlop_s* nlop_ir_meco_create(int N, const long out_dims[N], const long in_dims[N], const long TI_dims[N],
-				const complex float* TI, const long TE_dims[N], const complex float* TE, enum meco_model meco_model, enum fat_spec fat_spec)
+				const complex float* TI, const long TE_dims[N], const complex float* TE, enum meco_model meco_model, enum fat_spec fat_spec, float B0)
 {
 	assert((MECO_PI != meco_model) || (get_num_of_coeff(meco_model) == in_dims[COEFF_DIM]));
 
@@ -317,7 +317,7 @@ struct nlop_s* nlop_ir_meco_create(int N, const long out_dims[N], const long in_
 		args[1] = snlop_input(N, map_dims, "F");
 		args[2] = snlop_input(N, map_dims, "fB0");
 
-		tmp[0] = fat_spectrum(args[1], N, TE_dims, TE, fat_spec);
+		tmp[0] = fat_spectrum(args[1], N, TE_dims, TE, fat_spec, B0);
 		tmp[1] = snlop_add(tmp[0], args[0]);
 
 		out = B0_modulation(tmp[1], args[2], N, TE_dims, TE);
@@ -331,7 +331,7 @@ struct nlop_s* nlop_ir_meco_create(int N, const long out_dims[N], const long in_
 		args[2] = snlop_input(N, map_dims, "R2s");
 		args[3] = snlop_input(N, map_dims, "fB0");
 
-		tmp[0] = fat_spectrum(args[1], N, TE_dims, TE, fat_spec);
+		tmp[0] = fat_spectrum(args[1], N, TE_dims, TE, fat_spec, B0);
 		tmp[1] = snlop_add(tmp[0], args[0]);
 		tmp[2] = B0_modulation(tmp[1], args[3], N, TE_dims, TE);
 
@@ -347,7 +347,7 @@ struct nlop_s* nlop_ir_meco_create(int N, const long out_dims[N], const long in_
 		args[3] = snlop_input(N, map_dims, "R2sF");
 		args[4] = snlop_input(N, map_dims, "fB0");
 
-		tmp[0] = fat_spectrum(args[2], N, TE_dims, TE, fat_spec);
+		tmp[0] = fat_spectrum(args[2], N, TE_dims, TE, fat_spec, B0);
 		tmp[1] = T2s_decay(tmp[0], args[3], N, TE_dims, TE);
 		tmp[2] = T2s_decay(args[0], args[1], N, TE_dims, TE);
 		tmp[3] = snlop_add(tmp[1], tmp[2]);
@@ -402,7 +402,7 @@ struct nlop_s* nlop_ir_meco_create(int N, const long out_dims[N], const long in_
 
 		tmp[0] = inversion_recovery(args[0], args[1], args[2], N, TI_dims, TI);
 		tmp[1] = inversion_recovery(args[3], args[4], args[5], N, TI_dims, TI);
-		tmp[2] = fat_spectrum(tmp[1], N, TE_dims, TE, fat_spec);
+		tmp[2] = fat_spectrum(tmp[1], N, TE_dims, TE, fat_spec, B0);
 
 		tmp[3] = snlop_add(tmp[0], tmp[2]);
 		tmp[4] = B0_modulation(tmp[3], args[7], N, TE_dims, TE);
@@ -442,7 +442,7 @@ struct nlop_s* nlop_ir_meco_create(int N, const long out_dims[N], const long in_
 	return nlop_chain_FF(nlop_from_linop_F(moba_rvc_create(N, in_dims, real_constraint_flag)), ret);
 }
 
-struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_dims[N], const complex float* TE, enum meco_model sel_model, enum fat_spec fat_spec)
+struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_dims[N], const complex float* TE, enum meco_model sel_model, enum fat_spec fat_spec, float B0)
 {
 	long TE_dims[N];
 	md_select_dims(N, TE_FLAG, TE_dims, y_dims);
@@ -450,7 +450,7 @@ struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_
 	long map_dims[N];
 	md_select_dims(N, ~COEFF_FLAG, map_dims, x_dims);
 
-	struct nlop_s* model = nlop_ir_meco_create(N, y_dims, x_dims, NULL, NULL, TE_dims, TE, sel_model, fat_spec);
+	struct nlop_s* model = nlop_ir_meco_create(N, y_dims, x_dims, NULL, NULL, TE_dims, TE, sel_model, fat_spec, B0);
 
 	assert(md_check_equal_dims(N, y_dims, nlop_codomain(model)->dims, ~0UL));
 

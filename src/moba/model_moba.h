@@ -35,11 +35,12 @@ struct mobafit_model_config {
 
 	enum seq_type seq;
 	enum meco_model mgre_model;
+	float B0;
 };
 
 
 extern struct mobamod moba_create(const long dims[DIMS], const complex float* T1, const complex float* TE, const complex float* b1,
-		const complex float* b0, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, const long psf_dims[DIMS], const complex float* psf, const long coil_dims[DIMS], complex float* coils, const struct noir_model_conf_s* conf, struct moba_conf_s* data,
+		const complex float* b0, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, float B0, const long psf_dims[DIMS], const complex float* psf, const long coil_dims[DIMS], complex float* coils, const struct noir_model_conf_s* conf, struct moba_conf_s* data,
 		float scaling_M0, const complex float* fixed_maps);
 
 const struct nlop_s* moba_get_nlop(struct mobafit_model_config* data, const long out_dims[DIMS], const long param_dims[DIMS], const long enc_dims[DIMS], complex float* enc);

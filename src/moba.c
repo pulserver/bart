@@ -265,6 +265,7 @@ int main_moba(int argc, char* argv[argc])
 		OPTL_FLOAT(0, "sobolev_a", &conf.sobolev_a, "", "(a in 1 + a * \\Laplace^-b/2)"),
 		OPTL_FLOAT(0, "sobolev_b", &conf.sobolev_b, "", "(b in 1 + a * \\Laplace^-b/2)"),
 		OPTL_SELECT(0, "fat_spec_0", enum fat_spec, &conf.fat_spec, FAT_SPEC_0, "select fat spectrum from ISMRM fat-water tool"),
+		OPTL_FLOAT(0, "field-strength", &(conf.B0), "B0", "B0 field strength for fat spectrum [def: 3T]"),
 		OPTL_FLOAT(0, "scale_data", &scaling, "", "scaling factor for data"),
 		OPTL_FLOAT(0, "scale_psf", &scaling_psf, "", "(scaling factor for PSF)"),
 		OPTL_SET(0, "normalize_scaling", &normalize_scaling, "(normalize scaling by data / PSF)"),

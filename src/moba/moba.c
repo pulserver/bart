@@ -49,6 +49,7 @@ struct moba_conf moba_defaults = {
 	// MECO
 	.mgre_model = MECO_WFR2S,
 	.fat_spec = FAT_SPEC_1,
+	.B0 = 3.,
 	.scale_fB0 = { 222., 32. },
 	.out_origin_maps = false,
 };

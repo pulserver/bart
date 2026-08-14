@@ -245,7 +245,7 @@ static bool test_nlop_ir_meco(void)
 
 	md_zfill(N, in_dims, src, 1.0);
 
-	struct nlop_s* ir_meco = nlop_ir_meco_create(N, out_dims, in_dims, TI_dims, TI, TE_dims, TE, IR_MECO_W_T1_F_T1_R2S, FAT_SPEC_1);
+	struct nlop_s* ir_meco = nlop_ir_meco_create(N, out_dims, in_dims, TI_dims, TI, TE_dims, TE, IR_MECO_W_T1_F_T1_R2S, FAT_SPEC_1, 3);
 
 	nlop_apply(ir_meco, N, out_dims, dst, N, in_dims, src);
 
@@ -302,7 +302,7 @@ static bool test_nlop_ir_meco_der(void)
 
 	md_free(mask);
 
-	struct nlop_s* ir_meco = nlop_ir_meco_create(N, out_dims, in_dims, TI_dims, TI, TE_dims, TE, IR_MECO_W_T1_F_T1_R2S, FAT_SPEC_1);
+	struct nlop_s* ir_meco = nlop_ir_meco_create(N, out_dims, in_dims, TI_dims, TI, TE_dims, TE, IR_MECO_W_T1_F_T1_R2S, FAT_SPEC_1, 3);
 
 	float err = nlop_test_derivative_at(ir_meco, in);
 

@@ -198,6 +198,8 @@ int main_mobafit(int argc, char* argv[argc])
 	int mgre_model = MECO_WFR2S;
 	int num_lorentzian_pools = 0;
 
+	float B0 = 3.;
+
 	bool fB0_init = false;
 
 	int iter = 5;
@@ -327,6 +329,7 @@ int main_mobafit(int argc, char* argv[argc])
 		OPTL_FLVECN(0, "max", bound_max, "Max bound (map must be selected with \"max-flag\" or \"max-mag-flag\")"),
 		OPTL_INFILE(0, "b1map", &b1_file, "[deg]", "Input B1 map as cfl file"),
 		OPTL_INFILE(0, "b0map", &b0_file, "[rad/s]", "Input B0 map as cfl file"),
+		OPTL_FLOAT(0, "field-strength", &B0, "B0", "B0 field strength for fat spectrum [def: 3T]"),
 		OPTL_SUBOPT(0, "seq", "...", "configure sequence parameters for simulation based fitting", ARRAY_SIZE(seq_opts), seq_opts),
 		OPTL_SUBOPT(0, "sim", "...", "configure simulation parameters", ARRAY_SIZE(sim_opts), sim_opts),
 		OPTL_SUBOPT(0, "other", "...", "configure other simulation parameters", ARRAY_SIZE(other_opts), other_opts),
@@ -482,6 +485,7 @@ int main_mobafit(int argc, char* argv[argc])
 	struct mobafit_model_config config;
 	config.seq = seq;
 	config.mgre_model = mgre_model;
+	config.B0 = B0;
 
 	switch (config.seq) {
 

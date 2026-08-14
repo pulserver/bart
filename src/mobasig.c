@@ -35,6 +35,7 @@ int main_mobasig(int argc, char* argv[argc])
 	struct mobafit_model_config data;
 	data.seq = IR_LL;
 	data.mgre_model = MECO_WFR2S;
+	data.B0 = 3.0;
 
 	const struct opt_s opts[] = {
 
@@ -45,7 +46,7 @@ int main_mobasig(int argc, char* argv[argc])
 		OPT_SELECT('T', enum seq_type, &(data.seq), TSE, "Multi-Echo Spin Echo: f(M0, R2) = M0 * exp(-t * R2)"),
 		OPT_SELECT('G', enum seq_type, &(data.seq), MGRE, "MGRE"),
 		OPT_PINT('m',  (int*)&(data.mgre_model), "model", "Select the MGRE model from enum { WF = 0, WFR2S, WF2R2S, R2S, PHASEDIFF } [default: WFR2S]"),
-
+		OPTL_FLOAT(0, "field-strength", &(data.B0), "B0", "B0 field strength for fat spectrum [def: 3T]"),
 	};
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);

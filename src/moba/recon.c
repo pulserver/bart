@@ -306,7 +306,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 	case MDB_BLOCH:
 	case MDB_IR_MGRE:
 
-		nl = moba_create(dims, TI, TE_IR_MGRE, b1, b0, conf->scale_fB0, conf->mgre_model, conf->fat_spec, pat_dims, pattern, coil_dims, (data->other.fixed_coil) ? sens : NULL, &mconf, data, conf->scaling_M0, init);
+		nl = moba_create(dims, TI, TE_IR_MGRE, b1, b0, conf->scale_fB0, conf->mgre_model, conf->fat_spec, conf->B0, pat_dims, pattern, coil_dims, (data->other.fixed_coil) ? sens : NULL, &mconf, data, conf->scaling_M0, init);
 		break;
 	}
 

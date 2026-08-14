@@ -50,7 +50,7 @@
 
 
 struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const complex float* TE, const complex float* b1,
-		const complex float* b0, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, const long psf_dims[DIMS], const complex float* psf, const long coil_dims[DIMS], complex float* coil, const struct noir_model_conf_s* conf, struct moba_conf_s* data,
+		const complex float* b0, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, float B0, const long psf_dims[DIMS], const complex float* psf, const long coil_dims[DIMS], complex float* coil, const struct noir_model_conf_s* conf, struct moba_conf_s* data,
 		float scaling_M0, const complex float* fixed_maps)
 {
 	long data_dims[DIMS];
@@ -111,7 +111,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 		if (0. != scale_fB0[0])
 			ret.linop_sobolev[NC - 1] = linop_chain_FF(linop_noir_weights_create(DIMS, map_dims, map_dims, NULL, sobolev_trafo_flags, data->other.sobolev_os, scale_fB0[0], scale_fB0[1], 1), linop_zreal_create(DIMS, map_dims));
 
-		model = nlop_meco_create(DIMS, out_dims2, in_dims2, TI/*TI is used as TE*/, meco_model, fat_spec);
+		model = nlop_meco_create(DIMS, out_dims2, in_dims2, TI/*TI is used as TE*/, meco_model, fat_spec, B0);
 
 		break;
 
@@ -145,7 +145,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 		if (0. != scale_fB0[0])
 			ret.linop_sobolev[NC - 1] = linop_chain_FF(linop_noir_weights_create(DIMS, map_dims, map_dims, NULL, sobolev_trafo_flags, data->other.sobolev_os, scale_fB0[0], scale_fB0[1], 1), linop_zreal_create(DIMS, map_dims));
 
-		model = nlop_ir_meco_create(DIMS, out_dims2, in_dims2, TI_dims, TI, TE_dims, TE, meco_model, fat_spec);
+		model = nlop_ir_meco_create(DIMS, out_dims2, in_dims2, TI_dims, TI, TE_dims, TE, meco_model, fat_spec, B0);
 		break;
 
 	case MDB_BLOCH:
@@ -245,7 +245,7 @@ const struct nlop_s* moba_get_nlop(struct mobafit_model_config* config, const lo
 
 	case MGRE:
 
-		nlop = nlop_meco_create(DIMS, out_dims, param_dims, enc, config->mgre_model, FAT_SPEC_1);
+		nlop = nlop_meco_create(DIMS, out_dims, param_dims, enc, config->mgre_model, FAT_SPEC_1, config->B0);
 		break;
 
 	case TSE:
