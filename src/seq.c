@@ -331,7 +331,7 @@ int main_seq(int argc, char* argv[argc])
 			seq_events_to_cfl(DIMS, event_dims, out_events, &stat_counter[4], seq->state->start_block, E, seq->event);
 
 		if ((NULL != seq_file) && (SEQ_BLOCK_KERNEL_NOISE != seq->state->mode)) // no noise_scan with pulseq
-			events_to_pulseq(&ps, seq->state->mode, seq->conf->phys.tr, seq->conf->sys, prepped_rfs, seq->rf_shape, E, seq->event);
+			events_to_pulseq(&ps, seq->state->mode, seq->conf->phys.tr, prepped_rfs, seq->rf_shape, E, seq->event);
 
 		if (SEQ_BLOCK_KERNEL_IMAGE != seq->state->mode)
 			goto debug_print_events;

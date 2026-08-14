@@ -281,7 +281,7 @@ static int check_existing_gradient_shape(const struct pulseq* ps, const struct s
 	return -1;
 }
 
-static void grad_to_pulseq(int grad_id[3], struct pulseq *ps, struct seq_sys sys, double grad_start,
+static void grad_to_pulseq(int grad_id[3], struct pulseq *ps, double grad_start,
 			  double grad_len, double g[SEQ_MAX_GRAD_POINTS][3])
 {
 	long grad_start_brt = lround(grad_start / ps->gradient_raster_time);
@@ -292,7 +292,7 @@ static void grad_to_pulseq(int grad_id[3], struct pulseq *ps, struct seq_sys sys
 	for (int a = 0; a < 3; a++) {
 
 		for (int i = 0; i < grad_len_brt; i++)
-			g_axis[i] = - g[i + grad_start_brt][a] / sys.grad.max_amplitude; // -1. for consistency
+			g_axis[i] = - g[i + grad_start_brt][a] / ps->grad_max_ampl; // -1. for consistency
 
 		if (check_empty_shape(grad_len_brt, g_axis))
 			continue;
@@ -319,7 +319,7 @@ static void grad_to_pulseq(int grad_id[3], struct pulseq *ps, struct seq_sys sys
 			struct gradient g = {
 
 				.id = grad_id[a],
-				.amp = sys.grad.max_amplitude * sys.gamma,
+				.amp = ps->grad_max_ampl * ps->gamma,
 				.shape_id = sid
 			};
 
@@ -530,7 +530,7 @@ static bool empty_block(struct ps_block* b)
 		&& (0 == b->ext));
 }
 	
-void events_to_pulseq(struct pulseq *ps, enum seq_block mode, double tr, struct seq_sys sys, int M, const struct rf_shape rf_shapes[M], int N, const struct seq_event ev[N])
+void events_to_pulseq(struct pulseq *ps, enum seq_block mode, double tr, int M, const struct rf_shape rf_shapes[M], int N, const struct seq_event ev[N])
 {
 	int ext_id = 0;
 
@@ -607,7 +607,7 @@ void events_to_pulseq(struct pulseq *ps, enum seq_block mode, double tr, struct 
 
 		int g_id[3] = { 0, 0, 0 };
 
-		grad_to_pulseq(g_id, ps, sys, grad_start, MIN(grad_len, dur_split), grad_shapes);
+		grad_to_pulseq(g_id, ps, grad_start, MIN(grad_len, dur_split), grad_shapes);
 
 		grad_start += dur_split;
 

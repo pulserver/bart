@@ -201,7 +201,7 @@ static bool test_events_to_pulseq(void)
 	struct rf_shape pulse[1];
 	seq_sample_rf_shapes(1, pulse, &seq);
 
-	events_to_pulseq(&ps, seq_state.mode, seq.phys.tr, seq.sys, 1, pulse, e, ev);
+	events_to_pulseq(&ps, seq_state.mode, seq.phys.tr, 1, pulse, e, ev);
 
 	if (1 != ps.ps_blocks->len)
 		return false;
