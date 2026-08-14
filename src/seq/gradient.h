@@ -33,6 +33,9 @@ extern double grad_total_time(const struct grad_trapezoid* grad);
 extern double grad_momentum(struct grad_trapezoid* grad);
 
 extern bool grad_soft(struct grad_trapezoid* grad, double dur, double moment, struct grad_limits sys);
+
+extern int grad_support_with_offsets(struct grad_support support[4], double moment, struct grad_support start, struct grad_support end, const struct grad_limits sys);
+
 extern bool grad_hard(struct grad_trapezoid* grad, double moment, struct grad_limits sys);
 
 #endif // _SEQ_GRADIENT_H

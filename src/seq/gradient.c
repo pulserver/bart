@@ -118,3 +118,143 @@ bool grad_hard(struct grad_trapezoid* grad, double moment, struct grad_limits sy
 	return true;
 }
 
+
+static bool grad_support_check(const struct grad_support* support, struct grad_limits sys)
+{
+	if (0. > support->time)
+		return false;
+
+	if (fabs(support->ampl) > sys.max_amplitude)
+		return false;
+
+	return true;
+}
+
+
+static bool grad_support_check_interval(const struct grad_support* start, const struct grad_support* end, struct grad_limits sys)
+{
+	if (!grad_support_check(start, sys))
+		return false;
+
+	if (!grad_support_check(end, sys))
+		return false;
+
+	if (0. > end->time - start->time)
+		return false;
+
+	if (sys.inv_slew_rate > fabs((end->time - start->time) / (end->ampl - start->ampl)))
+		return false;
+
+	return true;
+}
+
+
+static int sign(float x)
+{
+	return (x > 0) - (x < 0);
+}
+
+
+static int grad_support_with_offsets_3point(struct grad_support support[4], double moment, struct grad_support start, struct grad_support end, struct grad_limits sys)
+{
+	support[0] = start;
+	support[1] = (struct grad_support){ 0 };
+	support[2] = end;
+	support[3] = (struct grad_support){ 0 };
+
+	double available_time = end.time - start.time;
+
+	if (0. >= available_time)
+		return -1;
+
+	if ((start.ampl > sys.max_amplitude) || (end.ampl > sys.max_amplitude))
+		return -2;
+
+	if (sys.inv_slew_rate  > fabs((end.time - start.time) / (end.ampl - start.ampl)))
+		return -3;
+
+	int sign_sm = sign(moment * start.ampl);
+
+	for (int i = 0; i < 10; i++) {
+
+		double spacing = 0.;
+		if (0 < sign_sm)
+			spacing = 1 - powf(0.5, i + 1);
+		else
+			spacing = powf(0.5, i + 1);
+
+		support[1].time = start.time + spacing * (end.time - start.time);
+		support[1].ampl = 2 * moment / (end.time - start.time) - spacing * start.ampl - (1 - spacing) * end.ampl;
+
+		if (   grad_support_check_interval(&start, &support[1], sys)
+		    && grad_support_check_interval(&support[1], &end, sys))
+			return 3;
+	}
+
+	return -4;
+}
+
+
+static int grad_support_with_offsets_4point(struct grad_support support[4], double moment, struct grad_support start, struct grad_support end, struct grad_limits sys)
+{
+	support[0] = start;
+	support[1] = (struct grad_support){ 0 };
+	support[2] = (struct grad_support){ 0 };
+	support[3] = end;
+
+	struct grad_support start2;
+	struct grad_support end2;
+	double moment2;
+
+	if (sign(start.ampl) != sign(moment)) {
+
+		support[1].ampl = sign(moment) * sys.max_amplitude;
+		support[1].time = start.time + fabs((support[1].ampl - start.ampl) * sys.inv_slew_rate);
+		moment2 = moment - (support[1].ampl + start.ampl) / 2. * fabs((support[1].ampl - start.ampl) * sys.inv_slew_rate);
+		start2 = support[1];
+		end2 = end;
+
+	} else {
+
+		support[2].ampl = sign(moment) * sys.max_amplitude;
+		support[2].time = end.time - fabs((end.ampl - support[2].ampl) * sys.inv_slew_rate);
+		moment2 = moment - (support[2].ampl + end.ampl) / 2. * fabs((end.ampl - support[2].ampl) * sys.inv_slew_rate);
+		start2 = start;
+		end2 = support[2];
+	}
+
+	double available_time = end2.time - start2.time;
+
+	if (   fabs(moment2) > fabs((available_time) * (end2.ampl + start2.ampl) / 2.)
+	    && (sys.max_amplitude < 2 * fabs(moment2) / available_time - start2.ampl)
+	    && (sys.max_amplitude < 2 * fabs(moment2) / available_time - end2.ampl))
+		return -11;
+
+	struct grad_support support2[4] = { { 0 } };
+
+	if (!grad_support_with_offsets_3point(support2, moment2, start2, end2, sys))
+		return -12;
+
+	if (sign(start.ampl) != sign(moment))
+		support[2] = support2[1];
+	else
+		support[1] = support2[1];
+
+	return 4;
+}
+
+
+/*
+ * compute support points for with start/end gradient support point
+ * returns number (n) of support points, where 0 is start, n-1 is end
+ * 1 .. n-2 intermediate support points
+ */
+int grad_support_with_offsets(struct grad_support support[4], double moment, struct grad_support start, struct grad_support end, struct grad_limits sys)
+{
+	int s = grad_support_with_offsets_3point(support, moment, start, end, sys);
+
+	if (0 < s)
+		return s;
+
+	return grad_support_with_offsets_4point(support, moment, start, end, sys);
+}
