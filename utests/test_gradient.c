@@ -235,3 +235,223 @@ UT_REGISTER_TEST(test_softest_gradient2);
 UT_REGISTER_TEST(test_hardest_gradient1);
 UT_REGISTER_TEST(test_hardest_gradient2);
 
+
+static bool test_grad_support_with_offsets1(void)
+{
+	const double end_time = 10000.;
+	const double moment[6] = { 0., 100, 500, 4000.,  -5000., 7500. };
+
+	struct grad_support start = {   0.,  1. };
+	struct grad_support end =  { end_time, -1. };
+
+	struct grad_support support[4];
+
+	for (int i = 0; i < 6; i++) {
+
+		int s = grad_support_with_offsets(support, moment[i], start, end, sys);
+
+		if (3 != s)
+			return false;
+
+		struct seq_event ev[4];
+		int e = seq_grad_support_to_event(4, ev, 0., s, support, (double[3]){1., 0., 0.});
+
+		double m0[3];
+		moment_sum(m0, end_time, e, ev);
+
+		if ((4 != e) && ((0 == moment[i]) && (2 != e)))
+			return false;
+
+		if (moment[i] != m0[0])
+			return false;
+	}
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_grad_support_with_offsets1);
+
+
+static bool test_grad_support_with_offsets_sys2(void)
+{
+	static struct grad_limits sys2 = {
+		.inv_slew_rate = 0.008,
+		.max_amplitude = 24E-3,
+	};
+
+	const double end_time = 5;
+	const double moment[4] = { 0., 0.06, -0.059, 0.119 };
+
+	struct grad_support start = {   0.,  24.E-3 };
+	struct grad_support end =  { end_time, 0 };
+
+	struct grad_support support[4];
+
+	for (int i = 0; i < 4; i++) {
+
+		int s = grad_support_with_offsets(support, moment[i], start, end, sys2);
+
+		if (3 != s)
+			return false;
+
+		struct seq_event ev[4];
+		int e = seq_grad_support_to_event(4, ev, 0., s, support, (double[3]){1., 0., 0.});
+
+		double m0[3];
+		moment_sum(m0, end_time, e, ev);
+
+		if (2 != e)
+			return false;
+
+		if (1E-6 * UT_TOL < fabs(moment[i] - m0[0]))
+			return false;
+	}
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_grad_support_with_offsets_sys2);
+
+
+static bool test_grad_support_with_offsets_3(void)
+{
+	const double end_time = 10000.;
+	const double moment[4] = { 0., 10000, 5000, 1000. };
+
+	struct grad_support start = {   0.,  1. };
+	struct grad_support end =  { end_time, 1. };
+
+	struct grad_support support[4];
+
+	for (int i = 0; i < 4; i++) {
+
+		int s = grad_support_with_offsets(support, moment[i], start, end, sys);
+
+		if (3 != s)
+			return false;
+
+		struct seq_event ev[4];
+		int e = seq_grad_support_to_event(4, ev, 0., s, support, (double[3]){1., 0., 0.});
+
+		double m0[3];
+		moment_sum(m0, end_time, e, ev);
+
+		if ((4 != e) && ((5000. == moment[i]) && (2 != e)))
+			return false;
+
+		if (1E-6 * UT_TOL < fabs(moment[i] - m0[0]))
+			return false;
+	}
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_grad_support_with_offsets_3);
+
+
+static bool test_grad_support_with_offsets_4(void)
+{
+	const double end_time = 10000.;
+	const double moment[4] = { -1000., -6000, -1 };
+
+	struct grad_support start = {   0.,  1. };
+	struct grad_support end =  { end_time, 1. };
+
+	struct grad_support support[4];
+
+	for (int i = 0; i < 3; i++) {
+
+		int s = grad_support_with_offsets(support, moment[i], start, end, sys);
+
+		if (4 != s)
+			return false;
+
+		struct seq_event ev[6];
+		int e = seq_grad_support_to_event(6, ev, 0., s, support, (double[3]){1., 0., 0.});
+
+		double m0[3];
+		moment_sum(m0, end_time, e, ev);
+
+		if (4 != e)
+			return false;
+
+		if (1E-6 * UT_TOL < fabs(moment[i] - m0[0]))
+			return false;
+	}
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_grad_support_with_offsets_4);
+
+
+static bool test_grad_support_with_offsets_5(void)
+{
+	const double end_time = 10000.;
+	const double moment[3] = { -8000. , 8000, 7501. };
+
+	struct grad_support start = {   0.,  1. };
+	struct grad_support end =  { end_time, -1. };
+
+	struct grad_support support[4];
+
+	for (int i = 0; i < 3; i++) {
+
+		int s = grad_support_with_offsets(support, moment[i], start, end, sys);
+
+		if (4 != s)
+			return false;
+
+		struct seq_event ev[6];
+		int e = seq_grad_support_to_event(6, ev, 0., s, support, (double[3]){1., 0., 0.});
+
+		double m0[3];
+		moment_sum(m0, end_time, e, ev);
+
+		if (4 != e)
+			return false;
+
+		if (1E-6 * UT_TOL < fabs(moment[i] - m0[0]))
+			return false;
+	}
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_grad_support_with_offsets_5);
+
+
+static bool test_grad_support_with_offsets_6(void)
+{
+	const double end_time = 10000.;
+	const double moment[3] = { 8875. , -6000, 8126. };
+
+	struct grad_support start = {   0.,  -0.5 };
+	struct grad_support end =  { end_time, 1 };
+
+	struct grad_support support[4];
+
+	for (int i = 0; i < 3; i++) {
+
+		int s = grad_support_with_offsets(support, moment[i], start, end, sys);
+
+		if (4 != s)
+			return false;
+
+		struct seq_event ev[6];
+		int e = seq_grad_support_to_event(6, ev, 0., s, support, (double[3]){1., 0., 0.});
+
+		double m0[3];
+		moment_sum(m0, end_time, e, ev);
+
+		if (4 != e)
+			return false;
+
+		if (1E-6 * UT_TOL < fabs(moment[i] - m0[0]))
+			return false;
+	}
+
+	return true;
+}
+
+UT_REGISTER_TEST(test_grad_support_with_offsets_6);
