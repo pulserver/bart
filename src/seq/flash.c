@@ -146,6 +146,8 @@ static double ro_blip_moment(const long pos[DIMS], const struct seq_config* seq)
 
 static int prep_grad_ro_deph(struct grad_trapezoid* grad, const struct seq_config* seq)
 {
+	*grad = (struct grad_trapezoid){ 0 };
+
 	const long echo = 0;
 
 	struct grad_limits limits = seq->sys.grad;

@@ -85,6 +85,8 @@ static double ro_momentum_after_echo(const struct seq_config* seq)
 
 static int prep_grad_ro_deph(struct grad_trapezoid* grad, const struct seq_config* seq)
 {
+	*grad = (struct grad_trapezoid){ 0 };
+
 	if (!grad_soft(grad, available_time_RF_SLI(seq), -ro_momentum_to_echo(seq), seq->sys.grad))
 		return 0;
 

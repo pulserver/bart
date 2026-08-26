@@ -22,7 +22,7 @@ static bool test_moment_sum(void)
 {
 	double available_time = 1000.;
 	double momentum = 10000.;
-	struct grad_trapezoid grad;
+	struct grad_trapezoid grad = { };
 
 	if (!grad_soft(&grad, available_time, momentum, limits))
 		return false;
