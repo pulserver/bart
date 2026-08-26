@@ -196,7 +196,7 @@ TESTS += tests/test-seq-raga-ind-multislice
 tests/test-seq-traj-meco: seq traj extract nrmse
 	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)				;\
 	$(TOOLDIR)/traj -r -D -G -s1 -E -x 220 -o 2. -y5 -e7 -t10 trj_ref.ra	;\
-	$(TOOLDIR)/seq --FOV 0.220  --BR 220  --dwell 5.4E-6 --rf_duration 400E-6 --BWTP 1.00 --slice_thickness 5E-3 --TR 13.8E-3 --TE 1.8E-3 --TE_delta 1.8E-3 --mems -r 5 -t 10 -e 7 samples.ra ;\
+	$(TOOLDIR)/seq --FOV 0.220  --BR 220  --dwell 5.4E-6 --rf_duration 400E-6 --BWTP 1.00 --slice_thickness 5E-3 --TR 13.8E-3 --TE 1.8E-3 --TE_delta 1.59E-3 --mems -r 5 -t 10 -e 7 --stats samples.ra ;\
 	$(TOOLDIR)/extract 0 0 3 samples.ra trj_seq.ra				;\
 	$(TOOLDIR)/nrmse -t 0.000001 trj_ref.ra trj_seq.ra			;\
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
@@ -209,7 +209,7 @@ TESTS += tests/test-seq-traj-meco
 tests/test-seq-traj-meco2: seq traj extract nrmse
 	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)				;\
 	$(TOOLDIR)/traj -r -D -G -s1 -E -x 256 -o 2. -y1 -e7 -t1 trj_ref.ra	;\
-	$(TOOLDIR)/seq --FOV 0.210  --BR 256  --dwell 5.6E-6 --rf_duration 900E-6 --BWTP 3.8 --slice_thickness 5E-3 --TR 20.3E-3 --TE 2.31E-3 --TE_delta 2.61E-3 --mems -r 1 -t 1 -e 7 samples.ra ;\
+	$(TOOLDIR)/seq --FOV 0.210  --BR 256  --dwell 5.6E-6 --rf_duration 900E-6 --BWTP 3.8 --slice_thickness 5E-3 --TR 20.3E-3 --TE 2.31E-3 --TE_delta 2.44E-3 --mems -r 1 -t 1 -e 7 --stats samples.ra ;\
 	$(TOOLDIR)/extract 0 0 3 samples.ra trj_seq.ra				;\
 	$(TOOLDIR)/nrmse -t 0.000001 trj_ref.ra trj_seq.ra			;\
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
@@ -236,7 +236,7 @@ TESTS += tests/test-seq-meco-chrono
 tests/test-seq-meco: seq traj extract nrmse
 	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)						;\
 	$(TOOLDIR)/traj -x 220 -o 2. -y 411 -e 7 -r -D trj_ref.ra 				;\
-	$(TOOLDIR)/seq --FOV 0.220  --BR 220  --dwell 5.4E-6 --rf_duration 400E-6 --BWTP 1.00 --slice_thickness 5E-3 --TR 13.8E-3 --TE 1.8E-3 --TE_delta 1.8E-3 --raga --tiny 31 -r 411 -e 7 samples.ra ;\
+	$(TOOLDIR)/seq --FOV 0.220  --BR 220  --dwell 5.4E-6 --rf_duration 400E-6 --BWTP 1.00 --slice_thickness 5E-3 --TR 13.8E-3 --TE 1.8E-3 --TE_delta 1.6E-3 --raga --tiny 31 -r 411 -e 7 --stats samples.ra ;\
 	$(TOOLDIR)/extract 0 0 3 samples.ra trj_seq.ra						;\
 	$(TOOLDIR)/nrmse -t 5.E-7 trj_ref.ra trj_seq.ra						;\
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
