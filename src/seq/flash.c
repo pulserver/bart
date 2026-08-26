@@ -198,8 +198,11 @@ static int prep_grad_ro_blip(struct grad_trapezoid* grad, long echo, const struc
 		pos0[TE_DIM] = echo;
 
 		double moment = ro_blip_moment(pos0, seq);
+		double time = seq->phys.te_delta - (ro_time_after_echo(echo - 1, seq)
+				+ ro_time_to_echo(echo, seq) + 2. * ro_amplitude(seq) * seq->sys.grad.inv_slew_rate);
 
-		grad_hard(grad, moment, seq->sys.grad);
+		if (!grad_soft(grad, time, moment, seq->sys.grad))
+			return 0;
 	}
 
 	return 1;
@@ -1001,7 +1004,10 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 		if (!prep_grad_ro_blip(&readout_blip, seq_state->pos[TE_DIM], seq))
 			return ERROR_PREP_GRAD_RO_BLIP;
 
-		timing.readout_blip = timing.readout[seq_state->pos[TE_DIM]] - grad_total_time(&readout_blip);
+		struct grad_trapezoid readout;
+
+		if (0 < seq_state->pos[TE_DIM])
+			timing.readout_blip = timing.readout[seq_state->pos[TE_DIM] - 1] + grad_total_time(&readout) + 1E-15;
 
 		if (   (1 < seq_state->pos[TE_DIM])
 		    && (timing.readout_blip < timing.adc[seq_state->pos[TE_DIM] - 1] + adc_duration(seq) + ro_amplitude(seq) * seq->sys.grad.inv_slew_rate))
@@ -1009,8 +1015,6 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 
 		i += seq_grad_to_event(ev + i, timing.readout_blip, &readout_blip, blipX);
 		i += seq_grad_to_event(ev + i, timing.readout_blip, &readout_blip, blipY);
-
-		struct grad_trapezoid readout;
 
 		if (!prep_grad_ro(&readout, seq_state->pos[TE_DIM], seq))
 			return ERROR_PREP_GRAD_RO_RO;
