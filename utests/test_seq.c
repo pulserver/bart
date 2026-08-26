@@ -37,7 +37,7 @@ static bool test_commands_sequence(void)
 	bart_seq_defaults(seq);
 
 	static char seq_cmd[128];
-	snprintf(seq_cmd, 128, "bart seq --pe_mode 1 --contrast 2 --tiny 13 --asl_label_slice 3");
+	snprintf(seq_cmd, 128, "bart seq FLASH --pe_mode 1 --contrast 2 --tiny 13 --asl_label_slice 3");
 
 	if (!seq_config_from_string(seq->conf, 128, seq_cmd))
 		return false;

@@ -25,7 +25,7 @@ static bool test_command(void)
 	struct seq_config seq = seq_config_defaults_flash;
 	seq.geom.baseres = 250;
 
-	if (!read_config_from_str(&seq, 200, "bart seq --BR 200 --FOV 0.305\0"))
+	if (!read_config_from_str(&seq, 200, "bart seq FLASH --BR 200 --FOV 0.305\0"))
 		return false;
 
 	if (200 != seq.geom.baseres)
@@ -39,25 +39,6 @@ static bool test_command(void)
 
 UT_REGISTER_TEST(test_command);
 
-
-static bool test_command2(void)
-{
-	struct seq_config seq = seq_config_defaults_flash;
-	seq.geom.baseres = 250;
-
-	if (!read_config_from_str(&seq, 200, "bart seq FLASH --BR 200 --FOV 0.305\0"))
-		return false;
-
-	if (200 != seq.geom.baseres)
-		return false;
-
-	if (0.305 != seq.geom.fov)
-		return false;
-
-	return true;
-}
-
-UT_REGISTER_TEST(test_command2);
 
 static bool test_print_command(void)
 {
