@@ -1310,18 +1310,14 @@ static struct stream_event* stream_event_create(long index, int type, const char
 
 static void stream_init_log(stream_t s)
 {
-	char* log_prefix = getenv("BART_STREAM_LOG");
+	char* log_suffix = getenv("BART_STREAM_LOG");
 
-	if (!log_prefix)
+	if (!log_suffix)
 		return;
 
 	const char* suffix2 = ".txt";
-	unsigned int logfile_len = strlen(log_prefix) + strlen(s->filename) + strlen(suffix2) + 1;
 
-	char* logfile_path = xmalloc(logfile_len);
-
-	assert(logfile_path);
-	snprintf(logfile_path, logfile_len, "%s%s%s", log_prefix, s->filename, suffix2);
+	char* logfile_path = ptr_printf("%s%s%s", s->filename, log_suffix, suffix2);
 
 	s->logfile = fopen(logfile_path, "a");
 
