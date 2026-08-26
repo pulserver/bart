@@ -9,6 +9,7 @@
 
 #include <assert.h>
 #include <complex.h>
+#include <errno.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -472,13 +473,15 @@ void stream_ensure_fifo(const char* name)
 
 	if (0 != stat(name, &statbuf))
 #ifndef NO_FIFO
-		mkfifo(name, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
+		if (0 != mkfifo(name, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)
+				&& EEXIST != errno)
+			error("mkfifo %s: %s.\n", name, strerror(errno));
 #else
 		error("BART compiled without fifo support, but requested an output stream that should be a fifo.\n");
 #endif
 
 	if (0 != stat(name, &statbuf))
-		error("stat / mkfifo.\n");
+		error("stat : %s.\n", strerror(errno));
 
 	if (S_IFIFO != (statbuf.st_mode & S_IFMT))
 		error(".fifo-file is not a FIFO!\n");
