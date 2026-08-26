@@ -153,8 +153,30 @@ void debug_vprintf(int level, const char* fmt, va_list ap)
 				errno = 0;
 				long r = strtol(str, NULL, 10);
 
-				if ((errno == 0) && (1 <= r))
-					cmd = ptr_printf(" (%s)", command_line ?: "bart wrapper");
+				if ((errno == 0) && (1 <= r)) {
+
+					long pid = getpid();
+					char fname[64] = { };
+					char fcontent[2048] = { };
+					sprintf(fname, "/proc/%lu/cmdline", pid);
+
+					FILE* f = fopen(fname, "r");
+
+					if (NULL != f) {
+
+						int l = fread(fcontent, 1, ARRAY_SIZE(fcontent) - 1, f);
+						fclose(f);
+
+						for (int i = 0; i < l - 1; i++)
+							if (fcontent[i] == '\0')
+								fcontent[i] = ' ';
+						cmd = ptr_printf(" [%s]", fcontent);
+					} else {
+
+						cmd = ptr_printf(" (%s)", command_line ?: "bart wrapper");
+					}
+
+				}
 			}
 
 			if (level < DP_INFO) {
