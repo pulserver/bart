@@ -15,8 +15,8 @@
 #include "utest.h"
 
 #define FLASH_EVENTS 14
-#define FLASH_EVENTS_MECO 68
-#define FLASH_EVENTS_MECO_64 581
+#define FLASH_EVENTS_MECO 79
+#define FLASH_EVENTS_MECO_64 706
 #define FLASH_EVENTS_SPOILED 22
 
 

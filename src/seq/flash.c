@@ -169,27 +169,53 @@ static int prep_grad_phs1_encoding(struct grad_trapezoid* grad, int rew, const l
 }
 
 
-static int prep_grad_ro_blip(struct grad_trapezoid* gradPHASE, struct grad_trapezoid* gradREAD, const long pos[DIMS], const struct seq_config* seq)
+static int prep_grad_ro_blip_merge(struct seq_event ev[12], double start_time, double end_time, const long pos[DIMS], const struct seq_config* seq)
 {
-	*gradPHASE = (struct grad_trapezoid){ 0 };
-	*gradREAD = (struct grad_trapezoid){ 0 };
+	if (0 == pos[TE_DIM])
+		return 0;
 
-	if (0 < pos[TE_DIM]) {
+	vec3d_t moment;
+	ro_blip_moment(moment, pos, seq);
 
-		vec3d_t moment;
-		ro_blip_moment(moment, pos, seq);
+	long pos2[DIMS];
+	md_copy_dims(DIMS, pos2, pos);
+	pos2[TE_DIM] = pos[TE_DIM] - 1;
 
-		double time = seq->phys.te_delta - (ro_time_after_echo(pos[TE_DIM] - 1, seq)
-				+ ro_time_to_echo(pos[TE_DIM], seq));
+	double angle_curr = get_rot_angle(pos, seq);
+	double angle_prev = get_rot_angle(pos2, seq);
 
-		if (!grad_soft(gradPHASE, time, moment[0], seq->sys.grad))
-			return 0;
+	double ramp =  ro_amplitude(seq) * seq->sys.grad.inv_slew_rate;
 
-		if (!grad_soft(gradREAD, time, moment[1], seq->sys.grad))
-			return 0;
-	}
+	struct grad_support x_start = { start_time,  ro_amplitude(seq) * sin(angle_prev) };
+	struct grad_support x_end  =  { end_time,    ro_amplitude(seq) * sin(angle_curr) };
 
-	return 1;
+	struct grad_support support[4];
+	int s = grad_support_with_offsets(support, moment[1] + 0.5 * ro_amplitude(seq) * ramp * (sin(angle_prev) + sin(angle_curr)),
+						x_start, x_end, seq->sys.grad);
+
+	if (0 > s)
+		return -1;
+
+	int e = seq_grad_support_to_event(6, ev, 0., s, support, (double[3]){1., 0., 0.});
+
+	if (0 > e)
+		return -2;
+
+	struct grad_support y_start = { start_time,  ro_amplitude(seq) * cos(angle_prev) };
+	struct grad_support y_end  =  { end_time,    ro_amplitude(seq) * cos(angle_curr) };
+
+	s = grad_support_with_offsets(support, moment[0] + 0.5 * ro_amplitude(seq) * ramp * (cos(angle_prev) + cos(angle_curr)),
+					y_start, y_end, seq->sys.grad);
+
+	if (0 > s)
+		return -3;
+
+	int e2 = seq_grad_support_to_event(6, ev + e, 0., s, support, (double[3]){0., 1., 0.});
+
+	if (0 > e2)
+		return -4;
+
+	return e + e2;
 }
 
 
@@ -948,6 +974,7 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 	i += seq_grad_to_event(ev + i, timing.slice_rephaser, &slice_rephaser, projSLICE);
 
 	struct grad_trapezoid ro_reph;
+	struct grad_trapezoid readout;
 
 	do {
 		double proj_angle = get_rot_angle(seq_state->pos, seq);
@@ -979,13 +1006,6 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 		}
 
 
-		struct grad_trapezoid readout_blipPHASE;
-		struct grad_trapezoid readout_blipREAD;
-		if (!prep_grad_ro_blip(&readout_blipPHASE, &readout_blipREAD, seq_state->pos, seq))
-			return ERROR_PREP_GRAD_RO_BLIP;
-
-		struct grad_trapezoid readout;
-
 		if (0 < seq_state->pos[TE_DIM])
 			timing.readout_blip = timing.readout[seq_state->pos[TE_DIM] - 1] + grad_total_time(&readout) + 1E-15;
 
@@ -993,8 +1013,13 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 		    && (timing.readout_blip < timing.adc[seq_state->pos[TE_DIM] - 1] + adc_duration(seq)))
 			return ERROR_BLIP_TIMING;
 
-		i += seq_grad_to_event(ev + i, timing.readout_blip, &readout_blipPHASE, projPHASE);
-		i += seq_grad_to_event(ev + i, timing.readout_blip, &readout_blipREAD, projREAD);
+
+		int blip_events = prep_grad_ro_blip_merge(ev + i, timing.readout_blip, timing.readout[seq_state->pos[TE_DIM]], seq_state->pos, seq);
+		if (0 > blip_events)
+			return ERROR_PREP_GRAD_RO_BLIP;
+
+		i += blip_events;
+
 
 		if (!prep_grad_ro(&readout, seq_state->pos[TE_DIM], seq))
 			return ERROR_PREP_GRAD_RO_RO;
