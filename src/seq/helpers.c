@@ -404,6 +404,7 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 			"\ngamma/b0/max grad/inv slew\t\t%.0f/%.3f/%.3f/%.6f\n",
 			seq->sys.gamma, seq->sys.b0, seq->sys.grad.max_amplitude, seq->sys.grad.inv_slew_rate);
 
+	ctr += snprintf(info + ctr, (size_t)(N - ctr), "\nlooping order\t %d", seq->enc.order);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
 			"\nloop_dims\t %ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t\n",
