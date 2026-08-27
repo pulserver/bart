@@ -6,6 +6,7 @@
 #include <math.h>
 
 #include "num/multind.h"
+#include "num/vec3.h"
 
 #include "misc/mri.h"
 #include "misc/misc.h"
@@ -121,27 +122,30 @@ static double ro_blip_angle(const long pos[DIMS], const struct seq_config* seq)
 	return 0.;
 }
 
-static double ro_blip_moment(const long pos[DIMS], const struct seq_config* seq)
+static void ro_blip_moment(vec3d_t blip_moment, const long pos[DIMS], const struct seq_config* seq)
 {
-	if (0 < pos[TE_DIM]) {
+	if (0 == pos[TE_DIM]) {
 
-		double angle_curr = get_rot_angle(pos, seq);
-		double moment_curr = ro_momentum_to_echo(pos[TE_DIM], seq);
-
-		long pos2[DIMS];
-		md_copy_dims(DIMS, pos2, pos);
-		pos2[TE_DIM] = pos[TE_DIM] - 1;
-
-		double angle_prev = get_rot_angle(pos2, seq);
-		double moment_prev = ro_momentum_after_echo(pos2[TE_DIM], seq);
-
-		double blip_x = -fabs(moment_curr) * cos(angle_curr) - fabs(moment_prev) * cos(angle_prev);
-		double blip_y = -fabs(moment_curr) * sin(angle_curr) - fabs(moment_prev) * sin(angle_prev);
-
-		return sqrt(pow(blip_x, 2.) + pow(blip_y, 2.));
+		vec3d_clear(blip_moment);
+		return;
 	}
 
-	return 0.;
+	double angle_curr = get_rot_angle(pos, seq);
+	double moment_curr = ro_momentum_to_echo(pos[TE_DIM], seq);
+
+	long pos2[DIMS];
+	md_copy_dims(DIMS, pos2, pos);
+	pos2[TE_DIM] = pos[TE_DIM] - 1;
+
+	double angle_prev = get_rot_angle(pos2, seq);
+	double moment_prev = ro_momentum_after_echo(pos2[TE_DIM], seq);
+
+	double blip_x = -fabs(moment_curr) * cos(angle_curr) - fabs(moment_prev) * cos(angle_prev);
+	double blip_y = -fabs(moment_curr) * sin(angle_curr) - fabs(moment_prev) * sin(angle_prev);
+
+	blip_moment[0] = blip_x;
+	blip_moment[1] = blip_y;
+	blip_moment[2] = 0.;
 }
 
 static int prep_grad_ro_deph(struct grad_trapezoid* grad, const struct seq_config* seq)
@@ -188,20 +192,19 @@ static int prep_grad_phs1_encoding(struct grad_trapezoid* grad, int rew, const l
 }
 
 
-static int prep_grad_ro_blip(struct grad_trapezoid* grad, long echo, const struct seq_config* seq)
+static int prep_grad_ro_blip(struct grad_trapezoid* grad, const long pos[DIMS], const struct seq_config* seq)
 {
 	*grad = (struct grad_trapezoid){ 0 };
 
-	if (0 < echo) {
+	if (0 < pos[TE_DIM]) {
 
-		long pos0[DIMS] = { [TE_DIM] = echo };
-		pos0[TE_DIM] = echo;
+		vec3d_t moment;
+		ro_blip_moment(moment, pos, seq);
 
-		double moment = ro_blip_moment(pos0, seq);
-		double time = seq->phys.te_delta - (ro_time_after_echo(echo - 1, seq)
-				+ ro_time_to_echo(echo, seq) + 2. * ro_amplitude(seq) * seq->sys.grad.inv_slew_rate);
+		double time = seq->phys.te_delta - (ro_time_after_echo(pos[TE_DIM] - 1, seq)
+				+ ro_time_to_echo(pos[TE_DIM], seq) + 2. * ro_amplitude(seq) * seq->sys.grad.inv_slew_rate);
 
-		if (!grad_soft(grad, time, moment, seq->sys.grad))
+		if (!grad_soft(grad, time, vec3d_norm(moment), seq->sys.grad))
 			return 0;
 	}
 
@@ -615,9 +618,10 @@ void flash_minimum_te(const struct seq_config* seq, double* min_te, double* fill
 	if (1 < seq->loop_dims[TE_DIM]) {
 
 		struct grad_trapezoid grad;
-		long pos0[DIMS] = { };
-		pos0[TE_DIM] = 1;
-		grad_hard(&grad, ro_blip_moment(pos0, seq), seq->sys.grad);
+		long pos0[DIMS] = { [TE_DIM] = 1};
+		vec3d_t moment;
+		ro_blip_moment(moment, pos0, seq);
+		grad_hard(&grad, vec3d_norm(moment), seq->sys.grad);
 
 		blip_time = grad_total_time(&grad);
 	}
@@ -1001,7 +1005,7 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 		double blipX[3] = { 0., cos(blip_angle), 0. };
 		double blipY[3] = { sin(blip_angle), 0., 0. };
 
-		if (!prep_grad_ro_blip(&readout_blip, seq_state->pos[TE_DIM], seq))
+		if (!prep_grad_ro_blip(&readout_blip, seq_state->pos, seq))
 			return ERROR_PREP_GRAD_RO_BLIP;
 
 		struct grad_trapezoid readout;
