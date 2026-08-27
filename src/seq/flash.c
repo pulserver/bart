@@ -561,6 +561,7 @@ static void conf_to_loop_dims(const int D, long dims[D], struct seq_config* seq)
 
 	dims[TE_DIM] = seq->loop_dims[TE_DIM];
 	dims[AVG_DIM] = seq->loop_dims[AVG_DIM];
+	dims[TIME2_DIM] = seq->loop_dims[TIME2_DIM];
 }
 
 void flash_interface_loop_dims(int reverse, struct seq_config* seq, const int D, long dims[D])
