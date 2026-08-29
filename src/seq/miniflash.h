@@ -7,7 +7,8 @@
 
 struct seq_config;
 
-void miniflash_interface_custom_params(int reverse, struct seq_config* seq, int nl, long params_long[__VLA(nl)], int nd, double params_double[__VLA(nd)]);
+void miniflash_interface_custom(struct seq_config* seq, int nl, const long params_long[__VLA(nl)], int nd, const double params_double[__VLA(nd)]);
+void miniflash_interface_custom_back(const struct seq_config* seq, int nl, long params_long[__VLA(nl)], int nd, double params_double[__VLA(nd)]);
 
 extern double miniflash_minimum_tr(const struct seq_config* seq);
 extern void miniflash_minimum_te(const struct seq_config* seq, double* min_te, double* fill_te);

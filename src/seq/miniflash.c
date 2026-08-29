@@ -35,6 +35,7 @@ static double start_adc(const struct seq_config* seq)
 static double ro_shift(const struct seq_config* seq)
 {
 	double adc_start = start_adc(seq);
+
 	return seq->sys.raster_grad - (round_up_raster(adc_start, seq->sys.raster_grad) - adc_start);
 }
 
@@ -92,7 +93,7 @@ static int prep_grad_ro_deph(struct grad_trapezoid* grad, const struct seq_confi
 
 static int prep_grad_phs1_encoding(struct grad_trapezoid* grad, int rew, const long pos[DIMS], const struct seq_config* seq)
 {
-	*grad = (struct grad_trapezoid){ 0 };
+	*grad = (struct grad_trapezoid){ };
 
 	long center = 0.5 * seq->loop_dims[PHS1_DIM];
 
@@ -110,7 +111,7 @@ static int prep_grad_phs1_encoding(struct grad_trapezoid* grad, int rew, const l
 
 static int prep_grad_ro(struct grad_trapezoid* grad, const struct seq_config* seq)
 {
-	*grad = (struct grad_trapezoid){ 0 };
+	*grad = (struct grad_trapezoid){ };
 
 	double ampl = ro_amplitude(seq);
 
@@ -127,7 +128,8 @@ static int prep_grad_ro(struct grad_trapezoid* grad, const struct seq_config* se
 
 static double end_last_ro(int rampdown, const struct seq_config* seq)
 {
-	double rdt = 0;
+	double rdt = 0.;
+
 	if (rampdown)
 		rdt = ro_amplitude(seq) * seq->sys.grad.inv_slew_rate;
 
@@ -138,13 +140,12 @@ static double end_last_ro(int rampdown, const struct seq_config* seq)
 
 static int prep_grad_spoiler_read(struct grad_trapezoid* grad, const struct seq_config* seq)
 {
-	*grad = (struct grad_trapezoid){ 0 };
+	*grad = (struct grad_trapezoid){ };
 
 	struct grad_limits lim = seq->sys.grad;
 	lim.inv_slew_rate = seq->sys.grad.inv_slew_rate * 2;
 
-	if (!grad_soft(grad, seq->phys.tr - end_last_ro(1, seq),
-			ro_momentum(seq), lim))
+	if (!grad_soft(grad, seq->phys.tr - end_last_ro(1, seq), ro_momentum(seq), lim))
 		return 0;
 
 	return 1;
@@ -152,7 +153,7 @@ static int prep_grad_spoiler_read(struct grad_trapezoid* grad, const struct seq_
 
 static int prep_grad_spoiler_slice(struct grad_trapezoid* grad, const struct seq_config* seq)
 {
-	*grad = (struct grad_trapezoid){ 0 };
+	*grad = (struct grad_trapezoid){ };
 
 	if (!grad_soft(grad, seq->phys.tr - end_last_ro(1, seq), slice_momentum_to_rephase(seq), seq->sys.grad))
 		return 0;
@@ -162,7 +163,7 @@ static int prep_grad_spoiler_slice(struct grad_trapezoid* grad, const struct seq
 
 static int prep_grad_sli(struct grad_trapezoid* grad, const struct seq_config* seq)
 {
-	*grad = (struct grad_trapezoid){ 0 };
+	*grad = (struct grad_trapezoid){ };
 
 	double ampl = slice_amplitude(seq);
 	double ramp = ampl * seq->sys.grad.inv_slew_rate;
@@ -181,7 +182,7 @@ static int prep_grad_sli(struct grad_trapezoid* grad, const struct seq_config* s
 
 static int prep_grad_sli_reph(struct grad_trapezoid* grad, const struct seq_config* seq)
 {
-	*grad = (struct grad_trapezoid){ 0 };
+	*grad = (struct grad_trapezoid){ };
 
 	if (!grad_soft(grad, available_time_RF_SLI(seq), -slice_momentum_to_rephase(seq), seq->sys.grad))
 		return 0;
@@ -190,10 +191,12 @@ static int prep_grad_sli_reph(struct grad_trapezoid* grad, const struct seq_conf
 }
 
 
-static void custom_params_to_config(struct seq_config* seq, int nl, const long custom_long[__VLA(nl)], int nd, const double custom_double[__VLA(nd)])
+void miniflash_interface_custom(struct seq_config* seq,
+				int nl, const long custom_long[__VLA(nl)],
+				int nd, const double custom_double[__VLA(nd)])
 {
-	seq->enc.pe_mode = (enum pe_mode)custom_long[SEQ_UI_IDX_LONG_PE_MODE];
-	seq->phys.contrast = (enum flash_contrast)custom_long[SEQ_UI_IDX_LONG_CONTRAST];
+	seq->enc.pe_mode = custom_long[SEQ_UI_IDX_LONG_PE_MODE];
+	seq->phys.contrast = custom_long[SEQ_UI_IDX_LONG_CONTRAST];
 
 	seq->phys.os = 2.;
 	seq->phys.rf_duration = 1E-6 * custom_long[SEQ_UI_IDX_LONG_RF_DURATION_US];
@@ -201,7 +204,9 @@ static void custom_params_to_config(struct seq_config* seq, int nl, const long c
 }
 
 
-static void config_to_custom_params(int nl, long custom_long[__VLA(nl)], int nd, double custom_double[__VLA(nd)], const struct seq_config* seq)
+void miniflash_interface_custom_back(const struct seq_config* seq,
+				     int nl, long custom_long[__VLA(nl)],
+				     int nd, double custom_double[__VLA(nd)])
 {
 	custom_long[SEQ_UI_IDX_LONG_PE_MODE] = seq->enc.pe_mode;;
 	custom_long[SEQ_UI_IDX_LONG_CONTRAST] = seq->phys.contrast;
@@ -211,18 +216,9 @@ static void config_to_custom_params(int nl, long custom_long[__VLA(nl)], int nd,
 	custom_double[SEQ_UI_IDX_DOUBLE_BWTP] = seq->phys.bwtp;
 }
 
-void miniflash_interface_custom_params(int reverse, struct seq_config* seq, int nl, long params_long[__VLA(nl)], int nd, double params_double[__VLA(nd)])
-{
-	if (reverse)
-		config_to_custom_params(nl, params_long, nd, params_double, seq);
-	else
-		custom_params_to_config(seq, nl, params_long, nd, params_double);
-}
-
 
 double miniflash_minimum_tr(const struct seq_config* seq)
 {
-
 	double mom_read = ro_momentum(seq) + ro_momentum_after_echo(seq);
 	double mom_slice = slice_momentum_to_rephase(seq);
 
@@ -376,7 +372,6 @@ int miniflash(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 		return ERROR_PREP_GRAD_SLI;
 
 	i += seq_grad_to_event(ev + i, timing.slice, &slice, projSLICE);
-
 	i += prep_rf_excitation(ev + i, timing.RF, rf_spoil_phase, seq_state, seq);
 
 	struct grad_trapezoid slice_rephaser;
@@ -404,8 +399,8 @@ int miniflash(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 
 	//check for overlapping gradients!
 	if (powf(seq->sys.grad.max_amplitude, 2.) < (  powf(slice_rephaser.ampl, 2.)
-							+ powf(readout_dephaser.ampl, 2.)
-							+ powf(phs1_encoding.ampl, 2.)))
+						     + powf(readout_dephaser.ampl, 2.)
+						     + powf(phs1_encoding.ampl, 2.)))
 		return ERROR_MAX_GRAD_RO_SLI;
 
 	i += seq_grad_to_event(ev + i, timing.readout_dephaser, &phs1_encoding, projPHASE);
@@ -423,7 +418,6 @@ int miniflash(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 		return ERROR_PREP_GRAD_RO_RO;
 
 	i += seq_grad_to_event(ev + i, timing.readout, &readout, projREAD);
-
 	i += prep_adc(ev + i, timing.adc, rf_spoil_phase, seq_state, seq);
 
 
@@ -440,6 +434,7 @@ int miniflash(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 		return ERROR_PREP_GRAD_SP_READ;
 
 	i += seq_grad_to_event(ev + i, timing.spoiler, &spoiler_read, projREAD);
+
 	struct grad_trapezoid spoiler_slice;
 
 	if (!prep_grad_spoiler_slice(&spoiler_slice, seq))
@@ -459,7 +454,8 @@ int miniflash(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 
 static int check_settings(const struct seq_state* seq_state, const struct seq_config* seq)
 {
-	if ((SEQ_CONTRAST_RF_SPOILED != seq->phys.contrast) && (SEQ_CONTRAST_NO_SPOILING != seq->phys.contrast))
+	if (   (SEQ_CONTRAST_RF_SPOILED != seq->phys.contrast)
+	    && (SEQ_CONTRAST_NO_SPOILING != seq->phys.contrast))
 		return ERROR_SETTING_CONTRAST;
 
 	if (   (SEQ_PEMODE_CARTESIAN != seq->enc.pe_mode)
@@ -477,8 +473,10 @@ static int check_settings(const struct seq_state* seq_state, const struct seq_co
 
 	if (1 != seq->loop_dims[PHS2_DIM])
 		return ERROR_SETTING_DIM;
+
 	if (1 != seq->loop_dims[TE_DIM])
 		return ERROR_SETTING_DIM;
+
 	if (1 != seq->loop_dims[SLICE_DIM])
 		return ERROR_SETTING_DIM;
 
@@ -501,6 +499,7 @@ static int check_settings(const struct seq_state* seq_state, const struct seq_co
 int miniflash_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const struct seq_config* seq)
 {
 	int err = check_settings(seq_state, seq);
+
 	if (1 > err)
 		return err;
 
@@ -511,7 +510,7 @@ int miniflash_block(int N, struct seq_event ev[N], struct seq_state* seq_state, 
 		return miniflash(N, ev, seq_state, seq);
 
 	seq_state->mode = SEQ_BLOCK_KERNEL_IMAGE;
-	return miniflash(N, ev, seq_state, seq);
 
-	return 0;
+	return miniflash(N, ev, seq_state, seq);
 }
+
