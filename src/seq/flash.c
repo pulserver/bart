@@ -953,7 +953,7 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 	if (!prep_grad_sli_reph(&slice_rephaser, seq_state->pos[PHS2_DIM], seq))
 		return ERROR_PREP_GRAD_SLI_REPH;
 
-	if ((grad_total_time(&slice) - 1.E-9) > timing.slice_rephaser)
+	if (grad_total_time(&slice) > timing.slice_rephaser)
 		return ERROR_SLI_TIMING;
 
 	i += seq_grad_to_event(ev + i, timing.slice_rephaser, &slice_rephaser, projSLICE);
@@ -1016,7 +1016,7 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 		if ((seq_state->pos[TE_DIM] == 0) && (timing.readout_dephaser + grad_total_time(&readout_dephaser) - 1.E-9) > timing.readout[seq_state->pos[TE_DIM]])
 			return ERROR_RO_TIMING;
 
-		if ((seq_state->pos[TE_DIM] == 0) && (timing.readout_dephaser + grad_total_time(&phs1_encoding) - 1.e-3) > timing.readout[seq_state->pos[TE_DIM]])
+		if ((seq_state->pos[TE_DIM] == 0) && (timing.readout_dephaser + grad_total_time(&phs1_encoding) > timing.readout[seq_state->pos[TE_DIM]]))
 			return ERROR_RO_TIMING;
 
 		i += seq_grad_to_event(ev + i, timing.readout[seq_state->pos[TE_DIM]], &readout, projX);
@@ -1072,7 +1072,7 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 	i += seq_grad_to_event(ev + i, timing.pe3d_rewinder, &pe3d_rewinder, projSLICE);
 
 
-	if (seq_block_end_flat(i, ev, seq->sys.raster_grad) - 1E-9 > seq->phys.tr)
+	if (seq_block_end_flat(i, ev, seq->sys.raster_grad) > seq->phys.tr)
 		return ERROR_END_FLAT_KERNEL;
 
 	long last_idx[DIMS];
