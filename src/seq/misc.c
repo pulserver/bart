@@ -19,6 +19,14 @@ double round_up_raster(double time, double raster_time)
 	return ceil(time / raster_time - 1E2 * raster_time) * raster_time;
 }
 
+double round_down_raster(double time, double raster_time)
+{
+	if (0. > time)
+		return 0.;
+
+	return floor(time / raster_time + 1E2 * raster_time) * raster_time;
+}
+
 double ro_amplitude(const struct seq_config* seq)
 {
 	return 1. / (seq->geom.fov * seq->phys.dwell * seq->sys.gamma);

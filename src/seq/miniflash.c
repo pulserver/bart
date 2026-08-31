@@ -45,7 +45,7 @@ static double available_time_RF_SLI(const struct seq_config* seq)
 	return seq->phys.te - seq->phys.rf_duration / 2.
 		- slice_amplitude(seq) * seq->sys.grad.inv_slew_rate
 		- seq->sys.grad.max_amplitude * seq->sys.grad.inv_slew_rate
-		- round_up_raster(adc_time_to_echo(0, seq) - 0.99 * seq->sys.raster_rf, seq->sys.raster_rf) // round down
+		- round_down_raster(adc_time_to_echo(0, seq), seq->sys.raster_rf)
 		- ro_shift(seq);
 }
 

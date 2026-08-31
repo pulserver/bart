@@ -62,6 +62,7 @@ extern double slice_momentum_to_rephase(const struct seq_config* seq);
 extern double ro_amplitude(const struct seq_config* seq);
 
 extern double round_up_raster(double time, double raster_time);
+extern double round_down_raster(double time, double raster_time);
 
 struct grad_trapezoid;
 struct grad_limits;
