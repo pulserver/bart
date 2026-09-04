@@ -26,34 +26,34 @@
 /// @param p Problem parameters
 void cn_bloch(int Nx, int Nt, float M[Nx][Nt][3], const float u[Nt - 1], const struct puls_opt_pars p)
 {
-	float Mz[4] = { 0. };
-	float Bz;
+	float Mz[4] = { };
 
 	// Loop over each voxel in the slice profile
 	for (int z = 0; z < Nx; z++) {
 
-		Bz = p.gamma * p.Gz * p.xdis[z];
+		float Bz = p.gamma * p.Gz * p.xdis[z];
+
 		Mz[0] = p.M0[z];
 		Mz[1] = p.M0[Nx + z];
 		Mz[2] = p.M0[2 * Nx + z];
 
 		vecf_copy(3, M[z][0], Mz);
  
-		for (int k = 1; k < Nt; k++) {
+		for (int k = 0; k < Nt - 1; k++) {
 
-			const float* gb = (const float[]){ u[k - 1] * p.B1, p.v[k - 1] * p.B1, p.w[k - 1] * Bz };
+			const float* gb = (const float[]){ u[k] * p.B1, p.v[k] * p.B1, p.w[k] * Bz };
 
 			NESTED(void, bloch_matrix_fun, (int N, float (*A)[N][N], float t))
 			{
 				(void)N;
 				(void)t;
 
-				bloch_matrix_ode((*A), p.r1, p.r2, gb);
+				bloch_matrix_ode(*A, p.r1, p.r2, gb);
 				(*A)[2][3] = p.M0c * (*A)[2][3];
 			};
 			
-			crank_nicolson(p.dt, 4, Mz, (k - 1) * p.dt, k * p.dt, bloch_matrix_fun);
-			vecf_copy(3, M[z][k], Mz);
+			crank_nicolson(p.dt, 4, Mz, k * p.dt, (k + 1) * p.dt, bloch_matrix_fun);
+			vecf_copy(3, M[z][k + 1], Mz);
 		}
 	}
 }
@@ -69,7 +69,7 @@ void cn_bloch(int Nx, int Nt, float M[Nx][Nt][3], const float u[Nt - 1], const s
 void cn_adjoint(int Nx, int Nt, float P[Nx][Nt - 1][3], const float u[Nt - 1], 
 	const float PT[Nx][3], const struct puls_opt_pars p)
 {
-	float Pz[4] = { 0. };
+	float Pz[4] = { };
 
 	// Loop over each voxel in the slice profile
 	for (int z = 0; z < Nx; z++) {
@@ -120,7 +120,7 @@ float objfun(int Nu, float G[Nu], struct Xk_struct* Xk, const struct puls_opt_pa
 	// Zero padding of control to readout time
 	float (*u)[p.Nt - 1] = xmalloc(sizeof *u);
 
-	memset(u, 0, sizeof *u);
+	vecf_zero(p.Nt - 1, *u);
 	vecf_copy(p.Nu, *u, iu);
 
 	// Solve state equation
@@ -136,6 +136,7 @@ float objfun(int Nu, float G[Nu], struct Xk_struct* Xk, const struct puls_opt_pa
 		for (int c = 0; c < 3; c++) {
 
 			(*res)[z][c] = (*M)[z][p.Nt - 1][c] - p.Md[c * p.Nx + z];
+
 			res_norm_sqr += (*res)[z][c] * (*res)[z][c];
 		}
 	}
@@ -208,10 +209,11 @@ void apply_Hess(int N, float Hdu[N], const struct puls_opt_pars p, const struct 
 
 	// Zero padding of control to readout time
 	float (*du)[p.Nt - 1] = xmalloc(sizeof *du);
-	memset(*du, 0, sizeof *du);
+
+	vecf_zero(p.Nt - 1, *du);
 	vecf_copy(p.Nu, *du, idu);
 
-	memset(Hdu, 0, (size_t)p.Nu * sizeof(float));
+	vecf_zero(p.Nu, Hdu);
 	vecf_saxpy(p.Nu, Hdu, p.alpha, *du); // Hdu = alpha * du
 
 	// Loop over each voxel in the slice profile
@@ -310,11 +312,9 @@ void apply_Hess(int N, float Hdu[N], const struct puls_opt_pars p, const struct 
 static float dist2bdy(int N, const float du[N], const float p[N], float trad, tr_cg_dot_t ip)
 {
 	// find distance to trust-region boundary from du in direction p
-	float dd = 0., xd = 0., xx = 0.;
-
-	dd = NESTED_CALL(ip, (N, p, p));
-	xd = NESTED_CALL(ip, (N, du, p));
-	xx = NESTED_CALL(ip, (N, du, du));
+	float dd = NESTED_CALL(ip, (N, p, p));
+	float xd = NESTED_CALL(ip, (N, du, p));
+	float xx = NESTED_CALL(ip, (N, du, du));
 
 	float ss = trad * trad;
 	float det = xd * xd + dd * (ss - xx);
@@ -342,7 +342,6 @@ enum TRCG_STATUS tr_cg(int Nu, float du[Nu], int* it, const float g[Nu], float t
 	  tr_cg_fun1_t H_func, tr_cg_dot_t ip)
 {
 	enum TRCG_STATUS flag;
-	float pHp, tau, al, step_norm, nrk, beta;
 	float (*Hp)[Nu] = xmalloc(sizeof *Hp);
 	float (*temp)[Nu] = xmalloc(sizeof *temp);
 	float (*r)[Nu] = xmalloc(sizeof *r);
@@ -362,30 +361,31 @@ enum TRCG_STATUS tr_cg(int Nu, float du[Nu], int* it, const float g[Nu], float t
 	while (true) {
 
 		NESTED_CALL(H_func, (Nu, *Hp, *p));
-		pHp = NESTED_CALL(ip, (Nu, *p, *Hp));
+
+		float pHp = NESTED_CALL(ip, (Nu, *p, *Hp));
 
 		// Check for negative curvature
 		if (pHp < __FLT_MIN__) {
 
-			tau = dist2bdy(Nu, du, *p, trad, ip); 	// Go to boundary
+			float tau = dist2bdy(Nu, du, *p, trad, ip); 	// Go to boundary
 			vecf_saxpy(Nu, du, tau, *p); 		// du = du + tau * p
 
 			flag = TRCG_NEGATIVE_CURVATURE;
 			break;
 		}
 
-		al = nr / pHp;
+		float al = nr / pHp;
 
 		// Check if step is too large
 		vecf_copy(Nu, *temp, du);
 		vecf_saxpy(Nu, *temp, al, *p);
 
-		step_norm = NESTED_CALL(ip, (Nu, *temp, *temp));
+		float step_norm = NESTED_CALL(ip, (Nu, *temp, *temp));
 
 		if (step_norm >= trad * trad) {
 
-			tau = dist2bdy(Nu, du, *p, trad, ip); 	// Go to boundary
-			vecf_saxpy(Nu, du, tau, *p); 		// du = du + tau * p
+			float tau = dist2bdy(Nu, du, *p, trad, ip); 	// Go to boundary
+			vecf_saxpy(Nu, du, tau, *p); 			// du = du + tau * p
 
 			flag = TRCG_STEP_TOO_LARGE;
 			break;
@@ -394,7 +394,7 @@ enum TRCG_STATUS tr_cg(int Nu, float du[Nu], int* it, const float g[Nu], float t
 		vecf_saxpy(Nu, du, al, *p);  // du = du + al * p
 		vecf_saxpy(Nu, *r, -al, *Hp); // r = r - al * Hp
 
-		nrk = NESTED_CALL(ip, (Nu, *r, *r));
+		float nrk = NESTED_CALL(ip, (Nu, *r, *r));
 
 		// Check convergence
 		if (nrk < np.cgtol * powf(nr0, 1.3f)) { // Norm of residual small enough
@@ -408,7 +408,7 @@ enum TRCG_STATUS tr_cg(int Nu, float du[Nu], int* it, const float g[Nu], float t
 			break;
 		}
 
-		beta = nrk / nr;
+		float beta = nrk / nr;
 		vecf_sxpay(Nu, beta, *p, *r); // p = r + beta * p
 
 		nr = nrk;
@@ -448,6 +448,7 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 	};
 
 	float (*G)[Nu] = xmalloc(sizeof *G);
+
 	struct Xk_struct Xk;
 	Xk.N = md_alloc(3, (long[3]) { 3, p.Nx, p.Nt - 1 }, sizeof(float));
 	Xk.P = md_alloc(3, (long[3]) { p.Nx, p.Nt - 1, 3 }, sizeof(float));
