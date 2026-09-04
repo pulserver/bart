@@ -1,6 +1,10 @@
 /* Copyright 2025-2026. TU Graz. Institute of Biomedical Imaging.
  * All rights reserved. Use of this source code is governed by
  * a BSD-style license which can be found in the LICENSE file.
+ *
+ * CS Aigner, C Clason, A Rund, and R Stollberger.
+ * Efficient high-resolution RF pulse  design applied to simultaneous multi-slice excitation.
+ * J Magn Reson 2016;263:33–44.
  */
 
 #include <math.h>
@@ -334,16 +338,10 @@ static float dist2bdy(int N, const float du[N], const float p[N], float trad, tr
 /// @param trad Radius of trust region
 /// @param H_func Function that computes the action of the Hessian H on a given vector p s.t. Hp = H(p)
 /// @param ip Inner product function: ip(x,y)
-/// @return Convergence FLAG:
-///		0: TRCG converged to the desired tolerance TOL within IT iterations
-///		1: TRCG iterated MAXIT times but did not converge
-///		2: TRCG terminated because the iterate left the trust region
-///		3: TRCG terminated because negative curvature was encountered
-enum TRCG_STATUS tr_cg(int iter, float tol, float trad,
+void tr_cg(int iter, float tol, float trad,
 	  int Nu, float du[Nu], int* it, const float g[Nu],
 	  tr_cg_fun1_t H_func, tr_cg_dot_t ip)
 {
-	enum TRCG_STATUS flag;
 	float (*Hp)[Nu] = xmalloc(sizeof *Hp);
 	float (*temp)[Nu] = xmalloc(sizeof *temp);
 	float (*r)[Nu] = xmalloc(sizeof *r);
@@ -372,7 +370,7 @@ enum TRCG_STATUS tr_cg(int iter, float tol, float trad,
 			float tau = dist2bdy(Nu, du, *p, trad, ip); 	// Go to boundary
 			vecf_saxpy(Nu, du, tau, *p); 		// du = du + tau * p
 
-			flag = TRCG_NEGATIVE_CURVATURE;
+			// TRCG_NEGATIVE_CURVATURE;
 			break;
 		}
 
@@ -389,7 +387,7 @@ enum TRCG_STATUS tr_cg(int iter, float tol, float trad,
 			float tau = dist2bdy(Nu, du, *p, trad, ip); 	// Go to boundary
 			vecf_saxpy(Nu, du, tau, *p); 			// du = du + tau * p
 
-			flag = TRCG_STEP_TOO_LARGE;
+			// TRCG_STEP_TOO_LARGE;
 			break;
 		}
 
@@ -401,14 +399,13 @@ enum TRCG_STATUS tr_cg(int iter, float tol, float trad,
 		// Check convergence
 		if (nrk < tol * powf(nr0, 1.3f)) { // Norm of residual small enough
 
-			flag = TRCG_CONVERGED;
+			// TRCG_CONVERGED;
 			break;
-
 		}
 
 		if (*it == iter) { // Too many iterations, but not converged
 
-			flag = TRCG_MAX_ITERATIONS;
+			// TRCG_MAX_ITERATIONS;
 			break;
 		}
 
@@ -423,16 +420,11 @@ enum TRCG_STATUS tr_cg(int iter, float tol, float trad,
 	xfree(p);
 	xfree(Hp);
 	xfree(temp);
-
-	return flag;
 }
 
 /// @brief The trust-region CG-Newton method computes the optimal control u. 
 ///	   The functional to be minimized is specified using the function handles OBJFUN, which 
 ///	   evaluates functional and gradient, and APPLY_HESS, which computes the action of the Hessian on a given direction. 
-/// 
-///        C. S. Aigner, C. Clason, A. Rund, and R. Stollberger, ‘Efficient high-resolution RF pulse 
-///        design applied to simultaneous multi-slice excitation’, J. Magn. Reson., vol. 263, pp. 33–44, Feb. 2016.
 /// 
 /// @param Nu Number of temporal control points
 /// @param u Optimal control u
@@ -465,7 +457,7 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 
 	vecf_copy(p.Nu, u, u0);
 
-	debug_printf(DP_DEBUG1, "it \tJ \t\t|g| \t\tflag \trho \t\tdJa/dJm \tcgits\n");
+	debug_printf(DP_DEBUG1, "it \tJ \t\t|g| \t\trho \t\tdJa/dJm \tcgits\n");
 	debug_printf(DP_DEBUG1, "%d\t%1.3e\t%1.3e\n", it, J, nrG0);
 
 	int cgit;
@@ -483,7 +475,7 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 	for (; it < np.maxit; it++) {
 
 		// Minimize quadratic model
-		int flag = tr_cg(np.cgits, np.cgtol, rho, p.Nu, *du, &cgit, *G, CLOSURE(tr_cg_fun1_t, Hmult), CLOSURE(tr_cg_dot_t, ip));
+		tr_cg(np.cgits, np.cgtol, rho, p.Nu, *du, &cgit, *G, CLOSURE(tr_cg_fun1_t, Hmult), CLOSURE(tr_cg_dot_t, ip));
 
 		vecf_axpbz(p.Nu, *udu, 1., u, 1., *du); // udu = u + du
 
@@ -517,7 +509,7 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 
 		nrG = sqrtf(ip(p.Nu, *G, *G));
 
-		debug_printf(DP_DEBUG1, "%d\t%1.3e\t%1.3e\t%d\t%1.3e\t%1.3e\t%d\n", it + 1, J, nrG, flag, rho, Jratio, cgit);
+		debug_printf(DP_DEBUG1, "%d\t%1.3e\t%1.3e\t%1.3e\t%1.3e\t%d\n", it + 1, J, nrG, rho, Jratio, cgit);
 
 		if ((nrG < np.reltol * nrG0) || (nrG < np.abstol))		// Tolerance reached
 			break;
