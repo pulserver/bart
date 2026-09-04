@@ -74,7 +74,7 @@ typedef CLOSURE_TYPE(float, (int N, const float x[N], const float y[N])) tr_cg_d
 
 void tr_cg(int iter, float tol, float trad,
 	int Nu, float du[Nu], int* it, const float g[Nu],
-	tr_cg_fun1_t H_func, tr_cg_dot_t ti);
+	tr_cg_fun1_t H_func, float dt);
 
 void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct tr_pars np, float* u0);
 

@@ -313,19 +313,7 @@ void apply_Hess(int N, float Hdu[N], const struct puls_opt_pars p, const struct 
 	xfree(dNz);
 }
 
-static float dist2bdy(int N, const float du[N], const float p[N], float trad, tr_cg_dot_t ip)
-{
-	// find distance to trust-region boundary from du in direction p
-	float dd = NESTED_CALL(ip, (N, p, p));
-	float xd = NESTED_CALL(ip, (N, du, p));
-	float xx = NESTED_CALL(ip, (N, du, du));
 
-	float ss = trad * trad;
-	float det = xd * xd + dd * (ss - xx);
-	float tau = (ss - xx) / (xd + sqrtf(det));
-
-	return tau;
-}
 
 /// @brief TR_CG iteration solves the Newton step HDU = -G  using Steihaug's trust-region 
 ///	   conjugate gradient method.
@@ -340,8 +328,20 @@ static float dist2bdy(int N, const float du[N], const float p[N], float trad, tr
 /// @param ip Inner product function: ip(x,y)
 void tr_cg(int iter, float tol, float trad,
 	  int Nu, float du[Nu], int* it, const float g[Nu],
-	  tr_cg_fun1_t H_func, tr_cg_dot_t ip)
+	  tr_cg_fun1_t H_func, float dt)
 {
+	NESTED(float, dist2boundary, (int N, const float du[N], const float p[N]))
+	{
+		// find distance to trust-region boundary from du in direction p
+		float dd = dt * vecf_sdot(N, p, p);
+		float xd = dt * vecf_sdot(N, du, p);
+		float xx = dt * vecf_sdot(N, du, du);
+
+		float ss = trad * trad;
+		float det = xd * xd + dd * (ss - xx);
+		return (ss - xx) / (xd + sqrtf(det));
+	};
+
 	float (*Hp)[Nu] = xmalloc(sizeof *Hp);
 	float (*temp)[Nu] = xmalloc(sizeof *temp);
 	float (*r)[Nu] = xmalloc(sizeof *r);
@@ -353,7 +353,7 @@ void tr_cg(int iter, float tol, float trad,
 	vecf_copy(Nu, *p, *r); 	  // p = -g
 
 	// Compute initial residual norm
-	float nr = NESTED_CALL(ip, (Nu, *r, *r));
+	float nr = dt * vecf_sdot(Nu, *r, *r);
 	float nr0 = sqrtf(nr);
 
 	*it = 1;
@@ -362,13 +362,14 @@ void tr_cg(int iter, float tol, float trad,
 
 		NESTED_CALL(H_func, (Nu, *Hp, *p));
 
-		float pHp = NESTED_CALL(ip, (Nu, *p, *Hp));
+		float pHp = dt * vecf_sdot(Nu, *p, *Hp);
 
 		// Check for negative curvature
 		if (pHp < __FLT_MIN__) {
 
-			float tau = dist2bdy(Nu, du, *p, trad, ip); 	// Go to boundary
-			vecf_saxpy(Nu, du, tau, *p); 		// du = du + tau * p
+			// Go to boundary
+			float tau = dist2boundary(Nu, du, *p);
+			vecf_saxpy(Nu, du, tau, *p);
 
 			// TRCG_NEGATIVE_CURVATURE;
 			break;
@@ -380,12 +381,13 @@ void tr_cg(int iter, float tol, float trad,
 		vecf_copy(Nu, *temp, du);
 		vecf_saxpy(Nu, *temp, al, *p);
 
-		float step_norm = NESTED_CALL(ip, (Nu, *temp, *temp));
+		float step_norm = dt * vecf_sdot(Nu, *temp, *temp);
 
 		if (step_norm >= trad * trad) {
 
-			float tau = dist2bdy(Nu, du, *p, trad, ip); 	// Go to boundary
-			vecf_saxpy(Nu, du, tau, *p); 			// du = du + tau * p
+			// Go to boundary
+			float tau = dist2boundary(Nu, du, *p);
+			vecf_saxpy(Nu, du, tau, *p);
 
 			// TRCG_STEP_TOO_LARGE;
 			break;
@@ -394,7 +396,7 @@ void tr_cg(int iter, float tol, float trad,
 		vecf_saxpy(Nu, du, al, *p);  // du = du + al * p
 		vecf_saxpy(Nu, *r, -al, *Hp); // r = r - al * Hp
 
-		float nrk = NESTED_CALL(ip, (Nu, *r, *r));
+		float nrk = dt * vecf_sdot(Nu, *r, *r);
 
 		// Check convergence
 		if (nrk < tol * powf(nr0, 1.3f)) { // Norm of residual small enough
@@ -433,16 +435,6 @@ void tr_cg(int iter, float tol, float trad,
 /// @param u0 Initial guess for the control u
 void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct tr_pars np, float* u0)
 {
-	NESTED(float, ip, (int N, const float x[N], const float y[N]))
-	{
-		float sum = 0.;
-
-		for (int i = 0; i < N; i++)
-			sum += p.dt * x[i] * y[i];
-
-		return sum;
-	};
-
 	float (*G)[Nu] = xmalloc(sizeof *G);
 
 	struct Xk_struct Xk;
@@ -453,7 +445,7 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 	int it = 0;
 
 	float J = objfun(p.Nu, *G, &Xk, p, u0);
-	float nrG0 = sqrtf(ip(p.Nu, *G, *G));
+	float nrG0 = sqrtf(p.dt) * vecf_norm(p.Nu, *G);
 
 	vecf_copy(p.Nu, u, u0);
 
@@ -475,7 +467,7 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 	for (; it < np.maxit; it++) {
 
 		// Minimize quadratic model
-		tr_cg(np.cgits, np.cgtol, rho, p.Nu, *du, &cgit, *G, CLOSURE(tr_cg_fun1_t, Hmult), CLOSURE(tr_cg_dot_t, ip));
+		tr_cg(np.cgits, np.cgtol, rho, p.Nu, *du, &cgit, *G, CLOSURE(tr_cg_fun1_t, Hmult), p.dt);
 
 		vecf_axpbz(p.Nu, *udu, 1., u, 1., *du); // udu = u + du
 
@@ -484,8 +476,8 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 
 		Hmult(p.Nu, *Hmult_res, *du);
 
-		dJm = -(0.5 * ip(p.Nu, *du, *Hmult_res) 		// Predicted reduction in J
-			+ ip(p.Nu, *G, *du));
+		dJm = -p.dt * (0.5 * vecf_sdot(p.Nu, *du, *Hmult_res) 		// Predicted reduction in J
+			+ vecf_sdot(p.Nu, *G, *du));
 
 		Jratio = dJa / dJm; 						// Ratio of real and predicted decrease
 
@@ -507,7 +499,7 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 		else if (Jratio < np.sig2)				 	// Model bad
 			rho = 1. / np.q * rho;				 	// Decrease radius
 
-		nrG = sqrtf(ip(p.Nu, *G, *G));
+		nrG = sqrtf(p.dt) * vecf_norm(p.Nu, *G);
 
 		debug_printf(DP_DEBUG1, "%d\t%1.3e\t%1.3e\t%1.3e\t%1.3e\t%d\n", it + 1, J, nrG, rho, Jratio, cgit);
 
