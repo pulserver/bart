@@ -325,12 +325,13 @@ static float dist2bdy(int N, const float du[N], const float p[N], float trad, tr
 
 /// @brief TR_CG iteration solves the Newton step HDU = -G  using Steihaug's trust-region 
 ///	   conjugate gradient method.
+/// @param iter max iterations
+/// @param tol tolerance
 /// @param Nu Number of temporal control points
 /// @param du Candidate step u computed by TR-CG
 /// @param it Number of TR-CG iterations performed
 /// @param g Gradient of the objective function
 /// @param trad Radius of trust region
-/// @param np Trust-region Newton method parameters
 /// @param H_func Function that computes the action of the Hessian H on a given vector p s.t. Hp = H(p)
 /// @param ip Inner product function: ip(x,y)
 /// @return Convergence FLAG:
@@ -338,7 +339,8 @@ static float dist2bdy(int N, const float du[N], const float p[N], float trad, tr
 ///		1: TRCG iterated MAXIT times but did not converge
 ///		2: TRCG terminated because the iterate left the trust region
 ///		3: TRCG terminated because negative curvature was encountered
-enum TRCG_STATUS tr_cg(int Nu, float du[Nu], int* it, const float g[Nu], float trad, const struct tr_pars np,
+enum TRCG_STATUS tr_cg(int iter, float tol, float trad,
+	  int Nu, float du[Nu], int* it, const float g[Nu],
 	  tr_cg_fun1_t H_func, tr_cg_dot_t ip)
 {
 	enum TRCG_STATUS flag;
@@ -397,12 +399,14 @@ enum TRCG_STATUS tr_cg(int Nu, float du[Nu], int* it, const float g[Nu], float t
 		float nrk = NESTED_CALL(ip, (Nu, *r, *r));
 
 		// Check convergence
-		if (nrk < np.cgtol * powf(nr0, 1.3f)) { // Norm of residual small enough
+		if (nrk < tol * powf(nr0, 1.3f)) { // Norm of residual small enough
 
 			flag = TRCG_CONVERGED;
 			break;
 
-		} else if (*it == np.cgits) { // Too many iterations, but not converged
+		}
+
+		if (*it == iter) { // Too many iterations, but not converged
 
 			flag = TRCG_MAX_ITERATIONS;
 			break;
@@ -479,7 +483,7 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 	for (; it < np.maxit; it++) {
 
 		// Minimize quadratic model
-		int flag = tr_cg(p.Nu, *du, &cgit, *G, rho, np, CLOSURE(tr_cg_fun1_t, Hmult), CLOSURE(tr_cg_dot_t, ip));
+		int flag = tr_cg(np.cgits, np.cgtol, rho, p.Nu, *du, &cgit, *G, CLOSURE(tr_cg_fun1_t, Hmult), CLOSURE(tr_cg_dot_t, ip));
 
 		vecf_axpbz(p.Nu, *udu, 1., u, 1., *du); // udu = u + du
 

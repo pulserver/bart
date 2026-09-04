@@ -1,3 +1,4 @@
+
 struct puls_opt_pars {
 	// Space discretization
 	double a; 	// Domain border in m
@@ -73,7 +74,8 @@ enum TRCG_STATUS { TRCG_CONVERGED, TRCG_NEGATIVE_CURVATURE, TRCG_STEP_TOO_LARGE,
 typedef CLOSURE_TYPE(void, (int N, float Hp[N], const float p[N])) tr_cg_fun1_t;
 typedef CLOSURE_TYPE(float, (int N, const float x[N], const float y[N])) tr_cg_dot_t;
 
-enum TRCG_STATUS tr_cg(int Nu, float du[Nu], int* it, const float g[Nu], float trad, const struct tr_pars np,
+enum TRCG_STATUS tr_cg(int iter, float tol, float trad,
+	int Nu, float du[Nu], int* it, const float g[Nu],
 	tr_cg_fun1_t H_func, tr_cg_dot_t ti);
 
 void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct tr_pars np, float* u0);
