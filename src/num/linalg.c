@@ -55,6 +55,13 @@ void mat_identity(int A, int B, complex float x[A][B])
 			x[i][j] = (i == j) ? 1. : 0.;
 }
 
+void matf_identity(int A, int B, float x[A][B])
+{
+	for (int i = 0; i < A; i++)
+		for (int j = 0; j < B; j++)
+			x[i][j] = (i == j) ? 1. : 0.;
+}
+
 void mat_zero(int A, int B, complex float m[A][B])
 {
 	for (int a = 0; a < A; a++)
@@ -627,6 +634,23 @@ void vec_saxpy(int N, complex float x[N], complex float alpha, const complex flo
 	for (int k = 0; k < N; k++)
 		x[k] += alpha * y[k];
 }
+
+
+void mat_saxpy(int N, int M, complex float x[N][M], complex float alpha, const complex float y[N][M])
+{
+	for (int k = 0; k < N; k++)
+		for (int l = 0; l < M; l++)
+			x[k][l] += alpha * y[k][l];
+}
+
+
+void matf_saxpy(int N, int M, float x[N][M], float alpha, const float y[N][M])
+{
+	for (int k = 0; k < N; k++)
+		for (int l = 0; l < M; l++)
+			x[k][l] += alpha * y[k][l];
+}
+
 
 void gram_matrix(int N, complex float cov[N][N], int L, const complex float data[N][L])
 {

@@ -2,6 +2,7 @@
 #include <complex.h>
 
 extern void mat_identity(int A, int B, complex float x[A][B]);
+extern void matf_identity(int A, int B, float x[A][B]);
 extern void mat_zero(int A, int B, complex float x[A][B]);
 extern void mat_gaussian(int A, int B, complex float x[A][B]);
 extern void mat_mul(int A, int B, int C, complex float x[A][C], const complex float y[A][B], const complex float z[B][C]);
@@ -32,6 +33,8 @@ extern complex float mat_det(int N, const complex float mat[N][N]);
 extern void mat_vecmul(int A, int B, complex float out[A], const complex float mat[A][B], const complex float in[B]);
 extern void matf_vecmul(int A, int B, float out[A], const float mat[A][B], const float in[B]);
 extern void matf_solve(int N, float x[N], const float m[N][N], const float y[N]);
+extern void mat_saxpy(int N, int M, complex float x[N][M], complex float alpha, const complex float y[N][M]);
+extern void matf_saxpy(int N, int M, float x[N][M], float alpha, const float y[N][M]);
 
 extern void mat_kron(int A, int B, int C, int D,
 		complex float out[A * C][B * D], const complex float in1[A][B], const complex float in2[C][D]);

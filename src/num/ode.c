@@ -76,11 +76,9 @@ void (crank_nicolson)(float h, int N, float x[N], float st, float end, ode_cn_f 
 		 */
 
 		float B[N][N];
-
 		// (I + dt/2 * A)
-		for (int i = 0; i < N; i++)
-			for (int j = 0; j < N; j++)
-				B[i][j] = (i == j) + h * A[i][j] / 2.;
+		matf_identity(N, N, B);
+		matf_saxpy(N, N, B, +h / 2., A);
 
 		float tmp[N];
 		matf_vecmul(N, N, tmp, B, x); // tmp = (I + dt/2 * A) * x_{n-1}
@@ -88,10 +86,8 @@ void (crank_nicolson)(float h, int N, float x[N], float st, float end, ode_cn_f 
 		t += h;
 
 		// (I - dt/2 * A)
-		for (int i = 0; i < N; i++)
-			for (int j = 0; j < N; j++)
-				B[i][j] = (i == j) - h * A[i][j] / 2.;
-
+		matf_identity(N, N, B);
+		matf_saxpy(N, N, B, -h / 2., A);
 		matf_solve(N, x, B, tmp);
 
 		if (t + h > end)
@@ -131,9 +127,8 @@ void (crank_nicolson_adjoint)(float h, int N, float x[N], float st, float end, o
 
 		 // (I + dt/2 * Akp1)
 		float B[N][N];
-		for (int i = 0; i < N; i++)
-			for (int j = 0; j < N; j++)
-				B[i][j] = (i == j) + h * Akp1[i][j] / 2.;
+		matf_identity(N, N, B);
+		matf_saxpy(N, N, B, +h / 2., Akp1);
 
 		float tmp[N];
 		matf_vecmul(N, N, tmp, B, x); // tmp = (I + dt/2 * Akp1) * x_{n+1}
@@ -141,10 +136,8 @@ void (crank_nicolson_adjoint)(float h, int N, float x[N], float st, float end, o
 		t -= h;
 
 		// (I - dt/2 * Ak)
-		for (int i = 0; i < N; i++)
-			for (int j = 0; j < N; j++)
-				B[i][j] = (i == j) - h * Ak[i][j] / 2.;
-
+		matf_identity(N, N, B);
+		matf_saxpy(N, N, B, -h / 2., Ak);
 		matf_solve(N, x, B, tmp);
 
 		if (t - h < st)
