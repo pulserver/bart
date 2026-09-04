@@ -319,16 +319,15 @@ void apply_Hess(int N, float Hdu[N], const struct puls_opt_pars p, const struct 
 ///	   conjugate gradient method.
 /// @param iter max iterations
 /// @param tol tolerance
+/// @param trad Radius of trust region
+/// @param dt time step
+/// @param magic_power magic parameter for stopping criterion
 /// @param Nu Number of temporal control points
 /// @param du Candidate step u computed by TR-CG
-/// @param it Number of TR-CG iterations performed
 /// @param g Gradient of the objective function
-/// @param trad Radius of trust region
 /// @param H_func Function that computes the action of the Hessian H on a given vector p s.t. Hp = H(p)
-/// @param ip Inner product function: ip(x,y)
-void tr_cg(int iter, float tol, float trad,
-	  int Nu, float du[Nu], int* it, const float g[Nu],
-	  tr_cg_fun1_t H_func, float dt)
+void tr_cg(int iter, float tol, float trad, float dt, float magic_power,
+	  int Nu, float du[Nu], const float g[Nu], tr_cg_fun1_t H_func)
 {
 	NESTED(void, go2boundary, (int N, float du[N], const float p[N]))
 	{
@@ -351,16 +350,14 @@ void tr_cg(int iter, float tol, float trad,
 
 	vecf_zero(Nu, du);
 	vecf_zero(Nu, *r);
-	vecf_saxpy(Nu, *r, -1, g); // r = -g
+	vecf_saxpy(Nu, *r, -1., g); // r = -g
 	vecf_copy(Nu, *p, *r); 	  // p = -g
 
 	// Compute initial residual norm
 	float nr = dt * vecf_sdot(Nu, *r, *r);
 	float nr0 = sqrtf(nr);
 
-	*it = 1;
-
-	while (true) {
+	for (int it = 0; it < iter; it++) {
 
 		NESTED_CALL(H_func, (Nu, *Hp, *p));
 
@@ -393,24 +390,14 @@ void tr_cg(int iter, float tol, float trad,
 		float nrk = dt * vecf_sdot(Nu, *r, *r);
 
 		// Check convergence
-		if (nrk < tol * powf(nr0, 1.3f)) { // Norm of residual small enough
-
-			// TRCG_CONVERGED;
-			break;
-		}
-
-		if (*it == iter) { // Too many iterations, but not converged
-
-			// TRCG_MAX_ITERATIONS;
-			break;
-		}
+		if (nrk < tol * powf(nr0, magic_power))
+			break; // TRCG_CONVERGED;
 
 		float beta = nrk / nr;
 		vecf_sxpay(Nu, beta, *p, *r); // p = r + beta * p
 
 		nr = nrk;
-		(*it)++;
-	}
+	}	// TRCG_MAX_ITERATIONS;
 
 	xfree(r);
 	xfree(p);
@@ -436,17 +423,14 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 	Xk.P = md_alloc(3, (long[3]) { p.Nx, p.Nt - 1, 3 }, sizeof(float));
 	Xk.u = md_alloc(1, (long[1]) { p.Nt - 1 }, sizeof(float));
 
-	int it = 0;
-
 	float J = objfun(p.Nu, *G, &Xk, p, u0);
 	float nrG0 = sqrtf(p.dt) * vecf_norm(p.Nu, *G);
 
 	vecf_copy(p.Nu, u, u0);
 
-	debug_printf(DP_DEBUG1, "it \tJ \t\t|g| \t\trho \t\tdJa/dJm \tcgits\n");
-	debug_printf(DP_DEBUG1, "%d\t%1.3e\t%1.3e\n", it, J, nrG0);
+	debug_printf(DP_DEBUG1, "it \tJ \t\t|g| \t\trho \t\tdJa/dJm\n");
+	debug_printf(DP_DEBUG1, "%d\t%1.3e\t%1.3e\n", 0, J, nrG0);
 
-	int cgit;
 	float dJm, Jratio, nrG;
 	float (*du)[p.Nu] = xmalloc(sizeof *du);
 	float (*udu)[p.Nu] = xmalloc(sizeof *udu);
@@ -458,10 +442,10 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 		apply_Hess(N, Hdu, p, &Xk, du);
 	};
 
-	for (; it < np.maxit; it++) {
+	for (int it = 0; it < np.maxit; it++) {
 
 		// Minimize quadratic model
-		tr_cg(np.cgits, np.cgtol, rho, p.Nu, *du, &cgit, *G, CLOSURE(tr_cg_fun1_t, Hmult), p.dt);
+		tr_cg(np.cgits, np.cgtol, rho, p.dt, 1.3, p.Nu, *du, *G, CLOSURE(tr_cg_fun1_t, Hmult));
 
 		vecf_axpbz(p.Nu, *udu, 1., u, 1., *du); // udu = u + du
 
@@ -495,7 +479,7 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 
 		nrG = sqrtf(p.dt) * vecf_norm(p.Nu, *G);
 
-		debug_printf(DP_DEBUG1, "%d\t%1.3e\t%1.3e\t%1.3e\t%1.3e\t%d\n", it + 1, J, nrG, rho, Jratio, cgit);
+		debug_printf(DP_DEBUG1, "%d\t%1.3e\t%1.3e\t%1.3e\t%1.3e\n", it + 1, J, nrG, rho, Jratio);
 
 		if ((nrG < np.reltol * nrG0) || (nrG < np.abstol))		// Tolerance reached
 			break;
