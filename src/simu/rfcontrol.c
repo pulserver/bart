@@ -330,7 +330,7 @@ void tr_cg(int iter, float tol, float trad,
 	  int Nu, float du[Nu], int* it, const float g[Nu],
 	  tr_cg_fun1_t H_func, float dt)
 {
-	NESTED(float, dist2boundary, (int N, const float du[N], const float p[N]))
+	NESTED(void, go2boundary, (int N, float du[N], const float p[N]))
 	{
 		// find distance to trust-region boundary from du in direction p
 		float dd = dt * vecf_sdot(N, p, p);
@@ -339,7 +339,9 @@ void tr_cg(int iter, float tol, float trad,
 
 		float ss = trad * trad;
 		float det = xd * xd + dd * (ss - xx);
-		return (ss - xx) / (xd + sqrtf(det));
+		float tau = (ss - xx) / (xd + sqrtf(det));
+
+		vecf_saxpy(N, du, tau, p);
 	};
 
 	float (*Hp)[Nu] = xmalloc(sizeof *Hp);
@@ -367,12 +369,8 @@ void tr_cg(int iter, float tol, float trad,
 		// Check for negative curvature
 		if (pHp < __FLT_MIN__) {
 
-			// Go to boundary
-			float tau = dist2boundary(Nu, du, *p);
-			vecf_saxpy(Nu, du, tau, *p);
-
-			// TRCG_NEGATIVE_CURVATURE;
-			break;
+			go2boundary(Nu, du, *p);
+			break; // TRCG_NEGATIVE_CURVATURE;
 		}
 
 		float al = nr / pHp;
@@ -385,12 +383,8 @@ void tr_cg(int iter, float tol, float trad,
 
 		if (step_norm >= trad * trad) {
 
-			// Go to boundary
-			float tau = dist2boundary(Nu, du, *p);
-			vecf_saxpy(Nu, du, tau, *p);
-
-			// TRCG_STEP_TOO_LARGE;
-			break;
+			go2boundary(Nu, du, *p);
+			break;	// TRCG_STEP_TOO_LARGE;
 		}
 
 		vecf_saxpy(Nu, du, al, *p);  // du = du + al * p
