@@ -463,23 +463,21 @@ static int compare(const void* a, const void* b)
 	return out;
 }
 
-#ifndef NO_LAPACK
+
 // Compute weights and sample points for Gauss-Legendre quadrature
 void roots_weights_gauss_legendre(const int N, double mu0, double roots[N], double weights[N])
 {
 	double k[N];
+
 	for (int i = 0; i < N; i++)
 		k[i] = i;
 
-	double c_band[2][N];
-	for (int i = 0; i < 2; i++)
-		for (int j = 0; j < N; j++) {
+	double c_band[2][N] = { };
 
-			if ( (0 == i) && (0 < j) )
+	for (int i = 0; i < 2; i++)
+		for (int j = 0; j < N; j++)
+			if ((0 == i) && (0 < j))
 				c_band[i][j] = k[j] * sqrt(1. / (4. * k[j] * k[j] - 1.));
-			else
-				c_band[i][j] = 0.;
-		}
 
 	double c[N][N];
 	mat_band_reorder(N, 2, c, c_band, true);
@@ -550,6 +548,5 @@ void roots_weights_gauss_legendre(const int N, double mu0, double roots[N], doub
 	for (int i = 0; i < N; i++)
 		weights[i] *= mu0 / sum;
 }
-#endif
 
 

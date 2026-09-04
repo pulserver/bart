@@ -91,11 +91,9 @@ void (crank_nicolson)(float h, int N, float x[N], float st, float end, ode_cn_f 
 		for (int i = 0; i < N; i++)
 			for (int j = 0; j < N; j++)
 				B[i][j] = (i == j) - h * A[i][j] / 2.;
-#ifndef NO_LAPACK
+
 		matf_solve(N, x, B, tmp);
-#else
-		assert(0);
-#endif
+
 		if (t + h > end)
 			h = end - t;
 	}
@@ -147,11 +145,8 @@ void (crank_nicolson_adjoint)(float h, int N, float x[N], float st, float end, o
 			for (int j = 0; j < N; j++)
 				B[i][j] = (i == j) - h * Ak[i][j] / 2.;
 
-#ifndef NO_LAPACK
 		matf_solve(N, x, B, tmp);
-#else
-		assert(0);
-#endif
+
 		if (t - h < st)
 			h = t - st;
 	}
