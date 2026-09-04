@@ -110,14 +110,14 @@ int main_bet(int argc, char* argv[argc])
 	md_zabs(DIMS, in_dims, magnitude, in_data);
 	md_real(DIMS, in_dims, interm, magnitude);
 
-	float t = 0.0;
-	float t98 = 0.0;
-	float t2 = 0.0;
+	float t = 0.;
+	float t98 = 0.;
+	float t2 = 0.;
 
-	threshold(DIMS, in_dims, interm, out, &t, &t98, &t2);
+	bet_threshold(DIMS, in_dims, interm, out, &t, &t98, &t2);
 
-	float COG[3] = { 0.0, 0.0, 0.0 };
-	float R = 0.0f;
+	float COG[3] = { 0., 0., 0. };
+	float R = 0.;
 
 	compute_cog(DIMS, in_dims, out, resolution, &t,
 		&t98, COG, &R);
@@ -153,6 +153,7 @@ int main_bet(int argc, char* argv[argc])
 	stl_compute_normals(o_dims, out_model);
 
 	float* mask = md_alloc_sameplace(DIMS, in_dims, FL_SIZE, in_data);
+
 	md_clear(DIMS, in_dims, mask, FL_SIZE);
 	
 	if (mesh_to_mask_winding)
@@ -162,8 +163,8 @@ int main_bet(int argc, char* argv[argc])
 
 	if (erode > 0) {
 
-		complex float* mask_cmplx = md_alloc_sameplace(DIMS, in_dims,
-			CFL_SIZE, in_data);
+		complex float* mask_cmplx = md_alloc_sameplace(DIMS, in_dims, CFL_SIZE, in_data);
+
 		md_zcmpl_real(DIMS, in_dims, mask_cmplx, mask);
 
 		long er_mask_dims[DIMS];

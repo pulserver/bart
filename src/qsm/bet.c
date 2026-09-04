@@ -8,11 +8,11 @@
  * References:
  *
  * Smith SM. Fast robust automated brain extraction.
- * Hum Brain Mapp. 2002;17(3):143-155.
+ * Hum Brain Mapp. 2002;17:143-155.
  *
- *J acobson, Alec & Kavan, Ladislav & Sorkine-Hornung, Olga. (2013).
+ * Jacobson, Alec & Kavan, Ladislav & Sorkine-Hornung, Olga.
  * Robust inside-outside segmentation using generalized winding numbers.
- * ACM Transactions on Graphics. 32. 1-12. 10.1145/2461912.2461916.
+ * ACM Transactions on Graphics. 2013;32:1-12. 10.1145/2461912.2461916.
  */
 
 #include <assert.h>
@@ -48,10 +48,12 @@ static int cmp_float(const void* a, const void* b)
 	return (fa > fb) - (fa < fb);
 }
 
-void threshold(int N, long dims[N], float* img,
+
+void bet_threshold(int N, long dims[N], float* img,
 	float* new_img, float* t, float* t98, float* t2)
 {
-	long n = dims[0] * dims[1] * dims[2];
+	long n = md_calc_size(3, dims);
+
 	assert(n > 0);
 
 	float (*tmp)[n] = xmalloc(sizeof(*tmp));
@@ -62,6 +64,7 @@ void threshold(int N, long dims[N], float* img,
 
 	*t2  = quickselect(*tmp, n, k2);
 	*t98 = quickselect(*tmp, n, k98);
+
 	*t = *t2 + 0.1f * (*t98 - *t2);
 
 	for (long i = 0; i < n; i++) {
@@ -75,26 +78,26 @@ void threshold(int N, long dims[N], float* img,
 	xfree(tmp);
 }
 
+
 void compute_cog(int N, long dims[N], const float* img, const float res[3], float* t,
 	float* t98, float COG[3], float* R_out)
 {
-	assert(N>3);
-	assert(dims[0]!=1 && dims[1]!=1 && dims[2]!=1);
+	assert(N > 3);
+	assert(1 < md_calc_size(3, dims));
 
 	long nx = dims[0];
 	long ny = dims[1];
 	long nz = dims[2];
-	float sum_w = 0.0f;
-	float sum_x = 0.0f;
-	float sum_y = 0.0f;
-	float sum_z = 0.0f;
+
+	float sum_w = 0.;
+	float sum_x = 0.;
+	float sum_y = 0.;
+	float sum_z = 0.;
 	long number = 0;
-	float w = 0.0f;
+	float w = 0.;
 
 	for (int i = 0; i < nx; i++) {
-
 		for (int j = 0; j < ny; j++) {
-
 			for (int k = 0; k < nz; k++) {
 
 				long index = k * ny * nx + j * nx + i;
@@ -103,20 +106,20 @@ void compute_cog(int N, long dims[N], const float* img, const float res[3], floa
 
 				float value = img[index];
 
-				if (*t < value) {
+				if (*t >= value)
+					continue;
 
-					number++;
+				number++;
 
-					if (*t98 <= value)
-						w = *t98;
-					else
-						w = value;
+				if (*t98 <= value)
+					w = *t98;
+				else
+					w = value;
 
-					sum_w += w;
-					sum_x += w * i * res[0];
-					sum_y += w * j * res[1];
-					sum_z += w * k * res[2];
-				}
+				sum_w += w;
+				sum_x += w * i * res[0];
+				sum_y += w * j * res[1];
+				sum_z += w * k * res[2];
 			}
 		}
 	}
@@ -143,14 +146,12 @@ float compute_tm(int N, long dims[N], const float* image, const float voxel_size
 
 	assert(max_vals > 0);
 
-	float* vals = xmalloc((size_t)max_vals * sizeof(float));
+	float* vals = xmalloc(sizeof(float[max_vals]));
 
 	unsigned long n = 0;
 
 	for (int ix = 0; ix < nx; ix++) {
-
 		for (int iy = 0; iy < ny; iy++) {
-
 			for (int iz = 0; iz < nz; iz++) {
 
 				float x = ix * voxel_size[0] - COG[0];
@@ -162,7 +163,6 @@ float compute_tm(int N, long dims[N], const float* image, const float voxel_size
 					vals[n] = image[(iz) * ny * nx + (iy) * nx + (ix)];
 					n++;
 				}
-
 			}
 		}
 	}
@@ -176,13 +176,14 @@ float compute_tm(int N, long dims[N], const float* image, const float voxel_size
 	return tm;
 }
 
+
 static void compute_normal(int i, const double* verts, const struct neighbors* neigh,
 	const float COG[3], float n_hat[3])
 {
 	const double* v = &verts[3 * i];
 	const struct neighbors* nb = &neigh[i];
 
-	float n[3] = {0, 0, 0};
+	float n[3] = { 0., 0., 0. };
 
 	for (int k = 0; k < nb->n; k++) {
 
@@ -203,7 +204,7 @@ static void compute_normal(int i, const double* verts, const struct neighbors* n
 		n[2] += v1[0] * v2[1] - v1[1] * v2[0];
 	}
 
-	float norm = sqrtf(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
+	float norm = vec3_norm(n);
 
 	if (EPS_NORMAL > norm)
 		norm = 1.f;
@@ -287,8 +288,8 @@ static void sample_ray(int N, long dims[N], const float v[3], const float n_hat[
 		if (d <= d2 && intensity > *Imax)
 			*Imax = intensity;
 	}
-
 }
+
 
 static void update_vertex(int N, long dims[N], int i, double* verts, const struct neighbors* neigh,
 	const float* image, const float voxel_size[3], const float COG[3], float t2, float t,
@@ -437,7 +438,6 @@ static int intersect_triangle_z(const double v0[3], const double v1[3], const do
 			seg->a.y = p0[1] + alpha * (p1[1] - p0[1]);
 			break;
 		}
-
 	}
 
 	for (int i = 0; i < 3; i++) {
@@ -575,14 +575,13 @@ static double compute_solid_angle(const double p[3], const double v0[3], const d
 		c[d] = v2[d] - p[d];
 	}
 
-	float len_a = sqrtf(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
-	float len_b = sqrtf(b[0] * b[0] + b[1] * b[1] + b[2] * b[2]);
-	float len_c = sqrtf(c[0] * c[0] + c[1] * c[1] + c[2] * c[2]);
+	float len_a = vec3_norm(a);
+	float len_b = vec3_norm(a);
+	float len_c = vec3_norm(a);
 
-	float dot_ab = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-	float dot_bc = b[0] * c[0] + b[1] * c[1] + b[2] * c[2];
-	float dot_ca = c[0] * a[0] + c[1] * a[1] + c[2] * a[2];
-
+	float dot_ab = vec3_sdot(a, b);
+	float dot_bc = vec3_sdot(b, c);
+	float dot_ca = vec3_sdot(c, a);
 
 	float det_abc =  c[0] * (a[1] * b[2] - a[2] * b[1])
 		+ c[1] * (a[2] * b[0] - a[0] * b[2])
@@ -592,6 +591,7 @@ static double compute_solid_angle(const double p[3], const double v0[3], const d
 
 	return 2 * atan2(det_abc, denom);
 }
+
 
 void mesh_to_mask_winding_number(int N, long dims[N], float* mask, float resolution[3],
 	const double (*verts)[3], const int (*tris)[3], int ntris)
@@ -624,15 +624,13 @@ void mesh_to_mask_winding_number(int N, long dims[N], float* mask, float resolut
 			solid_angle_sum += compute_solid_angle(center, v0, v1, v2);
 		}
 
-		long pos[N];
-
-		for (int d = 0; d < N; d++)
-			pos[d] = 0;
+		long pos[N] = { };
 
 		pos[0] = i;
 		pos[1] = j;
 		pos[2] = k;
 
-		MD_ACCESS(N, strs, pos, mask) = (solid_angle_sum * factor) > 0.5 ? 1.f : 0.f;
+		MD_ACCESS(N, strs, pos, mask) = (solid_angle_sum * factor > 0.5) ? 1.f : 0.f;
 	}
 }
+
