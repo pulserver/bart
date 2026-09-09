@@ -65,6 +65,45 @@ int seq_grad_support_to_event(int E, struct seq_event ev[E], double start_offset
 }
 
 
+/*
+ * Find degenerated triangular events and merge them if possible.
+ */
+int seq_event_merge_degenerated_triangles(int E, struct seq_event ev[__VLA(E)])
+{
+	int ctr = 0;
+
+	for (int e = 0; e < E; e++) {
+
+		if (SEQ_EVENT_GRADIENT != ev[e].type)
+			continue;
+
+		if (ev[e].mid == ev[e].end) {
+
+			for (int f = 0; f < E; f++) {
+
+				if (SEQ_EVENT_GRADIENT != ev[f].type)
+					continue;
+
+				if (   (ev[f].start == ev[f].mid) 
+				&& (ev[f].start == ev[e].end)
+				&& (ev[f].grad.ampl[0] == ev[e].grad.ampl[0])
+				&& (ev[f].grad.ampl[1] == ev[e].grad.ampl[1])
+				&& (ev[f].grad.ampl[2] == ev[e].grad.ampl[2])) {
+
+					ctr++;
+					ev[e].end = ev[f].end;
+					for (int a = 0; a < 3; a++)
+						ev[f].grad.ampl[a] = 0.;
+					break;
+				}
+			}
+		}
+	}
+
+	return ctr;
+}
+
+
 /* compute parameters for softest symmetric trapezoid
  * */
 bool grad_soft(struct grad_trapezoid* grad, double dur, double moment, struct grad_limits sys)

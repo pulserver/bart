@@ -27,6 +27,7 @@ struct grad_support {
 
 extern int seq_grad_support_to_event(int E, struct seq_event ev[__VLA(E)], double start_offset, int N, const struct grad_support grad[__VLA(N)], double proj[3]);
 
+extern int seq_event_merge_degenerated_triangles(int E, struct seq_event ev[__VLA(E)]);
 
 extern double grad_duration(const struct grad_trapezoid* grad);
 extern double grad_total_time(const struct grad_trapezoid* grad);

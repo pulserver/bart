@@ -1033,6 +1033,8 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 		i += seq_grad_to_event(ev + i, timing.readout[seq_state->pos[TE_DIM]], &readout, projX);
 		i += seq_grad_to_event(ev + i, timing.readout[seq_state->pos[TE_DIM]], &readout, projY);
 
+		seq_event_merge_degenerated_triangles(blip_events + 4, ev + i - (blip_events + 4));
+
 		i += prep_adc(ev + i, timing.adc[seq_state->pos[TE_DIM]], rf_spoil_phase, seq_state, seq);
 
 		if (seq_state->pos[TE_DIM] == seq->loop_dims[TE_DIM] - 1) {
