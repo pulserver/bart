@@ -17,14 +17,16 @@
  * in gpukrnls.cu. See vecops.c for the CPU version.
  */
 
-#ifdef USE_CUDA
-
+#ifdef USE_GPU
 #include <assert.h>
 #include <complex.h>
 
-#include <cuda_runtime_api.h>
+#include "num/gpu_compat_runtime.h"
+
+#ifndef USE_HIP
 #include <cuda.h>
 #include <cublas.h>
+#endif
 
 #ifdef _OPENMP
 #include <omp.h>

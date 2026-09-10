@@ -215,7 +215,7 @@ int main_nufft(int argc, char* argv[argc])
 
 		const struct linop_s* nufft_op;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (bart_use_gpu && !precond && !nufft_conf_options.dft) {
 
 			complex float* traj_gpu = md_gpu_move(DIMS, traj_dims, traj, CFL_SIZE);

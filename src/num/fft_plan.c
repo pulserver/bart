@@ -17,7 +17,7 @@ typedef void *fftwf_plan;
 #include "misc/misc.h"
 #include "misc/debug.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #include "fft-cuda.h"
 #endif
@@ -44,7 +44,7 @@ struct fft_plan_s {
 	const long* istrs;
 	const long* ostrs;
 
-#ifdef  USE_CUDA
+#ifdef USE_GPU
 	struct fft_cuda_plan_s* cuplan;
 #endif
 };
@@ -258,7 +258,7 @@ static void fft_apply(const operator_data_t* _plan, int N, void* args[N])
 		return;
 	}
 
-#ifdef  USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(src)) {
 
 #pragma 	omp critical(cufft_create_plan_in_threads)
@@ -289,7 +289,7 @@ static void fft_free_plan(const operator_data_t* _data)
 		fftwf_destroy_plan(plan->fftw);
 #endif
 
-#ifdef	USE_CUDA
+#ifdef USE_GPU
 	if (NULL != plan->cuplan)
 		fft_cuda_free_plan(plan->cuplan);
 #endif
@@ -376,7 +376,7 @@ const struct operator_s* fft_create2(int D, const long dimensions[D], unsigned l
 				md_free(tdst);
 
 
-#ifdef  USE_CUDA
+#ifdef USE_GPU
 			plan->cuplan = NULL;
 #endif
 			plan->D = D;

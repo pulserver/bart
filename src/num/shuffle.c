@@ -6,7 +6,7 @@
 
 #include "num/multind.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 

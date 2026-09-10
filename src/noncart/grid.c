@@ -26,7 +26,7 @@
 #include "num/vptr_fun.h"
 
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #include "noncart/gpu_grid.h"
 #endif
@@ -160,7 +160,7 @@ void gridH(const struct grid_conf_s* conf, const long ksp_dims[4], const long tr
 	assert(CFL_SIZE == trj_strs[0]);
 	assert(0 == trj_strs[3]);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(traj))
 		return cuda_gridH(conf, ksp_dims, trj_strs, traj, ksp_strs, dst, grid_dims, grid_strs, grid);
 #endif
@@ -209,7 +209,7 @@ void grid(const struct grid_conf_s* conf, const long ksp_dims[4], const long trj
 	assert(CFL_SIZE == trj_strs[0]);
 	assert(0 == trj_strs[3]);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(traj))
 		return cuda_grid(conf, ksp_dims, trj_strs, traj, grid_dims, grid_strs, grid, ksp_strs, src);
 #endif
@@ -348,7 +348,7 @@ static void grid_int(vptr_fun_data_t* _data, int N, int D, const long* dims[N], 
 	const long* lstrs[3] = { grd_strs + 4, ksp_strs + 4, trj_strs + 4 };
 	unsigned long pflags = md_nontriv_strides(D - 4, (data->backward ? ksp_strs : grd_strs) + 4);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(args[0]))
 		pflags = 0;
 #endif
@@ -609,7 +609,7 @@ static void apply_rolloff_correction2_int(vptr_fun_data_t* _data, int N, int D, 
 	obstr /= (long)CFL_SIZE;
 	ibstr /= (long)CFL_SIZE;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 
 	assert(cuda_ondevice(dst) == cuda_ondevice(src));
 

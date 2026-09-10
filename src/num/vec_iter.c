@@ -22,14 +22,14 @@ const struct vec_iter_s* select_vecops(const float* x)
 {
 	if (is_vptr(x)) {
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		return cuda_ondevice(x) ? &vptr_iter_ops_gpu : &vptr_iter_ops;
 #else
 		return &vptr_iter_ops;
 #endif
 	}
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	return cuda_ondevice(x) ? &gpu_iter_ops : &cpu_iter_ops;
 #else
 	(void)x;

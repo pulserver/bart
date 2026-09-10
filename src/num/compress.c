@@ -10,7 +10,7 @@
 #include "misc/types.h"
 
 #include "num/multind.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #include "num/gpukrnls_copy.h"
 #endif
@@ -125,7 +125,7 @@ static void md_decompress2_int(vptr_fun_data_t* _data, int N, int D, const long*
 		merge_size *= mdims[i];
 	}
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	bool gpu = cuda_ondevice(dst);
 	assert(gpu == cuda_ondevice(src));
 	assert(gpu == cuda_ondevice(index));
@@ -136,7 +136,7 @@ static void md_decompress2_int(vptr_fun_data_t* _data, int N, int D, const long*
 		const void* tsrc = src + md_calc_offset(D, istrs2, pos);
 		const long* tindex = &MD_ACCESS(D, mstrs, pos, index);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (gpu)
 			cuda_decompress(istrs[flat_idx], merge_size, ostrs[midx], tdst, mstrs[midx] / (long)sizeof(long), tindex, tsrc, d->size);
 		else
@@ -207,7 +207,7 @@ static void md_compress2_int(vptr_fun_data_t* _data, int N, int D, const long* d
 		merge_size *= mdims[i];
 	}
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	bool gpu = cuda_ondevice(dst);
 	assert(gpu == cuda_ondevice(src));
 	assert(gpu == cuda_ondevice(index));
@@ -219,7 +219,7 @@ static void md_compress2_int(vptr_fun_data_t* _data, int N, int D, const long* d
 		const void* tsrc = src + md_calc_offset(D, istrs, pos);
 		const long* tindex = &MD_ACCESS(D, mstrs, pos, index);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (gpu)
 			cuda_compress(ostrs[flat_idx], merge_size, tdst, mstrs[midx] / (long)sizeof(long), tindex, istrs[midx], tsrc, d->size);
 		else

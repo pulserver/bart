@@ -18,7 +18,7 @@
 #include "num/multind.h"
 //#include "num/parallel.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #ifdef BERKELEY_SVN
 #include "num/wlcuda.h"
@@ -146,7 +146,7 @@ static NESTED(void, icdf97_line, (long n, long str, void* ptr))
 
 static NESTED(void, cdf97_line_nosort, (long n, long str, void* ptr))
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(ptr))
 #ifdef BERKELEY_SVN
 		cuda_cdf97(n, str / 4, ptr);
@@ -160,7 +160,7 @@ static NESTED(void, cdf97_line_nosort, (long n, long str, void* ptr))
 
 static NESTED(void, icdf97_line_nosort, (long n, long str, void* ptr))
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(ptr))
 #ifdef BERKELEY_SVN
 		cuda_icdf97(n, str / 4, ptr);	

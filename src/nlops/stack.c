@@ -16,7 +16,7 @@
 #include "num/ops.h"
 #include "num/mpi_ops.h"
 #include "num/ops_graph.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -255,7 +255,7 @@ static void stack_clear_der(const nlop_data_t* _data)
 		nlop_clear_derivatives(d->nlops[i]);
 }
 
-#ifndef USE_CUDA
+#ifndef USE_GPU
 static int set_streams(int /*streams*/)
 {
 	return 1;

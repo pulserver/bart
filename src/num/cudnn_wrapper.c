@@ -6,7 +6,7 @@
  */
 
 #include <stdio.h>
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #ifdef USE_CUDNN
 
 #include <complex.h>

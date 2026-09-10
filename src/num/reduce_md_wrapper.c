@@ -16,7 +16,7 @@
 
 #include "reduce_md_wrapper.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #include "num/gpu_reduce.h"
 #endif
@@ -49,7 +49,7 @@ void reduce_zadd_inner_gpu(int N, const long dims[N], const long ostr[N], comple
 
 	assert(optr == iptr1);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert(cuda_ondevice(optr) && cuda_ondevice(iptr2));
 	cuda_reduce_zadd_inner(dims[0], (2 == N) ? dims[1] : 1, optr, iptr2);
 #else
@@ -79,7 +79,7 @@ void reduce_zadd_outer_gpu(int N, const long dims[N], const long ostr[N], comple
 
 	assert(optr == iptr1);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert(cuda_ondevice(optr) && cuda_ondevice(iptr2));
 	cuda_reduce_zadd_outer(dims[1], dims[0], optr, iptr2);
 #else
@@ -144,7 +144,7 @@ void reduce_add_inner_gpu(int N, const long dims[N], const long ostr[N], float* 
 
 	assert(optr == iptr1);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert(cuda_ondevice(optr) && cuda_ondevice(iptr2));
 	cuda_reduce_add_inner(dims[0], (2 == N) ? dims[1] : 1, optr, iptr2);
 #else
@@ -174,7 +174,7 @@ void reduce_add_outer_gpu(int N, const long dims[N], const long ostr[N], float* 
 
 	assert(optr == iptr1);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert(cuda_ondevice(optr) && cuda_ondevice(iptr2));
 	cuda_reduce_add_outer(dims[1], dims[0], optr, iptr2);
 #else
@@ -240,7 +240,7 @@ void reduce_zmax_inner_gpu(int N, const long dims[N], const long ostr[N], comple
 
 	assert(optr == iptr1);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert(cuda_ondevice(optr) && cuda_ondevice(iptr2));
 	cuda_reduce_zmax_inner(dims[0], (2 == N) ? dims[1] : 1, optr, iptr2);
 #else
@@ -270,7 +270,7 @@ void reduce_zmax_outer_gpu(int N, const long dims[N], const long ostr[N], comple
 
 	assert(optr == iptr1);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert(cuda_ondevice(optr) && cuda_ondevice(iptr2));
 	cuda_reduce_zmax_outer(dims[1], dims[0], optr, iptr2);
 #else

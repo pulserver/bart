@@ -1,6 +1,6 @@
 
-#ifdef USE_CUDA
-#include <cuda_runtime_api.h>
+#ifdef USE_GPU
+#include "num/gpu_compat_runtime.h"
 
 extern int cuda_get_max_threads(const void* func);
 

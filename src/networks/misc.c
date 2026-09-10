@@ -274,7 +274,7 @@ static void compute_adjoint_noncart(struct network_data_s* nd)
 
 	complex float* ref = NULL;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (nd->gpu && !use_compat_to_version("v0.8.00"))
 		ref = md_alloc_gpu(1, MD_DIMS(1), CFL_SIZE);
 #endif
@@ -434,7 +434,7 @@ static void network_data_compute_init_precomp(struct network_data_s* nd, complex
 
 	complex float* ref = NULL;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (nd->gpu && !use_compat_to_version("v0.8.00"))
 		ref = md_alloc_gpu(1, MD_DIMS(1), CFL_SIZE);
 #endif

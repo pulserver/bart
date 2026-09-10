@@ -18,7 +18,7 @@
 #include "num/mpi_ops.h"
 #include "num/init.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 

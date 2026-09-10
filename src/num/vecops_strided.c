@@ -45,7 +45,7 @@
 #include "num/md_wrapper.h"
 #include "num/convcorr.h"
 #include "num/vptr.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -792,7 +792,7 @@ static bool simple_z3op(int N_checks, struct simple_z3op_check strided_calls[N_c
 	int N_in = -1;
 
 	bool on_gpu = false;
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	on_gpu = cuda_ondevice(out);
 
 	if (on_gpu) {
@@ -985,7 +985,7 @@ static bool simple_3op(int N_checks, struct simple_3op_check strided_calls[N_che
 	int N_in = -1;
 
 	bool on_gpu = false;
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	on_gpu = cuda_ondevice(out);
 
 	if (on_gpu) {
@@ -1117,7 +1117,7 @@ static bool simple_s2op(int N_checks, struct simple_s2op_check strided_calls[N_c
 		bool applicable = true;
 		strided_kernel = strided_calls[i].strided_kernel;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (cuda_ondevice(out))
 			applicable &= strided_calls[i].on_gpu;
 		else

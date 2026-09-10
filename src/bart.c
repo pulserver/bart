@@ -47,7 +47,7 @@
 #include <omp.h>
 #endif
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -89,7 +89,7 @@ static void bart_exit_cleanup(void)
 #ifdef FFTWTHREADS
 	MANGLE(fftwf_cleanup_threads)();
 #endif
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	cuda_memcache_clear();
 #endif
 #ifdef __EMSCRIPTEN__
@@ -591,7 +591,7 @@ int main_bart(int argc, char* argv[argc])
 			// Threads are spawned dynamically with a performance penalty for md_functions,
 			// if we have an outer parallel region even if it is inactive.
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 			cuda_set_stream_level();
 #endif
 

@@ -51,7 +51,7 @@
 
 #include "calib.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "calib/calibcu.h"
 #endif
 
@@ -426,7 +426,7 @@ void calone(const struct ecalib_conf* conf, const long cov_dims[4], complex floa
  */
 void eigenmaps(const long out_dims[DIMS], complex float* optr, complex float* eptr, const complex float* imgcov2, const long msk_dims[3], const bool* msk, bool orthiter, int num_orthiter, bool ecal_usegpu)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (ecal_usegpu) {
 
 		//FIXME cuda version should be able to return sensitivities for a subset of image-space points
@@ -536,7 +536,7 @@ void caltwo(const struct ecalib_conf* conf, const long out_dims[DIMS], complex f
 
 	if (0 <= conf->econdim) {
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (conf->usegpu) {
 			assert(!msk);
 			complex float* tmp = md_alloc_gpu(4, in_dims, CFL_SIZE);
@@ -578,7 +578,7 @@ void caltwo(const struct ecalib_conf* conf, const long out_dims[DIMS], complex f
 		complex float* slc_out_cpu = slc_out;
 		complex float* slc_emaps_cpu = slc_emaps;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (conf->usegpu) {
 
 			slc_out_cpu = md_alloc(DIMS, sout_dims, CFL_SIZE);
@@ -770,7 +770,7 @@ void calib2(const struct ecalib_conf* conf, const long out_dims[DIMS], complex f
 
 
 	const complex float* data_tmp = data;
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (conf->usegpu)
 		data_tmp = md_gpu_move(DIMS, calreg_dims, data, CFL_SIZE);
 #endif

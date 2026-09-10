@@ -36,7 +36,7 @@
 #include "num/iovec.h"
 #include "num/ops.h"
 #include "num/ops_p.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -375,7 +375,7 @@ static void kern_normal(const linop_data_t* _data, complex float* dst, const com
 	md_merge_dims(DIMS, fmac_dims, input_dims, data->kernel_dims);
 
 	md_clear(DIMS, output_dims, dst, CFL_SIZE);
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(src))
 		md_zfmac2(DIMS, fmac_dims, output_str, dst, input_str, src, gpu_kernel_str, data->gpu_kernel);
 	else
@@ -392,7 +392,7 @@ static void kern_free(const linop_data_t* _data)
 	xfree(data->table_dims);
 	xfree(data->kernel_dims);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (data->gpu_kernel != NULL)
 		md_free(data->gpu_kernel);
 #endif
@@ -429,7 +429,7 @@ static const struct linop_s* linop_kern_create(bool gpu_flag,
 	data->kernel  = kernel;
 
 	data->gpu_kernel = NULL;
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (gpu_flag) {
 
 		long repmat_kernel_dims[DIMS] = { [0 ... DIMS - 1] = 1};
@@ -1182,7 +1182,7 @@ int main_wshfl(int argc, char* argv[argc])
 	if (fista) {
 
 		if (eval < 0) {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 			eval = bart_use_gpu ? estimate_maxeigenval_gpu(A_sc->normal) : estimate_maxeigenval(A_sc->normal);
 #else
 			eval = estimate_maxeigenval(A_sc->normal);

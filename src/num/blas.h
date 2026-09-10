@@ -3,7 +3,7 @@
 
 #include "misc/misc.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 void cublas_init(void);
 void cublas_deinit(void);
 

@@ -53,7 +53,7 @@
 #include "misc/debug.h"
 #include "misc/nested.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 /*
  * including gpukrnls.h so that I can directly call cuda_zreal.
@@ -658,7 +658,7 @@ static void make_2opf_simple(md_2opf_t fun, int D, const long dims[D], float* op
 	fun(D, dims, strs_single, optr, strs_double, iptr1);
 }
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 static void* gpu_constant(const void* vp, size_t size)
 {
 	return md_gpu_move(1, (long[1]){ 1 }, vp, size);
@@ -1051,8 +1051,7 @@ void md_div(int D, const long dims[D], float* optr, const float* iptr1, const fl
  */
 void md_zpow2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
 {
-#ifdef USE_CUDA
-	// FIXME: something is broken with the cuda implementation of zpow -> comparison test on cpu and gpu does not fail
+#ifdef USE_GPU	// FIXME: something is broken with the cuda implementation of zpow -> comparison test on cpu and gpu does not fail
 	//assert(!(cuda_ondevice(optr) || cuda_ondevice(iptr1) || cuda_ondevice(iptr2)));
 #endif
 	MAKE_Z3OP(zpow, D, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
@@ -2187,7 +2186,7 @@ void md_zreal2(int D, const long dim[D], const long ostr[D], complex float* optr
  */
 void md_zreal(int D, const long dims[D], complex float* optr, const complex float* iptr)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(iptr) && !is_vptr(iptr)) {
 
 		assert(cuda_ondevice(optr));
@@ -3172,7 +3171,7 @@ float md_asum2(int D, const long dims[D], const long strs[D], const float* ptr)
 #if 1
 	if (D == md_calc_blockdim(D, dims, strs, FL_SIZE)) {
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (cuda_ondevice(ptr))
 			return gpu_ops.asum(md_calc_size(D, dims), ptr);
 #endif
@@ -3189,7 +3188,7 @@ float md_asum2(int D, const long dims[D], const long strs[D], const float* ptr)
 
 	float* retp = &ret;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(ptr))
 		retp = gpu_constant(&ret, FL_SIZE);
 #endif
@@ -3198,7 +3197,7 @@ float md_asum2(int D, const long dims[D], const long strs[D], const float* ptr)
 
 	md_axpy2(D, dims, MD_STRIDES(D, dims0, FL_SIZE), retp, 1., strs1, tmp);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(ptr)) {
 
 		md_copy(D, dims0, &ret, retp, FL_SIZE);

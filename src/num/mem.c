@@ -15,13 +15,13 @@
 #include "misc/misc.h"
 #include "misc/debug.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
 #include "mem.h"
 
-#ifndef USE_CUDA
+#ifndef USE_GPU
 #define CUDA_MAX_STREAMS 0
 
 static int cuda_get_stream_id(void)

@@ -29,7 +29,7 @@
 #include "nlops/tenmul.h"
 #include "nlops/nlop_jacobian.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -65,7 +65,7 @@ static void zaxpbz_fun(const nlop_data_t* _data, int N, complex float* args[N])
 	complex float* src1 = args[1];
 	complex float* src2 = args[2];
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert((cuda_ondevice(dst) == cuda_ondevice(src1)) && (cuda_ondevice(src1) == cuda_ondevice(src2)));
 #endif
 
@@ -422,7 +422,7 @@ static void zmax_fun(const nlop_data_t* _data, complex float* dst, const complex
 
 	md_zmax2(data->N, data->dims, data->outstrides, dst, data->outstrides, dst, data->strides, src);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(dst)) {
 
 		md_copy2(data->N, data->dims, data->strides, data->max_index, data->outstrides, dst, CFL_SIZE);

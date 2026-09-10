@@ -15,7 +15,7 @@
 
 static void bench_sync(bool sync_gpu)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (sync_gpu)
 		cuda_sync_stream();
 #else

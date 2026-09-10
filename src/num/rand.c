@@ -28,7 +28,7 @@
 #include "num/vptr.h"
 #include "num/delayed.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #include "num/gpurand.h"
 #endif
@@ -394,7 +394,7 @@ void uniform_rand_vec(long N, float* dst)
 static void md_gaussian_obsolete_rand(int D, const long dims[D], complex float* dst)
 {
 	bool buf = is_vptr(dst);
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(dst))
 		buf = true;
 #endif
@@ -418,7 +418,7 @@ static void md_gaussian_obsolete_rand(int D, const long dims[D], complex float* 
 
 static void vec_gaussian_philox_rand(struct bart_rand_state state, long offset, long N, complex float* dst)
 {
-#ifdef  USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(dst)) {
 
 		cuda_gaussian_rand(N, dst, state.state, state.ctr1, (uint64_t)offset);
@@ -577,7 +577,7 @@ void md_zgaussian_rand(int D, const long dims[D], complex float* dst)
 static void md_uniform_obsolete_rand(int D, const long dims[D], complex float* dst)
 {
 	bool buf = is_vptr(dst);
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(dst))
 		buf = true;
 #endif
@@ -601,7 +601,7 @@ static void md_uniform_obsolete_rand(int D, const long dims[D], complex float* d
 
 static void vec_uniform_philox_rand(struct bart_rand_state state, long offset, long N, complex float* dst)
 {
-#ifdef  USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(dst)) {
 
 		cuda_uniform_rand(N, dst, state.state, state.ctr1, (uint64_t)offset);
@@ -638,7 +638,7 @@ void md_uniform_rand(int D, const long dims[D], complex float* dst)
 static void md_obsolete_rand_one(int D, const long dims[D], complex float* dst, double p)
 {
 	bool buf = is_vptr(dst);
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(dst))
 		buf = true;
 #endif
@@ -662,7 +662,7 @@ static void md_obsolete_rand_one(int D, const long dims[D], complex float* dst, 
 
 static void vec_philox_rand_one(struct bart_rand_state state, long offset, long N, complex float* dst, double p)
 {
-#ifdef  USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(dst)) {
 
 		cuda_rand_one(N, dst, p, state.state, state.ctr1, (uint64_t) offset);

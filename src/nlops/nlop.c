@@ -1694,7 +1694,7 @@ const struct nlop_s* nlop_cpu_wrapper_F(const struct nlop_s* op)
 
 const struct nlop_s* nlop_gpu_wrapper(const struct nlop_s* op)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	PTR_ALLOC(struct nlop_s, n);
 
 	int II = nlop_get_nr_in_args(op);

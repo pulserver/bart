@@ -24,7 +24,7 @@
 #include "num/fft.h"
 #include "num/ode.h"
 #include "num/filter.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 #include "num/mpi_ops.h"
@@ -43,7 +43,7 @@ static bool use_distributed_computing = false;
 static void* bench_alloc(int D, unsigned long mpi_flags, const long dimensions[D], size_t size)
 {
 	if (use_distributed_computing) {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (bart_use_gpu)
 			return md_alloc_gpu_mpi(D, mpi_flags, dimensions, size);
 		else
@@ -51,7 +51,7 @@ static void* bench_alloc(int D, unsigned long mpi_flags, const long dimensions[D
 			return md_alloc_mpi(D, mpi_flags, dimensions, size);
 	
 	} else {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (bart_use_gpu)
 			return md_alloc_gpu(D, dimensions, size);
 		else
@@ -63,7 +63,7 @@ static void* bench_alloc(int D, unsigned long mpi_flags, const long dimensions[D
 static double bench_timestamp(void)
 {
 	mpi_sync();
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (bart_use_gpu)
 		cuda_sync_device();
 #endif
@@ -864,7 +864,7 @@ int main_bench(int argc, char* argv[argc])
 	if ((mpi_get_num_procs() > 1))
 		 use_distributed_computing = true;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	num_init_gpu_support();
 #else
 	num_init();

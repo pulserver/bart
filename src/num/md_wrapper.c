@@ -13,7 +13,7 @@
 #include "num/blas.h"
 #include "num/multind.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpukrnls.h"
 #include "num/gpukrnls_unfold.h"
 #include "num/gpuops.h"
@@ -77,8 +77,7 @@ void zfmac_gpu_batched_loop(int N, const long dims[N], const long ostr[N], compl
 
 	md_copy_dims(N - 1, tdims, dims + 1);
 
-#ifdef USE_CUDA
-
+#ifdef USE_GPU
 	assert(cuda_ondevice(optr));
 	assert(cuda_ondevice(iptr1));
 	assert(cuda_ondevice(iptr2));
@@ -104,7 +103,7 @@ void zfmac_gpu_unfold(int N, const long dims[N], const long ostr[N], complex flo
 	assert((optr != iptr1) ||  (md_check_equal_dims(N, ostr, istr1, md_nontriv_dims(N, dims))));
 	assert((optr != iptr2) ||  (md_check_equal_dims(N, ostr, istr2, md_nontriv_dims(N, dims))));
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	cuda_zfmac_unfold(N, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 #else
 	assert(0);
@@ -163,7 +162,7 @@ void zfmacc_gpu_batched_loop(int N, const long dims[N], const long ostr[N], comp
 
 	md_copy_dims(N - 1, tdims, dims + 1);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert(cuda_ondevice(optr));
 	assert(cuda_ondevice(iptr1));
 	assert(cuda_ondevice(iptr2));
@@ -187,7 +186,7 @@ void zfmacc_gpu_unfold(int N, const long dims[N], const long ostr[N], complex fl
 	assert((optr != iptr1) ||  (md_check_equal_dims(N, ostr, istr1, md_nontriv_dims(N, dims))));
 	assert((optr != iptr2) ||  (md_check_equal_dims(N, ostr, istr2, md_nontriv_dims(N, dims))));
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	cuda_zfmacc_unfold(N, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 #else
 	assert(0);
@@ -207,7 +206,7 @@ void fmac_gpu_unfold(int N, const long dims[N], const long ostr[N], float* optr,
 	assert((optr != iptr1) ||  (md_check_equal_dims(N, ostr, istr1, md_nontriv_dims(N, dims))));
 	assert((optr != iptr2) ||  (md_check_equal_dims(N, ostr, istr2, md_nontriv_dims(N, dims))));
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	cuda_fmac_unfold(N, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 #else
 	assert(0);
@@ -240,7 +239,7 @@ void add_gpu_unfold(int N, const long dims[N], const long ostr[N], float* optr, 
 	assert((optr != iptr1) ||  (md_check_equal_dims(N, ostr, istr1, md_nontriv_dims(N, dims))));
 	assert((optr != iptr2) ||  (md_check_equal_dims(N, ostr, istr2, md_nontriv_dims(N, dims))));
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	cuda_add_unfold(N, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 #else
 	assert(0);
@@ -274,7 +273,7 @@ void zadd_gpu_unfold(int N, const long dims[N], const long ostr[N], complex floa
 	assert((optr != iptr1) ||  (md_check_equal_dims(N, ostr, istr1, md_nontriv_dims(N, dims))));
 	assert((optr != iptr2) ||  (md_check_equal_dims(N, ostr, istr2, md_nontriv_dims(N, dims))));
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	cuda_zadd_unfold(N, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 #else
 	assert(0);
@@ -308,7 +307,7 @@ void mul_gpu_unfold(int N, const long dims[N], const long ostr[N], float* optr, 
 	assert((optr != iptr1) ||  (md_check_equal_dims(N, ostr, istr1, md_nontriv_dims(N, dims))));
 	assert((optr != iptr2) ||  (md_check_equal_dims(N, ostr, istr2, md_nontriv_dims(N, dims))));
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	cuda_mul_unfold(N, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 #else
 	assert(0);
@@ -342,7 +341,7 @@ void zmul_gpu_unfold(int N, const long dims[N], const long ostr[N], complex floa
 	assert((optr != iptr1) ||  (md_check_equal_dims(N, ostr, istr1, md_nontriv_dims(N, dims))));
 	assert((optr != iptr2) ||  (md_check_equal_dims(N, ostr, istr2, md_nontriv_dims(N, dims))));
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	cuda_zmul_unfold(N, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 #else
 	assert(0);
@@ -374,7 +373,7 @@ void zmulc_gpu_unfold(int N, const long dims[N], const long ostr[N], complex flo
 	assert((optr != iptr1) ||  (md_check_equal_dims(N, ostr, istr1, md_nontriv_dims(N, dims))));
 	assert((optr != iptr2) ||  (md_check_equal_dims(N, ostr, istr2, md_nontriv_dims(N, dims))));
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	cuda_zmulc_unfold(N, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 #else
 	assert(0);
@@ -389,7 +388,7 @@ void fmacD_dot(int N, const long dims[__VLA(N)], const long ostr[__VLA(N)], doub
 	assert(FL_SIZE == istr1[0]);
 	assert(FL_SIZE == istr2[0]);
 	
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(optr)) {
 		
 		cuda_fmacD_dot(dims[0], optr, iptr1, iptr2);
@@ -412,7 +411,7 @@ void zfmaccD_dot(int N, const long dims[__VLA(N)], const long ostr[__VLA(N)], co
 	assert(CFL_SIZE == istr1[0]);
 	assert(CFL_SIZE == istr2[0]);
 	
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(optr)) {
 		
 		cuda_zfmaccD_dot(dims[0], optr, iptr1, iptr2);

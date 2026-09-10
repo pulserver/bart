@@ -17,7 +17,7 @@
 #include "num/iovec.h"
 #include "num/rand.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -69,7 +69,7 @@ static void stats_fun(const nlop_data_t* _data, int N, complex float* args[N])
 
 	if (NULL == data->x)
 		data->x = md_alloc_sameplace(data->dom->N, data->dom->dims, CFL_SIZE, args[0]);
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert((cuda_ondevice(mean) == cuda_ondevice(src)) && (cuda_ondevice(var) == cuda_ondevice(src)));
 #endif
 
@@ -253,7 +253,7 @@ static void normalize_fun(const nlop_data_t* _data, int N, complex float* args[N
 	md_zreal(data->statdom->N, data->statdom->dims, data->scale, data->scale); //assert that sigma is real
 	md_zspow(data->statdom->N, data->statdom->dims, data->scale, data->scale, -0.5);
 
-#ifdef USE_CUDA //FIXME: Optimize zsub2 for these strides
+#ifdef USE_GPU //FIXME: Optimize zsub2 for these strides
 	if (cuda_ondevice(src)) {
 
 		complex float* tmp = md_alloc_sameplace(data->dom->N, data->dom->dims, CFL_SIZE, src);

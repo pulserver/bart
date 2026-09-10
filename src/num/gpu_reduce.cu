@@ -8,9 +8,8 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include <cuda_runtime_api.h>
-#include <cuda.h>
-#include <cuComplex.h>
+#include "num/gpu_compat_runtime.h"
+#include "num/gpu_compat_complex.h"
 
 #include "num/gpu_reduce.h"
 #include "num/multind.h"

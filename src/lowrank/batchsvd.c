@@ -19,7 +19,7 @@
 #include "num/linalg.h"
 #include "num/multind.h"
 #include "num/vptr.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -30,7 +30,7 @@
 void batch_svthresh(int M, int N, int num_blocks, float lambda, complex float dst[num_blocks][N][M])
 {
 	bool copy = is_vptr(&dst[0][0][0]);
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	copy = copy || cuda_ondevice(&dst[0][0][0]);
 #endif
 

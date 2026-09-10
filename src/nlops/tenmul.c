@@ -18,7 +18,7 @@
 #include "nlops/nlop_jacobian.h"
 #include "num/ops.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -93,7 +93,7 @@ static void tenmul_fun(const nlop_data_t* _data, int N, complex float* args[N])
 	complex float* x1 = data->der1;
 	complex float* x2 = data->der2;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert((cuda_ondevice(dst) == cuda_ondevice(src1)) && (cuda_ondevice(src1) == cuda_ondevice(src2)));
 #endif
 

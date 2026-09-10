@@ -32,7 +32,7 @@
 #include "num/vptr.h"
 #include "num/vptr_fun.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #include "num/gpukrnls.h"
 #endif
@@ -173,7 +173,7 @@ static void fftmod2_r(int N, const long dims[N], unsigned long flags, const long
 
 		NESTED(void, nary_zfftmod, (void* ptr[]))
 		{
-#ifdef USE_CUDA
+#ifdef USE_GPU
 			if (cuda_ondevice(dst))
 				cuda_zfftmod_3d(tptr, ptr[0], ptr[1], inv, phase);
 			else

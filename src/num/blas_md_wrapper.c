@@ -16,7 +16,7 @@
 
 #include "num/blas.h"
 #include "num/multind.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -187,7 +187,7 @@ void blas_zfmac_caxpy(int N, const long dims[N], const long ostr[N], complex flo
 	long incx = istr1[0] / size;
 	long incy = ostr[0] / size;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(optr)) {
 
 		blas2_caxpy(dims[0], iptr2, incx, iptr1, incy, optr);
@@ -406,7 +406,7 @@ void blas_fmac_saxpy(int N, const long dims[N], const long ostr[N], float* optr,
 	long incx = istr1[0] / size;
 	long incy = ostr[0] / size;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(optr)) {
 
 		blas2_saxpy(dims[0], iptr2, incx, iptr1, incy, optr);
@@ -622,7 +622,7 @@ void blas_zmul_cscal(int N, const long dims[N], const long ostr[N], complex floa
 	assert(((optr != iptr1) || (ostr[0] == istr1[0])) && (0 == ostr[0] % size) && (0 == istr1[0] % size) && (0 == istr2[0]));
 	assert(1 == N);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(optr)) {
 
 		if (optr != iptr1)
@@ -799,7 +799,7 @@ void blas_mul_sscal(int N, const long dims[N], const long ostr[N], float* optr, 
 	assert(((optr != iptr1) || (ostr[0] == istr1[0])) && (0 == ostr[0] % size) && (0 == istr1[0] % size) && (0 == istr2[0]));
 	assert(1 == N);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(optr)) {
 
 		if (optr != iptr1)

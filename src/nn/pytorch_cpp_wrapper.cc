@@ -16,7 +16,7 @@
 #include "misc/debug.h"
 #include "misc/misc.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -60,7 +60,7 @@ struct pytorch_wrapper_s* pytorch_wrapper_create(const char* path, int II, const
 			}
 
 			auto options = torch::TensorOptions().dtype(torch::kComplexFloat).requires_grad(true);
-#ifdef USE_CUDA
+#ifdef USE_GPU
 			if (-1 < device)
 				options = options.device(torch::Device(torch::kCUDA, device));
 #endif
@@ -70,7 +70,7 @@ struct pytorch_wrapper_s* pytorch_wrapper_create(const char* path, int II, const
 			ret->itensor.push_back(tensor);
 		}
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (-1 < device)
 			ret->module = torch::jit::load(path, torch::Device(torch::kCUDA, device));
 		else
@@ -154,7 +154,7 @@ void pytorch_wrapper_apply_unchecked(struct pytorch_wrapper_s* data, int N, _Com
 
 		for (int i = 0; i < data->II; i++) {
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 			if (-1 == device) {
 
 				data->itensor[i] = data->itensor[i].to(torch::kCPU);
@@ -173,7 +173,7 @@ void pytorch_wrapper_apply_unchecked(struct pytorch_wrapper_s* data, int N, _Com
 			inputs.push_back(data->itensor[i]);
 		}
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (-1 == device) {
 
 			data->module.to(torch::kCPU);
@@ -204,7 +204,7 @@ void pytorch_wrapper_apply_unchecked(struct pytorch_wrapper_s* data, int N, _Com
 			}
 
 			data->otensor.push_back(output);
-#ifdef USE_CUDA
+#ifdef USE_GPU
 			if ((-1 < device) || cuda_ondevice(args[i])) {
 
 				cuda_sync_device();
@@ -227,7 +227,7 @@ void pytorch_wrapper_adjoint_unchecked(struct pytorch_wrapper_s* data, int o, in
 
 	torch::Tensor tsrc = torch::empty_like(data->otensor[o]);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if ((tsrc.is_cuda()) || cuda_ondevice(src)) {
 
 		cuda_memcpy(data->osize[o], tsrc.data_ptr(), src);
@@ -239,7 +239,7 @@ void pytorch_wrapper_adjoint_unchecked(struct pytorch_wrapper_s* data, int o, in
 
 	data->otensor[o].backward(tsrc, true, false, data->itensor[i]);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if ((data->itensor[i].grad().is_cuda()) || cuda_ondevice(dst)) {
 
 		cuda_sync_device();

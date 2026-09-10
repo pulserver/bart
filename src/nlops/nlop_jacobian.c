@@ -20,7 +20,7 @@
 #include "nlops/nlop.h"
 #include "num/ops.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 

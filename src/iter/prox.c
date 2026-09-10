@@ -20,7 +20,7 @@
 #include "num/ops_p.h"
 #include "num/ops.h"
 #include "num/iovec.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 

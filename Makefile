@@ -57,6 +57,7 @@ MPI?=0
 OPENBLAS?=0
 MKL?=0
 CUDA?=0
+HIP?=0
 CUDNN?=0
 ACML?=0
 OMP?=1
@@ -291,6 +292,11 @@ CUDA_BASE ?= /usr/
 CUDA_LIB ?= lib
 CUDNN_BASE ?= $(CUDA_BASE)
 CUDNN_LIB ?= lib64
+
+# hip
+HIP_BASE ?= /usr/lib64
+HIP_H := -I/usr/include/hip
+HIPCC ?= hipcc
 
 # tensorflow
 TENSORFLOW_BASE ?= /usr/local/
@@ -558,7 +564,26 @@ default: bart .gitignore
 
 # cuda
 
+ifeq ($(CUDA),1)
+ifeq ($(HIP),1)
+$(error ERROR: CUDA and HIP cannot be enabled at the same time. Set either CUDA=1 or HIP=1, not both.)
+endif
+endif
+
+ifeq ($(HIP),1)
+ifeq ($(CUDNN),1)
+$(error ERROR: HIP does not support cuDNN. Set CUDNN=0 when compiling with HIP=1.)
+endif
+endif
+
 NVCC?=$(CUDA_BASE)/bin/nvcc
+
+# Common GPU feature flag used by backend-agnostic code paths.
+USE_GPU := $(if $(filter 1,$(CUDA) $(HIP)),1,0)
+
+ifeq ($(USE_GPU),1)
+CPPFLAGS += -DUSE_GPU
+endif
 
 
 ifeq ($(CUDA),1)
@@ -585,13 +610,19 @@ endif
 # sm_20 no longer supported in CUDA 9
 GPUARCH_FLAGS ?=
 CUDA_CC ?= $(CC)
-NVCCFLAGS += -DUSE_CUDA -Xcompiler -fPIC -O2 $(GPUARCH_FLAGS) -I$(srcdir)/ -m64 -ccbin $(CUDA_CC)
+ifeq ($(HIP),1)
+CPPFLAGS += -D__HIP_PLATFORM_AMD__ -DUSE_HIP $(HIP_H)
+CUDA_L := -L/usr/lib64 -lhipfft -lhipblas -lamdhip64
+HIPFLAGS += -D__HIP_PLATFORM_AMD__ -DUSE_HIP -DUSE_GPU -fblocks -fPIC -O2 -I$(srcdir)/ -m64
+else
+NVCCFLAGS += -DUSE_CUDA -DUSE_GPU -Xcompiler -fPIC -O2 $(GPUARCH_FLAGS) -I$(srcdir)/ -m64 -ccbin $(CUDA_CC)
 #NVCCFLAGS = -Xcompiler -fPIC -Xcompiler -fopenmp -O2  -I$(srcdir)/
+endif
 
 
 %.o: %.cu
-	$(NVCC) $(NVCCFLAGS) -c $^ -o $@
-	$(NVCC) $(NVCCFLAGS) -M $^ -o $(DEPFILE)
+	$(if $(filter 1,$(HIP)),$(HIPCC) $(HIPFLAGS),$(NVCC) $(NVCCFLAGS)) -c $^ -o $@
+	$(if $(filter 1,$(HIP)),$(HIPCC) $(HIPFLAGS),$(NVCC) $(NVCCFLAGS)) -M $^ -o $(DEPFILE)
 
 
 # OpenMP
@@ -818,7 +849,7 @@ $(1)objs := $$($(1)srcs:.c=.o)
 $(1)objs += $$($(1)extrasrcs:.c=.o)
 $(1)objs += $$($(1)extracxxsrcs:.cc=.o)
 
-ifeq ($(CUDA),1)
+ifneq (,$(filter 1,$(CUDA) $(HIP)))
 $(1)objs += $$($(1)cudasrcs:.cu=.o)
 endif
 

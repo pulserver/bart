@@ -10,7 +10,7 @@
 #include "num/flpmath.h"
 #include "num/vptr.h"
 #include "num/vptr_fun.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #include "num/gpukrnls_triagmat.h"
 #endif
@@ -347,7 +347,7 @@ static void vptr_md_fmac_upper_triag2(vptr_fun_data_t* _data, int N, int D, cons
 	int dim1 = CAST_DOWN(vptr_md_fmac_upper_triag_s, _data)->dim1;
 	int dim2 = CAST_DOWN(vptr_md_fmac_upper_triag_s, _data)->dim2;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (   (D > 5) && (5 == dim1) && (6 == dim2)
 	    && (2 == dims[0][D - 1]) && ((long)FL_SIZE == strs[0][D - 1]) && ((long)FL_SIZE == strs[1][D - 1]) && (0 == strs[2][D - 1])
 	    && (1 == dims[0][4])

@@ -1,9 +1,9 @@
 
+#ifdef USE_GPU
+#include "num/gpu_compat_runtime.h"
+
 #include "misc/cppwrap.h"
 
-#ifdef USE_CUDA
-
-#include <cuda_runtime_api.h>
 extern void cuda_error(const char* file, int line, cudaError_t code);
 extern void cuda_gpu_check(const char* file, int line, const char* note);
 extern void cuda_check_ptr(const char* file, int line, int N, const void* ptr[__VLA(N)]);
@@ -26,7 +26,7 @@ extern void cuda_exit(void);
 extern int cuda_get_device_id(void);
 
 extern int cuda_get_stream_id(void);
-#ifdef USE_CUDA
+#ifdef USE_GPU
 extern cudaStream_t cuda_get_stream_by_id(int id);
 extern cudaStream_t cuda_get_stream(void);
 #endif

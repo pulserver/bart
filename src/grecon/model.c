@@ -98,7 +98,7 @@ const struct linop_s* pics_model(const struct pics_config* conf,
 		const complex float* traj_tmp = traj;
 
 		//for computation of psf on GPU
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (conf->gpu_gridding) {
 
 			assert(conf->gpu);
@@ -113,7 +113,7 @@ const struct linop_s* pics_model(const struct pics_config* conf,
 				fieldmap_dims, fieldmap, timemap_dims, timemap,
 				nufft_op, conf->shared_img_flags & ~conf->motion_flags);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (conf->gpu_gridding)
 			md_free(traj_tmp);
 #endif
@@ -133,7 +133,7 @@ const struct linop_s* pics_model(const struct pics_config* conf,
 	if (conf->real_value_constraint)
 		forward_op = linop_chain_FF(linop_realval_create(DIMS, img_dims), forward_op);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (conf->gpu && (conf->gpu_gridding || NULL == traj)) {
 
 		auto tmp = linop_gpu_wrapper(forward_op);

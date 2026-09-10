@@ -28,7 +28,7 @@
 #include "misc/mmio.h"
 #include "misc/types.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #include "num/gpukrnls.h"
 #endif
@@ -197,7 +197,7 @@ void mpi_signoff_proc(bool signoff)
 }
 
 #ifdef USE_MPI
-#ifdef USE_CUDA
+#ifdef USE_GPU
 static void print_cuda_aware_warning(void)
 {
 	static bool printed = false;
@@ -222,7 +222,7 @@ void mpi_sync(void)
 }
 
 #ifdef USE_MPI
-#ifdef USE_CUDA
+#ifdef USE_GPU
 static void mpi_bcast_selected_gpu(bool tag, void* ptr, long size, int root)
 {
 	if (1 == mpi_get_num_procs())
@@ -251,7 +251,7 @@ void mpi_bcast_selected(bool tag, void* ptr, long size, int root)
 	if (1 == mpi_get_num_procs())
 		return;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (!cuda_aware_mpi && cuda_ondevice(ptr)) {
 
 		mpi_bcast_selected_gpu(tag, ptr, size, root);
@@ -345,7 +345,7 @@ static void mpi_copy_kernel(void* dst, long size, const void* src, int sender_ra
 
 		if ((mpi_get_rank() == sender_rank) && (dst != src)) {
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 			if (cuda_ondevice(dst) || cuda_ondevice(src))
 				cuda_memcpy(size, dst, src);
 			else
@@ -361,7 +361,7 @@ static void mpi_copy_kernel(void* dst, long size, const void* src, int sender_ra
 
 		void* src2 = (void*)src;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (cuda_ondevice(src) && !cuda_aware_mpi) {
 
 			print_cuda_aware_warning();
@@ -374,7 +374,7 @@ static void mpi_copy_kernel(void* dst, long size, const void* src, int sender_ra
 		for (long n = 0; n < size; n += INT_MAX / 2)
 			mpi_send(src2 + n, MIN(size - n, INT_MAX / 2), recv_rank, blocking);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (cuda_ondevice(src) && !cuda_aware_mpi)
 			xfree(src2);
 #endif
@@ -384,7 +384,7 @@ static void mpi_copy_kernel(void* dst, long size, const void* src, int sender_ra
 
 		void* dst2 = dst;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (cuda_ondevice(dst) && !cuda_aware_mpi) {
 
 			print_cuda_aware_warning();
@@ -396,7 +396,7 @@ static void mpi_copy_kernel(void* dst, long size, const void* src, int sender_ra
 		for (long n = 0; n < size; n += INT_MAX / 2)
 			mpi_recv(dst2 + n, MIN(size - n, INT_MAX / 2), sender_rank, blocking);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (cuda_ondevice(dst) && !cuda_aware_mpi) {
 
 			cuda_memcpy(size, dst, dst2);
@@ -431,7 +431,7 @@ void mpi_copy2(int N, const long dim[N], const long ostr[N], void* optr, const l
 	bool ap_save = num_auto_parallelize;
 	num_auto_parallelize = false;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	cuda_sync_stream();
 #endif
 
@@ -455,7 +455,7 @@ void mpi_copy2_nonblocking(int N, const long dim[N], const long ostr[N], void* o
 	bool ap_save = num_auto_parallelize;
 	num_auto_parallelize = false;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	cuda_sync_stream();
 #endif
 
@@ -585,7 +585,7 @@ void mpi_gather_batch(void* dst, long count, const void* src, size_t size)
 */
 
 #ifdef USE_MPI
-#ifdef USE_CUDA
+#ifdef USE_GPU
 static void mpi_reduce_land_gpu(long N, bool vec[N])
 {
 	print_cuda_aware_warning();
@@ -609,7 +609,7 @@ void mpi_reduce_land(long N, bool vec[__VLA(N)])
 		error("MPI reduction requested but only run by one process!\n");
 
 #ifdef USE_MPI
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (!cuda_aware_mpi && cuda_ondevice(vec)) {
 
 		mpi_reduce_land_gpu(N, vec);
@@ -631,8 +631,8 @@ void mpi_reduce_land(long N, bool vec[__VLA(N)])
 #ifdef USE_MPI
 static void mpi_allreduce_sum_gpu(int N, float vec[N], MPI_Comm comm)
 {
-#ifdef USE_CUDA
-	if (!cuda_aware_mpi && cuda_ondevice(vec)) {
+#ifdef USE_GPU
+if (!cuda_aware_mpi && cuda_ondevice(vec)) {
 
 		print_cuda_aware_warning();
 
@@ -695,8 +695,8 @@ void mpi_reduce_sum_vector(long N, float vec[N])
 #ifdef USE_MPI
 static void mpi_allreduce_sumD_gpu(int N, double vec[N], MPI_Comm comm)
 {
-#ifdef USE_CUDA
-	if (!cuda_aware_mpi && cuda_ondevice(vec)) {
+#ifdef USE_GPU
+if (!cuda_aware_mpi && cuda_ondevice(vec)) {
 
 		print_cuda_aware_warning();
 
@@ -785,8 +785,8 @@ static void reduce_sum_int(vptr_fun_data_t* d, int N, int D, const long* dims[N]
 			rptr = vptr_resolve(rptr);
 			optr = vptr_resolve(optr);
 
-#ifdef USE_CUDA
-			if (cuda_ondevice(optr))
+#ifdef USE_GPU
+		if (cuda_ondevice(optr))
 				cuda_addD(tot, optr, optr, rptr);
 			else
 #endif

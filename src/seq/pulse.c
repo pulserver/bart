@@ -13,7 +13,7 @@
 
 #include "num/multind.h"
 #include "num/specfun.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -473,7 +473,7 @@ void pulse_free(const struct pulse* ps)
 
 void pulse_discretize(struct pulse* ps, int N, complex float pulse[N + 1])
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(pulse)) {
 
 		complex float tmp_pulse[N + 1];

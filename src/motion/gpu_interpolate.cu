@@ -5,9 +5,8 @@
  * Authors: Moritz Blumenthal
  */
 
-#include <cuda_runtime_api.h>
-#include <cuda.h>
-#include <cuComplex.h>
+#include "num/gpu_compat_runtime.h"
+#include "num/gpu_compat_complex.h"
 
 #include <math.h>
 #include <complex.h>

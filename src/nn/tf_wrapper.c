@@ -21,7 +21,7 @@
 #include "num/multind.h"
 #include "num/multiplace.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -158,7 +158,7 @@ static TF_SessionOptions* get_session_opts(void)
 
 	uint8_t* config = no_gpu;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (-1 != cuda_get_device_id())
 		config = gpu[cuda_get_device_id()];
 #else

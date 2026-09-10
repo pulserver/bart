@@ -28,7 +28,7 @@
 #include "num/ops_p.h"
 #include "num/ops.h"
 #include "num/rand.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -308,7 +308,7 @@ int main_wave(int argc, char* argv[argc])
 	print_opdims(A);
 
 	if (eval < 0)
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		eval = bart_use_gpu ? estimate_maxeigenval_gpu(A->normal) : estimate_maxeigenval(A->normal);
 #else
 		eval = estimate_maxeigenval(A->normal);

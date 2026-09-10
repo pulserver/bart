@@ -91,6 +91,13 @@ int main_version(int argc, char* argv[argc])
 			bart_printf("0\n");
 #endif
 
+		bart_printf("HIP=");
+#ifdef USE_HIP
+			bart_printf("1\n");
+#else
+			bart_printf("0\n");
+#endif
+
 		bart_printf("ACML=");
 #ifdef USE_ACML
 			bart_printf("1\n");

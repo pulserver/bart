@@ -19,7 +19,7 @@
 
 #include "num/multind.h"
 #include "num/vecops.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #include "num/gpukrnls_copy.h"
 #endif
@@ -541,7 +541,7 @@ unsigned long dims_parallel(int D, unsigned long io, int N, const long dims[N], 
 }
 
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 static bool use_gpu(int p, void* ptr[p])
 {
 	bool gpu = false;
@@ -661,7 +661,7 @@ void (optimized_nop)(int N, unsigned long io, int D, const long dim[D], const lo
 
 	bool gpu = false;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	gpu = use_gpu(N, nptr1);
 	int ND = (gpu ? optimize_dims_gpu : optimize_dims)(N, D, tdims, nstr1);
 #else
@@ -739,7 +739,7 @@ out:
 
 				cnst_buf[i] = md_alloc_sameplace(1, MD_DIMS(cnst_size), (size_t)tsizes[i], nptr1[i]);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 				if (gpu) {
 					cuda_copy_ND(1, MD_DIMS(cnst_size), MD_DIMS(tsizes[i]), cnst_buf[i], MD_DIMS(0), nptr1[i], (size_t)tsizes[i]);
 				} else
@@ -759,7 +759,7 @@ out:
 	debug_printf(DP_DEBUG4, "MD-Fun. Io: %lu Input: ", io);
 	debug_print_dims(DP_DEBUG4, D, dim);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (num_auto_parallelize && !gpu && !one_on_gpu(N, nptr1)) {
 #else
 	if (num_auto_parallelize) {
@@ -777,7 +777,7 @@ out:
 	for (int i = 0; i < N; i++)
 		nstr2[i] = *nstr1[i] + skip;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	debug_printf(DP_DEBUG4, "This is a %s call\n.", gpu ? "gpu" : "cpu");
 
 	__block struct nary_opt_data_s data = { md_calc_size(skip, tdims), gpu ? &gpu_ops : &cpu_ops };

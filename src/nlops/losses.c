@@ -17,7 +17,7 @@
 #include "num/multind.h"
 #include "num/flpmath.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -51,7 +51,7 @@ DEF_TYPEID(znorm_s);
 
 static void znorm_fun(const nlop_data_t* _data, complex float* dst, const complex float* src)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert((cuda_ondevice(dst) == cuda_ondevice(src)));
 #endif
 	const auto d = CAST_DOWN(znorm_s, _data);

@@ -589,7 +589,7 @@ int main_pics(int argc, char* argv[argc])
 		image_truth = load_cfl_sameplace(image_truth_file, DIMS, img_truth_dims, kspace);
 		//md_zsmul(DIMS, img_dims, image_truth, image_truth, 1. / scaling);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (conf.gpu) {
 
 			complex float* gpu_image_truth = md_gpu_move(DIMS, img_dims, image_truth, CFL_SIZE);
@@ -810,7 +810,7 @@ int main_pics(int argc, char* argv[argc])
 	unmap_cfl(DIMS, img_dims, image);
 	unmap_cfl(DIMS, img_dims, image_start);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (conf.gpu)
 		md_free(image_truth);
 	else

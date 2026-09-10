@@ -32,7 +32,7 @@
 #include "num/vptr.h"
 #include "num/vptr_fun.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #include "noncart/gpu_grid.h"
 #endif
@@ -307,7 +307,7 @@ static void apply_linphases_3D_int(vptr_fun_data_t* _data, int N, int D, const l
 	complex float* dst = args[0];
 	const complex float* src = args[1];
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert(cuda_ondevice(dst) == cuda_ondevice(src));
 
 	if (cuda_ondevice(dst)) {
@@ -1514,7 +1514,7 @@ static void nufft_apply_adjoint(const linop_data_t* _data, complex float* dst, c
 	auto data = CAST_DOWN(nufft_data, _data);
 	assert(!data->conf.lowmem);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert(cuda_ondevice(src) == cuda_ondevice(dst));
 #endif
 	int ND = data->N + 1;

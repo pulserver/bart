@@ -28,7 +28,7 @@
 
 #include "num/fft_plan.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -74,7 +74,7 @@ static void num_init_internal(void)
 		}
 	}
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	const char* gpu_str;
 
 	if (NULL != (gpu_str = getenv("BART_GPU"))) {
@@ -139,7 +139,7 @@ void num_init(void)
 		initialized = true;
 	}
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (bart_gpu_support && bart_use_gpu)
 			cuda_init();
 #else
@@ -158,7 +158,7 @@ void num_init_gpu_support(void)
 void num_deinit_gpu(void)
 {
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	cuda_exit();
 #else
 	error("BART compiled without GPU support.\n");

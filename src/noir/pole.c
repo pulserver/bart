@@ -23,7 +23,7 @@
 #include "num/vec3.h"
 #include "num/ode.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -842,7 +842,7 @@ static void fov_to_grid(const long dims[3], vec3_t pos)
 
 void sample_phase_pole_3D(int N, const long dims[N], complex float* dst, int D, const float r_fov[D][2][3], float tol)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(dst)) {
 
 		complex float* tmp = md_alloc(N, dims, CFL_SIZE);

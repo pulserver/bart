@@ -50,7 +50,7 @@
 #include "misc/nested.h"
 
 #include "num/optimize.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #include "num/gpukrnls.h"
 #include "num/gpukrnls_copy.h"
@@ -771,7 +771,7 @@ void md_clear2(int D, const long dim[D], const long str[D], void* ptr, size_t si
 		return;
 
 	const long (*nstr[1])[D] = { (const long (*)[D])str };
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	bool use_gpu = cuda_ondevice(ptr);
 #endif
 	unsigned long flags = 0;
@@ -788,7 +788,7 @@ void md_clear2(int D, const long dim[D], const long str[D], void* ptr, size_t si
 	{
 		size_t size2 = (size_t)((long)size * opt_data->size);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (use_gpu) {
 
 			cuda_clear((long)size2, ptr[0]);
@@ -980,7 +980,7 @@ void md_copy2(int D, const long dim[D], const long ostr[D], void* optr, const lo
 
 	assert(!is_vptr(optr) && !is_vptr(iptr));
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	bool use_gpu = cuda_ondevice(optr) || cuda_ondevice(iptr);
 
 #if 1
@@ -1029,7 +1029,7 @@ void md_copy2(int D, const long dim[D], const long ostr[D], void* optr, const lo
 	md_copy_dims(ND, tistr, tmp);
 #endif
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (use_gpu && (cuda_ondevice(optr) == cuda_ondevice(iptr)) && ND <= 7) {
 
 		cuda_copy_ND(ND, tdims, tostr, optr, tistr, iptr, size);
@@ -1122,7 +1122,7 @@ out:
 	{
 		size_t size2 = (size_t)((long)size * opt_data->size);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (use_gpu) {
 
 			cuda_memcpy((long)size2, ptr[0], ptr[1]);
@@ -1207,7 +1207,7 @@ void md_circular_swap2(int M, int D, const long dims[D], const long* strs[M], vo
 
 		char* tmp = (size2 < 32) ? alloca(size2) : xmalloc(size2);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		assert(!cuda_ondevice(ptr[0]));
 		assert(!cuda_ondevice(ptr[1]));
 #endif
@@ -2071,7 +2071,7 @@ bool md_compare2(int D, const long dims[D], const long str1[D], const void* src1
 
 	const long (*nstr[2])[D] = { (const long (*)[D])str1, (const long (*)[D])str2 };
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	bool gpu = cuda_ondevice(src1);
 #endif
 
@@ -2080,7 +2080,7 @@ bool md_compare2(int D, const long dims[D], const long str1[D], const void* src1
 		size_t size2 = (size_t)((long)size * opt_data->size);
 
 		bool eq2;
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (gpu)
 			eq2 = cuda_memequal((long)size2, ptrs[0], ptrs[1]);
 		else
@@ -2494,7 +2494,7 @@ static void md_mask_compress_int(vptr_fun_data_t* _data, int N, int D, const lon
 	uint32_t* dst = args[0];
 	float* src = args[1];
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(args[1])) {
 
 		cuda_mask_compress(tot, dst, src);
@@ -2548,7 +2548,7 @@ static void md_mask_decompress_int(vptr_fun_data_t* _data, int N, int D, const l
 	float* dst = args[0];
 	uint32_t* src = args[1];
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(src)) {
 
 		cuda_mask_decompress(tot, dst, src);
@@ -2613,7 +2613,7 @@ void* md_calloc(int D, const long dimensions[D], size_t size)
 
 
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 /**
  * Allocate GPU memory
  *
@@ -2759,7 +2759,7 @@ void* md_alloc_sameplace(int D, const long dimensions[D], size_t size, const voi
 	if (NULL != ret)
 		return ret;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	return (cuda_ondevice(ptr) ? md_alloc_gpu : md_alloc)(D, dimensions, size);
 #else
 	return md_alloc(D, dimensions, size);
@@ -2774,7 +2774,7 @@ bool md_is_sameplace(const void* ptr1, const void* ptr2)
 	if (is_vptr(ptr1))
 		return is_vptr_gpu(ptr1) == is_vptr_gpu(ptr2);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	return cuda_ondevice(ptr1) == cuda_ondevice(ptr2);
 #else
 	return true;
@@ -2792,7 +2792,7 @@ void md_free(const void* ptr)
 	if (vptr_free(ptr))
 		return;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(ptr))
 		cuda_free((void*)ptr);
 	else

@@ -20,7 +20,7 @@
 #include "num/iovec.h"
 #include "num/ops.h"
 #include "num/ops_p.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -346,7 +346,7 @@ void noir2_recon(const struct noir2_conf_s* conf, struct noir2_s* noir_ops,
 	linop_adjoint(noir_ops->lop_asym, N, dat_dims, data, N, ksp_dims, kspace);
 
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if((conf->gpu) && !cuda_ondevice(data)) {
 
 		complex float* tmp_data = md_gpu_move(N, dat_dims, data, CFL_SIZE);
@@ -652,7 +652,7 @@ void noir2_recon_noncart(
 		if (conf->gpu)
 			vptr_set_gpu(ref);
 	}
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	else if (conf->gpu)
 		ref = md_alloc_gpu(1, MD_DIMS(1), 1);
 #endif

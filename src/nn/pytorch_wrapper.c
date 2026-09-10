@@ -12,7 +12,7 @@
 
 #include "num/multind.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -43,7 +43,7 @@ static void pytorch_fun(const nlop_data_t* _data, int N, complex float* args[N])
 
 	int device = -1;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	for (int i = 0; i < N; i++)
 		device = cuda_ondevice(args[i]) ? 0 : -1;
 #endif
@@ -91,7 +91,7 @@ const struct nlop_s* nlop_pytorch_create(const char* path, int II, const int DI[
 
 	int device = -1;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (init_gpu && -1 < cuda_get_device_id())
 		device = cuda_get_device_id();
 #else

@@ -18,7 +18,7 @@
 #include "num/multind.h"
 #include "num/flpmath.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -60,7 +60,7 @@ static void mpsnr_fun(const nlop_data_t* _data, int D, complex float* args[D])
 	const complex float* src1 = args[1];
 	const complex float* src2 = args[2];
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert((cuda_ondevice(dst) == cuda_ondevice(src1)) && (cuda_ondevice(src1) == cuda_ondevice(src2)));
 #endif
 	int N = data->N;
@@ -315,7 +315,7 @@ static void cce_fun(const nlop_data_t* _data, int D, complex float* args[D])
 	const complex float* src_pred = args[1];
 	const complex float* src_true = args[2];
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert((cuda_ondevice(dst) == cuda_ondevice(src_pred)) && (cuda_ondevice(src_pred) == cuda_ondevice(src_true)));
 #endif
 	cce_initialize(data, dst);
@@ -482,7 +482,7 @@ static void accuracy_fun(const nlop_data_t* _data, int D, complex float* args[D]
 	const complex float* src_pred = args[1];
 	const complex float* src_true = args[2];
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert(   (cuda_ondevice(dst) == cuda_ondevice(src_pred))
 	       && (cuda_ondevice(src_pred) == cuda_ondevice(src_true)));
 #endif
@@ -565,7 +565,7 @@ static void frequency_compensation_fun(const nlop_data_t* _data, complex float* 
 {
 	const auto data = CAST_DOWN(frequency_compensation_s, _data);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert(cuda_ondevice(dst) == cuda_ondevice(src));
 #endif
 
@@ -755,7 +755,7 @@ static void dice_fun(const nlop_data_t* _data, int D, complex float* args[D])
 	const complex float* src_pred = args[1];
 	const complex float* src_true = args[2];
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert((cuda_ondevice(dst) == cuda_ondevice(src_pred)) && (cuda_ondevice(src_pred) == cuda_ondevice(src_true)));
 #endif
 	int N = d->N;

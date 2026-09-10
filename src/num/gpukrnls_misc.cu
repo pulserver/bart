@@ -3,7 +3,7 @@
  * a BSD-style license which can be found in the LICENSE file.
  */
 
-#include <cuda_runtime_api.h>
+#include "num/gpu_compat_runtime.h"
 
 #include "gpukrnls_misc.h"
 

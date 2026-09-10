@@ -41,7 +41,7 @@
 #include <omp.h>
 #endif
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -1038,7 +1038,7 @@ static void copy_fun(const operator_data_t* _data, int N, void* args[N])
 
 		bool allocate = !md_check_equal_dims(io->N, io->strs, data->strs[i], md_nontriv_dims(io->N, io->dims));
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		switch (data->loc[i]) {
 
 		case CL_CPU:
@@ -1242,7 +1242,7 @@ const struct operator_s* operator_copy_wrapper_sameplace(int N, const long* strs
 
 	for (int i = 0; i < N; i++) {
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (cuda_ondevice(ref))
 			loc[i] = CL_DEVICE;
 		else
@@ -1676,8 +1676,7 @@ static void link_apply(const operator_data_t* _data, int N, void* args[N])
 
 	const void* ref = args[0];
 
-#ifdef USE_CUDA
-	// Allocate tmp on GPU when one argument is on the GPU.
+#ifdef USE_GPU	// Allocate tmp on GPU when one argument is on the GPU.
 	// The scalar parameters of op_p may be on CPU.
 
 	for (int i = 0; i < N; i++)

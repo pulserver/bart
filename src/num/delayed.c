@@ -29,7 +29,7 @@
 #include "num/vptr.h"
 #include "num/vptr_fun.h"
 #include "num/mpi_ops.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -294,7 +294,7 @@ void delayed_compute(const void* /*ptr*/)
 	list_t ops = queue->ops;
 	queue->compute = true;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (!cuda_is_stream_default())
 		error("Delayed computation is incompatible with using multiple CUDA streams!\n");
 #endif
@@ -372,7 +372,7 @@ static void delayed_queue(delayed_op_t* x)
 		xfree(op);
 	}
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (!cuda_is_stream_default())
 		error("Delayed computation is incompatible with using multiple CUDA streams!\n");
 #endif

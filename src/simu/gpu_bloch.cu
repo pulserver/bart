@@ -4,7 +4,8 @@
  */
 
 #include <complex.h>
-#include <cuComplex.h>
+#include "num/gpu_compat_runtime.h"
+#include "num/gpu_compat_complex.h"
 #include <math.h>
 #include <stdlib.h>
 #include <assert.h>

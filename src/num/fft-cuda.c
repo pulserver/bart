@@ -17,8 +17,8 @@
 
 #include "fft-cuda.h"
 
-#ifdef USE_CUDA
-#include <cufft.h>
+#ifdef USE_GPU
+#include "num/gpu_compat_fft.h"
 #include "num/gpuops.h"
 
 #ifndef CFL_SIZE

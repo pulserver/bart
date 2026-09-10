@@ -29,7 +29,7 @@
 #include "num/ops.h"
 #include "num/iovec.h"
 #include "num/multiplace.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -1294,7 +1294,7 @@ struct operator_matrix_s {
 
 	const complex float* mat;
 	const complex float* mat_gram; // A^H A
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	const complex float* mat_gpu;
 	const complex float* mat_gram_gpu;
 #endif
@@ -1317,7 +1317,7 @@ static void linop_matrix_apply(const linop_data_t* _data, complex float* dst, co
 	auto data = CAST_DOWN(operator_matrix_s, _data);
 	const complex float* mat = data->mat;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(src)) {
 
 		if (NULL == data->mat_gpu)
@@ -1335,7 +1335,7 @@ static void linop_matrix_apply_adjoint(const linop_data_t* _data, complex float*
 	auto data = CAST_DOWN(operator_matrix_s, _data);
 	const complex float* mat = data->mat;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(src)) {
 
 		if (NULL == data->mat_gpu)
@@ -1364,7 +1364,7 @@ static void linop_matrix_apply_normal(const linop_data_t* _data, complex float* 
 	} else {
 
 		const complex float* mat_gram = data->mat_gram;
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (cuda_ondevice(src)) {
 
 			if (NULL == data->mat_gram_gpu)
@@ -1390,7 +1390,7 @@ static void linop_matrix_del(const linop_data_t* _data)
 
 	md_free(data->mat);
 	md_free(data->mat_gram);
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	md_free(data->mat_gpu);
 	md_free(data->mat_gram_gpu);
 #endif
@@ -1450,7 +1450,7 @@ static struct operator_matrix_s* linop_matrix_priv2(int N, const long out_dims[N
 
 	data->mat = mat;
 	data->mat_gram = NULL;
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	data->mat_gpu = NULL;
 	data->mat_gram_gpu = NULL;
 #endif

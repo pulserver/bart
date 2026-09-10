@@ -39,7 +39,7 @@
 #include "num/ops.h"
 #include "num/vptr_fun.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #include "wavelet/wl3-cuda.h"
 #endif
@@ -163,7 +163,7 @@ void fwt1(int N, int d, const long dims[N], const long ostr[N], complex float* l
 	long wistr[3] = { CFL_SIZE, istr[d], (long)CFL_SIZE * md_calc_size(o, dims) };
 	long wostr[3] = { CFL_SIZE, ostr[d], (long)CFL_SIZE * md_calc_size(o, odims) };
 
-#ifdef  USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(in)) {
 
 		assert(cuda_ondevice(low));
@@ -218,7 +218,7 @@ void iwt1(int N, int d, const long dims[N], const long ostr[N], complex float* o
 
 	md_clear(3, wdims, out, CFL_SIZE);	// we cannot clear because we merge outputs
 
-#ifdef  USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(out)) {
 
 		assert(cuda_ondevice(low));

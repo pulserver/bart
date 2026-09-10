@@ -82,7 +82,7 @@ int main_estmotion(int argc, char* argv[argc])
 
 	num_init_gpu_support();
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	md_alloc_fun_t my_alloc = bart_use_gpu ? md_alloc_gpu : md_alloc;
 #else
 	assert(!bart_use_gpu);

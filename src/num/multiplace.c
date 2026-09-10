@@ -7,7 +7,7 @@
 #include "misc/types.h"
 
 #include "num/multind.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -91,7 +91,7 @@ void multiplace_free(const struct multiplace_array_s* _ptr)
 
 static bool is_gpu(const void* ptr)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	return cuda_ondevice(ptr);
 #else
 	(void)ptr;
@@ -145,7 +145,7 @@ const void* multiplace_read(struct multiplace_array_s* ptr, const void* ref)
 
 	} else {
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (cuda_ondevice(ref)) {
 
 			if (NULL == ptr->ptr_gpu) {
@@ -191,7 +191,7 @@ struct multiplace_array_s* multiplace_move2(int D, const long dimensions[D], con
 
 	} else {
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (cuda_ondevice(tmp))
 			result->ptr_gpu = tmp;
 		else
@@ -223,7 +223,7 @@ struct multiplace_array_s* multiplace_move_F(int D, const long dimensions[D], si
 
 	} else {
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (cuda_ondevice(ptr))
 			result->ptr_gpu = (void*)ptr;
 		else

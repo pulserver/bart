@@ -47,7 +47,7 @@
 #include "moba/moba.h"
 
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #include "simu/gpu_bloch.h"
 #endif

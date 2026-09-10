@@ -29,9 +29,9 @@
 #include <omp.h>
 #endif
 
-#ifdef USE_CUDA
-#include <cuComplex.h>
-#include <cublas_v2.h>
+#ifdef USE_GPU
+#include "num/gpu_compat_complex.h"
+#include "num/gpu_compat_blas.h"
 
 #include "num/gpuops.h"
 #endif
@@ -39,7 +39,7 @@
 #include "blas.h"
 
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 //blas2_* means, we use the new blas interface, i.e. scalar parameters are written an read by pointers.
 //These pointers can point to cpu or gpu memory.
 
@@ -261,7 +261,7 @@ static void blas_cpu_unset_lock(void)
 
 void blas2_cgemm(char transa, char transb, long M, long N, long K, const complex float* alpha, long lda, const complex float* A, long ldb, const complex float* B, const complex float* beta, long ldc, complex float* C)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
 		CUBLAS_CALL(cublasCgemm(get_handle_device(), cublas_trans(transa), cublas_trans(transb), M, N, K, (const cuComplex*)alpha,
@@ -280,7 +280,7 @@ void blas2_cgemm(char transa, char transb, long M, long N, long K, const complex
 
 void blas_cgemm(char transa, char transb, long M, long N,  long K, const complex float alpha, long lda, const complex float* A, long ldb, const complex float* B, const complex float beta, long ldc, complex float* C)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
 		CUBLAS_CALL(cublasCgemm(get_handle_host(), cublas_trans(transa), cublas_trans(transb), M, N, K, (const cuComplex*)(&alpha),
@@ -299,7 +299,7 @@ void blas_cgemm(char transa, char transb, long M, long N,  long K, const complex
 
 void blas2_cgemv(char trans, long M, long N, const complex float* alpha, long lda, const complex float* A, long incx, const complex float* x, complex float* beta, long incy, complex float* y)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
 		CUBLAS_CALL(cublasCgemv(get_handle_device(), cublas_trans(trans), M, N, (const cuComplex*)alpha,
@@ -317,7 +317,7 @@ void blas2_cgemv(char trans, long M, long N, const complex float* alpha, long ld
 
 void blas_cgemv(char trans, long M, long N, complex float alpha, long lda, const complex float* A, long incx, const complex float* x, complex float beta, long incy, complex float* y)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
 		CUBLAS_CALL(cublasCgemv(get_handle_host(), cublas_trans(trans), M, N, (const cuComplex*)&alpha,
@@ -335,7 +335,7 @@ void blas_cgemv(char trans, long M, long N, complex float alpha, long lda, const
 
 void blas2_cgeru(long M, long N, const complex float* alpha, long incx, const complex float* x, long incy, const complex float* y, long lda, complex float* A)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
 		CUBLAS_CALL(cublasCgeru(get_handle_device(), M, N, (const cuComplex*)alpha,
@@ -352,7 +352,7 @@ void blas2_cgeru(long M, long N, const complex float* alpha, long incx, const co
 
 void blas_cgeru(long M, long N, complex float alpha, long incx, const complex float* x, long incy, const complex float* y, long lda, complex float* A)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
 		CUBLAS_CALL(cublasCgeru(get_handle_host(), M, N, (const cuComplex*)&alpha,
@@ -369,7 +369,7 @@ void blas_cgeru(long M, long N, complex float alpha, long incx, const complex fl
 
 void blas2_caxpy(long N, const complex float* alpha, long incx, const complex float* x, long incy, complex float* y)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
 		CUBLAS_CALL(cublasCaxpy(get_handle_device(), N, (const cuComplex*)alpha, (const cuComplex*)x, incx, (cuComplex*)y, incy));
@@ -385,7 +385,7 @@ void blas2_caxpy(long N, const complex float* alpha, long incx, const complex fl
 
 void blas_caxpy(long N, const complex float alpha, long incx, const complex float* x, long incy, complex float* y)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
 		CUBLAS_CALL(cublasCaxpy(get_handle_host(), N, (const cuComplex*)&alpha, (const cuComplex*)x, incx, (cuComplex*)y, incy));
@@ -401,7 +401,7 @@ void blas_caxpy(long N, const complex float alpha, long incx, const complex floa
 
 void blas2_cscal(long N, const complex float* alpha, long incx, complex float* x)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
 		CUBLAS_CALL(cublasCscal(get_handle_device(), N, (const cuComplex*)alpha, (cuComplex*)x, incx));
@@ -417,7 +417,7 @@ void blas2_cscal(long N, const complex float* alpha, long incx, complex float* x
 
 void blas_cscal(long N, const complex float alpha, long incx, complex float* x)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
 		CUBLAS_CALL(cublasCscal(get_handle_host(), N, (const cuComplex*)&alpha, (cuComplex*)x, incx));
@@ -433,7 +433,7 @@ void blas_cscal(long N, const complex float alpha, long incx, complex float* x)
 
 void blas2_cdotu(complex float* result, long N, long incx, const complex float* x, long incy, const complex float* y)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
 		CUBLAS_CALL(cublasCdotu(get_handle_device(), N, (const cuComplex*)x, incx, (const cuComplex*)y, incy, (cuComplex*)result));
@@ -449,7 +449,7 @@ void blas2_cdotu(complex float* result, long N, long incx, const complex float* 
 
 void blas2_sgemm(char transa, char transb, long M, long N, long K, const float* alpha, long lda, const float* A, long ldb, const float* B, const float* beta, long ldc, float* C)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
 		CUBLAS_CALL(cublasSgemm(get_handle_device(), cublas_trans(transa), cublas_trans(transb), M, N, K, alpha, A, lda, B, ldb, beta, C, ldc));
@@ -467,7 +467,7 @@ void blas2_sgemm(char transa, char transb, long M, long N, long K, const float* 
 
 void blas_sgemm(char transa, char transb, long M, long N,  long K, const float alpha, long lda, const float* A, long ldb, const float* B, const float beta, long ldc, float* C)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
 		CUBLAS_CALL(cublasSgemm(get_handle_host(), cublas_trans(transa), cublas_trans(transb), M, N, K, &alpha, A, lda, B, ldb, &beta, C, ldc));
@@ -485,7 +485,7 @@ void blas_sgemm(char transa, char transb, long M, long N,  long K, const float a
 
 void blas2_sgemv(char trans, long M, long N, const float* alpha, long lda, const float* A, long incx, const float* x, float* beta, long incy, float* y)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
 		CUBLAS_CALL(cublasSgemv(get_handle_device(), cublas_trans(trans), M, N, alpha,
@@ -503,7 +503,7 @@ void blas2_sgemv(char trans, long M, long N, const float* alpha, long lda, const
 
 void blas_sgemv(char trans, long M, long N, const float alpha, long lda, const float* A, long incx, const float* x, float beta, long incy, float* y)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
 		CUBLAS_CALL(cublasSgemv(get_handle_host(), cublas_trans(trans), M, N, &alpha,
@@ -521,7 +521,7 @@ void blas_sgemv(char trans, long M, long N, const float alpha, long lda, const f
 
 void blas2_sger(long M, long N, const float* alpha, long incx, const float* x, long incy, const float* y, long lda, float* A)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
 		CUBLAS_CALL(cublasSger(get_handle_device(), M, N, alpha, x, incx, y, incy, A, lda));
@@ -536,8 +536,7 @@ void blas2_sger(long M, long N, const float* alpha, long incx, const float* x, l
 
 void blas_sger(long M, long N, const float alpha, long incx, const float* x, long incy, const float* y, long lda, float* A)
 {
-#ifdef USE_CUDA
-
+#ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
 		CUBLAS_CALL(cublasSger(get_handle_host(), M, N, &alpha, x, incx, y, incy, A, lda));
@@ -552,7 +551,7 @@ void blas_sger(long M, long N, const float alpha, long incx, const float* x, lon
 
 void blas2_saxpy(long N, const float* alpha, long incx, const float* x, long incy, float* y)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
 		CUBLAS_CALL(cublasSaxpy(get_handle_device(), N, alpha, x, incx, y, incy));
@@ -568,7 +567,7 @@ void blas2_saxpy(long N, const float* alpha, long incx, const float* x, long inc
 
 void blas_saxpy(long N, const float alpha, long incx, const float* x, long incy, float* y)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
 		CUBLAS_CALL(cublasSaxpy(get_handle_host(), N, &alpha, x, incx, y, incy));
@@ -584,8 +583,7 @@ void blas_saxpy(long N, const float alpha, long incx, const float* x, long incy,
 
 void blas2_sscal(long N, const float* alpha, long incx, float* x)
 {
-#ifdef USE_CUDA
-
+#ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
 		CUBLAS_CALL(cublasSscal(get_handle_device(), N, alpha, x, incx));
@@ -601,7 +599,7 @@ void blas2_sscal(long N, const float* alpha, long incx, float* x)
 
 void blas_sscal(long N, float alpha, long incx, float* x)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
 		CUBLAS_CALL(cublasSscal(get_handle_host(), N, &alpha, x, incx));
@@ -617,7 +615,7 @@ void blas_sscal(long N, float alpha, long incx, float* x)
 
 void blas2_sdot(float* result, long N, long incx, const float* x, long incy, const float* y)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
 		CUBLAS_CALL(cublasSdot(get_handle_device(), N, x, incx, y, incy, result));
@@ -633,7 +631,7 @@ void blas2_sdot(float* result, long N, long incx, const float* x, long incy, con
 
 void blas_cdgmm(long M, long N, bool left_mul, const complex float* A, long lda, const complex float* x, long incx, complex float* C, long ldc)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
 		CUBLAS_CALL(cublasCdgmm(get_handle_device(), left_mul ? CUBLAS_SIDE_LEFT : CUBLAS_SIDE_RIGHT,
@@ -651,7 +649,7 @@ void blas_cdgmm(long M, long N, bool left_mul, const complex float* A, long lda,
 
 void blas_sdgmm(long M, long N, bool left_mul, const float* A, long lda, const float* x, long incx, float* C, long ldc)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
 		CUBLAS_CALL(cublasSdgmm(get_handle_device(), left_mul ? CUBLAS_SIDE_LEFT : CUBLAS_SIDE_RIGHT,
@@ -670,7 +668,7 @@ void blas_sdgmm(long M, long N, bool left_mul, const float* A, long lda, const f
 //B = alpha * op(A)
 void blas_cmatcopy(char trans, long M, long N, complex float alpha, const complex float* A, long lda, complex float* B, long ldb)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
 		complex float zero = 0.;
@@ -691,7 +689,7 @@ void blas_cmatcopy(char trans, long M, long N, complex float alpha, const comple
 //B = alpha * op(A)
 void blas2_cmatcopy(char trans, long M, long N, const complex float* alpha, const complex float* A, long lda, complex float* B, long ldb)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
 		complex float* zero = cuda_malloc(8);
@@ -715,7 +713,7 @@ void blas2_cmatcopy(char trans, long M, long N, const complex float* alpha, cons
 //B = alpha * op(A)
 void blas_smatcopy(char trans, long M, long N, float alpha, const float* A, long lda, float* B, long ldb)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
 		float zero = 0.;
@@ -736,7 +734,7 @@ void blas_smatcopy(char trans, long M, long N, float alpha, const float* A, long
 //B = alpha * op(A)
 void blas2_smatcopy(char trans, long M, long N, const float* alpha, const float* A, long lda, float* B, long ldb)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
 		float* zero = cuda_malloc(4);

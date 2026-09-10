@@ -18,7 +18,7 @@
 #include "num/flpmath.h"
 #include "num/iovec.h"
 #include "num/rand.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -432,7 +432,7 @@ static void norm_max_abs_fun(const nlop_data_t* _data, int D, complex float* arg
 	if (NULL == data->inv_scale)
 		data->inv_scale = md_alloc_sameplace(N, sdims, CFL_SIZE, dst);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert((cuda_ondevice(dst) == cuda_ondevice(src)));
 #endif
 
@@ -539,7 +539,7 @@ static void norm_znorm_fun(const nlop_data_t* _data, int D, complex float* args[
 	if (NULL == data->inv_scale)
 		data->inv_scale = md_alloc_sameplace(N, sdims, CFL_SIZE, dst);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert((cuda_ondevice(dst) == cuda_ondevice(src)));
 #endif
 	md_ztenmulc(N, sdims, scale, dims, src, dims, src);

@@ -14,11 +14,10 @@
 #include <math.h>
 #include <stdio.h>
 
-#include <cuda.h>
-#include <cufft.h>
-#include <cuda_runtime.h>
-#include <cublas_v2.h>
-#include <cuComplex.h>
+#include "num/gpu_compat_runtime.h"
+#include "num/gpu_compat_complex.h"
+#include "num/gpu_compat_fft.h"
+#include "num/gpu_compat_blas.h"
 
 #include "misc/mri.h"
 #include "misc/debug.h"

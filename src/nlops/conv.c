@@ -27,7 +27,7 @@
 
 #include "conv.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -107,7 +107,7 @@ static void convcorr_geom_fun(const nlop_data_t* _data, int N, complex float* ar
 
 	convcorr_init(data, dst);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	assert((cuda_ondevice(dst) == cuda_ondevice(src1)) && (cuda_ondevice(src1) == cuda_ondevice(src2)));
 #endif
 

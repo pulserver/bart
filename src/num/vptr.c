@@ -25,7 +25,7 @@
 #include "misc/shrdptr.h"
 #include "misc/debug.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 #include "num/multind.h"
@@ -258,7 +258,7 @@ static void vptr_mem_block_alloc(struct vptr_mem_s* mem, int idx, enum VPTR_LOC 
 			memset(mem->mem[idx], 0, (size_t)mem->block_size);
 
 		break;
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	case VPTR_GPU:
 		mem->mem[idx] = cuda_malloc(mem->block_size);
 
@@ -294,7 +294,7 @@ static void vptr_mem_block_free(struct vptr_mem_s* mem, int idx, enum VPTR_LOC l
 	case VPTR_CPU:
 		xfree(mem->mem[idx]);
 		break;
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	case VPTR_GPU:
 		cuda_free(mem->mem[idx]);
 		break;
@@ -540,7 +540,7 @@ static void handler(int /*sig*/, siginfo_t *si, void*)
 		error("Virtual pointer at %p not resolved!\n", si->si_addr);
 	}
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(si->si_addr))
 		error("Tried to access CUDA pointer at %x from CPU!\n", si->si_addr);
 #endif
@@ -1160,7 +1160,7 @@ void* vptr_wrap(int N, const long dims[N], size_t size, const void* ptr, struct 
 	vptr_mem_block_init(&mem->blocks);
 	mem->blocks.mem[0] = (void*)ptr;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	mem->loc = cuda_ondevice(ptr) ? VPTR_GPU : VPTR_CPU;
 #endif
 	mem->free = free;

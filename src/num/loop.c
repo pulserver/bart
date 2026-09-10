@@ -16,7 +16,7 @@
 #include "misc/misc.h"
 #include "misc/nested.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 #include "num/multind.h"
@@ -31,7 +31,7 @@
 static void md_zsample2(int N, const long dims[N], unsigned long flags, complex float* out, zsample_fun_t fun)
 {
 	bool buf = is_vptr(out);
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	buf = buf || cuda_ondevice(out);
 #endif
 
@@ -71,7 +71,7 @@ void (md_parallel_zsample)(int N, const long dims[N], complex float* out, zsampl
 
 static void (md_zzsample2)(int N, const long dims[N], unsigned long flags, complex double* out, zzsample_fun_t fun)
 {
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(out)) {
 
 		complex double *out2 = md_alloc(N, dims, sizeof *out2);

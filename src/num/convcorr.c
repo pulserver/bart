@@ -10,7 +10,7 @@
 #include <complex.h>
 
 #include "num/flpmath.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #include "num/gpukrnls.h"
 #include "num/gpu_conv.h"
@@ -70,7 +70,7 @@ zconvcorr_fwd_algo_f* algos_fwd_cpu[] = { zconvcorr_fwd_im2col_cf_cpu, };
 zconvcorr_bwd_krn_algo_f* algos_bwd_krn_cpu[] = { zconvcorr_bwd_krn_im2col_cf_cpu, };
 zconvcorr_bwd_in_algo_f* algos_bwd_in_cpu[] = {	zconvcorr_bwd_in_im2col_cf_cpu, };
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 zconvcorr_bwd_krn_algo_f* algos_bwd_krn_gpu[] = {
 #ifdef USE_CUDNN
 	zconvcorr_bwd_krn_cudnn,
@@ -336,7 +336,7 @@ static bool simple_zconvcorr_fwd(	int N, const long dims[N],
 						nidims, nistrs,
 						dilation, strides, conv, false) / (long)size;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(out))
 		for (int i = 0; (unsigned long)i < sizeof(algos_fwd_gpu) / sizeof(algos_fwd_gpu[0]); i++)
 			if (algos_fwd_gpu[i](	N,
@@ -434,7 +434,7 @@ static bool simple_zconvcorr_bwd_in(	int N, const long dims[N],
 						nidims, nistrs,
 						dilation, strides, conv, false) / (long)size;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(out))
 		for(int i = 0; (unsigned long)i < sizeof(algos_bwd_in_gpu) / sizeof(algos_bwd_in_gpu[0]); i++)
 			if (algos_bwd_in_gpu[i](	N,
@@ -446,7 +446,7 @@ static bool simple_zconvcorr_bwd_in(	int N, const long dims[N],
 #endif
 
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (!cuda_ondevice(out))
 #else
 	if (true)
@@ -537,7 +537,7 @@ static bool simple_zconvcorr_bwd_krn(	int N, const long dims[N],
 						nidims, nistrs,
 						dilation, strides, conv, false) / (long)size;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(out))
 		for(int i = 0; (unsigned long)i < sizeof(algos_bwd_krn_gpu) / sizeof(algos_bwd_krn_gpu[0]); i++)
 			if (algos_bwd_krn_gpu[i](	N,
@@ -548,7 +548,7 @@ static bool simple_zconvcorr_bwd_krn(	int N, const long dims[N],
 				return true;
 #endif
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (!cuda_ondevice(out))
 #else
 	if (true)
@@ -618,7 +618,7 @@ bool zconvcorr_fwd_im2col_cf_cpu(int N,
 #ifdef NO_BLAS
 	return false;
 #else
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(out))
 		return false;
 #endif
@@ -717,7 +717,7 @@ bool zconvcorr_bwd_krn_im2col_cf_cpu(int N,
 #ifdef NO_BLAS
 	return false;
 #else
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(out))
 		return false;
 #endif
@@ -817,7 +817,7 @@ bool zconvcorr_bwd_in_im2col_cf_cpu(int N,
 #ifdef NO_BLAS
 	return false;
 #else
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(out))
 		return false;
 #endif
@@ -911,7 +911,7 @@ bool zconvcorr_bwd_in_im2col_cf_cpu(int N,
 }
 
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 bool zconvcorr_fwd_im2col_cf_gpu(int N,
 				long odims[N], long ostrs[N], complex float* out,
 				long idims[N], long istrs[N], const complex float* in,
@@ -983,7 +983,7 @@ bool zconvcorr_fwd_im2col_cf_gpu(int N,
 #endif
 
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 bool zconvcorr_bwd_krn_im2col_cf_gpu(int N,
 				long odims[N], long ostrs[N], const complex float* out,
 				long idims[N], long istrs[N], const complex float* in,
@@ -1057,7 +1057,7 @@ bool zconvcorr_bwd_krn_im2col_cf_gpu(int N,
 #endif
 
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 bool zconvcorr_bwd_in_im2col_cf_gpu(int N,
 				long odims[N], long ostrs[N], const complex float* out,
 				long idims[N], long istrs[N], complex float* in,
@@ -1219,7 +1219,7 @@ bool test_zconvcorr_fwd(	int N,
 {
 	bool result = true;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	void* ref_ptr = gpu ? md_alloc_gpu(1, MD_DIMS(1), CFL_SIZE) : md_alloc(1, MD_DIMS(1), CFL_SIZE);
 #else
 	assert(!gpu);
@@ -1243,7 +1243,7 @@ bool test_zconvcorr_fwd(	int N,
 
 	long counter = 0;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	int nr_algos = gpu ? ARRAY_SIZE(algos_fwd_gpu) : ARRAY_SIZE(algos_fwd_cpu);
 #else
 	int nr_algos = ARRAY_SIZE(algos_fwd_cpu);
@@ -1251,7 +1251,7 @@ bool test_zconvcorr_fwd(	int N,
 
 	for(int i = 0; i < nr_algos; i++) {
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		zconvcorr_fwd_algo_f* algo = gpu ? algos_fwd_gpu[i] : algos_fwd_cpu[i];
 #else
 		zconvcorr_fwd_algo_f* algo = algos_fwd_cpu[i];
@@ -1291,7 +1291,7 @@ bool test_zconvcorr_bwd_in(	int N,
 {
 	bool result = true;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	void* ref_ptr = gpu ? md_alloc_gpu(1, MD_DIMS(1), CFL_SIZE) : md_alloc(1, MD_DIMS(1), CFL_SIZE);
 #else
 	assert(!gpu);
@@ -1315,7 +1315,7 @@ bool test_zconvcorr_bwd_in(	int N,
 
 	long counter = 0;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	int nr_algos = gpu ? ARRAY_SIZE(algos_bwd_in_gpu) : ARRAY_SIZE(algos_bwd_in_cpu);
 #else
 	int nr_algos = ARRAY_SIZE(algos_bwd_in_cpu);
@@ -1323,7 +1323,7 @@ bool test_zconvcorr_bwd_in(	int N,
 
 	for(int i = 0; i < nr_algos; i++) {
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		zconvcorr_bwd_in_algo_f* algo = gpu ? algos_bwd_in_gpu[i] : algos_bwd_in_cpu[i];
 #else
 		zconvcorr_bwd_in_algo_f* algo = algos_bwd_in_cpu[i];
@@ -1362,7 +1362,7 @@ bool test_zconvcorr_bwd_krn(	int N,
 {
 	bool result = true;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	void* ref_ptr = gpu ? md_alloc_gpu(1, MD_DIMS(1), CFL_SIZE) : md_alloc(1, MD_DIMS(1), CFL_SIZE);
 #else
 	assert(!gpu);
@@ -1386,7 +1386,7 @@ bool test_zconvcorr_bwd_krn(	int N,
 
 	long counter = 0;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	int nr_algos = gpu ? ARRAY_SIZE(algos_bwd_krn_gpu) : ARRAY_SIZE(algos_bwd_krn_cpu);
 #else
 	int nr_algos = ARRAY_SIZE(algos_bwd_krn_cpu);
@@ -1394,7 +1394,7 @@ bool test_zconvcorr_bwd_krn(	int N,
 
 	for(int i = 0; i < nr_algos; i++) {
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		zconvcorr_bwd_krn_algo_f* algo = gpu ? algos_bwd_krn_gpu[i] : algos_bwd_krn_cpu[i];
 #else
 		zconvcorr_bwd_krn_algo_f* algo = algos_bwd_krn_cpu[i];

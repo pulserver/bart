@@ -43,7 +43,7 @@ struct vec_iter_s {
 	void (*axpy_bat)(long Bi, long N, long Bo, float* a, const float* alpha, const float* x);
 };
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 extern const struct vec_iter_s gpu_iter_ops;
 #endif
 extern const struct vec_iter_s cpu_iter_ops;

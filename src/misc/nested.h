@@ -1,5 +1,5 @@
 
-#if defined(__clang__) && !defined(__CUDACC__)
+#if defined(__clang__) && !defined(__CUDACC__) && !defined(__HIPCC__)
 #define NESTED(RET, NAME, ARGS) \
 	RET (^NAME)ARGS = ^ARGS
 #define CLOSURE_TYPE(RET, ARGS) typeof(RET (^) ARGS)

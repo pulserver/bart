@@ -52,7 +52,7 @@
 #include "seq/flash.h"
 #include "seq/kernel.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #include "simu/gpu_bloch.h"
 #endif
@@ -570,7 +570,7 @@ static void pulse_sim_vec(const long mdims[3], const long mstrs[3], complex floa
 
 	long M = mdims[2];
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 	if (cuda_ondevice(mag)) {
 
 		complex float* dpulse = NULL;

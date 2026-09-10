@@ -17,7 +17,7 @@
 #include "num/ops.h"
 #include "num/multind.h"
 #include "num/flpmath.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 

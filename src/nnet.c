@@ -18,7 +18,7 @@
 
 #include "nn/weights.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 

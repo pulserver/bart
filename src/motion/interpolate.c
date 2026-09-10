@@ -17,7 +17,7 @@
 #include "num/flpmath.h"
 #include "num/multiplace.h"
 #include "num/vptr_fun.h"
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -25,7 +25,7 @@
 
 #include "nlops/nlop.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "motion/gpu_interpolate.h"
 #endif
 
@@ -51,7 +51,7 @@ void md_positions(int N, int d, unsigned long flags, const long sdims[N], const 
 	assert(pdims[d] == bitcount(flags));
 	assert(sdims[d] == bitcount(flags) || 1 == sdims[d]);
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 
 	if (cuda_ondevice(pos)) {
 
@@ -352,7 +352,7 @@ static void md_interpolate2_int(int d, unsigned long flags, int ord, int N, cons
 		long coffset = md_calc_offset(N, cstrs, pos) / (long)CFL_SIZE;
 		long goffset = md_calc_offset(N, gstrs, pos) / (long)CFL_SIZE;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (cuda_ondevice(coor))
 			cuda_interpolate2(ord, M, idims_red, istrs_red, intp + ioffset, cstrs_red, cstrs[d], coor + coffset, gdims_red, gstrs_red, grid + goffset);
 		else
@@ -382,7 +382,7 @@ static void md_interpolateH2_int(int d, unsigned long flags, int ord, int N, con
 		long coffset = md_calc_offset(N, cstrs, pos) / (long)CFL_SIZE;
 		long goffset = md_calc_offset(N, gstrs, pos) / (long)CFL_SIZE;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (cuda_ondevice(coor))
 			cuda_interpolateH2(ord, M, gdims_red, gstrs_red, grid + goffset, idims_red, istrs_red, intp + ioffset, cstrs_red, cstrs[d], coor + coffset);
 		else
@@ -556,7 +556,7 @@ static void md_interpolate_adj_coor2_int(int d, unsigned long flags, int ord, in
 		long coffset = md_calc_offset(N, cstrs, pos) / (long)CFL_SIZE;
 		long goffset = md_calc_offset(N, gstrs, pos) / (long)CFL_SIZE;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (cuda_ondevice(dcoor))
 			cuda_interpolate_adj_coor2(ord, M, idims_red, istrs_red, dintp + ioffset, cstrs_red, cstrs[d], coor + coffset, dcoor + coffset, gdims_red, gstrs_red, grid + goffset);
 		else
@@ -678,7 +678,7 @@ static void md_interpolate_der_coor2_int(int d, unsigned long flags, int ord, in
 		long coffset = md_calc_offset(N, cstrs, pos) / (long)CFL_SIZE;
 		long goffset = md_calc_offset(N, gstrs, pos) / (long)CFL_SIZE;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (cuda_ondevice(dcoor))
 			cuda_interpolate_der_coor2(ord, M, idims_red, istrs_red, dintp + ioffset, cstrs_red, cstrs[d], coor + coffset, dcoor + coffset, gdims_red, gstrs_red, grid + goffset);
 		else

@@ -42,7 +42,7 @@
 #include "grecon/optreg.h"
 #include "grecon/italgo.h"
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 #include "num/gpuops.h"
 #endif
 
@@ -443,7 +443,7 @@ int main_moba(int argc, char* argv[argc])
 
 		complex float* traj_cfl = traj;
 
-#ifdef USE_CUDA
+#ifdef USE_GPU
 		if (bart_use_gpu)
 			traj = md_gpu_move(DIMS, traj_dims, traj, CFL_SIZE);
 #endif
@@ -754,7 +754,7 @@ int main_moba(int argc, char* argv[argc])
 
 	complex float* monitor = (NULL != monitor_file) ? create_async_cfl(monitor_file, ITER_FLAG, DIMS, monitor_dims) : NULL;
 
-#ifdef  USE_CUDA
+#ifdef USE_GPU
 	if (bart_use_gpu) {
 
 		complex float* cim_gpu = md_gpu_move(DIMS, grid_dims, cim, CFL_SIZE);
