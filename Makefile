@@ -824,7 +824,7 @@ endif
 
 .INTERMEDIATE: $$($(1)objs)
 
-lib/lib$(1).a: lib$(1).a($$($(1)objs)) | pkg/bart.pc
+lib/lib$(1).a: lib$(1).a($$($(1)objs))
 
 endef
 
