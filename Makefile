@@ -160,7 +160,7 @@ ifeq ($(CC),emcc)
 endif
 
 
-HAVE_NOEXECWARN := $(shell ld --help 2>&1 | grep -c "\-no\-warn\-execstack")
+HAVE_NOEXECWARN := $(shell ld --help 2>&1 | grep -F -c -- "-no-warn-execstack")
 ifneq ($(BUILDTYPE), WASM)
 ifneq ($(HAVE_NOEXECWARN), 0)
 	LDFLAGS += -Wl,-no-warn-execstack
