@@ -105,7 +105,10 @@ void seq_ui_interface_custom_params(int reverse, struct seq_config* seq, int nl,
 
 	case SEQ_TYPE_FLASH:
 
-		flash_interface_custom_params(reverse, seq, nl, params_long, nd, params_double);
+		if (reverse)
+			flash_interface_custom_back(seq, nl, params_long, nd, params_double);
+		else
+			flash_interface_custom(seq, nl, params_long, nd, params_double);
 		break;
 
 	case SEQ_TYPE_MINIFLASH:

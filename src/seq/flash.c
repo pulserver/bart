@@ -127,7 +127,7 @@ static void ro_blip_moment(vec3d_t blip_moment, const long pos[DIMS], const stru
 
 static int prep_grad_ro_deph(struct grad_trapezoid* grad, const struct seq_config* seq)
 {
-	*grad = (struct grad_trapezoid){ 0 };
+	*grad = (struct grad_trapezoid){ };
 
 	const long echo = 0;
 
@@ -142,7 +142,7 @@ static int prep_grad_ro_deph(struct grad_trapezoid* grad, const struct seq_confi
 
 static int prep_grad_phs1_encoding(struct grad_trapezoid* grad, int rew, const long pos[DIMS], const struct seq_config* seq)
 {
-	*grad = (struct grad_trapezoid){ 0 };
+	*grad = (struct grad_trapezoid){ };
 
 	if (!((SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode) || (SEQ_PEMODE_CARTESIAN_LINEAR == seq->enc.pe_mode)))
 		return 1;
@@ -221,7 +221,7 @@ static int prep_grad_ro_blip_merge(struct seq_event ev[12], double start_time, d
 
 int prep_grad_ro(struct grad_trapezoid* grad, long echo, const struct seq_config* seq)
 {
-	*grad = (struct grad_trapezoid){ 0 };
+	*grad = (struct grad_trapezoid){ };
 
 	double ampl = ro_amplitude(seq);
 
@@ -253,7 +253,7 @@ static double end_last_ro(int rampdown, const struct seq_config* seq)
 
 static int prep_grad_ro_reph(struct grad_trapezoid* grad, const struct seq_config* seq)
 {
-	*grad = (struct grad_trapezoid){ 0 };
+	*grad = (struct grad_trapezoid){ };
 
 	if (SEQ_CONTRAST_RF_SPOILED != seq->phys.contrast)
 		return 1;
@@ -270,7 +270,7 @@ static int prep_grad_ro_reph(struct grad_trapezoid* grad, const struct seq_confi
 
 static int prep_grad_spoiler_read(struct grad_trapezoid* grad, const struct seq_config* seq)
 {
-	*grad = (struct grad_trapezoid){ 0 };
+	*grad = (struct grad_trapezoid){ };
 
 	if (SEQ_CONTRAST_RF_SPOILED != seq->phys.contrast)
 		return 1;
@@ -287,7 +287,7 @@ static int prep_grad_spoiler_read(struct grad_trapezoid* grad, const struct seq_
 
 static int prep_grad_spoiler_slice(struct grad_trapezoid* grad, const struct seq_config* seq)
 {
-	*grad = (struct grad_trapezoid){ 0 };
+	*grad = (struct grad_trapezoid){ };
 
 	if (SEQ_CONTRAST_RF_SPOILED != seq->phys.contrast)
 		return 1;
@@ -303,7 +303,7 @@ static int prep_grad_spoiler_slice(struct grad_trapezoid* grad, const struct seq
 
 static int prep_grad_sli(struct grad_trapezoid* grad, const struct seq_config* seq)
 {
-	*grad = (struct grad_trapezoid){ 0 };
+	*grad = (struct grad_trapezoid){ };
 
 	double ampl = slice_amplitude(seq);
 
@@ -321,7 +321,7 @@ static int prep_grad_sli(struct grad_trapezoid* grad, const struct seq_config* s
 
 static int prep_grad_sli_reph(struct grad_trapezoid* grad, long pos_phs2, const struct seq_config* seq)
 {
-	*grad = (struct grad_trapezoid){ 0 };
+	*grad = (struct grad_trapezoid){ };
 
 	struct grad_limits limits = seq->sys.grad;
 	limits.max_amplitude *= SCALE_GRAD;
@@ -344,7 +344,7 @@ static int prep_grad_sli_reph(struct grad_trapezoid* grad, long pos_phs2, const 
 
 static int prep_grad_pe3d_rewinder(struct grad_trapezoid* grad, const long pos[DIMS], const struct seq_config* seq)
 {
-	*grad = (struct grad_trapezoid){ 0 };
+	*grad = (struct grad_trapezoid){ };
 
 	if (!seq->enc.is3D || (SEQ_CONTRAST_RF_SPOILED != seq->phys.contrast))
 		return 1;
@@ -367,7 +367,9 @@ static int prep_grad_pe3d_rewinder(struct grad_trapezoid* grad, const long pos[D
 }
 
 
-static void custom_params_to_config(struct seq_config* seq, int nl, const long custom_long[nl], int nd, const double custom_double[nd])
+void flash_interface_custom(struct seq_config* seq,
+				int nl, const long custom_long[__VLA(nl)],
+				int nd, const double custom_double[__VLA(nd)])
 {
 	seq->enc.pe_mode = (enum pe_mode)custom_long[SEQ_UI_IDX_LONG_PE_MODE];
 	seq->phys.contrast = (enum flash_contrast)custom_long[SEQ_UI_IDX_LONG_CONTRAST];
@@ -414,7 +416,9 @@ static void custom_params_to_config(struct seq_config* seq, int nl, const long c
 }
 
 
-static void config_to_custom_params(int nl, long custom_long[nl], int nd, double custom_double[nd], const struct seq_config* seq)
+void flash_interface_custom_back(const struct seq_config* seq,
+				     int nl, long custom_long[__VLA(nl)],
+				     int nd, double custom_double[__VLA(nd)])
 {
 	custom_long[SEQ_UI_IDX_LONG_PE_MODE] = seq->enc.pe_mode;;
 	custom_long[SEQ_UI_IDX_LONG_CONTRAST] = seq->phys.contrast;
@@ -453,14 +457,6 @@ static void config_to_custom_params(int nl, long custom_long[nl], int nd, double
 	custom_long[SEQ_UI_IDX_LONG_ASL_MODE] = seq->asl.label_type;
 	custom_long[SEQ_UI_IDX_LONG_ASL_LD_MS] = lround(1.E3 * seq->asl.ld);
 	custom_long[SEQ_UI_IDX_LONG_ASL_PLD_MS] = lround(1.E3 * seq->asl.pld);
-}
-
-void flash_interface_custom_params(int reverse, struct seq_config* seq, int nl, long params_long[nl], int nd, double params_double[nd])
-{
-	if (reverse)
-		config_to_custom_params(nl, params_long, nd, params_double, seq);
-	else
-		custom_params_to_config(seq, nl, params_long, nd, params_double);
 }
 
 
@@ -960,9 +956,7 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 		return ERROR_PREP_GRAD_SLI;
 
 	i += seq_grad_to_event(ev + i, timing.slice, &slice, projSLICE);
-
 	i += prep_rf_excitation(ev + i, timing.RF, rf_spoil_phase, seq_state, seq);
-
 
 	struct grad_trapezoid slice_rephaser;
 
@@ -1002,7 +996,6 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 
 			i += seq_grad_to_event(ev + i, timing.readout_dephaser, &readout_dephaser, projX);
 			i += seq_grad_to_event(ev + i, timing.readout_dephaser, &readout_dephaser, projY);
-
 			i += seq_grad_to_event(ev + i, timing.readout_dephaser, &phs1_encoding, projPHASE);
 		}
 
@@ -1314,7 +1307,7 @@ int flash_block(int N, struct seq_event ev[N], struct seq_state* seq_state, cons
 		seq_state->mode = SEQ_BLOCK_KERNEL_IMAGE;
 		md_max_dims(DIMS, (COEFF2_FLAG), seq_state->pos, seq_state->pos, last_idx);
 
-		if (seq->trigger.trigger_out && md_check_equal_dims(DIMS, (long [DIMS]){ 0 }, seq_state->pos, PHS1_FLAG))
+		if (seq->trigger.trigger_out && md_check_equal_dims(DIMS, (long [DIMS]){ }, seq_state->pos, PHS1_FLAG))
 			ev[i++] = (struct seq_event){ .start = 0., .mid = 0., .end = 1e-3, .type = SEQ_EVENT_OUTPUT, NULL };
 
 		return flash(N - i, ev + i, seq_state, seq) + i;

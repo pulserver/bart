@@ -7,7 +7,8 @@
 
 struct seq_config;
 
-extern void flash_interface_custom_params(int reverse, struct seq_config* seq, int nl, long params_long[__VLA(nl)], int nd, double params_double[__VLA(nd)]);
+extern void flash_interface_custom(struct seq_config* seq, int nl, const long params_long[__VLA(nl)], int nd, const double params_double[__VLA(nd)]);
+extern void flash_interface_custom_back(const struct seq_config* seq, int nl, long params_long[__VLA(nl)], int nd, double params_double[__VLA(nd)]);
 extern void flash_interface_loop_dims(int reverse, struct seq_config* seq, const int D, long dims[__VLA(D)]);
 
 extern double flash_minimum_tr(const struct seq_config* seq);
