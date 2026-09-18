@@ -391,7 +391,7 @@ tests/test-phantom-noncart-BRAIN: traj phantom nufft fft nrmse
 	touch $@
 
 
-tests/test-phantom-stl: stl phantom fft fmac nrmse 
+tests/test-phantom-stl: stl phantom fft fmac nrmse
 	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
 	$(TOOLDIR)/stl --model HEX hex.ra						;\
 	$(TOOLDIR)/phantom -x33 -3 --coil HEAD_3D_64CH -s1 --stl hex.ra -k k.ra 	;\
@@ -401,6 +401,16 @@ tests/test-phantom-stl: stl phantom fft fmac nrmse
 	$(TOOLDIR)/fmac x0.ra s.ra x0s.ra						;\
 	$(TOOLDIR)/fft -i 7 k.ra x.ra							;\
 	$(TOOLDIR)/nrmse -t 0.082 x0s.ra x.ra						;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
+tests/test-phantom-trigsens: coils phantom nrmse stl fft
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
+	$(TOOLDIR)/stl --model HEX hex.ra						;\
+	$(TOOLDIR)/phantom --stl hex.ra -k -x33 -s1 --coil HEAD_3D_64CH k.ra				;\
+	$(TOOLDIR)/coils -k --H3D64C -n 1 s.ra st.ra						;\
+	$(TOOLDIR)/phantom --stl hex.ra -k -x33 -s1 --coil scoord=st.ra --coil scoeff=s.ra k0.ra		;\
+	$(TOOLDIR)/nrmse -t 0.00000001 k0.ra k.ra						;\
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
@@ -417,6 +427,7 @@ TESTS += tests/test-phantom-SONAR tests/test-phantom-SONAR-basis tests/test-phan
 TESTS += tests/test-phantom-brain tests/test-phantom-BRAIN-basis
 TESTS += tests/test-phantom-FILE tests/test-phantom-FILE-basis
 TESTS += tests/test-phantom-ellipsoid tests/test-phantom-noncart-ellipsoid tests/test-phantom-noncart-ellipsoid-params
+TESTS += tests/test-phantom-trigsens
 
 ifneq ($(BUILDTYPE), WASM) # stl fails under wasm
 TESTS_SLOW += tests/test-phantom-stl
