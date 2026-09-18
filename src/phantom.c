@@ -48,6 +48,8 @@ int main_phantom(int argc, char* argv[argc])
 
 	const char* stl_file = NULL;
 	const char* traj_file = NULL;
+	const char* straj_file = NULL;
+	const char* scoeff_file = NULL;
 	bool basis = false;
 
 	long dims[DIMS] = { [0 ... DIMS - 1] = 1 };
@@ -72,6 +74,8 @@ int main_phantom(int argc, char* argv[argc])
 
 		OPTL_SELECT(0, "HEAD_2D_8CH", enum coil_type, &(copts.ctype), HEAD_2D_8CH, "2D head coil with up to 8 channels"),
 		OPTL_SELECT(0, "HEAD_3D_64CH", enum coil_type, &(copts.ctype), HEAD_3D_64CH, "3D head coil with up to 64 channels\n"),
+		OPTL_INFILE(0, "scoord", &straj_file, "file", "k-space coordinates of coefficients of trig. polynomial model for senisitivities."),
+		OPTL_INFILE(0, "scoeff", &scoeff_file, "file", "coefficients of trig. polynomial model for sensitivities."),
 	};
 
 	const struct opt_s opts[] = {
@@ -111,6 +115,29 @@ int main_phantom(int argc, char* argv[argc])
 
 	num_init();
 	num_rand_init(randseed);
+
+	if ((NULL != straj_file && NULL == scoeff_file) || (NULL == straj_file && NULL != scoeff_file))
+		error("please provide coefficients *and* k-space coordinates of trigonometric polynomial sensitivity model together.");
+
+	long strajdims[DIMS];
+	float* straj_ = NULL;
+	long scoeffdims[DIMS];
+	complex float* scoeff = NULL;
+
+	if (NULL != straj_file && NULL != scoeff_file) {
+
+		copts.ctype = TRIG_POLY_EXT;
+
+		complex float* strajt = load_cfl(straj_file, DIMS, strajdims);
+		straj_ = md_alloc(DIMS, strajdims, FL_SIZE);
+		md_real(DIMS, strajdims, straj_, strajt);
+		unmap_cfl(DIMS, strajdims, strajt);
+
+		complex float* scoeff_ = load_cfl(scoeff_file, DIMS, scoeffdims);
+		scoeff = md_alloc(DIMS, scoeffdims, CFL_SIZE);
+		md_copy(DIMS, scoeffdims, scoeff, scoeff_, CFL_SIZE);
+		unmap_cfl(DIMS, scoeffdims, scoeff_);
+	}
 
 	if (NULL != stl_file)
 		ptype = STL;
@@ -380,7 +407,8 @@ int main_phantom(int argc, char* argv[argc])
 
 		coptss.ctype = ctype_;
 		coptss.kspace = kspace;
-		cnstr_coils(DIMS, &coptss, false, NULL, NULL, NULL, NULL);
+
+		cnstr_coils(DIMS, &coptss, false, strajdims, straj_, scoeffdims, scoeff);
 
 		struct grid_opts cgopts = gopts;
 		long stdims[DIMS];
@@ -445,6 +473,12 @@ int main_phantom(int argc, char* argv[argc])
 
 		break;
 	}
+
+	if (NULL != scoeff)
+		md_free(scoeff);
+
+	if (NULL != straj_)
+		md_free(straj_);
 
 	if (NULL != samples)
 		unmap_cfl(DIMS, sdims, samples);
