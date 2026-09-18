@@ -71,7 +71,7 @@ int main_phantom(int argc, char* argv[argc])
 	struct opt_s coil_opts[] = {
 
 		OPTL_SELECT(0, "HEAD_2D_8CH", enum coil_type, &(copts.ctype), HEAD_2D_8CH, "2D head coil with up to 8 channels"),
-		OPTL_SELECT(0, "HEAD_3D_64CH", enum coil_type, &(copts.ctype), HEAD_3D_64CH, "3D head coil with up to 64 channels"),
+		OPTL_SELECT(0, "HEAD_3D_64CH", enum coil_type, &(copts.ctype), HEAD_3D_64CH, "3D head coil with up to 64 channels\n"),
 	};
 
 	const struct opt_s opts[] = {
@@ -380,7 +380,7 @@ int main_phantom(int argc, char* argv[argc])
 
 		coptss.ctype = ctype_;
 		coptss.kspace = kspace;
-		cnstr_coils(DIMS, &coptss, false);
+		cnstr_coils(DIMS, &coptss, false, NULL, NULL, NULL, NULL);
 
 		struct grid_opts cgopts = gopts;
 		long stdims[DIMS];

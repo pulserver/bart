@@ -4,7 +4,7 @@
 
 #include "simu/grid.h"
 
-enum coil_type { COIL_NONE, HEAD_2D_8CH, HEAD_3D_64CH };
+enum coil_type { COIL_NONE, HEAD_2D_8CH, HEAD_3D_64CH, TRIG_POLY_EXT };
 
 struct coil_opts;
 
@@ -27,7 +27,7 @@ extern struct coil_opts coil_opts_pha_defaults;
 
 extern void get_position(long D, float p[4], const long pos[D], const long gdims[D], const float* grid);
 extern _Complex double* sample_coils(long D, long sdims[D], const long gdims[D], const float* grid, const struct coil_opts* copts);
-extern void cnstr_coils(long D, struct coil_opts* copts, bool legacy_fov);
+extern void cnstr_coils(long D, struct coil_opts* copts, bool legacy_fov, long ttrajdims[D], float* ttraj, long tcoeffdims[D], complex float* tcoeff);
 extern float* create_senstraj(long D, long gdims[D], struct grid_opts* gopts, struct coil_opts* copts);
 
 extern complex float* sens_internal_H2D8CH(long D, long dims[D], unsigned long flags);

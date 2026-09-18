@@ -148,6 +148,7 @@ static complex float xsens(int c, int s, double mpos[3], void* data, krn_t fun)
 			switch (krn_data->stype) {
 
 			case COIL_NONE:
+			case TRIG_POLY_EXT:
 				assert(0);
 
 			case HEAD_3D_64CH:
@@ -199,6 +200,7 @@ static complex float ksens(int c, int s, double mpos[3], void* data, krn_t fun)
 			switch (krn_data->stype) {
 
 			case COIL_NONE:
+			case TRIG_POLY_EXT:
 				assert(0);
 
 			case HEAD_3D_64CH:

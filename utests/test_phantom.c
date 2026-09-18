@@ -203,7 +203,7 @@ static bool test_phantom_sampling_dirac_nocoil_k(void)
 	struct coil_opts copts = coil_opts_defaults;
 	copts.ctype = COIL_NONE;
 	copts.kspace = kspace;
-	cnstr_coils(DIMS, &copts, false);
+	cnstr_coils(DIMS, &copts, false, NULL, NULL, NULL, NULL);
 
 	// sampling grid for coils
 	struct grid_opts cgopts = gopts;
@@ -276,7 +276,7 @@ static bool test_phantom_sampling_dirac_nocoil_x(void)
 	struct coil_opts copts = coil_opts_defaults;
 	copts.ctype = COIL_NONE;
 	copts.kspace = kspace;
-	cnstr_coils(DIMS, &copts, false);
+	cnstr_coils(DIMS, &copts, false, NULL, NULL, NULL, NULL);
 
 	// sampling grid for coils
 	struct grid_opts cgopts = gopts;
@@ -379,7 +379,7 @@ static bool test_phantom_sampling_const_8chcoil_x(void)
 	copts.ctype = HEAD_2D_8CH;
 	copts.kspace = kspace;
 	copts.flags = 3;
-	cnstr_coils(DIMS, &copts, false);
+	cnstr_coils(DIMS, &copts, false, NULL, NULL, NULL, NULL);
 
 	// sampling grid for coils
 	struct grid_opts cgopts = gopts;
@@ -442,7 +442,7 @@ static bool test_phantom_sampling_dirac_8chcoil_k(void)
 	copts.ctype = HEAD_2D_8CH;
 	copts.kspace = kspace;
 	copts.flags = 3;
-	cnstr_coils(DIMS, &copts, false);
+	cnstr_coils(DIMS, &copts, false, NULL, NULL, NULL, NULL);
 
 	// sampling grid for coils
 	struct grid_opts cgopts = gopts;
@@ -571,7 +571,7 @@ static bool test_phantom_sampling_const_64chcoil_x(void)
 	copts.ctype = HEAD_3D_64CH;
 	copts.kspace = kspace;
 	copts.flags = 3;
-	cnstr_coils(DIMS, &copts, false);
+	cnstr_coils(DIMS, &copts, false, NULL, NULL, NULL, NULL);
 
 	// sampling grid for coils
 	struct grid_opts cgopts = gopts;
@@ -635,7 +635,7 @@ static bool test_phantom_sampling_dirac_64chcoil_k(void)
 	copts.ctype = HEAD_3D_64CH;
 	copts.kspace = kspace;
 	copts.flags = 3;
-	cnstr_coils(DIMS, &copts, false);
+	cnstr_coils(DIMS, &copts, false, NULL, NULL, NULL, NULL);
 
 	// sampling grid for coils
 	struct grid_opts cgopts = gopts;

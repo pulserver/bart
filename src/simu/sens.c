@@ -193,6 +193,55 @@ static void cnstr_H3D64CH(long D, struct coil_opts* copts, bool legacy_fov)
 	copts->dstr = dstr_tripoly;
 }
 
+static void cnstr_TRIGPOLY(long D, struct coil_opts* copts, bool legacy_fov, const long ttrajdims[D], const float* ttraj, const long tcoeffdims[D], const complex float* tcoeff)
+{
+	(void) legacy_fov;
+
+	for (int i = 0; i < 3; i++)
+		assert(ttrajdims[i+1] == tcoeffdims[i]);
+
+	copts->data = xmalloc(sizeof(struct tri_poly));
+	struct tri_poly* t = copts->data;
+
+	t->D = D;
+	md_copy_dims(D, t->cpdims, ttrajdims);
+	t->cpos = md_alloc(D, ttrajdims, FL_SIZE);
+	md_copy(D, ttrajdims, t->cpos, ttraj, FL_SIZE);
+
+	copts->N = 0;
+	md_copy_dims(D, t->cdims, tcoeffdims);
+
+	for (int i = 0; i < tcoeffdims[COIL_DIM]; i++)
+		if (MD_IS_SET(copts->flags, i))
+			copts->N++;
+
+	t->cdims[COIL_DIM] = copts->N;
+
+	t->coeff = md_alloc(D, t->cdims, CFL_SIZE);
+
+	if (t->cdims[COIL_DIM] == tcoeffdims[COIL_DIM]) {
+
+		md_copy(D, t->cdims, t->coeff, tcoeff, CFL_SIZE);
+
+	} else {
+
+		long pos[D];
+		md_set_dims(D, pos, 0);
+
+		for (int i = 0; i < tcoeffdims[COIL_DIM]; i++) {
+
+			if (MD_IS_SET(copts->flags, i)) {
+
+				pos[COIL_DIM]++;
+				md_copy_block(D, pos, t->cdims, t->coeff, tcoeffdims, tcoeff, CFL_SIZE);
+			}
+		}
+	}
+
+	copts->fun = simfun_tripoly;
+	copts->dstr = dstr_tripoly;
+}
+
 static complex double simfun_nocoil_x(const void* v, const long C, const float pos[])
 {
 	(void) v;
@@ -222,7 +271,8 @@ static void cnstr_NOCOIL(long D, struct coil_opts* copts, bool legacy_fov)
 	copts->dstr = dstr_tripoly;
 }
 
-void cnstr_coils(long D, struct coil_opts* copts, bool legacy_fov)
+// ttraj and tcoeff are traj and coeff of external trigonometric polynomial
+void cnstr_coils(long D, struct coil_opts* copts, bool legacy_fov, long ttrajdims[D], float* ttraj, long tcoeffdims[D], complex float* tcoeff)
 {
 	switch (copts->ctype) {
 
@@ -241,6 +291,17 @@ void cnstr_coils(long D, struct coil_opts* copts, bool legacy_fov)
 	case COIL_NONE:
 
 		cnstr_NOCOIL(D, copts, legacy_fov);
+
+		break;
+
+	case TRIG_POLY_EXT:
+
+		assert(NULL != ttraj);
+		assert(NULL != tcoeff);
+		assert(NULL != ttrajdims);
+		assert(NULL != tcoeffdims);
+
+		cnstr_TRIGPOLY(D, copts, legacy_fov, ttrajdims, ttraj, tcoeffdims, tcoeff);
 
 		break;
 	}
@@ -299,6 +360,7 @@ float* create_senstraj(long D, long gdims[D], struct grid_opts* gopts, struct co
 	// those sensitivities are modeled by trigonometric polynomials with coefficients over t->cpos
 	case HEAD_2D_8CH:
 	case HEAD_3D_64CH:
+	case TRIG_POLY_EXT:
 
 		t = copts->data;
 		md_copy_dims(D, gdims, t->cpdims);
