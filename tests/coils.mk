@@ -49,7 +49,20 @@ tests/test-coils-grid: coils phantom grid nrmse
 	rm *.cfl *.hdr; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
+tests/test-coils-trigpoly: coils nrmse extract
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)	;\
+	$(TOOLDIR)/coils s.ra g.ra ;\
+	$(TOOLDIR)/coils -k sk.ra gk.ra ;\
+	$(TOOLDIR)/coils --scoord gk.ra --scoeff sk.ra s1.ra g1.ra ;\
+	$(TOOLDIR)/nrmse -t 0.0000001 s1.ra s.ra ;\
+	$(TOOLDIR)/nrmse -t 0.0000001 g1.ra g.ra ;\
+	$(TOOLDIR)/extract 3 2 4 s.ra s2.ra ;\
+	$(TOOLDIR)/coils -b 24 --scoord gk.ra --scoeff sk.ra s24.ra ;\
+	$(TOOLDIR)/nrmse -t 0.0000001 s2.ra s24.ra ;\
+	rm *.ra; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
 # needs 64bit flags, so does not currently work on wasm
 ifneq ($(BUILDTYPE), WASM)
-TESTS += tests/test-coils-channelselection tests/test-coils-grid tests/test-coils-sens64 tests/test-coils-sens8
+TESTS += tests/test-coils-channelselection tests/test-coils-grid tests/test-coils-sens64 tests/test-coils-sens8 tests/test-coils-trigpoly
 endif
