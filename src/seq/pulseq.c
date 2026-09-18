@@ -713,8 +713,8 @@ void pulseq_writef(FILE *fp, struct pulseq *ps)
 		}
 	}
 
-	fprintf(fp, "\n[SIGNATURE]\n");
-	fprintf(fp, "# TODO\n");
+	// fprintf(fp, "\n[SIGNATURE]\n");
+	// fprintf(fp, "# FIXME\n"); // remove these lines for .seq files to be compatible with mr0
 
 	pulseq_free(ps);
 }
