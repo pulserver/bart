@@ -936,6 +936,71 @@ static struct flash_timing flash_compute_timing(const struct seq_config *seq)
 	return timing;
 }
 
+static int flash_spoiling(int N, struct seq_event ev[N], struct seq_state* seq_state, const struct seq_config* seq, const struct flash_timing timing, const double last_proj_angle)
+{
+	int i = 0;
+
+	double projPHASE[3] = { 0. , 1. , 0 };
+	double projREAD[3] = { 1. , 0. , 0. };
+	double projSLICE[3] = { 0. , 0. , 1. };
+
+	double projXY[3] = { sin(last_proj_angle), cos(last_proj_angle), 0. };
+
+	struct grad_trapezoid ro_reph;
+	struct grad_trapezoid spoiler_read;
+	struct grad_trapezoid phase_rewinder;
+	struct grad_trapezoid spoiler_slice;
+	struct grad_trapezoid pe3d_rewinder;
+
+	double ampl_read;
+
+	switch (seq->phys.contrast) {
+
+	case SEQ_CONTRAST_NO_SPOILING:
+	case SEQ_CONTRAST_RF_RANDOM:
+		return 0;
+
+	case SEQ_CONTRAST_RF_SPOILED:
+
+		if (!prep_grad_ro_reph(&ro_reph, seq))
+			return ERROR_PREP_GRAD_RO_REPH;
+
+		i += seq_grad_to_event(ev + i, timing.readout_rephaser, &ro_reph, projXY);
+
+		if (!prep_grad_phs1_encoding(&phase_rewinder, 1, seq_state->pos, seq))
+			return ERROR_PREP_GRAD_SP_READ;
+
+		i += seq_grad_to_event(ev + i, timing.readout_rephaser, &phase_rewinder, projPHASE);
+
+		if (!prep_grad_spoiler_read(&spoiler_read, seq))
+			return ERROR_PREP_GRAD_SP_READ;
+
+		i += seq_grad_to_event(ev + i, timing.spoiler_read, &spoiler_read, projREAD); // don't project spoiler gradients, we need constant direction
+
+		if (!prep_grad_spoiler_slice(&spoiler_slice, seq))
+			return ERROR_PREP_GRAD_SP_SLICE;
+
+		ampl_read = fabs(ro_reph.ampl) + fabs(spoiler_read.ampl);
+
+		if (seq->sys.grad.max_amplitude < ampl_read)
+			return ERROR_MAX_GRAD_SPOILER_READ;
+
+		if (powf(seq->sys.grad.max_amplitude, 2.) < powf(ampl_read, 2.) + powf(spoiler_slice.ampl, 2.))
+			return ERROR_MAX_GRAD_SPOILER;
+
+		i += seq_grad_to_event(ev + i, timing.spoiler_slice, &spoiler_slice, projSLICE);
+
+		if (!prep_grad_pe3d_rewinder(&pe3d_rewinder, seq_state->pos, seq))
+			return ERROR_PREP_GRAD_PE3D_REW;
+
+		i += seq_grad_to_event(ev + i, timing.pe3d_rewinder, &pe3d_rewinder, projSLICE);
+
+		return i;
+
+	}
+
+	return -1;
+}
 
 int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const struct seq_config* seq)
 {
@@ -947,7 +1012,6 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 	double proj_angle = get_rot_angle(seq_state->pos, seq);
 
 	double projPHASE[3] = { 0. , 1. , 0 };
-	double projREAD[3] = { 1. , 0. , 0. };
 	double projSLICE[3] = { 0. , 0. , 1. };
 	double projXY[3] = { sin(proj_angle), cos(proj_angle), 0. };
 
@@ -994,7 +1058,6 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 	struct grad_trapezoid readout;
 
 	do {
-
 		proj_angle = get_rot_angle(seq_state->pos, seq);
 		projXY[0] = sin(proj_angle);
 		projXY[1] = cos(proj_angle);
@@ -1031,50 +1094,12 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 
 	} while (md_next(DIMS, seq->loop_dims, TE_FLAG, seq_state->pos));
 
+	int i_spoiling = flash_spoiling(N - i, ev + i, seq_state, seq, timing, proj_angle);
 
-	struct grad_trapezoid ro_reph;
+	if (0 > i_spoiling)
+		return i_spoiling;
 
-	if (!prep_grad_ro_reph(&ro_reph, seq))
-		return ERROR_PREP_GRAD_RO_REPH;
-
-	i += seq_grad_to_event(ev + i, timing.readout_rephaser, &ro_reph, projXY);
-
-	struct grad_trapezoid phase_rewinder;
-
-	if (!prep_grad_phs1_encoding(&phase_rewinder, 1, seq_state->pos, seq))
-		return ERROR_PREP_GRAD_SP_READ;
-
-	i += seq_grad_to_event(ev + i, timing.readout_rephaser, &phase_rewinder, projPHASE);
-
-	struct grad_trapezoid spoiler_read;
-
-	if (!prep_grad_spoiler_read(&spoiler_read, seq))
-		return ERROR_PREP_GRAD_SP_READ;
-
-	i += seq_grad_to_event(ev + i, timing.spoiler_read, &spoiler_read, projREAD); // don't project spoiler gradients, we need constant direction
-
-	struct grad_trapezoid spoiler_slice;
-
-	if (!prep_grad_spoiler_slice(&spoiler_slice, seq))
-		return ERROR_PREP_GRAD_SP_SLICE;
-
-	double ampl_read = fabs(ro_reph.ampl) + fabs(spoiler_read.ampl);
-	if (seq->sys.grad.max_amplitude < ampl_read)
-		return ERROR_MAX_GRAD_SPOILER_READ;
-
-	if (powf(seq->sys.grad.max_amplitude, 2.) < powf(ampl_read, 2.) + powf(spoiler_slice.ampl, 2.))
-		return ERROR_MAX_GRAD_SPOILER;
-
-	i += seq_grad_to_event(ev + i, timing.spoiler_slice, &spoiler_slice, projSLICE);
-
-
-	struct grad_trapezoid pe3d_rewinder;
-
-	if (!prep_grad_pe3d_rewinder(&pe3d_rewinder, seq_state->pos, seq))
-		return ERROR_PREP_GRAD_PE3D_REW;
-
-	i += seq_grad_to_event(ev + i, timing.pe3d_rewinder, &pe3d_rewinder, projSLICE);
-
+	i += i_spoiling;
 
 	if (seq_block_end_flat(i, ev, seq->sys.raster_grad) > seq->phys.tr)
 		return ERROR_END_FLAT_KERNEL;
