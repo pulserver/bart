@@ -386,8 +386,8 @@ void flash_interface_custom(struct seq_config* seq,
 	seq->phys.rf_duration = 1E-6 * custom_long[SEQ_UI_IDX_LONG_RF_DURATION_US];
 	seq->magn.init_delay = custom_long[SEQ_UI_IDX_LONG_INIT_DELAY];
 	seq->asl.label_type = (enum asl_label_type)custom_long[SEQ_UI_IDX_LONG_ASL_MODE];
-	seq->loop_dims[BATCH_DIM] = (SEQ_ASL_NONE != seq->asl.label_type) 
-					? ASL_BATCH_DIM_SIZE 
+	seq->loop_dims[BATCH_DIM] = (SEQ_ASL_NONE != seq->asl.label_type)
+					? ASL_BATCH_DIM_SIZE
 					: custom_long[SEQ_UI_IDX_LONG_INVERSIONS];
 	seq->magn.inv_delay_time = custom_long[SEQ_UI_IDX_LONG_INV_DELAY];
 	seq->enc.aligned_flags = (unsigned long)custom_long[SEQ_UI_IDX_LONG_RAGA_ALIGNED_FLAGS];
@@ -409,8 +409,8 @@ void flash_interface_custom(struct seq_config* seq,
 	seq->cest.offset_first = custom_double[	SEQ_UI_IDX_DOUBLE_CEST_OFFSET_FIRST_PPM];
 	seq->cest.offset_last = custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_LAST_PPM];
 	seq->cest.offset_increment = custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_INCREMENT_PPM];
-	seq->cest.offset_pause = 1E-3 * custom_long[SEQ_UI_IDX_LONG_CEST_OFFSET_PAUSE_MS]; 
-	
+	seq->cest.offset_pause = 1E-3 * custom_long[SEQ_UI_IDX_LONG_CEST_OFFSET_PAUSE_MS];
+
 	seq->asl.ld = 1E-3 * custom_long[SEQ_UI_IDX_LONG_ASL_LD_MS];
 	seq->asl.pld = 1E-3 * custom_long[SEQ_UI_IDX_LONG_ASL_PLD_MS];
 }
@@ -521,7 +521,7 @@ static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in
 	seq->loop_dims[CSHIFT_DIM] = cest_offsets(seq);
 
 	int pre_calls = 3; // 3 additional calls for delay_meas + noise_scan + ecg trigger
-	if (SEQ_CEST_NONE != seq->cest.sat_type) 
+	if (SEQ_CEST_NONE != seq->cest.sat_type)
 		seq->loop_dims[COEFF2_DIM] = seq->cest.sat_pulses + MAX(1, seq->magn.prep_scans) + pre_calls; // no trigger for CEST, but spoiler or mag_prep
 	else if (SEQ_ASL_NONE != seq->asl.label_type)
 		seq->loop_dims[COEFF2_DIM] = calc_asl_coeff2_dim(seq) + pre_calls;
@@ -575,7 +575,7 @@ static double gradient_time_after_RO(const struct seq_config* seq)
 		return 0.;
 
 
-	double mom_read = ro_momentum(seq->loop_dims[TE_DIM] - 1, seq) 
+	double mom_read = ro_momentum(seq->loop_dims[TE_DIM] - 1, seq)
 			+ ro_momentum_after_echo(seq->loop_dims[TE_DIM] - 1, seq);
 	double mom_slice = slice_momentum_to_rephase(seq);
 
@@ -591,7 +591,7 @@ double flash_minimum_tr(const struct seq_config* seq)
 	double time_gradients_after_RO = ro_amplitude(seq) * seq->sys.grad.inv_slew_rate + gradient_time_after_RO(seq);
 
 	// we have to check for minimum timings between rf and next adc
-	double add_time_ro_rf = MAX(MAX(seq->sys.min_duration_ro_rf, seq->sys.coil_control_lead) 
+	double add_time_ro_rf = MAX(MAX(seq->sys.min_duration_ro_rf, seq->sys.coil_control_lead)
 					- (time_gradients_after_RO + slice_amplitude(seq) * seq->sys.grad.inv_slew_rate), 0.);
 
 	struct grad_trapezoid last_ro;
@@ -682,7 +682,7 @@ static long flash_ex_calls(const struct seq_config* seq)
 
 		dims[SLICE_DIM] = (SEQ_ASL_NONE != seq->asl.label_type) ? seq->loop_dims[SLICE_DIM] - 1 : seq->loop_dims[SLICE_DIM];
 	}
-	
+
 	if (SEQ_ORDER_SEQ_MS == seq->enc.order)
 		incomplete_raga_spks *= dims[SLICE_DIM];
 
@@ -720,9 +720,9 @@ double flash_total_measure_time(const struct seq_config* seq)
 		sat_time += seq->cest.sat_pulse_pause;
 		sat_time += seq->sys.coil_control_lead * 2;
 		sat_time *= seq->cest.sat_pulses;
-		
+
 		if (0 == mag_prep(ev, seq)) // spoiler after last pulse only if no inversion
-			sat_time += 10.E-3; 
+			sat_time += 10.E-3;
 		prep_pulse_duration += sat_time;
 		prep_pulse_duration *= cest_offsets(seq);
 		prep_pulse_duration += seq->cest.offset_pause * (cest_offsets(seq) - 1);
@@ -1193,7 +1193,7 @@ int flash_block(int N, struct seq_event ev[N], struct seq_state* seq_state, cons
 
 	if (md_check_equal_order(DIMS, seq->order, seq_loop_order_multislice, SEQ_FLAGS))
 	       msm_flag = SLICE_FLAG ;
-	
+
 	if (SEQ_ASL_NONE != seq->asl.label_type)
 		asl_flag = AVG_FLAG;
 
@@ -1285,15 +1285,15 @@ int flash_block(int N, struct seq_event ev[N], struct seq_state* seq_state, cons
 
 		// Skip readout for ASL label slice and only acquire one M0 image at the beginning of the measurement
 		if (SEQ_ASL_NONE != seq->asl.label_type) {
-			
+
 			if (seq_state->pos[SLICE_DIM] == seq->asl.label_slice_index) {
 
 				md_max_dims(DIMS, COEFF2_FLAG, seq_state->pos, seq_state->pos, last_idx);
 				return 0;
-			}    
+			}
 
 			if (seq_state->pos[BATCH_DIM] == 0 && seq_state->pos[AVG_DIM] > 0) {
-				
+
 				md_max_dims(DIMS, COEFF2_FLAG | SLICE_FLAG | TIME_FLAG | PHS1_FLAG, seq_state->pos, seq_state->pos, last_idx);
 				return 0;
 			}

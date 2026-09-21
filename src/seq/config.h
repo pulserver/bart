@@ -58,7 +58,7 @@ enum cest_offset_type {
 	SEQ_CEST_OFFSET_INVIVO
 };
 
-enum asl_label_type { 
+enum asl_label_type {
 
 	SEQ_ASL_NONE,
 	SEQ_ASL_PCASL,
@@ -128,7 +128,7 @@ struct seq_sys {
 struct seq_trigger {
 
 	// Physiological triggering: scanner waits on event
-	enum trigger_type type; 
+	enum trigger_type type;
 	double delay_time;
 	int pulses;
 
@@ -143,7 +143,7 @@ struct asl_pulse {
 };
 
 struct seq_asl {
-				
+
 	enum asl_label_type label_type;		// ASL labeling mode (currently only PCASL is supported)
 	double ld;				// Labeling duration for PCASL in s
 	double pld;				// Post-labeling delay in s
@@ -180,7 +180,7 @@ struct seq_config {
 	struct seq_trigger trigger;
 	struct seq_cest cest;
 	struct seq_asl asl;
-	struct seq_sys sys; 
+	struct seq_sys sys;
 
 	int order[DIMS];
 	long loop_dims[DIMS];

@@ -41,7 +41,7 @@ const char* get_seqtype_str(enum seq_type type)
 		if ((enum seq_type)seqtype_opts[i].id == type)
 			return seqtype_opts[i].label;
 
-	return "unknown seqtype";	
+	return "unknown seqtype";
 }
 
 
@@ -51,7 +51,7 @@ const char* get_pemode_str(enum pe_mode mode)
 		if ((enum pe_mode)pemode_opts[i].id == mode)
 			return pemode_opts[i].label;
 
-	return "unknown pemode";	
+	return "unknown pemode";
 }
 
 const char* get_contrast_str(enum flash_contrast contrast)
