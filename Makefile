@@ -294,8 +294,8 @@ CUDNN_BASE ?= $(CUDA_BASE)
 CUDNN_LIB ?= lib64
 
 # hip
-HIP_BASE ?= /usr/lib64
-HIP_H := -I/usr/include/hip
+HIP_LIB ?= /usr/lib64
+HIP_H ?= -I/usr/include/hip
 HIPCC ?= hipcc
 
 # tensorflow
@@ -612,7 +612,7 @@ GPUARCH_FLAGS ?=
 CUDA_CC ?= $(CC)
 ifeq ($(HIP),1)
 CPPFLAGS += -D__HIP_PLATFORM_AMD__ -DUSE_HIP $(HIP_H)
-CUDA_L := -L/usr/lib64 -lhipfft -lhipblas -lamdhip64
+CUDA_L := -L$(HIP_LIB) -lhipfft -lhipblas -lamdhip64
 HIPFLAGS += -D__HIP_PLATFORM_AMD__ -DUSE_HIP -DUSE_GPU -fblocks -fPIC -O2 -I$(srcdir)/ -m64
 else
 NVCCFLAGS += -DUSE_CUDA -DUSE_GPU -Xcompiler -fPIC -O2 $(GPUARCH_FLAGS) -I$(srcdir)/ -m64 -ccbin $(CUDA_CC)
