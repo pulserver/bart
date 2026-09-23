@@ -399,7 +399,7 @@ static void siemens_dims_mapping(long pos[DIMS], uint16_t sLC[14], unsigned long
 }
 
 
-static enum adc_return siemens_bounds(bool vd, bool noise, bool dummy, bool refscan, bool refscan_ac,
+static enum adc_return siemens_bounds(bool vd, bool noise, bool dummy, bool refscan, bool refscan_ac, bool ignore_vop,
 				      unsigned long ignore_dims_flags, int fd, long min[DIMS], long max[DIMS])
 {
 	char scan_hdr[vd ? 192 : 0];
@@ -407,6 +407,9 @@ static enum adc_return siemens_bounds(bool vd, bool noise, bool dummy, bool refs
 
 	if (size != (size_t)read(fd, scan_hdr, size))
 		return ADC_ERROR;
+
+	if (vd && ignore_vop && skip_vop(scan_hdr, fd))
+		return ADC_SKIP;
 
 	long pos[DIMS] = { };
 
@@ -474,12 +477,15 @@ static enum adc_return siemens_bounds(bool vd, bool noise, bool dummy, bool refs
 }
 
 
-static enum adc_return siemens_adc_read(bool vd, int fd, bool noise, bool dummy, bool refscan, bool refscan_ac,
+static enum adc_return siemens_adc_read(bool vd, int fd, bool noise, bool dummy, bool refscan, bool refscan_ac, bool ignore_vop,
 					unsigned long ignore_dims_flags, bool linectr, bool partctr, bool radial,
 					const long dims[DIMS], long pos[DIMS], complex float* buf, complex float* pmu_val)
 {
 	char scan_hdr[vd ? 192 : 0];
 	xread(fd, scan_hdr, sizeof(scan_hdr));
+
+	if (vd && ignore_vop && skip_vop(scan_hdr, fd))
+		return ADC_SKIP;
 
 	int read_dim = radial ? PHS1_DIM : READ_DIM;
 
@@ -572,6 +578,7 @@ int main_twixread(int argc, char* argv[argc])
 	bool dummy = false;
 	bool refscan = false;
 	bool refscan_ac = true;
+	bool ignore_vop = false;
 	// When GRAPPA is selected as acceleartion method, SIEMENS does not use fully-sampled AC region,
 	// i.e. PATREFANDIMASCAN or PATREFSCAN flags are set for AC region depending on position.
 	// If refscan_ac is set, we interpret PATREFSCAN lines as image lines, too.
@@ -606,6 +613,7 @@ int main_twixread(int argc, char* argv[argc])
 		OPT_SET('D', &dummy, "only get dummy (preparation scans)"),
 		OPT_SET('R', &refscan, "get data of reference scan"),
 		OPT_CLEAR('S', &refscan_ac, "don't include reference lines"),
+		OPT_SET('V', &ignore_vop, "ignore VOP data (RF_MONITOR)"),
 		OPT_ULONG('I', &ignore_dims_flags, "flags", "ignore (squash) selected dimensions (defaults to LEVEL_FLAG)"),
 		OPT_SET('C', &chrono, "read data chronologically and ignore adc postitions"),
 		OPT_SET('M', &mpi, "MPI mode"),
@@ -659,7 +667,7 @@ int main_twixread(int argc, char* argv[argc])
 
 		while (ADC_END != sar) {
 
-			sar = siemens_bounds(vd, noise, dummy, refscan, refscan_ac, ignore_dims_flags, ifd, min, max);
+			sar = siemens_bounds(vd, noise, dummy, refscan, refscan_ac, ignore_vop, ignore_dims_flags, ifd, min, max);
 
 			if (ADC_SKIP == sar)
 				continue;
@@ -748,7 +756,7 @@ int main_twixread(int argc, char* argv[argc])
 		long pos[DIMS] = { };
 		complex float pmu_val = 0;
 
-		sar = siemens_adc_read(vd, ifd, noise, dummy, refscan, refscan_ac, ignore_dims_flags, linectr, partctr, radial, dims, pos, buf, &pmu_val);
+		sar = siemens_adc_read(vd, ifd, noise, dummy, refscan, refscan_ac, ignore_vop, ignore_dims_flags, linectr, partctr, radial, dims, pos, buf, &pmu_val);
 
 		if (ADC_ERROR == sar) {
 
