@@ -349,6 +349,28 @@ static void skip_to_next(const char* hdr, int fd, off_t offset)
 		error("seeking\n");
 }
 
+
+// Skip VOP (RF monitoring) blocks
+// VOP block size is calculated from header
+
+static bool skip_vop(const char* scan_hdr, int fd)
+{
+	struct mdh2 mdh;
+	memcpy(&mdh, scan_hdr + 40, sizeof(mdh));	// second part of mdh starts at byte 40
+
+	if (!MD_IS_SET(mdh.evalinfo, RF_MONITOR))
+		return false;
+
+	off_t chan_hdr_size = 32;
+	off_t chan_data_size = mdh.samples * (off_t)CFL_SIZE;
+	off_t remaining = mdh.channels * (chan_hdr_size + chan_data_size);
+
+	if (-1 == lseek(fd, remaining, SEEK_CUR))
+		error("seeking\n");
+
+	return true;
+}
+
 static void siemens_dims_mapping(long pos[DIMS], uint16_t sLC[14], unsigned long ignore_dims_flags, bool radial)
 {
 	pos[PHS1_DIM]	= sLC[0];
