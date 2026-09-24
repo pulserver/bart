@@ -3,6 +3,7 @@ TWIX_MultiRaid=$(AGUE_REF)/twix/TWIX_MultiRaid.dat
 TWIX_MPI=$(AGUE_REF)/twix/TWIX_MPI.dat
 TWIX_VE=$(AGUE_REF)/twix/TWIX_VE.dat
 TWIX_PMU=$(AGUE_REF)/twix/TWIX_PMU.dat
+TWIX_VE_VOP=$(AGUE_REF)/twix/TWIX_VE_VOP.dat
 
 tests/test-twixread: twixread ${TIWX_SingleRaid}
 	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
@@ -51,5 +52,13 @@ tests/test-twixread-pmu-chrono: twixread transpose nrmse
 	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
 	touch $@
 
-TESTS_AGUE += tests/test-twixread tests/test-twixread-multiraid tests/test-twixread-mpi tests/test-twixread-ve tests/test-twixread-pmu tests/test-twixread-pmu-chrono
+tests/test-twixread-ve-vop: twixread ${TWIX_VE_VOP}
+	set -e; mkdir $(TESTS_TMP) ; cd $(TESTS_TMP)					;\
+	echo $(AGUE_REF)								;\
+	$(TOOLDIR)/twixread -A -V ${TWIX_VE_VOP} ksp.ra					;\
+	echo "7def8c3ba27ceede47643920c10427a1  ksp.ra" | md5sum -c			;\
+	rm *.ra ; cd .. ; rmdir $(TESTS_TMP)
+	touch $@
+
+TESTS_AGUE += tests/test-twixread tests/test-twixread-multiraid tests/test-twixread-mpi tests/test-twixread-ve tests/test-twixread-pmu tests/test-twixread-pmu-chrono tests/test-twixread-ve-vop
 
