@@ -29,9 +29,6 @@
 #include "num/ops.h"
 #include "num/iovec.h"
 #include "num/multiplace.h"
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
 
 #include "linops/linop.h"
 #include "linops/fmac.h"
@@ -1292,12 +1289,9 @@ struct operator_matrix_s {
 
 	linop_data_t super;
 
-	const complex float* mat;
-	const complex float* mat_gram; // A^H A
-#ifdef USE_GPU
-	const complex float* mat_gpu;
-	const complex float* mat_gram_gpu;
-#endif
+	struct multiplace_array_s* mat;
+	struct multiplace_array_s* mat_gram; // A^H A
+
 	int N;
 
 	const long* mat_dims;
@@ -1315,37 +1309,15 @@ static DEF_TYPEID(operator_matrix_s);
 static void linop_matrix_apply(const linop_data_t* _data, complex float* dst, const complex float* src)
 {
 	auto data = CAST_DOWN(operator_matrix_s, _data);
-	const complex float* mat = data->mat;
 
-#ifdef USE_GPU
-	if (cuda_ondevice(src)) {
-
-		if (NULL == data->mat_gpu)
-			data->mat_gpu = md_gpu_move(data->N, data->mat_dims, data->mat, CFL_SIZE);
-
-		mat = data->mat_gpu;
-	}
-#endif
-
-	md_ztenmul(data->N, data->out_dims, dst, data->in_dims, src, data->mat_dims, mat);
+	md_ztenmul(data->N, data->out_dims, dst, data->in_dims, src, data->mat_dims, multiplace_read(data->mat, src));
 }
 
 static void linop_matrix_apply_adjoint(const linop_data_t* _data, complex float* dst, const complex float* src)
 {
 	auto data = CAST_DOWN(operator_matrix_s, _data);
-	const complex float* mat = data->mat;
 
-#ifdef USE_GPU
-	if (cuda_ondevice(src)) {
-
-		if (NULL == data->mat_gpu)
-			data->mat_gpu = md_gpu_move(data->N, data->mat_dims, data->mat, CFL_SIZE);
-
-		mat = data->mat_gpu;
-	}
-#endif
-
-	md_ztenmulc(data->N, data->in_dims, dst, data->out_dims, src, data->mat_dims, mat);
+	md_ztenmulc(data->N, data->in_dims, dst, data->out_dims, src, data->mat_dims, multiplace_read(data->mat, src));
 }
 
 static void linop_matrix_apply_normal(const linop_data_t* _data, complex float* dst, const complex float* src)
@@ -1363,17 +1335,7 @@ static void linop_matrix_apply_normal(const linop_data_t* _data, complex float* 
 
 	} else {
 
-		const complex float* mat_gram = data->mat_gram;
-#ifdef USE_GPU
-		if (cuda_ondevice(src)) {
-
-			if (NULL == data->mat_gram_gpu)
-				data->mat_gram_gpu = md_gpu_move(2 * data->N, data->grm_dims, data->mat_gram, CFL_SIZE);
-
-			mat_gram = data->mat_gram_gpu;
-		}
-#endif
-		md_ztenmul(2 * data->N, data->gout_dims, dst, data->gin_dims, src, data->grm_dims, mat_gram);
+		md_ztenmul(2 * data->N, data->gout_dims, dst, data->gin_dims, src, data->grm_dims, multiplace_read(data->mat_gram, src));
 	}
 }
 
@@ -1388,12 +1350,9 @@ static void linop_matrix_del(const linop_data_t* _data)
 	xfree(data->gout_dims);
 	xfree(data->grm_dims);
 
-	md_free(data->mat);
-	md_free(data->mat_gram);
-#ifdef USE_GPU
-	md_free(data->mat_gpu);
-	md_free(data->mat_gram_gpu);
-#endif
+	multiplace_free(data->mat);
+	multiplace_free(data->mat_gram);
+
 	xfree(data);
 }
 
@@ -1443,17 +1402,8 @@ static struct operator_matrix_s* linop_matrix_priv2(int N, const long out_dims[N
 	md_copy_dims(N, *in_dims1, in_dims);
 	data->in_dims = *PTR_PASS(in_dims1);
 
-
-	complex float* mat = md_alloc(N, matrix_dims, CFL_SIZE);
-
-	md_copy(N, matrix_dims, mat, matrix, CFL_SIZE);
-
-	data->mat = mat;
+	data->mat = multiplace_move(N, matrix_dims, CFL_SIZE, matrix);
 	data->mat_gram = NULL;
-#ifdef USE_GPU
-	data->mat_gpu = NULL;
-	data->mat_gram_gpu = NULL;
-#endif
 
 #if 1
 	// pre-multiply gram matrix (if there is a cost reduction)
@@ -1531,7 +1481,7 @@ static struct operator_matrix_s* linop_matrix_priv2(int N, const long out_dims[N
 
 		md_ztenmulc(2 * N, *grm_dims2, mat_gram, *gmt_dims2, matrix, *mat_dims2, matrix);
 
-		data->mat_gram = mat_gram;
+		data->mat_gram = multiplace_move_F(2 * N, *grm_dims2, CFL_SIZE, mat_gram);
 	}
 
 	PTR_FREE(gmt_dims2);
@@ -1692,7 +1642,7 @@ struct linop_s* linop_matrix_chain(const struct linop_s* a, const struct linop_s
 	debug_print_dims(DP_DEBUG2, N, matB_dims);
 	debug_print_dims(DP_DEBUG2, N, out_dims);
 
-	md_ztenmul(N, matrix_dims, matrix, matA_dims, a_data->mat, matB_dims, b_data->mat);
+	md_ztenmul(N, matrix_dims, matrix, matA_dims, multiplace_read(a_data->mat, matrix), matB_dims, multiplace_read(b_data->mat, matrix));
 
 	// priv2 takes our doubled dimensions
 
