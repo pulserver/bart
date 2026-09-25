@@ -11,15 +11,11 @@
 
 #include "misc/misc.h"
 #include "misc/types.h"
-#include "misc/debug.h"
 
 #include "num/iovec.h"
 #include "num/ops.h"
 #include "num/multind.h"
 #include "num/flpmath.h"
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
 
 #include "linops/someops.h"
 

@@ -274,10 +274,9 @@ static void compute_adjoint_noncart(struct network_data_s* nd)
 
 	complex float* ref = NULL;
 
-#ifdef USE_GPU
 	if (nd->gpu && !use_compat_to_version("v0.8.00"))
 		ref = md_alloc_gpu(1, MD_DIMS(1), CFL_SIZE);
-#endif
+
 	nlop_debug(DP_INFO, sense_adjoint);
 
 	if (nd->precomp)
@@ -434,10 +433,8 @@ static void network_data_compute_init_precomp(struct network_data_s* nd, complex
 
 	complex float* ref = NULL;
 
-#ifdef USE_GPU
 	if (nd->gpu && !use_compat_to_version("v0.8.00"))
 		ref = md_alloc_gpu(1, MD_DIMS(1), CFL_SIZE);
-#endif
 
 	nlop_generic_apply_loop_sameplace(nlop_normal_inv, loop_flags, 1, DO, odims, dst, 3, DI, idims, src, ref);
 

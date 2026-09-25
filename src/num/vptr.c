@@ -29,7 +29,6 @@
 #include "num/gpuops.h"
 #endif
 #include "num/multind.h"
-#include "num/flpmath.h"
 #include "num/mpi_ops.h"
 #include "num/delayed.h"
 
@@ -540,10 +539,9 @@ static void handler(int /*sig*/, siginfo_t *si, void*)
 		error("Virtual pointer at %p not resolved!\n", si->si_addr);
 	}
 
-#ifdef USE_GPU
-	if (cuda_ondevice(si->si_addr))
+	if (md_ondevice(si->si_addr))
 		error("Tried to access CUDA pointer at %x from CPU!\n", si->si_addr);
-#endif
+
 	error("Segfault!\n");
 }
 #endif
@@ -1160,9 +1158,7 @@ void* vptr_wrap(int N, const long dims[N], size_t size, const void* ptr, struct 
 	vptr_mem_block_init(&mem->blocks);
 	mem->blocks.mem[0] = (void*)ptr;
 
-#ifdef USE_GPU
-	mem->loc = cuda_ondevice(ptr) ? VPTR_GPU : VPTR_CPU;
-#endif
+	mem->loc = md_ondevice(ptr) ? VPTR_GPU : VPTR_CPU;
 	mem->free = free;
 
 	vptr_update_size(mem->loc, mem->blocks.block_size);

@@ -215,7 +215,6 @@ int main_nufft(int argc, char* argv[argc])
 
 		const struct linop_s* nufft_op;
 
-#ifdef USE_GPU
 		if (bart_use_gpu && !precond && !nufft_conf_options.dft) {
 
 			complex float* traj_gpu = md_gpu_move(DIMS, traj_dims, traj, CFL_SIZE);
@@ -234,9 +233,7 @@ int main_nufft(int argc, char* argv[argc])
 			md_free(traj_gpu);
 
 		} else {
-#else
-		{
-#endif
+
 			nufft_op = nufft_create2(DIMS, ksp_dims, coilim_dims,
 						traj_dims, traj,
 						pattern_dims, pattern,

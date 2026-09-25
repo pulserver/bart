@@ -18,9 +18,6 @@
 #include "num/flpmath.h"
 #include "num/iovec.h"
 #include "num/rand.h"
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
 
 #include "linops/someops.h"
 #include "linops/sum.h"
@@ -169,7 +166,7 @@ static void rand_mask_fixed_fun(const nlop_data_t* _data, int D, complex float* 
 	int N = data->N;
 
 	if (!update_random_state) {
-		
+
 		md_copy(data->N, data->dims, args[0], data->state, CFL_SIZE);
 		return;
 	}
@@ -207,7 +204,7 @@ static void rand_mask_fixed_fun(const nlop_data_t* _data, int D, complex float* 
 
 				if (0. == MD_ACCESS(N, strs, pos, data->state))
 					idx--;
-				
+
 				md_next(N, data->dims, ~data->bat_flags, pos);
 			}
 
@@ -267,7 +264,7 @@ const struct nlop_s* nlop_rand_split_fixed_create(int N, const long dims[N], uns
 
 	if (NULL != _fix_first)
 		md_zsub(N, fix_dims, fix_first, fix_first, _fix_first);
-	
+
 	long dims2[N];
 	md_select_dims(N, (~shared_dims_flag) | fix_flags, dims2, dims);
 
@@ -283,9 +280,9 @@ const struct nlop_s* nlop_rand_split_fixed_create(int N, const long dims[N], uns
 
 	auto result = nlop_combine_FF(first, second);
 	result = nlop_dup_F(result, 0, 2);
-	result = nlop_dup_F(result, 1, 2);												// out: (1 - mask) * in, mask * in ; in: in, mask 
+	result = nlop_dup_F(result, 1, 2);												// out: (1 - mask) * in, mask * in ; in: in, mask
 
-	result = nlop_prepend_FF(nlop_from_linop_F(linop_fmac_create(N, dims2, 0, shared_dims_flag, ~fix_flags, fix_first)), result, 1);// out: (1 - mask') * in, mask' * in ; in: in, mask ; where mask' = (1 - fix_first) * mask 
+	result = nlop_prepend_FF(nlop_from_linop_F(linop_fmac_create(N, dims2, 0, shared_dims_flag, ~fix_flags, fix_first)), result, 1);// out: (1 - mask') * in, mask' * in ; in: in, mask ; where mask' = (1 - fix_first) * mask
 
 	md_select_dims(N, ~shared_dims_flag, dims2, dims);
 	result = nlop_chain2_FF(nlop_rand_mask_fixed_create(N, dims2, (0 < p ? 1. : -1) - p, bat_dims_flag), 0, result, 1);
@@ -432,9 +429,8 @@ static void norm_max_abs_fun(const nlop_data_t* _data, int D, complex float* arg
 	if (NULL == data->inv_scale)
 		data->inv_scale = md_alloc_sameplace(N, sdims, CFL_SIZE, dst);
 
-#ifdef USE_GPU
-	assert((cuda_ondevice(dst) == cuda_ondevice(src)));
-#endif
+
+	assert((md_ondevice(dst) == md_ondevice(src)));
 
 	complex float* tmp = md_alloc_sameplace(N, dims, CFL_SIZE, dst);
 	md_zabs(N, dims, tmp, src);
@@ -539,9 +535,8 @@ static void norm_znorm_fun(const nlop_data_t* _data, int D, complex float* args[
 	if (NULL == data->inv_scale)
 		data->inv_scale = md_alloc_sameplace(N, sdims, CFL_SIZE, dst);
 
-#ifdef USE_GPU
-	assert((cuda_ondevice(dst) == cuda_ondevice(src)));
-#endif
+	assert((md_ondevice(dst) == md_ondevice(src)));
+
 	md_ztenmulc(N, sdims, scale, dims, src, dims, src);
 	md_zreal(N, sdims, scale, scale);
 	md_sqrt(N + 1, MD_REAL_DIMS(N, sdims), (float*)scale, (float*)scale);

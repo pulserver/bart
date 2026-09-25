@@ -6,13 +6,6 @@
 
 #include "num/multind.h"
 
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
-
-#include "misc/debug.h"
-#include "misc/misc.h"
-
 #include "shuffle.h"
 
 

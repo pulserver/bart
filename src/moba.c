@@ -42,10 +42,6 @@
 #include "grecon/optreg.h"
 #include "grecon/italgo.h"
 
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
-
 #include "moba/optreg.h"
 #include "moba/recon.h"
 #include "moba/moba.h"
@@ -443,10 +439,8 @@ int main_moba(int argc, char* argv[argc])
 
 		complex float* traj_cfl = traj;
 
-#ifdef USE_GPU
 		if (bart_use_gpu)
 			traj = md_gpu_move(DIMS, traj_dims, traj, CFL_SIZE);
-#endif
 
 		struct linop_s* nufft_op_k = nufft_create(DIMS, ksp_dims, grid_dims, traj_dims, traj, NULL, nufft_conf);
 		const struct operator_s* op_adj = operator_sameplace_wrapper(nufft_op_k->adjoint, traj);
@@ -754,7 +748,6 @@ int main_moba(int argc, char* argv[argc])
 
 	complex float* monitor = (NULL != monitor_file) ? create_async_cfl(monitor_file, ITER_FLAG, DIMS, monitor_dims) : NULL;
 
-#ifdef USE_GPU
 	if (bart_use_gpu) {
 
 		complex float* cim_gpu = md_gpu_move(DIMS, grid_dims, cim, CFL_SIZE);
@@ -763,7 +756,6 @@ int main_moba(int argc, char* argv[argc])
 
 		cim = cim_gpu;
 	}
-#endif
 
 	moba_recon(&conf, &data, dims, img_dims, img, coil_dims, sens, pat_dims, pattern, TI, TE_IR_MGRE, b1, b0, grid_dims, cim, init, monitor_dims, monitor);
 

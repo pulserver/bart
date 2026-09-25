@@ -20,9 +20,6 @@
 #include "num/iovec.h"
 #include "num/ops.h"
 #include "num/ops_p.h"
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
 
 #include "iter/italgos.h"
 #include "iter/iter.h"
@@ -345,18 +342,12 @@ void noir2_recon(const struct noir2_conf_s* conf, struct noir2_s* noir_ops,
 	complex float* data = md_alloc_sameplace(N, dat_dims, CFL_SIZE, kspace);
 	linop_adjoint(noir_ops->lop_asym, N, dat_dims, data, N, ksp_dims, kspace);
 
-
-#ifdef USE_GPU
-	if((conf->gpu) && !cuda_ondevice(data)) {
+	if((conf->gpu) && !md_ondevice(data)) {
 
 		complex float* tmp_data = md_gpu_move(N, dat_dims, data, CFL_SIZE);
 		md_free(data);
 		data = tmp_data;
 	}
-#else
-	if(conf->gpu)
-		error("Compiled without GPU support!");
-#endif
 
 	float scaling = conf->scaling;
 	if (0. > scaling) {
@@ -656,11 +647,11 @@ void noir2_recon_noncart(
 		ref = vptr_alloc_sameplace(1, MD_DIMS(1), 1, kspace);
 		if (conf->gpu)
 			vptr_set_gpu(ref);
-	}
-#ifdef USE_GPU
-	else if (conf->gpu)
+
+	} else if (conf->gpu) {
+
 		ref = md_alloc_gpu(1, MD_DIMS(1), 1);
-#endif
+	}
 
 	complex float* l_img = 		md_alloc_sameplace(N, limg_dims, CFL_SIZE, ref);
 	complex float* l_img_ref = 	conf->realtime ? md_alloc_sameplace(N, limg_dims, CFL_SIZE, ref) : NULL;

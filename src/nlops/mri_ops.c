@@ -24,9 +24,6 @@
 #include "num/rand.h"
 #include "num/fft.h"
 #include "num/init.h"
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
 
 #include "iter/misc.h"
 #include "iter/iter.h"

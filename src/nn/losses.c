@@ -11,16 +11,11 @@
 
 #include "misc/misc.h"
 #include "misc/types.h"
-#include "misc/debug.h"
 
 #include "num/iovec.h"
 #include "num/ops.h"
 #include "num/multind.h"
 #include "num/flpmath.h"
-
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
 
 #include "linops/linop.h"
 #include "linops/someops.h"
@@ -60,9 +55,8 @@ static void mpsnr_fun(const nlop_data_t* _data, int D, complex float* args[D])
 	const complex float* src1 = args[1];
 	const complex float* src2 = args[2];
 
-#ifdef USE_GPU
-	assert((cuda_ondevice(dst) == cuda_ondevice(src1)) && (cuda_ondevice(src1) == cuda_ondevice(src2)));
-#endif
+	assert((md_ondevice(dst) == md_ondevice(src1)) && (md_ondevice(src1) == md_ondevice(src2)));
+
 	int N = data->N;
 	const long* dims = data->dims;
 
@@ -315,9 +309,8 @@ static void cce_fun(const nlop_data_t* _data, int D, complex float* args[D])
 	const complex float* src_pred = args[1];
 	const complex float* src_true = args[2];
 
-#ifdef USE_GPU
-	assert((cuda_ondevice(dst) == cuda_ondevice(src_pred)) && (cuda_ondevice(src_pred) == cuda_ondevice(src_true)));
-#endif
+	assert((md_ondevice(dst) == md_ondevice(src_pred)) && (md_ondevice(src_pred) == md_ondevice(src_true)));
+
 	cce_initialize(data, dst);
 
 	md_zlog(data->N, data->dom->dims, data->tmp_log, src_pred);
@@ -482,10 +475,8 @@ static void accuracy_fun(const nlop_data_t* _data, int D, complex float* args[D]
 	const complex float* src_pred = args[1];
 	const complex float* src_true = args[2];
 
-#ifdef USE_GPU
-	assert(   (cuda_ondevice(dst) == cuda_ondevice(src_pred))
-	       && (cuda_ondevice(src_pred) == cuda_ondevice(src_true)));
-#endif
+	assert(   (md_ondevice(dst) == md_ondevice(src_pred))
+	       && (md_ondevice(src_pred) == md_ondevice(src_true)));
 
 	complex float* src_pred_t = md_alloc(data->dom->N, data->dom->dims, data->dom->size);
 	complex float* src_true_t = md_alloc(data->dom->N, data->dom->dims, data->dom->size);
@@ -565,9 +556,7 @@ static void frequency_compensation_fun(const nlop_data_t* _data, complex float* 
 {
 	const auto data = CAST_DOWN(frequency_compensation_s, _data);
 
-#ifdef USE_GPU
-	assert(cuda_ondevice(dst) == cuda_ondevice(src));
-#endif
+	assert(md_ondevice(dst) == md_ondevice(src));
 
 	complex float* sum = md_alloc_sameplace(data->sum_dom->N, data->sum_dom->dims, CFL_SIZE, src);
 
@@ -755,9 +744,8 @@ static void dice_fun(const nlop_data_t* _data, int D, complex float* args[D])
 	const complex float* src_pred = args[1];
 	const complex float* src_true = args[2];
 
-#ifdef USE_GPU
-	assert((cuda_ondevice(dst) == cuda_ondevice(src_pred)) && (cuda_ondevice(src_pred) == cuda_ondevice(src_true)));
-#endif
+	assert((md_ondevice(dst) == md_ondevice(src_pred)) && (md_ondevice(src_pred) == md_ondevice(src_true)));
+
 	int N = d->N;
 
 	dice_initialize(d, src_true);
@@ -1016,7 +1004,7 @@ const struct nlop_s* nlop_patched_cross_correlation_create(int N, const long dim
 	complex float* nrm = md_alloc(N, cdims, CFL_SIZE);
 
 	md_zfill(N, cdims, one, 1.);
-	
+
 	const struct nlop_s* nlop_avg = nlop_avg_window_create(N, cdims, kdims, flags);
 	nlop_apply(nlop_avg, N, cdims, nrm, N, cdims, one);
 	nlop_free(nlop_avg);
@@ -1041,7 +1029,7 @@ const struct nlop_s* nlop_patched_cross_correlation_create(int N, const long dim
 	linop_free(lop_nrm);
 
 	const struct nlop_s* ret = nlop_zdiv_reg_create(N, dims, epsilon);
-	
+
 	ret = nlop_prepend_FF(nlop_dup_F(nlop_tenmul_create(N, dims, dims, dims),0, 1), ret, 0);	// in: A, B * C
 	ret = nlop_prepend_FF(avg_window1, ret, 0);							// in: I * J, B * C
 	ret = nlop_chain2_swap_FF(nlop_tenmul_create(N, dims, dims, dims), 0, ret, 0);			// in: I, J, B * C
@@ -1058,7 +1046,7 @@ const struct nlop_s* nlop_patched_cross_correlation_create(int N, const long dim
 
 	ret = nlop_prepend_FF(nrm_window1, ret , 0);
 	ret = nlop_prepend_FF(nrm_window2, ret , 1);
- 
+
 	return ret;
 }
 

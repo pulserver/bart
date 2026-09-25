@@ -18,10 +18,6 @@
 
 #include "nn/weights.h"
 
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
-
 #include "misc/debug.h"
 #include "misc/opts.h"
 #include "misc/mmio.h"

@@ -98,14 +98,12 @@ const struct linop_s* pics_model(const struct pics_config* conf,
 		const complex float* traj_tmp = traj;
 
 		//for computation of psf on GPU
-#ifdef USE_GPU
 		if (conf->gpu_gridding) {
 
 			assert(conf->gpu);
 
 			traj_tmp = md_gpu_move(DIMS, traj_dims, traj, sizeof *traj);
 		}
-#endif
 
 		forward_op = sense_nc_init(max_dims, map_dims, maps, ksp_dims,
 				traj_dims, traj_tmp, conf->nuconf,
@@ -113,10 +111,8 @@ const struct linop_s* pics_model(const struct pics_config* conf,
 				fieldmap_dims, fieldmap, timemap_dims, timemap,
 				nufft_op, conf->shared_img_flags & ~conf->motion_flags);
 
-#ifdef USE_GPU
 		if (conf->gpu_gridding)
 			md_free(traj_tmp);
-#endif
 	}
 
 	if (NULL != motion) {
@@ -133,14 +129,13 @@ const struct linop_s* pics_model(const struct pics_config* conf,
 	if (conf->real_value_constraint)
 		forward_op = linop_chain_FF(linop_realval_create(DIMS, img_dims), forward_op);
 
-#ifdef USE_GPU
 	if (conf->gpu && (conf->gpu_gridding || NULL == traj)) {
 
 		auto tmp = linop_gpu_wrapper(forward_op);
 		linop_free(forward_op);
 		forward_op = tmp;
 	}
-#endif
+
 	if (conf->time_encoded_asl) {
 
 		const struct linop_s* hadamard_op = linop_hadamard_create(DIMS, img_dims, ITER_DIM);

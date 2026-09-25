@@ -64,7 +64,6 @@ double estimate_maxeigenval(const struct operator_s* op)
 	return estimate_maxeigenval_sameplace(op, 30, NULL);
 }
 
-#ifdef USE_GPU
 double estimate_maxeigenval_gpu(const struct operator_s* op)
 {
 	void* ref = md_alloc_gpu(1, MD_DIMS(1), 1);
@@ -75,4 +74,3 @@ double estimate_maxeigenval_gpu(const struct operator_s* op)
 
 	return max_eval;
 }
-#endif

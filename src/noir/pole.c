@@ -23,10 +23,6 @@
 #include "num/vec3.h"
 #include "num/ode.h"
 
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
-
 #include "pole.h"
 
 struct pole_config_s pole_config_default = {
@@ -842,15 +838,13 @@ static void fov_to_grid(const long dims[3], vec3_t pos)
 
 void sample_phase_pole_3D(int N, const long dims[N], complex float* dst, int D, const float r_fov[D][2][3], float tol)
 {
-#ifdef USE_GPU
-	if (cuda_ondevice(dst)) {
+	if (md_ondevice(dst)) {
 
 		complex float* tmp = md_alloc(N, dims, CFL_SIZE);
 		sample_phase_pole_3D(N, dims, tmp, D, r_fov, tol);
 		md_copy(N, dims, dst, tmp, CFL_SIZE);
 		return;
 	}
-#endif
 
 	assert(3 <= N);
 	assert(1 == md_calc_size(N - 3, dims + 3));

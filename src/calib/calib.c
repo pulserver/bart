@@ -536,14 +536,13 @@ void caltwo(const struct ecalib_conf* conf, const long out_dims[DIMS], complex f
 
 	if (0 <= conf->econdim) {
 
-#ifdef USE_GPU
 		if (conf->usegpu) {
+
 			assert(!msk);
 			complex float* tmp = md_alloc_gpu(4, in_dims, CFL_SIZE);
 			md_copy(4, in_dims, tmp, in_data, CFL_SIZE);
 			in_data = tmp;
 		}
-#endif
 
 		assert(conf->econdim < 3);
 
@@ -578,14 +577,11 @@ void caltwo(const struct ecalib_conf* conf, const long out_dims[DIMS], complex f
 		complex float* slc_out_cpu = slc_out;
 		complex float* slc_emaps_cpu = slc_emaps;
 
-#ifdef USE_GPU
 		if (conf->usegpu) {
 
 			slc_out_cpu = md_alloc(DIMS, sout_dims, CFL_SIZE);
 			slc_emaps_cpu = (NULL != slc_emaps) ? md_alloc(DIMS, sedims, CFL_SIZE) : NULL;
 		}
-#endif
-
 
 		long pos[DIMS] = { 0 };
 
@@ -770,10 +766,9 @@ void calib2(const struct ecalib_conf* conf, const long out_dims[DIMS], complex f
 
 
 	const complex float* data_tmp = data;
-#ifdef USE_GPU
+
 	if (conf->usegpu)
 		data_tmp = md_gpu_move(DIMS, calreg_dims, data, CFL_SIZE);
-#endif
 
 	float c = (conf->crop >= 0.) ? conf->crop : sure_crop(conf->var, out_dims, out_data, eptr, calreg_dims, data_tmp);
 

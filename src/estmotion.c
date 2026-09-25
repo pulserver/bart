@@ -11,15 +11,14 @@
  * Lecture Notes in Computer Science 2007;4713. Springer, Berlin, Heidelberg.
  *
  * Avants BB, Epstein CL, Grossman M, Gee JC.
- * Symmetric diffeomorphic image registration with cross-correlation: 
+ * Symmetric diffeomorphic image registration with cross-correlation:
  * evaluating automated labeling of elderly and neurodegenerative brain.
  * Med Image Anal 2008;12:26-41.
  */
 
-#include <stdlib.h>
+
 #include <assert.h>
 #include <complex.h>
-#include <stdio.h>
 #include <strings.h>
 
 #include "num/multind.h"
@@ -82,12 +81,7 @@ int main_estmotion(int argc, char* argv[argc])
 
 	num_init_gpu_support();
 
-#ifdef USE_GPU
 	md_alloc_fun_t my_alloc = bart_use_gpu ? md_alloc_gpu : md_alloc;
-#else
-	assert(!bart_use_gpu);
-	md_alloc_fun_t my_alloc = md_alloc;
-#endif
 
 	long rdims[DIMS];
 	long mdims[DIMS];
@@ -120,7 +114,7 @@ int main_estmotion(int argc, char* argv[argc])
 	complex float* imot = NULL;
 
 	if (NULL != imotion_file) {
-			
+
 		imot = my_alloc(DIMS, udims, CFL_SIZE);
 
 		md_clear(DIMS, udims, mot, CFL_SIZE);
@@ -136,7 +130,7 @@ int main_estmotion(int argc, char* argv[argc])
 
 	complex float* mot_ptr = create_cfl(motion_file, DIMS, udims);
 	md_copy(DIMS, udims, mot_ptr, mot, CFL_SIZE);
-	unmap_cfl(DIMS, udims, mot_ptr);	
+	unmap_cfl(DIMS, udims, mot_ptr);
 
 	md_free(mot);
 

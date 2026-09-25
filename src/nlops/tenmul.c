@@ -9,18 +9,13 @@
 
 #include "misc/types.h"
 #include "misc/misc.h"
-#include "misc/debug.h"
 
 #include "num/multind.h"
 #include "num/flpmath.h"
 
 #include "nlops/nlop.h"
 #include "nlops/nlop_jacobian.h"
-#include "num/ops.h"
 
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
 
 #include "tenmul.h"
 
@@ -93,9 +88,7 @@ static void tenmul_fun(const nlop_data_t* _data, int N, complex float* args[N])
 	complex float* x1 = data->der1;
 	complex float* x2 = data->der2;
 
-#ifdef USE_GPU
-	assert((cuda_ondevice(dst) == cuda_ondevice(src1)) && (cuda_ondevice(src1) == cuda_ondevice(src2)));
-#endif
+	assert((md_ondevice(dst) == md_ondevice(src1)) && (md_ondevice(src1) == md_ondevice(src2)));
 
 	if (nlop_der_requested(_data, 1, 0))
 		md_copy2(data->N, data->dims1, MD_STRIDES(data->N, data->dims1, CFL_SIZE), x1, data->istr1, src1, CFL_SIZE);

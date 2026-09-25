@@ -20,10 +20,6 @@
 
 #include "nn/weights.h"
 
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
-
 #include "misc/debug.h"
 #include "misc/opts.h"
 #include "misc/mmio.h"
@@ -67,23 +63,23 @@
  */
 static nn_t network_mnist_create(const long odims[2], const long idims[3], enum NETWORK_STATUS status)
 {
-	assert(10 == odims[0]);		// 10 classes 
+	assert(10 == odims[0]);		// 10 classes
 	assert(idims[2] == odims[1]);	// batch size of input and output equals
-	
+
 	long dims[5] = { 1, idims[0], idims[1], 1, idims[2] };	// input dimensions in the channel NHWC format, i.e. { Channels, X, Y, Z, Batch }
 	bool nhwc = true;					// we use NHWC layout
 
 	long kernel_size[] = { 3, 3, 1 };	// size of 3D convolution kernel
 	long strides[] = { 1, 1, 1 };
 	long dilation[] = { 1, 1, 1 };
-	
+
 	int chan1 = 32;
 	int chan2 = 64;
 	int chan3 = 128;
 	int chan4 = 10;
 
 	const struct initializer_s* init = NULL; // fallback to default initializer
-	
+
 	long pool_size[] = { 2, 2, 1 };
 
 	bool conv = false;	// we usecross correlation not convolution, i.e. as usual in deep-learning the convolution kernels are not flipped
@@ -182,7 +178,7 @@ int main_mnist(int argc, char* argv[argc])
 
 		if (bart_use_gpu)
 			move_gpu_nn_weights(weights);
-		
+
 		const struct nlop_s* batch_generator = batch_gen_create(2, (int [2]){ NO, NI },
 									(const long*[2]){ bdims_out, bdims_in },
 									(const long*[2]){ dims_out, dims_in },
@@ -193,7 +189,7 @@ int main_mnist(int argc, char* argv[argc])
 		int II = nn_get_nr_in_args(train_op);
 		int OO = nn_get_nr_out_args(train_op);
 
-		float* src[II];	
+		float* src[II];
 		src[0] = NULL; //reference output -> allocated and filled by training algorithm/batch generator
 		src[1] = NULL; //reference input -> allocated and filled by training algorithm/batch generator
 
@@ -226,7 +222,7 @@ int main_mnist(int argc, char* argv[argc])
 		complex float* out = create_cfl(filename_out, NO, dims_out);
 
 		nn_t net = network_mnist_create(dims_out, dims_in, STAT_TEST);
-		
+
 		nn_weights_t weights = load_nn_weights(filename_weights);
 
 		if (bart_use_gpu)

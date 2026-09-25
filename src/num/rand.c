@@ -393,13 +393,7 @@ void uniform_rand_vec(long N, float* dst)
 
 static void md_gaussian_obsolete_rand(int D, const long dims[D], complex float* dst)
 {
-	bool buf = is_vptr(dst);
-#ifdef USE_GPU
-	if (cuda_ondevice(dst))
-		buf = true;
-#endif
-
-	if (buf) {
+	if (is_vptr(dst) || md_ondevice(dst)) {
 
 		complex float* tmp = md_alloc(D, dims, sizeof(complex float));
 
@@ -576,13 +570,7 @@ void md_zgaussian_rand(int D, const long dims[D], complex float* dst)
 
 static void md_uniform_obsolete_rand(int D, const long dims[D], complex float* dst)
 {
-	bool buf = is_vptr(dst);
-#ifdef USE_GPU
-	if (cuda_ondevice(dst))
-		buf = true;
-#endif
-
-	if (buf) {
+	if (is_vptr(dst) || md_ondevice(dst)) {
 
 		complex float* tmp = md_alloc(D, dims, sizeof(complex float));
 
@@ -637,13 +625,7 @@ void md_uniform_rand(int D, const long dims[D], complex float* dst)
 
 static void md_obsolete_rand_one(int D, const long dims[D], complex float* dst, double p)
 {
-	bool buf = is_vptr(dst);
-#ifdef USE_GPU
-	if (cuda_ondevice(dst))
-		buf = true;
-#endif
-
-	if (buf) {
+	if (is_vptr(dst) || md_ondevice(dst)) {
 
 		complex float* tmp = md_alloc(D, dims, sizeof(complex float));
 

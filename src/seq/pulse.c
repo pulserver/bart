@@ -13,9 +13,6 @@
 
 #include "num/multind.h"
 #include "num/specfun.h"
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
 
 #include "seq/pulse_library.h"
 
@@ -117,14 +114,14 @@ void pulse_sinc_init(struct pulse_sinc* ps, float duration, float angle /*[deg]*
 
 /* SMS-multiband phase modulation
  * */
-static complex float pulse_sms_phase_modulation(const struct pulse_sms* ps, float t) 
+static complex float pulse_sms_phase_modulation(const struct pulse_sms* ps, float t)
 {
 	float phase = 0.;
 	complex float mod = 0. + 0.i;
 
 	for (int i = 0; i < ps->mb_factor; i++) {
 
-		phase = (t - CAST_UP(ps)->duration / 2.) 
+		phase = (t - CAST_UP(ps)->duration / 2.)
 			* ((i - (ps->mb_factor - 1.) / 2.) * ps->SMS_dist)
 			* (-2. * M_PI * (ps->bwtp / (ps->super.duration * ps->slice_th)))
 			+ 2 * M_PI * (ps->mb_part * i) / ps->mb_factor;
@@ -133,7 +130,7 @@ static complex float pulse_sms_phase_modulation(const struct pulse_sms* ps, floa
 	}
 
 	return mod / ps->mb_factor;
-}	
+}
 
 
 static complex float pulse_sms(const struct pulse_sms* ps, float t)
@@ -145,7 +142,7 @@ static complex float pulse_sms(const struct pulse_sms* ps, float t)
 
 	float rf = ps->A * sinc_windowed(ps->alpha, (t - mid) / t0, ps->bwtp / 2.);
 	complex float pm = 1. + 0.i;
-	
+
 	if (1 != ps->mb_factor)
 		pm = pulse_sms_phase_modulation(ps, t);
 
@@ -189,7 +186,7 @@ const struct pulse_sms pulse_sms_defaults = {
 };
 
 
-void pulse_sms_init(struct pulse_sms* ps, float duration, float angle /*[deg]*/, float /* phase */, float bwtp, float alpha, 
+void pulse_sms_init(struct pulse_sms* ps, float duration, float angle /*[deg]*/, float /* phase */, float bwtp, float alpha,
 			int mb, int part, float dist, float th)
 {
 	ps->super.size = sizeof(struct pulse_sms);
@@ -473,18 +470,15 @@ void pulse_free(const struct pulse* ps)
 
 void pulse_discretize(struct pulse* ps, int N, complex float pulse[N + 1])
 {
-#ifdef USE_GPU
-	if (cuda_ondevice(pulse)) {
+	if (md_ondevice(pulse)) {
 
 		complex float tmp_pulse[N + 1];
 		pulse_discretize(ps, N, tmp_pulse);
 		md_copy(1, MD_DIMS(N + 1), pulse, tmp_pulse, sizeof(complex float));
+	} else {
 
-		return;
+		for (int i = 0; i < N + 1; i++)
+			pulse[i] = pulse_eval(ps, i * ps->duration / N);
 	}
-#endif
-
-	for (int i = 0; i < N + 1; i++)
-		pulse[i] = pulse_eval(ps, i * ps->duration / N);
 }
 

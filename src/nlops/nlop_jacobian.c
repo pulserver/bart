@@ -20,10 +20,6 @@
 #include "nlops/nlop.h"
 #include "num/ops.h"
 
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
-
 #include "nlop_jacobian.h"
 
 

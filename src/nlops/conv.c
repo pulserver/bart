@@ -11,26 +11,20 @@
 
 #include "misc/types.h"
 #include "misc/misc.h"
-#include "misc/debug.h"
+
+#include "num/multind.h"
+#include "num/flpmath.h"
+#include "num/iovec.h"
 
 #include "linops/someops.h"
 #include "linops/linop.h"
 
-#include "num/multind.h"
-#include "num/flpmath.h"
-#include "num/fft.h"
-#include "num/iovec.h"
 #include "nlops/cast.h"
 #include "nlops/chain.h"
 #include "nlops/tenmul.h"
 #include "nlops/nlop.h"
 
 #include "conv.h"
-
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
-
 
 struct convcorr_geom_s {
 
@@ -107,9 +101,7 @@ static void convcorr_geom_fun(const nlop_data_t* _data, int N, complex float* ar
 
 	convcorr_init(data, dst);
 
-#ifdef USE_GPU
-	assert((cuda_ondevice(dst) == cuda_ondevice(src1)) && (cuda_ondevice(src1) == cuda_ondevice(src2)));
-#endif
+	assert((md_ondevice(dst) == md_ondevice(src1)) && (md_ondevice(src1) == md_ondevice(src2)));
 
 	// conj to have benefits of fmac optimization in adjoints
 

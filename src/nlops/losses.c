@@ -6,20 +6,13 @@
  */
 
 #include <assert.h>
-#include <math.h>
 
 #include "misc/misc.h"
 #include "misc/types.h"
-#include "misc/debug.h"
 
 #include "num/iovec.h"
-#include "num/ops.h"
 #include "num/multind.h"
 #include "num/flpmath.h"
-
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
 
 #include "linops/linop.h"
 #include "linops/someops.h"
@@ -51,9 +44,8 @@ DEF_TYPEID(znorm_s);
 
 static void znorm_fun(const nlop_data_t* _data, complex float* dst, const complex float* src)
 {
-#ifdef USE_GPU
-	assert((cuda_ondevice(dst) == cuda_ondevice(src)));
-#endif
+	assert((md_ondevice(dst) == md_ondevice(src)));
+
 	const auto d = CAST_DOWN(znorm_s, _data);
 
 	if (NULL == d->tmp)
@@ -141,7 +133,7 @@ const struct nlop_s* nlop_mse_scaled_create(int N, const long dims[N], unsigned 
 
 	auto scl1 = nlop_tenmul_create(N, scl_dims, dims, dims);
 	scl1 = nlop_prepend_FF(nlop_from_linop_F(linop_zconj_create(N, dims)), scl1, 1);
-	
+
 	auto scl2 = nlop_tenmul_create(N, scl_dims, dims, dims);
 	scl2 = nlop_prepend_FF(nlop_from_linop_F(linop_zconj_create(N, dims)), scl2, 1);
 	scl2 = nlop_dup_F(scl2, 0, 1);
@@ -154,7 +146,7 @@ const struct nlop_s* nlop_mse_scaled_create(int N, const long dims[N], unsigned 
 
 	scl = nlop_chain2_FF(scl, 0, nlop_tenmul_create(N, dims, dims, scl_dims), 1);
 	scl = nlop_dup_F(scl, 0, 2);								// out: x * (sum Re[y * conj(x)]) / (sum x * conj(x)); in: x, y
-			
+
 	auto mse = nlop_chain2_FF(nlop_zaxpbz_create(N, dims, 1, -1), 0, nlop_znorm_create(N, dims, mean_dims), 0);	// out: 1 / N || x - y ||^2; in: x, y
 
 	auto ret = nlop_chain2_swap_FF(scl, 0, mse, 0);		// out: min_l 1/N ||lx - y||^2 ; in : x, y, y

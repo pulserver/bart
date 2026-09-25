@@ -20,7 +20,6 @@
 #include "num/multind.h"
 #include "num/iovec.h"
 #include "num/flpmath.h"
-#include "num/ops.h"
 
 #include "nlops/nlop.h"
 #include "nlops/chain.h"
@@ -28,10 +27,6 @@
 #include "nlops/const.h"
 #include "nlops/tenmul.h"
 #include "nlops/nlop_jacobian.h"
-
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
 
 #include "someops.h"
 
@@ -65,9 +60,7 @@ static void zaxpbz_fun(const nlop_data_t* _data, int N, complex float* args[N])
 	complex float* src1 = args[1];
 	complex float* src2 = args[2];
 
-#ifdef USE_GPU
-	assert((cuda_ondevice(dst) == cuda_ondevice(src1)) && (cuda_ondevice(src1) == cuda_ondevice(src2)));
-#endif
+	assert((md_ondevice(dst) == md_ondevice(src1)) && (md_ondevice(src1) == md_ondevice(src2)));
 
 	const long* istrs1 = data->istrs1;
 	const long* istrs2 = data->istrs2;
@@ -422,14 +415,14 @@ static void zmax_fun(const nlop_data_t* _data, complex float* dst, const complex
 
 	md_zmax2(data->N, data->dims, data->outstrides, dst, data->outstrides, dst, data->strides, src);
 
-#ifdef USE_GPU
-	if (cuda_ondevice(dst)) {
+	if (md_ondevice(dst)) {
 
 		md_copy2(data->N, data->dims, data->strides, data->max_index, data->outstrides, dst, CFL_SIZE);
 		md_zgreatequal(data->N, data->dims, data->max_index, src, data->max_index);
-	} else
-#endif
-	md_zgreatequal2(data->N, data->dims, data->strides, data->max_index, data->strides, src, data->outstrides, dst);
+	} else {
+
+		md_zgreatequal2(data->N, data->dims, data->strides, data->max_index, data->strides, src, data->outstrides, dst);
+	}
 }
 
 static void zmax_der(const nlop_data_t* _data, int /*o*/, int /*i*/, complex float* dst, const complex float* src)

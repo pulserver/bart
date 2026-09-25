@@ -541,23 +541,22 @@ unsigned long dims_parallel(int D, unsigned long io, int N, const long dims[N], 
 }
 
 
-#ifdef USE_GPU
 static bool use_gpu(int p, void* ptr[p])
 {
 	bool gpu = false;
 
 	for (int i = 0; i < p; i++)
-		gpu = gpu || cuda_ondevice(ptr[i]);
+		gpu = gpu || md_ondevice(ptr[i]);
 
 	for (int i = 0; i < p; i++)
-		gpu = gpu && cuda_ondevice(ptr[i]);
+		gpu = gpu && md_ondevice(ptr[i]);
 
 #if 0
 	// FIXME: fails for copy
 	if (!gpu) {
 
 		for (int i = 0; i < p; i++)
-			assert(!cuda_ondevice(ptr[i]));
+			assert(!md_ondevice(ptr[i]));
 	}
 #endif
 	return gpu;
@@ -568,11 +567,10 @@ static bool one_on_gpu(int p, void* ptr[p])
 	bool gpu = false;
 
 	for (int i = 0; !gpu && (i < p); i++)
-		gpu |= cuda_ondevice(ptr[i]);
+		gpu |= md_ondevice(ptr[i]);
 
 	return gpu;
 }
-#endif
 
 extern double md_flp_total_time;
 double md_flp_total_time = 0.;
@@ -659,14 +657,10 @@ void (optimized_nop)(int N, unsigned long io, int D, const long dim[D], const lo
 		nptr1[i] = vptr_resolve(nptr[i]);
 	}
 
-	bool gpu = false;
+	bool gpu = use_gpu(N, nptr1);
 
-#ifdef USE_GPU
-	gpu = use_gpu(N, nptr1);
 	int ND = (gpu ? optimize_dims_gpu : optimize_dims)(N, D, tdims, nstr1);
-#else
-	int ND = optimize_dims(N, D, tdims, nstr1);
-#endif
+
 
 	void* cnst_buf[N];
 	for (int i = 0; i < N; i++)
@@ -759,11 +753,8 @@ out:
 	debug_printf(DP_DEBUG4, "MD-Fun. Io: %lu Input: ", io);
 	debug_print_dims(DP_DEBUG4, D, dim);
 
-#ifdef USE_GPU
 	if (num_auto_parallelize && !gpu && !one_on_gpu(N, nptr1)) {
-#else
-	if (num_auto_parallelize) {
-#endif
+
 		flags = dims_parallel(N, io, ND, tdims, nstr1, sizes);
 
 		while ((0 != flags) && (ffs(flags) <= skip))
@@ -777,9 +768,9 @@ out:
 	for (int i = 0; i < N; i++)
 		nstr2[i] = *nstr1[i] + skip;
 
-#ifdef USE_GPU
 	debug_printf(DP_DEBUG4, "This is a %s call\n.", gpu ? "gpu" : "cpu");
 
+#ifdef USE_GPU
 	__block struct nary_opt_data_s data = { md_calc_size(skip, tdims), gpu ? &gpu_ops : &cpu_ops };
 #else
 	__block struct nary_opt_data_s data = { md_calc_size(skip, tdims), &cpu_ops };

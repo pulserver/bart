@@ -25,9 +25,6 @@
 #include "num/vec_iter.h"
 #include "num/ops.h"
 #include "num/iovec.h"
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
 
 #include "wavelet/wavthresh.h"
 

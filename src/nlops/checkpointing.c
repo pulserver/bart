@@ -21,10 +21,6 @@
 #include "num/ops.h"
 #include "num/ops_graph.h"
 
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
-
 #include "checkpointing.h"
 
 

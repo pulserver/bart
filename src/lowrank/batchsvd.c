@@ -19,9 +19,6 @@
 #include "num/linalg.h"
 #include "num/multind.h"
 #include "num/vptr.h"
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
 
 #include "batchsvd.h"
 
@@ -29,12 +26,7 @@
 
 void batch_svthresh(int M, int N, int num_blocks, float lambda, complex float dst[num_blocks][N][M])
 {
-	bool copy = is_vptr(&dst[0][0][0]);
-#ifdef USE_GPU
-	copy = copy || cuda_ondevice(&dst[0][0][0]);
-#endif
-
-	if (copy) {
+	if (is_vptr(&dst[0][0][0]) || md_ondevice(&dst[0][0][0])) {
 
 		PTR_ALLOC(complex float[num_blocks][N][M], tmp);
 		md_copy(3, MD_DIMS(M, N, num_blocks), &(*tmp)[0][0][0], &dst[0][0][0], sizeof(complex float));

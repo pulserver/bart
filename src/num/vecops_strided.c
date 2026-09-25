@@ -45,9 +45,6 @@
 #include "num/md_wrapper.h"
 #include "num/convcorr.h"
 #include "num/vptr.h"
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
 
 #include "vecops_strided.h"
 
@@ -791,16 +788,13 @@ static bool simple_z3op(int N_checks, struct simple_z3op_check strided_calls[N_c
 
 	int N_in = -1;
 
-	bool on_gpu = false;
-#ifdef USE_GPU
-	on_gpu = cuda_ondevice(out);
+	bool on_gpu = md_ondevice(out);
 
 	if (on_gpu) {
 
-		assert(cuda_ondevice(in1));
-		assert(cuda_ondevice(in2));
+		assert(md_ondevice(in1));
+		assert(md_ondevice(in2));
 	}
-#endif
 
 	long bdims[N];
 	md_select_dims(N, md_nontriv_strides(N, istrs2), bdims, dims);
@@ -984,16 +978,13 @@ static bool simple_3op(int N_checks, struct simple_3op_check strided_calls[N_che
 
 	int N_in = -1;
 
-	bool on_gpu = false;
-#ifdef USE_GPU
-	on_gpu = cuda_ondevice(out);
+	bool on_gpu = md_ondevice(out);
 
 	if (on_gpu) {
 
-		assert(cuda_ondevice(in1));
-		assert(cuda_ondevice(in2));
+		assert(md_ondevice(in1));
+		assert(md_ondevice(in2));
 	}
-#endif
 
 	struct simple_3op_check strided_call;
 

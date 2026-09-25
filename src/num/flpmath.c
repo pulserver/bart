@@ -658,12 +658,10 @@ static void make_2opf_simple(md_2opf_t fun, int D, const long dims[D], float* op
 	fun(D, dims, strs_single, optr, strs_double, iptr1);
 }
 
-#ifdef USE_GPU
 static void* gpu_constant(const void* vp, size_t size)
 {
 	return md_gpu_move(1, (long[1]){ 1 }, vp, size);
 }
-#endif
 
 static void make_z3op_scalar(md_z3op_t fun, int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr, complex float val)
 {
@@ -3188,10 +3186,9 @@ float md_asum2(int D, const long dims[D], const long strs[D], const float* ptr)
 
 	float* retp = &ret;
 
-#ifdef USE_GPU
-	if (cuda_ondevice(ptr))
+	if (md_ondevice(ptr))
 		retp = gpu_constant(&ret, FL_SIZE);
-#endif
+
 	long dims0[D];
 	md_singleton_dims(D, dims0);
 

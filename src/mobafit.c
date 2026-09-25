@@ -662,13 +662,8 @@ int main_mobafit(int argc, char* argv[argc])
 
 	if (bart_use_gpu) {
 
-#ifdef USE_GPU
 		y_patch = md_alloc_gpu(DIMS, y_patch_dims, CFL_SIZE);
 		x_patch = md_alloc_gpu(DIMS, x_patch_dims, CFL_SIZE);
-#else
-		error("Compiled without GPU support!\n");
-#endif
-
 	} else {
 
 		y_patch = md_alloc(DIMS, y_patch_dims, CFL_SIZE);

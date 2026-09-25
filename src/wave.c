@@ -28,9 +28,6 @@
 #include "num/ops_p.h"
 #include "num/ops.h"
 #include "num/rand.h"
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
 
 #include "iter/iter.h"
 #include "iter/lsqr.h"
@@ -308,11 +305,7 @@ int main_wave(int argc, char* argv[argc])
 	print_opdims(A);
 
 	if (eval < 0)
-#ifdef USE_GPU
 		eval = bart_use_gpu ? estimate_maxeigenval_gpu(A->normal) : estimate_maxeigenval(A->normal);
-#else
-		eval = estimate_maxeigenval(A->normal);
-#endif
 
 	debug_printf(DP_INFO, "\tMax eval: %.2e\n", eval);
 	step /= eval;

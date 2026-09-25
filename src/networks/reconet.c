@@ -18,10 +18,6 @@
 #include "num/mpi_ops.h"
 #include "num/init.h"
 
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
-
 #include "linops/linop.h"
 #include "linops/someops.h"
 #include "linops/sum.h"

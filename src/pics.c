@@ -12,7 +12,6 @@
 
 #include <assert.h>
 #include <complex.h>
-#include <stdio.h>
 #include <math.h>
 
 #include "num/rand.h"
@@ -589,7 +588,6 @@ int main_pics(int argc, char* argv[argc])
 		image_truth = load_cfl_sameplace(image_truth_file, DIMS, img_truth_dims, kspace);
 		//md_zsmul(DIMS, img_dims, image_truth, image_truth, 1. / scaling);
 
-#ifdef USE_GPU
 		if (conf.gpu) {
 
 			complex float* gpu_image_truth = md_gpu_move(DIMS, img_dims, image_truth, CFL_SIZE);
@@ -598,7 +596,7 @@ int main_pics(int argc, char* argv[argc])
 
 			image_truth = gpu_image_truth;
 		}
-#endif
+
 		xfree(image_truth_file);
 	}
 
@@ -810,11 +808,9 @@ int main_pics(int argc, char* argv[argc])
 	unmap_cfl(DIMS, img_dims, image);
 	unmap_cfl(DIMS, img_dims, image_start);
 
-#ifdef USE_GPU
 	if (conf.gpu)
 		md_free(image_truth);
 	else
-#endif
 		unmap_cfl(DIMS, img_dims, image_truth);
 
 	unmap_cfl(DIMS, map_dims, maps);

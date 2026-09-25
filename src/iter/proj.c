@@ -8,16 +8,12 @@
 
 #include <complex.h>
 #include <assert.h>
-#include <math.h>
 
 #include "num/multind.h"
 #include "num/flpmath.h"
 #include "num/ops_p.h"
 #include "num/ops.h"
 #include "num/iovec.h"
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
 
 #include "misc/misc.h"
 

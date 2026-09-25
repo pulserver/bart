@@ -15,11 +15,6 @@
 
 #include "num/multind.h"
 #include "num/iovec.h"
-#ifdef USE_GPU
-#include "num/gpuops.h"
-#endif
-
-#include "linops/someops.h"
 
 #include "nlops/nlop.h"
 #include "nlops/cast.h"
@@ -147,7 +142,7 @@ void dump_nn_weights(const char *name, nn_weights_t weights) {
  * @param weights pointer to struct holding the weights
  */
 void move_gpu_nn_weights(nn_weights_t weights){
-#ifdef USE_GPU
+
 	for (int i = 0; i < weights->N; i++) {
 
 		auto iov = weights->iovs[i];
@@ -160,10 +155,6 @@ void move_gpu_nn_weights(nn_weights_t weights){
 
 		weights->tensors[i] = tmp;
 	}
-#else
-	(void)weights;
-	error("Compiled without gpu support!\n");
-#endif
 }
 
 /**
@@ -175,12 +166,7 @@ void move_gpu_nn_weights(nn_weights_t weights){
  */
 bool nn_weights_on_gpu(nn_weights_t weights)
 {
-#ifdef USE_GPU
-	return cuda_ondevice(weights->tensors[0]);
-#else
-	(void)weights;
-	return false;
-#endif
+	return md_ondevice(weights->tensors[0]);
 }
 
 /**
