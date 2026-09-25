@@ -1881,14 +1881,14 @@ static bool md_reshape_factor(int D, long dims[2 * D], long ostrs[2 * D], long i
 
 	// merge selected dimensions when contiguous
 	long idx = -1;
-	
+
 	for (int i = 0; i < D; i++) {
 
 		if (-1 < idx && MD_IS_SET(flags, i)) {
 
 			nidims[idx] *= nidims[i];
 			nodims[idx] *= nodims[i];
-			
+
 			nidims[i] = 1;
 			nodims[i] = 1;
 		}
@@ -1934,7 +1934,7 @@ static bool md_reshape_factor(int D, long dims[2 * D], long ostrs[2 * D], long i
 			o++;
 
 		assert((D == o) == (D == i));
-		
+
 		if (D == o)
 			return true;
 
@@ -2611,9 +2611,6 @@ void* md_calloc(int D, const long dimensions[D], size_t size)
 	return ptr;
 }
 
-
-
-#ifdef USE_GPU
 /**
  * Allocate GPU memory
  *
@@ -2621,7 +2618,16 @@ void* md_calloc(int D, const long dimensions[D], size_t size)
  */
 void* md_alloc_gpu(int D, const long dimensions[D], size_t size)
 {
+#ifdef USE_GPU
 	return cuda_malloc(md_calc_size(D, dimensions) * (long)size);
+#else
+	(void)D;
+	(void)dimensions;
+	(void)size;
+
+	error("BART is compiled without GPU support!\n");
+	return NULL;
+#endif
 }
 
 
@@ -2630,6 +2636,11 @@ void* md_alloc_gpu(int D, const long dimensions[D], size_t size)
  */
 void* md_alloc_gpu_mpi(int D, unsigned long f, const long dimensions[D], size_t size)
 {
+#ifndef USE_GPU
+	error("BART is compiled without GPU support!\n");
+	return NULL;
+#endif
+
 	auto hint = hint_mpi_create(f, D, dimensions);
 	void* ret = vptr_alloc(D, dimensions, size, hint);
 	vptr_set_gpu(ret);
@@ -2647,6 +2658,11 @@ void* md_alloc_gpu_mpi(int D, unsigned long f, const long dimensions[D], size_t 
  */
 void* md_gpu_move(int D, const long dims[D], const void* ptr, size_t size)
 {
+#ifndef USE_GPU
+	error("BART is compiled without GPU support!\n");
+	return NULL;
+#endif
+
 	if (NULL == ptr)
 		return NULL;
 
@@ -2676,13 +2692,17 @@ void* md_gpu_mpi_move(int D, unsigned long f, const long dims[D], const void* pt
 	if (NULL == ptr)
 		return NULL;
 
+#ifndef USE_GPU
+	error("BART is compiled without GPU support!\n");
+	return NULL;
+#endif
+
 	void* mpi_ptr = md_alloc_gpu_mpi(D, f, dims, size);
 
 	md_copy(D, dims, mpi_ptr, ptr, size);
 
 	return mpi_ptr;
 }
-#endif
 
 
 /**
@@ -2778,6 +2798,17 @@ bool md_is_sameplace(const void* ptr1, const void* ptr2)
 	return cuda_ondevice(ptr1) == cuda_ondevice(ptr2);
 #else
 	return true;
+#endif
+}
+
+bool md_ondevice(const void* ptr)
+{
+#ifdef USE_GPU
+	return cuda_ondevice(ptr) || is_vptr_gpu(ptr);
+#else
+	(void)ptr;
+
+	return false;
 #endif
 }
 

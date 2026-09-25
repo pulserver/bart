@@ -177,14 +177,13 @@ inline void* md_alloc(int D, const long dimensions[__VLA(D)], size_t size)
 }
 
 extern void* md_calloc(int D, const long dimensions[__VLA(D)], size_t size);
-#ifdef USE_GPU
 extern void* md_alloc_gpu(int D, const long dimensions[__VLA(D)], size_t size);
 extern void* md_gpu_move(int D, const long dims[__VLA(D)], const void* ptr, size_t size);
 extern void* md_gpu_mpi_move(int D, unsigned long dist_flags, const long dims[__VLA(D)], const void* ptr, size_t size);
 extern void* md_alloc_gpu_mpi(int D, unsigned long dist_flags, const long dims[__VLA(D)], size_t size);
-#endif
 extern void* md_alloc_sameplace(int D, const long dimensions[__VLA(D)], size_t size, const void* ptr);
 extern void md_free(const void* p);
+extern bool md_ondevice(const void* ptr);
 extern bool md_is_sameplace(const void* ptr1, const void* ptr2);
 
 extern void* md_alloc_mpi(int D, unsigned long dist_flags, const long dims[__VLA(D)], size_t size);
