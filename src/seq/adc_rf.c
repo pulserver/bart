@@ -47,7 +47,10 @@ double rf_spoiling(int D, const long pos[D], const struct seq_config* seq)
 
 	case SEQ_CONTRAST_RF_SPOILED:
 
-		idx = 1. + md_ravel_index_permuted(DIMS, pos, SEQ_FLAGS & ~(COEFF_FLAG|COEFF2_FLAG), seq->loop_dims, seq->order);
+		if (0 == pos[COEFF_DIM])
+			idx = 1. + pos[COEFF2_DIM] - 3; // 3 blocks before dummy (delay, noise, ecg)
+		else
+			idx = 1. + seq->magn.prep_scans + md_ravel_index_permuted(DIMS, pos, SEQ_FLAGS & ~(COEFF_FLAG|COEFF2_FLAG), seq->loop_dims, seq->order);
 
 		return fmod(0.5 * RFSPOIL_INCREMENT_DEG * (idx + pow(idx, 2.)), 360.);
 
@@ -82,7 +85,7 @@ int prep_rf_excitation(struct seq_event* rf_ev, double start, double rf_spoil_ph
 		rf_ev->pulse.shape_id = seq_state->pos[SLICE_DIM];
 
 	if (seq->geom.mb_factor <= rf_ev->pulse.shape_id) // SLICE_DIM is only used for SMS
-		return 0;	
+		return 0;
 
 	rf_ev->pulse.type = SEQ_RF_EXCITATION;
 	rf_ev->pulse.fa = seq->phys.flip_angle;
@@ -98,7 +101,7 @@ int prep_rf_inversion(struct seq_event* rf_ev, double start, const struct seq_co
 	if ((seq->magn.mag_prep != SEQ_PREP_IR_NONSELECTIVE) && (seq->magn.mag_prep != SEQ_PREP_IR_SELECTIVE))
 		return 0;
 
-	rf_ev->type = SEQ_EVENT_PULSE;	
+	rf_ev->type = SEQ_EVENT_PULSE;
 
 	rf_ev->start = start;
 
@@ -135,7 +138,7 @@ int prep_rf_hanning(struct seq_event* rf_ev, double start, double phase_shift, c
 
 	rf_ev->mid = rf_ev->start + (rf_ev->end - rf_ev->start) * asym_pulse;
 
-	rf_ev->pulse.shape_id = seq->geom.mb_factor;	
+	rf_ev->pulse.shape_id = seq->geom.mb_factor;
 
 	rf_ev->pulse.type = SEQ_RF_EXCITATION;
 	rf_ev->pulse.fa = seq->asl.hanning.flip_angle;
@@ -169,7 +172,7 @@ double adc_duration(const struct seq_config* seq)
 
 static double adc_nco_freq(double proj_angle, long chrono_slice, const struct seq_config* seq)
 {
-	return seq->sys.gamma * 
+	return seq->sys.gamma *
 		(seq->geom.shift[chrono_slice][0] * ro_amplitude(seq) * sin(proj_angle)
 		+ seq->geom.shift[chrono_slice][1] * ro_amplitude(seq) * cos(proj_angle));
 }
@@ -256,12 +259,12 @@ int prep_adc(struct seq_event* adc_ev, double start, double rf_spoil_phase,
 	double delta_pe = 0.;
 	if (   ((SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode) || (SEQ_PEMODE_CARTESIAN_LINEAR == seq->enc.pe_mode))
 	    && (0 < seq->geom.shift[seq_state->chrono_slice][1]))
-		delta_pe =   (360. * seq->geom.shift[seq_state->chrono_slice][1] / seq->geom.fov) 
+		delta_pe =   (360. * seq->geom.shift[seq_state->chrono_slice][1] / seq->geom.fov)
 			   * (- 0.5 * seq->loop_dims[PHS1_DIM] + adc_ev->adc.pos[PHS1_DIM]);
 
 	double delta_3d = 0.;
 	if (seq->enc.is3D)
-		delta_3d =   (180. / seq->loop_dims[PHS2_DIM] + 
+		delta_3d =   (180. / seq->loop_dims[PHS2_DIM] +
 			      360. * seq->geom.shift[seq_state->chrono_slice][2] / (seq->geom.slice_thickness * seq->loop_dims[PHS2_DIM]))
 			   * (0.5 * seq->loop_dims[PHS2_DIM] - adc_ev->adc.pos[PHS2_DIM]);
 

@@ -35,21 +35,23 @@ static bool rf_spoiling_spoiled(void)
 
 	struct seq_config seq = seq_config_defaults_flash;
 	seq.phys.contrast = SEQ_CONTRAST_RF_SPOILED;
+	seq.magn.prep_scans = 3;
 
 	struct seq_state seq_state = { };
 
 	seq.loop_dims[SLICE_DIM] = 2;
 	seq.loop_dims[PHS1_DIM] = 2;
-	seq.loop_dims[TIME_DIM] = 10;
+	seq.loop_dims[TIME_DIM] = 5;
 
 	seq_ui_interface_loop_dims(0, &seq, DIMS, seq.loop_dims);
 
-	seq.loop_dims[COEFF_DIM] = 1;
-	seq.loop_dims[COEFF2_DIM] = 1;
-
-	int i = 0;
+	int i = seq.magn.prep_scans;
 
 	do {
+
+		if (1 != seq_state.pos[COEFF_DIM] || (seq_state.pos[COEFF2_DIM] != seq.loop_dims[COEFF2_DIM] - 1))
+			continue;
+
 		if (UT_TOL < fabs(ref[i++] - rf_spoiling(DIMS, seq_state.pos, &seq)))
 			return false;
 
@@ -332,9 +334,9 @@ static bool test_hanning(void)
 {
 	struct seq_config seq = seq_config_defaults_flash;
 	seq.asl.label_type = SEQ_ASL_PCASL;
-	
+
 	struct rf_shape rf_shape[10];
-	int rfs = seq_sample_rf_shapes(10, rf_shape, &seq); 
+	int rfs = seq_sample_rf_shapes(10, rf_shape, &seq);
 
 	float shape_mag[SEQ_MAX_RF_SAMPLES];
 	float shape_pha[SEQ_MAX_RF_SAMPLES];
@@ -355,7 +357,7 @@ static bool test_hanning(void)
 
 	double s = seq_pulse_scaling(&rf_shape[1]);
 	double n = seq_pulse_norm_sum(&rf_shape[1]);
-	
+
 	if (fabs(s - seq.asl.hanning.flip_angle) > 1E-5)
 		return false;
 
