@@ -28,8 +28,8 @@
 
 #include "opts.h"
 
-#ifdef WIN32
-static int getsubopt(char **restrict, char *const *restrict, char **restrict) { assert(0); }
+#ifdef _WIN32
+#include "win/getsubopt.h"
 #endif
 
 list_t str_list = NULL;
