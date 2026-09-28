@@ -97,7 +97,7 @@ static void get_datetime_str(int len, char* datetime_str)
 	time_t tv = time(NULL);
 	struct tm* dt = gmtime(&tv);
 
-	strftime(datetime_str, (size_t)len, "%F %T", dt);
+	strftime(datetime_str, (size_t)len, "%Y-%m-%d %H:%M:%S", dt);
 }
 
 #define RESET	"\033[0m"
