@@ -34,9 +34,11 @@
 static const char help_str[] = "Copy stdin to stdout + given output files.";
 
 
+#ifdef SIGPIPE
 static void stream_sigpipe_handler(int /*signum*/)
 {
 }
+#endif
 
 int main_tee(int argc, char* argv[argc])
 {
@@ -77,6 +79,7 @@ int main_tee(int argc, char* argv[argc])
 
 	if (keep_going) {
 
+#ifdef SIGPIPE
 		// sigpipe can occur when a receiving program closes a pipe early.
 		// tee explicitly allows that and therefore needs to ignore sigpipe.
 		struct sigaction old_sigaction = {};
@@ -85,6 +88,7 @@ int main_tee(int argc, char* argv[argc])
 		// Make sure we don't overwrite any other handler.
 		// this does not work if the program is run from a systemd unit.
 		// assert((SIG_DFL == old_sigaction.sa_handler) || (stream_sigpipe_handler == old_sigaction.sa_handler));
+#endif
 	}
 
 	bart_dim_t dims[DIMS];

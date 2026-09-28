@@ -61,8 +61,11 @@
 
 #include "main.h"
 
-// also check in commands/ subdir at the bart exe location
+// also check in commands/ subdir at the bart exe location,
+// which is found through readlink, a POSIX call
+#ifndef _WIN32
 #define CHECK_EXE_COMMANDS
+#endif
 
 #ifndef DIMS
 #define DIMS 16
@@ -229,8 +232,12 @@ static void parse_bart_opts(int* argcp, char*** argvp, int order[DIMS], stream_t
 
 	if (attach) {
 
+#ifdef SIGSTOP
 		fprintf(stderr, "PID: %d", getpid());
 		raise(SIGSTOP);
+#else
+		error("Attaching a debugger needs SIGSTOP, which this platform does not have.\n");
+#endif
 	}
 
 	if (0 != bart_mpi_split_flags) {
