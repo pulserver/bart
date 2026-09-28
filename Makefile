@@ -734,6 +734,8 @@ CPPFLAGS += $(BLAS_H)
 # librt
 ifeq ($(BUILDTYPE), MacOSX)
 	LIBRT :=
+else ifeq ($(BUILDTYPE), MSYS)
+	LIBRT :=
 else
 ifeq ($(BARTDLL),1)
 	LIBRT :=
