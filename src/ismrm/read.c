@@ -167,10 +167,10 @@ static void debug_print_ISMRMRD_acq(int level, struct ISMRMRD_AcquisitionHeader 
 }
 
 static void ismrm_conf_merge_unmapped_dims(struct isrmrm_config_s* config);
-static void ismrm_conf_to_dims(const struct isrmrm_config_s* config, int N, long dims[__VLA(N)]);
+static void ismrm_conf_to_dims(const struct isrmrm_config_s* config, int N, bart_dim_t dims[__VLA(N)]);
 static bool ismrm_validate_limits(struct isrmrm_config_s* config);
 
-void ismrm_read_dims(const char* datafile, struct isrmrm_config_s* config, int N, long dims[N])
+void ismrm_read_dims(const char* datafile, struct isrmrm_config_s* config, int N, bart_dim_t dims[N])
 {
 	ismrm_read_encoding_limits(datafile, config);
 
@@ -187,7 +187,7 @@ void ismrm_read_dims(const char* datafile, struct isrmrm_config_s* config, int N
 	ismrm_conf_to_dims(config, N, dims);
 }
 
-void ismrm_stream_read_dims(struct isrmrm_config_s* config, int N, long dims[N])
+void ismrm_stream_read_dims(struct isrmrm_config_s* config, int N, bart_dim_t dims[N])
 {
 	assert(NULL != config->ismrm_cpp_state);
 
@@ -260,14 +260,14 @@ static void ismrm_conf_merge_unmapped_dims(struct isrmrm_config_s* config)
 	}
 }
 
-static void ismrm_conf_to_dims(const struct isrmrm_config_s* config, int N, long dims[N])
+static void ismrm_conf_to_dims(const struct isrmrm_config_s* config, int N, bart_dim_t dims[N])
 {
 	for (int i = ISMRMRD_PHS1_DIM; i < ISMRMRD_NAMED_DIMS + ISMRMRD_USER_INTS; i++)
 		assert ((1 == config->limits[i].size) || (-1 != config->dim_mapping[i]));
 
-	long max[N];
-	long min[N];
-	long ctr[N];
+	bart_dim_t max[N];
+	bart_dim_t min[N];
+	bart_dim_t ctr[N];
 
 	for (int i = 0; i < N; i++) {
 
@@ -299,7 +299,7 @@ static void ismrm_conf_to_dims(const struct isrmrm_config_s* config, int N, long
 	debug_printf(DP_DEBUG1, "Center: "); debug_print_dims(DP_DEBUG1, N, ctr);
 }
 
-inline static bool set_pos(struct isrmrm_config_s* config, int N, long pos[N], int map, int idx)
+inline static bool set_pos(struct isrmrm_config_s* config, int N, bart_dim_t pos[N], int map, int idx)
 {
 	assert(config->dim_mapping[map] < N);
 
@@ -324,7 +324,7 @@ inline static bool set_pos(struct isrmrm_config_s* config, int N, long pos[N], i
 			case ISMRMRD_SLICE_ASCENDING: break;
 			case ISMRMRD_SLICE_INTERLEAVED:
 			{
-				long max = config->limits[map].size;
+				bart_dim_t max = config->limits[map].size;
 
 				if (0 == max % 2)
 					idx = (idx < max / 2) ? idx * 2 : 2 * idx - max + 1;
@@ -334,7 +334,7 @@ inline static bool set_pos(struct isrmrm_config_s* config, int N, long pos[N], i
 			break;
 			case ISMRMRD_SLICE_INTERLEAVED_SIEMENS:
 			{
-				long max = config->limits[map].size;
+				bart_dim_t max = config->limits[map].size;
 
 				if (0 == max % 2)
 					idx = (idx < max / 2) ? idx * 2 + 1 : 2 * idx - max;
@@ -378,7 +378,7 @@ inline static bool set_pos(struct isrmrm_config_s* config, int N, long pos[N], i
 	return true;
 }
 
-static bool ismrm_read_idx(struct isrmrm_config_s* config, struct ISMRMRD_EncodingCounters idx, int N, long pos[N])
+static bool ismrm_read_idx(struct isrmrm_config_s* config, struct ISMRMRD_EncodingCounters idx, int N, bart_dim_t pos[N])
 {
 	for (int i = 0; i < N; i++)
 		pos[i] = 0;
@@ -391,28 +391,28 @@ static bool ismrm_read_idx(struct isrmrm_config_s* config, struct ISMRMRD_Encodi
 	return result;
 }
 
-static bool ismrmrd_convert_acquisition(struct isrmrm_config_s* config, const ISMRMRD_Acquisition* acq, int N, const long dims[N], long strs[N], long pos[N], complex float* buf);
+static bool ismrmrd_convert_acquisition(struct isrmrm_config_s* config, const ISMRMRD_Acquisition* acq, int N, const bart_dim_t dims[N], bart_stride_t strs[N], bart_dim_t pos[N], complex float* buf);
 
-void ismrm_read(const char* datafile, struct isrmrm_config_s* config, int N, long dims[N], complex float* buf)
+void ismrm_read(const char* datafile, struct isrmrm_config_s* config, int N, bart_dim_t dims[N], complex float* buf)
 {
 	ISMRMRD_Dataset d;
 	ismrmrd_init_dataset(&d, datafile, "/dataset");
 	ismrmrd_open_dataset(&d, false);
 
-	long number_of_acquisitions = ismrmrd_get_number_of_acquisitions(&d);
+	bart_dim_t number_of_acquisitions = ismrmrd_get_number_of_acquisitions(&d);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	for (int i = 0; i < N; i++)
 		pos[i] = 0;
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
 	ISMRMRD_Acquisition acq;
 
 	config->convert_state = (struct ismrmrd_convert_state){ 0 };
 
-	for (long i = 0; i < number_of_acquisitions; i++) {
+	for (bart_dim_t i = 0; i < number_of_acquisitions; i++) {
 
 		ismrmrd_init_acquisition(&acq);
 		ismrmrd_read_acquisition(&d, i, &acq);
@@ -428,7 +428,7 @@ void ismrm_read(const char* datafile, struct isrmrm_config_s* config, int N, lon
 }
 
 
-static bool ismrmrd_convert_acquisition(struct isrmrm_config_s* config, const ISMRMRD_Acquisition* acq, int N, const long dims[N], long strs[N], long pos[N], complex float* buf)
+static bool ismrmrd_convert_acquisition(struct isrmrm_config_s* config, const ISMRMRD_Acquisition* acq, int N, const bart_dim_t dims[N], bart_stride_t strs[N], bart_dim_t pos[N], complex float* buf)
 {
 	config->convert_state.attempts++;
 	bool skip = false;
@@ -469,17 +469,17 @@ static bool ismrmrd_convert_acquisition(struct isrmrm_config_s* config, const IS
 	if ((!ismrm_read_idx(config, acq->head.idx, N, pos)) || (NULL == buf))
 		return false;
 
-	long channels = acq->head.available_channels;
+	bart_dim_t channels = acq->head.available_channels;
 	if (acq->head.available_channels != acq->head.active_channels)
 		error("All channels must be active, but (%d/%d) are active!\n", acq->head.active_channels, acq->head.available_channels);
 
-	long samples = acq->head.number_of_samples;
+	bart_dim_t samples = acq->head.number_of_samples;
 
 	assert(channels == dims[config->dim_mapping[ISMRMRD_COIL_DIM]]);
 	assert(samples + acq->head.discard_post + acq->head.discard_pre == dims[config->dim_mapping[ISMRMRD_READ_DIM]]);
 
-	long adc_dims[N];
-	long adc_strs[N];
+	bart_dim_t adc_dims[N];
+	bart_stride_t adc_strs[N];
 
 	md_singleton_dims(N, adc_dims);
 	assert(config->dim_mapping[ISMRMRD_READ_DIM] < config->dim_mapping[ISMRMRD_COIL_DIM]);
@@ -527,18 +527,18 @@ static bool ismrmrd_convert_acquisition(struct isrmrm_config_s* config, const IS
 	return true;
 }
 
-long ismrm_stream_read(struct isrmrm_config_s* conf, int N, const long dims[N], long pos[N], complex float* out)
+bart_dim_t ismrm_stream_read(struct isrmrm_config_s* conf, int N, const bart_dim_t dims[N], bart_dim_t pos[N], complex float* out)
 {
 	assert(NULL != conf->ismrm_cpp_state);
 
 	ISMRMRD_Acquisition acq;
 	ismrmrd_init_acquisition(&acq);
 
-	long bytes = ismrm_stream_read_acquisition(conf, &acq);
+	bart_dim_t bytes = ismrm_stream_read_acquisition(conf, &acq);
 	if (0 == bytes)
 		return bytes;
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
 	if(!ismrmrd_convert_acquisition(conf, &acq, N, dims, strs, pos, out))

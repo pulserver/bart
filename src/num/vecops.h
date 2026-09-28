@@ -2,6 +2,8 @@
 #ifndef _VECOPS_H
 #define _VECOPS_H
 
+#include "misc/dimtypes.h"
+
 extern const struct vec_ops cpu_ops;
 
 struct vec_ops {

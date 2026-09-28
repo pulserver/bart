@@ -31,7 +31,7 @@
 
 #include "weights.h"
 
-const struct nn_weights_s* create_multi_md_array(int N, int D[N], const long* dimensions[N], const complex float* x[N], size_t sizes[N])
+const struct nn_weights_s* create_multi_md_array(int N, int D[N], const bart_dim_t* dimensions[N], const complex float* x[N], size_t sizes[N])
 {
 	const struct iovec_s* iovs[N];
 
@@ -89,7 +89,7 @@ nn_weights_t load_nn_weights(const char *name)
 	int N_max = 1024;
 	int D_max = 32;
 	int D[N_max];
-	long dimensions[N_max][D_max];
+	bart_dim_t dimensions[N_max][D_max];
 	complex float* args[N_max];
 
 	int N = load_multi_cfl(name, N_max, D_max, D, dimensions, args);
@@ -100,7 +100,7 @@ nn_weights_t load_nn_weights(const char *name)
 	PTR_ALLOC(const struct iovec_s*[N], niov);
 	PTR_ALLOC(complex float*[N], ntensors);
 
-	const long* dimensions_unmap[N];
+	const bart_dim_t* dimensions_unmap[N];
 
 	for (int i = 0; i < N; i++) {
 
@@ -130,7 +130,7 @@ nn_weights_t load_nn_weights(const char *name)
 void dump_nn_weights(const char *name, nn_weights_t weights) {
 
 	int D[weights->N];
-	const long* dims[weights->N];
+	const bart_dim_t* dims[weights->N];
 
 	for (int i = 0; i < weights->N; i++) {
 

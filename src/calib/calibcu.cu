@@ -93,7 +93,7 @@ static __device__ void gram_schmidtcu(int M, int N, cuFloatComplex* evals, cuFlo
 	}
 }
 
-static __device__ long upper_triag_idx(long j, long i)
+static __device__ bart_dim_t upper_triag_idx(bart_dim_t j, bart_dim_t i)
 {
 	if (i > j)
 		return - (j + ((i + 1) * i) / 2);
@@ -101,14 +101,14 @@ static __device__ long upper_triag_idx(long j, long i)
 	return i + ((j + 1) * j) / 2;
 }
 
-static __device__ inline void mat_mulcu_upperdiag(int M, int N, cuFloatComplex* A, cuFloatComplex* B, cuFloatComplex* C, long offset, long stride)
+static __device__ inline void mat_mulcu_upperdiag(int M, int N, cuFloatComplex* A, cuFloatComplex* B, cuFloatComplex* C, bart_stride_t offset, bart_stride_t stride)
 {
 	for (int k = threadIdx.y; k < N; k += blockDim.y) {
 
 		for (int j = 0; j < N; j++) {
 
 			cuFloatComplex val;
-			long idx = upper_triag_idx(j, k);
+			bart_dim_t idx = upper_triag_idx(j, k);
 			val = (0 > idx) ? cuConjf(C[offset - idx * stride]) : C[offset + idx * stride];
 
 			for (int i = 0; i < M; i++) {
@@ -122,11 +122,11 @@ static __device__ inline void mat_mulcu_upperdiag(int M, int N, cuFloatComplex* 
 	}
 }
 
-static __global__ void eigenmapscu_kern(cuFloatComplex* in, cuFloatComplex* out, cuFloatComplex* vals, int iter, long V, int N, int M)
+static __global__ void eigenmapscu_kern(cuFloatComplex* in, cuFloatComplex* out, cuFloatComplex* vals, int iter, bart_dim_t V, int N, int M)
 {
-	for (long boffset = blockDim.x * blockIdx.x; boffset < V; boffset += blockDim.x * gridDim.x) {
+	for (bart_stride_t boffset = blockDim.x * blockIdx.x; boffset < V; boffset += blockDim.x * gridDim.x) {
 
-		long offset = boffset + threadIdx.x;
+		bart_stride_t offset = boffset + threadIdx.x;
 
 		extern __shared__ cuFloatComplex sdata[];
 		cuFloatComplex *tmp1, *tmp2, *evals;
@@ -167,21 +167,21 @@ static __global__ void eigenmapscu_kern(cuFloatComplex* in, cuFloatComplex* out,
 
 
 
-void eigenmapscu(const long dims[5], _Complex float* optr, _Complex float* eptr, const _Complex float* imgcov2, int num_orthiter)
+void eigenmapscu(const bart_dim_t dims[5], _Complex float* optr, _Complex float* eptr, const _Complex float* imgcov2, int num_orthiter)
 {
 	const int N = (int) dims[3];
 	const int M = (int) dims[4];
 
 	assert(M <= N);
 
-	long imgcov2_dims[5];
+	bart_dim_t imgcov2_dims[5];
 	md_select_dims(5, ~(COIL_FLAG|MAPS_FLAG), imgcov2_dims, dims);
 	imgcov2_dims[3] = N * (N + 1) / 2;
 
-	long eptr_dims[5];
+	bart_dim_t eptr_dims[5];
 	md_select_dims(5, ~COIL_FLAG, eptr_dims, dims);
 
-	long imgcov2_df_dims[5];
+	bart_dim_t imgcov2_df_dims[5];
 	md_select_dims(5, ~(COIL_FLAG|MAPS_FLAG), imgcov2_df_dims, dims);
 	imgcov2_df_dims[3] = N * N;
 
@@ -229,7 +229,7 @@ void eigenmapscu(const long dims[5], _Complex float* optr, _Complex float* eptr,
 	while (ythreads > N)
 		ythreads /= 2;
 
-	long V = md_calc_size(3, dims);
+	bart_dim_t V = md_calc_size(3, dims);
 
 	dim3 threads(xthreads, ythreads, 1);
 	int numBlocks = (V + (xthreads - 1)) / xthreads;

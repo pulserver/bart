@@ -1,3 +1,4 @@
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 extern float gaussian_pdf(int N, const complex float m[N],

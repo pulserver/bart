@@ -19,7 +19,7 @@ static bool test_looklocker(void)
 
 	data.short_tr_LL_approx = true;
 
-	long dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 	dims[TE_DIM] = echos;
 
 	complex float* signal = md_alloc(DIMS, dims, CFL_SIZE);
@@ -51,7 +51,7 @@ static bool test_looklocker_long_TR(void)
 
 	data.short_tr_LL_approx = true;
 
-	long dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 	dims[TE_DIM] = echos;
 
 	complex float* signal = md_alloc(DIMS, dims, CFL_SIZE);
@@ -116,7 +116,7 @@ static bool test_IR_bSSFP(void)
 
 	float echos = 200;
 
-	long dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 	dims[TE_DIM] = echos;
 
 	complex float* signal = md_alloc(DIMS, dims, CFL_SIZE);
@@ -149,7 +149,7 @@ static bool test_buxton(void)
 
 	float timepoints = 200;
 
-	long dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 	dims[TE_DIM] = timepoints;
 
 	complex float* signal = md_alloc(DIMS, dims, CFL_SIZE);
@@ -183,7 +183,7 @@ static bool test_buxton_pulsed(void)
 
 	float timepoints = 200;
 
-	long dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 	dims[TE_DIM] = timepoints;
 
 	complex float* signal = md_alloc(DIMS, dims, CFL_SIZE);
@@ -217,7 +217,7 @@ static bool test_buxton_after_labeling(void)
 
 	float timepoints = 200;
 
-	long dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 	dims[TE_DIM] = timepoints;
 
 	complex float* signal = md_alloc(DIMS, dims, CFL_SIZE);

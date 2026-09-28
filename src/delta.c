@@ -27,7 +27,7 @@ static const char help_str[] = "Kronecker delta.";
 int main_delta(int argc, char* argv[argc])
 {
 	int N = 0;
-	unsigned long flags = 0UL;
+	bart_flags_t flags = UINT64_C(0);
 	int len = 0;
 	const char* out_file = NULL;
 
@@ -45,7 +45,7 @@ int main_delta(int argc, char* argv[argc])
 
 	num_init();
 
-	long dims[N];
+	bart_dim_t dims[N];
 
 	for (int i = 0; i < N; i++)
 		dims[i] = MD_IS_SET(flags, i) ? len : 1;

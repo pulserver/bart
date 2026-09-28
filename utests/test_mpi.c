@@ -28,28 +28,28 @@ static bool test_mpi_get_flags_C2R(void)
 
 	/* so far dims is ignored in mpi_get_flags */
 
-	const unsigned long flags = 8UL;
-	const long cdims[N] = { 32, 32, 1, 8, 1, 1, 1, 1, 1, 1};
+	const bart_flags_t flags = UINT64_C(8);
+	const bart_dim_t cdims[N] = { 32, 32, 1, 8, 1, 1, 1, 1, 1, 1};
 
 	complex float* ptr = md_alloc_mpi(N, flags, cdims, CFL_SIZE);
 
-	long cstrs[N];
+	bart_stride_t cstrs[N];
 	md_calc_strides(N, cstrs, cdims, CFL_SIZE);
 
-	const long rdims[N + 1] = { 2, 32, 32, 1, 8, 1, 1, 1, 1, 1, 1};
-	long rstrs[N + 1];
+	const bart_dim_t rdims[N + 1] = { 2, 32, 32, 1, 8, 1, 1, 1, 1, 1, 1};
+	bart_stride_t rstrs[N + 1];
 	md_calc_strides(N, rstrs, rdims, FL_SIZE);
 
 	//return
-	const unsigned long complex_flags = vptr_block_loop_flags(N, cdims, cstrs, ptr, CFL_SIZE, false);
-	const unsigned long real_flags = vptr_block_loop_flags(N, rdims, rstrs, ptr, FL_SIZE, false);
+	const bart_flags_t complex_flags = vptr_block_loop_flags(N, cdims, cstrs, ptr, CFL_SIZE, false);
+	const bart_flags_t real_flags = vptr_block_loop_flags(N, rdims, rstrs, ptr, FL_SIZE, false);
 
 	md_free(ptr);
 
 #ifdef USE_MPI
-	UT_RETURN_ASSERT((flags == complex_flags) && (complex_flags == (real_flags >> 1UL)));
+	UT_RETURN_ASSERT((flags == complex_flags) && (complex_flags == (real_flags >> UINT64_C(1))));
 #else
-	UT_RETURN_ASSERT(0UL == (complex_flags | real_flags));
+	UT_RETURN_ASSERT(UINT64_C(0) == (complex_flags | real_flags));
 #endif
 }
 UT_REGISTER_TEST(test_mpi_get_flags_C2R);
@@ -61,22 +61,22 @@ static bool test_mpi_get_flags_slice(void)
 
 	/* so far dims is ignored in mpi_get_flags */
 
-	const unsigned long flags = 8UL;
-	const long dims[N] = { 32, 32, 1, 8, 1, 1, 1, 1, 1, 1};
+	const bart_flags_t flags = UINT64_C(8);
+	const bart_dim_t dims[N] = { 32, 32, 1, 8, 1, 1, 1, 1, 1, 1};
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
 	complex float* ptr = md_alloc_mpi(N, flags, dims, CFL_SIZE);
 
-	long sstrs[N];
+	bart_stride_t sstrs[N];
 	md_select_strides(N, ~flags, sstrs, strs);
 
-	unsigned long f = vptr_block_loop_flags(N, dims, sstrs, ptr, CFL_SIZE, false);
+	bart_flags_t f = vptr_block_loop_flags(N, dims, sstrs, ptr, CFL_SIZE, false);
 
 	md_free(ptr);
 
-	UT_RETURN_ASSERT(0UL == f);
+	UT_RETURN_ASSERT(UINT64_C(0) == f);
 }
 
 UT_REGISTER_TEST(test_mpi_get_flags_slice);
@@ -86,23 +86,23 @@ static bool test_mpi_get_flags_reshape(void)
 {
 	const size_t CFL_SIZE = sizeof(complex float);
 
-	const unsigned long flags = 8UL;
-	const long dims[N] = { 32, 32, 1, 8, 1, 1, 1, 1, 1, 1};
+	const bart_flags_t flags = UINT64_C(8);
+	const bart_dim_t dims[N] = { 32, 32, 1, 8, 1, 1, 1, 1, 1, 1};
 
 	complex float* ptr = md_alloc_mpi(N, flags, dims, CFL_SIZE);
 
-	const long reshape1_dims[N] = { 32, 16, 2, 8, 1, 1, 1, 1, 1};
-	long reshape1_strs[N];
+	const bart_dim_t reshape1_dims[N] = { 32, 16, 2, 8, 1, 1, 1, 1, 1};
+	bart_stride_t reshape1_strs[N];
 	md_calc_strides(N, reshape1_strs, reshape1_dims, CFL_SIZE);
 
-	unsigned long f = vptr_block_loop_flags(N, dims, reshape1_strs, ptr, CFL_SIZE, false);
+	bart_flags_t f = vptr_block_loop_flags(N, dims, reshape1_strs, ptr, CFL_SIZE, false);
 
 	md_free(ptr);
 
 #ifdef USE_MPI
 	UT_RETURN_ASSERT(flags == f);
 #else
-	UT_RETURN_ASSERT(0UL == f);
+	UT_RETURN_ASSERT(UINT64_C(0) == f);
 #endif
 }
 UT_REGISTER_TEST(test_mpi_get_flags_reshape);
@@ -112,24 +112,24 @@ static bool test_mpi_get_flags_roi(void)
 {
 	const size_t CFL_SIZE = sizeof(complex float);
 
-	const unsigned long flags = 8UL;
+	const bart_flags_t flags = UINT64_C(8);
 
-	long dims[N] = { 128, 128, 1, 8, 1, 1, 1, 1, 1, 1};
-	long strs[N];
+	bart_dim_t dims[N] = { 128, 128, 1, 8, 1, 1, 1, 1, 1, 1};
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
 	complex float* ptr = md_alloc_mpi(N, flags, dims, CFL_SIZE);
 
-	long roi[N] = { 128, 32, 1, 8, 1, 1, 1, 1, 1, 1};
+	bart_dim_t roi[N] = { 128, 32, 1, 8, 1, 1, 1, 1, 1, 1};
 
 
-	unsigned long f1 = vptr_block_loop_flags(N, roi, strs, ptr, CFL_SIZE, false);
+	bart_flags_t f1 = vptr_block_loop_flags(N, roi, strs, ptr, CFL_SIZE, false);
 
 	md_free(ptr);
 #ifdef USE_MPI
 	UT_RETURN_ASSERT(f1 == flags);
 #else
-	UT_RETURN_ASSERT(0UL == f1);
+	UT_RETURN_ASSERT(UINT64_C(0) == f1);
 #endif
 }
 

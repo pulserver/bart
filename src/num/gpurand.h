@@ -2,6 +2,7 @@
 #ifndef _GPURAND_H
 #define _GPURAND_H
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 

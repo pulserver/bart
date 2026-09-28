@@ -33,7 +33,7 @@ static const char help_str[] = "simulation tool";
 
 
 // FIXME: Turn off sensitivity analysis if derivatives are not asked for
-static void perform_bloch_simulation(int N, struct sim_data* data, long mdims[N], complex float* mxy, long ddims[N], complex float* deriv)     // 4 Derivatives: dR1, dM0, dR2, dB1
+static void perform_bloch_simulation(int N, struct sim_data* data, bart_dim_t mdims[N], complex float* mxy, bart_dim_t ddims[N], complex float* deriv)     // 4 Derivatives: dR1, dM0, dR2, dB1
 {
 	int D = ddims[READ_DIM];
 	int T = ddims[TE_DIM];
@@ -50,16 +50,16 @@ static void perform_bloch_simulation(int N, struct sim_data* data, long mdims[N]
 
 	bloch_simulation2(data, T, data->voxel.P, &m, &sa_r1, &sa_r2, &sa_m0, &sa_b1, &sa_k, &sa_Om);
 
-	long pos[DIMS];
+	bart_dim_t pos[DIMS];
 	md_copy_dims(DIMS, pos, ddims);
 
-	long dstrs[DIMS];
+	bart_stride_t dstrs[DIMS];
 	md_calc_strides(N, dstrs, ddims, CFL_SIZE);
 
-	long mstrs[DIMS];
+	bart_stride_t mstrs[DIMS];
 	md_calc_strides(N, mstrs, mdims, CFL_SIZE);
 
-	long ind = 0;
+	bart_dim_t ind = 0;
 
 	for (int d = 0; d < D; d++) {
 
@@ -75,7 +75,7 @@ static void perform_bloch_simulation(int N, struct sim_data* data, long mdims[N]
 
 				pos[MAPS_DIM] = 0;
 				pos[ITER_DIM] = p;
-				ind = md_calc_offset(N, mstrs, pos) / (long)CFL_SIZE;
+				ind = md_calc_offset(N, mstrs, pos) / (bart_stride_t)CFL_SIZE;
 
 				// M = M_x + i M_y
 				mxy[ind] = (A == D) ? m[i][p][d] : (m[i][p][0] + 1.i * m[i][p][1]);
@@ -83,19 +83,19 @@ static void perform_bloch_simulation(int N, struct sim_data* data, long mdims[N]
 				if (NULL == deriv)
 					continue;
 
-				ind = md_calc_offset(N, dstrs, pos) / (long)CFL_SIZE;
+				ind = md_calc_offset(N, dstrs, pos) / (bart_stride_t)CFL_SIZE;
 				deriv[ind] = (A == D) ? sa_r1[i][p][d] : (sa_r1[i][p][0] + 1.i * sa_r1[i][p][1]);
 
 				pos[MAPS_DIM] = 1;
-				ind = md_calc_offset(N, dstrs, pos) / (long)CFL_SIZE;
+				ind = md_calc_offset(N, dstrs, pos) / (bart_stride_t)CFL_SIZE;
 				deriv[ind] = (A == D) ? sa_m0[i][p][d] : (sa_m0[i][p][0] + 1.i * sa_m0[i][p][1]);
 
 				pos[MAPS_DIM] = 2;
-				ind = md_calc_offset(N, dstrs, pos) / (long)CFL_SIZE;
+				ind = md_calc_offset(N, dstrs, pos) / (bart_stride_t)CFL_SIZE;
 				deriv[ind] = (A == D) ? sa_r2[i][p][d] : (sa_r2[i][p][0] + 1.i * sa_r2[i][p][1]);
 
 				pos[MAPS_DIM] = 3;
-				ind = md_calc_offset(N, dstrs, pos) / (long)CFL_SIZE;
+				ind = md_calc_offset(N, dstrs, pos) / (bart_stride_t)CFL_SIZE;
 
 				if (0 == p)
 					deriv[ind] = (A == D) ? sa_b1[i][0][d] : (sa_b1[i][0][0] + 1.i * sa_b1[i][0][1]);
@@ -103,11 +103,11 @@ static void perform_bloch_simulation(int N, struct sim_data* data, long mdims[N]
 				if (p < data->voxel.P - 1) {
 
 					pos[MAPS_DIM] = 4;
-					ind = md_calc_offset(N, dstrs, pos) / (long)CFL_SIZE;
+					ind = md_calc_offset(N, dstrs, pos) / (bart_stride_t)CFL_SIZE;
 					deriv[ind] = (A == D) ? sa_k[i][p][d] : (sa_k[i][p][0] + 1.i * sa_k[i][p][1]);
 
 					pos[MAPS_DIM] = 5;
-					ind = md_calc_offset(N, dstrs, pos) / (long)CFL_SIZE;
+					ind = md_calc_offset(N, dstrs, pos) / (bart_stride_t)CFL_SIZE;
 					deriv[ind] = (A == D) ? sa_Om[i][p][d] : (sa_Om[i][p][0] + 1.i * sa_Om[i][p][1]);
 				}
 			}
@@ -246,7 +246,7 @@ int main_sim(int argc, char* argv[argc])
 
 	// Define output dimensions for signal
 
-	long mdims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t mdims[DIMS] = { [0 ... DIMS - 1] = 1 };
 
 	if (split_dim)
 		mdims[READ_DIM] = 3; // (x, y, z)
@@ -264,7 +264,7 @@ int main_sim(int argc, char* argv[argc])
 
 	complex float* signals = create_cfl(out_signal, DIMS, mdims);
 
-	long ddims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t ddims[DIMS] = { [0 ... DIMS - 1] = 1 };
 
 	md_copy_dims(DIMS, ddims, mdims);
 	ddims[MAPS_DIM] = (1 == data.voxel.P) ? 4 : 6; // [dR1, dM0, dR2, dB1], dOm, dk
@@ -276,10 +276,10 @@ int main_sim(int argc, char* argv[argc])
 
 	// Temporary dimensions for derivative and magnetization
 
-	long tmdims[DIMS];
+	bart_dim_t tmdims[DIMS];
 	md_select_dims(DIMS, ~(COEFF_FLAG|COEFF2_FLAG), tmdims, mdims);
 
-	long tddims[DIMS];
+	bart_dim_t tddims[DIMS];
 	md_select_dims(DIMS, ~(COEFF_FLAG|COEFF2_FLAG), tddims, ddims);
 
 
@@ -291,7 +291,7 @@ int main_sim(int argc, char* argv[argc])
 
 	// Run all simulations and store signal and optional derivatives
 
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 
 	// Starting time of simulation
 	double start = timestamp();

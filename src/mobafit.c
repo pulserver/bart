@@ -61,11 +61,11 @@ struct mobafit_bound_s {
 	iter_op_data super;
 
 	int N;
-	long* dims;
+	bart_dim_t* dims;
 
-	unsigned long min_flags;
-	unsigned long max_flags;
-	unsigned long max_norm_flags;
+	bart_flags_t min_flags;
+	bart_flags_t max_flags;
+	bart_flags_t max_norm_flags;
 
 	float* min;
 	float* max;
@@ -81,13 +81,13 @@ static void mobafit_bound(iter_op_data* _data, float* dst, const float* src)
 
 	int N = data->N;
 
-	long map_dims[N];
-	long strs[N];
+	bart_dim_t map_dims[N];
+	bart_stride_t strs[N];
 
 	md_select_dims(N, ~COEFF_FLAG, map_dims, data->dims);
 	md_calc_strides(N, strs, data->dims, CFL_SIZE);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
 	complex float* tmp_map = md_alloc_sameplace(N, map_dims, CFL_SIZE, dst);
@@ -352,7 +352,7 @@ int main_mobafit(int argc, char* argv[argc])
 
 	num_init_gpu_support();
 
-	long bas_dims[DIMS];
+	bart_dim_t bas_dims[DIMS];
 	complex float* basis = NULL;
 
 
@@ -362,13 +362,13 @@ int main_mobafit(int argc, char* argv[argc])
 		md_zconj(DIMS, bas_dims, basis, basis);
 	}
 
-	long enc_dims[DIMS];
+	bart_dim_t enc_dims[DIMS];
 	complex float* enc = load_cfl(enc_file, DIMS, enc_dims);
 
-	long y_dims[DIMS];
+	bart_dim_t y_dims[DIMS];
 	complex float* y = load_cfl(echo_file, DIMS, y_dims);
 
-	long y_sig_dims[DIMS];
+	bart_dim_t y_sig_dims[DIMS];
 	md_copy_dims(DIMS, y_sig_dims, y_dims);
 
 	if (NULL == basis) {
@@ -403,7 +403,7 @@ int main_mobafit(int argc, char* argv[argc])
 		}
 	}
 
-	long x_dims[DIMS];
+	bart_dim_t x_dims[DIMS];
 	md_select_dims(DIMS, ~(TE_FLAG | COEFF_FLAG), x_dims, y_dims);
 
 
@@ -467,17 +467,17 @@ int main_mobafit(int argc, char* argv[argc])
 
 	md_zfill(DIMS, x_dims, x, 1.);
 
-	long y_patch_dims[DIMS];
-	long x_patch_dims[DIMS];
-	long y_patch_sig_dims[DIMS];
-	long cov_patch_dims[DIMS];
+	bart_dim_t y_patch_dims[DIMS];
+	bart_dim_t x_patch_dims[DIMS];
+	bart_dim_t y_patch_sig_dims[DIMS];
+	bart_dim_t cov_patch_dims[DIMS];
 
 	md_select_dims(DIMS, FFT_FLAGS | TE_FLAG | COEFF_FLAG, y_patch_dims, y_dims);
 	md_select_dims(DIMS, FFT_FLAGS | TE_FLAG | COEFF_FLAG, y_patch_sig_dims, y_sig_dims);
 	md_select_dims(DIMS, FFT_FLAGS | TE_FLAG | COEFF_FLAG, x_patch_dims, x_dims);
 	md_select_dims(DIMS, FFT_FLAGS | TE_FLAG | COEFF_FLAG, cov_patch_dims, cov_dims);
 
-	long map_dims[DIMS];
+	bart_dim_t map_dims[DIMS];
 	md_select_dims(DIMS, ~(COEFF_FLAG | TE_FLAG), map_dims, x_patch_dims);
 
 	// create signal model
@@ -496,14 +496,14 @@ int main_mobafit(int argc, char* argv[argc])
 	case SIM:
 
 		const complex float *b1 = NULL;
-		long b1_dims[DIMS];
+		bart_dim_t b1_dims[DIMS];
 
 		const complex float *b0 = NULL;
-		long b0_dims[DIMS];
+		bart_dim_t b0_dims[DIMS];
 
-		long bloch_dims[DIMS];
-		long out_dims[DIMS];
-		long in_dims[DIMS];
+		bart_dim_t bloch_dims[DIMS];
+		bart_dim_t out_dims[DIMS];
+		bart_dim_t in_dims[DIMS];
 
 		moba_conf->model = MDB_BLOCH;
 		moba_conf->sim = sim;
@@ -543,17 +543,17 @@ int main_mobafit(int argc, char* argv[argc])
 
 	if (NULL != basis) {
 
-		long max_dims[DIMS];
-		md_max_dims(DIMS, ~0UL, max_dims, bas_dims, y_patch_sig_dims);
+		bart_dim_t max_dims[DIMS];
+		md_max_dims(DIMS, ~UINT64_C(0), max_dims, bas_dims, y_patch_sig_dims);
 
-		unsigned long oflags = ~md_nontriv_dims(DIMS, y_patch_dims);
-		unsigned long iflags = ~md_nontriv_dims(DIMS, y_patch_sig_dims);
-		unsigned long bflags = ~md_nontriv_dims(DIMS, bas_dims);
+		bart_flags_t oflags = ~md_nontriv_dims(DIMS, y_patch_dims);
+		bart_flags_t iflags = ~md_nontriv_dims(DIMS, y_patch_sig_dims);
+		bart_flags_t bflags = ~md_nontriv_dims(DIMS, bas_dims);
 
 		const struct nlop_s* nlop_bas = nlop_from_linop_F(linop_fmac_create(DIMS, max_dims, oflags, iflags, bflags, basis));
 		nlop = nlop_chain_FF(nlop, nlop_bas);
 
-		long tdims[DIMS];
+		bart_dim_t tdims[DIMS];
 		md_transpose_dims(DIMS, 5, 6, tdims, y_patch_dims);
 		nlop = nlop_reshape_out_F(nlop, 0, DIMS, tdims);
 		nlop = nlop_zrprecomp_jacobian_F(nlop);
@@ -579,7 +579,7 @@ int main_mobafit(int argc, char* argv[argc])
 	complex float init[DIMS] = { [0 ... DIMS - 1] = 1. };
 	complex float scale[DIMS] = { [0 ... DIMS - 1] = 1. };
 
-	for (long i = 0; i < x_dims[COEFF_DIM]; i++) {
+	for (bart_dim_t i = 0; i < x_dims[COEFF_DIM]; i++) {
 
 		init[i] = init0[i];
 		scale[i] = scale0[i];
@@ -588,11 +588,11 @@ int main_mobafit(int argc, char* argv[argc])
 		bound_min[i] /= (scale0[i] ?: 1);
 	}
 
-	long c_dims[DIMS];
+	bart_dim_t c_dims[DIMS];
 	md_select_dims(DIMS, COEFF_FLAG, c_dims, x_dims);
 
-	long c_strs[DIMS];
-	long x_strs[DIMS];
+	bart_stride_t c_strs[DIMS];
+	bart_stride_t x_strs[DIMS];
 
 	md_calc_strides(DIMS, c_strs, c_dims, CFL_SIZE);
 	md_calc_strides(DIMS, x_strs, x_dims, CFL_SIZE);
@@ -624,7 +624,7 @@ int main_mobafit(int argc, char* argv[argc])
 
 	bounds.dims = x_patch_dims;
 
-	for (long i = 0; i < x_dims[COEFF_DIM]; i++) {
+	for (bart_dim_t i = 0; i < x_dims[COEFF_DIM]; i++) {
 
 		if (1. != scale[i]) {
 
@@ -676,7 +676,7 @@ int main_mobafit(int argc, char* argv[argc])
 	}
 
 
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 
 	do {
 		md_copy_block(DIMS, pos, y_patch_dims, y_patch, y_dims, y, CFL_SIZE);

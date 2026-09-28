@@ -36,23 +36,23 @@ struct convcorr_geom_s {
 
 	nlop_data_t super;
 
-	long N;
+	bart_dim_t N;
 
-	const long* odims;
-	const long* idims1;
-	const long* idims2;
+	const bart_dim_t* odims;
+	const bart_dim_t* idims1;
+	const bart_dim_t* idims2;
 
-	const long* mdims;
-	const long* ostrs;
-	const long* istrs1;
-	const long* istrs2;
+	const bart_dim_t* mdims;
+	const bart_stride_t* ostrs;
+	const bart_stride_t* istrs1;
+	const bart_stride_t* istrs2;
 
-	unsigned long flags;
+	bart_flags_t flags;
 
 	complex float* der1;
 	complex float* der2;
 
-	long shift;
+	bart_dim_t shift;
 };
 
 DEF_TYPEID(convcorr_geom_s);
@@ -192,8 +192,8 @@ static void convcorr_geom_del(const nlop_data_t* _data)
 	xfree(data);
 }
 
-static struct nlop_s* nlop_convcorr_geom_valid_create(long N, unsigned long flags, const long odims[N], const long idims[N], const long kdims[N],
-							bool conv, const long strides[N], const long dilations[N], bool transp)
+static struct nlop_s* nlop_convcorr_geom_valid_create(bart_dim_t N, bart_flags_t flags, const bart_dim_t odims[N], const bart_dim_t idims[N], const bart_dim_t kdims[N],
+							bool conv, const bart_stride_t strides[N], const bart_dim_t dilations[N], bool transp)
 {
 	for (int i = 0; i < N; i++) {
 
@@ -208,23 +208,23 @@ static struct nlop_s* nlop_convcorr_geom_valid_create(long N, unsigned long flag
 
 	data->flags = flags;
 
-	long nl_odims[1][N];
+	bart_dim_t nl_odims[1][N];
 	md_copy_dims(N, nl_odims[0], transp ? idims : odims);
 
-	long nl_idims[2][N];
+	bart_dim_t nl_idims[2][N];
 	md_copy_dims(N, nl_idims[0], transp ? odims : idims);
 	md_copy_dims(N, nl_idims[1], kdims);
 
 	data->N = N;
 
-	PTR_ALLOC(long[N], nodims);
-	PTR_ALLOC(long[N], nidims1);
-	PTR_ALLOC(long[N], nidims2);
+	PTR_ALLOC(bart_dim_t[N], nodims);
+	PTR_ALLOC(bart_dim_t[N], nidims1);
+	PTR_ALLOC(bart_dim_t[N], nidims2);
 
-	PTR_ALLOC(long[2 * N], nmdims);
-	PTR_ALLOC(long[2 * N], nostrs);
-	PTR_ALLOC(long[2 * N], nistrs1);
-	PTR_ALLOC(long[2 * N], nistrs2);
+	PTR_ALLOC(bart_dim_t[2 * N], nmdims);
+	PTR_ALLOC(bart_dim_t[2 * N], nostrs);
+	PTR_ALLOC(bart_dim_t[2 * N], nistrs1);
+	PTR_ALLOC(bart_dim_t[2 * N], nistrs2);
 
 	md_copy_dims(N, *nodims, nl_odims[0]);
 	md_copy_dims(N, *nidims1, nl_idims[0]);
@@ -236,14 +236,14 @@ static struct nlop_s* nlop_convcorr_geom_valid_create(long N, unsigned long flag
 							odims, MD_STRIDES(N, odims, CFL_SIZE),
 							kdims, MD_STRIDES(N, kdims, CFL_SIZE),
 							idims, MD_STRIDES(N, idims, CFL_SIZE),
-							dilations, strides, conv, false) / (long)CFL_SIZE;
+							dilations, strides, conv, false) / (bart_stride_t)CFL_SIZE;
 	else
 		data->shift = calc_convcorr_geom_strs_dil(N, flags,
 							*nmdims, *nostrs, *nistrs2, *nistrs1,
 							odims, MD_STRIDES(N, odims, CFL_SIZE),
 							kdims, MD_STRIDES(N, kdims, CFL_SIZE),
 							idims, MD_STRIDES(N, idims, CFL_SIZE),
-							dilations, strides, conv, false) / (long)CFL_SIZE;
+							dilations, strides, conv, false) / (bart_stride_t)CFL_SIZE;
 
 	data->odims = *PTR_PASS(nodims);
 	data->idims1 = *PTR_PASS(nidims1);
@@ -263,10 +263,10 @@ static struct nlop_s* nlop_convcorr_geom_valid_create(long N, unsigned long flag
 }
 
 
-struct nlop_s* nlop_convcorr_geom_create(int N, unsigned long flags, const long odims[N], const long idims[N], const long kdims[N],
-					enum PADDING conv_pad, bool conv, const long strides[N], const long dilations[N], char transpc)
+struct nlop_s* nlop_convcorr_geom_create(int N, bart_flags_t flags, const bart_dim_t odims[N], const bart_dim_t idims[N], const bart_dim_t kdims[N],
+					enum PADDING conv_pad, bool conv, const bart_stride_t strides[N], const bart_dim_t dilations[N], char transpc)
 {
-	long ones[N];
+	bart_dim_t ones[N];
 	md_singleton_dims(N, ones);
 
 	if (NULL == strides)
@@ -281,8 +281,8 @@ struct nlop_s* nlop_convcorr_geom_create(int N, unsigned long flags, const long 
 
 	bool transp = ('N' != transpc);
 
-	long pad_for[N];
-	long pad_after[N];
+	bart_dim_t pad_for[N];
+	bart_dim_t pad_after[N];
 	md_singleton_strides(N, pad_for);
 	md_singleton_strides(N, pad_after);
 
@@ -292,7 +292,7 @@ struct nlop_s* nlop_convcorr_geom_create(int N, unsigned long flags, const long 
 
 	} else {
 
-		long nidims[N];
+		bart_dim_t nidims[N];
 
 		for (int i = 0; i < N; i++) {
 
@@ -306,7 +306,7 @@ struct nlop_s* nlop_convcorr_geom_create(int N, unsigned long flags, const long 
 				nidims[i] = idims[i];
 			}
 
-			long pos = labs((nidims[i] / 2) - (idims[i] / 2)); // center corresponds to resize_center/ceter of fft
+			bart_dim_t pos = labs((nidims[i] / 2) - (idims[i] / 2)); // center corresponds to resize_center/ceter of fft
 
 			// from md_resize_center:
 			// if idim[d] > nidim[d], then optr[i] = iptr[pos + i] for 0 <= i < nidim[d]

@@ -102,11 +102,11 @@ int main_join(int argc, char* argv[argc])
 		}
 	}
 
-	long in_dims[count][N];
+	bart_dim_t in_dims[count][N];
 	const complex float* in_data[count];
 
-	long offsets[count];
-	long sum = 0;
+	bart_stride_t offsets[count];
+	bart_dim_t sum = 0;
 
 	// figure out size of output
 	for (int l = 0, i = 0; i < count; i++) {
@@ -148,7 +148,7 @@ int main_join(int argc, char* argv[argc])
 			unmap_cfl(N, in_dims[i], in_data[i]);
 	}
 
-	long out_dims[N];
+	bart_dim_t out_dims[N];
 
 	for (int i = 0; i < N; i++)
 		out_dims[i] = in_dims[0][i];
@@ -178,7 +178,7 @@ int main_join(int argc, char* argv[argc])
 	complex float* out_data = NULL;
 
 	if (stream)
-		out_data = create_async_cfl(out_file, stream ? MD_BIT(dim) : 0UL, N, out_dims);
+		out_data = create_async_cfl(out_file, stream ? MD_BIT(dim) : UINT64_C(0), N, out_dims);
 	else
 		out_data = create_cfl(out_file, N, out_dims);
 
@@ -199,7 +199,7 @@ int main_join(int argc, char* argv[argc])
 			if (append && (0 == i))
 				continue;
 
-			long pos[N];
+			bart_dim_t pos[N];
 			md_singleton_strides(N, pos);
 			pos[dim] = offsets[i];
 
@@ -212,8 +212,8 @@ int main_join(int argc, char* argv[argc])
 
 	} else {
 
-		long opos[N];
-		long ipos[N];
+		bart_dim_t opos[N];
+		bart_dim_t ipos[N];
 
 		md_singleton_strides(N, opos);
 		md_singleton_strides(N, ipos);
@@ -226,7 +226,7 @@ int main_join(int argc, char* argv[argc])
 
 			for (ipos[dim] = 0; ipos[dim] < in_dims[i][dim]; ipos[dim]++) {
 
-				long slc_dims[DIMS];
+				bart_dim_t slc_dims[DIMS];
 				md_select_dims(DIMS, ~MD_BIT(dim), slc_dims, out_dims);
 
 				if (NULL != istrm)

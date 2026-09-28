@@ -330,14 +330,14 @@ void opt_bpursuit_configure(struct opt_reg_s* ropts, const struct operator_p_s* 
 	ropts->sr++;
 }
 
-void opt_precond_configure(struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], const struct linop_s* model_op, int N, const long ksp_dims[N], const complex float* data, const long pat_dims[N], const complex float* pattern)
+void opt_precond_configure(struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], const struct linop_s* model_op, int N, const bart_dim_t ksp_dims[N], const complex float* data, const bart_dim_t pat_dims[N], const complex float* pattern)
 {
 	int nr_penalties = ropts->r + ropts->sr;
 	assert(NUM_REGS > nr_penalties);
 
 	const struct iovec_s* iov = linop_codomain(model_op);
-	assert(md_check_equal_dims(N, iov->dims, ksp_dims, ~0UL));
-	assert(md_check_compat(N, ~0UL, pat_dims, ksp_dims));
+	assert(md_check_equal_dims(N, iov->dims, ksp_dims, ~UINT64_C(0)));
+	assert(md_check_compat(N, ~UINT64_C(0), pat_dims, ksp_dims));
 
 	if (NULL == pattern) {
 
@@ -356,7 +356,7 @@ void opt_precond_configure(struct opt_reg_s* ropts, const struct operator_p_s* p
 
 	if (0 < ropts->svars) {
 
-		long pos[1] = { 0 };
+		bart_dim_t pos[1] = { 0 };
 		auto iov = linop_domain(trafos[nr_penalties]);
 
 		const struct linop_s* extract = linop_extract_create(1, pos, MD_DIMS(md_calc_size(iov->N, iov->dims)), MD_DIMS(md_calc_size(iov->N, iov->dims) + ropts->svars));
@@ -368,7 +368,7 @@ void opt_precond_configure(struct opt_reg_s* ropts, const struct operator_p_s* p
 	ropts->sr++;
 }
 
-void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], const long (*sdims[NUM_REGS])[N + 1], int llr_blk, int shift_mode, const char* wtype_str, bool use_gpu, int asl_dim)
+void opt_reg_configure(int N, const bart_dim_t img_dims[N], struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], const bart_dim_t (*sdims[NUM_REGS])[N + 1], int llr_blk, int shift_mode, const char* wtype_str, bool use_gpu, int asl_dim)
 {
 	float lambda = ropts->lambda;
 	bool randshift = (1 == shift_mode);
@@ -411,7 +411,7 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 
 		// for asl, the second regularization term only has half the size of the first
 
-		long tmp_dims[DIMS];
+		bart_dim_t tmp_dims[DIMS];
 		if (ropts->asl && regs[nr].asl)
 			get_asl_dims(DIMS, asl_dim, tmp_dims, img_dims);
 		else if (ropts->teasl && !(regs[nr].asl))
@@ -448,10 +448,10 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 	assert(ropts->r <= NUM_REGS);
 	assert(1 == img_dims[BATCH_DIM]);
 
-	long ext_shift = md_calc_size(N, img_dims);
+	bart_dim_t ext_shift = md_calc_size(N, img_dims);
 	int nr_penalties = ropts->r;
 
-	long blkdims[MAX_LEV][DIMS];
+	bart_dim_t blkdims[MAX_LEV][DIMS];
 	int levels;
 
 	enum wtype wtype;
@@ -478,11 +478,11 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 		if (-1. == regs[nr].lambda)
 			regs[nr].lambda = lambda;
 
-		long minsize[DIMS] = { [0 ... DIMS - 1] = 1 };
-		unsigned long wflags = 0;
+		bart_dim_t minsize[DIMS] = { [0 ... DIMS - 1] = 1 };
+		bart_flags_t wflags = 0;
 
-		long thresh_dims[N];
-		long img_strs[N];
+		bart_dim_t thresh_dims[N];
+		bart_stride_t img_strs[N];
 
 		assert(nr_penalties < NUM_REGS);
 
@@ -546,10 +546,10 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 
 			trafos[nr] = linop_wavelet_create(N, wflags, img_dims, img_strs, wtype, minsize, randshift);
 
-			long wav_dims[DIMS];
+			bart_dim_t wav_dims[DIMS];
 			md_copy_dims(DIMS, wav_dims, linop_codomain(trafos[nr])->dims);
 
-			long K = (md_calc_size(wxdim, wav_dims) / 100) * regs[nr].k;
+			bart_dim_t K = (md_calc_size(wxdim, wav_dims) / 100) * regs[nr].k;
 
 			debug_printf(DP_DEBUG3, "\nK = %ld elements will be thresholded per wavelet transform\n", K);
 			debug_printf(DP_DEBUG3, "Total wavelet dimensions: \n[");
@@ -607,7 +607,7 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 
 			if (NULL != sdims) {
 
-				PTR_ALLOC(long[N + 1], dims);
+				PTR_ALLOC(bart_dim_t[N + 1], dims);
 				md_copy_dims(N + 1, *dims, linop_codomain(trafos[nr_penalties])->dims);
 				sdims[nr_penalties] = PTR_PASS(dims);
 			}
@@ -631,7 +631,7 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 
 			if (NULL != sdims) {
 
-				PTR_ALLOC(long[N + 1], dims);
+				PTR_ALLOC(bart_dim_t[N + 1], dims);
 				md_copy_dims(N + 1, *dims, linop_codomain(trafos[nr_penalties])->dims);
 				(*dims)[N] = 1;
 				sdims[nr_penalties] = PTR_PASS(dims);
@@ -658,7 +658,7 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 
 			if (NULL != sdims) {
 
-				PTR_ALLOC(long[N + 1], dims);
+				PTR_ALLOC(bart_dim_t[N + 1], dims);
 				md_copy_dims(N + 1, *dims, linop_codomain(trafos[nr_penalties])->dims);
 				sdims[nr_penalties] = PTR_PASS(dims);
 			}
@@ -670,7 +670,7 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 
 			if (NULL != sdims) {
 
-				PTR_ALLOC(long[N + 1], dims);
+				PTR_ALLOC(bart_dim_t[N + 1], dims);
 				md_copy_dims(N  + 1, *dims, linop_codomain(trafos[nr_penalties])->dims);
 				(*dims)[N] = 1;
 				sdims[nr_penalties] = PTR_PASS(dims);
@@ -683,7 +683,7 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 
 			if (NULL != sdims) {
 
-				PTR_ALLOC(long[N + 1], dims);
+				PTR_ALLOC(bart_dim_t[N + 1], dims);
 				md_copy_dims(N  + 1, *dims, linop_codomain(trafos[nr_penalties])->dims);
 				sdims[nr_penalties] = PTR_PASS(dims);
 			}
@@ -696,7 +696,7 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 
 			debug_printf(DP_INFO, "L1-Laplace regularization: %f\n", regs[nr].lambda);
 
-			long krn_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+			bart_dim_t krn_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 
 			for (int i = 0; i < DIMS; i++)
 				if (MD_IS_SET(regs[nr].xflags, i))
@@ -738,7 +738,7 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 			int remove_mean = 0;
 
 			trafos[nr] = linop_identity_create(DIMS, img_dims);
-			prox_ops[nr] = lrthresh_create(img_dims, randshift, regs[nr].xflags, (const long (*)[DIMS])blkdims, regs[nr].lambda, false, remove_mean, overlapping_blocks);
+			prox_ops[nr] = lrthresh_create(img_dims, randshift, regs[nr].xflags, (const bart_dim_t (*)[DIMS])blkdims, regs[nr].lambda, false, remove_mean, overlapping_blocks);
 
 			if (use_gpu)
 				debug_printf(DP_WARN, "Lowrank regularization is not GPU accelerated.\n");
@@ -760,7 +760,7 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 				blkdims[l][MAPS_DIM] = 1;
 
 			trafos[nr2] = linop_identity_create(DIMS, img_dims);
-			prox_ops[nr2] = lrthresh_create(img_dims, randshift, regs[nr].xflags, (const long (*)[DIMS])blkdims, regs[nr].lambda, false, 0, use_gpu);
+			prox_ops[nr2] = lrthresh_create(img_dims, randshift, regs[nr].xflags, (const bart_dim_t (*)[DIMS])blkdims, regs[nr].lambda, false, 0, use_gpu);
 
 			const struct linop_s* decom_op = sum_create( img_dims, use_gpu );
 			const struct linop_s* tmp_op = forward_op;
@@ -794,11 +794,11 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 
 			debug_printf(DP_INFO, "l1 regularization: %f\n", regs[nr].lambda);
 
-			long in2_dims[DIMS];
+			bart_dim_t in2_dims[DIMS];
 			if (NULL != lop_asl) {
 
 				assert(DIMS == linop_domain(lop_asl)->N);
-				assert(md_check_equal_dims(DIMS, img_dims, linop_domain(lop_asl)->dims, ~0UL));
+				assert(md_check_equal_dims(DIMS, img_dims, linop_domain(lop_asl)->dims, ~UINT64_C(0)));
 
 				assert(DIMS == linop_codomain(lop_asl)->N);
 				md_copy_dims(DIMS, in2_dims, linop_codomain(lop_asl)->dims);
@@ -856,7 +856,7 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 
 			auto dom = nlop_domain(tf_ops);
 
-			if (!md_check_equal_dims(MIN(DIMS, dom->N), dom->dims, img_dims, ~0UL)) {
+			if (!md_check_equal_dims(MIN(DIMS, dom->N), dom->dims, img_dims, ~UINT64_C(0))) {
 
 				debug_printf(DP_WARN, "TF-dims: ");
 				debug_print_dims(DP_INFO, dom->N, dom->dims);
@@ -873,7 +873,7 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 
 			auto prox_op = prox_nlgrad_create(tf_ops, 1, 1., regs[nr].lambda, false);
 
-			prox_ops[nr] = op_p_auto_normalize(prox_op, ~0LU, NORM_MAX);
+			prox_ops[nr] = op_p_auto_normalize(prox_op, ~UINT64_C(0), NORM_MAX);
 
 			operator_p_free(prox_op);
 
@@ -887,7 +887,7 @@ void opt_reg_configure(int N, const long img_dims[N], struct opt_reg_s* ropts, c
 			 || (ICTV == regs[nr].xform)
 			 || (ICTGV == regs[nr].xform))) {
 
-			long pos[1] = { 0 };
+			bart_dim_t pos[1] = { 0 };
 
 			const struct linop_s* extract = linop_extract_create(1, pos, MD_DIMS(md_calc_size(N, img_dims)), MD_DIMS(md_calc_size(N, img_dims) + ropts->svars));
 			extract = linop_reshape_out_F(extract, N, img_dims);

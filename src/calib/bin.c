@@ -42,7 +42,7 @@ const struct bin_conf_s bin_defaults = {
 };
 
 // Binning by equal central angle
-static void det_bins(const complex float* state, const long bins_dims[DIMS], float* bins, const int idx, const int n, float offset)
+static void det_bins(const complex float* state, const bart_dim_t bins_dims[DIMS], float* bins, const int idx, const int n, float offset)
 {
 	int T = bins_dims[TIME_DIM];
 
@@ -61,7 +61,7 @@ static void det_bins(const complex float* state, const long bins_dims[DIMS], flo
 }
 
 // Binning by amplitude
-static void det_bins_amp(const long state_dims[DIMS], const complex float* state, const long bins_dims[DIMS], float* bins, const int idx, const int n)
+static void det_bins_amp(const bart_dim_t state_dims[DIMS], const complex float* state, const bart_dim_t bins_dims[DIMS], float* bins, const int idx, const int n)
 {
 	int T = bins_dims[TIME_DIM];
 	
@@ -99,13 +99,13 @@ static void det_bins_amp(const long state_dims[DIMS], const complex float* state
  * steps total_time / 2 and total_time / 2 + 1. If the angle increases, time evolution
  * is consistent with increasing bin-index.  Otherwise, swap EOF_a with EOF_b.
  */
-static bool check_valid_time(const long singleton_dims[DIMS], complex float* singleton, const long labels_dims[DIMS], const complex float* labels, const long labels_idx[2])
+static bool check_valid_time(const bart_dim_t singleton_dims[DIMS], complex float* singleton, const bart_dim_t labels_dims[DIMS], const complex float* labels, const bart_dim_t labels_idx[2])
 {
 	// Indices at half of total time
 	int idx_0 = floor(singleton_dims[TIME_DIM] / 2.);
 	int idx_1 = idx_0 + 1;
 
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 
 	pos[TIME2_DIM] = labels_idx[0];
 	md_copy_block(DIMS, pos, singleton_dims, singleton, labels_dims, labels, CFL_SIZE);
@@ -137,10 +137,10 @@ static bool check_valid_time(const long singleton_dims[DIMS], complex float* sin
 
 
 // Calculate maximum number of samples in a bin
-static int get_binsize_max(const long bins_dims[DIMS], const float* bins, const int n_card, const int n_resp)
+static int get_binsize_max(const bart_dim_t bins_dims[DIMS], const float* bins, const int n_card, const int n_resp)
 {
 	// Array to count number of appearances of a bin
-	long count_dims[2] = { n_card, n_resp };
+	bart_dim_t count_dims[2] = { n_card, n_resp };
 
 	int* count = md_calloc(2, count_dims, sizeof(int));
 
@@ -176,10 +176,10 @@ static int get_binsize_max(const long bins_dims[DIMS], const float* bins, const 
 
 
 
-static void moving_average(const long state_dims[DIMS], complex float* state, const int mavg_window)
+static void moving_average(const bart_dim_t state_dims[DIMS], complex float* state, const int mavg_window)
 {
 	// Pad with boundary values
-	long pad_dims[DIMS];
+	bart_dim_t pad_dims[DIMS];
 	md_copy_dims(DIMS, pad_dims, state_dims);
 
 	pad_dims[TIME_DIM] = state_dims[TIME_DIM] + mavg_window -1;
@@ -188,15 +188,15 @@ static void moving_average(const long state_dims[DIMS], complex float* state, co
 
 	md_resize_center(DIMS, pad_dims, pad, state_dims, state, CFL_SIZE);
 
-	long singleton_dims[DIMS];
+	bart_dim_t singleton_dims[DIMS];
 	md_select_dims(DIMS, TIME2_FLAG, singleton_dims, state_dims);
 
 	complex float* singleton = md_alloc(DIMS, singleton_dims, CFL_SIZE);
 
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 	md_copy_block(DIMS, pos, singleton_dims, singleton, state_dims, state, CFL_SIZE); // Get first value of array
 
-	long start = labs((pad_dims[TIME_DIM] / 2) - (state_dims[TIME_DIM] / 2));
+	bart_dim_t start = labs((pad_dims[TIME_DIM] / 2) - (state_dims[TIME_DIM] / 2));
 
 	for (int i = 0; i < start; i++) { // Fill beginning of pad array
 
@@ -204,7 +204,7 @@ static void moving_average(const long state_dims[DIMS], complex float* state, co
 		md_copy_block(DIMS, pos, pad_dims, pad, singleton_dims, singleton, CFL_SIZE);
 	}
 
-	long end = mavg_window - start;
+	bart_dim_t end = mavg_window - start;
 
 	pos[TIME_DIM] = state_dims[TIME_DIM] - 1;
 	md_copy_block(DIMS, pos, singleton_dims, singleton, state_dims, state, CFL_SIZE); // Get last value of array
@@ -216,16 +216,16 @@ static void moving_average(const long state_dims[DIMS], complex float* state, co
 	}
 
 	// Calc moving average
-	long tmp_dims[DIMS + 1];
+	bart_dim_t tmp_dims[DIMS + 1];
 	md_copy_dims(DIMS, tmp_dims, pad_dims);
 	tmp_dims[DIMS] = 1;
 
-	long tmp_strs[DIMS + 1];
+	bart_stride_t tmp_strs[DIMS + 1];
 	md_calc_strides(DIMS, tmp_strs, tmp_dims, CFL_SIZE);
 
 	tmp_dims[TIME_DIM] = state_dims[TIME_DIM]; // Moving-average-reduced temporal dimension
 
-	long tmp2_strs[DIMS + 1];
+	bart_stride_t tmp2_strs[DIMS + 1];
 	md_calc_strides(DIMS + 1, tmp2_strs, tmp_dims, CFL_SIZE);
 
 	tmp_dims[DIMS] = mavg_window;
@@ -244,18 +244,18 @@ static void moving_average(const long state_dims[DIMS], complex float* state, co
 
 
 
-int bin_quadrature(const long bins_dims[DIMS], float* bins,
-			const long labels_dims[DIMS], complex float* labels,
+int bin_quadrature(const bart_dim_t bins_dims[DIMS], float* bins,
+			const bart_dim_t labels_dims[DIMS], complex float* labels,
 			const struct bin_conf_s conf)
 {
 	// Extract respiratory labels
-	long resp_state_dims[DIMS];
+	bart_dim_t resp_state_dims[DIMS];
 	md_copy_dims(DIMS, resp_state_dims, labels_dims);
 	resp_state_dims[TIME2_DIM] = 2;
 
 	complex float* resp_state = md_alloc(DIMS, resp_state_dims, CFL_SIZE);
 
-	long resp_state_singleton_dims[DIMS];
+	bart_dim_t resp_state_singleton_dims[DIMS];
 	md_copy_dims(DIMS, resp_state_singleton_dims, resp_state_dims);
 	resp_state_singleton_dims[TIME2_DIM] = 1;
 
@@ -263,7 +263,7 @@ int bin_quadrature(const long bins_dims[DIMS], float* bins,
 
 	bool valid_time_resp = check_valid_time(resp_state_singleton_dims, resp_state_singleton, labels_dims, labels, conf.resp_labels_idx);
 
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 
 	for (int i = 0; i < 2; i++){
 
@@ -280,13 +280,13 @@ int bin_quadrature(const long bins_dims[DIMS], float* bins,
 
 
 	// Extract cardiac labels
-	long card_state_dims[DIMS];
+	bart_dim_t card_state_dims[DIMS];
 	md_copy_dims(DIMS, card_state_dims, labels_dims);
 	card_state_dims[TIME2_DIM] = 2;
 
 	complex float* card_state = md_alloc(DIMS, card_state_dims, CFL_SIZE);
 
-	long card_state_singleton_dims[DIMS];
+	bart_dim_t card_state_singleton_dims[DIMS];
 	md_copy_dims(DIMS, card_state_singleton_dims, card_state_dims);
 	card_state_singleton_dims[TIME2_DIM] = 1;
 

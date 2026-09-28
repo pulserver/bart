@@ -62,8 +62,8 @@ int main_roistat(int argc, char* argv[argc])
 
 	num_init();
 
-	long rdims[DIMS];
-	long idims[DIMS];
+	bart_dim_t rdims[DIMS];
+	bart_dim_t idims[DIMS];
 
 	complex float* roi = load_cfl(roi_file, DIMS, rdims);
 	complex float* in = load_cfl(in_file, DIMS, idims);
@@ -100,37 +100,37 @@ int main_roistat(int argc, char* argv[argc])
 	}
 
 
-	if (!md_check_compat(DIMS, ~0UL, rdims, idims))
+	if (!md_check_compat(DIMS, ~UINT64_C(0), rdims, idims))
 		error("Incompatible dimensions\n");
 
 
-	long istrs[DIMS];
+	bart_stride_t istrs[DIMS];
 	md_calc_strides(DIMS, istrs, idims, CFL_SIZE);
 
-	long rstrs[DIMS];
+	bart_stride_t rstrs[DIMS];
 	md_calc_strides(DIMS, rstrs, rdims, CFL_SIZE);
 
 
-	unsigned long rflags = md_nontriv_dims(DIMS, rdims);
-	unsigned long iflags = md_nontriv_dims(DIMS, idims);
+	bart_flags_t rflags = md_nontriv_dims(DIMS, rdims);
+	bart_flags_t iflags = md_nontriv_dims(DIMS, idims);
 
-	long mdims[DIMS];
+	bart_dim_t mdims[DIMS];
 	md_merge_dims(DIMS, mdims, idims, rdims);
 
-	long odims[DIMS];
+	bart_dim_t odims[DIMS];
 	md_select_dims(DIMS, rflags ^ iflags, odims, mdims);
 
-	long ostrs[DIMS];
+	bart_stride_t ostrs[DIMS];
 	md_calc_strides(DIMS, ostrs, odims, CFL_SIZE);
 
 
 	debug_print_dims(DP_DEBUG1, DIMS, odims);
 
 
-	long sdims[DIMS];
+	bart_dim_t sdims[DIMS];
 	md_singleton_dims(DIMS, sdims);
 
-	long sstrs[DIMS];
+	bart_stride_t sstrs[DIMS];
 	md_singleton_strides(DIMS, sstrs);
 
 	complex float* pat = (pat_name ? create_cfl : anon_cfl)(pat_name, DIMS, odims);
@@ -142,7 +142,7 @@ int main_roistat(int argc, char* argv[argc])
 	complex float* var = NULL;
 	complex float* tmp = NULL;
 
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 
 	if (COUNT == stat)
 		goto out;
@@ -167,10 +167,10 @@ int main_roistat(int argc, char* argv[argc])
 	var = (var_name ? create_cfl : anon_cfl)(var_name, DIMS, odims);
 
 
-	long ridims[DIMS];
+	bart_dim_t ridims[DIMS];
 	md_select_dims(DIMS, iflags | rflags, ridims, mdims);
 
-	long ristrs[DIMS];
+	bart_stride_t ristrs[DIMS];
 	md_calc_strides(DIMS, ristrs, ridims, CFL_SIZE);
 
 	tmp = md_calloc(DIMS, ridims, CFL_SIZE);
@@ -208,7 +208,7 @@ int main_roistat(int argc, char* argv[argc])
 		bart_printf("#%12s\t%6s\t%6s\n", "mean", "std", "count");
 
 		do {
-			long count = crealf(MD_ACCESS(DIMS, ostrs, pos, pat)) + (bessel ? 1 : 0);
+			bart_dim_t count = crealf(MD_ACCESS(DIMS, ostrs, pos, pat)) + (bessel ? 1 : 0);
 			complex float mn = MD_ACCESS(DIMS, ostrs, pos, avg);
 			float std = crealf(MD_ACCESS(DIMS, ostrs, pos, var));
 

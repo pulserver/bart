@@ -1,3 +1,5 @@
+#include "misc/dimtypes.h"
+
 
 struct nlop_s;
 struct noir_model_conf_s;

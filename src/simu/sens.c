@@ -41,7 +41,7 @@ struct coil_opts coil_opts_defaults = {
 	.kspace = false,
 	.ctype = HEAD_2D_8CH,
 	.N = -1,
-	.flags = ~0UL,
+	.flags = ~UINT64_C(0),
 	.data = NULL,
 	.dstr = NULL,
 	.fun = NULL,
@@ -52,10 +52,10 @@ struct coil_opts coil_opts_pha_defaults = {
 	.ctype = COIL_NONE,
 };
 
-static complex float* sens_internal_model(long D, long dims[D], unsigned long flags, long Nc, bool flip, const void* v)
+static complex float* sens_internal_model(bart_dim_t D, bart_dim_t dims[D], bart_flags_t flags, bart_dim_t Nc, bool flip, const void* v)
 {
 	// require 8 byte for representation of up to 64 coils
-	assert(8 <= sizeof(unsigned long));
+	assert(8 <= sizeof(bart_flags_t));
 
         const complex float* arr = v;
 
@@ -67,7 +67,7 @@ static complex float* sens_internal_model(long D, long dims[D], unsigned long fl
 
 	assert(0 < dims[COIL_DIM]);
 
-	long pos[D], ppos[D], apos[D], strs[D], astrs[D], adims[D];
+	bart_dim_t pos[D], ppos[D], apos[D], strs[D], astrs[D], adims[D];
 
 	complex float* model = md_alloc(D, dims, CFL_SIZE);
 
@@ -80,7 +80,7 @@ static complex float* sens_internal_model(long D, long dims[D], unsigned long fl
 		adims[i+1] = dims[i];
 
 	// strides following C order for arr
-	long old = 1;
+	bart_dim_t old = 1;
 	for (int i = 0; i < D; i++) {
 
 		astrs[D - i - 1] = (1 == adims[D - i - 1]) ? 0 : old;
@@ -91,7 +91,7 @@ static complex float* sens_internal_model(long D, long dims[D], unsigned long fl
 	md_set_dims(D, apos, 0);
 
 	do {
-		long n = 0;
+		bart_dim_t n = 0;
 
 		// for compatibility with phantom tool where a sign error existed, the index can be flipped
 		for (int i = 0; i < 3; i++)
@@ -114,7 +114,7 @@ static complex float* sens_internal_model(long D, long dims[D], unsigned long fl
         return model;
 }
 
-complex float* sens_internal_H2D8CH(long D, long dims[D], unsigned long flags)
+complex float* sens_internal_H2D8CH(bart_dim_t D, bart_dim_t dims[D], bart_flags_t flags)
 {
 	md_singleton_dims(D, dims);
 
@@ -124,7 +124,7 @@ complex float* sens_internal_H2D8CH(long D, long dims[D], unsigned long flags)
 	return sens_internal_model(D, dims, flags, 8, true, sens_coeff);
 }
 
-complex float* sens_internal_H3D64CH(long D, long dims[D], unsigned long flags)
+complex float* sens_internal_H3D64CH(bart_dim_t D, bart_dim_t dims[D], bart_flags_t flags)
 {
 	md_singleton_dims(D, dims);
 
@@ -135,7 +135,7 @@ complex float* sens_internal_H3D64CH(long D, long dims[D], unsigned long flags)
 	return sens_internal_model(D, dims, flags, 64, true, sens64_coeff);
 }
 
-static complex double simfun_tripoly(const void* v, const long C, const float pos[])
+static complex double simfun_tripoly(const void* v, const bart_dim_t C, const float pos[])
 {
 	const struct coil_opts* copts = v;
 	struct tri_poly* t = copts->data;
@@ -143,7 +143,7 @@ static complex double simfun_tripoly(const void* v, const long C, const float po
 	return (copts->kspace ? ktripoly : xtripoly)(t, C, posd);
 }
 
-static void cnstr_H2D8CH(long D, struct coil_opts* copts, bool legacy_fov)
+static void cnstr_H2D8CH(bart_dim_t D, struct coil_opts* copts, bool legacy_fov)
 {
 	copts->data = xmalloc(sizeof(struct tri_poly));
 	struct tri_poly* t = copts->data;
@@ -166,7 +166,7 @@ static void cnstr_H2D8CH(long D, struct coil_opts* copts, bool legacy_fov)
 	copts->dstr = dstr_tripoly;
 }
 
-static void cnstr_H3D64CH(long D, struct coil_opts* copts, bool legacy_fov)
+static void cnstr_H3D64CH(bart_dim_t D, struct coil_opts* copts, bool legacy_fov)
 {
 	copts->data = xmalloc(sizeof(struct tri_poly));
 	struct tri_poly* t = copts->data;
@@ -193,7 +193,7 @@ static void cnstr_H3D64CH(long D, struct coil_opts* copts, bool legacy_fov)
 	copts->dstr = dstr_tripoly;
 }
 
-static complex double simfun_nocoil_x(const void* v, const long C, const float pos[])
+static complex double simfun_nocoil_x(const void* v, const bart_dim_t C, const float pos[])
 {
 	(void) v;
 	(void) C;
@@ -201,7 +201,7 @@ static complex double simfun_nocoil_x(const void* v, const long C, const float p
 	return 1;
 }
 
-static complex double simfun_nocoil_k(const void* v, const long C, const float pos[])
+static complex double simfun_nocoil_k(const void* v, const bart_dim_t C, const float pos[])
 {
 	(void) v;
 	(void) C;
@@ -213,7 +213,7 @@ static complex double simfun_nocoil_k(const void* v, const long C, const float p
 	return 0;
 }
 
-static void cnstr_NOCOIL(long D, struct coil_opts* copts, bool legacy_fov)
+static void cnstr_NOCOIL(bart_dim_t D, struct coil_opts* copts, bool legacy_fov)
 {
 	(void) D;
 	(void) legacy_fov;
@@ -222,7 +222,7 @@ static void cnstr_NOCOIL(long D, struct coil_opts* copts, bool legacy_fov)
 	copts->dstr = dstr_tripoly;
 }
 
-void cnstr_coils(long D, struct coil_opts* copts, bool legacy_fov)
+void cnstr_coils(bart_dim_t D, struct coil_opts* copts, bool legacy_fov)
 {
 	switch (copts->ctype) {
 
@@ -246,9 +246,9 @@ void cnstr_coils(long D, struct coil_opts* copts, bool legacy_fov)
 	}
 }
 
-void get_position(long D, float p[4], const long pos[D], const long gdims[D], const float* grid)
+void get_position(bart_dim_t D, float p[4], const bart_dim_t pos[D], const bart_dim_t gdims[D], const float* grid)
 {
-	long poss[D];
+	bart_dim_t poss[D];
 	md_copy_dims(D, poss, pos);
 	poss[0] = 0;
 	// shift grid index by one (constant over coil dim)
@@ -259,9 +259,9 @@ void get_position(long D, float p[4], const long pos[D], const long gdims[D], co
 		p[poss[0]] = MD_ACCESS(D, MD_STRIDES(D, gdims, FL_SIZE), poss, grid);
 }
 
-complex double* sample_coils(long D, long sdims[D], const long gdims[D], const float* grid, const struct coil_opts* copts)
+complex double* sample_coils(bart_dim_t D, bart_dim_t sdims[D], const bart_dim_t gdims[D], const float* grid, const struct coil_opts* copts)
 {
-	const long* gdimsp = gdims; // clang
+	const bart_dim_t* gdimsp = gdims; // clang
 
 	md_singleton_dims(D, sdims);
 
@@ -272,7 +272,7 @@ complex double* sample_coils(long D, long sdims[D], const long gdims[D], const f
 
 	complex double* sens = md_alloc(D, sdims, CDL_SIZE);
 
-	NESTED(complex double, fun, (const long pos[]))
+	NESTED(complex double, fun, (const bart_dim_t pos[]))
 	{
 		float p[4];
 		get_position(D, p, pos, gdimsp, grid);
@@ -286,7 +286,7 @@ complex double* sample_coils(long D, long sdims[D], const long gdims[D], const f
 
 // compute trajectory (k-space) or grid (x-space) over which sensitivities are computed
 // for k-space, the support of the fourier trafo of the sensitivities is used
-float* create_senstraj(long D, long gdims[D], struct grid_opts* gopts, struct coil_opts* copts)
+float* create_senstraj(bart_dim_t D, bart_dim_t gdims[D], struct grid_opts* gopts, struct coil_opts* copts)
 {
 	if (!gopts->kspace)
 		return compute_grid(D, gdims, gopts, NULL, NULL);

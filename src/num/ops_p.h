@@ -2,6 +2,7 @@
 #ifndef _OPS_P_H
 #define _OPS_P_H
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 struct operator_data_s;

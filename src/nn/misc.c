@@ -17,7 +17,7 @@
 #include "misc.h"
 
 
-void onehotenc_to_index(int N, const long odims[N], complex float* dst, const long idims[N], const complex float* src)
+void onehotenc_to_index(int N, const bart_dim_t odims[N], complex float* dst, const bart_dim_t idims[N], const complex float* src)
 {
 	int class_index = -1;
 
@@ -32,21 +32,21 @@ void onehotenc_to_index(int N, const long odims[N], complex float* dst, const lo
 
 	assert(-1 != class_index);
 
-	long num_classes = idims[class_index];
+	bart_dim_t num_classes = idims[class_index];
 
-	long ostrs[N];
-	long istrs[N];
-	long pos[N];
+	bart_stride_t ostrs[N];
+	bart_stride_t istrs[N];
+	bart_dim_t pos[N];
 
 	md_calc_strides(N, ostrs, odims, CFL_SIZE);
 	md_calc_strides(N, istrs, idims, CFL_SIZE);
 	md_singleton_strides(N, pos);
 
 	do {
-		long tpos [N];
+		bart_dim_t tpos [N];
 		md_copy_dims(N, tpos, pos);
 
-		long index = 0;
+		bart_dim_t index = 0;
 		bool double_max = false;
 		float max_val = crealf(MD_ACCESS(N, istrs, tpos, src));
 
@@ -73,10 +73,10 @@ void onehotenc_to_index(int N, const long odims[N], complex float* dst, const lo
 
 		MD_ACCESS(N, ostrs, pos, dst) = index;
 
-	} while (md_next(N, odims, ~0UL, pos));
+	} while (md_next(N, odims, ~UINT64_C(0), pos));
 }
 
-void index_to_onehotenc(int N, const long odims[N], complex float* dst, const long idims[N], const complex float* src)
+void index_to_onehotenc(int N, const bart_dim_t odims[N], complex float* dst, const bart_dim_t idims[N], const complex float* src)
 {
 	int class_index = -1;
 
@@ -91,11 +91,11 @@ void index_to_onehotenc(int N, const long odims[N], complex float* dst, const lo
 
 	assert(-1 != class_index);
 
-	long num_classes = odims[class_index];
+	bart_dim_t num_classes = odims[class_index];
 
-	long ostrs[N];
-	long istrs[N];
-	long pos[N];
+	bart_stride_t ostrs[N];
+	bart_stride_t istrs[N];
+	bart_dim_t pos[N];
 
 	md_calc_strides(N, ostrs, odims, CFL_SIZE);
 	md_calc_strides(N, istrs, idims, CFL_SIZE);
@@ -104,7 +104,7 @@ void index_to_onehotenc(int N, const long odims[N], complex float* dst, const lo
 	md_clear(N, odims, dst, CFL_SIZE);
 
 	do {
-		long tpos [N];
+		bart_dim_t tpos [N];
 		md_copy_dims(N, tpos, pos);
 		tpos[class_index] = lroundf(MD_ACCESS(N, istrs, tpos, src));
 
@@ -113,17 +113,17 @@ void index_to_onehotenc(int N, const long odims[N], complex float* dst, const lo
 
 		MD_ACCESS(N, ostrs, tpos, dst) = 1.;
 
-	} while (md_next(N, idims, ~0UL, pos));
+	} while (md_next(N, idims, ~UINT64_C(0), pos));
 }
 
 
-void onehotenc_set_max_to_one(int N, const long dims[N], int class_index, complex float* dst, const complex float* src)
+void onehotenc_set_max_to_one(int N, const bart_dim_t dims[N], int class_index, complex float* dst, const complex float* src)
 {
-	long bdims[N];
+	bart_dim_t bdims[N];
 	md_select_dims(N, ~MD_BIT(class_index), bdims, dims);
 
-	long strs[N];
-	long bstrs[N];
+	bart_stride_t strs[N];
+	bart_stride_t bstrs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 	md_calc_strides(N, bstrs, bdims, CFL_SIZE);
 
@@ -142,7 +142,7 @@ void onehotenc_set_max_to_one(int N, const long dims[N], int class_index, comple
 }
 
 
-float onehotenc_accuracy(int N, const long dims[N], int class_index, const complex float* cmp, const complex float* ref)
+float onehotenc_accuracy(int N, const bart_dim_t dims[N], int class_index, const complex float* cmp, const complex float* ref)
 {
 	complex float* tmp_cmp = md_alloc_sameplace(N, dims, CFL_SIZE, cmp);
 	complex float* tmp_ref = md_alloc_sameplace(N, dims, CFL_SIZE, ref);
@@ -158,9 +158,9 @@ float onehotenc_accuracy(int N, const long dims[N], int class_index, const compl
 	return 1. - result;
 }
 
-void onehotenc_confusion_matrix(int N, const long dims[N], int class_index, complex float* dst, const complex float* pred, const complex float* ref)
+void onehotenc_confusion_matrix(int N, const bart_dim_t dims[N], int class_index, complex float* dst, const complex float* pred, const complex float* ref)
 {
-	long classes = dims[class_index];
+	bart_dim_t classes = dims[class_index];
 
 	complex float* tmp_pred = md_alloc_sameplace(N, dims, CFL_SIZE, pred);
 	complex float* tmp_ref = md_alloc_sameplace(N, dims, CFL_SIZE, ref);
@@ -168,10 +168,10 @@ void onehotenc_confusion_matrix(int N, const long dims[N], int class_index, comp
 	onehotenc_set_max_to_one(N, dims, class_index, tmp_pred, pred);
 	onehotenc_set_max_to_one(N, dims, class_index, tmp_ref, ref);
 
-	long tdims[N + 2];
-	long ostrs[N + 2];
-	long pstrs[N + 2];
-	long rstrs[N + 2];
+	bart_dim_t tdims[N + 2];
+	bart_stride_t ostrs[N + 2];
+	bart_stride_t pstrs[N + 2];
+	bart_stride_t rstrs[N + 2];
 
 	md_singleton_strides(N + 2, ostrs);
 	md_singleton_strides(N + 2, pstrs);
@@ -196,9 +196,9 @@ void onehotenc_confusion_matrix(int N, const long dims[N], int class_index, comp
 }
 
 
-void print_confusion_matrix(int N, const long dims[N], int class_index, const complex float* pred, const complex float* ref)
+void print_confusion_matrix(int N, const bart_dim_t dims[N], int class_index, const complex float* pred, const complex float* ref)
 {
-	long classes = dims[class_index];
+	bart_dim_t classes = dims[class_index];
 
 	complex float matrix[classes][classes];
 	onehotenc_confusion_matrix(N, dims, class_index, &matrix[0][0], pred, ref);
@@ -218,7 +218,7 @@ void print_confusion_matrix(int N, const long dims[N], int class_index, const co
 	md_free(tmp_cmp);
 	md_free(tmp_ref);
 
-	long N_pred = md_calc_size(N, dims) / classes;
+	bart_dim_t N_pred = md_calc_size(N, dims) / classes;
 	int count_char = MAX(3, snprintf(NULL, 0, "%ld", N_pred));
 
 	printf("\npred \\ ref |");
@@ -248,9 +248,9 @@ void print_confusion_matrix(int N, const long dims[N], int class_index, const co
 		printf("%-11d|", i);
 
 		for (int j = 0; j < classes; j++)
-			printf("%*ld", count_char + 1, (long)crealf(matrix[j][i]));
+			printf("%*ld", count_char + 1, (bart_dim_t)crealf(matrix[j][i]));
 
-		printf("|%*ld\n", count_char + 1, (long)crealf(pred_count[i]));
+		printf("|%*ld\n", count_char + 1, (bart_dim_t)crealf(pred_count[i]));
 	}
 
 	for (int i = 0; i < 11; i++)
@@ -271,7 +271,7 @@ void print_confusion_matrix(int N, const long dims[N], int class_index, const co
 	printf("%-11s|", "sum");
 
 	for (int i = 0; i < classes; i++)
-		printf("%*ld", count_char + 1, (long)crealf(ref_count[i]));
+		printf("%*ld", count_char + 1, (bart_dim_t)crealf(ref_count[i]));
 
 	printf("|%*ld\n", count_char + 1, N_pred);
 }

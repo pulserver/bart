@@ -2,6 +2,7 @@
 #ifndef _ITER_ITALGOS_H
 #define _ITER_ITALGOS_H
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 enum IN_TYPE { IN_UNDEFINED, IN_STATIC, IN_BATCH, IN_OPTIMIZE, IN_BATCH_GENERATOR, IN_BATCHNORM, IN_GAUSSIAN_RAND, IN_UNIFORM_RAND };
@@ -18,7 +19,7 @@ struct vec_iter_s;
 struct iter_dump_s;
 
 #ifndef MD_IS_SET
-#define MD_BIT(x) (1UL << (x))
+#define MD_BIT(x) (UINT64_C(1) << (x))
 #define MD_IS_SET(x, y)	((x) & MD_BIT(y))
 #define MD_CLEAR(x, y) ((x) & ~MD_BIT(y))
 #define MD_SET(x, y)	((x) | MD_BIT(y))
@@ -87,14 +88,14 @@ struct iter_monitor_s;
 struct monitor_iter6_s;
 
 float conjgrad(int maxiter, float l2lambda, float epsilon,
-	long N,
+	bart_dim_t N,
 	const struct vec_iter_s* vops,
 	struct iter_op_s linop,
 	float* x, const float* b,
 	struct iter_monitor_s* monitor);
 
 void conjgrad_batch(int maxiter, float l2lambda, float* l2lambda_batch, float epsilon,
-	long N, long Bi, long Bo,
+	bart_dim_t N, bart_dim_t Bi, bart_dim_t Bo,
 	const struct vec_iter_s* vops,
 	struct iter_op_s linop,
 	float* x, const float* b,
@@ -102,7 +103,7 @@ void conjgrad_batch(int maxiter, float l2lambda, float* l2lambda_batch, float ep
 
 
 void landweber(int maxiter, float epsilon, float alpha,
-	long N, long M,
+	bart_dim_t N, bart_dim_t M,
 	const struct vec_iter_s* vops,
 	struct iter_op_s op,
 	struct iter_op_s adj,
@@ -111,14 +112,14 @@ void landweber(int maxiter, float epsilon, float alpha,
 	struct iter_monitor_s* monitor);
 
 void landweber_sym(int maxiter, float epsilon, float alpha,
-	long N,
+	bart_dim_t N,
 	const struct vec_iter_s* vops,
 	struct iter_op_s op,
 	float* x, const float* b,
 	struct iter_monitor_s* monitor);
 
 void eulermaruyama(int maxiter, float alpha, float step,
-	long N,
+	bart_dim_t N,
 	const struct vec_iter_s* vops,
 	struct iter_op_s op,
 	struct iter_op_p_s* thresh,
@@ -126,25 +127,25 @@ void eulermaruyama(int maxiter, float alpha, float step,
 	struct iter_monitor_s* monitor);
 
 void eulermaruyama_precond(int maxiter, float alpha,
-	float step, long N,
+	float step, bart_dim_t N,
 	const struct vec_iter_s* vops,
 	struct iter_op_s op,
 	struct iter_op_p_s* thresh,
 	float* x, const float* b,
-	long M,
+	bart_dim_t M,
 	struct iter_op_s prec_adj,
 	struct iter_op_s prec_inormal,
 	float diag_prec,
 	int max_prec_iter,
 	float prec_tol,
-	long batchsize,
+	bart_dim_t batchsize,
 	struct iter_monitor_s* monitor);
 
 void sgd(int epochs, int batches,
 	float learning_rate, float batchnorm_momentum,
 	const float (*learning_rate_schedule)[epochs][batches],
-	int NI, long isize[NI], enum IN_TYPE in_type[NI], float* x[NI],
-	int NO, long osize[NO], enum OUT_TYPE out_type[NI],
+	int NI, bart_dim_t isize[NI], enum IN_TYPE in_type[NI], float* x[NI],
+	int NO, bart_dim_t osize[NO], enum OUT_TYPE out_type[NI],
 	int N_batch, int N_total,
 	const struct vec_iter_s* vops,
 	struct iter_nlop_s nlop,
@@ -181,7 +182,7 @@ typedef CLOSURE_TYPE(void, (struct ist_data* itrdata)) ist_continuation_t;
 
 
 void ist(int maxiter, float epsilon, float tau, bool last,
-	long N,
+	bart_dim_t N,
 	const struct vec_iter_s* vops,
 	ist_continuation_t ist_continuation,
 	struct iter_op_s op,
@@ -202,7 +203,7 @@ extern struct ravine_conf ravine_mod;
 void fista(int maxiter, float epsilon, float tau, float alpha,
 	bool last,
 	struct ravine_conf,
-	long N,
+	bart_dim_t N,
 	const struct vec_iter_s* vops,
 	ist_continuation_t ist_continuation,
 	struct iter_op_s op,
@@ -212,7 +213,7 @@ void fista(int maxiter, float epsilon, float tau, float alpha,
 
 
 void irgnm(int iter, float alpha, float alpha_min, float redu,
-	long N, long M,
+	bart_dim_t N, bart_dim_t M,
 	const struct vec_iter_s* vops,
 	struct iter_op_s op,
 	struct iter_op_s adj,
@@ -222,7 +223,7 @@ void irgnm(int iter, float alpha, float alpha_min, float redu,
 	struct iter_monitor_s* monitor);
 
 void irgnm2(int iter, float alpha, float alpha_min, float alpha0, float redu,
-	long N, long M,
+	bart_dim_t N, bart_dim_t M,
 	const struct vec_iter_s* vops,
 	struct iter_op_s op,
 	struct iter_op_s der,
@@ -233,7 +234,7 @@ void irgnm2(int iter, float alpha, float alpha_min, float alpha0, float redu,
 	struct iter_monitor_s* monitor);
 
 void levenberg_marquardt(int maxiter, int cgiter, float l2lambda, float redu, float maxreg,
-	long N, long M, long Bi, long Bo,
+	bart_dim_t N, bart_dim_t M, bart_dim_t Bi, bart_dim_t Bo,
 	const struct vec_iter_s* vops,
 	struct iter_op_s op,
 	struct iter_op_s adj,
@@ -243,7 +244,7 @@ void levenberg_marquardt(int maxiter, int cgiter, float l2lambda, float redu, fl
 	struct iter_monitor_s* monitor);
 
 void altmin(int iter, float alpha, float redu,
-	long N,
+	bart_dim_t N,
 	const struct vec_iter_s* vops,
 	int NI,
 	struct iter_nlop_s op,
@@ -254,11 +255,11 @@ void altmin(int iter, float alpha, float redu,
 void pocs(int maxiter,
 	int D, struct iter_op_p_s proj_ops[__VLA(D)],
 	const struct vec_iter_s* vops,
-	long N, float* x,
+	bart_dim_t N, float* x,
 	struct iter_monitor_s* monitor);
 
 double power(int maxiter,
-	long N,
+	bart_dim_t N,
 	const struct vec_iter_s* vops,
 	struct iter_op_s op,
 	float* u, float*b);
@@ -266,7 +267,7 @@ double power(int maxiter,
 void chambolle_pock(float alpha, int maxiter, float epsilon, float tau, float sigma,
 	float sigma_tau_ratio, float theta,
 	float decay, bool adapt_stepsize,
-	int O, long N, long M[O],
+	int O, bart_dim_t N, bart_dim_t M[O],
 	const struct vec_iter_s* vops,
 	struct iter_op_s op_norm,
 	struct iter_op_s op_forw[O],
@@ -276,8 +277,8 @@ void chambolle_pock(float alpha, int maxiter, float epsilon, float tau, float si
 	float* x, const float* xadj,
 	struct iter_monitor_s* monitor);
 
-void iPALM(	long NI, long isize[__VLA(NI)], enum IN_TYPE in_type[__VLA(NI)], float* x[__VLA(NI)], float* x_old[__VLA(NI)],
-		long NO, long osize[__VLA(NO)], enum OUT_TYPE out_type[__VLA(NO)],
+void iPALM(	bart_dim_t NI, bart_dim_t isize[__VLA(NI)], enum IN_TYPE in_type[__VLA(NI)], float* x[__VLA(NI)], float* x_old[__VLA(NI)],
+		bart_dim_t NO, bart_dim_t osize[__VLA(NO)], enum OUT_TYPE out_type[__VLA(NO)],
 		int numbatches, int epoch_start, int epoch_end,
 		const struct vec_iter_s* vops,
 		float alpha[__VLA(NI)], float beta[__VLA(NI)], bool convex[__VLA(NI)], bool trivial_stepsize, bool reduce_momentum,

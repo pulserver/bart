@@ -2,6 +2,7 @@
 #ifndef _MRI2_H
 #define _MRI2_H
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 #ifndef DIMS

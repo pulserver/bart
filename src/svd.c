@@ -46,13 +46,13 @@ int main_svd(int argc, char* argv[argc])
 
 
 	int N = 2;
-	long dims[N];
+	bart_dim_t dims[N];
 
 	complex float* in = load_cfl(in_file, N, dims);
 
-	long dimsU[2] = { dims[0], econ ? MIN(dims[0], dims[1]) : dims[0] };
-	long dimsS[2] = { MIN(dims[0], dims[1]), 1 };
-	long dimsVH[2] = { econ ? MIN(dims[0], dims[1]) : dims[1], dims[1] };
+	bart_dim_t dimsU[2] = { dims[0], econ ? MIN(dims[0], dims[1]) : dims[0] };
+	bart_dim_t dimsS[2] = { MIN(dims[0], dims[1]), 1 };
+	bart_dim_t dimsVH[2] = { econ ? MIN(dims[0], dims[1]) : dims[1], dims[1] };
 
 	complex float* U = create_cfl(U_file, N, dimsU);
 	complex float* S = create_cfl(S_file, N, dimsS);

@@ -2,6 +2,7 @@
 #ifndef _SIGNALS_H
 #define _SIGNALS_H 1
 
+#include "misc/dimtypes.h"
 #include <complex.h>
 
 
@@ -32,7 +33,7 @@ struct signal_model {
 	bool ir_ss;
 	enum fat_spec fat_spec;
         float time_T1relax;
-        long Hbeats;
+        bart_dim_t Hbeats;
 	bool single_repetition;
 	bool short_tr_LL_approx;
 	int freq_samples;

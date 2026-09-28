@@ -71,7 +71,7 @@ static void norm_inv_alloc(struct norm_inv_s* d, const void* ref)
 }
 
 
-static void norm_inv_set_ops(const struct norm_inv_s* d, unsigned long der_flag)
+static void norm_inv_set_ops(const struct norm_inv_s* d, bart_flags_t der_flag)
 {
 	complex float* tmp_out = md_alloc_sameplace(d->dom[0]->N, d->dom[0]->dims, CFL_SIZE, d->in_args[0]);
 
@@ -168,7 +168,7 @@ static void norm_inv_fun(const nlop_data_t* _data, int Narg, complex float* args
 
 	md_copy(d->dom[0]->N, d->dom[0]->dims, d->in_args[0], dst, CFL_SIZE);
 
-	unsigned long der_flags = 0;
+	bart_flags_t der_flags = 0;
 
 	for (int i = 0; i < d->II; i++)
 		if (nlop_der_requested(_data, i, 0))
@@ -381,8 +381,8 @@ const struct nlop_s* norm_inv_create(struct nlop_norm_inv_conf* conf, const stru
 		NI = MAX(NI, nlop_generic_domain(normal_op, i)->N);
 
 
-	long nl_odims[OO][NO];
-	long nl_idims[II][NI];
+	bart_dim_t nl_odims[OO][NO];
+	bart_dim_t nl_idims[II][NI];
 
 	nlop_der_fun_t der[II][OO];
 	nlop_der_fun_t adj[II][OO];
@@ -411,14 +411,14 @@ const struct nlop_s* norm_inv_create(struct nlop_norm_inv_conf* conf, const stru
 }
 
 
-const struct nlop_s* norm_inv_lambda_create(struct nlop_norm_inv_conf* conf, const struct nlop_s* normal_op, unsigned long lflags)
+const struct nlop_s* norm_inv_lambda_create(struct nlop_norm_inv_conf* conf, const struct nlop_s* normal_op, bart_flags_t lflags)
 {
 	int II = nlop_get_nr_in_args(normal_op);
 	auto iov = nlop_generic_domain(normal_op, 0);
 
 	int N = iov->N;
-	long dims[N];
-	long ldims[N];
+	bart_dim_t dims[N];
+	bart_dim_t ldims[N];
 
 	md_copy_dims(N, dims, iov->dims);
 	md_select_dims(N, lflags, ldims, dims);
@@ -437,7 +437,7 @@ const struct nlop_s* norm_inv_lambda_create(struct nlop_norm_inv_conf* conf, con
 }
 
 
-const struct nlop_s* norm_inv_lop_lambda_create(struct nlop_norm_inv_conf* conf, const struct linop_s* lop, unsigned long lflags)
+const struct nlop_s* norm_inv_lop_lambda_create(struct nlop_norm_inv_conf* conf, const struct linop_s* lop, bart_flags_t lflags)
 {
 	struct nlop_norm_inv_conf tconf = conf ? *conf : nlop_norm_inv_default;
 	tconf.store_nlop = true;
@@ -505,8 +505,8 @@ const struct nlop_s* nlop_maxeigen_create(const struct nlop_s* normal_op)
 		NI = MAX(NI, nlop_generic_domain(normal_op, i + 1)->N);
 
 
-	long nl_odims[OO][NO];
-	long nl_idims[II ? II : 1][NI];
+	bart_dim_t nl_odims[OO][NO];
+	bart_dim_t nl_idims[II ? II : 1][NI];
 
 
 	md_singleton_dims(NO, nl_odims[0]);

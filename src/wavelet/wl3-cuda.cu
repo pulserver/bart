@@ -19,13 +19,13 @@
 
 struct ldim3 {
 
-	unsigned long x;
-	unsigned long y;
-	unsigned long z;
+	uint64_t x;
+	uint64_t y;
+	uint64_t z;
 };
 
 
-__device__ long Wdot(ldim3 a, ldim3 b)
+__device__ bart_dim_t Wdot(ldim3 a, ldim3 b)
 {
 	return a.x * b.x + a.y * b.y + a.z * b.z;
 }
@@ -118,13 +118,13 @@ __global__ void kern_up3(ldim3 dims, ldim3 ostr, cuFloatComplex* out, ldim3 istr
 
 // extern "C" size_t cuda_shared_mem;
 
-extern "C" void wl3_cuda_down3(const long dims[3], const long out_str[3], _Complex float* out, const long in_str[3], const _Complex float* in, unsigned int flen, const float filter[__VLA(flen)])
+extern "C" void wl3_cuda_down3(const bart_dim_t dims[3], const bart_stride_t out_str[3], _Complex float* out, const bart_stride_t in_str[3], const _Complex float* in, unsigned int flen, const float filter[__VLA(flen)])
 {
-	struct ldim3 dims3 = { (unsigned long)dims[0], (unsigned long)dims[1], (unsigned long)dims[2] };
+	struct ldim3 dims3 = { (uint64_t)dims[0], (uint64_t)dims[1], (uint64_t)dims[2] };
 	struct ldim3 ostrs = { out_str[0] / CFL_SIZE, out_str[1] / CFL_SIZE, out_str[2] / CFL_SIZE };
 	struct ldim3 istrs = { in_str[0] / CFL_SIZE, in_str[1] / CFL_SIZE, in_str[2] / CFL_SIZE };
 
-	long d1 = bandsize(dims[1], flen);
+	bart_dim_t d1 = bandsize(dims[1], flen);
 
 	int T = 8;
 	dim3 th(T, T, T);
@@ -135,9 +135,9 @@ extern "C" void wl3_cuda_down3(const long dims[3], const long out_str[3], _Compl
 	CUDA_KERNEL_ERROR;
 }
 
-extern "C" void wl3_cuda_up3(const long dims[3], const long out_str[3], _Complex float* out, const long in_str[3],  const _Complex float* in, unsigned int flen, const float filter[__VLA(flen)])
+extern "C" void wl3_cuda_up3(const bart_dim_t dims[3], const bart_stride_t out_str[3], _Complex float* out, const bart_stride_t in_str[3],  const _Complex float* in, unsigned int flen, const float filter[__VLA(flen)])
 {
-	ldim3 dims3 = { (unsigned long)dims[0], (unsigned long)dims[1], (unsigned long)dims[2] };
+	ldim3 dims3 = { (uint64_t)dims[0], (uint64_t)dims[1], (uint64_t)dims[2] };
 	ldim3 ostrs = { out_str[0] / CFL_SIZE, out_str[1] / CFL_SIZE, out_str[2] / CFL_SIZE };
 	ldim3 istrs = { in_str[0] / CFL_SIZE, in_str[1] / CFL_SIZE, in_str[2] / CFL_SIZE };
 

@@ -1,3 +1,4 @@
+#include "misc/dimtypes.h"
 #include "networks/cnn.h"
 
 struct tf_shared_graph_s;
@@ -13,4 +14,4 @@ struct network_tensorflow_s {
 
 extern struct network_tensorflow_s network_tensorflow_default;
 
-extern nn_t network_tensorflow_create(const struct network_s* config, int NO, const long odims[NO], int NI, const long idims[NI], enum NETWORK_STATUS status);
+extern nn_t network_tensorflow_create(const struct network_s* config, int NO, const bart_dim_t odims[NO], int NI, const bart_dim_t idims[NI], enum NETWORK_STATUS status);

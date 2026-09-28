@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include <complex.h>
 
 struct moba_conf;

@@ -37,8 +37,8 @@ int main_calmat(int argc, char* argv[argc])
 		ARG_OUTFILE(true, &out_file, "calibration_matrix"),
 	};
 
-	long calsize[3] = { 24, 24, 24 };
-	long kdims[3] = { 5, 5, 5 };
+	bart_dim_t calsize[3] = { 24, 24, 24 };
+	bart_dim_t kdims[3] = { 5, 5, 5 };
 	bool calcen = false;
 
 	const struct opt_s opts[] = {
@@ -54,7 +54,7 @@ int main_calmat(int argc, char* argv[argc])
 
 
 	int N = DIMS;
-	long ksp_dims[N];
+	bart_dim_t ksp_dims[N];
 
 	complex float* in_data = load_cfl(in_file, N, ksp_dims);
 
@@ -63,7 +63,7 @@ int main_calmat(int argc, char* argv[argc])
 
 
 
-	long cal_dims[N];
+	bart_dim_t cal_dims[N];
 	complex float* cal_data = NULL;
 
 	if (!calcen) {
@@ -98,7 +98,7 @@ int main_calmat(int argc, char* argv[argc])
 	unmap_cfl(N, ksp_dims, in_data);
 
 
-	long calmat_dims[N];
+	bart_dim_t calmat_dims[N];
 	md_singleton_dims(N, calmat_dims);
 	complex float* cm = calibration_matrix(calmat_dims, kdims, cal_dims, cal_data);
 	md_free(cal_data);

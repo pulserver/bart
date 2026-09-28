@@ -29,24 +29,24 @@
 // vertices listed counterclockwise when looked on from outside (right-hand rule).
 //
 // convert vertices in array to contiguous fortran data format and compute normal vector
-static double* stl_internal_model(long dims[3], const double (*arr)[][3][3])
+static double* stl_internal_model(bart_dim_t dims[3], const double (*arr)[][3][3])
 {
         if (3 != dims[0] || 4 != dims[1])
                 error("dimensions do not match dimensions for stl format");
 
-        long strs[3];
+        bart_stride_t strs[3];
         md_calc_strides(3, strs, dims, DL_SIZE);
 
         double* model = md_alloc(3, dims, DL_SIZE);
 
-        long pos[3] = { };
+        bart_dim_t pos[3] = { };
 
         do {
                 // Normal vector is computed afterwards.
                 if (3 > pos[1])
                         MD_ACCESS(3, strs, pos, model) = (*arr)[pos[2]][pos[1]][pos[0]];
 
-        } while (md_next(3, dims, ~0UL, pos));
+        } while (md_next(3, dims, ~UINT64_C(0), pos));
 
         stl_compute_normals(dims, model);
 
@@ -69,7 +69,7 @@ static const double stl_hexahedron[12][3][3] = {
         { { -0.45, -0.45, -0.45 }, { 0.45, 0.45, -0.45 }, { 0.45, -0.45, -0.45 } },
 };
 
-double* stl_internal_hexahedron(long dims[3])
+double* stl_internal_hexahedron(bart_dim_t dims[3])
 {
         dims[0] = 3;
         dims[1] = 4;
@@ -87,7 +87,7 @@ static const double stl_tetrahedron[4][3][3] = {
         { { -0.45, -0.45, 0.45 }, { -0.45, 0.45, -0.45 }, { 0.45, -0.45, -0.45 } },
 };
 
-double* stl_internal_tetrahedron(long dims[3])
+double* stl_internal_tetrahedron(bart_dim_t dims[3])
 {
         dims[0] = 3;
         dims[1] = 4;

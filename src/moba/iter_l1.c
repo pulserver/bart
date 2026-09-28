@@ -63,12 +63,12 @@ struct T1inv_s {
 	const struct nlop_s* nlop;
 	const struct mdb_irgnm_l1_conf* conf;
 
-	long size_x;
-	long size_y;
+	bart_dim_t size_x;
+	bart_dim_t size_y;
 
 	float alpha;
 
-	const long* dims;
+	const bart_dim_t* dims;
 
 	bool first_iter;
 	int outer_iter;
@@ -101,16 +101,16 @@ static void normal(iter_op_data* _data, float* _dst, const float* _src)
 	assert(dst != src);
 #endif
 
-	long img_dims[DIMS];
+	bart_dim_t img_dims[DIMS];
 	md_select_dims(DIMS, ~COIL_FLAG, img_dims, data->dims);
 
-	long img_strs[DIMS];
+	bart_stride_t img_strs[DIMS];
 	md_calc_strides(DIMS, img_strs, img_dims, CFL_SIZE);
 
-	long map_dims[DIMS];
+	bart_dim_t map_dims[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, map_dims, img_dims);
 
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 
 	for (pos[COEFF_DIM] = 0; pos[COEFF_DIM] < img_dims[COEFF_DIM]; pos[COEFF_DIM]++) {
 
@@ -124,7 +124,7 @@ static void normal(iter_op_data* _data, float* _dst, const float* _src)
 	complex float* col_dst = dst + md_calc_size(DIMS, img_dims);
 	const complex float* col_src = src + md_calc_size(DIMS, img_dims);
 
-	long col_size = data->size_x / 2 - md_calc_size(DIMS, img_dims);
+	bart_dim_t col_size = data->size_x / 2 - md_calc_size(DIMS, img_dims);
 
 	if (0 == col_size)
 		return;
@@ -142,16 +142,16 @@ static void pos_value(iter_op_data* _data, float* dst, const float* src)
 	auto data = CAST_DOWN(T1inv_s, _data);
 
 	// filter coils here, as we want to leave the coil sensitivity part untouched
-	long img_dims[DIMS];
+	bart_dim_t img_dims[DIMS];
 	md_select_dims(DIMS, ~COIL_FLAG, img_dims, data->dims);
 
-	long strs[DIMS];
+	bart_stride_t strs[DIMS];
 	md_calc_strides(DIMS, strs, img_dims, CFL_SIZE);
 
-	long dims1[DIMS];
+	bart_dim_t dims1[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, dims1, img_dims);
 
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 
 	do {
 		if (!MD_IS_SET(data->conf->constrained_maps, pos[COEFF_DIM]))
@@ -326,7 +326,7 @@ static void inverse_admm(iter_op_data* _data, float alpha, float* dst, const flo
 	admm_plan.prox_ops = a_prox_ops;
 
 
-	long z_dims[D ?: 1];
+	bart_dim_t z_dims[D ?: 1];
 
 	for (int i = 0; i < D; i++)
 		z_dims[i] = 2 * md_calc_size(linop_codomain(trafos[i])->N, linop_codomain(trafos[i])->dims);
@@ -347,8 +347,8 @@ static void inverse_admm(iter_op_data* _data, float alpha, float* dst, const flo
 static const struct operator_p_s* create_prox(const long img_dims[DIMS], unsigned long wav_flags, unsigned long jflag, float lambda)
 {
 	bool randshift = true;
-	long minsize[DIMS] = { [0 ... DIMS - 1] = 1 };
-	unsigned long wflags = 0;
+	bart_dim_t minsize[DIMS] = { [0 ... DIMS - 1] = 1 };
+	bart_flags_t wflags = 0;
 
 	for (int i = 0; i < DIMS; i++) {
 
@@ -410,7 +410,7 @@ static void T1inv_del(const operator_data_t* _data)
 }
 
 
-static const struct operator_p_s* T1inv_p_create(const struct mdb_irgnm_l1_conf* conf, const long dims[DIMS], struct nlop_s* nlop)
+static const struct operator_p_s* T1inv_p_create(const struct mdb_irgnm_l1_conf* conf, const bart_dim_t dims[DIMS], struct nlop_s* nlop)
 {
 	PTR_ALLOC(struct T1inv2_s, data);
 	SET_TYPEID(T1inv2_s, data);
@@ -422,10 +422,10 @@ static const struct operator_p_s* T1inv_p_create(const struct mdb_irgnm_l1_conf*
 	long M = 2 * md_calc_size(cd->N, cd->dims);
 	long N = 2 * md_calc_size(dm->N, dm->dims);
 
-	long* ndims = *TYPE_ALLOC(long[DIMS]);
+	bart_dim_t* ndims = *TYPE_ALLOC(bart_dim_t[DIMS]);
 	md_copy_dims(DIMS, ndims, dims);
 
-	long img_dims[DIMS];
+	bart_dim_t img_dims[DIMS];
 	md_select_dims(DIMS, ~COIL_FLAG, img_dims, dims);
 
 	long red_dims[DIMS];
@@ -475,7 +475,7 @@ struct pu_data {
 	iter_op_data super;
 
 	int N;
-	const long* dims;
+	const bart_dim_t* dims;
 	complex float* tmp;
 	int steps;
 	int pusteps;
@@ -501,16 +501,16 @@ static void partial_update(iter_op_data* _data, float* _dst, const float* _src)
 
 
 void mdb_irgnm_l1(const struct mdb_irgnm_l1_conf* conf,
-	const long dims[DIMS],
+	const bart_dim_t dims[DIMS],
 	struct nlop_s* nlop,
-	long N, float* dst, float* dst_ref,
-	long M, const float* src)
+	bart_dim_t N, float* dst, float* dst_ref,
+	bart_dim_t M, const float* src)
 {
 	auto cd = nlop_codomain(nlop);
 	auto dm = nlop_domain(nlop);
 
-	assert((long)sizeof(float[M]) == md_calc_size(cd->N, cd->dims) * (long)cd->size);
-	assert((long)sizeof(float[N]) == md_calc_size(dm->N, dm->dims) * (long)dm->size);
+	assert((bart_stride_t)sizeof(float[M]) == md_calc_size(cd->N, cd->dims) * (bart_dim_t)cd->size);
+	assert((bart_stride_t)sizeof(float[N]) == md_calc_size(dm->N, dm->dims) * (bart_dim_t)dm->size);
 
 	const struct operator_p_s* inv_op = NULL;
 

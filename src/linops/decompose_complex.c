@@ -30,8 +30,8 @@ struct decompose_complex_s {
 	int D;
 	int K;
 
-	const long* idims;
-	const long* odims;
+	const bart_dim_t* idims;
+	const bart_dim_t* odims;
 
 	complex float* buffer;
 };
@@ -43,7 +43,7 @@ static void decompose_complex_fwd(const linop_data_t* _data, complex float* dst,
 	const auto data = CAST_DOWN(decompose_complex_s, _data);
 
 	#pragma omp parallel for
-	for (long k = 0; k < data->K; k ++)
+	for (bart_dim_t k = 0; k < data->K; k ++)
 		dst[k] = creal(src[k]) + 1.0i * cimag(src[k + data->K]);
 }
 
@@ -69,27 +69,27 @@ static void decompose_complex_free(const linop_data_t* _data)
 	xfree(data);
 }
 
-struct linop_s* linop_decompose_complex_create(int N, int D, const long dims[N])
+struct linop_s* linop_decompose_complex_create(int N, int D, const bart_dim_t dims[N])
 {
 	assert(D < N);
 	for (int k = D; k < N; k++)
 		assert(1 == dims[k]);
 
-	long K = 1;
+	bart_dim_t K = 1;
 	for (int k = 0; k < D; k++)
 		K = K * dims[k];
 
 	PTR_ALLOC(struct decompose_complex_s, data);
 	SET_TYPEID(decompose_complex_s, data);
 
-	long idims[N];
+	bart_dim_t idims[N];
 	md_copy_dims(N, idims, dims);
 	idims[D] = 2;
-	long odims[N];
+	bart_dim_t odims[N];
 	md_copy_dims(N, odims, dims);
 
-	PTR_ALLOC(long[N], idims_alloc);
-	PTR_ALLOC(long[N], odims_alloc);
+	PTR_ALLOC(bart_dim_t[N], idims_alloc);
+	PTR_ALLOC(bart_dim_t[N], odims_alloc);
 
 	md_copy_dims(N, *idims_alloc, idims);
 	md_copy_dims(N, *odims_alloc, odims);

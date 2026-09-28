@@ -94,12 +94,12 @@ static void adadelta_update_free(const operator_data_t* _data)
 	xfree(d);
 }
 
-const struct operator_p_s* operator_adadelta_update_create(int N, const long dims[N], float rho, float epsilon)
+const struct operator_p_s* operator_adadelta_update_create(int N, const bart_dim_t dims[N], float rho, float epsilon)
 {
 	PTR_ALLOC(struct adadelta_update_s, data);
 	SET_TYPEID(adadelta_update_s, data);
 
-	long rdims[N + 1];
+	bart_dim_t rdims[N + 1];
 	rdims[0] = 2;
 	md_copy_dims(N, rdims + 1, dims);
 
@@ -185,12 +185,12 @@ static void adam_update_free(const operator_data_t* _data)
 	xfree(d);
 }
 
-const struct operator_p_s* operator_adam_update_create(int N, const long dims[N], float beta1, float beta2, float epsilon, long reset_mod)
+const struct operator_p_s* operator_adam_update_create(int N, const bart_dim_t dims[N], float beta1, float beta2, float epsilon, bart_dim_t reset_mod)
 {
 	PTR_ALLOC(struct adam_update_s, data);
 	SET_TYPEID(adam_update_s, data);
 
-	long rdims[N + 1];
+	bart_dim_t rdims[N + 1];
 	rdims[0] = 2;
 	md_copy_dims(N, rdims + 1, dims);
 
@@ -247,12 +247,12 @@ static void clip_free(const operator_data_t* _data)
 	xfree(d);
 }
 
-const struct operator_s* operator_clip_create(int N, const long dims[N], float clipnorm, float clipval)
+const struct operator_s* operator_clip_create(int N, const bart_dim_t dims[N], float clipnorm, float clipval)
 {
 	PTR_ALLOC(struct clip_s, data);
 	SET_TYPEID(clip_s, data);
 
-	long rdims[N + 1];
+	bart_dim_t rdims[N + 1];
 	rdims[0] = 2;
 	md_copy_dims(N, rdims + 1, dims);
 
@@ -291,12 +291,12 @@ static void sgd_update_free(const operator_data_t* _data)
 	xfree(d);
 }
 
-const struct operator_p_s* operator_sgd_update_create(int N, const long dims[N])
+const struct operator_p_s* operator_sgd_update_create(int N, const bart_dim_t dims[N])
 {
 	PTR_ALLOC(struct sgd_update_s, data);
 	SET_TYPEID(sgd_update_s, data);
 
-	long rdims[N + 1];
+	bart_dim_t rdims[N + 1];
 	rdims[0] = 2;
 	md_copy_dims(N, rdims + 1, dims);
 

@@ -22,7 +22,7 @@ static bool test_conv_generic(enum conv_mode mode, enum conv_type type, int N, c
 	complex float O[N];
 
 	conv(1, 1u, type, mode,
-		(long[]){ N }, O, (long[]){ 8 }, T, (long[]){ 3 }, K);
+		(bart_dim_t[]){ N }, O, (bart_dim_t[]){ 8 }, T, (bart_dim_t[]){ 3 }, K);
 
 	bool ok = true;
 
@@ -107,7 +107,7 @@ static bool test_conv2_generic(enum conv_mode mode, enum conv_type type, int N, 
 	complex float O[N];
 
 	conv(1, 1u, type, mode,
-		(long[]){ N }, O, (long[]){ 8 }, T, (long[]){ 4 }, K);
+		(bart_dim_t[]){ N }, O, (bart_dim_t[]){ 8 }, T, (bart_dim_t[]){ 4 }, K);
 
 	bool ok = true;
 

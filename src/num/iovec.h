@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include <stdlib.h>
 
 #include "misc/cppwrap.h"

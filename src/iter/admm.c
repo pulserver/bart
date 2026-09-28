@@ -59,7 +59,7 @@ struct admm_normaleq_data {
 
 	iter_op_data super;
 
-	long N;
+	bart_dim_t N;
 	int num_funs;
 	struct admm_op* ops;
 
@@ -109,7 +109,7 @@ struct cg_xupdate_s {
 
 	iter_op_data super;
 
-	long N;
+	bart_dim_t N;
 	const struct vec_iter_s* vops;
 
 	int maxitercg;
@@ -147,7 +147,7 @@ static void cg_xupdate(iter_op_data* _data, float rho, float* x, const float* rh
 }
 
 
-static long sum_long_array(int N, const long a[N])
+static bart_dim_t sum_long_array(int N, const bart_dim_t a[N])
 {
 	return ((0 == N) ? 0 : (a[0] + sum_long_array(N - 1, a + 1)));
 }
@@ -167,8 +167,8 @@ static long sum_long_array(int N, const long a[N])
  * The b_i are offsets (biases) that should also be provided in admm_plan_s.
  */
 void admm(const struct admm_plan_s* plan,
-	int D, const long z_dims[D],
-	long N, float* x, const float* x_adj,
+	int D, const bart_dim_t z_dims[D],
+	bart_dim_t N, float* x, const float* x_adj,
 	const struct vec_iter_s* vops,
 	struct iter_op_s Aop,
 	struct iter_monitor_s* monitor)
@@ -424,7 +424,7 @@ void admm(const struct admm_plan_s* plan,
 
 			vops->del(GH_usum);
 
-			long M = sum_long_array(num_funs, z_dims);
+			bart_dim_t M = sum_long_array(num_funs, z_dims);
 
 			float eps_pri = plan->ABSTOL * sqrt((double)M) + plan->RELTOL * r_scaling;
 			float eps_dual = plan->ABSTOL * sqrt((double)N) + plan->RELTOL * s_scaling;

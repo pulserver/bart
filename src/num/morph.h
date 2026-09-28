@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include "num/conv.h"
 
 extern _Complex float* md_structuring_element_cube(int N, bart_dim_t dims[N], int radius, bart_flags_t flags, const void* ref);

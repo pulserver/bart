@@ -29,7 +29,7 @@ int main_upat(int argc, char* argv[argc])
 		ARG_OUTFILE(true, &out_file, "output"),
 	};
 
-	long dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t dims[DIMS] = { [0 ... DIMS - 1] = 1 };
         dims[PHS1_DIM] = 128;
 	dims[PHS2_DIM] = 128;
 
@@ -52,11 +52,11 @@ int main_upat(int argc, char* argv[argc])
 
 	complex float* pat = create_cfl(out_file, DIMS, dims);
 
-	long Y = dims[PHS1_DIM];
-	long Z = dims[PHS2_DIM];
+	bart_dim_t Y = dims[PHS1_DIM];
+	bart_dim_t Z = dims[PHS2_DIM];
 
-	for (long y = 0; y < Y; y++)
-		for (long z = 0; z < Z; z++)
+	for (bart_dim_t y = 0; y < Y; y++)
+		for (bart_dim_t z = 0; z < Z; z++)
 			pat[z * Y + y] = (   ((y % undy == 0) && (z % undz == 0))
 					  || (   (labs(2 * y - Y) < 2 * center)
 					      && (labs(2 * z - Z) < 2 * center)))  ? 1.  : 0.;

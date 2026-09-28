@@ -8,6 +8,7 @@
 
 // DO NOT CHANGE THIS HEADER !
 
+#include "misc/dimtypes.h"
 #include "misc/dllspec.h"
 #include "misc/cppwrap.h"
 
@@ -98,12 +99,12 @@ enum mode_flags {
 
 struct seq_interface_conf {
 
-	unsigned long mode;
+	bart_flags_t mode;
 
 	double tr;
-	long radial_views;
-	long slices;
-	long echoes;
+	bart_dim_t radial_views;
+	bart_dim_t slices;
+	bart_dim_t echoes;
 	double slice_thickness;
 
 	enum trigger_type trigger_type;
@@ -124,16 +125,16 @@ BARTLIB_API extern double BARTLIB_CALL seq_minimum_tr(const struct seq_config* s
 BARTLIB_API extern void BARTLIB_CALL seq_minimum_te(const struct seq_config* seq, double* min_te, double* fill_te);
 
 
-BARTLIB_API extern long BARTLIB_CALL seq_relevant_readouts_meas_time(const struct seq_config* seq);
+BARTLIB_API extern bart_dim_t BARTLIB_CALL seq_relevant_readouts_meas_time(const struct seq_config* seq);
 BARTLIB_API extern double BARTLIB_CALL seq_total_measure_time(const struct seq_config* seq);
 
 
 // conversion UI and seq_config
 BARTLIB_API extern void BARTLIB_CALL
-seq_ui_interface_loop_dims(int reverse, struct seq_config* seq, const int D, long dims[__VLA(D)]);
+seq_ui_interface_loop_dims(int reverse, struct seq_config* seq, const int D, bart_dim_t dims[__VLA(D)]);
 
 BARTLIB_API extern void BARTLIB_CALL
-seq_ui_interface_custom_params(int reverse, struct seq_config* seq, int nl, long params_long[__VLA(nl)], int nd, double params_double[__VLA(nd)]);
+seq_ui_interface_custom_params(int reverse, struct seq_config* seq, int nl, bart_dim_t params_long[__VLA(nl)], int nd, double params_double[__VLA(nd)]);
 
 BARTLIB_API extern void BARTLIB_CALL
 seq_ui_interface_standard_conf(int reverse, struct seq_config* seq, struct seq_standard_conf* std_conf);

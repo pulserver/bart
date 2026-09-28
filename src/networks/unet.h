@@ -1,3 +1,4 @@
+#include "misc/dimtypes.h"
 #include "networks/cnn.h"
 
 
@@ -30,32 +31,32 @@ struct network_unet_s {
 	network_t super;
 
 	int N;
-	long kdims[DIMS];
-	long dilations[DIMS];
+	bart_dim_t kdims[DIMS];
+	bart_dim_t dilations[DIMS];
 
-	long Nf; // number of filters (top-level)
-	long Kx; // filter size
-	long Ky; // filter size
-	long Kz; // filter size
-	long Ng; // number groups
+	bart_dim_t Nf; // number of filters (top-level)
+	bart_dim_t Kx; // filter size
+	bart_dim_t Ky; // filter size
+	bart_dim_t Kz; // filter size
+	bart_dim_t Ng; // number groups
 
-	unsigned long conv_flag;
-	unsigned long channel_flag;
-	unsigned long group_flag;
-	unsigned long batch_flag;
+	bart_flags_t conv_flag;
+	bart_flags_t channel_flag;
+	bart_flags_t group_flag;
+	bart_flags_t batch_flag;
 
-	long N_level;
+	bart_dim_t N_level;
 
 	float channel_factor; //number channels on lower level
 	float reduce_factor; //reduce resolution of lower level
 
-	long max_channels; //maximum number of channels
+	bart_dim_t max_channels; //maximum number of channels
 
-	long Nl_highest_before; //number of layers in highest level
-	long Nl_highest_after; //number of layers in highest level
-	long Nl_before; //number of layers per level
-	long Nl_after; //number of layers per level
-	long Nl_lowest; //number of layers per level
+	bart_dim_t Nl_highest_before; //number of layers in highest level
+	bart_dim_t Nl_highest_after; //number of layers in highest level
+	bart_dim_t Nl_before; //number of layers per level
+	bart_dim_t Nl_after; //number of layers per level
+	bart_dim_t Nl_lowest; //number of layers per level
 
 	bool real_constraint;
 
@@ -85,6 +86,6 @@ extern struct network_unet_s network_unet_default_reco;
 extern struct network_unet_s network_unet_default_segm;
 extern struct network_unet_s network_nnunet_default_segm;
 
-extern nn_t network_unet_create(const struct network_s* config, int NO, const long odims[NO], int NI, const long idims[NI], enum NETWORK_STATUS status);
+extern nn_t network_unet_create(const struct network_s* config, int NO, const bart_dim_t odims[NO], int NI, const bart_dim_t idims[NI], enum NETWORK_STATUS status);
 extern bool unet_is_diagonal(const struct network_s* config);
 

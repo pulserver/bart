@@ -1,3 +1,5 @@
+#include "misc/dimtypes.h"
+
 
 #ifndef NO_PNG
 extern int png_write_rgb24(const char* name, int w, int h, bart_dim_t inum, const unsigned char* buf);

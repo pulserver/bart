@@ -1,3 +1,5 @@
+#include "misc/dimtypes.h"
+
 
 struct operator_p_s;
 struct linop_s;
@@ -25,10 +27,10 @@ extern struct optreg_conf optreg_defaults;
 struct opt_reg_s;
 
 
-extern const struct operator_p_s* moba_nonneg_prox_create(int N, const long maps_dims[__VLA(N)], int coeff_dim, unsigned long nonneg_flag, float lambda);
+extern const struct operator_p_s* moba_nonneg_prox_create(int N, const bart_dim_t maps_dims[__VLA(N)], int coeff_dim, bart_flags_t nonneg_flag, float lambda);
 
 extern void help_reg_moba(void);
 
 extern bool opt_reg_moba(void* ptr, char c, const char* optarg);
 
-extern void opt_reg_moba_configure(int N, const long dims[__VLA(N)], struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], struct optreg_conf* optreg_conf);
+extern void opt_reg_moba_configure(int N, const bart_dim_t dims[__VLA(N)], struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], struct optreg_conf* optreg_conf);

@@ -2,6 +2,7 @@
 #ifndef _STREAM_H
 #define _STREAM_H 1
 
+#include "misc/dimtypes.h"
 #include <stddef.h>
 
 #include "misc/cppwrap.h"

@@ -32,7 +32,7 @@ struct iter5_altmin_s {
 
 	struct iter3_irgnm_conf* conf;
 
-	long i; // argument to minimize
+	bart_dim_t i; // argument to minimize
 };
 
 DEF_TYPEID(iter5_altmin_s);
@@ -61,7 +61,7 @@ static void altmin_inverse(iter_op_data* _o, float alpha, float* dst, const floa
 
 	const struct iovec_s* idest = nlop_generic_domain(data->nlop, data->i);
 
-	long size = 2 * md_calc_size(idest->N, idest->dims);
+	bart_dim_t size = 2 * md_calc_size(idest->N, idest->dims);
 
 	float* AHy = md_alloc_sameplace(1, MD_DIMS(size), FL_SIZE, src);
 
@@ -79,8 +79,8 @@ static void altmin_inverse(iter_op_data* _o, float alpha, float* dst, const floa
 
 void iter5_altmin(iter3_conf* _conf,
 		struct nlop_s* nlop,
-		long NI, float* dst[NI],
-		long M, const float* src,
+		bart_dim_t NI, float* dst[NI],
+		bart_dim_t M, const float* src,
 		struct iter_nlop_s cb)
 {
 	auto conf = CAST_DOWN(iter3_irgnm_conf, _conf);
@@ -89,7 +89,7 @@ void iter5_altmin(iter3_conf* _conf,
 	struct iter_op_p_s min_ops[NI];
 	struct iter5_altmin_s min_data[NI];
 
-	for(long i = 0; i < NI; ++i) {
+	for(bart_dim_t i = 0; i < NI; ++i) {
 
 		min_data[i] = (struct iter5_altmin_s){ { &TYPEID(iter5_altmin_s) }, nlop, conf, i };
 		min_ops[i] = (struct iter_op_p_s){ altmin_inverse, CAST_UP(&min_data[i]) };

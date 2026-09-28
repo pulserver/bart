@@ -1,3 +1,4 @@
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 #include <stddef.h>

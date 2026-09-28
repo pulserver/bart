@@ -53,7 +53,7 @@ static bool test_tree_sorted(void)
 	}
 
 	float* vals_sorted[N];
-	long NR;
+	bart_dim_t NR;
 
 	NR = tree_count(tree);
 	tree_to_array(tree, NR, (void**)vals_sorted);

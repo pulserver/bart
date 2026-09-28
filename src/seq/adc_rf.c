@@ -35,7 +35,7 @@ double phase_clamp(double phase)
 }
 
 
-double rf_spoiling(int D, const long pos[D], const struct seq_config* seq)
+double rf_spoiling(int D, const bart_dim_t pos[D], const struct seq_config* seq)
 {
 	double idx;
 
@@ -167,7 +167,7 @@ double adc_duration(const struct seq_config* seq)
 	return round_up_raster(seq->phys.dwell * seq->geom.baseres * (0.5 + seq->phys.asym_echo), seq->sys.raster_rf);
 }
 
-static double adc_nco_freq(double proj_angle, long chrono_slice, const struct seq_config* seq)
+static double adc_nco_freq(double proj_angle, bart_dim_t chrono_slice, const struct seq_config* seq)
 {
 	return seq->sys.gamma * 
 		(seq->geom.shift[chrono_slice][0] * ro_amplitude(seq) * sin(proj_angle)
@@ -182,8 +182,8 @@ int prep_adc(struct seq_event* adc_ev, double start, double rf_spoil_phase,
 	adc_ev->start = start;
 	adc_ev->end = adc_ev->start + adc_duration(seq);
 
-	adc_ev->adc.dwell_ns = (long)(seq->phys.dwell * 1.E9 + 0.5);
-	adc_ev->adc.columns = (long)(seq->geom.baseres * (seq->phys.asym_echo + 0.5));
+	adc_ev->adc.dwell_ns = (bart_dim_t)(seq->phys.dwell * 1.E9 + 0.5);
+	adc_ev->adc.columns = (bart_dim_t)(seq->geom.baseres * (seq->phys.asym_echo + 0.5));
 
 	adc_ev->mid = adc_ev->start + adc_time_to_echo(seq_state->pos[TE_DIM], seq);
 
@@ -217,8 +217,8 @@ int prep_adc(struct seq_event* adc_ev, double start, double rf_spoil_phase,
 		adc_ev->adc.flags |= SEQ_ADC_FLAG_DUMMY;
 	}
 
-	long zeros[DIMS] = { 0 };
-	long last_idx[DIMS];
+	bart_dim_t zeros[DIMS] = { 0 };
+	bart_dim_t last_idx[DIMS];
 	for (int i = 0; i < DIMS; i++)
 		last_idx[i] = seq->loop_dims[i] - 1;
 

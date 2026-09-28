@@ -150,7 +150,7 @@ static float intlookup(int n, const float table[n + 1], float x)
 
 
 
-void gridH(const struct grid_conf_s* conf, const long ksp_dims[4], const long trj_strs[4], const complex float* traj, const long ksp_strs[4], complex float* dst, const long grid_dims[4], const long grid_strs[4], const complex float* grid)
+void gridH(const struct grid_conf_s* conf, const bart_dim_t ksp_dims[4], const bart_stride_t trj_strs[4], const complex float* traj, const bart_stride_t ksp_strs[4], complex float* dst, const bart_dim_t grid_dims[4], const bart_stride_t grid_strs[4], const complex float* grid)
 {
 	if (grid_dims[3] != ksp_dims[3])
 		error("Adjoint gridding: ksp and grid are incompatible in dim 3 (%d != %d)!\n", ksp_dims[3], grid_dims[3]);
@@ -165,7 +165,7 @@ void gridH(const struct grid_conf_s* conf, const long ksp_dims[4], const long tr
 		return cuda_gridH(conf, ksp_dims, trj_strs, traj, ksp_strs, dst, grid_dims, grid_strs, grid);
 #endif
 
-	long C = ksp_dims[3];
+	bart_dim_t C = ksp_dims[3];
 
 	// precompute kaiser bessel table
 	kb_init(conf->beta);
@@ -174,8 +174,8 @@ void gridH(const struct grid_conf_s* conf, const long ksp_dims[4], const long tr
 	for (int ir = 0; ir < ksp_dims[1]; ir++) {
 		for (int ip = 0; ip < ksp_dims[2]; ip++) {
 
-			long it = (ir * trj_strs[1] + ip * trj_strs[2]) / (long)CFL_SIZE;
-			long ik = (ir * ksp_strs[1] + ip * ksp_strs[2]) / (long)CFL_SIZE;
+			bart_dim_t it = (ir * trj_strs[1] + ip * trj_strs[2]) / (bart_stride_t)CFL_SIZE;
+			bart_dim_t ik = (ir * ksp_strs[1] + ip * ksp_strs[2]) / (bart_stride_t)CFL_SIZE;
 
 			float pos[3];
 			pos[0] = conf->os * (creal(traj[it + 0]) + conf->shift[0]);
@@ -193,13 +193,13 @@ void gridH(const struct grid_conf_s* conf, const long ksp_dims[4], const long tr
 			grid_pointH(C, 3, grid_dims, grid_strs, pos, val, grid, conf->periodic, conf->width, kb_size, kb_table);
 
 			for (int j = 0; j < ksp_dims[3]; j++)
-				dst[j * ksp_strs[3] / (long)CFL_SIZE + ik] += val[j];
+				dst[j * ksp_strs[3] / (bart_stride_t)CFL_SIZE + ik] += val[j];
 		}
 	}
 }
 
 
-void grid(const struct grid_conf_s* conf, const long ksp_dims[4], const long trj_strs[4], const complex float* traj, const long grid_dims[4], const long grid_strs[4], complex float* grid, const long ksp_strs[4], const complex float* src)
+void grid(const struct grid_conf_s* conf, const bart_dim_t ksp_dims[4], const bart_stride_t trj_strs[4], const complex float* traj, const bart_dim_t grid_dims[4], const bart_stride_t grid_strs[4], complex float* grid, const bart_stride_t ksp_strs[4], const complex float* src)
 {
 	if (grid_dims[3] != ksp_dims[3])
 		error("Gridding: ksp and grid are incompatible in dim 3 (%d != %d)!\n", ksp_dims[3], grid_dims[3]);
@@ -214,7 +214,7 @@ void grid(const struct grid_conf_s* conf, const long ksp_dims[4], const long trj
 		return cuda_grid(conf, ksp_dims, trj_strs, traj, grid_dims, grid_strs, grid, ksp_strs, src);
 #endif
 
-	long C = ksp_dims[3];
+	bart_dim_t C = ksp_dims[3];
 
 	// precompute kaiser bessel table
 	kb_init(conf->beta);
@@ -224,8 +224,8 @@ void grid(const struct grid_conf_s* conf, const long ksp_dims[4], const long trj
 	for (int ir = 0; ir < ksp_dims[1]; ir++) {
 		for (int ip = 0; ip < ksp_dims[2]; ip++) {
 
-			long it = (ir * trj_strs[1] + ip * trj_strs[2]) / (long)CFL_SIZE;
-			long ik = (ir * ksp_strs[1] + ip * ksp_strs[2]) / (long)CFL_SIZE;
+			bart_dim_t it = (ir * trj_strs[1] + ip * trj_strs[2]) / (bart_stride_t)CFL_SIZE;
+			bart_dim_t ik = (ir * ksp_strs[1] + ip * ksp_strs[2]) / (bart_stride_t)CFL_SIZE;
 
 			float pos[3];
 			pos[0] = conf->os * (creal(traj[it + 0]) + conf->shift[0]);
@@ -242,7 +242,7 @@ void grid(const struct grid_conf_s* conf, const long ksp_dims[4], const long trj
 
 			for (int j = 0; j < C; j++) {
 
-				val[j] = src[j * ksp_strs[3] / (long)CFL_SIZE + ik];
+				val[j] = src[j * ksp_strs[3] / (bart_stride_t)CFL_SIZE + ik];
 				skip = skip && (0. == val[j]);
 			}
 
@@ -253,12 +253,12 @@ void grid(const struct grid_conf_s* conf, const long ksp_dims[4], const long trj
 }
 
 
-static void grid2_dims(int D, const long trj_dims[D], const long ksp_dims[D], const long grid_dims[D])
+static void grid2_dims(int D, const bart_dim_t trj_dims[D], const bart_dim_t ksp_dims[D], const bart_dim_t grid_dims[D])
 {
 	assert(D >= 4);
-	assert(md_check_compat(D - 3, ~0UL, grid_dims + 3, ksp_dims + 3));
+	assert(md_check_compat(D - 3, ~UINT64_C(0), grid_dims + 3, ksp_dims + 3));
 //	assert(md_check_compat(D - 3, ~(MD_BIT(0) | MD_BIT(1)), trj_dims + 3, ksp_dims + 3));
-	assert(md_check_compat(D - 3, ~0UL, trj_dims + 3, ksp_dims + 3));
+	assert(md_check_compat(D - 3, ~UINT64_C(0), trj_dims + 3, ksp_dims + 3));
 
 	assert(3 == trj_dims[0]);
 	assert(1 == trj_dims[3]);
@@ -275,25 +275,25 @@ struct vptr_grid_s {
 
 DEF_TYPEID(vptr_grid_s);
 
-static void grid_int(vptr_fun_data_t* _data, int N, int D, const long* dims[N], const long* strs[N], void* args[N])
+static void grid_int(vptr_fun_data_t* _data, int N, int D, const bart_dim_t* dims[N], const bart_stride_t* strs[N], void* args[N])
 {
 	auto data = CAST_DOWN(vptr_grid_s, _data);
 
-	const long* grd_dims = dims[0];
-	const long* ksp_dims = dims[1];
-	const long* trj_dims = dims[2];
+	const bart_dim_t* grd_dims = dims[0];
+	const bart_dim_t* ksp_dims = dims[1];
+	const bart_dim_t* trj_dims = dims[2];
 
-	long grd_strs[D];
-	long ksp_strs[D];
-	long trj_strs[D];
+	bart_stride_t grd_strs[D];
+	bart_stride_t ksp_strs[D];
+	bart_stride_t trj_strs[D];
 
 	md_copy_strides(D, grd_strs, strs[0]);
 	md_copy_strides(D, ksp_strs, strs[1]);
 	md_copy_strides(D, trj_strs, strs[2]);
 
-	long max_dims[D];
-	md_max_dims(D, ~0UL, max_dims, ksp_dims, trj_dims);
-	md_max_dims(D - 3, ~0UL, max_dims + 3, max_dims + 3, grd_dims + 3);
+	bart_dim_t max_dims[D];
+	md_max_dims(D, ~UINT64_C(0), max_dims, ksp_dims, trj_dims);
+	md_max_dims(D - 3, ~UINT64_C(0), max_dims + 3, max_dims + 3, grd_dims + 3);
 
 	if ((trj_strs[2] == trj_strs[1] * max_dims[1]) && (ksp_strs[2] == ksp_strs[1] * max_dims[1])) {
 
@@ -327,11 +327,11 @@ static void grid_int(vptr_fun_data_t* _data, int N, int D, const long* dims[N], 
 		}
 	}
 
-	const long* ptr_grd_dims = &grd_dims[0];
-	const long* ptr_ksp_dims = &max_dims[0];
-	const long* ptr_ksp_strs = &ksp_strs[0];
-	const long* ptr_trj_strs = &trj_strs[0];
-	const long* ptr_grid_strs = &grd_strs[0];
+	const bart_dim_t* ptr_grd_dims = &grd_dims[0];
+	const bart_dim_t* ptr_ksp_dims = &max_dims[0];
+	const bart_stride_t* ptr_ksp_strs = &ksp_strs[0];
+	const bart_stride_t* ptr_trj_strs = &trj_strs[0];
+	const bart_stride_t* ptr_grid_strs = &grd_strs[0];
 
 	NESTED(void, nary_grid, (void* ptr[]))
 	{
@@ -345,8 +345,8 @@ static void grid_int(vptr_fun_data_t* _data, int N, int D, const long* dims[N], 
 			grid(&data->conf, ptr_ksp_dims, ptr_trj_strs, trj, ptr_grd_dims, ptr_grid_strs, grd, ptr_ksp_strs, ksp);
 	};
 
-	const long* lstrs[3] = { grd_strs + 4, ksp_strs + 4, trj_strs + 4 };
-	unsigned long pflags = md_nontriv_strides(D - 4, (data->backward ? ksp_strs : grd_strs) + 4);
+	const bart_stride_t* lstrs[3] = { grd_strs + 4, ksp_strs + 4, trj_strs + 4 };
+	bart_flags_t pflags = md_nontriv_strides(D - 4, (data->backward ? ksp_strs : grd_strs) + 4);
 
 #ifdef USE_GPU
 	if (cuda_ondevice(args[0]))
@@ -356,7 +356,7 @@ static void grid_int(vptr_fun_data_t* _data, int N, int D, const long* dims[N], 
 	md_parallel_nary(3, D - 4, max_dims + 4, pflags, lstrs, args, nary_grid);
 }
 
-void grid2(const struct grid_conf_s* conf, int D, const long trj_dims[D], const complex float* traj, const long grid_dims[D], complex float* dst, const long ksp_dims[D], const complex float* src)
+void grid2(const struct grid_conf_s* conf, int D, const bart_dim_t trj_dims[D], const complex float* traj, const bart_dim_t grid_dims[D], complex float* dst, const bart_dim_t ksp_dims[D], const complex float* src)
 {
 	grid2_dims(D, trj_dims, ksp_dims, grid_dims);
 
@@ -366,14 +366,14 @@ void grid2(const struct grid_conf_s* conf, int D, const long trj_dims[D], const 
 	_d->conf = *conf;
 	_d->backward = false;
 
-	exec_vptr_zfun(grid_int, CAST_UP(PTR_PASS(_d)), 3, D, ~7UL, MD_BIT(0), MD_BIT(0) | MD_BIT(1) | MD_BIT(2),
-			(const long*[3]) { grid_dims, ksp_dims, trj_dims },
-			(const long*[3]) { MD_STRIDES(D, grid_dims, CFL_SIZE), MD_STRIDES(D, ksp_dims, CFL_SIZE), MD_STRIDES(D, trj_dims, CFL_SIZE) },
+	exec_vptr_zfun(grid_int, CAST_UP(PTR_PASS(_d)), 3, D, ~UINT64_C(7), MD_BIT(0), MD_BIT(0) | MD_BIT(1) | MD_BIT(2),
+			(const bart_dim_t*[3]) { grid_dims, ksp_dims, trj_dims },
+			(const bart_dim_t*[3]) { MD_STRIDES(D, grid_dims, CFL_SIZE), MD_STRIDES(D, ksp_dims, CFL_SIZE), MD_STRIDES(D, trj_dims, CFL_SIZE) },
 			(complex float*[3]) { dst, (void*) src, (void*)traj});
 }
 
 
-void grid2H(const struct grid_conf_s* conf, int D, const long trj_dims[D], const complex float* traj, const long ksp_dims[D], complex float* dst, const long grid_dims[D], const complex float* src)
+void grid2H(const struct grid_conf_s* conf, int D, const bart_dim_t trj_dims[D], const complex float* traj, const bart_dim_t ksp_dims[D], complex float* dst, const bart_dim_t grid_dims[D], const complex float* src)
 {
 	grid2_dims(D, trj_dims, ksp_dims, grid_dims);
 
@@ -383,14 +383,14 @@ void grid2H(const struct grid_conf_s* conf, int D, const long trj_dims[D], const
 	_d->conf = *conf;
 	_d->backward = true;
 
-	exec_vptr_zfun(grid_int, CAST_UP(PTR_PASS(_d)), 3, D, ~7UL, MD_BIT(1), MD_BIT(0) | MD_BIT(1) | MD_BIT(2),
-			(const long*[3]) { grid_dims, ksp_dims, trj_dims },
-			(const long*[3]) { MD_STRIDES(D, grid_dims, CFL_SIZE), MD_STRIDES(D, ksp_dims, CFL_SIZE), MD_STRIDES(D, trj_dims, CFL_SIZE) },
+	exec_vptr_zfun(grid_int, CAST_UP(PTR_PASS(_d)), 3, D, ~UINT64_C(7), MD_BIT(1), MD_BIT(0) | MD_BIT(1) | MD_BIT(2),
+			(const bart_dim_t*[3]) { grid_dims, ksp_dims, trj_dims },
+			(const bart_dim_t*[3]) { MD_STRIDES(D, grid_dims, CFL_SIZE), MD_STRIDES(D, ksp_dims, CFL_SIZE), MD_STRIDES(D, trj_dims, CFL_SIZE) },
 			(complex float*[3]) { (void*) src, dst, (void*)traj});
 }
 
 
-typedef CLOSURE_TYPE(void, (long ind, float d)) grid_update_t;
+typedef CLOSURE_TYPE(void, (bart_dim_t ind, float d)) grid_update_t;
 
 #ifndef __clang__
 #define VLA(x) x
@@ -400,7 +400,7 @@ typedef CLOSURE_TYPE(void, (long ind, float d)) grid_update_t;
 #define VLA(x)
 #endif
 
-static void grid_point_gen(int N, const long dims[VLA(N)], const long strs[VLA(N)], const float pos[VLA(N)], bool periodic, float width, int kb_size, const float kb_table[VLA(kb_size + 1)], grid_update_t update)
+static void grid_point_gen(int N, const bart_dim_t dims[VLA(N)], const bart_stride_t strs[VLA(N)], const float pos[VLA(N)], bool periodic, float width, int kb_size, const float kb_table[VLA(kb_size + 1)], grid_update_t update)
 {
 #ifndef __clang__
 	int sti[N];
@@ -440,7 +440,7 @@ static void grid_point_gen(int N, const long dims[VLA(N)], const long strs[VLA(N
 		}
 	}
 
-	__block NESTED(void, grid_point_r, (int N, long ind, float d))	// __block for recursion
+	__block NESTED(void, grid_point_r, (int N, bart_dim_t ind, float d))	// __block for recursion
 	{
 		if (0 == N) {
 
@@ -454,7 +454,7 @@ static void grid_point_gen(int N, const long dims[VLA(N)], const long strs[VLA(N
 
 				float frac = fabs(((float)w - pos[N]));
 				float d2 = d * intlookup(kb_size, kb_table, frac / width);
-				long ind2 = ind + ((w + off[N]) % dims[N]) * strs[N] / (long)CFL_SIZE;
+				bart_dim_t ind2 = ind + ((w + off[N]) % dims[N]) * strs[N] / (bart_stride_t)CFL_SIZE;
 
 				grid_point_r(N, ind2, d2);
 			}
@@ -466,23 +466,23 @@ static void grid_point_gen(int N, const long dims[VLA(N)], const long strs[VLA(N
 
 
 
-void grid_point(int ch, int N, const long dims[N], const long strs[N], const float pos[N], complex float* dst, const complex float val[ch], bool periodic, float width, int kb_size, const float kb_table[kb_size + 1])
+void grid_point(int ch, int N, const bart_dim_t dims[N], const bart_stride_t strs[N], const float pos[N], complex float* dst, const complex float val[ch], bool periodic, float width, int kb_size, const float kb_table[kb_size + 1])
 {
-	const long *_strs = strs;	// clang workaround
+	const bart_stride_t *_strs = strs;	// clang workaround
 	const complex float *_val = val;
 
-	NESTED(void, update, (long ind, float d))
+	NESTED(void, update, (bart_dim_t ind, float d))
 	{
-		const long *strs = _strs;
+		const bart_stride_t *strs = _strs;
 		const complex float *val = _val;
 
 		for (int c = 0; c < ch; c++) {
 
 			// we are allowed to update real and imaginary part independently which works atomically
 #pragma 		omp atomic
-			__real(dst[ind + c * strs[3] / (long)CFL_SIZE]) += __real(val[c]) * d;
+			__real(dst[ind + c * strs[3] / (bart_stride_t)CFL_SIZE]) += __real(val[c]) * d;
 #pragma 		omp atomic
-			__imag(dst[ind + c * strs[3] / (long)CFL_SIZE]) += __imag(val[c]) * d;
+			__imag(dst[ind + c * strs[3] / (bart_stride_t)CFL_SIZE]) += __imag(val[c]) * d;
 		}
 	};
 
@@ -491,20 +491,20 @@ void grid_point(int ch, int N, const long dims[N], const long strs[N], const flo
 
 
 
-void grid_pointH(int ch, int N, const long dims[N], const long strs[N], const float pos[N], complex float val[ch], const complex float* src, bool periodic, float width, int kb_size, const float kb_table[kb_size + 1])
+void grid_pointH(int ch, int N, const bart_dim_t dims[N], const bart_stride_t strs[N], const float pos[N], complex float val[ch], const complex float* src, bool periodic, float width, int kb_size, const float kb_table[kb_size + 1])
 {
-	const long *_strs = strs;	// clang workaround
+	const bart_stride_t *_strs = strs;	// clang workaround
 	complex float *_val = val;
 
-	NESTED(void, update, (long ind, float d))
+	NESTED(void, update, (bart_dim_t ind, float d))
 	{
-		const long *strs = _strs;
+		const bart_stride_t *strs = _strs;
 		complex float *val = _val;
 
 		for (int c = 0; c < ch; c++) {
 
-			__real(val[c]) += __real(src[ind + c * strs[3] / (long)CFL_SIZE]) * d;
-			__imag(val[c]) += __imag(src[ind + c * strs[3] / (long)CFL_SIZE]) * d;
+			__real(val[c]) += __real(src[ind + c * strs[3] / (bart_stride_t)CFL_SIZE]) * d;
+			__imag(val[c]) += __imag(src[ind + c * strs[3] / (bart_stride_t)CFL_SIZE]) * d;
 		}
 	};
 
@@ -534,7 +534,7 @@ static float pos(int d, int i, float os)
 // width is defined in units of the oversampled grid
 // use os=1  if dims correspond to the oversampled grid
 // use os=os if dims correspond to the not oversampled grid
-void rolloff_correction(float os, float width, float beta, const long dimensions[3], complex float* dst)
+void rolloff_correction(float os, float width, float beta, const bart_dim_t dimensions[3], complex float* dst)
 {
 	// precompute kaiser bessel table
 	kb_init(beta);
@@ -565,13 +565,13 @@ struct vptr_rolloff_s {
 
 DEF_TYPEID(vptr_rolloff_s);
 
-static void apply_rolloff_correction2_int(vptr_fun_data_t* _data, int N, int D, const long* _dims[N], const long* strs[N], void* args[N])
+static void apply_rolloff_correction2_int(vptr_fun_data_t* _data, int N, int D, const bart_dim_t* _dims[N], const bart_stride_t* strs[N], void* args[N])
 {
 	auto data = CAST_DOWN(vptr_rolloff_s, _data);
 
-	long dims[D];
-	long ostrs[D];
-	long istrs[D];
+	bart_dim_t dims[D];
+	bart_stride_t ostrs[D];
+	bart_stride_t istrs[D];
 	md_copy_dims(D, dims, _dims[0]);
 	md_copy_strides(D, ostrs, strs[0]);
 	md_copy_strides(D, istrs, strs[1]);
@@ -586,9 +586,9 @@ static void apply_rolloff_correction2_int(vptr_fun_data_t* _data, int N, int D, 
 	// precompute kaiser bessel table
 	kb_init(data->beta);
 
-	long size_bat = 1;
-	long obstr = -1;	// batch stride, we support three dims with strides and one batch dim
-	long ibstr = -1;	// batch stride, we support three dims with strides and one batch dim
+	bart_dim_t size_bat = 1;
+	bart_stride_t obstr = -1;	// batch stride, we support three dims with strides and one batch dim
+	bart_stride_t ibstr = -1;	// batch stride, we support three dims with strides and one batch dim
 
 	for (int i = 3; i < D; i++) {
 
@@ -606,8 +606,8 @@ static void apply_rolloff_correction2_int(vptr_fun_data_t* _data, int N, int D, 
 		size_bat *= dims[i];
 	}
 
-	obstr /= (long)CFL_SIZE;
-	ibstr /= (long)CFL_SIZE;
+	obstr /= (bart_stride_t)CFL_SIZE;
+	ibstr /= (bart_stride_t)CFL_SIZE;
 
 #ifdef USE_GPU
 
@@ -615,9 +615,9 @@ static void apply_rolloff_correction2_int(vptr_fun_data_t* _data, int N, int D, 
 
 	if (cuda_ondevice(dst)) {
 
-		long dims_cuda[4] = { dims[0], dims[1], dims[2], md_calc_size(D - 3, dims + 3) };
-		long ostrs_cuda[4] = { ostrs[0] / (long)CFL_SIZE, ostrs[1] / (long)CFL_SIZE, ostrs[2] / (long)CFL_SIZE, obstr };
-		long istrs_cuda[4] = { istrs[0] / (long)CFL_SIZE, istrs[1] / (long)CFL_SIZE, istrs[2] / (long)CFL_SIZE, ibstr };
+		bart_dim_t dims_cuda[4] = { dims[0], dims[1], dims[2], md_calc_size(D - 3, dims + 3) };
+		bart_dim_t ostrs_cuda[4] = { ostrs[0] / (bart_stride_t)CFL_SIZE, ostrs[1] / (bart_stride_t)CFL_SIZE, ostrs[2] / (bart_stride_t)CFL_SIZE, obstr };
+		bart_dim_t istrs_cuda[4] = { istrs[0] / (bart_stride_t)CFL_SIZE, istrs[1] / (bart_stride_t)CFL_SIZE, istrs[2] / (bart_stride_t)CFL_SIZE, ibstr };
 
 		cuda_apply_rolloff_correction2(os, width, beta, D, dims_cuda, ostrs_cuda, dst, istrs_cuda, src);
 
@@ -636,14 +636,14 @@ static void apply_rolloff_correction2_int(vptr_fun_data_t* _data, int N, int D, 
 		for (int y = 0; y < dims[1]; y++) {
 			for (int x = 0; x < dims[0]; x++) {
 
-				long oidx = (x * ostrs[0] + y * ostrs[1] + z * ostrs[2]) / (long)CFL_SIZE;
-				long iidx = (x * istrs[0] + y * istrs[1] + z * istrs[2]) / (long)CFL_SIZE;
+				bart_dim_t oidx = (x * ostrs[0] + y * ostrs[1] + z * ostrs[2]) / (bart_stride_t)CFL_SIZE;
+				bart_dim_t iidx = (x * istrs[0] + y * istrs[1] + z * istrs[2]) / (bart_stride_t)CFL_SIZE;
 
 				float val = (dims[0] > 1 ? rolloff(pos(dims[0], x, os), beta, width) : 1)
 					  * (dims[1] > 1 ? rolloff(pos(dims[1], y, os), beta, width) : 1)
 					  * (dims[2] > 1 ? rolloff(pos(dims[2], z, os), beta, width) : 1);
 
-				for (long i = 0; i < size_bat; i++)
+				for (bart_dim_t i = 0; i < size_bat; i++)
 					dst[oidx + i * obstr] = val * src[iidx + i * ibstr];
 			}
 		}
@@ -656,7 +656,7 @@ static void apply_rolloff_correction2_int(vptr_fun_data_t* _data, int N, int D, 
 	}
 }
 
-void apply_rolloff_correction2(float os, float width, float beta, int N, const long dims[N], const long ostrs[N], complex float* dst, const long istrs[N], const complex float* src)
+void apply_rolloff_correction2(float os, float width, float beta, int N, const bart_dim_t dims[N], const bart_stride_t ostrs[N], complex float* dst, const bart_stride_t istrs[N], const complex float* src)
 {
 	PTR_ALLOC(struct vptr_rolloff_s, _d);
 	SET_TYPEID(vptr_rolloff_s, _d);
@@ -665,10 +665,10 @@ void apply_rolloff_correction2(float os, float width, float beta, int N, const l
 	_d->width = width;
 	_d->beta = beta;
 
-	exec_vptr_zfun(apply_rolloff_correction2_int, CAST_UP(PTR_PASS(_d)), 2, N, ~7UL, MD_BIT(0), MD_BIT(1), (const long*[2]){ dims, dims }, (const long*[2]){ ostrs, istrs }, (complex float*[2]){ dst, (void*)src });
+	exec_vptr_zfun(apply_rolloff_correction2_int, CAST_UP(PTR_PASS(_d)), 2, N, ~UINT64_C(7), MD_BIT(0), MD_BIT(1), (const bart_dim_t*[2]){ dims, dims }, (const bart_dim_t*[2]){ ostrs, istrs }, (complex float*[2]){ dst, (void*)src });
 }
 
-void apply_rolloff_correction(float os, float width, float beta, int N, const long dims[N], complex float* dst, const complex float* src)
+void apply_rolloff_correction(float os, float width, float beta, int N, const bart_dim_t dims[N], complex float* dst, const complex float* src)
 {
 	apply_rolloff_correction2(os, width, beta, N, dims, MD_STRIDES(N, dims, CFL_SIZE), dst, MD_STRIDES(N, dims, CFL_SIZE), src);
 }

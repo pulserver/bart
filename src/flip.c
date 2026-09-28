@@ -25,7 +25,7 @@ static const char help_str[] = "Flip (reverse) dimensions specified by the {bitm
 
 int main_flip(int argc, char* argv[argc])
 {
-	unsigned long flags = 0;
+	bart_flags_t flags = 0;
 	const char* in_file = NULL;
 	const char* out_file = NULL;
 
@@ -43,7 +43,7 @@ int main_flip(int argc, char* argv[argc])
 	num_init();
 
 	int N = DIMS;
-	long dims[N];
+	bart_dim_t dims[N];
 	complex float* idata = load_cfl(in_file, N, dims);
 	complex float* odata = create_cfl(out_file, N, dims);
 

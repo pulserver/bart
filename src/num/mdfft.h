@@ -2,6 +2,8 @@
 #ifndef _MD_FFT_H
 #define _MD_FFT_H	1
 
+#include "misc/dimtypes.h"
+
 #define MD_FFT_FORWARD 0u
 #define MD_FFT_INVERSE (~0u)
 

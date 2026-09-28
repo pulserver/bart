@@ -47,19 +47,19 @@ int main_rovir(int argc, char* argv[argc])
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
 
-	long pos_dims[DIMS];
-	long neg_dims[DIMS];
+	bart_dim_t pos_dims[DIMS];
+	bart_dim_t neg_dims[DIMS];
 
 	complex float* pos = load_cfl(pos_file, DIMS, pos_dims);
 	complex float* neg = load_cfl(neg_file, DIMS, neg_dims);
 
-	assert(md_check_equal_dims(DIMS, pos_dims, neg_dims, ~0UL));
+	assert(md_check_equal_dims(DIMS, pos_dims, neg_dims, ~UINT64_C(0)));
 
-	long out_dims[DIMS];
+	bart_dim_t out_dims[DIMS];
 	md_select_dims(DIMS, COIL_FLAG, out_dims, pos_dims);
 	out_dims[MAPS_DIM] = out_dims[COIL_DIM];
 
-	long tra_dims[DIMS];
+	bart_dim_t tra_dims[DIMS];
 	md_transpose_dims(DIMS, MAPS_DIM, COIL_DIM, tra_dims, pos_dims);
 
 	complex float* A = md_alloc(DIMS, out_dims, CFL_SIZE);
@@ -73,7 +73,7 @@ int main_rovir(int argc, char* argv[argc])
 	unmap_cfl(DIMS, pos_dims, pos);
 	unmap_cfl(DIMS, neg_dims, neg);
 
-	long N = out_dims[COIL_DIM];
+	bart_dim_t N = out_dims[COIL_DIM];
 	float eigen[N];
 
 	lapack_geig(N, eigen,

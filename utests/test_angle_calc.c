@@ -21,7 +21,7 @@ static bool test_get_rot_angle(void)
 	double TOL = UT_TOL * 1e-5;
 
 	struct seq_config seq = seq_config_defaults_flash;
-	long pos[DIMS] = { 0 };
+	bart_dim_t pos[DIMS] = { 0 };
 	md_copy_order(DIMS, seq.order, seq_loop_order_avg_outer);
 
 	if (TOL < angle_diff(get_rot_angle(pos, &seq), 0.))

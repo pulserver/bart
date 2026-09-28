@@ -49,11 +49,11 @@
 #include "model_moba.h"
 
 
-struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const complex float* TE, const complex float* b1,
+struct mobamod moba_create(const bart_dim_t dims[DIMS], const complex float* TI, const complex float* TE, const complex float* b1,
 		const complex float* b0, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, float B0, const long psf_dims[DIMS], const complex float* psf, const long coil_dims[DIMS], complex float* coil, const struct noir_model_conf_s* conf, struct moba_conf_s* data,
 		float scaling_M0, const complex float* fixed_maps)
 {
-	long data_dims[DIMS];
+	bart_dim_t data_dims[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, data_dims, dims);
 
 	struct noir_model_conf_s mconf = *conf;
@@ -63,11 +63,11 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 	struct mobamod ret;
 
 	// FIXME: unify them more
-	long out_dims[DIMS];
-	long in_dims[DIMS];
-	long map_dims[DIMS];
-	long TI_dims[DIMS];
-	long TE_dims[DIMS];
+	bart_dim_t out_dims[DIMS];
+	bart_dim_t in_dims[DIMS];
+	bart_dim_t map_dims[DIMS];
+	bart_dim_t TI_dims[DIMS];
+	bart_dim_t TE_dims[DIMS];
 
 	md_select_dims(DIMS, FFT_FLAGS|SLICE_FLAG|TE_FLAG|CSHIFT_FLAG|TIME_FLAG|TIME2_FLAG, out_dims, dims);
 	md_select_dims(DIMS, FFT_FLAGS|SLICE_FLAG|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, in_dims, dims);
@@ -211,14 +211,14 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 	return ret;
 }
 
-const struct nlop_s* moba_get_nlop(struct mobafit_model_config* config, const long out_dims[DIMS], const long param_dims[DIMS], const long enc_dims[DIMS], complex float* enc)
+const struct nlop_s* moba_get_nlop(struct mobafit_model_config* config, const bart_dim_t out_dims[DIMS], const bart_dim_t param_dims[DIMS], const bart_dim_t enc_dims[DIMS], complex float* enc)
 {
 	const struct nlop_s* nlop = NULL;
 	int n_params = param_dims[COEFF_DIM];
 
-	assert(md_check_compat(DIMS, ~0UL, param_dims, out_dims));
+	assert(md_check_compat(DIMS, ~UINT64_C(0), param_dims, out_dims));
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	md_copy_dims(DIMS, dims, out_dims);
 	dims[COEFF_DIM] = enc_dims[COEFF_DIM];
 

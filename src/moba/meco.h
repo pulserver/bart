@@ -2,6 +2,7 @@
 #ifndef _MECO_H
 #define _MECO_H 1
 
+#include "misc/dimtypes.h"
 #include <complex.h>
 
 struct linop_s;
@@ -23,9 +24,9 @@ enum meco_model {
 #endif
 
 extern int get_num_of_coeff(enum meco_model sel_model);
-extern unsigned long get_PD_flag(enum meco_model sel_model);
-extern unsigned long get_R2S_flag(enum meco_model sel_model);
-extern unsigned long get_fB0_flag(enum meco_model sel_model);
+extern bart_flags_t get_PD_flag(enum meco_model sel_model);
+extern bart_flags_t get_R2S_flag(enum meco_model sel_model);
+extern bart_flags_t get_fB0_flag(enum meco_model sel_model);
 
 
 

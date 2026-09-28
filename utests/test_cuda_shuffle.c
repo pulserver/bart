@@ -27,7 +27,7 @@ struct ptr_cpugpu {
 	complex float* gpu;
 };
 
-static struct ptr_cpugpu alloc_pair_rand(int N, const long dims[N])
+static struct ptr_cpugpu alloc_pair_rand(int N, const bart_dim_t dims[N])
 {
 	struct ptr_cpugpu ret = {
 
@@ -41,7 +41,7 @@ static struct ptr_cpugpu alloc_pair_rand(int N, const long dims[N])
 	return ret;
 }
 
-static struct ptr_cpugpu alloc_pair_zero(int N, const long dims[N])
+static struct ptr_cpugpu alloc_pair_zero(int N, const bart_dim_t dims[N])
 {
 	struct ptr_cpugpu ret = {
 
@@ -55,7 +55,7 @@ static struct ptr_cpugpu alloc_pair_zero(int N, const long dims[N])
 	return ret;
 }
 
-static float cmp_pair_F(int N, const long dims[N], struct ptr_cpugpu x)
+static float cmp_pair_F(int N, const bart_dim_t dims[N], struct ptr_cpugpu x)
 {
 	complex float* tmp = md_alloc(N, dims, CFL_SIZE);
 	md_copy(N, dims, tmp, x.gpu, CFL_SIZE);
@@ -82,9 +82,9 @@ static bool test_cuda_decompose1(void)
 
 	enum { N = 5 };
 
-	const long dims[N] = { 4, 1, 9, 2, 2 };
-	const long factors[N] = { 2, 1, 3, 1, 1 };
-	const long odims[N + 1] = { 2, 1, 3, 2, 2, 6};
+	const bart_dim_t dims[N] = { 4, 1, 9, 2, 2 };
+	const bart_dim_t factors[N] = { 2, 1, 3, 1, 1 };
+	const bart_dim_t odims[N + 1] = { 2, 1, 3, 2, 2, 6};
 
 	struct ptr_cpugpu in = alloc_pair_rand(N, dims);
 	struct ptr_cpugpu out = alloc_pair_zero(N + 1, odims);
@@ -102,9 +102,9 @@ static bool test_cuda_decompose2(void)
 
 	enum { N = 5 };
 
-	const long dims[N] = { 4, 1, 9, 2, 2 };
-	const long factors[N] = { 2, 1, 3, 2, 1 };
-	const long odims[N + 1] = { 2, 1, 3, 1, 2, 12};
+	const bart_dim_t dims[N] = { 4, 1, 9, 2, 2 };
+	const bart_dim_t factors[N] = { 2, 1, 3, 2, 1 };
+	const bart_dim_t odims[N + 1] = { 2, 1, 3, 1, 2, 12};
 
 	struct ptr_cpugpu in = alloc_pair_rand(N, dims);
 	struct ptr_cpugpu out = alloc_pair_zero(N + 1, odims);
@@ -122,9 +122,9 @@ static bool test_cuda_recompose1(void)
 
 	enum { N = 5 };
 
-	const long dims[N] = { 4, 1, 9, 2, 2 };
-	const long factors[N] = { 2, 1, 3, 1, 1 };
-	const long odims[N + 1] = { 2, 1, 3, 2, 2, 6};
+	const bart_dim_t dims[N] = { 4, 1, 9, 2, 2 };
+	const bart_dim_t factors[N] = { 2, 1, 3, 1, 1 };
+	const bart_dim_t odims[N + 1] = { 2, 1, 3, 2, 2, 6};
 
 	struct ptr_cpugpu in = alloc_pair_rand(N + 1, odims);
 	struct ptr_cpugpu out = alloc_pair_zero(N, dims);
@@ -142,9 +142,9 @@ static bool test_cuda_recompose2(void)
 
 	enum { N = 5 };
 
-	const long dims[N] = { 4, 1, 9, 2, 2 };
-	const long factors[N] = { 2, 1, 3, 2, 1 };
-	const long odims[N + 1] = { 2, 1, 3, 1, 2, 12};
+	const bart_dim_t dims[N] = { 4, 1, 9, 2, 2 };
+	const bart_dim_t factors[N] = { 2, 1, 3, 2, 1 };
+	const bart_dim_t odims[N + 1] = { 2, 1, 3, 1, 2, 12};
 
 	struct ptr_cpugpu in = alloc_pair_rand(N + 1, odims);
 	struct ptr_cpugpu out = alloc_pair_zero(N, dims);

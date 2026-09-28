@@ -47,15 +47,15 @@ struct blochfun_s {
 
 	int N;
 
-	const long* der_dims;
-	const long* map_dims;
-	const long* in_dims;
-	const long* out_dims;
+	const bart_dim_t* der_dims;
+	const bart_dim_t* map_dims;
+	const bart_dim_t* in_dims;
+	const bart_dim_t* out_dims;
 
-	const long* der_strs;
-	const long* map_strs;
-	const long* in_strs;
-	const long* out_strs;
+	const bart_stride_t* der_strs;
+	const bart_stride_t* map_strs;
+	const bart_stride_t* in_strs;
+	const bart_stride_t* out_strs;
 
 	//derivatives
 	complex float* derivatives;
@@ -83,18 +83,18 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 	complex float* m0scale = md_alloc(data->N, data->map_dims, CFL_SIZE);
 	complex float* b1scale = md_alloc(data->N, data->map_dims, CFL_SIZE);
 
-	long pool_dims[DIMS];
+	bart_dim_t pool_dims[DIMS];
 	md_copy_dims(DIMS, pool_dims, data->map_dims);
 	pool_dims[ITER_DIM] = data->moba_data->sim.voxel.P - 1;
 
-	long pool_strs[DIMS];
+	bart_stride_t pool_strs[DIMS];
 	md_calc_strides(data->N, pool_strs, pool_dims, CFL_SIZE);
 
-	long pool_out_dims[DIMS];
+	bart_dim_t pool_out_dims[DIMS];
 	md_copy_dims(DIMS, pool_out_dims, data->out_dims);
 	pool_out_dims[ITER_DIM] = data->moba_data->sim.voxel.P - 1;
 
-	long pool_out_strs[DIMS];
+	bart_stride_t pool_out_strs[DIMS];
 	md_calc_strides(data->N, pool_out_strs, pool_out_dims, CFL_SIZE);
 
 	// FIXME: Keep all r1, r2, m0 scales in one variable
@@ -104,7 +104,7 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 	complex float* omscale = md_alloc(data->N, pool_dims, CFL_SIZE);
 	complex float* m0_poolscale = md_alloc(data->N, pool_dims, CFL_SIZE);
 
-	long pos[data->N];
+	bart_dim_t pos[data->N];
 	md_set_dims(data->N, pos, 0);
 
 	//-------------------------------------------------------------------
@@ -166,7 +166,7 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 			for (int z = 0; z < data->map_dims[2]; z++) {
 
 				//Calculate correct spatial position
-				long spa_pos[DIMS];
+				bart_dim_t spa_pos[DIMS];
 
 				md_copy_dims(DIMS, spa_pos, data->map_dims);
 
@@ -174,15 +174,15 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 				spa_pos[1] = y;
 				spa_pos[2] = z;
 
-				long spa_ind = md_calc_offset(data->N, data->map_strs, spa_pos) / (long)CFL_SIZE;
+				bart_dim_t spa_ind = md_calc_offset(data->N, data->map_strs, spa_pos) / (bart_stride_t)CFL_SIZE;
 
-				long spa_pos_pools[DIMS];
+				bart_dim_t spa_pos_pools[DIMS];
 
 				md_copy_dims(DIMS, spa_pos_pools, pool_dims);
 				spa_pos_pools[0] = x;
 				spa_pos_pools[1] = y;
 				spa_pos_pools[2] = z;
-				long spa_ind_pools;
+				bart_dim_t spa_ind_pools;
 
 				//-------------------------------------------------------------------
 				// Define simulation parameter
@@ -223,7 +223,7 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 				for (int p = 0; p < sim_data.voxel.P - 1; p++) {
 
 					spa_pos_pools[ITER_DIM] = p;
-					spa_ind_pools = md_calc_offset(data->N, pool_strs, spa_pos_pools) / (long)CFL_SIZE;
+					spa_ind_pools = md_calc_offset(data->N, pool_strs, spa_pos_pools) / (bart_stride_t)CFL_SIZE;
 
 					//FIXME: Switch to Boolean?
 					sim_data.voxel.r1[p + 1] =  crealf(r1_poolscale[spa_ind_pools]);
@@ -289,20 +289,20 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 				// Copy simulation output to storage on CPU
 				//-------------------------------------------------------------------
 
-				long curr_pos[DIMS];
+				bart_dim_t curr_pos[DIMS];
 				md_copy_dims(DIMS, curr_pos, spa_pos);
 
-				long curr_pos_pools[DIMS];
+				bart_dim_t curr_pos_pools[DIMS];
 				md_copy_dims(DIMS, curr_pos_pools, spa_pos_pools);
 
-				long position = 0;
+				bart_dim_t position = 0;
 
 				for (int j = 0; j < sim_data.seq.rep_num; j++) {
 
 					curr_pos[TE_DIM] = j;
 					curr_pos_pools[TE_DIM] = j;
 
-					position = md_calc_offset(data->N, data->out_strs, curr_pos) / (long)CFL_SIZE;
+					position = md_calc_offset(data->N, data->out_strs, curr_pos) / (bart_stride_t)CFL_SIZE;
 
 					float a = 1.;
 
@@ -354,7 +354,7 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 					for (int p = 0; p < sim_data.voxel.P - 1; p++) {
 
 						curr_pos_pools[ITER_DIM] = p;
-						position = md_calc_offset(data->N, pool_out_strs, curr_pos_pools) / (long)CFL_SIZE;
+						position = md_calc_offset(data->N, pool_out_strs, curr_pos_pools) / (bart_stride_t)CFL_SIZE;
 
 						if (SEQ_CEST == sim_data.seq.seq_type) {
 
@@ -507,35 +507,35 @@ struct nlop_s* nlop_bloch_create(int N, const long out_dims[N], const long in_di
 	long map_dims[N];
 	md_select_dims(N, ~COEFF_FLAG, map_dims, in_dims);
 
-	PTR_ALLOC(long[N], derdims);
+	PTR_ALLOC(bart_dim_t[N], derdims);
 	md_copy_dims(N, *derdims, der_dims);
 	data->der_dims = *PTR_PASS(derdims);
 
-	PTR_ALLOC(long[N], allstr);
+	PTR_ALLOC(bart_dim_t[N], allstr);
 	md_calc_strides(N, *allstr, der_dims, CFL_SIZE);
 	data->der_strs = *PTR_PASS(allstr);
 
-	PTR_ALLOC(long[N], ndims);
+	PTR_ALLOC(bart_dim_t[N], ndims);
 	md_copy_dims(N, *ndims, map_dims);
 	data->map_dims = *PTR_PASS(ndims);
 
-	PTR_ALLOC(long[N], nmstr);
+	PTR_ALLOC(bart_dim_t[N], nmstr);
 	md_calc_strides(N, *nmstr, map_dims, CFL_SIZE);
 	data->map_strs = *PTR_PASS(nmstr);
 
-	PTR_ALLOC(long[N], nodims);
+	PTR_ALLOC(bart_dim_t[N], nodims);
 	md_copy_dims(N, *nodims, out_dims);
 	data->out_dims = *PTR_PASS(nodims);
 
-	PTR_ALLOC(long[N], nostr);
+	PTR_ALLOC(bart_dim_t[N], nostr);
 	md_calc_strides(N, *nostr, out_dims, CFL_SIZE);
 	data->out_strs = *PTR_PASS(nostr);
 
-	PTR_ALLOC(long[N], nidims);
+	PTR_ALLOC(bart_dim_t[N], nidims);
 	md_copy_dims(N, *nidims, in_dims);
 	data->in_dims = *PTR_PASS(nidims);
 
-	PTR_ALLOC(long[N], nistr);
+	PTR_ALLOC(bart_dim_t[N], nistr);
 	md_calc_strides(N, *nistr, in_dims, CFL_SIZE);
 	data->in_strs = *PTR_PASS(nistr);
 

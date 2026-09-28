@@ -28,7 +28,7 @@ static const char help_str[] = "Apply Hamming (Hann) window to <input> along dim
 
 int main_window(int argc, char* argv[argc])
 {
-	unsigned long flags = 0;
+	bart_flags_t flags = 0;
 	const char* in_file = NULL;
 	const char* out_file = NULL;
 
@@ -50,7 +50,7 @@ int main_window(int argc, char* argv[argc])
 
 	num_init();
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	
 	complex float* in_data = load_cfl(in_file, DIMS, dims);
 	complex float* out_data = create_cfl(out_file, DIMS, dims);

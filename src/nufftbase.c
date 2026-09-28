@@ -26,7 +26,7 @@ int main_nufftbase(int argc, char* argv[argc])
 {
 	const char* traj_file = NULL;
 	const char* out_file = NULL;
-	long dims[3];
+	bart_dim_t dims[3];
 
 	struct arg_s args[] = {
 
@@ -47,7 +47,7 @@ int main_nufftbase(int argc, char* argv[argc])
 	num_init();
 
 
-	long traj_dims[DIMS];
+	bart_dim_t traj_dims[DIMS];
 	complex float* traj_map = load_cfl(traj_file, DIMS, traj_dims);
 
 	complex float* traj = md_alloc_sameplace(DIMS, traj_dims, CFL_SIZE, traj_map);
@@ -55,11 +55,11 @@ int main_nufftbase(int argc, char* argv[argc])
 
 	unmap_cfl(DIMS, traj_dims, traj_map);
 
-	long traj_strs[DIMS];
+	bart_stride_t traj_strs[DIMS];
 	md_calc_strides(DIMS, traj_strs, traj_dims, CFL_SIZE);
 
-	long cord_dims[DIMS];
-	long cord_strs[DIMS];
+	bart_dim_t cord_dims[DIMS];
+	bart_stride_t cord_strs[DIMS];
 	md_select_dims(DIMS, MD_BIT(0), cord_dims, traj_dims);
 	md_calc_strides(DIMS, cord_strs, cord_dims, CFL_SIZE);
 
@@ -75,8 +75,8 @@ int main_nufftbase(int argc, char* argv[argc])
 		md_zslessequal(DIMS, traj_dims, traj, traj, 0.5);
 	}
 
-	long out_dims[DIMS];
-	long out_strs[DIMS];
+	bart_dim_t out_dims[DIMS];
+	bart_stride_t out_strs[DIMS];
 	md_select_dims(DIMS, ~MD_BIT(0), out_dims, traj_dims);
 	md_calc_strides(DIMS, out_strs, out_dims, CFL_SIZE);
 

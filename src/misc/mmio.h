@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 extern bool mmio_file_locking;

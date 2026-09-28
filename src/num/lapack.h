@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include <complex.h>
 
 extern void lapack_eig(bart_dim_t N, float eigenval[N], complex float matrix[N][N]);

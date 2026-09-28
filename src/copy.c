@@ -42,9 +42,9 @@ static void delay_seconds(double seconds)
 int main_copy(int argc, char* argv[argc])
 {
 	int count = 0;
-	long* dims = NULL;
-	long* poss = NULL;
-	unsigned long stream_flags = 0UL;
+	bart_dim_t* dims = NULL;
+	bart_dim_t* poss = NULL;
+	bart_flags_t stream_flags = UINT64_C(0);
 
 	const char* in_file = NULL;
 	const char* out_file = NULL;
@@ -77,8 +77,8 @@ int main_copy(int argc, char* argv[argc])
 	assert(count >= 0);
 	assert((0 == count) || (!is_stream));
 
-	long in_dims[N];
-	long out_dims[N];
+	bart_dim_t in_dims[N];
+	bart_dim_t out_dims[N];
 
 	complex float* in_data = (is_stream ? load_async_cfl : load_cfl)(in_file, N, in_dims);
 
@@ -106,15 +106,15 @@ int main_copy(int argc, char* argv[argc])
 	else
 		out_data = create_async_cfl(out_file, stream_flags, N, out_dims);
 
-	long position[N];
+	bart_dim_t position[N];
 
 	for (int i = 0; i < N; i++)
 		position[i] = 0;
 
 	for (int i = 0; i < count; i++) {
 
-		long dim = dims[i];
-		long pos = poss[i];
+		bart_dim_t dim = dims[i];
+		bart_dim_t pos = poss[i];
 
 		assert(dim < N);
 		assert((0 <= pos) && (pos < out_dims[dim]));
@@ -122,9 +122,9 @@ int main_copy(int argc, char* argv[argc])
 		position[dim] = pos;
 	}
 
-	long stream_pos[N];
-	long non_stream_idims[N];
-	long non_stream_odims[N];
+	bart_dim_t stream_pos[N];
+	bart_dim_t non_stream_idims[N];
+	bart_dim_t non_stream_odims[N];
 	md_set_dims(N, stream_pos, 0);
 
 	// these can both be non-Null despite 0 == stream_flags, because of looping.
@@ -134,10 +134,10 @@ int main_copy(int argc, char* argv[argc])
 	md_select_dims(N, ~stream_flags, non_stream_odims, out_dims);
 	md_select_dims(N, ~stream_flags, non_stream_idims, in_dims);
 
-	long ostr[N];
+	bart_stride_t ostr[N];
 	md_calc_strides(N, ostr, out_dims, CFL_SIZE);
 
-	long istr[N];
+	bart_stride_t istr[N];
 	md_calc_strides(N, istr, in_dims, CFL_SIZE);
 
 	do {

@@ -68,12 +68,12 @@ struct nnet_s nnet_init = {
 	.N_segm_labels = -1,
 };
 
-static int get_no_odims_mnist(const struct nnet_s* /*config*/, int NI, const long /*idims*/[NI])
+static int get_no_odims_mnist(const struct nnet_s* /*config*/, int NI, const bart_dim_t /*idims*/[NI])
 {
 	return 2;
 }
 
-static void get_odims_mnist(const struct nnet_s* /*config*/, int NO, long odims[NO], int NI, const long idims[NI])
+static void get_odims_mnist(const struct nnet_s* /*config*/, int NO, bart_dim_t odims[NO], int NI, const bart_dim_t idims[NI])
 {
 	odims[0] = 10;
 	odims[1] = idims[2];
@@ -107,12 +107,12 @@ void nnet_init_mnist_default(struct nnet_s* nnet)
 		nnet->valid_loss =  &loss_classification_valid;
 }
 
-static int get_no_odims_segm(const struct nnet_s* /*config*/, int NI, const long /*idims*/[NI])
+static int get_no_odims_segm(const struct nnet_s* /*config*/, int NI, const bart_dim_t /*idims*/[NI])
 {
 	return NI;
 }
 
-static void get_odims_segm(const struct nnet_s* config, int NO, long odims[NO], int NI, const long idims[NI])
+static void get_odims_segm(const struct nnet_s* config, int NO, bart_dim_t odims[NO], int NI, const bart_dim_t idims[NI])
 {
 	assert(NO == NI);
 
@@ -121,7 +121,7 @@ static void get_odims_segm(const struct nnet_s* config, int NO, long odims[NO], 
 	odims[0] = config->N_segm_labels;
 }
 
-void nnet_init_unet_segm_default(struct nnet_s* nnet, long N_unet_segm_labels, long N_nnunet_segm_labels)
+void nnet_init_unet_segm_default(struct nnet_s* nnet, bart_dim_t N_unet_segm_labels, bart_dim_t N_nnunet_segm_labels)
 {
 	if (   ((-1 == N_unet_segm_labels) && (-1 == N_nnunet_segm_labels))
 	    || ((-1 != N_unet_segm_labels) && (-1 != N_nnunet_segm_labels)))
@@ -157,13 +157,13 @@ void nnet_init_unet_segm_default(struct nnet_s* nnet, long N_unet_segm_labels, l
 }
 
 
-static nn_t nnet_network_create(const struct nnet_s* config, int NO, const long odims[NO], int NI, const long idims[NI], enum NETWORK_STATUS status)
+static nn_t nnet_network_create(const struct nnet_s* config, int NO, const bart_dim_t odims[NO], int NI, const bart_dim_t idims[NI], enum NETWORK_STATUS status)
 {
 	return network_create(config->network, NO, odims, NI, idims, status);
 }
 
 
-static nn_t nnet_train_create(const struct nnet_s* config, int NO, const long odims[NO], int NI, const long idims[NI])
+static nn_t nnet_train_create(const struct nnet_s* config, int NO, const bart_dim_t odims[NO], int NI, const bart_dim_t idims[NI])
 {
 	auto train_op = nnet_network_create(config, NO, odims, NI, idims, STAT_TRAIN);
 
@@ -174,7 +174,7 @@ static nn_t nnet_train_create(const struct nnet_s* config, int NO, const long od
 	return train_op;
 }
 
-static nn_t nnet_apply_op_create(const struct nnet_s* config, int NO, const long odims[NO], int NI, const long idims[NI])
+static nn_t nnet_apply_op_create(const struct nnet_s* config, int NO, const bart_dim_t odims[NO], int NI, const bart_dim_t idims[NI])
 {
 	auto nn_apply = nnet_network_create(config, NO, odims, NI, idims, STAT_TEST);
 
@@ -201,15 +201,15 @@ static nn_t nnet_valid_create(const struct nnet_s* config, const struct nn_weigh
 
 
 void train_nnet(struct nnet_s* config,
-		int NO, const long odims[NO], const complex float* out,
-		int NI, const long idims[NI], const complex float* in,
-		long Nb, const struct nn_weights_s* valid_files)
+		int NO, const bart_dim_t odims[NO], const complex float* out,
+		int NI, const bart_dim_t idims[NI], const complex float* in,
+		bart_dim_t Nb, const struct nn_weights_s* valid_files)
 {
-	long Nt = odims[NO - 1];
+	bart_dim_t Nt = odims[NO - 1];
 	assert(Nt == idims[NI - 1]);
 
-	long bodims[NO];
-	long bidims[NI];
+	bart_dim_t bodims[NO];
+	bart_dim_t bidims[NI];
 
 	md_copy_dims(NO, bodims, odims);
 	md_copy_dims(NI, bidims, idims);
@@ -233,8 +233,8 @@ void train_nnet(struct nnet_s* config,
 
 
 	const complex float* train_data[] = {out, in};
-	const long* bat_dims[] = { bodims, bidims };
-	const long* tot_dims[] = { odims, idims };
+	const bart_dim_t* bat_dims[] = { bodims, bidims };
+	const bart_dim_t* tot_dims[] = { odims, idims };
 	auto batch_generator = batch_gen_create_from_iter(config->train_conf, 2, (const int[2]){NO, NI}, bat_dims, tot_dims, train_data, 0);
 
 	//setup for iter algorithm
@@ -248,7 +248,7 @@ void train_nnet(struct nnet_s* config,
 		auto iov_weight = config->weights->iovs[i];
 		auto iov_train_op = nlop_generic_domain(nn_get_nlop(nn_train), i + 2);
 
-		assert(md_check_equal_dims(iov_weight->N, iov_weight->dims, iov_train_op->dims, ~0UL));
+		assert(md_check_equal_dims(iov_weight->N, iov_weight->dims, iov_train_op->dims, ~UINT64_C(0)));
 
 		src[i + 2] = (float*)config->weights->tensors[i];
 	}
@@ -303,8 +303,8 @@ void train_nnet(struct nnet_s* config,
 
 
 void apply_nnet(	const struct nnet_s* config,
-			int NO, const long odims[NO], complex float* out,
-			int NI, const long idims[NI], const complex float* in)
+			int NO, const bart_dim_t odims[NO], complex float* out,
+			int NI, const bart_dim_t idims[NI], const complex float* in)
 {
 	if (config->gpu)
 		move_gpu_nn_weights(config->weights);
@@ -338,21 +338,21 @@ void apply_nnet(	const struct nnet_s* config,
 
 
 void apply_nnet_batchwise(	const struct nnet_s* config,
-				int NO, const long odims[NO], complex float* out,
-				int NI, const long idims[NI], const complex float* in,
-				long Nb)
+				int NO, const bart_dim_t odims[NO], complex float* out,
+				int NI, const bart_dim_t idims[NI], const complex float* in,
+				bart_dim_t Nb)
 {
-	long Nt = odims[NO - 1];
+	bart_dim_t Nt = odims[NO - 1];
 
 	while (0 < Nt) {
 
-		long odims1[NO];
-		long idims1[NI];
+		bart_dim_t odims1[NO];
+		bart_dim_t idims1[NI];
 
 		md_copy_dims(NI, idims1, idims);
 		md_copy_dims(NO, odims1, odims);
 
-		long Nb_tmp = MIN(Nt, Nb);
+		bart_dim_t Nb_tmp = MIN(Nt, Nb);
 
 		odims1[NO - 1] = Nb_tmp;
 		idims1[NI - 1] = Nb_tmp;
@@ -368,9 +368,9 @@ void apply_nnet_batchwise(	const struct nnet_s* config,
 
 
 void eval_nnet(	struct nnet_s* nnet,
-		int NO, const long odims[NO], const complex float* out,
-		int NI, const long idims[NI], const complex float* in,
-		long Nb)
+		int NO, const bart_dim_t odims[NO], const complex float* out,
+		int NI, const bart_dim_t idims[NI], const complex float* in,
+		bart_dim_t Nb)
 {
 	complex float* tmp_out = md_alloc(NO, odims, CFL_SIZE);
 

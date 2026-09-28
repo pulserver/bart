@@ -39,7 +39,7 @@ do {												\
 	auto _o = (o);										\
 	typedef typeof((*_p)->data[0]) eltype_t;						\
 	int n2 = VEC_LEN(*_p) + 1;								\
-	*_p = xrealloc(*_p, (size_t)((long)sizeof(**_p) + n2 * (long)sizeof(eltype_t)));	\
+	*_p = xrealloc(*_p, (size_t)((bart_stride_t)sizeof(**_p) + n2 * (bart_stride_t)sizeof(eltype_t)));	\
 	(*_p)->len = n2;									\
 	(*_p)->data[n2 - 1] = _o;								\
 } while (0)
@@ -136,7 +136,7 @@ static double fovz(const struct seq_config* seq)
 	if (seq->enc.is3D)
 		return seq->geom.slice_thickness * seq->loop_dims[PHS2_DIM] / seq->geom.slab_os;
 
-	long slices = get_slices(seq);
+	bart_dim_t slices = get_slices(seq);
 
 	double min_pos = seq->geom.shift[0][2];
 	double max_pos = seq->geom.shift[0][2];
@@ -204,7 +204,7 @@ void pulse_shapes_to_pulseq(struct pulseq *ps, int N, const struct rf_shape rf_s
 
 	for (int i = 0; i < N; i++) {
 
-		long samples = rf_shapes[i].samples;
+		bart_dim_t samples = rf_shapes[i].samples;
 
 		double mag[samples];
 		double pha[samples];
@@ -348,7 +348,7 @@ static int adc_to_pulseq(struct pulseq *ps, int i_adc, double block_start, int N
 
 	int adc_id = VEC_LEN(ps->adcs) + 1;
 
-	long samples = lround(ev[adc_idx].adc.columns * ev[adc_idx].adc.os);
+	bart_dim_t samples = lround(ev[adc_idx].adc.columns * ev[adc_idx].adc.os);
 
 	if (samples % 2) {
 
@@ -614,7 +614,7 @@ void events_to_pulseq(struct pulseq *ps, enum seq_block mode, double tr, int M, 
 		struct ps_block b = {
 
 			.num = VEC_LEN(ps->ps_blocks) + 1,
-			.dur = (unsigned long)lround(dur_split / ps->block_raster_time),
+			.dur = (bart_flags_t)lround(dur_split / ps->block_raster_time),
 			.rf = rf_id,
 			.g = { g_id[0], g_id[1], g_id[2] },
 			.adc = adc_id,

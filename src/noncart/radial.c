@@ -17,16 +17,16 @@
 #include "radial.h"
 
 
-void traj_radial_angles(int N, const long adims[N], float* angles, const long tdims[N], const complex float* traj)
+void traj_radial_angles(int N, const bart_dim_t adims[N], float* angles, const bart_dim_t tdims[N], const complex float* traj)
 {
 	assert(md_check_compat(N, MD_BIT(0) | MD_BIT(1), adims, tdims));
-	long tdims1[N];
+	bart_dim_t tdims1[N];
 	md_select_dims(N, ~(MD_BIT(0) | MD_BIT(1)) , tdims1, tdims);
 
 	complex float* x = md_alloc_sameplace(N, tdims1, CFL_SIZE, traj);
 	complex float* y = md_alloc_sameplace(N, tdims1, CFL_SIZE, traj);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
 	md_slice(N, MD_BIT(0) | MD_BIT(1), pos, tdims, x, traj, CFL_SIZE);
@@ -54,9 +54,9 @@ void traj_radial_angles(int N, const long adims[N], float* angles, const long td
 
 
 
-float traj_radial_dcshift(int N, const long tdims[N], const complex float* traj)
+float traj_radial_dcshift(int N, const bart_dim_t tdims[N], const complex float* traj)
 {
-	long tdims1[N];
+	bart_dim_t tdims1[N];
 	md_select_dims(N, ~MD_BIT(1), tdims1, tdims);
 
 	complex float* traj1 = md_alloc_sameplace(N, tdims1, CFL_SIZE, traj);
@@ -64,7 +64,7 @@ float traj_radial_dcshift(int N, const long tdims[N], const complex float* traj)
 
 	md_resize_center(N, tdims1, traj1, tdims, traj, CFL_SIZE);
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_select_dims(N, ~MD_BIT(0), sdims, tdims1);
 
 	complex float* shift = md_alloc_sameplace(N, sdims, CFL_SIZE, traj);
@@ -83,12 +83,12 @@ float traj_radial_dcshift(int N, const long tdims[N], const complex float* traj)
 }
 
 
-float traj_radial_deltak(int N, const long tdims[N], const complex float* traj)
+float traj_radial_deltak(int N, const bart_dim_t tdims[N], const complex float* traj)
 {
-	long tdims1[N];
+	bart_dim_t tdims1[N];
 	md_select_dims(N, ~MD_BIT(1), tdims1, tdims);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
 
@@ -115,18 +115,18 @@ float traj_radial_deltak(int N, const long tdims[N], const complex float* traj)
 	return shift1;
 }
 
-bool traj_radial_same_dk(int N, const long tdims[N], const complex float* traj)
+bool traj_radial_same_dk(int N, const bart_dim_t tdims[N], const complex float* traj)
 {
 	assert(1 < N);
 
-	long rdims[N];
+	bart_dim_t rdims[N];
 	md_copy_dims(N, rdims, tdims);
 	rdims[1] -= 2;
 
 	complex float* tmp1 = md_alloc_sameplace(N, rdims, CFL_SIZE, traj);
 	complex float* tmp2 = md_alloc_sameplace(N, rdims, CFL_SIZE, traj);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 	pos[1] = 1;
 
@@ -149,15 +149,15 @@ bool traj_radial_same_dk(int N, const long tdims[N], const complex float* traj)
 	return (1.e-5 > err);
 }
 
-static void traj_radial_direction_int(int N, long idx, const long ddims[N], complex float* dir, const long tdims[N], const complex float* traj)
+static void traj_radial_direction_int(int N, bart_dim_t idx, const bart_dim_t ddims[N], complex float* dir, const bart_dim_t tdims[N], const complex float* traj)
 {
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 	pos[1] = idx;
 
 	md_slice(N, MD_BIT(1), pos, tdims, dir, traj, CFL_SIZE);
 
-	long ndims[N];
+	bart_dim_t ndims[N];
 	md_select_dims(N, ~MD_BIT(0), ndims, ddims);
 
 	complex float* nrm = md_alloc_sameplace(N, ndims, CFL_SIZE, traj);
@@ -195,9 +195,9 @@ void traj_radial_dcshifts(int N, const long sdims[__VLA(N)], complex float* shif
 
 
 
-bool traj_radial_through_center(int N, const long tdims[N], const complex float* traj)
+bool traj_radial_through_center(int N, const bart_dim_t tdims[N], const complex float* traj)
 {
-	long ddims[N];
+	bart_dim_t ddims[N];
 	md_select_dims(N, ~MD_BIT(1), ddims, tdims);
 
 	complex float* dir1 = md_alloc_sameplace(N, ddims, CFL_SIZE, traj);
@@ -214,12 +214,12 @@ bool traj_radial_through_center(int N, const long tdims[N], const complex float*
 	return (1.e-5 > err);
 }
 
-bool traj_is_radial(int N, const long tdims[N], const complex float* traj)
+bool traj_is_radial(int N, const bart_dim_t tdims[N], const complex float* traj)
 {
 	return traj_radial_same_dk(N, tdims, traj) && traj_radial_through_center(N, tdims, traj);
 }
 
-void traj_radial_direction(int N, const long ddims[N], complex float* dir, const long tdims[N], const complex float* traj)
+void traj_radial_direction(int N, const bart_dim_t ddims[N], complex float* dir, const bart_dim_t tdims[N], const complex float* traj)
 {
 	traj_radial_direction_int(N, tdims[1] - 1, ddims, dir, tdims, traj);
 }

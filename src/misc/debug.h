@@ -2,6 +2,7 @@
 #ifndef _DEBUG_H
 #define _DEBUG_H 1
 
+#include "misc/dimtypes.h"
 #include <stdarg.h>
 #include <stddef.h>
 

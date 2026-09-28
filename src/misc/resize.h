@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 extern void sinc_resize(int D, const bart_dim_t out_dims[__VLA(D)], _Complex float* out, const bart_dim_t in_dims[__VLA(D)], const _Complex float* in);

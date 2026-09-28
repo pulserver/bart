@@ -122,13 +122,13 @@ int main_seq(int argc, char* argv[argc])
 	debug_printf(DP_INFO, "loops: %ld \t dims: ", md_calc_size(DIMS, seq->conf->loop_dims));
 	debug_print_dims(DP_INFO, DIMS, seq->conf->loop_dims);
 
-	long kernel_dims[DIMS];
+	bart_dim_t kernel_dims[DIMS];
 	md_select_dims(DIMS, ~(COEFF_FLAG | COEFF2_FLAG | ITER_FLAG), kernel_dims, seq->conf->loop_dims);
 
 	debug_printf(DP_INFO, "kernels: %ld \t dims: ", md_calc_size(DIMS, kernel_dims));
 	debug_print_dims(DP_INFO, DIMS, kernel_dims);
 
-	long mdims[DIMS];
+	bart_dim_t mdims[DIMS];
 	md_select_dims(DIMS, ~TE_FLAG, mdims, kernel_dims);
 
 	int E = 0;
@@ -160,10 +160,10 @@ int main_seq(int argc, char* argv[argc])
 	double g2[seq_opts.samples][mdims[READ_DIM]];
 	float m0[seq_opts.samples][3];
 
-	long mstrs[DIMS];
+	bart_stride_t mstrs[DIMS];
 	md_calc_strides(DIMS, mstrs, mdims, CFL_SIZE);
 
-	long adims[DIMS];
+	bart_dim_t adims[DIMS];
 	md_copy_dims(DIMS, adims, kernel_dims);
 
 	adims[PHS2_DIM] *= adims[PHS1_DIM]; // consistency with traj tool
@@ -176,19 +176,19 @@ int main_seq(int argc, char* argv[argc])
 	long event_dims[DIMS]; // after bart_seq_prepare
 	md_singleton_dims(DIMS, event_dims);
 
-	long adc_dims[DIMS];
+	bart_dim_t adc_dims[DIMS];
 	md_select_dims(DIMS, (READ_FLAG | PHS1_FLAG | TE_FLAG), adc_dims, adims);
 
-	long adc_strs[DIMS];
+	bart_stride_t adc_strs[DIMS];
 	md_calc_strides(DIMS, adc_strs, adc_dims, CFL_SIZE);
 
-	long astrs[DIMS];
+	bart_stride_t astrs[DIMS];
 	md_calc_strides(DIMS, astrs, adims, CFL_SIZE);
 
-	long ind_dims[DIMS];
+	bart_dim_t ind_dims[DIMS];
 	md_select_dims(DIMS, ~(READ_FLAG | PHS1_FLAG), ind_dims, adims);
 
-	long ind_strs[DIMS];
+	bart_stride_t ind_strs[DIMS];
 	md_calc_strides(DIMS, ind_strs, ind_dims, CFL_SIZE);
 
 	complex float* out_grad = NULL;

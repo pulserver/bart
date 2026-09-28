@@ -535,8 +535,8 @@ static struct nlop_s* nlop_stack_inputs_generic(const struct nlop_s* x, int NI, 
 	if (0 > stack_dim)
 		stack_dim += N;
 
-	long odims[NI][N];
-	long idims[N];
+	bart_dim_t odims[NI][N];
+	bart_dim_t idims[N];
 	md_copy_dims(N, idims, nlop_generic_domain(x, index[0])->dims);
 	idims[stack_dim] = 0;
 
@@ -598,8 +598,8 @@ static struct nlop_s* nlop_stack_outputs_generic(const struct nlop_s* x, int NO,
 	if (0 > stack_dim)
 		stack_dim += N;
 
-	long idims[NO][N];
-	long odims[N];
+	bart_dim_t idims[NO][N];
+	bart_dim_t odims[N];
 
 	md_copy_dims(N, odims, nlop_generic_codomain(x, index[0])->dims);
 	odims[stack_dim] = 0;

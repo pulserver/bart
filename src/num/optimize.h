@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include <stdlib.h>
 
 extern void merge_dims(int D, int N, bart_dim_t dims[N], bart_stride_t (*ostrs[D])[N]);

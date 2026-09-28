@@ -33,13 +33,13 @@ struct wavelet_s {
 	linop_data_t super;
 
 	int N;
-	unsigned long flags;
-	const long* idims;
-	const long* istr;
-	const long* odims;
-	const long* ostr;
-	const long* minsize;
-	long* shifts;
+	bart_flags_t flags;
+	const bart_dim_t* idims;
+	const bart_stride_t* istr;
+	const bart_dim_t* odims;
+	const bart_stride_t* ostr;
+	const bart_dim_t* minsize;
+	bart_dim_t* shifts;
 	bool randshift;
 	struct bart_rand_state *rand_state;
 	int flen;
@@ -93,7 +93,7 @@ static void wavelet_del(const linop_data_t* _data)
 	xfree(data);
 }
 
-struct linop_s* linop_wavelet_create(int N, unsigned long flags, const long dims[N], const long istr[N], enum wtype wtype, const long minsize[N], bool randshift)
+struct linop_s* linop_wavelet_create(int N, bart_flags_t flags, const bart_dim_t dims[N], const bart_stride_t istr[N], enum wtype wtype, const bart_dim_t minsize[N], bool randshift)
 {
 	PTR_ALLOC(struct wavelet_s, data);
 	SET_TYPEID(wavelet_s, data);
@@ -123,27 +123,27 @@ struct linop_s* linop_wavelet_create(int N, unsigned long flags, const long dims
 		break;
 	}
 
-	long (*idims)[N] = TYPE_ALLOC(long[N]);
+	bart_dim_t (*idims)[N] = TYPE_ALLOC(bart_dim_t[N]);
 	md_copy_dims(N, *idims, dims);
 	data->idims = *idims;
 
-	long (*nistr)[N] = TYPE_ALLOC(long[N]);
+	bart_stride_t (*nistr)[N] = TYPE_ALLOC(bart_dim_t[N]);
 	md_copy_strides(N, *nistr, istr);
 	data->istr = *nistr;
 
-	long (*nminsize)[N] = TYPE_ALLOC(long[N]);
+	bart_dim_t (*nminsize)[N] = TYPE_ALLOC(bart_dim_t[N]);
 	md_copy_dims(N, *nminsize, minsize);
 	data->minsize = *nminsize;
 
-	long (*odims)[N] = TYPE_ALLOC(long[N]);
+	bart_dim_t (*odims)[N] = TYPE_ALLOC(bart_dim_t[N]);
 	wavelet_coeffs2(N, flags, *odims, dims, minsize, data->flen);
 	data->odims = *odims;
 
-	long (*ostr)[N] = TYPE_ALLOC(long[N]);
+	bart_stride_t (*ostr)[N] = TYPE_ALLOC(bart_dim_t[N]);
 	md_calc_strides(N, *ostr, *odims, CFL_SIZE);
 	data->ostr = *ostr;
 
-	long (*shifts)[N] = TYPE_ALLOC(long[N]);
+	bart_dim_t (*shifts)[N] = TYPE_ALLOC(bart_dim_t[N]);
 	for (int i = 0; i < data->N; i++)
 		(*shifts)[i] = 0;
 

@@ -60,16 +60,16 @@ void model_net_deactivate_multigpu(void)
 struct noir2_net_config_s {
 
 	int N;
-	long* trj_dims;
-	long* wgh_dims;
-	long* bas_dims;
-	long* msk_dims;
-	long* ksp_dims;
-	long* cim_dims;
-	long* img_dims;
-	long* col_dims;
+	bart_dim_t* trj_dims;
+	bart_dim_t* wgh_dims;
+	bart_dim_t* bas_dims;
+	bart_dim_t* msk_dims;
+	bart_dim_t* ksp_dims;
+	bart_dim_t* cim_dims;
+	bart_dim_t* img_dims;
+	bart_dim_t* col_dims;
 
-	unsigned long batch_flag;
+	bart_flags_t batch_flag;
 	struct noir2_model_conf_s mconf;
 
 	bool noncart;
@@ -79,29 +79,29 @@ struct noir2_net_config_s {
 };
 
 struct noir2_net_config_s* noir2_net_config_create(int N,
-	const long trj_dims[N],
-	const long wgh_dims[N],
-	const long bas_dims[N], const complex float* basis,
-	const long msk_dims[N], const complex float* mask,
-	const long ksp_dims[N],
-	const long cim_dims[N],
-	const long img_dims[N],
-	const long col_dims[N],
-	unsigned long batch_flag,
+	const bart_dim_t trj_dims[N],
+	const bart_dim_t wgh_dims[N],
+	const bart_dim_t bas_dims[N], const complex float* basis,
+	const bart_dim_t msk_dims[N], const complex float* mask,
+	const bart_dim_t ksp_dims[N],
+	const bart_dim_t cim_dims[N],
+	const bart_dim_t img_dims[N],
+	const bart_dim_t col_dims[N],
+	bart_flags_t batch_flag,
 	struct noir2_model_conf_s* model_conf)
 {
 	PTR_ALLOC(struct noir2_net_config_s, x);
 
 	x->N = N;
 
-	x->trj_dims = ARR_CLONE(long[N], trj_dims ?: MD_SINGLETON_DIMS(N));
-	x->wgh_dims = ARR_CLONE(long[N], wgh_dims ?: MD_SINGLETON_DIMS(N));
-	x->bas_dims = ARR_CLONE(long[N], bas_dims ?: MD_SINGLETON_DIMS(N));
-	x->msk_dims = ARR_CLONE(long[N], msk_dims ?: MD_SINGLETON_DIMS(N));
-	x->ksp_dims = ARR_CLONE(long[N], ksp_dims ?: MD_SINGLETON_DIMS(N));
-	x->cim_dims = ARR_CLONE(long[N], cim_dims ?: MD_SINGLETON_DIMS(N));
-	x->img_dims = ARR_CLONE(long[N], img_dims ?: MD_SINGLETON_DIMS(N));
-	x->col_dims = ARR_CLONE(long[N], col_dims ?: MD_SINGLETON_DIMS(N));
+	x->trj_dims = ARR_CLONE(bart_dim_t[N], trj_dims ?: MD_SINGLETON_DIMS(N));
+	x->wgh_dims = ARR_CLONE(bart_dim_t[N], wgh_dims ?: MD_SINGLETON_DIMS(N));
+	x->bas_dims = ARR_CLONE(bart_dim_t[N], bas_dims ?: MD_SINGLETON_DIMS(N));
+	x->msk_dims = ARR_CLONE(bart_dim_t[N], msk_dims ?: MD_SINGLETON_DIMS(N));
+	x->ksp_dims = ARR_CLONE(bart_dim_t[N], ksp_dims ?: MD_SINGLETON_DIMS(N));
+	x->cim_dims = ARR_CLONE(bart_dim_t[N], cim_dims ?: MD_SINGLETON_DIMS(N));
+	x->img_dims = ARR_CLONE(bart_dim_t[N], img_dims ?: MD_SINGLETON_DIMS(N));
+	x->col_dims = ARR_CLONE(bart_dim_t[N], col_dims ?: MD_SINGLETON_DIMS(N));
 
 	x->basis = basis;
 	x->mask = mask;
@@ -141,14 +141,14 @@ struct noir2_net_s {
 struct noir2_net_s* noir2_net_create(struct noir2_net_config_s* config, int NB)
 {
 	int N = config->N;
-	long trj_dims[N];
-	long wgh_dims[N];
-	long bas_dims[N];
-	long msk_dims[N];
-	long ksp_dims[N];
-	long cim_dims[N];
-	long img_dims[N];
-	long col_dims[N];
+	bart_dim_t trj_dims[N];
+	bart_dim_t wgh_dims[N];
+	bart_dim_t bas_dims[N];
+	bart_dim_t msk_dims[N];
+	bart_dim_t ksp_dims[N];
+	bart_dim_t cim_dims[N];
+	bart_dim_t img_dims[N];
+	bart_dim_t col_dims[N];
 
 	md_select_dims(N, config->batch_flag, trj_dims, config->trj_dims);
 	md_select_dims(N, config->batch_flag, wgh_dims, config->wgh_dims);
@@ -157,7 +157,7 @@ struct noir2_net_s* noir2_net_create(struct noir2_net_config_s* config, int NB)
 	md_select_dims(N, config->batch_flag, img_dims, config->img_dims);
 	md_select_dims(N, config->batch_flag, col_dims, config->col_dims);
 
-	long NB_model = md_calc_size(N, ksp_dims);
+	bart_dim_t NB_model = md_calc_size(N, ksp_dims);
 	assert(NB_model == md_calc_size(N, wgh_dims));
 	assert(NB_model == md_calc_size(N, cim_dims));
 	assert(NB_model == md_calc_size(N, img_dims));
@@ -176,13 +176,13 @@ struct noir2_net_s* noir2_net_create(struct noir2_net_config_s* config, int NB)
 
 	struct noir2_s models[NB * NB_model];
 	
-	long img_col_dims[N];
+	bart_dim_t img_col_dims[N];
 	md_copy_dims(N, img_col_dims, col_dims);
 	for (int i = 0; i < N; i++)
 		if (1 != img_dims[i] && 1 != col_dims[i])
 			img_col_dims[i] = img_dims[i];
 
-	for (long i = 0; i < NB * NB_model; i++) {
+	for (bart_dim_t i = 0; i < NB * NB_model; i++) {
 
 		if (config->noncart)
 			models[i] = noir2_noncart_create(N, trj_dims, NULL, wgh_dims, NULL, bas_dims, config->basis, msk_dims, config->mask, ksp_dims, cim_dims, img_dims, col_dims, img_col_dims, &config->mconf);
@@ -235,13 +235,13 @@ int noir2_net_get_N(struct noir2_net_s* x)
 	return x->config->N;
 }
 
-void noir2_net_get_img_dims(struct noir2_net_s* x, int N, long img_dims[N])
+void noir2_net_get_img_dims(struct noir2_net_s* x, int N, bart_dim_t img_dims[N])
 {
 	assert(N == x->config->N);
 	md_copy_dims(N, img_dims, x->config->img_dims);
 }
 
-void noir2_net_get_cim_dims(struct noir2_net_s* x, int N, long cim_dims[N])
+void noir2_net_get_cim_dims(struct noir2_net_s* x, int N, bart_dim_t cim_dims[N])
 {
 	assert(N == x->config->N);
 	md_copy_dims(N, cim_dims, x->config->cim_dims);
@@ -351,7 +351,7 @@ static const struct nlop_s* noir_normal_inversion_create(struct noir2_s* model, 
 	conf.iter_conf = &cgconf;
 
 	auto normal_op = noir_get_normal(model);
-	auto result = norm_inv_lambda_create(&conf, normal_op, ~0UL);
+	auto result = norm_inv_lambda_create(&conf, normal_op, ~UINT64_C(0));
 
 	nlop_free(normal_op);
 
@@ -368,8 +368,8 @@ static const struct nlop_s* noir_gauss_newton_step_create_s(struct noir2_s* mode
 	assert(1 == dom->N);
 	int N = cod->N;
 
-	long dims[1];
-	long kdims[N];
+	bart_dim_t dims[1];
+	bart_dim_t kdims[N];
 
 	md_copy_dims(1, dims, dom->dims);
 	md_copy_dims(N, kdims, cod->dims);
@@ -527,18 +527,18 @@ static const struct nlop_s* noir_rtnlinv_iter_s_create(int T, struct noir2_s* mo
 const struct nlop_s* noir_rtnlinv_iter_create(struct noir2_net_s* model, const struct iter_conjgrad_conf* iter_conf, int iter, int iter_skip, float redu, float alpha_min, float temp_damp)
 {
 	int N = model->config->N;
-	long bat_dims[N];
+	bart_dim_t bat_dims[N];
 
 	md_select_dims(N,  model->config->batch_flag, bat_dims, model->config->ksp_dims);
 	assert(1 < bat_dims[TIME_DIM]);
 
-	long T = bat_dims[TIME_DIM];
-	long B = md_calc_size(N, bat_dims) / T;
+	bart_dim_t T = bat_dims[TIME_DIM];
+	bart_dim_t B = md_calc_size(N, bat_dims) / T;
 
 	const struct nlop_s* nlops[B];
-	long b = 0;
+	bart_dim_t b = 0;
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
 	struct noir2_s* models[T];
@@ -588,7 +588,7 @@ const struct nlop_s* noir_decomp_create(struct noir2_net_s* model)
 	int ostack_dims[] = { BATCH_DIM, BATCH_DIM };
 
 	int N = model->config->N;
-	long col_dims[N];
+	bart_dim_t col_dims[N];
 	md_copy_dims(N, col_dims, model->models[0].col_ten_dims);
 
 	for (int i = 0; i < N; i++)
@@ -780,11 +780,11 @@ const struct nlop_s* noir_adjoint_fft_create_s(struct noir2_s* model)
 	auto dom = linop_domain(model->lop_fft);
 
 	int N = model->N;
-	long nl_odims[1][N];
+	bart_dim_t nl_odims[1][N];
 	md_copy_dims(N, nl_odims[0], dom->dims);
 
 
-	long nl_idims[2][N];
+	bart_dim_t nl_idims[2][N];
 	md_copy_dims(N, nl_idims[0], cod->dims);
 	md_copy_dims(N, nl_idims[1], data->model->pat_dims);
 
@@ -825,11 +825,11 @@ const struct nlop_s* noir_adjoint_nufft_create_s(struct noir2_s* model)
 	auto dom = linop_domain(model->lop_fft);
 
 	int N = model->N;
-	long nl_odims[1][N];
+	bart_dim_t nl_odims[1][N];
 	md_copy_dims(N, nl_odims[0], dom->dims);
 
 
-	long nl_idims[3][N];
+	bart_dim_t nl_idims[3][N];
 	md_copy_dims(N, nl_idims[0], cod->dims);
 	md_copy_dims(N, nl_idims[1], data->model->pat_dims);
 	md_copy_dims(N, nl_idims[2], data->model->trj_dims);
@@ -951,10 +951,10 @@ const struct nlop_s* noir_nufft_create_s(struct noir2_s* model)
 	data->model = model;
 
 	int N = model->N;
-	long nl_odims[1][N];
+	bart_dim_t nl_odims[1][N];
 	md_copy_dims(N, nl_odims[0], model->ksp_dims);
 
-	long nl_idims[2][N];
+	bart_dim_t nl_idims[2][N];
 	md_copy_dims(N, nl_idims[0], model->cim_dims);
 	md_copy_dims(N, nl_idims[1], model->trj_dims);
 
@@ -1038,7 +1038,7 @@ static const struct nlop_s* noir_sense_normal_inversion_create(struct noir2_s* m
 	conf.iter_conf = &cgconf;
 
 	auto normal_op = noir_sense_normal(model);
-	auto result = norm_inv_lambda_create(&conf, normal_op, ~0UL);
+	auto result = norm_inv_lambda_create(&conf, normal_op, ~UINT64_C(0));
 
 	nlop_free(normal_op);
 
@@ -1049,7 +1049,7 @@ static const struct nlop_s* noir_sense_normal_inversion_create(struct noir2_s* m
 static const struct nlop_s* noir_sense_recon_create_s(struct noir2_s* model, const struct iter_conjgrad_conf* iter_conf)
 {
 	int N = model->N;
-	long img_dims[N];
+	bart_dim_t img_dims[N];
 	md_copy_dims(N, img_dims, model->img_dims);
 
 	auto result = noir_sense_adjoint(model);								//out: A^Hy; in: y, coln
@@ -1089,7 +1089,7 @@ const struct nlop_s* noir_sense_recon_create(struct noir2_net_s* model, const st
 	return nlop_reshape2_in_F(ret, 0, model->config->N, model->config->batch_flag, model->config->cim_dims);
 }
 
-const struct nlop_s* noir_nlinv_regularization_create(struct noir2_net_s* model, unsigned long mask_flags)
+const struct nlop_s* noir_nlinv_regularization_create(struct noir2_net_s* model, bart_flags_t mask_flags)
 {
 	auto nlop_l2 = noir_split_create(model);
 
@@ -1099,15 +1099,15 @@ const struct nlop_s* noir_nlinv_regularization_create(struct noir2_net_s* model,
 	int N = dom_img->N;
 	assert(DIMS == N);
 
-	long img_dims[N];
-	long col_dims[N];
-	long bat_dims[N];
+	bart_dim_t img_dims[N];
+	bart_dim_t col_dims[N];
+	bart_dim_t bat_dims[N];
 
 	md_copy_dims(N, img_dims, dom_img->dims);
 	md_copy_dims(N, col_dims, dom_col->dims);
 	md_select_dims(N, BATCH_FLAG, bat_dims, img_dims);
 
-	long msk_dims[N];
+	bart_dim_t msk_dims[N];
 	md_select_dims(N, mask_flags, msk_dims, img_dims);
 
 	nlop_l2 = nlop_chain2_swap_FF(nlop_l2, 0, nlop_tenmul_create(N, img_dims, img_dims, msk_dims), 0);
@@ -1163,7 +1163,7 @@ struct noir_nlop_debug_s {
 	const struct nlop_s* frw;
 	const struct nlop_s* der;
 	const struct nlop_s* adj;
-	long size;
+	bart_dim_t size;
 };
 
 DEF_TYPEID(noir_nlop_debug_s);
@@ -1254,7 +1254,7 @@ const struct nlop_s* noir_nlop_dump_create(struct noir2_net_s* model, const char
 	data->adj = nlop_del_out_F(data->adj, 0);
 
 	int N = nlop_generic_domain(decomp, 0)->N;
-	long dims[N];
+	bart_dim_t dims[N];
 	md_copy_dims(N, dims, nlop_generic_domain(decomp, 0)->dims);
 
 	data->size = md_calc_size(N, dims);

@@ -19,16 +19,16 @@
 // include test data
 #include "test_flpmath_data.h"
 
-typedef void (*z3opd_t)(int D, const long dims[D], const long ostrs[D], complex double* optr, const long istrs1[D], const complex float* iptr1, const long istrs2[D], const complex float* iptr2);
-typedef void (*z3op_t)(int D, const long dims[D], const long ostrs[D], complex float* optr, const long istrs1[D], const complex float* iptr1, const long istrs2[D], const complex float* iptr2);
-typedef void (*r3op_t)(int D, const long dims[D], const long ostrs[D], float* optr, const long istrs1[D], const float* iptr1, const long istrs2[D], const float* iptr2);
-typedef void (*r3opd_t)(int D, const long dims[D], const long ostrs[D], double* optr, const long istrs1[D], const float* iptr1, const long istrs2[D], const float* iptr2);
+typedef void (*z3opd_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex double* optr, const bart_stride_t istrs1[D], const complex float* iptr1, const bart_stride_t istrs2[D], const complex float* iptr2);
+typedef void (*z3op_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs1[D], const complex float* iptr1, const bart_stride_t istrs2[D], const complex float* iptr2);
+typedef void (*r3op_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], float* optr, const bart_stride_t istrs1[D], const float* iptr1, const bart_stride_t istrs2[D], const float* iptr2);
+typedef void (*r3opd_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], double* optr, const bart_stride_t istrs1[D], const float* iptr1, const bart_stride_t istrs2[D], const float* iptr2);
 
-static bool test_mpi_zscalar2(unsigned long mpi_flags)
+static bool test_mpi_zscalar2(bart_flags_t mpi_flags)
 {
 	enum { N = 5};
-	long dims[N] = { 2, 3, 3, 3, 3 };
-	long strs[N ];
+	bart_dim_t dims[N] = { 2, 3, 3, 3, 3 };
+	bart_stride_t strs[N ];
 	md_calc_strides(N, strs, dims, FL_SIZE);
 
 	float* ptr_dist = md_mpi_move(N, mpi_flags, dims, (float*)test_md_in0, FL_SIZE);
@@ -42,24 +42,24 @@ static bool test_mpi_zscalar2(unsigned long mpi_flags)
 	UT_RETURN_ASSERT(err < UT_TOL);
 }
 
-static bool test_mpi_scalar2_8(void)	{ return test_mpi_zscalar2(8UL); }
-static bool test_mpi_scalar2_12(void)	{ return test_mpi_zscalar2(12UL); }
+static bool test_mpi_scalar2_8(void)	{ return test_mpi_zscalar2(UINT64_C(8)); }
+static bool test_mpi_scalar2_12(void)	{ return test_mpi_zscalar2(UINT64_C(12)); }
 
 UT_REGISTER_TEST(test_mpi_scalar2_8);
 UT_REGISTER_TEST(test_mpi_scalar2_12);
 
 
-static bool test_mpi_z3opd(z3opd_t test_fun, unsigned long mpi_flags)
+static bool test_mpi_z3opd(z3opd_t test_fun, bart_flags_t mpi_flags)
 {
 	enum { N = 4};
-	long dims[N] = { 3, 3, 3, 3 };
-	long strs[N];
+	bart_dim_t dims[N] = { 3, 3, 3, 3 };
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
 	complex float* in1 = md_mpi_move(N, mpi_flags, dims, test_md_in0, CFL_SIZE);
 	complex float* in2 = md_mpi_move(N, mpi_flags, dims, test_md_in1, CFL_SIZE);
 
-	long dstrs[N];
+	bart_stride_t dstrs[N];
 	md_calc_strides(N, dstrs, dims, CDL_SIZE);
 	complex double* ret = md_alloc_mpi(N, mpi_flags, dims, CDL_SIZE);
 	md_clear(N, dims, ret, CDL_SIZE);
@@ -75,7 +75,7 @@ static bool test_mpi_z3opd(z3opd_t test_fun, unsigned long mpi_flags)
 	test_fun(N, dims, dstrs, ref, strs, test_md_in0, strs, test_md_in1);
 
 	//Hacky but should work for this purpose
-	long rdims[N + 1];
+	bart_dim_t rdims[N + 1];
 	rdims[0] = DL_SIZE;
 	md_copy_dims(N, rdims + 1, dims);
 
@@ -108,11 +108,11 @@ static bool test_mpi_zfmacD2_34(void)	{ return test_mpi_z3opd(md_zfmacD2,	MD_BIT
 UT_REGISTER_TEST(test_mpi_zfmacD2_3);
 UT_REGISTER_TEST(test_mpi_zfmacD2_34);
 
-static bool test_mpi_z3op(z3op_t test_fun, unsigned long mpi_flags)
+static bool test_mpi_z3op(z3op_t test_fun, bart_flags_t mpi_flags)
 {
 	enum { N = 4};
-	long dims[N] = { 3, 3, 3, 3 };
-	long strs[N];
+	bart_dim_t dims[N] = { 3, 3, 3, 3 };
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
 	complex float* in1 = md_mpi_move(N, mpi_flags, dims, test_md_in0, CFL_SIZE);
@@ -161,11 +161,11 @@ static bool test_mpi_zadd2_34(void)		{ return test_mpi_z3op(md_zadd2,	MD_BIT(3)|
 UT_REGISTER_TEST(test_mpi_zadd2_3);
 UT_REGISTER_TEST(test_mpi_zadd2_34);
 
-static bool test_mpi_r3op(r3op_t test_fun, unsigned long mpi_flags)
+static bool test_mpi_r3op(r3op_t test_fun, bart_flags_t mpi_flags)
 {
 	enum { N = 5};
-	long dims[N] = { 2, 3, 3, 3, 3 };
-	long strs[N];
+	bart_dim_t dims[N] = { 2, 3, 3, 3, 3 };
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, FL_SIZE);
 	
 	float* in1 = md_mpi_move(N, mpi_flags, dims, test_md_in0, FL_SIZE);
@@ -203,17 +203,17 @@ UT_REGISTER_TEST(test_mpi_fmac2_4);
 UT_REGISTER_TEST(test_mpi_fmac2_23);
 
 
-static bool test_mpi_r3opd(r3opd_t test_fun, unsigned long mpi_flags)
+static bool test_mpi_r3opd(r3opd_t test_fun, bart_flags_t mpi_flags)
 {
 	enum { N = 5};
-	long dims[N] = { 2, 3, 3, 3, 3 };
-	long strs[N];
+	bart_dim_t dims[N] = { 2, 3, 3, 3, 3 };
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, FL_SIZE);
 
 	float* in1 = md_mpi_move(N, mpi_flags, dims, test_md_in0, FL_SIZE);
 	float* in2 = md_mpi_move(N, mpi_flags, dims, test_md_in1, FL_SIZE);
 
-	long dstrs[N];
+	bart_stride_t dstrs[N];
 	md_calc_strides(N, dstrs, dims, DL_SIZE);
 
 	double* ret = md_alloc_mpi(N, mpi_flags, dims, DL_SIZE);

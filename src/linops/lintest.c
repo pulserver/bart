@@ -22,10 +22,10 @@ static float linop_test_adjoint_generic(const struct linop_s* op, bool rvc)
 	int N_dom = linop_domain(op)->N;
 	int N_cod = linop_codomain(op)->N;
 
-	long dims_dom[N_dom];
+	bart_dim_t dims_dom[N_dom];
 	md_copy_dims(N_dom, dims_dom, linop_domain(op)->dims);
 
-	long dims_cod[N_cod];
+	bart_dim_t dims_cod[N_cod];
 	md_copy_dims(N_cod, dims_cod, linop_codomain(op)->dims);
 
 	complex float* tmp1 = md_alloc(N_dom, dims_dom, CFL_SIZE);
@@ -41,8 +41,8 @@ static float linop_test_adjoint_generic(const struct linop_s* op, bool rvc)
 
 	linop_adjoint_unchecked(op, tmp4, tmp2);
 
-	long rdims_dom[N_dom + 1];
-	long rdims_cod[N_cod + 1];
+	bart_dim_t rdims_dom[N_dom + 1];
+	bart_dim_t rdims_cod[N_cod + 1];
 	rdims_cod[0] = 2;
 	rdims_dom[0] = 2;
 	md_copy_dims(N_dom, rdims_dom + 1, dims_dom);
@@ -81,10 +81,10 @@ float linop_test_normal(const struct linop_s* op)
 	int N_dom = linop_domain(op)->N;
 	int N_cod = linop_codomain(op)->N;
 
-	long dims_dom[N_dom];
+	bart_dim_t dims_dom[N_dom];
 	md_copy_dims(N_dom, dims_dom, linop_domain(op)->dims);
 
-	long dims_cod[N_cod];
+	bart_dim_t dims_cod[N_cod];
 	md_copy_dims(N_cod, dims_cod, linop_codomain(op)->dims);
 
 	complex float* tmp1 = md_alloc(N_dom, dims_dom, CFL_SIZE);
@@ -114,7 +114,7 @@ float linop_test_inverse(const struct linop_s* op)
 {
 	int N_dom = linop_domain(op)->N;
 
-	long dims_dom[N_dom];
+	bart_dim_t dims_dom[N_dom];
 	md_copy_dims(N_dom, dims_dom, linop_domain(op)->dims);
 
 	complex float* tmp1 = md_alloc(N_dom, dims_dom, CFL_SIZE);

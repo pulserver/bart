@@ -2,6 +2,7 @@
 #ifndef _IO_H
 #define _IO_H 1
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 #define IO_MAX_HDR_SIZE 4096

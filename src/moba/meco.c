@@ -447,7 +447,7 @@ struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_
 	long TE_dims[N];
 	md_select_dims(N, TE_FLAG, TE_dims, y_dims);
 
-	long map_dims[N];
+	bart_dim_t map_dims[N];
 	md_select_dims(N, ~COEFF_FLAG, map_dims, x_dims);
 
 	struct nlop_s* model = nlop_ir_meco_create(N, y_dims, x_dims, NULL, NULL, TE_dims, TE, sel_model, fat_spec, B0);

@@ -2,6 +2,7 @@
 #ifndef EGRAPH_H
 #define EGRAPH_H
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 struct enode_s;

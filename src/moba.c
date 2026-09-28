@@ -54,7 +54,7 @@
 static const char help_str[] = "Model-based nonlinear inverse reconstruction";
 
 
-static void edge_filter1(const long map_dims[DIMS], complex float* dst, float lambda)
+static void edge_filter1(const bart_dim_t map_dims[DIMS], complex float* dst, float lambda)
 {
 	float sc[DIMS];
 	for (int i = 0; i < DIMS; i++)
@@ -73,7 +73,7 @@ static void edge_filter1(const long map_dims[DIMS], complex float* dst, float la
 	md_zsmul(DIMS, map_dims, dst, dst, lambda);
 }
 
-static void edge_filter2(const long map_dims[DIMS], complex float* dst, float lambda)
+static void edge_filter2(const bart_dim_t map_dims[DIMS], complex float* dst, float lambda)
 {
 	float beta = 100.;
 
@@ -132,7 +132,7 @@ int main_moba(int argc, char* argv[argc])
 	struct opt_reg_s ropts;
 	conf.ropts = &ropts;
 
-	long img_vec[3] = { };
+	bart_dim_t img_vec[3] = { };
 
 	struct moba_conf_s data;
 
@@ -309,7 +309,7 @@ int main_moba(int argc, char* argv[argc])
 
 
 
-	long ksp_dims[DIMS];
+	bart_dim_t ksp_dims[DIMS];
 	complex float* kspace_data = load_cfl(ksp_file, DIMS, ksp_dims);
 
 	struct vptr_hint_s* hint = NULL;
@@ -322,11 +322,11 @@ int main_moba(int argc, char* argv[argc])
 
 	vptr_hint_free(hint);
 
-	long TI_dims[DIMS];
+	bart_dim_t TI_dims[DIMS];
 	complex float* TI = NULL;
 
 	const complex float* TE_IR_MGRE = NULL;
-	long TE_IR_MGRE_dims[DIMS];
+	bart_dim_t TE_IR_MGRE_dims[DIMS];
 
 	if (MDB_IR_MGRE == conf.mode) {
 
@@ -354,13 +354,13 @@ int main_moba(int argc, char* argv[argc])
 
 	assert(1 == ksp_dims[MAPS_DIM]);
 
-	long grid_dims[DIMS];
+	bart_dim_t grid_dims[DIMS];
 	md_copy_dims(DIMS, grid_dims, ksp_dims);
 
 	complex float* cim = NULL;
 
 	complex float* pattern = NULL;
-	long pat_dims[DIMS];
+	bart_dim_t pat_dims[DIMS];
 
 
 	if (NULL != psf_file) {
@@ -470,7 +470,7 @@ int main_moba(int argc, char* argv[argc])
 
 		complex float* psf = NULL;
 
-		long wgh_dims[DIMS];
+		bart_dim_t wgh_dims[DIMS];
 		md_select_dims(DIMS, ~COIL_FLAG, wgh_dims, ksp_dims);
 
 		complex float* wgh = md_alloc_sameplace(DIMS, wgh_dims, CFL_SIZE, kspace_data);
@@ -591,13 +591,13 @@ int main_moba(int argc, char* argv[argc])
 
 	if (conf.k_filter) {
 
-		long map_dims[DIMS];
+		bart_dim_t map_dims[DIMS];
 		md_select_dims(DIMS, FFT_FLAGS, map_dims, pat_dims);
 
-		long map_strs[DIMS];
+		bart_stride_t map_strs[DIMS];
 		md_calc_strides(DIMS, map_strs, map_dims, CFL_SIZE);
 
-		long pat_strs[DIMS];
+		bart_stride_t pat_strs[DIMS];
 		md_calc_strides(DIMS, pat_strs, pat_dims, CFL_SIZE);
 
 		complex float* filter = md_alloc_sameplace(DIMS, map_dims, CFL_SIZE, pattern);
@@ -620,7 +620,7 @@ int main_moba(int argc, char* argv[argc])
 
 	// read initialization file
 
-	long init_dims[DIMS] = { [0 ... DIMS-1] = 1 };
+	bart_dim_t init_dims[DIMS] = { [0 ... DIMS-1] = 1 };
 	complex float* init = NULL;
 
 	if (NULL != init_file) {
@@ -638,7 +638,7 @@ int main_moba(int argc, char* argv[argc])
 	// Load passed B1
 
 	const complex float* b1 = NULL;
-	long b1_dims[DIMS];
+	bart_dim_t b1_dims[DIMS];
 
 	if (NULL != input_b1) {
 
@@ -650,7 +650,7 @@ int main_moba(int argc, char* argv[argc])
 	// Load passed B0
 
         const complex float* b0 = NULL;
-	long b0_dims[DIMS];
+	bart_dim_t b0_dims[DIMS];
 
 	if (NULL != input_b0) {
 
@@ -711,18 +711,18 @@ int main_moba(int argc, char* argv[argc])
 
 	// Scale parameter maps
 
-	long tmp_dims[DIMS];
+	bart_dim_t tmp_dims[DIMS];
 	md_select_dims(DIMS, FFT_FLAGS|MAPS_FLAG|TIME_FLAG|SLICE_FLAG|TIME2_FLAG, tmp_dims, grid_dims);
 
 	complex float* tmp = md_alloc_sameplace(DIMS, tmp_dims, CFL_SIZE, cim);
 
-	long pos[DIMS] = { [0 ... DIMS - 1] = 0 };
+	bart_dim_t pos[DIMS] = { [0 ... DIMS - 1] = 0 };
 
 	assert(img_dims[COEFF_DIM] <= (long)ARRAY_SIZE(data.other.scale));
 
 	// Transform B1 map from image to k-space and add k-space to initialization array (img)
 
-	unsigned long sobolev_flag = 0;
+	bart_flags_t sobolev_flag = 0;
 
 	sobolev_flag |= (MDB_T1_PHY == conf.mode) ? MD_BIT(2) : 0;
 	sobolev_flag |= (MDB_BLOCH == conf.mode) ? MD_BIT(3) : 0;

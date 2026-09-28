@@ -1,3 +1,5 @@
+#include "misc/dimtypes.h"
+
 
 extern bool bart_use_gpu;
 extern bart_flags_t bart_mpi_split_flags;

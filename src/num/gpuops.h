@@ -1,5 +1,6 @@
 
 #ifdef USE_GPU
+#include "misc/dimtypes.h"
 #include "num/gpu_compat_runtime.h"
 
 #include "misc/cppwrap.h"

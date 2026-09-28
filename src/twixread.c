@@ -340,7 +340,7 @@ static void skip_to_next(const char* hdr, int fd, off_t offset)
 	struct mdh1 mdh1;
 	memcpy(&mdh1, hdr, sizeof(mdh1));
 
-	ssize_t dma_length = mdh1.flags_dmalength & 0x01FFFFFFL;
+	ssize_t dma_length = mdh1.flags_dmalength & INT64_C(0x01FFFFFF);
 
 	if (dma_length < offset)
 		error("dma_length < offset.\n");
@@ -378,7 +378,7 @@ static void siemens_dims_mapping(long pos[DIMS], uint16_t sLC[14], unsigned long
 
 
 static enum adc_return siemens_bounds(bool vd, bool noise, bool dummy, bool refscan, bool refscan_ac,
-				      unsigned long ignore_dims_flags, int fd, long min[DIMS], long max[DIMS])
+				      bart_flags_t ignore_dims_flags, int fd, bart_dim_t min[DIMS], bart_dim_t max[DIMS])
 {
 	char scan_hdr[vd ? 192 : 0];
 	size_t size = sizeof(scan_hdr);
@@ -386,7 +386,7 @@ static enum adc_return siemens_bounds(bool vd, bool noise, bool dummy, bool refs
 	if (size != (size_t)read(fd, scan_hdr, size))
 		return ADC_ERROR;
 
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 
 	for (pos[COIL_DIM] = 0; pos[COIL_DIM] < max[COIL_DIM]; pos[COIL_DIM]++) {
 
@@ -511,7 +511,7 @@ static enum adc_return siemens_adc_read(bool vd, int fd, bool noise, bool dummy,
 			return ADC_ERROR;
 		}
 
-		xread(fd, buf + pos[COIL_DIM] * dims[read_dim], (size_t)(dims[read_dim] * (long)CFL_SIZE));
+		xread(fd, buf + pos[COIL_DIM] * dims[read_dim], (size_t)(dims[read_dim] * (bart_stride_t)CFL_SIZE));
 	}
 
 	pos[COIL_DIM] = 0;
@@ -538,8 +538,8 @@ int main_twixread(int argc, char* argv[argc])
 		ARG_OUTFILE(false, &pmu_file, "pmu"),
 	};
 
-	long adcs = 0;
-	long radial_lines = -1;
+	bart_dim_t adcs = 0;
+	bart_dim_t radial_lines = -1;
 
 	bool autoc = false;
 	bool linectr = false;
@@ -554,11 +554,11 @@ int main_twixread(int argc, char* argv[argc])
 	// i.e. PATREFANDIMASCAN or PATREFSCAN flags are set for AC region depending on position.
 	// If refscan_ac is set, we interpret PATREFSCAN lines as image lines, too.
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	md_singleton_dims(DIMS, dims);
 
 	bool chrono = false;
-	unsigned long ignore_dims_flags = LEVEL_FLAG;
+	bart_flags_t ignore_dims_flags = LEVEL_FLAG;
 
 	const char* pat_file = NULL;
 
@@ -620,15 +620,15 @@ int main_twixread(int argc, char* argv[argc])
 	bool vd = siemens_meas_setup(ifd, &hdr);
 
 	enum adc_return sar = ADC_OK;
-	long off[DIMS] = { };
+	bart_stride_t off[DIMS] = { };
 
 	if (noise && refscan)
 		error("Noise and reference scan cannot be read in one run!\n");
 
 	if (autoc | noise | chrono) {
 
-		long max[DIMS] = { [COIL_DIM] = 1000 };
-		long min[DIMS] = { }; // min is always 0
+		bart_dim_t max[DIMS] = { [COIL_DIM] = 1000 };
+		bart_dim_t min[DIMS] = { }; // min is always 0
 
 		if (chrono)
 			ignore_dims_flags = ~COIL_FLAG;
@@ -674,7 +674,7 @@ int main_twixread(int argc, char* argv[argc])
 		siemens_meas_setup(ifd, &hdr); // reset
 	}
 
-	long adc_dims[DIMS];
+	bart_dim_t adc_dims[DIMS];
 
 	if (-1 != radial_lines) {
 
@@ -714,7 +714,7 @@ int main_twixread(int argc, char* argv[argc])
 
 	void* buf = md_alloc(DIMS, adc_dims, CFL_SIZE);
 
-	long mpi_slice = -1;
+	bart_dim_t mpi_slice = -1;
 
 	sar = ADC_OK;
 
@@ -723,7 +723,7 @@ int main_twixread(int argc, char* argv[argc])
 		if (mpi && (0 == adcs)) //with MPI, we cannot rely on ADC_END
 			break;
 
-		long pos[DIMS] = { };
+		bart_dim_t pos[DIMS] = { };
 		complex float pmu_val = 0;
 
 		sar = siemens_adc_read(vd, ifd, noise, dummy, refscan, refscan_ac, ignore_dims_flags, linectr, partctr, radial, dims, pos, buf, &pmu_val);

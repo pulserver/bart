@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include <complex.h>
 
 extern void mat_identity(int A, int B, complex float x[A][B]);

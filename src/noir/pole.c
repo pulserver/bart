@@ -42,7 +42,7 @@ struct pole_config_s pole_config_default = {
 	.osx = 1.,
 };
 
-static void get_circle_coords(struct pole_config_s* conf, long pos[3], int index, int normal, int diameter, bool twoD)
+static void get_circle_coords(struct pole_config_s* conf, bart_dim_t pos[3], int index, int normal, int diameter, bool twoD)
 {
 	float angle = 2. * M_PI * index / conf->segments;
 
@@ -89,14 +89,14 @@ static int get_diameter(struct pole_config_s conf, int normal, const long dims[3
 	return diameter;
 }
 
-static void compute_curl_map_normal(struct pole_config_s conf, int N, const long dims[N], complex float* curl_map, const complex float* sens, int normal)
+static void compute_curl_map_normal(struct pole_config_s conf, int N, const bart_dim_t dims[N], complex float* curl_map, const complex float* sens, int normal)
 {
 	assert(2 <= bitcount(md_nontriv_dims(MIN(N, 3), dims)));
 	assert(0 < conf.diameter);
 	assert(0 <= normal && normal < 3);
 
-	long pos1[N];
-	long pos2[N];
+	bart_dim_t pos1[N];
+	bart_dim_t pos2[N];
 
 	md_set_dims(N, pos1, 0);
 	md_set_dims(N, pos2, 0);
@@ -105,7 +105,7 @@ static void compute_curl_map_normal(struct pole_config_s conf, int N, const long
 
 	bool twoD = false;
 
-	long odims[N];
+	bart_dim_t odims[N];
 	md_copy_dims(N, odims, dims);
 
 	for (int i = 0; i < 3; i++) {
@@ -172,7 +172,7 @@ static void compute_curl_map_normal(struct pole_config_s conf, int N, const long
 }
 
 
-void compute_curl_map(struct pole_config_s conf, int N, const long curl_dims[N], int dim, complex float* curl_map, const long sens_dims[N], const complex float* sens)
+void compute_curl_map(struct pole_config_s conf, int N, const bart_dim_t curl_dims[N], int dim, complex float* curl_map, const bart_dim_t sens_dims[N], const complex float* sens)
 {
 	assert(dim < N);
 	assert(md_check_compat(N, MD_BIT(dim), curl_dims, sens_dims));
@@ -196,7 +196,7 @@ void compute_curl_map(struct pole_config_s conf, int N, const long curl_dims[N],
 	}
 }
 
-void compute_curl_weighting(struct pole_config_s conf, int N, const long curl_dims[N], int dim, complex float* wgh_map, const long col_dims[N], const complex float* sens)
+void compute_curl_weighting(struct pole_config_s conf, int N, const bart_dim_t curl_dims[N], int dim, complex float* wgh_map, const bart_dim_t col_dims[N], const complex float* sens)
 {
 	assert(dim < N);
 	assert(md_check_compat(N, MD_BIT(dim), curl_dims, col_dims));
@@ -204,9 +204,9 @@ void compute_curl_weighting(struct pole_config_s conf, int N, const long curl_di
 	complex float* wgh = md_alloc_sameplace(N, col_dims, CFL_SIZE, wgh_map);
 
 	md_clear(N, col_dims, wgh, CFL_SIZE);
-	md_zss(N, col_dims, 0UL, wgh, sens);
+	md_zss(N, col_dims, UINT64_C(0), wgh, sens);
 
-	long rdims[N];
+	bart_dim_t rdims[N];
 	md_select_dims(N, ~conf.avg_flag, rdims, col_dims);
 
 	complex float* tmp = md_alloc_sameplace(N, rdims, CFL_SIZE, wgh_map);
@@ -226,9 +226,9 @@ void compute_curl_weighting(struct pole_config_s conf, int N, const long curl_di
 }
 
 
-void average_curl_map(int N, const long pmap_dims[N], complex float* red_curl_map, const long curl_dims[N], int dim, complex float* curl_map, complex float* wgh_map)
+void average_curl_map(int N, const bart_dim_t pmap_dims[N], complex float* red_curl_map, const bart_dim_t curl_dims[N], int dim, complex float* curl_map, complex float* wgh_map)
 {
-	long tmp_dims[N];
+	bart_dim_t tmp_dims[N];
 	md_select_dims(N, MD_BIT(dim) | md_nontriv_dims(N, pmap_dims), tmp_dims, curl_dims);
 
 	complex float* tmp = md_alloc_sameplace(N, tmp_dims, CFL_SIZE, curl_map);
@@ -252,7 +252,7 @@ void average_curl_map(int N, const long pmap_dims[N], complex float* red_curl_ma
 }
 
 
-static struct lseg_s extract_phase_poles_2d_sign(struct pole_config_s conf, int N, const long dims[N], const complex float* curl_map, bool pos)
+static struct lseg_s extract_phase_poles_2d_sign(struct pole_config_s conf, int N, const bart_dim_t dims[N], const complex float* curl_map, bool pos)
 {
 	assert((3 == bitcount(md_nontriv_dims(3, dims))) || (2 == bitcount(md_nontriv_dims(3, dims))));
 	assert(1 == md_calc_size(N - 3, dims + 3));
@@ -285,19 +285,19 @@ static struct lseg_s extract_phase_poles_2d_sign(struct pole_config_s conf, int 
 	if (conf.closing != 0. && !conf.espirit) {
 
 		int dmin = lroundf(ceilf(((-1 == conf.closing) ? conf.diameter / 2. : conf.closing) * MAX(dims[(normal + 1) % 3], dims[(normal + 2) % 3])));
-		long mdims[3];
+		bart_dim_t mdims[3];
 		complex float* mask = md_structuring_element_cube(3, mdims, dmin, md_nontriv_dims(3, dims), curl_map);
 
 		md_closing(3, mdims, mask, dims, binary, binary, CONV_TRUNCATED);
 		md_free(mask);
 	}
 
-	long sdims[3];
+	bart_dim_t sdims[3];
 	complex float* strc = md_structuring_element_cube(3, sdims, 1, md_nontriv_dims(3, dims), curl_map);
 
 	complex float* labels = md_alloc_sameplace(3, dims, CFL_SIZE, curl_map);
 
-	long nlabel = md_label(3, dims, labels, binary, sdims, strc);
+	bart_dim_t nlabel = md_label(3, dims, labels, binary, sdims, strc);
 
 	md_free(binary);
 	md_free(strc);
@@ -332,7 +332,7 @@ static struct lseg_s extract_phase_poles_2d_sign(struct pole_config_s conf, int 
 }
 
 
-struct lseg_s extract_phase_poles_2D(struct pole_config_s conf, int N, const long dims[N], const complex float* curl_map)
+struct lseg_s extract_phase_poles_2D(struct pole_config_s conf, int N, const bart_dim_t dims[N], const complex float* curl_map)
 {
 	struct lseg_s pos = extract_phase_poles_2d_sign(conf, N, dims, curl_map, true);
 	struct lseg_s neg = extract_phase_poles_2d_sign(conf, N, dims, curl_map, false);
@@ -388,7 +388,7 @@ static void get_coord_transform(vec3_t evec[3], const vec3_t r1, const vec3_t r2
 
 
 
-void sample_phase_pole_2D(int N, const long dims[N], complex float* dst, int D, const float r[D][2][3])
+void sample_phase_pole_2D(int N, const bart_dim_t dims[N], complex float* dst, int D, const float r[D][2][3])
 {
 	assert(2 == bitcount(md_nontriv_dims(3, dims)));
 
@@ -433,13 +433,13 @@ void sample_phase_pole_2D(int N, const long dims[N], complex float* dst, int D, 
 			center[i][j] += (dims[j] / 2) / (float)dims[j];
 	}
 
-	const long* dimsp = dims;
+	const bart_dim_t* dimsp = dims;
 	float* centerp0 = &center[0][0];
 	float* evecp0 = &evec[0][0][0];
 	float* Lp = L;
 
 
-	NESTED(complex float, pole_kernel, (const long pos[]))
+	NESTED(complex float, pole_kernel, (const bart_dim_t pos[]))
 	{
 		complex float ret = 1.;
 
@@ -470,9 +470,9 @@ void sample_phase_pole_2D(int N, const long dims[N], complex float* dst, int D, 
 }
 
 
-bool phase_pole_correction(struct pole_config_s conf, int N, const long pmap_dims[N], complex float* phase, const long sens_dims[N], const complex float* sens)
+bool phase_pole_correction(struct pole_config_s conf, int N, const bart_dim_t pmap_dims[N], complex float* phase, const bart_dim_t sens_dims[N], const complex float* sens)
 {
-	long curl_dims[N];
+	bart_dim_t curl_dims[N];
 	md_copy_dims(N, curl_dims, sens_dims);
 
 	int normal = conf.normal;
@@ -494,7 +494,7 @@ bool phase_pole_correction(struct pole_config_s conf, int N, const long pmap_dim
 	compute_curl_map(conf, N, curl_dims, ITER_DIM, curl_map, sens_dims, sens);
 	compute_curl_weighting(conf, N, curl_dims, ITER_DIM, curl_wgh, sens_dims, sens);
 
-	long rcurl_map_dims[N];
+	bart_dim_t rcurl_map_dims[N];
 	md_select_dims(N, ~(conf.avg_flag | MD_BIT(ITER_DIM)), rcurl_map_dims, curl_dims);
 
 	complex float* red_curl_map = md_alloc_sameplace(N, rcurl_map_dims, CFL_SIZE, sens);
@@ -526,23 +526,23 @@ bool phase_pole_correction(struct pole_config_s conf, int N, const long pmap_dim
 }
 
 
-bool phase_pole_correction_loop(struct pole_config_s conf, int N, unsigned long lflags, const long pmap_dims[N], complex float* phase, const long sens_dims[N], const complex float* sens)
+bool phase_pole_correction_loop(struct pole_config_s conf, int N, bart_flags_t lflags, const bart_dim_t pmap_dims[N], complex float* phase, const bart_dim_t sens_dims[N], const complex float* sens)
 {
 	bool ret = false;
 
-	long npmap_dims[N];
-	long nsens_dims[N];
+	bart_dim_t npmap_dims[N];
+	bart_dim_t nsens_dims[N];
 
 	md_select_dims(N, ~lflags, npmap_dims, pmap_dims);
 	md_select_dims(N, ~lflags, nsens_dims, sens_dims);
 
-	long pmap_strs[N];
-	long sens_strs[N];
+	bart_stride_t pmap_strs[N];
+	bart_stride_t sens_strs[N];
 
 	md_calc_strides(N, pmap_strs, pmap_dims, CFL_SIZE);
 	md_calc_strides(N, sens_strs, sens_dims, CFL_SIZE);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
 	do {
@@ -558,14 +558,14 @@ bool phase_pole_correction_loop(struct pole_config_s conf, int N, unsigned long 
 }
 
 
-void phase_pole_normalize(int N, const long pdims[N], complex float* phase, const long idims[N], const complex float* image)
+void phase_pole_normalize(int N, const bart_dim_t pdims[N], complex float* phase, const bart_dim_t idims[N], const complex float* image)
 {
 	complex float* timage = md_alloc_sameplace(N, idims, CFL_SIZE, image);
 
 	md_ztenmul(N, idims, timage, pdims, phase, pdims, image);
 
-	long tpdims[N];
-	md_select_dims(N, ~7UL, tpdims, pdims);
+	bart_dim_t tpdims[N];
+	md_select_dims(N, ~UINT64_C(7), tpdims, pdims);
 
 	complex float* dot = md_alloc_sameplace(N, tpdims, CFL_SIZE, image);
 

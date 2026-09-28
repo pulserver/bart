@@ -1,3 +1,5 @@
+#include "misc/dimtypes.h"
+
 
 extern void activate_strided_vecops(void);
 extern void deactivate_strided_vecops(void);

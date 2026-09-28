@@ -65,10 +65,10 @@ int main_ncalib(int argc, char* argv[argc])
 	conf.normalize_lowres = true;
 	conf.alpha_min = 1.e-3;
 
-	long calsize[3] = { 48, 48, 48 };
-	long ksenssize[3] = { 16, 16, 16 };
+	bart_dim_t calsize[3] = { 48, 48, 48 };
+	bart_dim_t ksenssize[3] = { 16, 16, 16 };
 
-	long my_sens_dims[3] = { 0, 0, 0 };
+	bart_dim_t my_sens_dims[3] = { 0, 0, 0 };
 
 	const char* pat_file = NULL;
 	const char* trj_file = NULL;
@@ -79,9 +79,9 @@ int main_ncalib(int argc, char* argv[argc])
 	float scaling = 0;
 	float oversampling_coils = 0;
 
-	unsigned long cnstcoil_flags = 0UL;
-	unsigned long shared_img_flags = 0UL;
-	unsigned long scale_loop_flags = 0UL;
+	bart_flags_t cnstcoil_flags = UINT64_C(0);
+	bart_flags_t shared_img_flags = UINT64_C(0);
+	bart_flags_t scale_loop_flags = UINT64_C(0);
 
 	const struct opt_s opts[] = {
 
@@ -125,7 +125,7 @@ int main_ncalib(int argc, char* argv[argc])
 	num_init_delayed();
 	conf.gpu = bart_use_gpu;
 
-	long ksp_dims[DIMS];
+	bart_dim_t ksp_dims[DIMS];
 	complex float* kspace = load_cfl(ksp_file, DIMS, ksp_dims);
 
 	struct vptr_hint_s* hint = NULL;
@@ -143,7 +143,7 @@ int main_ncalib(int argc, char* argv[argc])
 	assert(1 == ksp_dims[MAPS_DIM]);
 
 	complex float* pattern = NULL;
-	long pat_dims[DIMS];
+	bart_dim_t pat_dims[DIMS];
 
 	if (NULL != pat_file) {
 
@@ -158,7 +158,7 @@ int main_ncalib(int argc, char* argv[argc])
 	}
 
 	const complex float* basis = NULL;
-	long bas_dims[DIMS];
+	bart_dim_t bas_dims[DIMS];
 
 	if (NULL != bas_file) {
 
@@ -169,12 +169,12 @@ int main_ncalib(int argc, char* argv[argc])
 		md_singleton_dims(DIMS, bas_dims);
 	}
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	md_copy_dims(DIMS, dims, ksp_dims);
 
-	long sens_dims[DIMS];
+	bart_dim_t sens_dims[DIMS];
 
-	long trj_dims[DIMS];
+	bart_dim_t trj_dims[DIMS];
 	complex float* traj  = NULL;
 
 	if (NULL != trj_file) {
@@ -183,7 +183,7 @@ int main_ncalib(int argc, char* argv[argc])
 
 		traj = load_cfl_sameplace(trj_file, DIMS, trj_dims, kspace);
 
-		long tdims[DIMS];
+		bart_dim_t tdims[DIMS];
 		estimate_im_dims(DIMS, FFT_FLAGS, tdims, trj_dims, traj);
 
 		md_select_dims(3, md_nontriv_dims(3, tdims), dims, calsize);
@@ -201,7 +201,7 @@ int main_ncalib(int argc, char* argv[argc])
 
 		md_zabs(DIMS, trj_dims, trj_tmp, traj);
 
-		long cord_dims[DIMS];
+		bart_dim_t cord_dims[DIMS];
 		md_select_dims(DIMS, MD_BIT(0), cord_dims, trj_dims);
 
 		complex float inv_dims[3] = { 1. / (dims[0] - ksenssize[0]),  1. / (dims[1] - ksenssize[1]), 1. / (dims[2] - ksenssize[2]) };
@@ -225,8 +225,8 @@ int main_ncalib(int argc, char* argv[argc])
 
 		md_copy_dims(3, my_sens_dims, ksp_dims);
 
-		long nksp_dims[DIMS];
-		long npat_dims[DIMS];
+		bart_dim_t nksp_dims[DIMS];
+		bart_dim_t npat_dims[DIMS];
 		md_copy_dims(DIMS, nksp_dims, ksp_dims);
 		md_copy_dims(DIMS, npat_dims, pat_dims);
 
@@ -240,7 +240,7 @@ int main_ncalib(int argc, char* argv[argc])
 		complex float* npat = anon_cfl_sameplace(NULL, DIMS, npat_dims, kspace);
 
 		complex float* tmp = md_alloc_sameplace(DIMS, nksp_dims, CFL_SIZE, nksp);
-		long tdims[DIMS];
+		bart_dim_t tdims[DIMS];
 
 		md_copy_dims(DIMS, tdims, nksp_dims);
 
@@ -289,7 +289,7 @@ int main_ncalib(int argc, char* argv[argc])
 		if (conf.noncart)
 			assert(1 == md_calc_size(5, bas_dims));
 		else
-			md_check_compat(5, ~0ul, bas_dims, dims);
+			md_check_compat(5, ~UINT64_C(0), bas_dims, dims);
 
 		dims[COEFF_DIM] = bas_dims[COEFF_DIM];
 		dims[TE_DIM] = 1;
@@ -310,14 +310,14 @@ int main_ncalib(int argc, char* argv[argc])
 	else
 	 	conf.oversampling_coils = oversampling_coils;
 
-	long ksens_dims[DIMS];
+	bart_dim_t ksens_dims[DIMS];
 	md_copy_dims(DIMS, ksens_dims, sens_dims);
 	md_select_dims(3, md_nontriv_dims(3, sens_dims), ksens_dims, ksenssize);
 
-	long img_dims[DIMS];
+	bart_dim_t img_dims[DIMS];
 	md_select_dims(DIMS, ~COIL_FLAG & ~shared_img_flags, img_dims, dims);
 
-	long cim_dims[DIMS];
+	bart_dim_t cim_dims[DIMS];
 	md_select_dims(DIMS, ~MAPS_FLAG, cim_dims, dims);
 
 	complex float* img = (NULL != img_file ? create_cfl_sameplace : anon_cfl_sameplace)(img_file, DIMS, img_dims, kspace);
@@ -331,7 +331,7 @@ int main_ncalib(int argc, char* argv[argc])
 
 	complex float mask = 1. / norm_img;
 
-	long scl_dims[DIMS];
+	bart_dim_t scl_dims[DIMS];
 	md_select_dims(DIMS, scale_loop_flags, scl_dims, ksp_dims);
 
 	if (0 > conf.scaling)
@@ -377,7 +377,7 @@ int main_ncalib(int argc, char* argv[argc])
 	unmap_cfl(DIMS, trj_dims, traj);
 	unmap_cfl(DIMS, pat_dims, pattern);
 
-	long nrm_dims[DIMS];
+	bart_dim_t nrm_dims[DIMS];
 	md_select_dims(DIMS, ~(MAPS_FLAG | COIL_FLAG), nrm_dims, sens_dims);
 	complex float* scl = md_alloc_sameplace(DIMS, nrm_dims, CFL_SIZE, sens);
 	md_zrss(DIMS, sens_dims, (MAPS_FLAG | COIL_FLAG), scl, sens);

@@ -15,11 +15,11 @@
 
 static bool test_md_gaussian_score_1d(complex float s)
 {
-	long dims_score[4] = { 1, 1, 1, 1 };
-	long dims_x[4]     = { 1, 1, 1, 1 };
-	long dims_mu[4]    = { 1, 1, 1, 1 };
-	long dims_vars[4]  = { 1, 1, 1, 1 };
-	long dims_ws[4]    = { 1, 1, 1, 1 };
+	bart_dim_t dims_score[4] = { 1, 1, 1, 1 };
+	bart_dim_t dims_x[4]     = { 1, 1, 1, 1 };
+	bart_dim_t dims_mu[4]    = { 1, 1, 1, 1 };
+	bart_dim_t dims_vars[4]  = { 1, 1, 1, 1 };
+	bart_dim_t dims_ws[4]    = { 1, 1, 1, 1 };
 
 	complex float x[1]    = { 0.3 };
 	complex float mu[1]   = { 0. };
@@ -39,11 +39,11 @@ static bool test_md_gaussian_score_1d(complex float s)
 
 static bool test_md_gaussian_score_2d(complex float s)
 {
-	long dims_score[4] = { 2, 1, 1, 1 };
-	long dims_x[4]     = { 2, 1, 1, 1 };
-	long dims_mu[4]    = { 2, 1, 1, 1 };
-	long dims_vars[4]  = { 1, 1, 1, 1 }; // only one variance implementation
-	long dims_ws[4]    = { 1, 1, 1, 1 };
+	bart_dim_t dims_score[4] = { 2, 1, 1, 1 };
+	bart_dim_t dims_x[4]     = { 2, 1, 1, 1 };
+	bart_dim_t dims_mu[4]    = { 2, 1, 1, 1 };
+	bart_dim_t dims_vars[4]  = { 1, 1, 1, 1 }; // only one variance implementation
+	bart_dim_t dims_ws[4]    = { 1, 1, 1, 1 };
 
 	complex float x[2]    = { 0.5 - 0.1i, 0.5 + 0.1i };
 	complex float mu[2]   = { 0.3, 1.2 };
@@ -64,11 +64,11 @@ static bool test_md_gaussian_score_2d(complex float s)
 
 static bool test_md_gaussian_score_4d(complex float s)
 {
-	long dims_score[4] = { 2, 2, 1, 1 };
-	long dims_x[4]     = { 2, 2, 1, 1 };
-	long dims_mu[4]    = { 2, 2, 1, 1 };
-	long dims_vars[4]  = { 1, 1, 1, 1 }; // only one variance implementation
-	long dims_ws[4]    = { 1, 1, 1, 1 };
+	bart_dim_t dims_score[4] = { 2, 2, 1, 1 };
+	bart_dim_t dims_x[4]     = { 2, 2, 1, 1 };
+	bart_dim_t dims_mu[4]    = { 2, 2, 1, 1 };
+	bart_dim_t dims_vars[4]  = { 1, 1, 1, 1 }; // only one variance implementation
+	bart_dim_t dims_ws[4]    = { 1, 1, 1, 1 };
 
 	complex float x[4] = { 0.9 - 0.5i, 0.5 + 0.2i, 0.7 - 0.9i, 0.8 + 0.3i };
 	complex float mu[4] = { 0 + 0.5i, 0.9 - 0.9i, 0.2 + 0.1i, 0.2 + 0.i };
@@ -88,11 +88,11 @@ static bool test_md_gaussian_score_4d(complex float s)
 
 static bool test_md_gaussian_score_multisamples(complex float s)
 {
-	long dims_score[4] = { 2, 1, 2, 1 };
-	long dims_x[4]     = { 2, 1, 2, 1 };
-	long dims_mu[4]    = { 2, 1, 1, 1 };
-	long dims_vars[4]  = { 1, 1, 1, 1 }; // only one variance implementation
-	long dims_ws[4]    = { 1, 1, 1, 1 };
+	bart_dim_t dims_score[4] = { 2, 1, 2, 1 };
+	bart_dim_t dims_x[4]     = { 2, 1, 2, 1 };
+	bart_dim_t dims_mu[4]    = { 2, 1, 1, 1 };
+	bart_dim_t dims_vars[4]  = { 1, 1, 1, 1 }; // only one variance implementation
+	bart_dim_t dims_ws[4]    = { 1, 1, 1, 1 };
 
 	complex float x[4]    = { 0.8 - 0.3i, 0.2 + 0.9i, 0.5 - 0.6i, 0.9 + 0.5i  };
 	complex float mu[2]   = { 0.3, 1.2 };
@@ -117,11 +117,11 @@ static bool test_md_gaussian_score_multisamples(complex float s)
 
 static bool test_md_gaussian_score_multigauss(complex float s)
 {
-	long dims_score[4] = { 2, 1, 1, 1 };
-	long dims_x[4]     = { 2, 1, 1, 1 };
-	long dims_mu[4]    = { 2, 1, 1, 2 };
-	long dims_vars[4]  = { 1, 1, 1, 2 };
-	long dims_ws[4]    = { 1, 1, 1, 2 };
+	bart_dim_t dims_score[4] = { 2, 1, 1, 1 };
+	bart_dim_t dims_x[4]     = { 2, 1, 1, 1 };
+	bart_dim_t dims_mu[4]    = { 2, 1, 1, 2 };
+	bart_dim_t dims_vars[4]  = { 1, 1, 1, 2 };
+	bart_dim_t dims_ws[4]    = { 1, 1, 1, 2 };
 
 	complex float x[2]    = { 0.8 - 0.3i, 0.2 + 0i };
 	complex float mu[4]   = { 0, 0, 0, 0 }; // mean = 0
@@ -144,11 +144,11 @@ static bool test_md_gaussian_score_multigauss(complex float s)
 
 static bool test_md_gaussian_score_2d_both(complex float s)
 {
-	long dims_score[4] = { 2, 1, 1, 1 };
-	long dims_x[4]     = { 2, 1, 1, 1 };
-	long dims_mu[4]    = { 2, 1, 1, 1 };
-	long dims_vars[4]  = { 1, 1, 1, 1 }; // only one variance implementation
-	long dims_ws[4]    = { 1, 1, 1, 1 };
+	bart_dim_t dims_score[4] = { 2, 1, 1, 1 };
+	bart_dim_t dims_x[4]     = { 2, 1, 1, 1 };
+	bart_dim_t dims_mu[4]    = { 2, 1, 1, 1 };
+	bart_dim_t dims_vars[4]  = { 1, 1, 1, 1 }; // only one variance implementation
+	bart_dim_t dims_ws[4]    = { 1, 1, 1, 1 };
 
 	complex float x[2]    = { 0.5 - 0.1i, 0.5 + 0.1i };
 	complex float mu[2]   = { 0.3, 1.2 };

@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include <complex.h>
 
 extern void memcfl_register(const char* name, int D, const bart_dim_t dims[D], complex float* data, bool managed);

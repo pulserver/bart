@@ -55,10 +55,10 @@ struct prox_weighted_leastsquares_data {
 
 	int N;
 
-	const long* dims;
+	const bart_dim_t* dims;
 	struct multiplace_array_s* y;
 
-	const long* wdims;
+	const bart_dim_t* wdims;
 	struct multiplace_array_s* W;
 
 	float lambda;
@@ -81,8 +81,8 @@ static void prox_weighted_leastsquares_fun(const operator_data_t* prox_data, flo
 	auto pdata = CAST_DOWN(prox_weighted_leastsquares_data, prox_data);
 
 	int N = pdata->N;
-	const long* dims = pdata->dims;
-	const long* wdims = pdata->wdims;
+	const bart_dim_t* dims = pdata->dims;
+	const bart_dim_t* wdims = pdata->wdims;
 
 	const complex float* y = multiplace_read(pdata->y, z);
 	const complex float* W_sqr = multiplace_read(pdata->W, z);
@@ -135,20 +135,20 @@ static void prox_weighted_leastsquares_del(const operator_data_t* _data)
 	xfree(data);
 }
 
-const struct operator_p_s* prox_weighted_leastsquares_create(int N, const long dims[N], float lambda, const complex float* y, unsigned long flags, const complex float* W)
+const struct operator_p_s* prox_weighted_leastsquares_create(int N, const bart_dim_t dims[N], float lambda, const complex float* y, bart_flags_t flags, const complex float* W)
 {
 	PTR_ALLOC(struct prox_weighted_leastsquares_data, pdata);
 	SET_TYPEID(prox_weighted_leastsquares_data, pdata);
 
 	pdata->N = N;
-	pdata->dims = ARR_CLONE(long[N], dims);
+	pdata->dims = ARR_CLONE(bart_dim_t[N], dims);
 
 	pdata->y = (NULL == y) ? NULL : multiplace_move(N, dims, CFL_SIZE, y);
 	pdata->lambda = lambda;
 
-	long wdims[N];
+	bart_dim_t wdims[N];
 	md_select_dims(N, flags, wdims, dims);
-	pdata->wdims = ARR_CLONE(long[N], wdims);
+	pdata->wdims = ARR_CLONE(bart_dim_t[N], wdims);
 
 	if (NULL != W) {
 
@@ -165,7 +165,7 @@ const struct operator_p_s* prox_weighted_leastsquares_create(int N, const long d
 	return operator_p_create(N, dims, N, dims, CAST_UP(PTR_PASS(pdata)), prox_weighted_leastsquares_fun, prox_weighted_leastsquares_del);
 }
 
-const struct operator_p_s* prox_leastsquares_create(int N, const long dims[N], float lambda, const complex float* y)
+const struct operator_p_s* prox_leastsquares_create(int N, const bart_dim_t dims[N], float lambda, const complex float* y)
 {
 	return prox_weighted_leastsquares_create(N, dims, lambda, y, 0, NULL);
 }
@@ -183,7 +183,7 @@ struct prox_l2norm_data {
 	operator_data_t super;
 
 	float lambda;
-	long size;
+	bart_dim_t size;
 };
 
 static DEF_TYPEID(prox_l2norm_data);
@@ -226,7 +226,7 @@ static void prox_l2norm_del(const operator_data_t* _data)
 	xfree(CAST_DOWN(prox_l2norm_data, _data));
 }
 
-const struct operator_p_s* prox_l2norm_create(int N, const long dims[N], float lambda)
+const struct operator_p_s* prox_l2norm_create(int N, const bart_dim_t dims[N], float lambda)
 {
 	PTR_ALLOC(struct prox_l2norm_data, pdata);
 	SET_TYPEID(prox_l2norm_data, pdata);
@@ -255,8 +255,8 @@ struct prox_l2ball_data {
 	float eps;
 
 	int N;
-	unsigned long flags;
-	const long* dims;
+	bart_flags_t flags;
+	const bart_dim_t* dims;
 };
 
 static DEF_TYPEID(prox_l2ball_data);
@@ -280,7 +280,7 @@ static void prox_l2ball_fun(const operator_data_t* prox_data, float /*mu*/, floa
 	else
 		md_copy(d->N, d->dims, z, x_plus_u, CFL_SIZE);
 
-	long rdims[d->N];
+	bart_dim_t rdims[d->N];
 	md_select_dims(d->N, d->flags, rdims, d->dims);
 	complex float* q1 = md_alloc_sameplace(d->N, rdims, CFL_SIZE, z);
 	complex float* q2 = md_alloc_sameplace(d->N, rdims, CFL_SIZE, z);
@@ -319,7 +319,7 @@ static void prox_l2ball_del(const operator_data_t* _data)
 	xfree(data);
 }
 
-const struct operator_p_s* prox_l2ball2_create(int N, unsigned long flags, const long dims[N], float eps, const complex float* y)
+const struct operator_p_s* prox_l2ball2_create(int N, bart_flags_t flags, const bart_dim_t dims[N], float eps, const complex float* y)
 {
 	PTR_ALLOC(struct prox_l2ball_data, pdata);
 	SET_TYPEID(prox_l2ball_data, pdata);
@@ -328,13 +328,13 @@ const struct operator_p_s* prox_l2ball2_create(int N, unsigned long flags, const
 	pdata->eps = eps;
 	pdata->N = N;
 	pdata->flags = flags;
-	pdata->dims = ARR_CLONE(long[N], dims);
+	pdata->dims = ARR_CLONE(bart_dim_t[N], dims);
 
 
 	return operator_p_create(N, dims, N, dims, CAST_UP(PTR_PASS(pdata)), prox_l2ball_apply, prox_l2ball_del);
 }
 
-const struct operator_p_s* prox_l2ball_create(int N, const long dims[N], float eps, const complex float* y)
+const struct operator_p_s* prox_l2ball_create(int N, const bart_dim_t dims[N], float eps, const complex float* y)
 {
 	return prox_l2ball2_create(N, 0, dims, eps, y);
 }
@@ -410,7 +410,7 @@ static void prox_thresh_del(const void* _data)
 	xfree((void*)_data);
 }
 
-const struct operator_p_s* prox_thresh_create(int N, const long dims[N], float lambda,
+const struct operator_p_s* prox_thresh_create(int N, const bart_dim_t dims[N], float lambda,
 		void (*thresh)(void* _data, float lambda, float* _dst, const float* _src),
 		void* data)
 {
@@ -435,7 +435,7 @@ struct prox_zero_data {
 
 	operator_data_t super;
 
-	long size;
+	bart_dim_t size;
 };
 
 static DEF_TYPEID(prox_zero_data);
@@ -467,7 +467,7 @@ static void prox_zero_del(const operator_data_t* _data)
 	xfree(CAST_DOWN(prox_zero_data, _data));
 }
 
-const struct operator_p_s* prox_zero_create(int N, const long dims[N])
+const struct operator_p_s* prox_zero_create(int N, const bart_dim_t dims[N])
 {
 	PTR_ALLOC(struct prox_zero_data, pdata);
 	SET_TYPEID(prox_zero_data, pdata);
@@ -494,7 +494,7 @@ struct prox_ineq_data {
 
 	const float* b;
 	float a;
-	long size;
+	bart_dim_t size;
 	bool positive;
 };
 
@@ -533,7 +533,7 @@ static void prox_ineq_del(const operator_data_t* _data)
 	xfree(CAST_DOWN(prox_ineq_data, _data));
 }
 
-static const struct operator_p_s* prox_ineq_create(int N, const long dims[N], const complex float* b, float a, bool positive)
+static const struct operator_p_s* prox_ineq_create(int N, const bart_dim_t dims[N], const complex float* b, float a, bool positive)
 {
 	PTR_ALLOC(struct prox_ineq_data, pdata);
 	SET_TYPEID(prox_ineq_data, pdata);
@@ -551,7 +551,7 @@ static const struct operator_p_s* prox_ineq_create(int N, const long dims[N], co
  * Proximal function for less than or equal to:
  * f(z) = 1{z <= b}
  */
-const struct operator_p_s* prox_lesseq_create(int N, const long dims[N], const complex float* b)
+const struct operator_p_s* prox_lesseq_create(int N, const bart_dim_t dims[N], const complex float* b)
 {
 	return prox_ineq_create(N, dims, b, 0., false);
 }
@@ -560,7 +560,7 @@ const struct operator_p_s* prox_lesseq_create(int N, const long dims[N], const c
  * Proximal function for greater than or equal to:
  * f(z) = 1{z >= b}
  */
-const struct operator_p_s* prox_greq_create(int N, const long dims[N], const complex float* b)
+const struct operator_p_s* prox_greq_create(int N, const bart_dim_t dims[N], const complex float* b)
 {
 	return prox_ineq_create(N, dims, b, 0., true);
 }
@@ -569,7 +569,7 @@ const struct operator_p_s* prox_greq_create(int N, const long dims[N], const com
  * Proximal function for nonnegative orthant
  * f(z) = 1{z >= 0}
  */
-const struct operator_p_s* prox_nonneg_create(int N, const long dims[N])
+const struct operator_p_s* prox_nonneg_create(int N, const bart_dim_t dims[N])
 {
 	return prox_ineq_create(N, dims, NULL, 0., true);
 }
@@ -578,7 +578,7 @@ const struct operator_p_s* prox_nonneg_create(int N, const long dims[N])
  * Proximal function for greater than or equal to a scalar:
  * f(z) = 1{z >= a}
  */
-const struct operator_p_s* prox_zsmax_create(int N, const long dims[N], float a)
+const struct operator_p_s* prox_zsmax_create(int N, const bart_dim_t dims[N], float a)
 {
 	return prox_ineq_create(N, dims, NULL, a, true);
 }
@@ -588,7 +588,7 @@ struct prox_rvc_data {
 
 	operator_data_t super;
 
-	long size;
+	bart_dim_t size;
 };
 
 static DEF_TYPEID(prox_rvc_data);
@@ -609,7 +609,7 @@ static void prox_rvc_del(const operator_data_t* _data)
 /*
  * Proximal function for real-value constraint
  */
-const struct operator_p_s* prox_rvc_create(int N, const long dims[N])
+const struct operator_p_s* prox_rvc_create(int N, const bart_dim_t dims[N])
 {
 	PTR_ALLOC(struct prox_rvc_data, pdata);
 	SET_TYPEID(prox_rvc_data, pdata);

@@ -38,16 +38,16 @@
 #include "recon.h"
 
 
-static void post_process(enum mdb_t mode, struct moba_conf_s* data, const long imgs_dims[DIMS], const struct linop_s* op[], complex float* img)
+static void post_process(enum mdb_t mode, struct moba_conf_s* data, const bart_dim_t imgs_dims[DIMS], const struct linop_s* op[], complex float* img)
 {
-	long pos[DIMS] = { 0L };
+	bart_dim_t pos[DIMS] = { INT64_C(0) };
 
 	// Project B1 map back into image space
 
-	long map_dims[DIMS];
+	bart_dim_t map_dims[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, map_dims, imgs_dims);
 
-	long img_strs[DIMS];
+	bart_dim_t img_strs[DIMS];
 	md_calc_strides(DIMS, img_strs, imgs_dims, CFL_SIZE);
 
 	complex float* tmp = md_alloc_sameplace(DIMS, map_dims, CFL_SIZE, img);
@@ -79,7 +79,7 @@ static void post_process(enum mdb_t mode, struct moba_conf_s* data, const long i
 
 		pos[COEFF_DIM] = 2;
 
-		long map_size = md_calc_size(DIMS, map_dims);
+		bart_dim_t map_size = md_calc_size(DIMS, map_dims);
 
 		md_copy_block(DIMS, pos, map_dims, tmp, imgs_dims, img, CFL_SIZE);
 
@@ -271,16 +271,16 @@ static void moba_monitor(struct iter_monitor_s* _data, const struct vec_iter_s* 
 
 
 static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
-                const long dims[DIMS],
-		const long imgs_dims[DIMS], complex float* img,
-		const long coil_dims[DIMS], complex float* sens,
-		const long pat_dims[DIMS], const complex float* pattern,
+                const bart_dim_t dims[DIMS],
+		const bart_dim_t imgs_dims[DIMS], complex float* img,
+		const bart_dim_t coil_dims[DIMS], complex float* sens,
+		const bart_dim_t pat_dims[DIMS], const complex float* pattern,
 		const complex float* TI,
 		const complex float* TE_IR_MGRE,
 		const complex float* b1,
 		const complex float* b0,
-		const long data_dims[DIMS], const complex float* kspace_data,
-		const long mimg_dims[DIMS], complex float* mimg,
+		const bart_dim_t data_dims[DIMS], const complex float* kspace_data,
+		const bart_dim_t mimg_dims[DIMS], complex float* mimg,
 		const complex float* init)
 {
 
@@ -310,11 +310,11 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 		break;
 	}
 
-	long map_dims[DIMS];
+	bart_dim_t map_dims[DIMS];
 
 	md_copy_dims(DIMS, map_dims, imgs_dims);
 	map_dims[COEFF_DIM] = 1;
-	long pos[DIMS] = { 0L };
+	bart_dim_t pos[DIMS] = { INT64_C(0) };
 
 	if (MDB_IR_MGRE == conf->mode && use_compat_to_version("v1.0.00")) {
 
@@ -333,11 +333,11 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 		md_copy_block(DIMS, pos, imgs_dims, img, map_dims, tmp, CFL_SIZE);
 	}
 
-	long skip = md_calc_size(DIMS, imgs_dims);
-	long size = skip + (!data->other.fixed_coil ? md_calc_size(DIMS, coil_dims) : 0);
-	long data_size = md_calc_size(DIMS, data_dims);
+	bart_dim_t skip = md_calc_size(DIMS, imgs_dims);
+	bart_dim_t size = skip + (!data->other.fixed_coil ? md_calc_size(DIMS, coil_dims) : 0);
+	bart_dim_t data_size = md_calc_size(DIMS, data_dims);
 
-	long d1[1] = { size };
+	bart_dim_t d1[1] = { size };
 	// variable which is optimized by the IRGNM
 	complex float* x;
 	complex float* x_ref;
@@ -426,7 +426,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 
 	set_regu_flags(&conf2, conf, data, imgs_dims[COEFF_DIM], nl.linop_sobolev);
 
-	long irgnm_conf_dims[DIMS];
+	bart_dim_t irgnm_conf_dims[DIMS];
 	md_select_dims(DIMS, FFT_FLAGS|SLICE_FLAG|MAPS_FLAG|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, irgnm_conf_dims, imgs_dims);
 
 	irgnm_conf_dims[COIL_DIM] = coil_dims[COIL_DIM];

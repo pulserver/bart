@@ -1,3 +1,5 @@
+#include "misc/dimtypes.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

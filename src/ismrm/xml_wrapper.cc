@@ -290,7 +290,7 @@ static bool ignore_next_message(struct isrmrm_config_s* config)
 	return false;
 }
 
-extern "C" long ismrm_stream_read_acquisition(struct isrmrm_config_s* config, ISMRMRD::ISMRMRD_Acquisition* c_acq)
+extern "C" bart_dim_t ismrm_stream_read_acquisition(struct isrmrm_config_s* config, ISMRMRD::ISMRMRD_Acquisition* c_acq)
 {
 	struct ismrm_cpp_state* s = config->ismrm_cpp_state;
 
@@ -328,7 +328,7 @@ extern "C" long ismrm_stream_read_acquisition(struct isrmrm_config_s* config, IS
 		if (LONG_MAX < data_size)
 			error("BART ISMRMRD Wrapper: Too large acquisition.\n");
 
-		return (long)data_size;
+		return (bart_dim_t)data_size;
 
 	} catch(std::runtime_error& e) {
 

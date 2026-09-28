@@ -37,7 +37,7 @@ struct itop_s {
 
 	const struct operator_s* op;
 	int num_funs;
-	long size;
+	bart_dim_t size;
 
 	const struct iovec_s* iov;
 

@@ -10,6 +10,7 @@
 #ifndef _ESTVAR_H
 #define _ESTVAR_H
 
+#include "misc/dimtypes.h"
 #include <complex.h>
 
 /**
@@ -23,7 +24,7 @@
  *  kernel_dims - Kernel dimensions.
  *  calreg_dims - Calibration region dimensions.
  */
-extern float estvar_sv(const char* toolbox, long L, const float S[L], const long kernel_dims[3], const long calreg_dims[4]);
+extern float estvar_sv(const char* toolbox, bart_dim_t L, const float S[L], const bart_dim_t kernel_dims[3], const bart_dim_t calreg_dims[4]);
 
 /**
  * estvar_calreg - This estimates the variance of noise present in the 
@@ -34,7 +35,7 @@ extern float estvar_sv(const char* toolbox, long L, const float S[L], const long
  *  calreg_dims - Calibration region dimensions.
  *  calreg      - Calibration region.
  */
-extern float estvar_calreg(const char* toolbox, const long kernel_dims[3], const long calreg_dims[4], const complex float* calreg);
+extern float estvar_calreg(const char* toolbox, const bart_dim_t kernel_dims[3], const bart_dim_t calreg_dims[4], const complex float* calreg);
 
 /**
  * estvar_kspace - This estimates the variance of noise present in kspace data.
@@ -46,6 +47,6 @@ extern float estvar_calreg(const char* toolbox, const long kernel_dims[3], const
  *  kspace_dims - Dimensions of input data.
  *  kspace      - Input kspace data.
  */
-extern float estvar_kspace(const char* toolbox, int N, const long kernel_dims[3], const long calib_size[3], const long kspace_dims[N], const complex float* kspace);
+extern float estvar_kspace(const char* toolbox, int N, const bart_dim_t kernel_dims[3], const bart_dim_t calib_size[3], const bart_dim_t kspace_dims[N], const complex float* kspace);
 
 #endif

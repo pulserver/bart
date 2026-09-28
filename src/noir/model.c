@@ -59,9 +59,9 @@ static void noir_linop_del(const void* _data)
 struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], complex float* coil, const long pat_dims[DIMS], const complex float* psf, const struct noir_model_conf_s* conf)
 {
 
-	long data_dims[DIMS];
-	long data_red_dims[DIMS];
-	long imgs_dims[DIMS];
+	bart_dim_t data_dims[DIMS];
+	bart_dim_t data_red_dims[DIMS];
+	bart_dim_t imgs_dims[DIMS];
 
 	md_select_dims(DIMS, ~COIL_FLAG, imgs_dims, dims);
 	md_select_dims(DIMS, ~MAPS_FLAG, data_red_dims, dims);

@@ -1,3 +1,5 @@
+#include "misc/dimtypes.h"
+
 extern bool simple_zconvcorr(	int N, const bart_dim_t dims[__VLA(N)],
 				const bart_stride_t ostrs[__VLA(N)], _Complex float* optr,
 				const bart_stride_t istrs1[__VLA(N)], const _Complex float* iptr1,

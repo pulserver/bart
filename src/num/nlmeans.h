@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include <complex.h>
 
 extern void md_znlmeans2(int D, const bart_dim_t dims[D], bart_flags_t flags,

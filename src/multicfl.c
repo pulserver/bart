@@ -51,8 +51,8 @@ int main_multicfl(int argc, char* argv[argc])
 		const char* multi_file = cfl_files[n_single_cfls];
 		const char** single_files = cfl_files;
 		int D[n_single_cfls];
-		long dims_load[n_single_cfls][DIMS];
-		const long* dims_store[n_single_cfls];
+		bart_dim_t dims_load[n_single_cfls][DIMS];
+		const bart_dim_t* dims_store[n_single_cfls];
 		const complex float* x[n_single_cfls];
 
 		for (int i = 0; i < n_single_cfls; i++) {
@@ -73,8 +73,8 @@ int main_multicfl(int argc, char* argv[argc])
 		const char** single_files = cfl_files + 1;
 		int D_max = DIMS;
 		int D[n_single_cfls];
-		long dims_load[n_single_cfls][D_max];
-		const long* dims_store[n_single_cfls];
+		bart_dim_t dims_load[n_single_cfls][D_max];
+		const bart_dim_t* dims_store[n_single_cfls];
 		complex float* x[n_single_cfls];
 
 		int N = load_multi_cfl(multi_file, n_single_cfls, D_max, D, dims_load, x);

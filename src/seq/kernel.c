@@ -179,11 +179,11 @@ void seq_compute_moment0(int M, float moments[M][3], double dt, int N, const str
 /*
  * Compute times and phase of adc samples. 
  */
-void seq_compute_adc_samples(int D, const long adc_dims[D], complex float* adc, int N, const struct seq_event ev[N])
+void seq_compute_adc_samples(int D, const bart_dim_t adc_dims[D], complex float* adc, int N, const struct seq_event ev[N])
 {
 	md_clear(D, adc_dims, adc, CFL_SIZE);
 
-	long adc_strs[D];
+	bart_stride_t adc_strs[D];
 	md_calc_strides(D, adc_strs, adc_dims, CFL_SIZE);
 
 	int e = 0;
@@ -195,7 +195,7 @@ void seq_compute_adc_samples(int D, const long adc_dims[D], complex float* adc, 
 
 		double dwell = 1.E-9 * ev[i].adc.dwell_ns /  ev[i].adc.os;
 
-		long pos[DIMS] = { };
+		bart_dim_t pos[DIMS] = { };
 		pos[TE_DIM] = e;
 
 		do {

@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 extern void casorati_dims(int N, bart_dim_t odim[2], const bart_dim_t dimk[__VLA(N)], const bart_dim_t dims[__VLA(N)]);

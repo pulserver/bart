@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include "misc/nested.h"
 
 typedef CLOSURE_TYPE(void, (void)) bench_f;

@@ -73,8 +73,8 @@ int main_ismrmrd(int argc, char* argv[argc])
 		return 0;
 	}
 
-	long D = DIMS;
-	long dims[D];
+	bart_dim_t D = DIMS;
+	bart_dim_t dims[D];
 	md_set_dims(D, dims, 0);
 
 	if (!stream) {
@@ -95,10 +95,10 @@ int main_ismrmrd(int argc, char* argv[argc])
 		return 0;
 	}
 
-	long pos[D];
+	bart_dim_t pos[D];
 	md_set_dims(D, pos, 0);
 
-	unsigned long flags = 0;
+	bart_flags_t flags = 0;
 
 	complex float* bart_cfl = NULL;
 	stream_t bart_stream = NULL;

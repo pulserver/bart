@@ -19,7 +19,7 @@
 
 
 
-static void get_coord(int N, unsigned long flags, float coord[N], long pos[N], const long tdims[N], const long tstrs[N], const complex float* traj)
+static void get_coord(int N, bart_flags_t flags, float coord[N], bart_dim_t pos[N], const bart_dim_t tdims[N], const bart_stride_t tstrs[N], const complex float* traj)
 {
 	assert(0 == pos[0]);
 	int j = 0;
@@ -53,7 +53,7 @@ static void get_coord(int N, unsigned long flags, float coord[N], long pos[N], c
  *	this calculates the phase accrual for the whole grid at the given sample_time
  *	and returns the result in out.
  */
-static void phase_correction_term(int N, const long out_dims[N], complex float* out, const float sample_time, const complex float* field_map)
+static void phase_correction_term(int N, const bart_dim_t out_dims[N], complex float* out, const float sample_time, const complex float* field_map)
 {
 	// FIXME:  integrate into linear phase and do it inplace to be faster
 	md_zsmul(N, out_dims, out, field_map, sample_time);
@@ -66,18 +66,18 @@ static void phase_correction_term(int N, const long out_dims[N], complex float* 
  * perform DFT analysis to go from image to ksp
  *
  */
-void nudft_forward2(int N, unsigned long flags,
-			const long kdims[N], const long kstrs[N], complex float* ksp,
-			const long idims[N], const long istrs[N], const complex float* img,
-			const long tdims[N], const long tstrs[N], const complex float* traj,
+void nudft_forward2(int N, bart_flags_t flags,
+			const bart_dim_t kdims[N], const bart_stride_t kstrs[N], complex float* ksp,
+			const bart_dim_t idims[N], const bart_stride_t istrs[N], const complex float* img,
+			const bart_dim_t tdims[N], const bart_stride_t tstrs[N], const complex float* traj,
 			const complex float* fieldmap,
-			const long tmstrs[N], const complex float* timemap)
+			const bart_stride_t tmstrs[N], const complex float* timemap)
 {
 	assert(1 == kdims[0]);
-	assert(md_check_compat(N, ~0UL, kdims, tdims));
+	assert(md_check_compat(N, ~UINT64_C(0), kdims, tdims));
 
-	long tmp_dims[N];
-	long tmp_strs[N];
+	bart_dim_t tmp_dims[N];
+	bart_stride_t tmp_strs[N];
 
 	md_select_dims(N, flags, tmp_dims, idims);
 	md_calc_strides(N, tmp_strs, tmp_dims, CFL_SIZE);
@@ -85,19 +85,19 @@ void nudft_forward2(int N, unsigned long flags,
 	complex float* tmp = md_alloc_sameplace(N, tmp_dims, CFL_SIZE, ksp);
 
 	// TODO: tmp_pc can be eliminated later, just for now to test
-	long tmp_pc_dims[N];
-	long tmp_pc_strs[N];
+	bart_dim_t tmp_pc_dims[N];
+	bart_stride_t tmp_pc_strs[N];
 	md_select_dims(N, flags, tmp_pc_dims, idims);
 	md_calc_strides(N, tmp_pc_strs, tmp_pc_dims, CFL_SIZE);
 	complex float* tmp_pc = md_alloc(N, tmp_pc_dims, CFL_SIZE);
 
-	long kstrs2[N];
+	bart_stride_t kstrs2[N];
 	for (int i = 0; i < N; i++)
 		kstrs2[i] = MD_IS_SET(flags, i) ? 0 : kstrs[i];
 
 	md_clear2(N, kdims, kstrs, ksp, CFL_SIZE);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	for (int i = 0; i < N; i++)
 		pos[i] = 0;
 
@@ -130,18 +130,18 @@ void nudft_forward2(int N, unsigned long flags,
  *
  *	perform DFT synthesis to go from kspace to image
  */
-void nudft_adjoint2(int N, unsigned long flags,
-			const long idims[N], const long istrs[N], complex float* img,
-			const long kdims[N], const long kstrs[N], const complex float* ksp,
-			const long tdims[N], const long tstrs[N], const complex float* traj,
+void nudft_adjoint2(int N, bart_flags_t flags,
+			const bart_dim_t idims[N], const bart_stride_t istrs[N], complex float* img,
+			const bart_dim_t kdims[N], const bart_stride_t kstrs[N], const complex float* ksp,
+			const bart_dim_t tdims[N], const bart_stride_t tstrs[N], const complex float* traj,
 			const complex float* fieldmap,
-			const long tmstrs[N], const complex float* timemap)
+			const bart_stride_t tmstrs[N], const complex float* timemap)
 {
 	assert(1 == kdims[0]);
-	assert(md_check_compat(N, ~0UL, kdims, tdims));
+	assert(md_check_compat(N, ~UINT64_C(0), kdims, tdims));
 
-	long tmp_dims[N];
-	long tmp_strs[N];
+	bart_dim_t tmp_dims[N];
+	bart_stride_t tmp_strs[N];
 
 	md_select_dims(N, flags, tmp_dims, idims);
 	md_calc_strides(N, tmp_strs, tmp_dims, CFL_SIZE);
@@ -149,20 +149,20 @@ void nudft_adjoint2(int N, unsigned long flags,
 	complex float* tmp = md_alloc_sameplace(N, tmp_dims, CFL_SIZE, img);
 
 	// TODO: tmp_pc can be eliminated later, just for now to test
-	long tmp_pc_dims[N];
-	long tmp_pc_strs[N];
+	bart_dim_t tmp_pc_dims[N];
+	bart_stride_t tmp_pc_strs[N];
 	md_select_dims(N, flags, tmp_pc_dims, idims);
 	md_calc_strides(N, tmp_pc_strs, tmp_pc_dims, CFL_SIZE);
 
 	complex float* tmp_pc = md_alloc(N, tmp_pc_dims, CFL_SIZE);
 
-	long kstrs2[N];
+	bart_stride_t kstrs2[N];
 	for (int i = 0; i < N; i++)
 		kstrs2[i] = MD_IS_SET(flags, i) ? 0 : kstrs[i];
 
 	md_clear2(N, idims, istrs, img, CFL_SIZE);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	for (int i = 0; i < N; i++)
 		pos[i] = 0;
 
@@ -193,17 +193,17 @@ void nudft_adjoint2(int N, unsigned long flags,
 }
 
 
-void nudft_forward(int N, unsigned long flags,
-			const long odims[N], complex float* out,
-			const long idims[N], const complex float* in,
-			const long tdims[N], const complex float* traj,
+void nudft_forward(int N, bart_flags_t flags,
+			const bart_dim_t odims[N], complex float* out,
+			const bart_dim_t idims[N], const complex float* in,
+			const bart_dim_t tdims[N], const complex float* traj,
 			const complex float* fieldmap,
-			const long tmdims[N], const complex float* timemap)
+			const bart_dim_t tmdims[N], const complex float* timemap)
 {
-	long ostrs[N];
-	long istrs[N];
-	long tstrs[N];
-	long tmstrs[N];
+	bart_stride_t ostrs[N];
+	bart_stride_t istrs[N];
+	bart_stride_t tstrs[N];
+	bart_stride_t tmstrs[N];
 
 	md_calc_strides(N, ostrs, odims, CFL_SIZE);
 	md_calc_strides(N, istrs, idims, CFL_SIZE);
@@ -219,18 +219,18 @@ struct nudft_s {
 	linop_data_t base;
 
 	int N;
-	unsigned long flags;
+	bart_flags_t flags;
 
-	long* kdims;
-	long* idims;
-	long* tdims;
-	long* kstrs;
-	long* istrs;
-	long* tstrs;
-	long* fmdims;
-	long* fmstrs;
-	long* tmdims;
-	long* tmstrs;
+	bart_dim_t* kdims;
+	bart_dim_t* idims;
+	bart_dim_t* tdims;
+	bart_stride_t* kstrs;
+	bart_stride_t* istrs;
+	bart_stride_t* tstrs;
+	bart_dim_t* fmdims;
+	bart_stride_t* fmstrs;
+	bart_dim_t* tmdims;
+	bart_stride_t* tmstrs;
 
 	const complex float* traj;
 	const complex float* fieldmap;
@@ -280,12 +280,12 @@ static void nudft_delete(const linop_data_t* _data)
 	xfree(data);
 }
 
-struct linop_s* nudft_create2(int N, unsigned long flags,
-					const long odims[N], const long ostrs[N],
-					const long idims[N], const long istrs[N],
-					const long tdims[N], const complex float* traj,
-					const long fmdims[N], const complex float* fieldmap,
-					const long tmdims[N], const complex float* timemap)
+struct linop_s* nudft_create2(int N, bart_flags_t flags,
+					const bart_dim_t odims[N], const bart_stride_t ostrs[N],
+					const bart_dim_t idims[N], const bart_stride_t istrs[N],
+					const bart_dim_t tdims[N], const complex float* traj,
+					const bart_dim_t fmdims[N], const complex float* fieldmap,
+					const bart_dim_t tmdims[N], const complex float* timemap)
 {
 	PTR_ALLOC(struct nudft_s, data);
 
@@ -295,34 +295,34 @@ struct linop_s* nudft_create2(int N, unsigned long flags,
 	data->fieldmap = fieldmap;
 	data->timemap = timemap;
 
-	data->kdims = *TYPE_ALLOC(long[N]);
-	data->kstrs = *TYPE_ALLOC(long[N]);
+	data->kdims = *TYPE_ALLOC(bart_dim_t[N]);
+	data->kstrs = *TYPE_ALLOC(bart_dim_t[N]);
 
 	md_copy_dims(N, data->kdims, odims);
 	md_copy_strides(N, data->kstrs, ostrs);
 
-	data->idims = *TYPE_ALLOC(long[N]);
-	data->istrs = *TYPE_ALLOC(long[N]);
+	data->idims = *TYPE_ALLOC(bart_dim_t[N]);
+	data->istrs = *TYPE_ALLOC(bart_dim_t[N]);
 
 	md_copy_dims(N, data->idims, idims);
 	md_copy_strides(N, data->istrs, istrs);
 
-	data->tdims = *TYPE_ALLOC(long[N]);
-	data->tstrs = *TYPE_ALLOC(long[N]);
+	data->tdims = *TYPE_ALLOC(bart_dim_t[N]);
+	data->tstrs = *TYPE_ALLOC(bart_dim_t[N]);
 
 	md_copy_dims(N, data->tdims, tdims);
 	md_calc_strides(N, data->tstrs, tdims, CFL_SIZE);
 
 	if (NULL != fieldmap) {
 
-		data->fmdims = *TYPE_ALLOC(long[N]);
-		data->fmstrs = *TYPE_ALLOC(long[N]);
+		data->fmdims = *TYPE_ALLOC(bart_dim_t[N]);
+		data->fmstrs = *TYPE_ALLOC(bart_dim_t[N]);
 
 		md_copy_dims(N, data->fmdims, fmdims);
 		md_calc_strides(N, data->fmstrs, fmdims, CFL_SIZE);
 
-		data->tmdims = *TYPE_ALLOC(long[N]);
-		data->tmstrs = *TYPE_ALLOC(long[N]);
+		data->tmdims = *TYPE_ALLOC(bart_dim_t[N]);
+		data->tmstrs = *TYPE_ALLOC(bart_dim_t[N]);
 
 		md_copy_dims(N, data->tmdims, tmdims);
 		md_calc_strides(N, data->tmstrs, tmdims, CFL_SIZE);
@@ -340,7 +340,7 @@ struct linop_s* nudft_create2(int N, unsigned long flags,
 			nudft_apply, nudft_adj, NULL, NULL, nudft_delete);
 }
 
-struct linop_s* nudft_create(int N, unsigned long flags, const long odims[N], const long idims[N], const long tdims[N], const complex float* traj, const long fmdims[N], const complex float* fieldmap, const long tmdims[N], const complex float* timemap)
+struct linop_s* nudft_create(int N, bart_flags_t flags, const bart_dim_t odims[N], const bart_dim_t idims[N], const bart_dim_t tdims[N], const complex float* traj, const bart_dim_t fmdims[N], const complex float* fieldmap, const bart_dim_t tmdims[N], const complex float* timemap)
 {
 	return nudft_create2(N, flags, odims, MD_STRIDES(N, odims, CFL_SIZE), idims, MD_STRIDES(N, idims, CFL_SIZE), tdims, traj, fmdims, fieldmap, tmdims, timemap);
 }

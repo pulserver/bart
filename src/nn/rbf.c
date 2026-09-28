@@ -111,15 +111,15 @@ static void rbf_fun(const nlop_data_t* _data, int N_args, complex float* args[N_
 	float* der_dz = data->dz;
 
 	int N = data->N;
-	const long* zdims = data->zdom->dims;
-	const long* wdims = data->wdom->dims;
-	const long* zstrs = data->zdom->strs;
-	const long* wstrs = data->wdom->strs;
+	const bart_dim_t* zdims = data->zdom->dims;
+	const bart_dim_t* wdims = data->wdom->dims;
+	const bart_stride_t* zstrs = data->zdom->strs;
+	const bart_stride_t* wstrs = data->wdom->strs;
 
 	float* tmp_w = md_alloc_sameplace(N, wdims, FL_SIZE, zdst);
 	float* tmp_z = md_alloc_sameplace(N, zdims, FL_SIZE, zdst);
 
-	long Nw = wdims[data->idx_w];
+	bart_dim_t Nw = wdims[data->idx_w];
 	float mumin = data->Imin;
 	float dmu = (data->Imax - data->Imin)/((float)Nw - 1.);
 
@@ -144,13 +144,13 @@ static void rbf_fun(const nlop_data_t* _data, int N_args, complex float* args[N_
 
 		md_pdf_gauss(N, zdims, tmp1, tmp_z, (mumin + j * dmu), data->sigma); //tmp1 = 1/sqrt(2pi sigma^2) *exp(-(z_ik-mu_j)^2/(2*sigma^2))
 
-		long wpos[N];
+		bart_dim_t wpos[N];
 		for (int i = 0; i < N; i++)
 			wpos[i] = 0;
 
 		wpos[data->idx_w] = j;
 
-		const float* wtmp = tmp_w + md_calc_offset(data->N, data->wdom->strs, wpos) / (long)FL_SIZE;
+		const float* wtmp = tmp_w + md_calc_offset(data->N, data->wdom->strs, wpos) / (bart_stride_t)FL_SIZE;
 
 		md_mul2(N, zdims, zstrs, tmp1, wstrs, wtmp, zstrs, tmp1);
 		md_add(N, zdims, real_dst, real_dst, tmp1);
@@ -194,12 +194,12 @@ static void rbf_der2(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 	float* der_z = data->z;
 
 	int N = data->N;
-	const long* zdims = data->zdom->dims;
-	const long* wdims = data->wdom->dims;
-	const long* zstrs = data->zdom->strs;
-	const long* wstrs = data->wdom->strs;
+	const bart_dim_t* zdims = data->zdom->dims;
+	const bart_dim_t* wdims = data->wdom->dims;
+	const bart_stride_t* zstrs = data->zdom->strs;
+	const bart_stride_t* wstrs = data->wdom->strs;
 
-	long Nw = wdims[data->idx_w];
+	bart_dim_t Nw = wdims[data->idx_w];
 
 	float mumin = data->Imin;
 	float dmu = (data->Imax - data->Imin)/((float)Nw - 1.);
@@ -227,14 +227,14 @@ static void rbf_der2(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 		md_smul(N, zdims, tmp2, tmp2, -1. / (2 * data->sigma * data->sigma)); // tmp2 = -(z_ik-mu_j)²/(2*sigma²)
 		md_exp(N, zdims, tmp2, tmp2); // tmp2 = exp[-(z_ik-mu_j)²/(2*sigma²)]
 
-		long wpos[N];
+		bart_dim_t wpos[N];
 
 		for (int i = 0; i < N; i++)
 			wpos[i] = 0;
 
 		wpos[data->idx_w] = j;
 
-		const float* wtmp = real_src + md_calc_offset(N, wstrs, wpos) / (long)FL_SIZE;
+		const float* wtmp = real_src + md_calc_offset(N, wstrs, wpos) / (bart_stride_t)FL_SIZE;
 
 		md_copy2(N, zdims, zstrs, tmp3, wstrs, wtmp, FL_SIZE); // tmp3 = w_ik
 
@@ -258,12 +258,12 @@ static void rbf_adj2(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 	float* der_z = data->z;
 
 	int N = data->N;
-	const long* zdims = data->zdom->dims;
-	const long* wdims = data->wdom->dims;
-	const long* zstrs = data->zdom->strs;
-	const long* wstrs = data->wdom->strs;
+	const bart_dim_t* zdims = data->zdom->dims;
+	const bart_dim_t* wdims = data->wdom->dims;
+	const bart_stride_t* zstrs = data->zdom->strs;
+	const bart_stride_t* wstrs = data->wdom->strs;
 
-	long Nw = wdims[data->idx_w];
+	bart_dim_t Nw = wdims[data->idx_w];
 	float mumin = data->Imin;
 	float dmu = (data->Imax - data->Imin)/((float)Nw - 1.);
 
@@ -283,13 +283,13 @@ static void rbf_adj2(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 
 		md_pdf_gauss(N, zdims, tmp1, der_z, (mumin + j * dmu), data->sigma);//tmp1 = 1/sqrt(2pi sigma^2) *exp(-(z_ik-mu_j)^2/(2*sigma^2))
 
-		long wpos[N];
+		bart_dim_t wpos[N];
 		for (int i = 0; i < N; i++)
 			wpos[i] = 0;
 
 		wpos[data->idx_w] = j;
 
-		float* wtmp = real_dst + md_calc_offset(data->N, data->wdom->strs, wpos) / (long)FL_SIZE;
+		float* wtmp = real_dst + md_calc_offset(data->N, data->wdom->strs, wpos) / (bart_stride_t)FL_SIZE;
 
 		md_mul(N, zdims, tmp1, tmp1, real_src); // tmp1 = exp[-(z_ik-mu_j)²/(2*sigma²)] * phi_ik
 		md_add2(N, zdims, wstrs, wtmp, wstrs, wtmp, zstrs, tmp1);
@@ -362,7 +362,7 @@ static void rbf_del(const nlop_data_t* _data)
  * Note that Nb denotes the product of the parallel computable dimensions,
  * i.e. the number of different vectors z which is Nb = Nx*Ny*Nz*Nb
  */
-const struct nlop_s* nlop_activation_rbf_create(const long dims[3], float Imax, float Imin, bool use_imag)
+const struct nlop_s* nlop_activation_rbf_create(const bart_dim_t dims[3], float Imax, float Imin, bool use_imag)
 {
 	PTR_ALLOC(struct rbf_s, data);
 	SET_TYPEID(rbf_s, data);
@@ -371,8 +371,8 @@ const struct nlop_s* nlop_activation_rbf_create(const long dims[3], float Imax, 
 	data->idx_w = 2;
 	data->use_imag = use_imag;
 
-	long zdimsw[3];// {Nf, NB, 1 };
-	long wdimsw[3];// {Nf, 1,  Nw};
+	bart_dim_t zdimsw[3];// {Nf, NB, 1 };
+	bart_dim_t wdimsw[3];// {Nf, 1,  Nw};
 
 	md_select_dims(3, 3, zdimsw, dims);
 	md_select_dims(3, 5, wdimsw, dims);
@@ -397,12 +397,12 @@ const struct nlop_s* nlop_activation_rbf_create(const long dims[3], float Imax, 
 	//C.f. https://github.com/VLOGroup/tensorflow-icg/blob/a11ad61d93d57c83f1af312b84a922e7612ec398/tensorflow/contrib/icg/kernels/activations.cu.cc#L123
 	data->sigma = (Imax - Imin) / (float)(dims[2]);
 
-	long zdims[2] = {dims[0], dims[1]};
-	long wdims[2] = {dims[0], dims[2]};
+	bart_dim_t zdims[2] = {dims[0], dims[1]};
+	bart_dim_t wdims[2] = {dims[0], dims[2]};
 
-	long nl_odims[1][2];
+	bart_dim_t nl_odims[1][2];
 	md_copy_dims(2, nl_odims[0], zdims);
-	long nl_idims[2][2];
+	bart_dim_t nl_idims[2][2];
 	md_copy_dims(2, nl_idims[0], zdims);
 	md_copy_dims(2, nl_idims[1], wdims);
 

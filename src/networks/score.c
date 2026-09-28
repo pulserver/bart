@@ -37,12 +37,12 @@ nn_t nn_score_to_expectation(nn_t score)
 	auto dom = nn_generic_domain(score, 0, NULL);
 
 	int N = dom->N;
-	long dims[N];
+	bart_dim_t dims[N];
 	md_copy_dims(N, dims, dom->dims);
 
 	auto sdom = nn_generic_domain(score, 1, NULL);
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_singleton_dims(N, sdims);
 	sdims[N - 1] = md_calc_size(sdom->N, sdom->dims);
 
@@ -67,12 +67,12 @@ nn_t nn_expectation_to_score(nn_t Dx)
 	auto dom = nn_generic_domain(Dx, 0, NULL);
 
 	int N = dom->N;
-	long dims[N];
+	bart_dim_t dims[N];
 	md_copy_dims(N, dims, dom->dims);
 
 	auto sdom = nn_generic_domain(Dx, 1, NULL);
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_singleton_dims(N, sdims);
 	sdims[N - 1] = md_calc_size(sdom->N, sdom->dims);
 
@@ -98,12 +98,12 @@ const struct nlop_s* nlop_score_to_expectation(const struct nlop_s* score)
 	auto dom = nlop_generic_domain(score, 0);
 
 	int N = dom->N;
-	long dims[N];
+	bart_dim_t dims[N];
 	md_copy_dims(N, dims, dom->dims);
 
 	auto sdom = nlop_generic_domain(score, 1);
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_singleton_dims(N, sdims);
 	sdims[N - 1] = md_calc_size(sdom->N, sdom->dims);
 
@@ -128,12 +128,12 @@ const struct nlop_s* nlop_expectation_to_score(const struct nlop_s* Dx)
 	auto dom = nlop_generic_domain(Dx, 0);
 
 	int N = dom->N;
-	long dims[N];
+	bart_dim_t dims[N];
 	md_copy_dims(N, dims, dom->dims);
 
 	auto sdom = nlop_generic_domain(Dx, 1);
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_singleton_dims(N, sdims);
 	sdims[N - 1] = md_calc_size(sdom->N, sdom->dims);
 
@@ -163,10 +163,10 @@ const struct nn_s* nn_denoise_precond_edm(const struct nn_s* network, float /*si
 	sdom = iovec_create2(sdom->N, sdom->dims, sdom->strs, sdom->size);
 
 	int N = dom->N;
-	long dims[N];
+	bart_dim_t dims[N];
 	md_copy_dims(N, dims, dom->dims);
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_singleton_dims(N, sdims);
 	sdims[N - 1] = md_calc_size(sdom->N, sdom->dims);
 
@@ -225,10 +225,10 @@ const struct nn_s* nn_denoise_loss_VE(const struct nn_s* network, float sigma_mi
 	auto sdom = nn_generic_domain(network, 1, NULL);
 
 	int N = dom->N;
-	long dims[N];
+	bart_dim_t dims[N];
 	md_copy_dims(N, dims, dom->dims);
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_singleton_dims(N, sdims);
 	sdims[N - 1] = md_calc_size(sdom->N, sdom->dims);
 
@@ -245,7 +245,7 @@ const struct nn_s* nn_denoise_loss_VE(const struct nn_s* network, float sigma_mi
 
 	network = nn_chain2_swap_FF(network, 0, NULL, nn_from_nlop_F(weight), 0, NULL);  // in: y, z, sigma, sigma; out: 1/sigma (D_yn(y+sigma*z; sigma) - y)
 	network = nn_dup_F(network, 2, NULL, 3, NULL);  // in: y, z, sigma; out: 1/sigma (D_yn(y+sigma*z; sigma) - y)
-	network = nn_chain2_FF(network, 0, NULL, nn_from_nlop_F(nlop_znorm_create(N, dims, ~0UL)), 0, NULL);  // in: y, z, sigma; out: 1/N ||1/sigma (D_yn(y+sigma*z; sigma) - y)||^2
+	network = nn_chain2_FF(network, 0, NULL, nn_from_nlop_F(nlop_znorm_create(N, dims, ~UINT64_C(0))), 0, NULL);  // in: y, z, sigma; out: 1/N ||1/sigma (D_yn(y+sigma*z; sigma) - y)||^2
 
 	const struct nlop_s* sigma = nlop_from_linop_F(linop_zreal_create(N, sdims));
 	sigma = nlop_chain_FF(sigma, nlop_from_linop_F(linop_scale_create(N, sdims, logf(sigma_max / sigma_min))));
@@ -270,10 +270,10 @@ const struct nn_s* nn_denoise_loss_EDM(const struct nn_s* network, float /*sigma
 	auto sdom = nn_generic_domain(network, 1, NULL);
 
 	int N = dom->N;
-	long dims[N];
+	bart_dim_t dims[N];
 	md_copy_dims(N, dims, dom->dims);
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_singleton_dims(N, sdims);
 	sdims[N - 1] = md_calc_size(sdom->N, sdom->dims);
 
@@ -296,7 +296,7 @@ const struct nn_s* nn_denoise_loss_EDM(const struct nn_s* network, float /*sigma
 
 	network = nn_chain2_swap_FF(network, 0, NULL, nn_from_nlop_F(weight), 0, NULL);  // in: y, z, sigma, sigma; out: 1/sigma (D_yn(y+sigma*z; sigma) - y)
 	network = nn_dup_F(network, 2, NULL, 3, NULL);  // in: y, z, sigma; out: 1/sigma (D_yn(y+sigma*z; sigma) - y)
-	network = nn_chain2_FF(network, 0, NULL, nn_from_nlop_F(nlop_znorm_create(N, dims, ~0UL)), 0, NULL);  // in: y, z, sigma; out: 1/N ||1/sigma (D_yn(y+sigma*z; sigma) - y)||^2
+	network = nn_chain2_FF(network, 0, NULL, nn_from_nlop_F(nlop_znorm_create(N, dims, ~UINT64_C(0))), 0, NULL);  // in: y, z, sigma; out: 1/N ||1/sigma (D_yn(y+sigma*z; sigma) - y)||^2
 
 	float Pmean = -1.2;
 	float Pstd = 1.2;
