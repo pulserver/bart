@@ -230,8 +230,12 @@ static void parse_bart_opts(int* argcp, char*** argvp, int order[DIMS], stream_t
 
 	if (attach) {
 
+#ifdef SIGSTOP
 		fprintf(stderr, "PID: %d", getpid());
 		raise(SIGSTOP);
+#else
+		error("Attaching a debugger needs SIGSTOP, which this platform does not have.\n");
+#endif
 	}
 
 	if (0 != bart_mpi_split_flags) {
