@@ -29,7 +29,9 @@
 
 #include "opts.h"
 
-#ifdef BARTDLL
+#if defined(_WIN32)
+#include "win/getsubopt.h"
+#elif defined(BARTDLL)
 int getsubopt(char **restrict, char *const *restrict, char **restrict) { assert(0); }
 #endif
 
