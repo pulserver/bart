@@ -526,7 +526,13 @@ static int vptr_cmp(const void* _a, const void* _b)
 }
 
 
-#ifndef BARTLIB_EXPORTS
+// Name the virtual pointer behind a segmentation fault, where the platform
+// reports the faulting address (SA_SIGINFO).
+#if !defined(BARTLIB_EXPORTS) && defined(SA_SIGINFO)
+#define VPTR_SEGV_HANDLER
+#endif
+
+#ifdef VPTR_SEGV_HANDLER
 static struct sigaction old_sa;
 
 static void handler(int /*sig*/, siginfo_t *si, void*)
@@ -553,7 +559,7 @@ static void vptr_init(void)
 	if (NULL != vmap)
 		return;
 
-#ifndef BARTLIB_EXPORTS
+#ifdef VPTR_SEGV_HANDLER
 	struct sigaction sa;
 
 	sa.sa_flags = SA_SIGINFO;
@@ -561,11 +567,11 @@ static void vptr_init(void)
 	sa.sa_sigaction = handler;
 
 	sigaction(SIGSEGV, &sa, &old_sa);
+#endif
 
 #pragma omp critical(bart_vmap)
 	if (NULL == vmap)
 		vmap = tree_create(vptr_cmp);
-#endif
 }
 
 
