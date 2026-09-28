@@ -603,6 +603,9 @@ static struct mem_s* vptr_reserve_int(size_t len)
 
 	void* ptr = mmap(NULL, len, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
 
+	if (MAP_FAILED == ptr)
+		error("Reserving %zu bytes of address space failed.\n", len);
+
 	PTR_ALLOC(struct mem_s, x);
 
 	x->ptr = ptr;
