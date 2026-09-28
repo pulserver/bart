@@ -6,24 +6,12 @@
  * 2024 Philip Schaten <philip.schaten@tugraz.at>
  */
 
-#ifdef WIN32
+// C11 threads where the C library has them, POSIX threads where it does not.
+#if defined(__APPLE__) || defined(_WIN32)
+#define BART_LOCK_PTHREAD
+#endif
 
-#include <assert.h>
-
-#include "lock.h"
-
-void bart_lock(bart_lock_t* lock) { assert(0); }
-void bart_unlock(bart_lock_t* lock) { assert(0); }
-void bart_lock_destroy(bart_lock_t* x) { assert(0); }
-bart_lock_t* bart_lock_create(void) { assert(0); }
-void bart_cond_wait(bart_cond_t* cond, bart_lock_t* lock) { assert(0); }
-void bart_cond_notify_all(bart_cond_t* cond) { assert(0); }
-void bart_cond_destroy(bart_cond_t* x) { assert(0); }
-bart_cond_t* bart_cond_create(void) { assert(0); }
-
-#else
-
-#ifdef __APPLE__
+#ifdef BART_LOCK_PTHREAD
 #	include <pthread.h>
 #else
 #	include <threads.h>
@@ -34,7 +22,7 @@ bart_cond_t* bart_cond_create(void) { assert(0); }
 #include "lock.h"
 
 struct bart_lock {
-#ifdef __APPLE__
+#ifdef BART_LOCK_PTHREAD
 	pthread_mutex_t mx;
 #else
 	mtx_t mx;
@@ -43,7 +31,7 @@ struct bart_lock {
 
 void bart_lock(bart_lock_t* lock)
 {
-#ifdef __APPLE__
+#ifdef BART_LOCK_PTHREAD
 	pthread_mutex_lock(&lock->mx);
 #else
 	mtx_lock(&lock->mx);
@@ -53,7 +41,7 @@ void bart_lock(bart_lock_t* lock)
 //returns true if lock was acquired
 bool bart_trylock(bart_lock_t* lock)
 {
-#ifdef __APPLE__
+#ifdef BART_LOCK_PTHREAD
 	return 0 == pthread_mutex_trylock(&lock->mx);
 #else
 	return 0 == mtx_trylock(&lock->mx);
@@ -62,7 +50,7 @@ bool bart_trylock(bart_lock_t* lock)
 
 void bart_unlock(bart_lock_t* lock)
 {
-#ifdef __APPLE__
+#ifdef BART_LOCK_PTHREAD
 	pthread_mutex_unlock(&lock->mx);
 #else
 	mtx_unlock(&lock->mx);
@@ -72,7 +60,7 @@ void bart_unlock(bart_lock_t* lock)
 bart_lock_t* bart_lock_create(void)
 {
 	bart_lock_t* lock = xmalloc(sizeof *lock);
-#ifdef __APPLE__
+#ifdef BART_LOCK_PTHREAD
 	pthread_mutex_init(&lock->mx, PTHREAD_MUTEX_DEFAULT);
 #else
 	mtx_init(&lock->mx, mtx_plain);
@@ -83,7 +71,7 @@ bart_lock_t* bart_lock_create(void)
 
 void bart_lock_destroy(bart_lock_t* lock)
 {
-#ifdef __APPLE__
+#ifdef BART_LOCK_PTHREAD
 	pthread_mutex_destroy(&lock->mx);
 #else
 	mtx_destroy(&lock->mx);
@@ -95,7 +83,7 @@ void bart_lock_destroy(bart_lock_t* lock)
 
 struct bart_cond {
 
-#ifdef __APPLE__
+#ifdef BART_LOCK_PTHREAD
 	bart_dim_t counter;
 	pthread_cond_t cnd;
 #else
@@ -108,7 +96,7 @@ bart_cond_t* bart_cond_create(void)
 {
 	bart_cond_t* cond = xmalloc(sizeof *cond);
 
-#ifdef __APPLE__
+#ifdef BART_LOCK_PTHREAD
 	pthread_cond_init(&cond->cnd, NULL);
 	cond->counter = 0;
 #else
@@ -123,7 +111,7 @@ void bart_cond_wait(bart_cond_t* cond, bart_lock_t* lock)
 {
 	bart_dim_t counter = cond->counter;
 
-#ifdef __APPLE__
+#ifdef BART_LOCK_PTHREAD
 	while (counter == cond->counter)
 		pthread_cond_wait(&cond->cnd, &lock->mx);
 #else
@@ -135,7 +123,7 @@ void bart_cond_wait(bart_cond_t* cond, bart_lock_t* lock)
 void bart_cond_notify_all(bart_cond_t* cond)
 {
 	cond->counter++;
-#ifdef __APPLE__
+#ifdef BART_LOCK_PTHREAD
 	pthread_cond_broadcast(&cond->cnd);
 #else
 	cnd_broadcast(&cond->cnd);
@@ -144,12 +132,10 @@ void bart_cond_notify_all(bart_cond_t* cond)
 
 void bart_cond_destroy(bart_cond_t* cond)
 {
-#ifdef __APPLE__
+#ifdef BART_LOCK_PTHREAD
 	pthread_cond_destroy(&cond->cnd);
 #else
 	cnd_destroy(&cond->cnd);
 #endif
 	xfree(cond);
 }
-
-#endif
