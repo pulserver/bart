@@ -142,7 +142,7 @@ ifeq ($(UNAME),CYGWIN_NT-10.0)
 endif
 
 
-ifneq (,$(findstring MSYS,$(UNAME)))
+ifneq (,$(findstring MSYS,$(UNAME))$(findstring MINGW,$(UNAME)))
 	BUILDTYPE = MSYS
 	#LDFLAGS += -lucrtbase # support for %F, %T formatting codes in strftime()
 	#LDFLAGS += -static-libgomp
