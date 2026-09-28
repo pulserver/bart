@@ -1343,7 +1343,7 @@ static void check_args(int N, const struct arg_s args[N])
 
 
 
-static int xsnprintf(int size, char buf[static size], const char* fmt, ...) __attribute__((format(printf,3,4)));
+static int xsnprintf(int size, char buf[static size], const char* fmt, ...) __attribute__((format(BART_PRINTF,3,4)));
 static int xsnprintf(int size, char buf[static size], const char* fmt, ...)
 {
 	va_list ap;
