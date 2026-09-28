@@ -173,6 +173,20 @@ void* mmap(void *addr, size_t len, int prot, int flags, int fildes, OffsetType o
 		return MAP_FAILED;
 	}
 	
+	// A file mapping has no inaccessible protection, so an anonymous
+	// PROT_NONE mapping, which reserves address space, is a reservation.
+	if (prot == PROT_NONE && (flags & MAP_ANONYMOUS) != 0) {
+
+		map = VirtualAlloc(((flags & MAP_FIXED) == 0) ? NULL : addr, len, MEM_RESERVE, PAGE_NOACCESS);
+
+		if (map == NULL) {
+			errno = __map_mman_error(GetLastError(), ENOMEM);
+			return MAP_FAILED;
+		}
+
+		return map;
+	}
+
 	h = ((flags & MAP_ANONYMOUS) == 0) ? 
 					(HANDLE)_get_osfhandle(fildes) : INVALID_HANDLE_VALUE;
 
@@ -228,6 +242,20 @@ int munmap(void *addr, size_t len)
 		return 0;
 		
 	DWORD error = GetLastError();
+
+	// A reservation made by mmap above is released as a whole.
+	MEMORY_BASIC_INFORMATION info;
+
+	if (   (0 != VirtualQuery(addr, &info, sizeof info))
+	    && (info.AllocationBase == addr)
+	    && (info.Type == MEM_PRIVATE)
+	    && (info.State == MEM_RESERVE)) {
+
+		if (VirtualFree(addr, 0, MEM_RELEASE))
+			return 0;
+
+		error = GetLastError();
+	}
 	
 	// In POSIX, munmap is supposed to throw no errors when trying to unmap a memory address that is not a mapped memory segment.
 	// On the other hand, Windows throws an error in this case that can be ignored when emulating functionality of munmap.
