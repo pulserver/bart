@@ -217,10 +217,10 @@ int dicom_write(const char* name, int cols, int rows, bart_dim_t inum, const uns
 	dicom_elements[ITAG_IMAGE_ROWS].data = &(uint16_t){ rows };
 	dicom_elements[ITAG_IMAGE_COLS].data = &(uint16_t){ cols };
 
-	assert(inum >= INT64_C(0));
+	assert(inum >= 0);
 
 	char inst_num[13]; // max number of bytes for InstanceNumber tag
-	ilen = snprintf(inst_num, 13, "%04ld", inum);
+	ilen = snprintf(inst_num, 13, "%04" PRId64, inum);
 
 	assert(ilen < 13);
 

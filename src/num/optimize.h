@@ -10,7 +10,7 @@ extern int optimize_dims(int D, int N, bart_dim_t dims[N], bart_stride_t (*strs[
 extern int optimize_dims_gpu(int D, int N, bart_dim_t dims[N], bart_stride_t (*strs[D])[N]);
 extern int min_blockdim(int D, int N, const bart_dim_t dims[N], bart_stride_t (*strs[D])[N], size_t size[D]);
 extern bart_flags_t dims_parallel(int D, bart_flags_t io, int N, const bart_dim_t dims[N], bart_stride_t (*strs[D])[N], size_t size[D]);
-extern bart_flags_t parallelizable(int D, unsigned int io, int N, const bart_dim_t dims[N], const bart_stride_t (*strs[D])[N], size_t size[D]);
+extern bart_flags_t parallelizable(int D, bart_flags_t io, int N, const bart_dim_t dims[N], const bart_stride_t (*strs[D])[N], size_t size[D]);
 
 struct vec_ops;
 

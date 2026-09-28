@@ -141,7 +141,7 @@ void overlapandsave2(int N, bart_flags_t flags, const bart_dim_t blk[N], const b
 
 	bart_dim_t shift[2 * N];
 
-	bart_flags_t nflags = UINT64_C(0);
+	bart_flags_t nflags = 0;
 
 	for (int i = 0; i < N; i++) {
 
@@ -246,7 +246,7 @@ void overlapandsave2H(int N, bart_flags_t flags, const bart_dim_t blk[N], const 
 
 	bart_dim_t shift[2 * N];
 	
-	bart_flags_t nflags = UINT64_C(0);
+	bart_flags_t nflags = 0;
 
 	for (int i = 0; i < N; i++) {
 
@@ -365,7 +365,7 @@ void overlapandsave2NE(int N, bart_flags_t flags, const bart_dim_t blk[N], const
 
 	bart_dim_t shift[2 * N];
 
-	bart_flags_t nflags = UINT64_C(0);
+	bart_flags_t nflags = 0;
 
 	for (int i = 0; i < N; i++) {
 

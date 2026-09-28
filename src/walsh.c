@@ -64,7 +64,7 @@ int main_walsh(int argc, char* argv[argc])
 	complex float* cal_data = extract_calib(caldims, calsize, dims, in_data, false);
 	unmap_cfl(DIMS, dims, in_data);
 
-	debug_printf(DP_INFO, "Calibration region %ldx%ldx%ld\n", caldims[0], caldims[1], caldims[2]);
+	debug_printf(DP_INFO, "Calibration region %" PRId64 "x%" PRId64 "x%" PRId64 "\n", caldims[0], caldims[1], caldims[2]);
 
 	dims[COIL_DIM] = dims[COIL_DIM] * (dims[COIL_DIM] + 1) / 2;
 

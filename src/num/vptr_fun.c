@@ -34,7 +34,7 @@ void exec_vptr_fun_internal(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D,
 		md_max_dims(D, ~UINT64_C(0), ldims, ldims, tdims);
 	}
 
-	bart_flags_t vptr_loop_flags = UINT64_C(0);
+	bart_flags_t vptr_loop_flags = 0;
 
 	for (int i = 0; i < N; i++)
 		vptr_loop_flags |= vptr_block_loop_flags(D, ldims, strs[i], ptr[i], sizes[i], true);

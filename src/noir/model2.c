@@ -123,7 +123,7 @@ static struct noir2_s noir2_init_create(int N,
 
 	for (int i = 0; i < N; i++)
 		wgh_dims[i] = MD_IS_SET(conf->wght_flags & md_nontriv_dims(N, ret.col_dims), i)
-				? lround(col_dims[i] * (conf->ret_os_coils ? 1. : conf->oversampling_coils)) : 1;
+				? llround(col_dims[i] * (conf->ret_os_coils ? 1. : conf->oversampling_coils)) : 1;
 
 	ret.lop_coil = linop_noir_weights_create(N, ret.col_ten_dims, ret.col_dims,
 						wgh_dims, conf->wght_flags, conf->oversampling_coils,
@@ -405,7 +405,7 @@ void noir2_orthogonalize(int N, const bart_dim_t col_dims[N], complex float* coi
 {
 	bart_dim_t nmaps = col_dims[MAPS_DIM];
 
-	if (INT64_C(1) == nmaps)
+	if (1 == nmaps)
 		return;
 
 	bart_dim_t single_map_dims[N];
@@ -419,13 +419,13 @@ void noir2_orthogonalize(int N, const bart_dim_t col_dims[N], complex float* coi
 
 	complex float* tmp = md_alloc_sameplace(N, single_map_dims, CFL_SIZE, coils);
 
-	for (bart_dim_t map = INT64_C(0); map < nmaps; ++map) {
+	for (bart_dim_t map = 0; map < nmaps; ++map) {
 
 		complex float* map_ptr = (void*)coils + map * col_strs[MAPS_DIM];
 
 		md_clear(N, single_map_dims, tmp, CFL_SIZE);
 
-		for (bart_dim_t prev = INT64_C(0); prev < map; ++prev) {
+		for (bart_dim_t prev = 0; prev < map; ++prev) {
 
 			complex float* prev_map_ptr = (void*)coils + prev * col_strs[MAPS_DIM];
 
@@ -698,7 +698,7 @@ static const struct nlop_s* nlop_noir_opt_create(int N,
 	md_set_dims(3, pos, 0);
 
 	for (int i = 0; i < 3; i++)
-		pos[i] = labs((fftm_dims[i] / 2) - (out_dims[i] / 2));
+		pos[i] = llabs((fftm_dims[i] / 2) - (out_dims[i] / 2));
 
 	d->fftm_cim = multiplace_move2(3, out_dims, MD_STRIDES(3, fftm_dims, CFL_SIZE), CFL_SIZE, &MD_ACCESS(3, MD_STRIDES(3, fftm_dims, CFL_SIZE), pos, fftm));
 
@@ -711,7 +711,7 @@ static const struct nlop_s* nlop_noir_opt_create(int N,
 	fftmod(N, fftm_dims, FFT_FLAGS, fftm, fftm);
 
 	for (int i = 0; i < 3; i++)
-		pos[i] = labs((fftm_dims[i] / 2) - (out_dims[i] / 2));
+		pos[i] = llabs((fftm_dims[i] / 2) - (out_dims[i] / 2));
 
 	d->fftm_col = multiplace_move2(3, out_dims, MD_STRIDES(3, fftm_dims, CFL_SIZE), CFL_SIZE, &MD_ACCESS(3, MD_STRIDES(3, fftm_dims, CFL_SIZE), pos, fftm));
 
@@ -725,7 +725,7 @@ static const struct nlop_s* nlop_noir_opt_create(int N,
 	fftscale(N, fftm_dims, FFT_FLAGS, fftm, fftm);
 
 	for (int i = 0; i < 3; i++)
-		pos[i] = labs((fftm_dims[i] / 2) - (kco_dims[i] / 2));
+		pos[i] = llabs((fftm_dims[i] / 2) - (kco_dims[i] / 2));
 
 	d->fftm_col = multiplace_move2(3, kco_dims, MD_STRIDES(3, fftm_dims, CFL_SIZE), CFL_SIZE, &MD_ACCESS(3, MD_STRIDES(3, fftm_dims, CFL_SIZE), pos, fftm));
 
@@ -743,17 +743,17 @@ static const struct nlop_s* nlop_noir_opt_create(int N,
 	d->cim_buf_zeropad = NULL;
 
 	for (int i = 0; i < 3; i++)
-		pos[i] = labs((cim_dims_os[i] / 2) - (out_dims[i] / 2));
+		pos[i] = llabs((cim_dims_os[i] / 2) - (out_dims[i] / 2));
 
 	d->cim_offset = md_calc_offset(3, MD_STRIDES(3, cim_dims_os, 1), pos);
 
 	for (int i = 0; i < 3; i++)
-		pos[i] = labs((col_dims_os[i] / 2) - (kco_dims[i] / 2));
+		pos[i] = llabs((col_dims_os[i] / 2) - (kco_dims[i] / 2));
 
 	d->kco_offset = md_calc_offset(3, MD_STRIDES(3, col_dims_os, 1), pos);
 
 	for (int i = 0; i < 3; i++)
-		pos[i] = labs((col_dims_os[i] / 2) - (out_dims[i] / 2));
+		pos[i] = llabs((col_dims_os[i] / 2) - (out_dims[i] / 2));
 
 	d->col_offset = md_calc_offset(3, MD_STRIDES(3, col_dims_os, 1), pos);
 
@@ -828,7 +828,7 @@ struct noir2_s noir2_noncart_optimized_create(int N,
 
 	bart_dim_t swgh_dims[N];
 	for (int i = 0; i < N; i++)
-		swgh_dims[i] = MD_IS_SET(conf->wght_flags & md_nontriv_dims(N, kco_dims), i) ? lround(col_dims[i] * (conf->ret_os_coils ? 1. : conf->oversampling_coils)) : 1;
+		swgh_dims[i] = MD_IS_SET(conf->wght_flags & md_nontriv_dims(N, kco_dims), i) ? llround(col_dims[i] * (conf->ret_os_coils ? 1. : conf->oversampling_coils)) : 1;
 
 	ret.lop_coil2 = linop_noir_weights_create(N, col_dims, kco_dims, swgh_dims, conf->wght_flags, (conf->ret_os_coils ? 1. : conf->oversampling_coils), conf->a, conf->b, 1);
 

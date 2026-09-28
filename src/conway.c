@@ -81,7 +81,7 @@ int main_conway(int argc, char* argv[argc])
 	complex float* buf = md_alloc(2, dims, CFL_SIZE);
 	complex float* tmp = md_alloc(2, dims, CFL_SIZE);
 
-	struct conv_plan* plan = conv_plan(2, UINT64_C(3), periodic ? CONV_CYCLIC : CONV_TRUNCATED, CONV_SYMMETRIC, dims, dims, mdims, &mask[0][0]);
+	struct conv_plan* plan = conv_plan(2, 3, periodic ? CONV_CYCLIC : CONV_TRUNCATED, CONV_SYMMETRIC, dims, dims, mdims, &mask[0][0]);
 
 	for (int i = 0; i < iter; i++) {
 

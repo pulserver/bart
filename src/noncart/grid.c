@@ -153,7 +153,7 @@ static float intlookup(int n, const float table[n + 1], float x)
 void gridH(const struct grid_conf_s* conf, const bart_dim_t ksp_dims[4], const bart_stride_t trj_strs[4], const complex float* traj, const bart_stride_t ksp_strs[4], complex float* dst, const bart_dim_t grid_dims[4], const bart_stride_t grid_strs[4], const complex float* grid)
 {
 	if (grid_dims[3] != ksp_dims[3])
-		error("Adjoint gridding: ksp and grid are incompatible in dim 3 (%d != %d)!\n", ksp_dims[3], grid_dims[3]);
+		error("Adjoint gridding: ksp and grid are incompatible in dim 3 (%" PRId64 " != %" PRId64 ")!\n", ksp_dims[3], grid_dims[3]);
 
 	assert(3 == ksp_dims[0]);
 	assert(0 == ksp_strs[0]);
@@ -202,7 +202,7 @@ void gridH(const struct grid_conf_s* conf, const bart_dim_t ksp_dims[4], const b
 void grid(const struct grid_conf_s* conf, const bart_dim_t ksp_dims[4], const bart_stride_t trj_strs[4], const complex float* traj, const bart_dim_t grid_dims[4], const bart_stride_t grid_strs[4], complex float* grid, const bart_stride_t ksp_strs[4], const complex float* src)
 {
 	if (grid_dims[3] != ksp_dims[3])
-		error("Gridding: ksp and grid are incompatible in dim 3 (%d != %d)!\n", ksp_dims[3], grid_dims[3]);
+		error("Gridding: ksp and grid are incompatible in dim 3 (%" PRId64 " != %" PRId64 ")!\n", ksp_dims[3], grid_dims[3]);
 
 	assert(3 == ksp_dims[0]);
 	assert(0 == ksp_strs[0]);

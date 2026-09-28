@@ -106,7 +106,7 @@ void index_to_onehotenc(int N, const bart_dim_t odims[N], complex float* dst, co
 	do {
 		bart_dim_t tpos [N];
 		md_copy_dims(N, tpos, pos);
-		tpos[class_index] = lroundf(MD_ACCESS(N, istrs, tpos, src));
+		tpos[class_index] = llroundf(MD_ACCESS(N, istrs, tpos, src));
 
 		assert(tpos[class_index] < num_classes);
 		assert(0 <= tpos[class_index]);
@@ -219,7 +219,7 @@ extern void print_confusion_matrix(int N, const bart_dim_t dims[N], int class_in
 	md_free(tmp_ref);
 
 	bart_dim_t N_pred = md_calc_size(N, dims) / classes;
-	int count_char = MAX(3, snprintf(NULL, 0, "%ld", N_pred));
+	int count_char = MAX(3, snprintf(NULL, 0, "%" PRId64, N_pred));
 
 	printf("\npred \\ ref |");
 
@@ -248,9 +248,9 @@ extern void print_confusion_matrix(int N, const bart_dim_t dims[N], int class_in
 		printf("%-11d|", i);
 
 		for (int j = 0; j < classes; j++)
-			printf("%*ld", count_char + 1, (bart_dim_t)crealf(matrix[j][i]));
+			printf("%*" PRId64, count_char + 1, (bart_dim_t)crealf(matrix[j][i]));
 
-		printf("|%*ld\n", count_char + 1, (bart_dim_t)crealf(pred_count[i]));
+		printf("|%*" PRId64 "\n", count_char + 1, (bart_dim_t)crealf(pred_count[i]));
 	}
 
 	for (int i = 0; i < 11; i++)
@@ -271,8 +271,8 @@ extern void print_confusion_matrix(int N, const bart_dim_t dims[N], int class_in
 	printf("%-11s|", "sum");
 
 	for (int i = 0; i < classes; i++)
-		printf("%*ld", count_char + 1, (bart_dim_t)crealf(ref_count[i]));
+		printf("%*" PRId64, count_char + 1, (bart_dim_t)crealf(ref_count[i]));
 
-	printf("|%*ld\n", count_char + 1, N_pred);
+	printf("|%*" PRId64 "\n", count_char + 1, N_pred);
 }
 

@@ -205,7 +205,7 @@ complex float* extract_calib2(bart_dim_t caldims[DIMS], const bart_dim_t calsize
 		}
 	}
 
-	debug_printf(DP_DEBUG1, "Calibration region...  (size: %ldx%ldx%ld, pos: %ldx%ldx%ld)\n",
+	debug_printf(DP_DEBUG1, "Calibration region...  (size: %" PRId64 "x%" PRId64 "x%" PRId64 ", pos: %" PRId64 "x%" PRId64 "x%" PRId64 ")\n",
 				caldims[0], caldims[1], caldims[2], calpos[0] + tmp_pos[0], calpos[1] + tmp_pos[1], calpos[2] + tmp_pos[2]);
 
 	complex float* cal_data = md_alloc_sameplace(DIMS, caldims, CFL_SIZE, tmp_data);
@@ -291,10 +291,10 @@ void estimate_fast_sq_im_dims(int N, bart_dim_t dims[3], const bart_dim_t tdims[
 
 		bart_dim_t n = fast_size;
 
-		while (0 == n % INT64_C(2)) { n /= INT64_C(2); }
-		while (0 == n % INT64_C(3)) { n /= INT64_C(3); }
-		while (0 == n % INT64_C(5)) { n /= INT64_C(5); }
-		while (0 == n % INT64_C(7)) { n /= INT64_C(7); }
+		while (0 == n % 2) { n /= 2; }
+		while (0 == n % 3) { n /= 3; }
+		while (0 == n % 5) { n /= 5; }
+		while (0 == n % 7) { n /= 7; }
 
 		if (n <= 1)
 			break;

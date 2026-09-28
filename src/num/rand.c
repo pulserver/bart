@@ -99,7 +99,7 @@ static void warn_bart_rand_state(void)
 				warned = true;
 
 				if (0 != (~cfl_loop_rand_flags & cfl_loop_get_flags()))
-					debug_printf(DP_WARN, "rand_state_create provides identical random numbers for each cfl loop iteration for dims with bitmask %lu\n", ~cfl_loop_rand_flags & cfl_loop_get_flags());
+					debug_printf(DP_WARN, "rand_state_create provides identical random numbers for each cfl loop iteration for dims with bitmask %" PRIu64 "\n", ~cfl_loop_rand_flags & cfl_loop_get_flags());
 			}
 		}
 	}

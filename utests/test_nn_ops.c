@@ -526,7 +526,7 @@ static bool test_mpool_der(void)
 	complex float* out = md_alloc(N, indims, CFL_SIZE);
 
 	const struct nlop_s* network = nlop_from_linop_F(linop_identity_create(N, indims));
-	network = append_maxpool_layer(network, 0, MAKE_ARRAY(INT64_C(3), INT64_C(1), INT64_C(1)), PAD_VALID, true);
+	network = append_maxpool_layer(network, 0, MD_DIMS(3, 1, 1), PAD_VALID, true);
 	nlop_apply(network, 5, outdims, out, N, indims, in);
 	nlop_adjoint(network, N, indims, in, N, outdims, out);
 
@@ -572,7 +572,7 @@ static bool test_sigmoid_der(void)
 	const struct nlop_s* network = nlop_from_linop(id);
 	linop_free(id);
 
-	network = append_activation(network, 0, ACT_SIGMOID, UINT64_C(0));
+	network = append_activation(network, 0, ACT_SIGMOID, 0);
 
 	float err_adj = nlop_test_adj_derivatives(network, true);
 	float err_der = nlop_test_derivatives(network);

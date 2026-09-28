@@ -135,7 +135,7 @@ void md_medianz2(int D, int M, const bart_dim_t dim[D], const bart_stride_t ostr
         bart_stride_t stride = istr[M];
 
 	bart_dim_t dim2[D];
-	md_select_dims(D, ~(1u << M), dim2, dim);
+	md_select_dims(D, ~MD_BIT(M), dim2, dim);
 
 	NESTED(void, nary_medianz, (void* ptr[]))
 	{
@@ -155,7 +155,7 @@ void md_medianz(int D, int M, const bart_dim_t dim[D], complex float* optr, cons
 	assert(M < D);
 
 	bart_dim_t dim2[D];
-	md_select_dims(D, ~(1u << M), dim2, dim);
+	md_select_dims(D, ~MD_BIT(M), dim2, dim);
 
 	bart_stride_t istr[D];
 	bart_stride_t ostr[D];
@@ -176,7 +176,7 @@ void md_geometric_medianz2(int D, int M, const bart_dim_t dim[D], const bart_str
         bart_dim_t length = dim[M];
 	bart_stride_t stride = istr[M];
 
-	md_select_dims(D, ~(1u << M), dim2, dim);
+	md_select_dims(D, ~MD_BIT(M), dim2, dim);
 
 	NESTED(void, nary_medianz, (void* ptr[]))
 	{
@@ -197,7 +197,7 @@ void md_geometric_medianz(int D, int M, const bart_dim_t dim[D], complex float* 
 
 	bart_dim_t dim2[D];
 
-	md_select_dims(D, ~(1u << M), dim2, dim);
+	md_select_dims(D, ~MD_BIT(M), dim2, dim);
 
 	bart_stride_t istr[D];
 	bart_stride_t ostr[D];
@@ -275,7 +275,7 @@ void klaplace_scaled(int N, const bart_dim_t dims[N], bart_flags_t flags, const 
 
 	for (int i = 0; i < bitcount(flags); i++) {
 
-		int lsb = ffs(flags2) - 1;
+		int lsb = md_min_idx(flags2);
 		flags2 = MD_CLEAR(flags2, lsb);
 
 		complex float grad[N];
@@ -350,7 +350,7 @@ static void md_zwindow2(int D, const bart_dim_t dims[D], bart_flags_t flags, con
 
 	// process first flagged dimension
 
-	int lsb = ffs(flags) - 1;
+	int lsb = md_min_idx(flags);
 
 	bart_dim_t win_dims[D];
 	bart_stride_t win_strs[D];

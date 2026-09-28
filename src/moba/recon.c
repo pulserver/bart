@@ -42,7 +42,7 @@ static void post_process(enum mdb_t mode, const struct linop_s* op, struct moba_
 	bart_dim_t imgs_dims[DIMS];
 	md_select_dims(DIMS, FFT_FLAGS|MAPS_FLAG|CSHIFT_FLAG|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, imgs_dims, dims);
 
-	bart_dim_t pos[DIMS] = { INT64_C(0) };
+	bart_dim_t pos[DIMS] = { 0 };
 
 	// Project B1 map back into image space
 
@@ -330,7 +330,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 
 	md_copy_dims(DIMS, map_dims, imgs_dims);
 	map_dims[COEFF_DIM] = 1;
-	bart_dim_t pos[DIMS] = { INT64_C(0) };
+	bart_dim_t pos[DIMS] = { 0 };
 
 	if (MDB_IR_MGRE == conf->mode) {
 
@@ -388,7 +388,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 		.opt_reg = conf->opt_reg,
 		.step = conf->step,
 		.lower_bound = conf->lower_bound,
-		.l2flags = (0 == conf->l2para) ? ((1 == conf->opt_reg) ? (UINT64_C(0)) : ~(UINT64_C(0))) : conf->l2para,
+		.l2flags = (0 == conf->l2para) ? ((1 == conf->opt_reg) ? 0 : ~UINT64_C(0)) : conf->l2para,
 		.constrained_maps = conf->constrained_maps,
 		.auto_norm = conf->auto_norm,
 		.no_sens_l2 = data->other.no_sens_l2,

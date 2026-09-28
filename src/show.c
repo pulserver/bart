@@ -78,7 +78,7 @@ ok:
 	for (bart_dim_t i = 0; i < T; i++) {
 
 		if (index)
-			printf("%04ld%s", i, sep);
+			printf("%04" PRId64 "%s", i, sep);
 
 		if (real)
 			printf(fmt, crealf(data[i]));
@@ -133,7 +133,7 @@ int main_show(int argc, char* argv[argc])
 	if (-1 != showdim) {
 
 		assert((showdim >= 0) && (showdim < N));
-		bart_printf("%ld\n", dims[showdim]);
+		bart_printf("%" PRId64 "\n", dims[showdim]);
 
 		goto out;
 	}
@@ -145,7 +145,7 @@ int main_show(int argc, char* argv[argc])
 		bart_printf("AoD:");
 
 		for (int i = 0; i < N; i++)
-			bart_printf("\t%ld", dims[i]);
+			bart_printf("\t%" PRId64, dims[i]);
 
 		bart_printf("\n");
 

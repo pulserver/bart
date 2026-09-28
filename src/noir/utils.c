@@ -31,7 +31,7 @@
 
 void noir_calc_weights(double a, double b, const bart_dim_t dims[3], complex float* dst)
 {
-	bart_flags_t flags = UINT64_C(0);
+	bart_flags_t flags = 0;
 
 	for (int i = 0; i < 3; i++)
 		if (1 != dims[i])
@@ -89,9 +89,9 @@ struct linop_s* linop_noir_weights_create(int N, const bart_dim_t img_dims[N], c
 
 	for (int i = 0; i < N; i++) {
 
-		os_dims[i] = lround(img_dims[i] * (MD_IS_SET(flags, i) ? fabs(factor_fov) : 1.));
+		os_dims[i] = llround(img_dims[i] * (MD_IS_SET(flags, i) ? fabs(factor_fov) : 1.));
 		if (fabs(img_dims[i] * (MD_IS_SET(flags, i) ? fabs(factor_fov) : 1.) - os_dims[i]) > 0.0001)
-			debug_printf(DP_WARN, "Sobolev oversampling factor %f is incompatible with grid size %ld!\n", factor_fov, img_dims[i]);
+			debug_printf(DP_WARN, "Sobolev oversampling factor %f is incompatible with grid size %" PRId64 "!\n", factor_fov, img_dims[i]);
 	}
 
 	bart_dim_t wgh_dims[N];

@@ -69,7 +69,7 @@ const struct linop_s* pics_model(const struct pics_config* conf,
 	bart_dim_t img2_dims[DIMS];
 	md_select_dims(DIMS, ~(COIL_FLAG | conf->shared_img_flags), img2_dims, max_dims);
 
-	assert(md_check_compat(DIMS, UINT64_C(0), img2_dims, img_dims));
+	assert(md_check_compat(DIMS, 0, img2_dims, img_dims));
 
 	// build model
 

@@ -149,7 +149,7 @@ static bool test_mpi_znorm_slice3(void)
 	complex float* dat_cpu = md_alloc(3, dims, CFL_SIZE);
 	md_gaussian_rand(3, dims, dat_cpu);
 
-	complex float* dat_mpi = md_alloc_mpi(3, UINT64_C(6), dims, CFL_SIZE);
+	complex float* dat_mpi = md_alloc_mpi(3, 6, dims, CFL_SIZE);
 	md_copy(3, dims, dat_mpi, dat_cpu, CFL_SIZE);
 
 	bart_dim_t sdims[3];

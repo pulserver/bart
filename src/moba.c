@@ -306,7 +306,7 @@ int main_moba(int argc, char* argv[argc])
 
 	if (conf.sms) {
 
-		debug_printf(DP_INFO, "SMS Model-based reconstruction. Multiband factor: %ld\n", ksp_dims[SLICE_DIM]);
+		debug_printf(DP_INFO, "SMS Model-based reconstruction. Multiband factor: %" PRId64 "\n", ksp_dims[SLICE_DIM]);
 		fftmod(DIMS, ksp_dims, SLICE_FLAG, kspace_data, kspace_data); // fftmod to get correct slice order in output
 	}
 
@@ -331,7 +331,7 @@ int main_moba(int argc, char* argv[argc])
 
 			estimate_im_dims(DIMS, FFT_FLAGS, img_dims, traj_dims, traj);
 			md_copy_dims(3, img_vec, img_dims);
-			debug_printf(DP_INFO, "Est. image size: %ld %ld %ld\n", img_vec[0], img_vec[1], img_vec[2]);
+			debug_printf(DP_INFO, "Est. image size: %" PRId64 " %" PRId64 " %" PRId64 "\n", img_vec[0], img_vec[1], img_vec[2]);
 		}
 
 
@@ -350,7 +350,7 @@ int main_moba(int argc, char* argv[argc])
 			bart_dim_t grid_size = ksp_dims[1] * oversampling;
 			grid_dims[READ_DIM] = grid_size;
 			grid_dims[PHS1_DIM] = grid_size;
-			grid_dims[PHS2_DIM] = INT64_C(1);
+			grid_dims[PHS2_DIM] = 1;
 		}
 
 		if (-1 == restrict_fov)

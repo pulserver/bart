@@ -54,7 +54,7 @@ bool stream_encode(int l, char buf[l], const struct stream_msg* msg)
 
 	int w = 0;
 	if (types[msg->type].param)
-		w = snprintf(buf, MSG_HDR_SIZE, "%s%s%ld",
+		w = snprintf(buf, MSG_HDR_SIZE, "%s%s%" PRId64,
 				TOKEN, types[msg->type].keyword, msg->data.data_long);
 	else
 		w = snprintf(buf, MSG_HDR_SIZE, "%s%s", TOKEN, types[msg->type].keyword);
@@ -88,7 +88,7 @@ bool stream_decode(struct stream_msg* msg, int l, const char buf[l])
 	msg->ext = types[msg->type].ext;
 
 	if (types[msg->type].param)
-		msg->data.data_long = strtol(str + types[msg->type].keylen, NULL, 10);
+		msg->data.data_long = strtoll(str + types[msg->type].keylen, NULL, 10);
 
 	return true;
 }

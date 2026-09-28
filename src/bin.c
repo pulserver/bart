@@ -276,8 +276,8 @@ int main_bin(int argc, char* argv[argc])
 	case BIN_REORDER: // Reorder: Assign to dst from src according to labels
 	case BIN_LABEL: // Label binning: Bin elements from src according to labels
 
-		md_check_compat(DIMS, ~0u, src_dims, labels_dims);
-		md_check_bounds(DIMS, ~0u, labels_dims, src_dims);
+		md_check_compat(DIMS, ~UINT64_C(0), src_dims, labels_dims);
+		md_check_bounds(DIMS, ~UINT64_C(0), labels_dims, src_dims);
 
 		int dim = -1;
 
@@ -363,7 +363,7 @@ int main_bin(int argc, char* argv[argc])
 
 			dst_dims[zero_filled_dim] = zero_fill[1];
 
-			debug_printf(DP_DEBUG3, "Spokes per Frame: %ld\n", spokes_per_frame);
+			debug_printf(DP_DEBUG3, "Spokes per Frame: %" PRId64 "\n", spokes_per_frame);
 			debug_printf(DP_DEBUG3, "dst_dim:\n");
 			debug_print_dims(DP_DEBUG3, DIMS, dst_dims);
 		}
@@ -447,7 +447,7 @@ int main_bin(int argc, char* argv[argc])
 			}
 
 			bart_dim_t size = md_calc_size(DIMS, loop_dims);
-			bart_dim_t index = md_ravel_index(DIMS, loop_dims, ~0U, pos_loop);
+			bart_dim_t index = md_ravel_index(DIMS, loop_dims, ~UINT64_C(0), pos_loop);
 
 			if (0 == index % ((10 >= size) ? 1 : size / 10))
 				debug_printf(DP_DEBUG3, "Binning: %f\n", 100. * index / (double)size);

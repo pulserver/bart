@@ -5,7 +5,7 @@
 #include "misc/dimtypes.h"
 
 #define MD_FFT_FORWARD 0u
-#define MD_FFT_INVERSE (~0u)
+#define MD_FFT_INVERSE (~UINT64_C(0))
 
 
 extern void md_fft2(int N, const bart_dim_t dims[N],

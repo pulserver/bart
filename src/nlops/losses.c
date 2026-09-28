@@ -235,7 +235,7 @@ static void zasum_fun(const nlop_data_t* _data, complex float* dst, const comple
 
 	md_smul(data->N, data->rdims, data->der, data->der, 1. / data->scaling);
 
-	md_copy(1, MAKE_ARRAY(INT64_C(1)), dst, &result, CFL_SIZE);
+	md_copy(1, MD_DIMS(1), dst, &result, CFL_SIZE);
 }
 
 

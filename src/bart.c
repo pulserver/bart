@@ -432,7 +432,7 @@ static int batch_wrapper(main_fun_t* dispatch_func, int argc, char *argv[argc], 
 
 static bool loop_step(bart_dim_t start, bart_dim_t total, bart_dim_t workers, bart_dim_t* idx, bart_dim_t *idx_p, int final_ret, const int order[DIMS], stream_t ref_stream)
 {
-	debug_printf(DP_DEBUG3, "Enter BART loop_step: start=%ld idx=%ld, idx_p=%ld, final_ret=%d.\n", start, *idx, *idx_p, final_ret);
+	debug_printf(DP_DEBUG3, "Enter BART loop_step: start=%" PRId64 " idx=%" PRId64 ", idx_p=%" PRId64 ", final_ret=%d.\n", start, *idx, *idx_p, final_ret);
 
 	// initialization
 	if (-1 == *idx)
@@ -474,9 +474,9 @@ static bool loop_step(bart_dim_t start, bart_dim_t total, bart_dim_t workers, ba
 
 		*idx_p = md_ravel_index(DIMS, pos, flags, dims);
 
-		debug_printf(DP_DEBUG3, "BART loop_step stream idx received: idx=%ld;  Pos: \n [ ", *idx);
+		debug_printf(DP_DEBUG3, "BART loop_step stream idx received: idx=%" PRId64 ";  Pos: \n [ ", *idx);
 		for(int i = 0; i < DIMS; i++)
-			debug_printf(DP_DEBUG3, "%ld, ", pos[i]);
+			debug_printf(DP_DEBUG3, "%" PRId64 ", ", pos[i]);
 		debug_printf(DP_DEBUG3, "].\n");
 
 		return true;
@@ -505,7 +505,7 @@ static bool loop_step(bart_dim_t start, bart_dim_t total, bart_dim_t workers, ba
 	*idx_p = md_calc_offset(DIMS, pstr, pos);
 
 
-	debug_printf(DP_DEBUG3, "Leave BART loop_step: start=%ld idx=%ld, idx_p=%ld, final_ret=%d.\n\n", start, *idx, *idx_p, final_ret);
+	debug_printf(DP_DEBUG3, "Leave BART loop_step: start=%" PRId64 " idx=%" PRId64 ", idx_p=%" PRId64 ", final_ret=%d.\n\n", start, *idx, *idx_p, final_ret);
 
 
 	//FIXME : Loop Order breaks random number test.

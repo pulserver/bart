@@ -177,7 +177,7 @@ const struct linop_s* linop_scaled_sum_create(int N, const bart_dim_t imgd_dims[
 
 const struct linop_s* linop_avg_create(int N, const bart_dim_t imgd_dims[N], bart_flags_t flags)
 {
-	if (UINT64_C(0) == (flags & md_nontriv_dims(N, imgd_dims)))
+	if (0 == (flags & md_nontriv_dims(N, imgd_dims)))
 		return linop_identity_create(N, imgd_dims);
 
 	struct sum_data* data = sum_create_data(N, imgd_dims, flags);
@@ -256,7 +256,7 @@ static void repmat_apply_adjoint(const linop_data_t* _data, complex float* dst, 
 
 const struct linop_s* linop_repmat_create(int N, const bart_dim_t odims[N], bart_flags_t flags)
 {
-	if (UINT64_C(0) == (flags & md_nontriv_dims(N, odims)))
+	if (0 == (flags & md_nontriv_dims(N, odims)))
 		return linop_identity_create(N, odims);
 
 	struct repmat_data* data = repmat_create_data(N, odims, flags);

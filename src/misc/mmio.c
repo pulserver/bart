@@ -48,7 +48,7 @@
 
 // for Windows DLLs
 #ifndef MAP_NORESERVE
-#define MAP_NORESERVE UINT64_C(0)
+#define MAP_NORESERVE 0
 #endif
 
 // for BSD compatibility
@@ -152,7 +152,7 @@ static struct cfl_loop_desc_s cfl_loop_desc = {
 
 	.D = 0,
 	.omp_threads = 1,
-	.flags = UINT64_C(0),
+	.flags = 0,
 	.loop_dims =  { [0 ... DIMS - 1] = 1 },
 	.offs_dims =  { [0 ... DIMS - 1] = 0 },
 };
@@ -284,7 +284,7 @@ bart_dim_t get_cfl_loop_index()
 	if (MAX_WORKER < worker_id)
 		error("Worker id exceeds maximum supported workers!\n");
 
-	debug_printf(DP_DEBUG2, "loop index: %ld\n", cfl_loop_index[worker_id]);
+	debug_printf(DP_DEBUG2, "loop index: %" PRId64 "\n", cfl_loop_index[worker_id]);
 	return cfl_loop_index[worker_id];
 }
 
@@ -582,7 +582,7 @@ static void* create_data(int ofd, size_t header_size, size_t size)
 		return NULL;
 
 	size_t skip = header_size & ~UINT64_C(4095);
-	size_t off = header_size & UINT64_C(4095);
+	size_t off = header_size & 4095;
 	void* addr;
 
 	if (MAP_FAILED == (addr = mmap(NULL, size + off, PROT_READ|PROT_WRITE, MAP_SHARED, ofd, (off_t)skip)))
@@ -959,7 +959,7 @@ complex float* create_async_cfl(const char* name, const bart_flags_t flags, int 
 	if (0 != (md_nontriv_dims(D, dimensions) & flags))
 		error("Creating stream %s: Cannot combine streaming and looping!\n", name);
 
-	return create_cfl_internal(name, D, dimensions, UINT64_C(0));
+	return create_cfl_internal(name, D, dimensions, 0);
 }
 
 
@@ -1297,7 +1297,7 @@ complex float* private_cfl(int D, const bart_dim_t dims[D], const char* name)
 		io_error("private cfl %s: cannot stat file\n", name);
 
 	if (T != st.st_size)
-		error("private cfl %s: file size (%ld) does not match header (%ld)\n", name, st.st_size, T);
+		error("private cfl %s: file size (%jd) does not match header (%" PRId64 ")\n", name, (intmax_t)st.st_size, T);
 
 	if (MAP_FAILED == (addr = mmap(NULL, (size_t)T, PROT_READ|PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, fd, 0)))
 		io_error("private cfl %s: cannot mmap file\n", name);
@@ -1577,7 +1577,7 @@ void unmap_multi_cfl(int N, int D[N], const bart_dim_t* dimensions[N], complex f
 	for (int i = 0; i < N; i++) {
 
 		if (args[i] != args[0] + (T / (bart_stride_t)sizeof(complex float)))
-			error("unmap multi cfl 1 %ld\n", T);
+			error("unmap multi cfl 1 %zu\n", T);
 
 		bart_dim_t isize = io_calc_size(D[i], dimensions[i], sizeof(complex float));
 

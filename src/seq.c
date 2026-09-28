@@ -163,7 +163,7 @@ int main_seq(int argc, char* argv[argc])
 
 		if (1 == seq->conf->loop_dims[TIME_DIM]) {
 
-			debug_printf(DP_INFO, "Set total number of spokes to %ld (full frame for RAGA encoding)\n", seq->conf->loop_dims[PHS1_DIM]);
+			debug_printf(DP_INFO, "Set total number of spokes to %" PRId64 " (full frame for RAGA encoding)\n", seq->conf->loop_dims[PHS1_DIM]);
 			seq->conf->loop_dims[TIME_DIM] = seq->conf->loop_dims[PHS1_DIM];
 		}
 	}
@@ -235,13 +235,13 @@ int main_seq(int argc, char* argv[argc])
 	}
 
 
-	debug_printf(DP_INFO, "loops: %ld \t dims: ", md_calc_size(DIMS, seq->conf->loop_dims));
+	debug_printf(DP_INFO, "loops: %" PRId64 " \t dims: ", md_calc_size(DIMS, seq->conf->loop_dims));
 	debug_print_dims(DP_INFO, DIMS, seq->conf->loop_dims);
 
 	bart_dim_t kernel_dims[DIMS];
 	md_select_dims(DIMS, ~(COEFF_FLAG | COEFF2_FLAG | ITER_FLAG), kernel_dims, seq->conf->loop_dims);
 
-	debug_printf(DP_INFO, "kernels: %ld \t dims: ", md_calc_size(DIMS, kernel_dims));
+	debug_printf(DP_INFO, "kernels: %" PRId64 " \t dims: ", md_calc_size(DIMS, kernel_dims));
 	debug_print_dims(DP_INFO, DIMS, kernel_dims);
 
 	bart_dim_t mdims[DIMS];

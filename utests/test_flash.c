@@ -329,7 +329,7 @@ static bool test_flash_mom2(void)
 	if (FLASH_EVENTS != E)
 		return false;
 
-	const int samples = lround(1.E6 * seq.phys.tr);
+	const int samples = llround(1.E6 * seq.phys.tr);
 	float m0[samples][3];
 
 	seq_compute_moment0(samples, m0, 1.E-6, E, ev);

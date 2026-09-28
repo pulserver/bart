@@ -108,13 +108,13 @@ static void print_opdims(const struct linop_s* op)
 	debug_printf(DP_INFO, "\tDomain:   [");
 
 	for (bart_dim_t k = 0; k < domain->N; k ++)
-		debug_printf(DP_INFO, "%6ld", domain->dims[k]);
+		debug_printf(DP_INFO, "%6" PRId64, domain->dims[k]);
 
 	debug_printf(DP_INFO, "]\n");
 	debug_printf(DP_INFO, "\tCodomain: [");
 
 	for (bart_dim_t k = 0; k < codomain->N; k ++)
-		debug_printf(DP_INFO, "%6ld", codomain->dims[k]);
+		debug_printf(DP_INFO, "%6" PRId64, codomain->dims[k]);
 
 	debug_printf(DP_INFO, "]\n");
 }
@@ -134,9 +134,9 @@ static void construct_mask(
 
 	for (int i = 0; i < n; i++) {
 
-		y = lround(creal(reorder[i]));
-		z = lround(creal(reorder[i + n]));
-		t = lround(creal(reorder[i + 2 * n]));
+		y = llround(creal(reorder[i]));
+		z = llround(creal(reorder[i + n]));
+		t = llround(creal(reorder[i + 2 * n]));
 
 		mask[(y + z * sy) + t * sy * sz] = 1;
 	}
@@ -222,9 +222,9 @@ static void kern_apply(const linop_data_t* _data, complex float* dst, const comp
 
 	for (int i = 0; i < n; i ++) {
 
-		y = lround(creal(data->reorder[i]));
-		z = lround(creal(data->reorder[i + n]));
-		t = lround(creal(data->reorder[i + 2 * n]));
+		y = llround(creal(data->reorder[i]));
+		z = llround(creal(data->reorder[i + n]));
+		t = llround(creal(data->reorder[i + 2 * n]));
 
 		md_clear(4, vec_dims, vec, CFL_SIZE);
 		md_zfmac2(4, fmac_dims, vec_str, vec, phi_in_str, (perm + ((wx * nc * tk) * (y + z * sy))), phi_mat_str, data->phi);
@@ -293,8 +293,8 @@ static void kern_adjoint(const linop_data_t* _data, complex float* dst, const co
 #else
 		int tid = 0;
 #endif
-		int y = lround(creal(data->reorder[k]));
-		int z = lround(creal(data->reorder[k + n]));
+		int y = llround(creal(data->reorder[k]));
+		int z = llround(creal(data->reorder[k + n]));
 		int t = -1;
 
 		if (0 == flags[k]) {
@@ -303,10 +303,10 @@ static void kern_adjoint(const linop_data_t* _data, complex float* dst, const co
 
 			for (int i = k; i < n; i ++) {
 
-				if ((y == lround(creal(data->reorder[i]))) && (z == lround(creal(data->reorder[i + n])))) {
+				if ((y == llround(creal(data->reorder[i]))) && (z == llround(creal(data->reorder[i + n])))) {
 
 					flags[i] = 1;
-					t = lround(creal(data->reorder[i + 2 * n]));
+					t = llround(creal(data->reorder[i + 2 * n]));
 
 					md_copy(4, line_dims, (vec + (wx * nc * tf * tid) + t * wx * nc), (src + i * wx * nc), CFL_SIZE);
 				}
@@ -908,8 +908,8 @@ static void fftmod_apply(bart_dim_t sy, bart_dim_t sz,
 
 	bart_dim_t n = reorder_dims[0];
 	for (bart_dim_t k = 0; k < n; k++) {
-		y = lround(creal(reorder[k]));
-		z = lround(creal(reorder[k + n]));
+		y = llround(creal(reorder[k]));
+		z = llround(creal(reorder[k + n]));
 
 		py = cexp(2.i * M_PI * dy * y);
 		pz = cexp(2.i * M_PI * dz * z);

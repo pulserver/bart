@@ -477,7 +477,7 @@ static double bench_generic_mdfft(bart_dim_t dims[DIMS], bart_flags_t flags)
 static double bench_mdfft(bart_dim_t scale)
 {
 	bart_dim_t dims[DIMS] = { 1, 128 * scale, 128 * scale, 1, 1, 4, 1, 4 };
-	return bench_generic_mdfft(dims, UINT64_C(6));
+	return bench_generic_mdfft(dims, 6);
 }
 
 
@@ -506,7 +506,7 @@ static double bench_generic_fft(bart_dim_t dims[DIMS], bart_flags_t flags)
 static double bench_fft(bart_dim_t scale)
 {
 	bart_dim_t dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 1, 16, 1, 8 };
-	return bench_generic_fft(dims, UINT64_C(6));
+	return bench_generic_fft(dims, 6);
 }
 
 
@@ -536,7 +536,7 @@ static double bench_generic_fftmod(bart_dim_t dims[DIMS], bart_flags_t flags)
 static double bench_fftmod(bart_dim_t scale)
 {
 	bart_dim_t dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 1, 16, 1, 16 };
-	return bench_generic_fftmod(dims, UINT64_C(6));
+	return bench_generic_fftmod(dims, 6);
 }
 
 
@@ -738,7 +738,7 @@ int main_bench(int argc, char* argv[argc])
 		if (threads) {
 
 			num_set_num_threads((int)pos[THREADS_IND] + 1);
-			debug_printf(DP_INFO, "%02ld threads. ", pos[THREADS_IND] + 1);
+			debug_printf(DP_INFO, "%02" PRId64 " threads. ", pos[THREADS_IND] + 1);
 		}
 
 		do_test(dims, &MD_ACCESS(BENCH_DIMS, strs, pos, out), pos[SCALE_IND] + 1,

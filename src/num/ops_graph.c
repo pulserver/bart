@@ -120,7 +120,7 @@ static const char* print_node_arg(const struct node_s* _node)
 
 		auto tmp = name;
 
-		name = ptr_printf("%s %ld", tmp, iov->dims[i]);
+		name = ptr_printf("%s %" PRId64, tmp, iov->dims[i]);
 
 		xfree(tmp);
 	}

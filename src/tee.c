@@ -166,7 +166,7 @@ int main_tee(int argc, char* argv[argc])
 			}
 
 			if (timer)
-				fprintf(stderr, "frame %ld: %fs\n", counter, timestamp() - time);
+				fprintf(stderr, "frame %" PRId64 ": %fs\n", counter, timestamp() - time);
 
 			time = timestamp();
 

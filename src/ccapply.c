@@ -152,7 +152,7 @@ int main_ccapply(int argc, char* argv[argc])
 
 	if (forward) {
 
-		debug_printf(DP_DEBUG1, "Compressing to %ld virtual coils...\n", P);
+		debug_printf(DP_DEBUG1, "Compressing to %" PRId64 " virtual coils...\n", P);
 
 		md_transpose_dims(DIMS, COIL_DIM, MAPS_DIM, trp_dims, out_dims);
 		trp_dims[MAPS_DIM] = out_dims[COIL_DIM];

@@ -418,9 +418,9 @@ const struct operator_p_s* op_p_auto_normalize(const struct operator_p_s* op, ba
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
 	assert(N == io_out->N);
-	assert(md_check_compat(N, INT64_C(0), dims, io_out->dims));
-	assert(md_check_compat(N, INT64_C(0), strs, io_in->strs));
-	assert(md_check_compat(N, INT64_C(0), strs, io_out->strs));
+	assert(md_check_compat(N, 0, dims, io_out->dims));
+	assert(md_check_compat(N, 0, strs, io_in->strs));
+	assert(md_check_compat(N, 0, strs, io_out->strs));
 
 	return operator_p_create(N, dims, N, dims, CAST_UP(PTR_PASS(data)), auto_norm_apply, auto_norm_del);
 }

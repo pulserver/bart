@@ -192,7 +192,7 @@ int main_denoise(int argc, char* argv[argc])
 
 	int nr_penalties = ropts.r + ropts.sr;
 
-	debug_printf(DP_INFO, "Regularization terms: %d, Supporting variables: %ld\n", nr_penalties, ropts.svars);
+	debug_printf(DP_INFO, "Regularization terms: %d, Supporting variables: %" PRId64 "\n", nr_penalties, ropts.svars);
 
 	// choose algorithm
 

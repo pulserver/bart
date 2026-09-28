@@ -50,7 +50,7 @@ static void num_init_internal(void)
 
 	if (NULL != (wisdom_str = getenv("BART_USE_FFTW_WISDOM"))) {
 
-		bart_dim_t wisdom = strtol(wisdom_str, NULL, 10);
+		bart_dim_t wisdom = strtoll(wisdom_str, NULL, 10);
 
 		if ((1 != wisdom) && (0 != wisdom))
 			error("BART_USE_FFTW_WISDOM environment variable must be 0 or 1!\n");
@@ -63,7 +63,7 @@ static void num_init_internal(void)
 
 	if (NULL != (chunk_str = getenv("BART_PARALLEL_CHUNK_SIZE"))) {
 
-		bart_dim_t chunk_size = strtol(chunk_str, NULL, 10);
+		bart_dim_t chunk_size = strtoll(chunk_str, NULL, 10);
 
 		if (0 < chunk_size) {
 
@@ -98,7 +98,7 @@ static void num_init_internal(void)
 
 	if (NULL != (mem_str = getenv("BART_GPU_GLOBAL_MEMORY"))) {
 
-		bart_dim_t mem = strtol(mem_str, NULL, 10);
+		bart_dim_t mem = strtoll(mem_str, NULL, 10);
 
 		if ((1 != mem) && (0 != mem))
 			error("BART_GPU_GLOBAL_MEMORY environment variable must be 0 or 1!\n");

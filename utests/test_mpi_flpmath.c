@@ -42,8 +42,8 @@ static bool test_mpi_zscalar2(bart_flags_t mpi_flags)
 	UT_RETURN_ASSERT(err < UT_TOL);
 }
 
-static bool test_mpi_scalar2_8(void)	{ return test_mpi_zscalar2(UINT64_C(8)); }
-static bool test_mpi_scalar2_12(void)	{ return test_mpi_zscalar2(UINT64_C(12)); }
+static bool test_mpi_scalar2_8(void)	{ return test_mpi_zscalar2(8); }
+static bool test_mpi_scalar2_12(void)	{ return test_mpi_zscalar2(12); }
 
 UT_REGISTER_TEST(test_mpi_scalar2_8);
 UT_REGISTER_TEST(test_mpi_scalar2_12);

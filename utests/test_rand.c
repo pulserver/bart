@@ -74,7 +74,7 @@ static bool test_threads_rand(md_rand_t function, const char* name)
 
 	num_rand_init(0xDEADBEEF);
 	if (print_bench)
-		bart_printf("times (%s, %ld elements, ~%.2f GiB, %2d rounds):\tsingle thread: ", name, md_calc_size(N, dims), gibi, rounds);
+		bart_printf("times (%s, %" PRId64 " elements, ~%.2f GiB, %2d rounds):\tsingle thread: ", name, md_calc_size(N, dims), gibi, rounds);
 	run_bench(rounds, print_bench, sync_gpu, f_st);
 
 

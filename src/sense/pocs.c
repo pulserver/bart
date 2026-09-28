@@ -200,7 +200,7 @@ void pocs_recon2(italgo_fun2_t italgo, void* iconf, const struct linop_s* ops[3]
 	md_copy_strides(DIMS, data.strs_ksp, strs_ksp);
 	md_copy_strides(DIMS, data.strs_pat, strs_pat);
 
-	data.sense_op = sense_init(UINT64_C(0), dims, FFT_FLAGS|MAPS_FLAG|COIL_FLAG, maps);
+	data.sense_op = sense_init(0, dims, FFT_FLAGS|MAPS_FLAG|COIL_FLAG, maps);
 
 	data.thresh = thresh_op;
 

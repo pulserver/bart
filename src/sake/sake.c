@@ -114,7 +114,7 @@ static void lowrank(float alpha, int D, const bart_dim_t dims[D], complex float*
 	bart_dim_t kern_dims[D];
 
 	md_set_dims(D, kern_dims, 1);
-	md_min_dims(4, ~0u, kern_dims, kern_min, dims);
+	md_min_dims(4, ~UINT64_C(0), kern_dims, kern_min, dims);
 
 	debug_printf(DP_DEBUG3, "kern_dims = \t");
 	debug_print_dims(DP_DEBUG3, D, kern_dims);

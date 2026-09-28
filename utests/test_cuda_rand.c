@@ -198,7 +198,7 @@ static bool test_cuda_rand(md_rand_t function, const char* name, double tol)
 
 	num_rand_init(0xDEADBEEF);
 	if (print_bench)
-		bart_printf("times (%s, %ld elements, ~%.2f GiB, %2d rounds):\t%5d threads: ", name, md_calc_size(N2, dims2), gibi, rounds, some_threads);
+		bart_printf("times (%s, %" PRId64 " elements, ~%.2f GiB, %2d rounds):\t%5d threads: ", name, md_calc_size(N2, dims2), gibi, rounds, some_threads);
 	run_bench(rounds, print_bench, sync_gpu, f_mt);
 
 

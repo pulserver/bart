@@ -247,7 +247,7 @@ static const struct iter_dump_s* iter6_dump_default_create(const char* base_file
 	const bart_dim_t* dims[NI];
 	bool save_array[NI];
 
-	bool guess_save_flag = (UINT64_C(0) == save_flag);
+	bool guess_save_flag = (0 == save_flag);
 
 	for (int i = 0; i < NI; i++) {
 

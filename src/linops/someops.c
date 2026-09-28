@@ -481,7 +481,7 @@ struct linop_s* linop_resize_center_create(int N, const bart_dim_t out_dims[N], 
 {
 	bart_dim_t pos[N];
 	for (int i = 0; i < N; i++)
-		pos[i] = labs((out_dims[i] / 2) - (in_dims[i] / 2));
+		pos[i] = llabs((out_dims[i] / 2) - (in_dims[i] / 2));
 
 
 	return linop_copy_block_create(N, pos, out_dims, in_dims);
@@ -617,9 +617,9 @@ struct linop_s* linop_padding_create_onedim(int N, const bart_dim_t dims[N], enu
 	md_copy_dims(N, *dims_after, dims);
 	md_copy_dims(N, *dims_out, dims);
 
-	(*dims_for)[pad_dim] = MAX(INT64_C(0), pad_for);
+	(*dims_for)[pad_dim] = MAX(0, pad_for);
 	(*dims_mid)[pad_dim] = MIN(dims[pad_dim], dims[pad_dim] + pad_for + pad_after);
-	(*dims_after)[pad_dim] = MAX(INT64_C(0), pad_after);
+	(*dims_after)[pad_dim] = MAX(0, pad_after);
 
 	(*dims_out)[pad_dim] += (pad_for + pad_after);
 
@@ -780,7 +780,7 @@ struct linop_s* linop_padding_create(int N, const bart_dim_t dims[N], enum PADDI
 
 		for (int i = 0; i < N; i++) {
 
-			pos[i] = labs(pad_for[i]);
+			pos[i] = llabs(pad_for[i]);
 			odims[i] = dims[i] + pad_after[i] + pad_for[i];
 		}
 
@@ -1130,7 +1130,7 @@ struct linop_s* linop_shift_create(int N, const bart_dim_t dims[N], int shift_di
 
 	bart_dim_t dims_exp[N];
 	md_copy_dims(N, dims_exp, dims);
-	dims_exp[shift_dim] += labs(shift);
+	dims_exp[shift_dim] += llabs(shift);
 
 	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
@@ -1531,7 +1531,7 @@ static struct operator_matrix_s* linop_matrix_priv2(int N, const bart_dim_t out_
 
 	if (mult_gram < 2 * mult_mat) {	// FIXME: rethink
 
-		debug_printf(DP_DEBUG2, "Gram matrix: 2x %ld vs %ld\n", mult_mat, mult_gram);
+		debug_printf(DP_DEBUG2, "Gram matrix: 2x %" PRId64 " vs %" PRId64 "\n", mult_mat, mult_gram);
 
 		complex float* mat_gram = md_alloc(2 * N, *grm_dims2, CFL_SIZE);
 
@@ -1686,7 +1686,7 @@ struct linop_s* linop_matrix_chain(const struct linop_s* a, const struct linop_s
 
 	md_max_dims(N, flags, matrix_dims, matA_dims, matB_dims);
 
-	debug_printf(DP_DEBUG1, "tensor chain: %ld x %ld -> %ld\n",
+	debug_printf(DP_DEBUG1, "tensor chain: %" PRId64 " x %" PRId64 " -> %" PRId64 "\n",
 			md_calc_size(N, matA_dims), md_calc_size(N, matB_dims), md_calc_size(N, matrix_dims));
 
 

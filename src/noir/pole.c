@@ -48,7 +48,7 @@ static void get_circle_coords(struct pole_config_s* conf, bart_dim_t pos[3], int
 	vec3_saxpy(fpos, fpos, 0.5 * diameter * sinf(angle), e2[normal]);
 
 	for (int i = 0; i < 3; i++)
-		pos[i] = MAX(0, MIN(diameter, lroundf(fpos[i])));
+		pos[i] = MAX(0, MIN(diameter, llroundf(fpos[i])));
 
 	if (twoD)
 		pos[normal] = 0;
@@ -67,7 +67,7 @@ static void compute_curl_map_normal(struct pole_config_s conf, int N, const bart
 	md_set_dims(N, pos2, 0);
 
 	if (dims[(normal + 1) % 3] != dims[(normal + 2) % 3])
-		debug_printf(DP_DEBUG1, "Non-square dimensions detected (%ld, %ld, %ld): ", dims[0], dims[1], dims[2]);
+		debug_printf(DP_DEBUG1, "Non-square dimensions detected (%" PRId64 ", %" PRId64 ", %" PRId64 "): ", dims[0], dims[1], dims[2]);
 
 	int diameter;
 
@@ -79,7 +79,7 @@ static void compute_curl_map_normal(struct pole_config_s conf, int N, const bart
 	} else {
 
 		diameter = roundf(ceil(conf.diameter * MAX(dims[(normal + 1) % 3], dims[(normal + 2) % 3])));
-		debug_printf(DP_DEBUG1, "Circle diameter set to %d (%.3f * %ld).\n", diameter, conf.diameter,  MAX(dims[(normal + 1) % 3], dims[(normal + 2) % 3]));
+		debug_printf(DP_DEBUG1, "Circle diameter set to %d (%.3f * %" PRId64 ").\n", diameter, conf.diameter,  MAX(dims[(normal + 1) % 3], dims[(normal + 2) % 3]));
 	}
 
 	bool twoD = false;
@@ -183,7 +183,7 @@ void compute_curl_weighting(struct pole_config_s conf, int N, const bart_dim_t c
 	complex float* wgh = md_alloc_sameplace(N, col_dims, CFL_SIZE, wgh_map);
 
 	md_clear(N, col_dims, wgh, CFL_SIZE);
-	md_zss(N, col_dims, UINT64_C(0), wgh, sens);
+	md_zss(N, col_dims, 0, wgh, sens);
 
 	bart_dim_t rdims[N];
 	md_select_dims(N, ~conf.avg_flag, rdims, col_dims);
@@ -263,7 +263,7 @@ static struct lseg_s extract_phase_poles_2d_sign(struct pole_config_s conf, int 
 
 	if (conf.closing != 0. && !conf.espirit) {
 
-		int dmin = lroundf(ceilf(((-1 == conf.closing) ? conf.diameter / 2. : conf.closing) * MAX(dims[(normal + 1) % 3], dims[(normal + 2) % 3])));
+		int dmin = llroundf(ceilf(((-1 == conf.closing) ? conf.diameter / 2. : conf.closing) * MAX(dims[(normal + 1) % 3], dims[(normal + 2) % 3])));
 		bart_dim_t mdims[3];
 		complex float* mask = md_structuring_element_cube(3, mdims, dmin, md_nontriv_dims(3, dims), curl_map);
 

@@ -655,7 +655,7 @@ bool stream_send_msg2(int pipefd, const struct stream_msg* msg,
 
 bool stream_send_msg(int pfd, const struct stream_msg* msg)
 {
-	return stream_send_msg2(pfd, msg, 1, (bart_dim_t[1]){ }, (bart_dim_t[1]){ }, NULL, UINT64_C(0));
+	return stream_send_msg2(pfd, msg, 1, (bart_dim_t[1]){ }, (bart_dim_t[1]){ }, NULL, 0);
 }
 
 
@@ -809,7 +809,7 @@ static bool stream_receive_index_locked2(stream_t s)
 	// if receiving, save timestamp after finished receiving!
 	stream_log_index(s, index, timestamp());
 
-	debug_printf(DP_DEBUG3, "data index rcvd: %ld\n", index);
+	debug_printf(DP_DEBUG3, "data index rcvd: %" PRId64 "\n", index);
 
 	return true;
 }
@@ -924,7 +924,7 @@ static bool stream_send_index_locked(stream_t s, bart_dim_t index)
 		pcfl->index++;
 	}
 
-	debug_printf(DP_DEBUG3, "data index sent: %ld\n", pcfl->index);
+	debug_printf(DP_DEBUG3, "data index sent: %" PRId64 "\n", pcfl->index);
 
 	return true;
 }
@@ -1067,7 +1067,7 @@ void stream_sync_all(stream_t strm)
 	bart_dim_t pos[D];
 	md_set_dims(D, pos, 0);
 
-	stream_sync_slice(strm, D, pcfl->dims, UINT64_C(0), pos);
+	stream_sync_slice(strm, D, pcfl->dims, 0, pos);
 }
 
 
@@ -1347,7 +1347,7 @@ static void stream_stop_log(const struct stream* s)
 		return;
 
 	for (bart_dim_t i = 0; i <= s->pcfl->index; i++)
-		fprintf(s->logfile, "%ld, %f\n", i, s->timestamps[i]);
+		fprintf(s->logfile, "%" PRId64 ", %f\n", i, s->timestamps[i]);
 
 	if (NULL != s->logfile)
 		fclose(s->logfile);

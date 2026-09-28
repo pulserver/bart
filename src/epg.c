@@ -54,7 +54,7 @@ int main_epg(int argc, char* argv[argc])
 	float B1 =   1.0;
 	int SP = 0;
 	int N = 10;
-	bart_flags_t unknowns = UINT64_C(3);
+	bart_flags_t unknowns = 3;
 	bart_dim_t verbose = 0;
 
 	const struct opt_s opts[] = {

@@ -10,7 +10,7 @@ extern void noir_back_coils(const struct linop_s* op, complex float* dst, const 
 
 struct noir_model_conf_s {
 
-	unsigned int fft_flags;
+	bart_flags_t fft_flags;
 	unsigned int cnstcoil_flags;
 	unsigned int ptrn_flags;
 	_Bool rvc;

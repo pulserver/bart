@@ -184,7 +184,7 @@ static void zblock_diag_der(const nlop_data_t* _data, int o, int i, complex floa
 	const bart_dim_t* ddims = (*(const struct iovec_s* (*)[OO][II])(data->iov_der))[o][i]->dims;
 
 	if (NULL == der)
-		error("Block diag %x derivative not available!\n", data);
+		error("Block diag %p derivative not available!\n", data);
 
 	md_ztenmul(data->N, data->iov_out[o]->dims, dst, data->iov_in[i]->dims, src, ddims, der);
 
@@ -208,7 +208,7 @@ static void zblock_diag_adj(const nlop_data_t* _data, int o, int i, complex floa
 	const bart_dim_t* ddims = (*(const struct iovec_s* (*)[OO][II])(data->iov_der))[o][i]->dims;
 
 	if (NULL == der)
-		error("Block diag %x derivative not available!\n", data);
+		error("Block diag %p derivative not available!\n", data);
 
 	md_ztenmulc(data->N, data->iov_in[i]->dims, dst, data->iov_out[o]->dims, src, ddims, der);
 
@@ -483,7 +483,7 @@ static void rblock_diag_der(const nlop_data_t* _data, int o, int i, complex floa
 	const bart_dim_t* ddims = (*(const struct iovec_s* (*)[OO][II])(data->iov_der))[o][i]->dims;
 
 	if (NULL == der)
-		error("Block diag %x derivative not available!\n", data);
+		error("Block diag %p derivative not available!\n", data);
 
 	md_tenmul(data->N, data->iov_out[o]->dims, (float*)dst, data->iov_in[i]->dims, (float*)src, ddims, der);
 }
@@ -498,7 +498,7 @@ static void rblock_diag_adj(const nlop_data_t* _data, int o, int i, complex floa
 	const bart_dim_t* ddims = (*(const struct iovec_s* (*)[OO][II])(data->iov_der))[o][i]->dims;
 
 	if (NULL == der)
-		error("Block diag %x derivative not available!\n", data);
+		error("Block diag %p derivative not available!\n", data);
 
 	md_tenmul(data->N, data->iov_in[i]->dims, (float*)dst, data->iov_out[o]->dims, (float*)src, ddims, der);
 }

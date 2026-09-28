@@ -131,7 +131,7 @@ int main_join(int argc, char* argv[argc])
 			stream_t strm = stream_lookup(in_data[i]);
 
 			if ((NULL != strm) && (0 != (stream_get_flags(strm) & (~MD_BIT(dim)))))
-				error("Input %s is streamed along dims(flags: %lu) other than the one joined!\n", name, stream_get_flags(strm));
+				error("Input %s is streamed along dims(flags: %" PRIu64 ") other than the one joined!\n", name, stream_get_flags(strm));
 
 		} else {
 
@@ -166,7 +166,7 @@ int main_join(int argc, char* argv[argc])
 	complex float* out_data = NULL;
 
 	if (stream)
-		out_data = create_async_cfl(out_file, stream ? MD_BIT(dim) : UINT64_C(0), N, out_dims);
+		out_data = create_async_cfl(out_file, stream ? MD_BIT(dim) : 0, N, out_dims);
 	else
 		out_data = create_cfl(out_file, N, out_dims);
 

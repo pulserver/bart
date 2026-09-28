@@ -129,7 +129,7 @@ int seq_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq_confi
 
 		const float alpha = 0.5;
 
-		pulse[idx].samples = lround(1.E6 * seq->phys.rf_duration);
+		pulse[idx].samples = llround(1.E6 * seq->phys.rf_duration);
 
 		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
 			return -1;
@@ -165,7 +165,7 @@ int seq_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq_confi
 		pulse[idx].sar_calls = seq->loop_dims[BATCH_DIM];
 		pulse[idx].sar_dur = pp->duration;
 
-		pulse[idx].samples = lround(0.5 * 1E6 * pulse[idx].sar_dur);
+		pulse[idx].samples = llround(0.5 * 1E6 * pulse[idx].sar_dur);
 
 		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
 			return -1;
@@ -350,7 +350,7 @@ int seq_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 		last_idx[i] = seq->loop_dims[i] - 1;
 
 	// changed beahvior for sequential multislice
-	bart_flags_t msm_flag = UINT64_C(0);
+	bart_flags_t msm_flag = 0;
 
 	if (md_check_equal_order(DIMS, seq->order, seq_loop_order_multislice, SEQ_FLAGS))
 	       msm_flag = SLICE_FLAG ;

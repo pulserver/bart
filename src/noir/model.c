@@ -250,7 +250,7 @@ void noir_orthogonalize(struct noir_s* op, complex float* coils)
 	// orthogonalization of the coil profiles
 	bart_dim_t nmaps = data->imgs_dims[MAPS_DIM];
 
-	if (INT64_C(1) == nmaps)
+	if (1 == nmaps)
 		return;
 
 	bart_dim_t single_map_dims[DIMS];
@@ -264,13 +264,13 @@ void noir_orthogonalize(struct noir_s* op, complex float* coils)
 
 	complex float* tmp = md_alloc_sameplace(DIMS, single_map_dims, CFL_SIZE, coils);
 
-	for (bart_dim_t map = INT64_C(0); map < nmaps; ++map) {
+	for (bart_dim_t map = 0; map < nmaps; ++map) {
 
 		complex float* map_ptr = (void*)coils + map * data_strs[MAPS_DIM];
 
 		md_clear(DIMS, single_map_dims, tmp, CFL_SIZE);
 
-		for (bart_dim_t prev = INT64_C(0); prev < map; ++prev) {
+		for (bart_dim_t prev = 0; prev < map; ++prev) {
 
 			complex float* prev_map_ptr = (void*)coils + prev * data_strs[MAPS_DIM];
 

@@ -685,7 +685,7 @@ void mpi_reduce_sum(int N, const bart_dim_t dims[N], float* optr, float* rptr)
 	_d->use_double = false;
 	_d->use_complex = false;
 
-	exec_vptr_fun_gen(reduce_sum_int, CAST_UP(PTR_PASS(_d)), 2, N, ~UINT64_C(0), UINT64_C(3), UINT64_C(3), (const bart_dim_t*[2]) { dims, dims }, (const bart_dim_t*[2]) { MD_STRIDES(N, dims, FL_SIZE), MD_STRIDES(N, dims, FL_SIZE) }, (void*[2]) { optr, rptr }, (size_t[2]){ FL_SIZE, FL_SIZE }, false);
+	exec_vptr_fun_gen(reduce_sum_int, CAST_UP(PTR_PASS(_d)), 2, N, ~UINT64_C(0), 3, 3, (const bart_dim_t*[2]) { dims, dims }, (const bart_dim_t*[2]) { MD_STRIDES(N, dims, FL_SIZE), MD_STRIDES(N, dims, FL_SIZE) }, (void*[2]) { optr, rptr }, (size_t[2]){ FL_SIZE, FL_SIZE }, false);
 }
 
 void mpi_reduce_zsum(int N, const bart_dim_t dims[N], complex float* optr, complex float* rptr)
@@ -696,7 +696,7 @@ void mpi_reduce_zsum(int N, const bart_dim_t dims[N], complex float* optr, compl
 	_d->use_double = false;
 	_d->use_complex = true;
 
-	exec_vptr_fun_gen(reduce_sum_int, CAST_UP(PTR_PASS(_d)), 2, N, ~UINT64_C(0), UINT64_C(3), UINT64_C(3), (const bart_dim_t*[2]) { dims, dims }, (const bart_dim_t*[2]) { MD_STRIDES(N, dims, CFL_SIZE), MD_STRIDES(N, dims, CFL_SIZE) }, (void*[2]) { optr, rptr }, (size_t[2]){ CFL_SIZE, CFL_SIZE }, false);
+	exec_vptr_fun_gen(reduce_sum_int, CAST_UP(PTR_PASS(_d)), 2, N, ~UINT64_C(0), 3, 3, (const bart_dim_t*[2]) { dims, dims }, (const bart_dim_t*[2]) { MD_STRIDES(N, dims, CFL_SIZE), MD_STRIDES(N, dims, CFL_SIZE) }, (void*[2]) { optr, rptr }, (size_t[2]){ CFL_SIZE, CFL_SIZE }, false);
 
 }
 
@@ -719,7 +719,7 @@ void mpi_reduce_sumD(int N, const bart_dim_t dims[N], double* optr, double* rptr
 	_d->use_double = true;
 	_d->use_complex = false;
 
-	exec_vptr_fun_gen(reduce_sum_int, CAST_UP(PTR_PASS(_d)), 2, N, ~UINT64_C(0), UINT64_C(3), UINT64_C(3), (const bart_dim_t*[2]) { dims, dims }, (const bart_dim_t*[2]) { MD_STRIDES(N, dims, DL_SIZE), MD_STRIDES(N, dims, DL_SIZE) }, (void*[2]) { optr, rptr }, (size_t[2]){ DL_SIZE, DL_SIZE }, false);
+	exec_vptr_fun_gen(reduce_sum_int, CAST_UP(PTR_PASS(_d)), 2, N, ~UINT64_C(0), 3, 3, (const bart_dim_t*[2]) { dims, dims }, (const bart_dim_t*[2]) { MD_STRIDES(N, dims, DL_SIZE), MD_STRIDES(N, dims, DL_SIZE) }, (void*[2]) { optr, rptr }, (size_t[2]){ DL_SIZE, DL_SIZE }, false);
 }
 
 void mpi_reduce_zsumD(int N, const bart_dim_t dims[N], complex double* optr, complex double* rptr)
@@ -730,7 +730,7 @@ void mpi_reduce_zsumD(int N, const bart_dim_t dims[N], complex double* optr, com
 	_d->use_double = true;
 	_d->use_complex = true;
 
-	exec_vptr_fun_gen(reduce_sum_int, CAST_UP(PTR_PASS(_d)), 2, N, ~UINT64_C(0), UINT64_C(3), UINT64_C(3), (const bart_dim_t*[2]) { dims, dims }, (const bart_dim_t*[2]) { MD_STRIDES(N, dims, CDL_SIZE), MD_STRIDES(N, dims, CDL_SIZE) }, (void*[2]) { optr, rptr }, (size_t[2]){ CDL_SIZE, CDL_SIZE }, false);
+	exec_vptr_fun_gen(reduce_sum_int, CAST_UP(PTR_PASS(_d)), 2, N, ~UINT64_C(0), 3, 3, (const bart_dim_t*[2]) { dims, dims }, (const bart_dim_t*[2]) { MD_STRIDES(N, dims, CDL_SIZE), MD_STRIDES(N, dims, CDL_SIZE) }, (void*[2]) { optr, rptr }, (size_t[2]){ CDL_SIZE, CDL_SIZE }, false);
 }
 
 void* mpi_reduction_sum_buffer_create(const void* ptr)

@@ -51,7 +51,7 @@ static void rolloff_apply(const linop_data_t* _d, complex float* dst, const comp
  
 	bart_dim_t pos[d->N];
 	for (int i = 0; i < d->N; i++)
-		pos[i] = (i < 3) ? labs((d->odims[i] / 2) - (d->dims[i] / 2)) : 0;
+		pos[i] = (i < 3) ? llabs((d->odims[i] / 2) - (d->dims[i] / 2)) : 0;
 
 	md_clear(d->N, d->odims, dst, CFL_SIZE);
 	apply_rolloff_correction2(d->conf.os, d->conf.width, d->conf.beta, d->N, d->dims,
@@ -71,7 +71,7 @@ static void rolloff_adjoint(const linop_data_t* _d, complex float* dst, const co
  
 	bart_dim_t pos[d->N];
 	for (int i = 0; i < d->N; i++)
-		pos[i] = (i < 3) ? labs((d->odims[i] / 2) - (d->dims[i] / 2)) : 0;
+		pos[i] = (i < 3) ? llabs((d->odims[i] / 2) - (d->dims[i] / 2)) : 0;
 
 	apply_rolloff_correction2(d->conf.os, d->conf.width, d->conf.beta, d->N, d->dims,
 				  istrs, dst,
@@ -109,7 +109,7 @@ struct linop_s* linop_kb_rolloff_create(int N, const bart_dim_t dims[N], bart_fl
 	
 	bart_dim_t odims[N];
 	for (int i = 0; i < N; i++)
-		odims[i] = (MD_IS_SET(flags, i)) ? lround(conf->os * dims[i]) : dims[i];
+		odims[i] = (MD_IS_SET(flags, i)) ? llround(conf->os * dims[i]) : dims[i];
 
 	d->odims = ARR_CLONE(bart_dim_t[N], odims);
 	d->conf = *conf;
@@ -206,7 +206,7 @@ extern struct linop_s* nufft_create_chain(int N,
 
 	bart_dim_t os_cim_dims[N];
 	for (int i = 0; i < N; i++)
-		os_cim_dims[i] = (MD_IS_SET(flags, i)) ? lround(conf->os * cim_dims[i]) : cim_dims[i];
+		os_cim_dims[i] = (MD_IS_SET(flags, i)) ? llround(conf->os * cim_dims[i]) : cim_dims[i];
 	
 	ret = linop_chain_FF(ret, linop_fftc_create(N, os_cim_dims, flags));
 

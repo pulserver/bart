@@ -66,7 +66,7 @@ void md_zsample(int N, const bart_dim_t dims[N], complex float* out, zsample_fun
 
 void md_parallel_zsample(int N, const bart_dim_t dims[N], complex float* out, zsample_fun_t fun)
 {
-	md_zsample2(N, dims, ~0U, out, fun);
+	md_zsample2(N, dims, ~UINT64_C(0), out, fun);
 }
 
 static void md_zzsample2(int N, const bart_dim_t dims[N], bart_flags_t flags, complex double* out, zzsample_fun_t fun)
@@ -104,7 +104,7 @@ void md_zzsample(int N, const bart_dim_t dims[N], complex double* out, zzsample_
 
 void md_parallel_zzsample(int N, const bart_dim_t dims[N], complex double* out, zzsample_fun_t fun)
 {
-	md_zzsample2(N, dims, ~0U, out, fun);
+	md_zzsample2(N, dims, ~UINT64_C(0), out, fun);
 }
 
 static void md_sample2(int N, const bart_dim_t dims[N], bart_flags_t flags, float* out, sample_fun_t fun)
@@ -129,7 +129,7 @@ void md_sample(int N, const bart_dim_t dims[N], float* out, sample_fun_t fun)
 
 void md_parallel_sample(int N, const bart_dim_t dims[N], float* out, sample_fun_t fun)
 {
-	md_sample2(N, dims, ~0U, out, fun);
+	md_sample2(N, dims, ~UINT64_C(0), out, fun);
 }
 
 

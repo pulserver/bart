@@ -262,7 +262,7 @@ int main_nlinvnet(int argc, char* argv[argc])
 		if (0 == md_calc_size(3, im_vec)) {
 
 			estimate_im_dims(DIMS, FFT_FLAGS, dims, trj_dims, traj);
-			debug_printf(DP_INFO, "Est. image size: %ld %ld %ld\n", dims[0], dims[1], dims[2]);
+			debug_printf(DP_INFO, "Est. image size: %" PRId64 " %" PRId64 " %" PRId64 "\n", dims[0], dims[1], dims[2]);
 
 		} else {
 

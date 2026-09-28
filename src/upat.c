@@ -58,8 +58,8 @@ int main_upat(int argc, char* argv[argc])
 	for (bart_dim_t y = 0; y < Y; y++)
 		for (bart_dim_t z = 0; z < Z; z++)
 			pat[z * Y + y] = (   ((y % undy == 0) && (z % undz == 0))
-					  || (   (labs(2 * y - Y) < 2 * center)
-					      && (labs(2 * z - Z) < 2 * center)))  ? 1.  : 0.;
+					  || (   (llabs(2 * y - Y) < 2 * center)
+					      && (llabs(2 * z - Z) < 2 * center)))  ? 1.  : 0.;
 
 	unmap_cfl(DIMS, dims, pat);
 	return 0;

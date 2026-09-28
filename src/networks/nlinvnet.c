@@ -915,7 +915,7 @@ void train_nlinvnet(struct nlinvnet_s* nlinvnet, int Nb, struct named_data_list_
 
 		const complex float* use_reco = NULL;
 		bart_dim_t use_reco_dims[DIMS];
-		bart_flags_t use_reco_nontriv = UINT64_C(0);
+		bart_flags_t use_reco_nontriv = 0;
 
 		if (NULL != nlinvnet->use_reco_file) {
 

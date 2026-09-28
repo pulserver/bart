@@ -56,7 +56,7 @@ int main_estshift(int argc, char* argv[argc])
 	const complex float* in1 = load_cfl(arg1_file, DIMS, dims1);
 	const complex float* in2 = load_cfl(arg2_file, DIMS, dims2);
 
-	assert(md_check_compat(DIMS, ~0u, dims1, dims2));
+	assert(md_check_compat(DIMS, ~UINT64_C(0), dims1, dims2));
 
 	float shifts[DIMS];
 	est_subpixel_shift(DIMS, shifts, dims1, flags, in1, in2);

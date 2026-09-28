@@ -90,7 +90,7 @@ UT_REGISTER_TEST(test_snlop_exp);
 
 static bool test_snlop_log(void)
 {
-	return test_snlop_unary(clogf, snlop_log, (complex float[4]){ INT64_C(1), 2.718282, -1., 1. + 1.i });
+	return test_snlop_unary(clogf, snlop_log, (complex float[4]){ 1, 2.718282, -1., 1. + 1.i });
 }
 
 UT_REGISTER_TEST(test_snlop_log);
@@ -341,7 +341,7 @@ static bool test_snlop_mul(void)
 
 	arg_t x1 = snlop_input(N, dims, "x1");
 	arg_t x2 = snlop_input(N, dims, "x2");
-	arg_t mul_x = snlop_mul(x1, x2, UINT64_C(1));
+	arg_t mul_x = snlop_mul(x1, x2, 1);
 
 	arg_t iargs[2] = { x1, x2 };
 	arg_t oargs[1] = { mul_x };
@@ -385,7 +385,7 @@ static bool test_snlop_div(void)
 
 	arg_t x1 = snlop_input(N, dims, "x1");
 	arg_t x2 = snlop_input(N, dims, "x2");
-	arg_t div = snlop_div(x1, x2, UINT64_C(1));
+	arg_t div = snlop_div(x1, x2, 1);
 
 	arg_t iargs[2] = { x1, x2 };
 	arg_t oargs[1] = { div };

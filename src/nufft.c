@@ -136,7 +136,7 @@ int main_nufft(int argc, char* argv[argc])
 
 	if (8 >= md_calc_size(3, coilest_dims)) {
 
-		debug_printf(DP_WARN,	"\tThe estimated image size %ldx%ldx%ld is very small.\n"
+		debug_printf(DP_WARN,	"\tThe estimated image size %" PRId64 "x%" PRId64 "x%" PRId64 " is very small.\n"
 					"\tDid you scale your trajectory correctly?\n"
 					"\tThe unit of measurement is pixel_size / FOV.\n",
 					coilest_dims[0], coilest_dims[1], coilest_dims[2]);
@@ -193,7 +193,7 @@ int main_nufft(int argc, char* argv[argc])
 		if (0 == md_calc_size(3, coilim_dims)) {
 
 			md_copy_dims(DIMS, coilim_dims, coilest_dims);
-			debug_printf(DP_INFO, "Est. image size: %ldx%ldx%ld\n", coilim_dims[0], coilim_dims[1], coilim_dims[2]);
+			debug_printf(DP_INFO, "Est. image size: %" PRId64 "x%" PRId64 "x%" PRId64 "\n", coilim_dims[0], coilim_dims[1], coilim_dims[2]);
 
 			if (!conf.decomp) {
 

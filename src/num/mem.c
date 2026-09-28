@@ -162,7 +162,7 @@ void debug_print_memcache(int dl)
 		if (NULL == mem_allocs[i])
 			return;
 
-		debug_printf(dl, "%ld allocated for stream %i (%ld used / %ld unused)\n", unused_memory[i] + used_memory[i], i, used_memory[i], unused_memory[i]);
+		debug_printf(dl, "%" PRId64 " allocated for stream %i (%" PRId64 " used / %" PRId64 " unused)\n", unused_memory[i] + used_memory[i], i, used_memory[i], unused_memory[i]);
 
 		print_mem_tree(dl, mem_cache[i]);
 		print_mem_tree(dl, mem_allocs[i]);
@@ -233,7 +233,7 @@ void memcache_clear(void (*device_free)(const void* x, bool host))
 
 	while (NULL != nptr) {
 
-		debug_printf(DP_DEBUG3, "Freeing %ld bytes.\n", nptr->len);
+		debug_printf(DP_DEBUG3, "Freeing %zd bytes.\n", nptr->len);
 		if (!nptr->host)
 			freed += nptr->len;
 
@@ -246,7 +246,7 @@ void memcache_clear(void (*device_free)(const void* x, bool host))
 #pragma	omp atomic
 	unused_memory[cuda_get_stream_id()] -= freed;
 
-	debug_printf(DP_DEBUG2, "Freed %ld bytes.\n", freed);
+	debug_printf(DP_DEBUG2, "Freed %" PRId64 " bytes.\n", freed);
 }
 
 

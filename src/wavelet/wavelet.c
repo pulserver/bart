@@ -475,7 +475,7 @@ void wavelet_coeffs2(int N, bart_flags_t flags, bart_dim_t odims[N], const bart_
 	bart_dim_t wdims[N];
 	md_select_dims(N, flags, wdims, dims);	// remove unmodified dims
 
-	int b = ffs(flags) - 1;
+	int b = md_min_idx(flags);
 
 	odims[b] = wavelet_coeffs_r(levels - 1, N, flags, wdims, min, flen);
 }
@@ -494,7 +494,7 @@ static bool wavelet_check_dims(int N, bart_flags_t flags, const bart_dim_t dims[
 
 static void embed(int N, bart_flags_t flags, bart_stride_t ostr[N], const bart_dim_t dims[N], const bart_stride_t str[N])
 {
-	int b = ffs(flags) - 1;
+	int b = md_min_idx(flags);
 
 	bart_dim_t dims1[N];
 	md_select_dims(N, flags, dims1, dims);
@@ -541,7 +541,7 @@ static void fwt2_int(int N, bart_flags_t flags, const bart_dim_t shifts[N], cons
 
 	// ... which get embedded in dimension b
 
-	int b = ffs(flags) - 1;
+	int b = md_min_idx(flags);
 
 	bart_stride_t ostr2[2 * N];
 	md_calc_strides(2 * N, ostr2, wdims, (size_t)ostr[b]);
@@ -559,7 +559,7 @@ static void fwt2_int(int N, bart_flags_t flags, const bart_dim_t shifts[N], cons
 	bart_dim_t bands = md_calc_size(N, wdims + N);
 	bart_dim_t coeffs = md_calc_size(N, wdims + 0);
 
-	debug_printf(DP_DEBUG4, "fwt2: flags:%lu lcoeffs:%ld coeffs:%ld (space:%ld) bands:%ld str:%ld off:%ld\n", flags, level_coeffs, coeffs, odims2[b], bands, ostr[b], offset / istr[b]);
+	debug_printf(DP_DEBUG4, "fwt2: flags:%" PRIu64 " lcoeffs:%" PRId64 " coeffs:%" PRId64 " (space:%" PRId64 ") bands:%" PRId64 " str:%" PRId64 " off:%" PRId64 "\n", flags, level_coeffs, coeffs, odims2[b], bands, ostr[b], offset / istr[b]);
 
 	// subtract coefficients in high band
 
@@ -624,7 +624,7 @@ static void iwt2_int(int N, bart_flags_t flags, const bart_dim_t shifts[N], cons
 
 	// ... which get embedded in dimension b
 
-	int b = ffs(flags) - 1;
+	int b = md_min_idx(flags);
 
 	bart_stride_t istr2[2 * N];
 	md_calc_strides(2 * N, istr2, wdims, (size_t)istr[b]);
@@ -648,7 +648,7 @@ static void iwt2_int(int N, bart_flags_t flags, const bart_dim_t shifts[N], cons
 
 	assert(idims2[b] > 0);
 
-	debug_printf(DP_DEBUG4, "ifwt2: flags:%lu lcoeffs:%ld coeffs:%ld (space:%ld) bands:%ld str:%ld off:%ld\n", flags, level_coeffs, coeffs, idims2[b], bands, istr[b], offset / ostr[b]);
+	debug_printf(DP_DEBUG4, "ifwt2: flags:%" PRIu64 " lcoeffs:%" PRId64 " coeffs:%" PRId64 " (space:%" PRId64 ") bands:%" PRId64 " str:%" PRId64 " off:%" PRId64 "\n", flags, level_coeffs, coeffs, idims2[b], bands, istr[b], offset / ostr[b]);
 
 	// fix me we need temp storage
 	complex float* tmp = md_alloc_sameplace(2 * N, wdims2, CFL_SIZE, out);

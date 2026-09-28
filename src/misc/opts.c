@@ -548,8 +548,8 @@ void cmdline_synth(void (*print)(const char* str, ...), int n, const struct opt_
 		case OPT_INT:
 		case OPT_PINT: (*print)("%d", *(int*)opts[i].ptr); break;
 		case OPT_UINT: (*print)("%u", *(unsigned int*)opts[i].ptr); break;
-		case OPT_LONG: (*print)("%ld", *(bart_dim_t*)opts[i].ptr); break;
-		case OPT_ULONG: (*print)("%lu", *(bart_flags_t*)opts[i].ptr); break;
+		case OPT_LONG: (*print)("%" PRId64, *(bart_dim_t*)opts[i].ptr); break;
+		case OPT_ULONG: (*print)("%" PRIu64, *(bart_flags_t*)opts[i].ptr); break;
 		case OPT_ULLONG: (*print)("%llu", *(unsigned long long*)opts[i].ptr); break;
 
 		case OPT_CFL:
@@ -595,7 +595,7 @@ void cmdline_synth(void (*print)(const char* str, ...), int n, const struct opt_
 
 				if (j > 0)
 					(*print)(":");
-				(*print)("%ld", (*vn)[j]);
+				(*print)("%" PRId64, (*vn)[j]);
 			}
 
 			break;
@@ -1036,17 +1036,17 @@ bool opt_vec2(void* ptr, char c, const char* optarg)
 {
 	if (islower(c) || !isprint(c)) {
 
-		if (2 != sscanf(optarg, "%ld:%ld", &(*(bart_dim_t(*)[2])ptr)[0], &(*(bart_dim_t(*)[2])ptr)[1])) {
+		if (2 != sscanf(optarg, "%" SCNd64 ":%" SCNd64, &(*(bart_dim_t(*)[2])ptr)[0], &(*(bart_dim_t(*)[2])ptr)[1])) {
 
-			(*(bart_dim_t(*)[3])ptr)[0] = atol(optarg);
-			(*(bart_dim_t(*)[3])ptr)[1] = atol(optarg);
+			(*(bart_dim_t(*)[3])ptr)[0] = atoll(optarg);
+			(*(bart_dim_t(*)[3])ptr)[1] = atoll(optarg);
 		}
 
 	} else {
 
 		debug_printf(DP_WARN, "the upper-case options for specifying dimensions are deprecated.\n");
 
-		int r = sscanf(optarg, "%ld:%ld", &(*(bart_dim_t(*)[2])ptr)[0], &(*(bart_dim_t(*)[2])ptr)[1]);
+		int r = sscanf(optarg, "%" SCNd64 ":%" SCNd64, &(*(bart_dim_t(*)[2])ptr)[0], &(*(bart_dim_t(*)[2])ptr)[1]);
 
 		assert(2 == r);
 	}
@@ -1076,18 +1076,18 @@ bool opt_vec3(void* ptr, char c, const char* optarg)
 {
 	if (islower(c) || !isprint(c)) {
 
-		if (3 != sscanf(optarg, "%ld:%ld:%ld", &(*(bart_dim_t(*)[3])ptr)[0], &(*(bart_dim_t(*)[3])ptr)[1], &(*(bart_dim_t(*)[3])ptr)[2])) {
+		if (3 != sscanf(optarg, "%" SCNd64 ":%" SCNd64 ":%" SCNd64, &(*(bart_dim_t(*)[3])ptr)[0], &(*(bart_dim_t(*)[3])ptr)[1], &(*(bart_dim_t(*)[3])ptr)[2])) {
 
-			(*(bart_dim_t(*)[3])ptr)[0] = atol(optarg);
-			(*(bart_dim_t(*)[3])ptr)[1] = atol(optarg);
-			(*(bart_dim_t(*)[3])ptr)[2] = atol(optarg);
+			(*(bart_dim_t(*)[3])ptr)[0] = atoll(optarg);
+			(*(bart_dim_t(*)[3])ptr)[1] = atoll(optarg);
+			(*(bart_dim_t(*)[3])ptr)[2] = atoll(optarg);
 		}
 
 	} else {
 
 		debug_printf(DP_WARN, "the upper-case options for specifying dimensions are deprecated.\n");
 
-		int r = sscanf(optarg, "%ld:%ld:%ld", &(*(bart_dim_t(*)[3])ptr)[0], &(*(bart_dim_t(*)[3])ptr)[1], &(*(bart_dim_t(*)[3])ptr)[2]);
+		int r = sscanf(optarg, "%" SCNd64 ":%" SCNd64 ":%" SCNd64, &(*(bart_dim_t(*)[3])ptr)[0], &(*(bart_dim_t(*)[3])ptr)[1], &(*(bart_dim_t(*)[3])ptr)[2]);
 
 		assert(3 == r);
 	}
@@ -1103,7 +1103,7 @@ bool opt_vecn(void* _ptr, char c, const char* optarg)
 
 	int delta = 0;
 
-	int r = sscanf(optarg, "%ld%n", vec + count, &delta);
+	int r = sscanf(optarg, "%" SCNd64 "%n", vec + count, &delta);
 	assert(1 == r);
 
 	optarg += delta;
@@ -1111,7 +1111,7 @@ bool opt_vecn(void* _ptr, char c, const char* optarg)
 
 	bart_dim_t tmp;
 
-	while (1 == sscanf(optarg, ":%ld%n", &tmp, &delta)) {
+	while (1 == sscanf(optarg, ":%" SCNd64 "%n", &tmp, &delta)) {
 
 		if (count == ptr->max)
 			error("Option '%c' is at maximum a vector of size %d!\n", c, ptr->max);
@@ -1341,6 +1341,7 @@ static void check_args(int N, const struct arg_s args[N])
 
 
 
+static int xsnprintf(int size, char buf[static size], const char* fmt, ...) __attribute__((format(printf,3,4)));
 static int xsnprintf(int size, char buf[static size], const char* fmt, ...)
 {
 	va_list ap;

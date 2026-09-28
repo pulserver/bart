@@ -366,7 +366,7 @@ static bool test_iter_eulermaruyama(void)
 	complex float* dst = md_calloc(N, dims, CFL_SIZE);
 
 	complex float diag[] = { 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9 };
-	const struct linop_s* id = linop_cdiag_create(N, dims, UINT64_C(2), diag);
+	const struct linop_s* id = linop_cdiag_create(N, dims, 2, diag);
 
 	struct lsqr_conf conf = lsqr_defaults;
 	struct iter_eulermaruyama_conf em_conf = iter_eulermaruyama_defaults;
@@ -386,7 +386,7 @@ static bool test_iter_eulermaruyama(void)
 	operator_p_apply(lsqr, 1., N, dims, dst, N, dims, src);
 
 	complex float std[10];
-	md_zstd(N, dims, UINT64_C(1), std, dst);
+	md_zstd(N, dims, 1, std, dst);
 
 	for (int i = 0; i < 10; i++)
 		if (cabsf(diag[i] * std[i] - 1.f) > 0.1)
@@ -417,7 +417,7 @@ static bool test_iter_eulermaruyama_precond(void)
 	complex float* dst = md_calloc(N, dims, CFL_SIZE);
 
 	complex float diag[] = { 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9 };
-	const struct linop_s* id = linop_cdiag_create(N, dims, UINT64_C(2), diag);
+	const struct linop_s* id = linop_cdiag_create(N, dims, 2, diag);
 
 	struct lsqr_conf conf = lsqr_defaults;
 	struct iter_eulermaruyama_conf em_conf = iter_eulermaruyama_defaults;
@@ -441,7 +441,7 @@ static bool test_iter_eulermaruyama_precond(void)
 	operator_p_apply(lsqr, 1., N, dims, dst, N, dims, src);
 
 	complex float std[10];
-	md_zstd(N, dims, UINT64_C(1), std, dst);
+	md_zstd(N, dims, 1, std, dst);
 
 	for (int i = 0; i < 10; i++)
 		if (cabsf(diag[i] * std[i] - 1.f) > 0.1)

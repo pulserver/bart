@@ -1898,7 +1898,7 @@ struct extract_data_s {
 	operator_data_t super;
 
 	int a;
-	off_t off;
+	bart_stride_t off;
 	const struct operator_s* op;
 
 	bart_stride_t* strs;

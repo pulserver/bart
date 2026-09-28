@@ -22,7 +22,7 @@
 static complex float* noncart_shift(bart_dim_t odims[DIMS], const bart_dim_t sdims[DIMS], const complex float* shift, const bart_dim_t tdims[DIMS], const complex float* tdata)
 {
 	md_max_dims(DIMS, ~UINT64_C(0), odims, tdims, sdims);
-	md_select_dims(DIMS, ~1u, odims, odims);
+	md_select_dims(DIMS, ~MD_BIT(0), odims, odims);
 
 
 	complex float* odata = md_alloc(DIMS, odims, CFL_SIZE);

@@ -103,7 +103,7 @@ static void grog_grid2(int D, const bart_dim_t tdims[D], const complex float* tr
 
 	bart_flags_t loop_flags = tflags & dflags & ~(PHS1_FLAG|PHS2_FLAG);
 
-	if (UINT64_C(0) == loop_flags)
+	if (0 == loop_flags)
 		return grog_grid(D, tdims, traj_shift, ddims, data_grid, data, lnG_dims, lnG);
 
 	bart_dim_t tdims1[D];
@@ -182,7 +182,7 @@ int main_grog(int argc, char* argv[argc])
 	if (!md_check_compat(DIMS - 1, ~UINT64_C(0), tdims + 1, ddims + 1))
 		error("Incompatible dimensions\n");
 
-	if (UINT64_C(1) != (tflags & ~dflags))
+	if (1 != (tflags & ~dflags))
 		error("Incompatible dimensions\n");
 
 
@@ -208,7 +208,7 @@ int main_grog(int argc, char* argv[argc])
 	bart_dim_t tdims2[DIMS];
 	const complex float* traj_grid = load_cfl(grid_traj_file, DIMS, tdims2);
 
-	if (!md_check_compat(DIMS, UINT64_C(0), tdims, tdims2))
+	if (!md_check_compat(DIMS, 0, tdims, tdims2))
 		error("Incompatible trajectory.\n");
 
 	complex float* data_grid = create_cfl(grid_data_file, DIMS, ddims);

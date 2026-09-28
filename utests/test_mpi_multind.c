@@ -31,7 +31,7 @@ static bool test_mpi_copy_from_distributed(bart_flags_t flags, int ndim1, int nd
 	md_calc_strides(N, strs, dims, 1);
 
 	bart_dim_t sdims[N];
-	md_select_dims(N, UINT64_C(3), sdims, dims);
+	md_select_dims(N, 3, sdims, dims);
 
 	complex float* ref = md_alloc(N, dims, CFL_SIZE);
 	complex float* dist_ptr = md_alloc_mpi(N, flags, dims, CFL_SIZE);
@@ -109,7 +109,7 @@ static bool test_mpi_copy_roi_with_shift(void)
 
 	complex float* ref_in = md_alloc(N, dims, CFL_SIZE);
 	md_gaussian_rand(N, dims, ref_in);
-	complex float* ptr_in = md_mpi_move(N, UINT64_C(8), dims, ref_in, CFL_SIZE);
+	complex float* ptr_in = md_mpi_move(N, 8, dims, ref_in, CFL_SIZE);
 
 	complex float* ref = md_alloc(N, dims, CFL_SIZE);
 	complex float* ptr = md_alloc_mpi(N, 8, dims, CFL_SIZE);

@@ -69,7 +69,7 @@ enode_t enode_create(const char* name, const void* data)
 	x->iedges = list_create();
 	x->oedges = list_create();
 	x->active = true;
-	x->flags = UINT64_C(0);
+	x->flags = 0;
 	x->count = 0;
 	x->prev = NULL;
 

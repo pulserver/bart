@@ -51,7 +51,7 @@ static void rot45z2(int D, int M,
 
 static int find_bit(bart_flags_t N)
 {
-	return ffsl((bart_dim_t)N) - 1;
+	return md_min_idx(N);
 }
 
 static int next_powerof2(int x)

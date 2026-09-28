@@ -122,7 +122,7 @@ static void config_to_custom_params(int nl, bart_dim_t custom_long[__VLA(nl)], i
 	custom_long[SEQ_UI_IDX_LONG_MB_FACTOR] = seq->geom.mb_factor;
 
 	custom_long[SEQ_UI_IDX_LONG_TINY] = seq->enc.tiny;
-	custom_long[SEQ_UI_IDX_LONG_RF_DURATION_US] = lround(1.E6 * seq->phys.rf_duration);
+	custom_long[SEQ_UI_IDX_LONG_RF_DURATION_US] = llround(1.E6 * seq->phys.rf_duration);
 	custom_long[SEQ_UI_IDX_LONG_INIT_DELAY] = seq->magn.init_delay;
 	custom_long[SEQ_UI_IDX_LONG_INVERSIONS] = seq->loop_dims[BATCH_DIM];
 	custom_long[SEQ_UI_IDX_LONG_INV_DELAY] = seq->magn.inv_delay_time;
@@ -404,7 +404,7 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 			seq->geom.baseres, seq->geom.mb_factor, seq->geom.sms_distance);
 	
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
-			"\nPE_Mode/Turns-GA/aligned flags/order\t%d/%d/%ld/%d",
+			"\nPE_Mode/Turns-GA/aligned flags/order\t%d/%d/%" PRIu64 "/%d",
 			seq->enc.pe_mode, seq->enc.tiny, seq->enc.aligned_flags, seq->enc.order);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
@@ -416,7 +416,7 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 			seq->magn.mag_prep, seq->magn.ti, seq->magn.init_delay, seq->magn.inv_delay_time);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
-			"\nloop_dims\t: %ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t",
+			"\nloop_dims\t: %" PRId64 "|%" PRId64 "|%" PRId64 "|%" PRId64 "\t\t%" PRId64 "|%" PRId64 "|%" PRId64 "|%" PRId64 "\t\t%" PRId64 "|%" PRId64 "|%" PRId64 "|%" PRId64 "\t\t%" PRId64 "|%" PRId64 "|%" PRId64 "|%" PRId64 "\t\t",
 			seq->loop_dims[READ_DIM], seq->loop_dims[PHS1_DIM], seq->loop_dims[PHS2_DIM], seq->loop_dims[COIL_DIM],
 			seq->loop_dims[MAPS_DIM], seq->loop_dims[TE_DIM], seq->loop_dims[COEFF_DIM], seq->loop_dims[COEFF2_DIM],
 			seq->loop_dims[ITER_DIM], seq->loop_dims[CSHIFT_DIM], seq->loop_dims[TIME_DIM], seq->loop_dims[TIME2_DIM],

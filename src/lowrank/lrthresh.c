@@ -249,7 +249,7 @@ static void lrthresh_apply(const operator_data_t* _data, float mu, complex float
 		}
 
 
-		debug_printf(DP_DEBUG4, "M=%ld, N=%ld, B=%ld, num_blocks=%ld, img_size=%ld, blk_size=%ld\n", M, N, B, num_blocks, img_size, blk_size);
+		debug_printf(DP_DEBUG4, "M=%" PRId64 ", N=%" PRId64 ", B=%" PRId64 ", num_blocks=%" PRId64 ", img_size=%" PRId64 ", blk_size=%" PRId64 "\n", M, N, B, num_blocks, img_size, blk_size);
 
 		batch_svthresh(M, N, num_blocks, lambda * GWIDTH(M, N, B), *(complex float (*)[mat2_dims[1]][M][N])tmp_mat2);
 		//	for ( int b = 0; b < mat_dims[1]; b++ )

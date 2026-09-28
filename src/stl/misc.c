@@ -147,7 +147,7 @@ void stl_center_fov(const bart_dim_t dims[3], double* model, double fov_size)
 
 void stl_stats(const bart_dim_t dims[3], const double* model)
 {
-        debug_printf(DP_INFO, "Number of triangles: %ld\n", dims[2]);
+        debug_printf(DP_INFO, "Number of triangles: %" PRId64 "\n", dims[2]);
 
         double min_v[3];
 	double max_v[3];
@@ -166,7 +166,7 @@ static void stl_write_ascii(FILE *fp, const bart_dim_t dims[3], const double* mo
 	assert(3 == dims[0]);
 	assert(4 == dims[1]);
 
-        debug_printf(DP_INFO, "Number of triangles: %ld\n", dims[2]);
+        debug_printf(DP_INFO, "Number of triangles: %" PRId64 "\n", dims[2]);
 
         bart_stride_t strs[3];
         md_calc_strides(3, strs, dims, DL_SIZE);

@@ -213,7 +213,7 @@ static void bloch_fun(const nlop_data_t* _data, complex float* dst, const comple
 
 		//consistent with compute_mask
 		bart_dim_t size = (1 == data->map_dims[i]) ? 1 : (data->map_dims[i] * fov_reduction_factor);
-		start[i] = labs((size / 2) - (data->map_dims[i] / 2));
+		start[i] = llabs((size / 2) - (data->map_dims[i] / 2));
 		end[i] = size + start[i];
 	}
 

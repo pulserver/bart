@@ -79,9 +79,9 @@ int main_ncalib(int argc, char* argv[argc])
 	float scaling = 0;
 	float oversampling_coils = 0;
 
-	bart_flags_t cnstcoil_flags = UINT64_C(0);
-	bart_flags_t shared_img_flags = UINT64_C(0);
-	bart_flags_t scale_loop_flags = UINT64_C(0);
+	bart_flags_t cnstcoil_flags = 0;
+	bart_flags_t shared_img_flags = 0;
+	bart_flags_t scale_loop_flags = 0;
 
 	const struct opt_s opts[] = {
 
@@ -129,7 +129,7 @@ int main_ncalib(int argc, char* argv[argc])
 
 	if (1 != ksp_dims[SLICE_DIM]) {
 
-		debug_printf(DP_INFO, "SMS-NLINV reconstruction. Multiband factor: %ld\n", ksp_dims[SLICE_DIM]);
+		debug_printf(DP_INFO, "SMS-NLINV reconstruction. Multiband factor: %" PRId64 "\n", ksp_dims[SLICE_DIM]);
 		conf.sms = true;
 	}
 
@@ -182,7 +182,7 @@ int main_ncalib(int argc, char* argv[argc])
 		if (0 == md_calc_size(3, my_sens_dims)) {
 
 			md_copy_dims(3, my_sens_dims, tdims);
-			debug_printf(DP_INFO, "Est. image size: %ld %ld %ld\n", my_sens_dims[0], my_sens_dims[1], my_sens_dims[2]);
+			debug_printf(DP_INFO, "Est. image size: %" PRId64 " %" PRId64 " %" PRId64 "\n", my_sens_dims[0], my_sens_dims[1], my_sens_dims[2]);
 		}
 
 		// discard high frequencies (needed for periodic in toeplitz)

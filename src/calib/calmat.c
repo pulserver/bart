@@ -118,7 +118,7 @@ complex float* calibration_matrix_mask2(bart_dim_t calmat_dims[2], const bart_di
 	md_zcmp2(2, msk_dims, msk_strs, msk, msk_strs, msk,
 			(bart_dim_t[2]){ 0, 0 }, &(complex float){ /* pcm_dims[1] */ 15 }); // FIXME
 
-	debug_printf(DP_DEBUG1, "%ld/%ld fully-sampled patches.\n",
+	debug_printf(DP_DEBUG1, "%" PRId64 "/%" PRId64 " fully-sampled patches.\n",
 				(bart_dim_t)pow(md_znorm(2, msk_dims, msk), 2.), pcm_dims[0]);
 
 	complex float* tmp = calibration_matrix_mask(calmat_dims, kdims, mask, calreg_dims, data);
@@ -147,7 +147,7 @@ static void circular_patch_mask(const bart_dim_t kdims[3], int channels, complex
 		float dist = 0.;
 
 		for (int i = 0; i < 3; i++)
-			dist += (float)labs(kpos[i] - kcen[i]) / (float)kdims[i];
+			dist += (float)llabs(kpos[i] - kcen[i]) / (float)kdims[i];
 
 		for (int c = 0; c < channels; c++)
 			mask[((c * kdims[2] + kpos[2]) * kdims[1] + kpos[1]) * kdims[0] + kpos[0]] = (dist <= 0.5) ? 1 : 0;

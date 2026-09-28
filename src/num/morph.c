@@ -44,7 +44,7 @@ complex float* md_structuring_element_ball(int N, bart_dim_t dims[N], int radius
 
 		float rad = 0.;
 		for (int i = 0; i < N; i++)
-			rad += powf(labs(pos[i] - dimsp[i] / 2), 2);
+			rad += powf(llabs(pos[i] - dimsp[i] / 2), 2);
 
 		if (rad <= powf(radius, 2))
 			val = 1.;
@@ -248,7 +248,7 @@ complex float* md_label_simple_connection(int N, bart_dim_t dims[N], float radiu
 	do {
 		bart_dim_t sum = 0;
 		for (int i = 0; i < N; i++)
-			sum += pow(labs(pos[i] - center[i]), 2);
+			sum += pow(llabs(pos[i] - center[i]), 2);
 
 		MD_ACCESS(N, strs, pos, structure) = (pow(radius, 2) >= sum) ? 1. : 0.;
 	} while (md_next(N, dims, ~UINT64_C(0), pos));
