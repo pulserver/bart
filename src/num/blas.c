@@ -151,7 +151,7 @@ static cublasOperation_t cublas_trans(char trans)
 
 
 
-double cuda_asum(long size, const float* src)
+double cuda_asum(bart_dim_t size, const float* src)
 {
 	double result = 0;
 
@@ -169,7 +169,7 @@ double cuda_asum(long size, const float* src)
 	return result;
 }
 
-void cuda_saxpy(long size, float* y, float alpha, const float* src)
+void cuda_saxpy(bart_dim_t size, float* y, float alpha, const float* src)
 {
 //	printf("SAXPY %x %x %ld\n", y, src, size);
 
@@ -184,7 +184,7 @@ void cuda_saxpy(long size, float* y, float alpha, const float* src)
 
 }
 
-void cuda_swap(long size, float* a, float* b)
+void cuda_swap(bart_dim_t size, float* a, float* b)
 {
 	while (size > 0) {
 
@@ -259,7 +259,7 @@ static void blas_cpu_unset_lock(void)
 
 
 
-void blas2_cgemm(char transa, char transb, long M, long N, long K, const complex float* alpha, long lda, const complex float* A, long ldb, const complex float* B, const complex float* beta, long ldc, complex float* C)
+void blas2_cgemm(char transa, char transb, bart_dim_t M, bart_dim_t N, bart_dim_t K, const complex float* alpha, bart_dim_t lda, const complex float* A, bart_dim_t ldb, const complex float* B, const complex float* beta, bart_dim_t ldc, complex float* C)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
@@ -278,7 +278,7 @@ void blas2_cgemm(char transa, char transb, long M, long N, long K, const complex
 
 
 
-void blas_cgemm(char transa, char transb, long M, long N,  long K, const complex float alpha, long lda, const complex float* A, long ldb, const complex float* B, const complex float beta, long ldc, complex float* C)
+void blas_cgemm(char transa, char transb, bart_dim_t M, bart_dim_t N,  bart_dim_t K, const complex float alpha, bart_dim_t lda, const complex float* A, bart_dim_t ldb, const complex float* B, const complex float beta, bart_dim_t ldc, complex float* C)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
@@ -297,7 +297,7 @@ void blas_cgemm(char transa, char transb, long M, long N,  long K, const complex
 
 
 
-void blas2_cgemv(char trans, long M, long N, const complex float* alpha, long lda, const complex float* A, long incx, const complex float* x, complex float* beta, long incy, complex float* y)
+void blas2_cgemv(char trans, bart_dim_t M, bart_dim_t N, const complex float* alpha, bart_dim_t lda, const complex float* A, bart_dim_t incx, const complex float* x, complex float* beta, bart_dim_t incy, complex float* y)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
@@ -315,7 +315,7 @@ void blas2_cgemv(char trans, long M, long N, const complex float* alpha, long ld
 
 
 
-void blas_cgemv(char trans, long M, long N, complex float alpha, long lda, const complex float* A, long incx, const complex float* x, complex float beta, long incy, complex float* y)
+void blas_cgemv(char trans, bart_dim_t M, bart_dim_t N, complex float alpha, bart_dim_t lda, const complex float* A, bart_dim_t incx, const complex float* x, complex float beta, bart_dim_t incy, complex float* y)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
@@ -333,7 +333,7 @@ void blas_cgemv(char trans, long M, long N, complex float alpha, long lda, const
 
 
 
-void blas2_cgeru(long M, long N, const complex float* alpha, long incx, const complex float* x, long incy, const complex float* y, long lda, complex float* A)
+void blas2_cgeru(bart_dim_t M, bart_dim_t N, const complex float* alpha, bart_dim_t incx, const complex float* x, bart_dim_t incy, const complex float* y, bart_dim_t lda, complex float* A)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
@@ -350,7 +350,7 @@ void blas2_cgeru(long M, long N, const complex float* alpha, long incx, const co
 
 
 
-void blas_cgeru(long M, long N, complex float alpha, long incx, const complex float* x, long incy, const complex float* y, long lda, complex float* A)
+void blas_cgeru(bart_dim_t M, bart_dim_t N, complex float alpha, bart_dim_t incx, const complex float* x, bart_dim_t incy, const complex float* y, bart_dim_t lda, complex float* A)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
@@ -367,7 +367,7 @@ void blas_cgeru(long M, long N, complex float alpha, long incx, const complex fl
 
 
 
-void blas2_caxpy(long N, const complex float* alpha, long incx, const complex float* x, long incy, complex float* y)
+void blas2_caxpy(bart_dim_t N, const complex float* alpha, bart_dim_t incx, const complex float* x, bart_dim_t incy, complex float* y)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
@@ -383,7 +383,7 @@ void blas2_caxpy(long N, const complex float* alpha, long incx, const complex fl
 
 
 
-void blas_caxpy(long N, const complex float alpha, long incx, const complex float* x, long incy, complex float* y)
+void blas_caxpy(bart_dim_t N, const complex float alpha, bart_dim_t incx, const complex float* x, bart_dim_t incy, complex float* y)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
@@ -399,7 +399,7 @@ void blas_caxpy(long N, const complex float alpha, long incx, const complex floa
 
 
 
-void blas2_cscal(long N, const complex float* alpha, long incx, complex float* x)
+void blas2_cscal(bart_dim_t N, const complex float* alpha, bart_dim_t incx, complex float* x)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
@@ -415,7 +415,7 @@ void blas2_cscal(long N, const complex float* alpha, long incx, complex float* x
 
 
 
-void blas_cscal(long N, const complex float alpha, long incx, complex float* x)
+void blas_cscal(bart_dim_t N, const complex float alpha, bart_dim_t incx, complex float* x)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
@@ -431,7 +431,7 @@ void blas_cscal(long N, const complex float alpha, long incx, complex float* x)
 
 
 
-void blas2_cdotu(complex float* result, long N, long incx, const complex float* x, long incy, const complex float* y)
+void blas2_cdotu(complex float* result, bart_dim_t N, bart_dim_t incx, const complex float* x, bart_dim_t incy, const complex float* y)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
@@ -447,7 +447,7 @@ void blas2_cdotu(complex float* result, long N, long incx, const complex float* 
 
 
 
-void blas2_sgemm(char transa, char transb, long M, long N, long K, const float* alpha, long lda, const float* A, long ldb, const float* B, const float* beta, long ldc, float* C)
+void blas2_sgemm(char transa, char transb, bart_dim_t M, bart_dim_t N, bart_dim_t K, const float* alpha, bart_dim_t lda, const float* A, bart_dim_t ldb, const float* B, const float* beta, bart_dim_t ldc, float* C)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
@@ -465,7 +465,7 @@ void blas2_sgemm(char transa, char transb, long M, long N, long K, const float* 
 
 
 
-void blas_sgemm(char transa, char transb, long M, long N,  long K, const float alpha, long lda, const float* A, long ldb, const float* B, const float beta, long ldc, float* C)
+void blas_sgemm(char transa, char transb, bart_dim_t M, bart_dim_t N,  bart_dim_t K, const float alpha, bart_dim_t lda, const float* A, bart_dim_t ldb, const float* B, const float beta, bart_dim_t ldc, float* C)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
@@ -483,7 +483,7 @@ void blas_sgemm(char transa, char transb, long M, long N,  long K, const float a
 
 
 
-void blas2_sgemv(char trans, long M, long N, const float* alpha, long lda, const float* A, long incx, const float* x, float* beta, long incy, float* y)
+void blas2_sgemv(char trans, bart_dim_t M, bart_dim_t N, const float* alpha, bart_dim_t lda, const float* A, bart_dim_t incx, const float* x, float* beta, bart_dim_t incy, float* y)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
@@ -501,7 +501,7 @@ void blas2_sgemv(char trans, long M, long N, const float* alpha, long lda, const
 
 
 
-void blas_sgemv(char trans, long M, long N, const float alpha, long lda, const float* A, long incx, const float* x, float beta, long incy, float* y)
+void blas_sgemv(char trans, bart_dim_t M, bart_dim_t N, const float alpha, bart_dim_t lda, const float* A, bart_dim_t incx, const float* x, float beta, bart_dim_t incy, float* y)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
@@ -519,7 +519,7 @@ void blas_sgemv(char trans, long M, long N, const float alpha, long lda, const f
 
 
 
-void blas2_sger(long M, long N, const float* alpha, long incx, const float* x, long incy, const float* y, long lda, float* A)
+void blas2_sger(bart_dim_t M, bart_dim_t N, const float* alpha, bart_dim_t incx, const float* x, bart_dim_t incy, const float* y, bart_dim_t lda, float* A)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
@@ -534,7 +534,7 @@ void blas2_sger(long M, long N, const float* alpha, long incx, const float* x, l
 
 
 
-void blas_sger(long M, long N, const float alpha, long incx, const float* x, long incy, const float* y, long lda, float* A)
+void blas_sger(bart_dim_t M, bart_dim_t N, const float alpha, bart_dim_t incx, const float* x, bart_dim_t incy, const float* y, bart_dim_t lda, float* A)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
@@ -549,7 +549,7 @@ void blas_sger(long M, long N, const float alpha, long incx, const float* x, lon
 
 
 
-void blas2_saxpy(long N, const float* alpha, long incx, const float* x, long incy, float* y)
+void blas2_saxpy(bart_dim_t N, const float* alpha, bart_dim_t incx, const float* x, bart_dim_t incy, float* y)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
@@ -565,7 +565,7 @@ void blas2_saxpy(long N, const float* alpha, long incx, const float* x, long inc
 
 
 
-void blas_saxpy(long N, const float alpha, long incx, const float* x, long incy, float* y)
+void blas_saxpy(bart_dim_t N, const float alpha, bart_dim_t incx, const float* x, bart_dim_t incy, float* y)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
@@ -581,7 +581,7 @@ void blas_saxpy(long N, const float alpha, long incx, const float* x, long incy,
 
 
 
-void blas2_sscal(long N, const float* alpha, long incx, float* x)
+void blas2_sscal(bart_dim_t N, const float* alpha, bart_dim_t incx, float* x)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
@@ -597,7 +597,7 @@ void blas2_sscal(long N, const float* alpha, long incx, float* x)
 
 
 
-void blas_sscal(long N, float alpha, long incx, float* x)
+void blas_sscal(bart_dim_t N, float alpha, bart_dim_t incx, float* x)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
@@ -613,7 +613,7 @@ void blas_sscal(long N, float alpha, long incx, float* x)
 
 
 
-void blas2_sdot(float* result, long N, long incx, const float* x, long incy, const float* y)
+void blas2_sdot(float* result, bart_dim_t N, bart_dim_t incx, const float* x, bart_dim_t incy, const float* y)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
@@ -629,7 +629,7 @@ void blas2_sdot(float* result, long N, long incx, const float* x, long incy, con
 
 
 
-void blas_cdgmm(long M, long N, bool left_mul, const complex float* A, long lda, const complex float* x, long incx, complex float* C, long ldc)
+void blas_cdgmm(bart_dim_t M, bart_dim_t N, bool left_mul, const complex float* A, bart_dim_t lda, const complex float* x, bart_dim_t incx, complex float* C, bart_dim_t ldc)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
@@ -647,7 +647,7 @@ void blas_cdgmm(long M, long N, bool left_mul, const complex float* A, long lda,
 
 
 
-void blas_sdgmm(long M, long N, bool left_mul, const float* A, long lda, const float* x, long incx, float* C, long ldc)
+void blas_sdgmm(bart_dim_t M, bart_dim_t N, bool left_mul, const float* A, bart_dim_t lda, const float* x, bart_dim_t incx, float* C, bart_dim_t ldc)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
@@ -666,7 +666,7 @@ void blas_sdgmm(long M, long N, bool left_mul, const float* A, long lda, const f
 
 
 //B = alpha * op(A)
-void blas_cmatcopy(char trans, long M, long N, complex float alpha, const complex float* A, long lda, complex float* B, long ldb)
+void blas_cmatcopy(char trans, bart_dim_t M, bart_dim_t N, complex float alpha, const complex float* A, bart_dim_t lda, complex float* B, bart_dim_t ldb)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
@@ -687,7 +687,7 @@ void blas_cmatcopy(char trans, long M, long N, complex float alpha, const comple
 
 
 //B = alpha * op(A)
-void blas2_cmatcopy(char trans, long M, long N, const complex float* alpha, const complex float* A, long lda, complex float* B, long ldb)
+void blas2_cmatcopy(char trans, bart_dim_t M, bart_dim_t N, const complex float* alpha, const complex float* A, bart_dim_t lda, complex float* B, bart_dim_t ldb)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
@@ -711,7 +711,7 @@ void blas2_cmatcopy(char trans, long M, long N, const complex float* alpha, cons
 
 
 //B = alpha * op(A)
-void blas_smatcopy(char trans, long M, long N, float alpha, const float* A, long lda, float* B, long ldb)
+void blas_smatcopy(char trans, bart_dim_t M, bart_dim_t N, float alpha, const float* A, bart_dim_t lda, float* B, bart_dim_t ldb)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
@@ -732,7 +732,7 @@ void blas_smatcopy(char trans, long M, long N, float alpha, const float* A, long
 
 
 //B = alpha * op(A)
-void blas2_smatcopy(char trans, long M, long N, const float* alpha, const float* A, long lda, float* B, long ldb)
+void blas2_smatcopy(char trans, bart_dim_t M, bart_dim_t N, const float* alpha, const float* A, bart_dim_t lda, float* B, bart_dim_t ldb)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
@@ -755,7 +755,7 @@ void blas2_smatcopy(char trans, long M, long N, const float* alpha, const float*
 
 
 
-void blas_csyrk(char uplo, char trans, long N, long K, const complex float alpha, long lda, const complex float A[][lda], complex float beta, long ldc, complex float C[][ldc])
+void blas_csyrk(char uplo, char trans, bart_dim_t N, bart_dim_t K, const complex float alpha, bart_dim_t lda, const complex float A[][lda], complex float beta, bart_dim_t ldc, complex float C[][ldc])
 {
 	assert('U' == uplo);
 	assert(('T' == trans) || ('N' == trans));
@@ -765,14 +765,14 @@ void blas_csyrk(char uplo, char trans, long N, long K, const complex float alpha
 
 
 
-void blas_sger_fmac(long M, long N, float* A, const float* x, const float* y)
+void blas_sger_fmac(bart_dim_t M, bart_dim_t N, float* A, const float* x, const float* y)
 {
 	blas_sger(M, N, 1., 1, x, 1, y, M, A);
 }
 
 
 
-void blas_gemv_zfmac(long M, long N, complex float* y, const complex float* A, char trans, const complex float* x)
+void blas_gemv_zfmac(bart_dim_t M, bart_dim_t N, complex float* y, const complex float* A, char trans, const complex float* x)
 {
 	assert((trans == 'N') || (trans == 'T') || (trans == 'C'));
 
@@ -781,7 +781,7 @@ void blas_gemv_zfmac(long M, long N, complex float* y, const complex float* A, c
 
 
 
-void blas_gemv_fmac(long M, long N, float* y, const float* A, char trans, const float* x)
+void blas_gemv_fmac(bart_dim_t M, bart_dim_t N, float* y, const float* A, char trans, const float* x)
 {
 	assert((trans == 'N') || (trans == 'T'));
 
@@ -790,20 +790,20 @@ void blas_gemv_fmac(long M, long N, float* y, const float* A, char trans, const 
 
 
 
-void blas_matrix_multiply(long M, long N, long K, complex float C[N][M], const complex float A[K][M], const complex float B[N][K])
+void blas_matrix_multiply(bart_dim_t M, bart_dim_t N, bart_dim_t K, complex float C[N][M], const complex float A[K][M], const complex float B[N][K])
 {
 	blas_cgemm('N', 'N', M, N, K, 1. , M, (const complex float*)A, K, (const complex float*)B, 0., M, (complex float*)C);
 }
 
 
 
-void blas_matrix_zfmac(long M, long N, long K, complex float* C, const complex float* A, char transa, const complex float* B, char transb)
+void blas_matrix_zfmac(bart_dim_t M, bart_dim_t N, bart_dim_t K, complex float* C, const complex float* A, char transa, const complex float* B, char transb)
 {
 	assert((transa == 'N') || (transa == 'T') || (transa == 'C'));
 	assert((transb == 'N') || (transb == 'T') || (transb == 'C'));
 
-	long lda = (transa == 'N' ? M: K);
-	long ldb = (transb == 'N' ? K: N);
+	bart_dim_t lda = (transa == 'N' ? M: K);
+	bart_dim_t ldb = (transb == 'N' ? K: N);
 
 	blas_cgemm(transa, transb, M, N, K, 1., lda, A, ldb, B, 1., M, C);
 }

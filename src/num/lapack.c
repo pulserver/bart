@@ -41,24 +41,24 @@
  * LAPACK svd destroys its input matrix
  **/
 
-void lapack_eig(long N, float eigenval[N], complex float matrix[N][N])
+void lapack_eig(bart_dim_t N, float eigenval[N], complex float matrix[N][N])
 {
 	LAPACKE(cheev, 'V', 'U', N, &matrix[0][0], N, eigenval);
 }
 
 // A*x = (lambda)*B*x
-void lapack_geig(long N, float eigenval[N], complex float A[N][N], complex float B[N][N])
+void lapack_geig(bart_dim_t N, float eigenval[N], complex float A[N][N], complex float B[N][N])
 {
 	LAPACKE(chegv, 1, 'V', 'U', N, &A[0][0], N, &B[0][0], N, eigenval);
 }
 
-void lapack_svd(long M, long N, complex float U[M][M], complex float VH[N][N], float S[(N > M) ? M : N], complex float A[N][M])
+void lapack_svd(bart_dim_t M, bart_dim_t N, complex float U[M][M], complex float VH[N][N], float S[(N > M) ? M : N], complex float A[N][M])
 {
 	LAPACKE(cgesdd, 'A', M, N, &A[0][0], M, S, &U[0][0], M, &VH[0][0], N);
 }
 
 // AT = VHT ST UT
-void lapack_svd_econ(long M, long N,
+void lapack_svd_econ(bart_dim_t M, bart_dim_t N,
 		     complex float U[(N > M) ? M : N][M],
 		     complex float VH[N][(N > M) ? M : N],
 		     float S[(N > M) ? M : N],
@@ -71,7 +71,7 @@ void lapack_svd_econ(long M, long N,
 
 // A = QR in Fortran notation
 // A is overwritten with Q only A[MIN(M,N)][M] are valid on exit
-void lapack_qr_econ(long M, long N,
+void lapack_qr_econ(bart_dim_t M, bart_dim_t N,
 		    complex float R[N][(N > M) ? M : N],
 		    complex float A[N][M])
 {
@@ -89,49 +89,49 @@ void lapack_qr_econ(long M, long N,
 	PTR_FREE(tau);
 }
 
-void lapack_eig_double(long N, double eigenval[N], complex double matrix[N][N])
+void lapack_eig_double(bart_dim_t N, double eigenval[N], complex double matrix[N][N])
 {
 	LAPACKE(zheev, 'V', 'U', N, &matrix[0][0], N, eigenval);
 }
 
-void lapack_svd_double(long M, long N, complex double U[M][M], complex double VH[N][N], double S[(N > M) ? M : N], complex double A[N][M])
+void lapack_svd_double(bart_dim_t M, bart_dim_t N, complex double U[M][M], complex double VH[N][N], double S[(N > M) ? M : N], complex double A[N][M])
 {
 	LAPACKE(zgesdd, 'A', M, N, &A[0][0], M, S, &U[0][0], M, &VH[0][0], N);
 }
 
-static void lapack_cholesky_UL(long N, char UL, complex float A[N][N])
+static void lapack_cholesky_UL(bart_dim_t N, char UL, complex float A[N][N])
 {
 	LAPACKE(cpotrf, UL, N, &A[0][0], N);
 }
 
-void lapack_cholesky(long N, complex float A[N][N])
+void lapack_cholesky(bart_dim_t N, complex float A[N][N])
 {
 	lapack_cholesky_UL(N, 'U', A);
 }
 
-void lapack_cholesky_lower(long N, complex float A[N][N])
+void lapack_cholesky_lower(bart_dim_t N, complex float A[N][N])
 {
 	lapack_cholesky_UL(N, 'L', A);
 }
 
 
-static void lapack_trimat_inverse_UL(long N, char UL, complex float A[N][N])
+static void lapack_trimat_inverse_UL(bart_dim_t N, char UL, complex float A[N][N])
 {
 	LAPACKE(ctrtri, UL, 'N', N, &A[0][0], N);
 }
 
-void lapack_trimat_inverse(long N, complex float A[N][N])
+void lapack_trimat_inverse(bart_dim_t N, complex float A[N][N])
 {
 	lapack_trimat_inverse_UL(N, 'U', A);
 }
 
-void lapack_trimat_inverse_lower(long N, complex float A[N][N])
+void lapack_trimat_inverse_lower(bart_dim_t N, complex float A[N][N])
 {
 	lapack_trimat_inverse_UL(N, 'L', A);
 }
 
 // Solve A x = B for x
-void lapack_trimat_solve(long N, long M, complex float A[N][N], complex float B[M][N], bool upper)
+void lapack_trimat_solve(bart_dim_t N, bart_dim_t M, complex float A[N][N], complex float B[M][N], bool upper)
 {
 	// for non-unit ('N') triangular matrix A
 	// on output: B overwritten by solution matrix X
@@ -139,7 +139,7 @@ void lapack_trimat_solve(long N, long M, complex float A[N][N], complex float B[
 }
 
 
-void lapack_cinverse_UL(long N, complex float A[N][N])
+void lapack_cinverse_UL(bart_dim_t N, complex float A[N][N])
 {
 	int ipiv[N];
 
@@ -147,7 +147,7 @@ void lapack_cinverse_UL(long N, complex float A[N][N])
 	LAPACKE(cgetri, N, &A[0][0], N, ipiv);
 }
 
-void lapack_sinverse_UL(long N, float A[N][N])
+void lapack_sinverse_UL(bart_dim_t N, float A[N][N])
 {
 	int ipiv[N];
 
@@ -156,7 +156,7 @@ void lapack_sinverse_UL(long N, float A[N][N])
 }
 
 
-void lapack_schur(long N, complex float W[N], complex float VS[N][N], complex float A[N][N])
+void lapack_schur(bart_dim_t N, complex float W[N], complex float VS[N][N], complex float A[N][N])
 {
 	int sdim = 0;
 
@@ -164,7 +164,7 @@ void lapack_schur(long N, complex float W[N], complex float VS[N][N], complex fl
 	LAPACKE(cgees, 'V', 'N', NULL, N, &A[0][0], N, &sdim, &W[0], &VS[0][0], N);
 }
 
-void lapack_schur_double(long N, complex double W[N], complex double VS[N][N], complex double A[N][N])
+void lapack_schur_double(bart_dim_t N, complex double W[N], complex double VS[N][N], complex double A[N][N])
 {
 	int sdim = 0;
 
@@ -174,14 +174,14 @@ void lapack_schur_double(long N, complex double W[N], complex double VS[N][N], c
 
 // Solves the complex Sylvester matrix equation
 // op(A)*X + X*op(B) = scale*C
-void lapack_sylvester(long N, long M, float* scale, complex float A[N][N], complex float B[M][M], complex float C[M][N])
+void lapack_sylvester(bart_dim_t N, bart_dim_t M, float* scale, complex float A[N][N], complex float B[M][M], complex float C[M][N])
 {
 	// A -> triangluar
 	// On output: C overwritten by X
 	LAPACKE(ctrsyl, 'N', 'N', +1, N, M, &A[0][0], N, &B[0][0], M, &C[0][0], N, scale);
 }
 
-void lapack_solve_real(long N, float A[N][N], float B[N])
+void lapack_solve_real(bart_dim_t N, float A[N][N], float B[N])
 {
 	int ipiv[N];
 	LAPACKE(sgesv, N, 1, &A[0][0], N, ipiv, B, N);

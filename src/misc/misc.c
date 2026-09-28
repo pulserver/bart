@@ -174,7 +174,7 @@ int bart_printf(const char* fmt, ...)
 }
 
 
-void print_dims(int D, const long dims[D])
+void print_dims(int D, const bart_dim_t dims[D])
 {
 	printf("[");
 
@@ -186,15 +186,15 @@ void print_dims(int D, const long dims[D])
 
 
 
-void debug_print_bits(int dblevel, int D, unsigned long bitmask)
+void debug_print_bits(int dblevel, int D, bart_flags_t bitmask)
 {
 	bool dbl = debug_logging;
 	debug_logging = false;
 	debug_printf(dblevel, "[");
 
-	unsigned long curr_bit = 1;
+	bart_flags_t curr_bit = 1;
 
-	while (curr_bit < (1ul << (D - 1))) {
+	while (curr_bit < (UINT64_C(1) << (D - 1))) {
 
 		debug_printf(dblevel, "%u", bitmask & curr_bit ? 1 : 0);
 		curr_bit = curr_bit << 1;
@@ -209,7 +209,7 @@ void debug_print_bits(int dblevel, int D, unsigned long bitmask)
 #undef debug_print_dims
 #endif
 
-void debug_print_dims(int dblevel, int D, const long dims[D])
+void debug_print_dims(int dblevel, int D, const bart_dim_t dims[D])
 {
 	bool dbl = debug_logging;
 	debug_logging = false;
@@ -230,7 +230,7 @@ void debug_print_dims_trace(const char* func_name,
 			    int line,
 			    int dblevel,
 			    int D,
-			    const long dims[D])
+			    const bart_dim_t dims[D])
 {
 	bool dbl = debug_logging;
 	debug_logging = false;
@@ -285,10 +285,10 @@ int parse_double(double res[1], const char* str)
 	return 0;
 }
 
-int parse_long(long res[1], const char* str)
+int parse_long(bart_dim_t res[1], const char* str)
 {
 	char* tail;
-	long l = strtol(str, &tail, 10);
+	bart_dim_t l = strtol(str, &tail, 10);
 
 	if ('\0' != tail[0])
 		return -1;
@@ -321,7 +321,7 @@ int parse_ulonglong(unsigned long long res[1], const char* str)
 
 int parse_int(int res[1], const char* str)
 {
-	long val;
+	bart_dim_t val;
 	if (0 != parse_long(&val, str))
 		return -1;
 
@@ -388,7 +388,7 @@ void (quicksort)(int N, int ord[N], quicksort_cmp_t cmp)
  */
 float quickselect(float *arr, int n, int k)
 {
-	long i, ir, j, l, mid;
+	bart_dim_t i, ir, j, l, mid;
 	float a;
 
 	l = 0;
@@ -452,7 +452,7 @@ float quickselect(float *arr, int n, int k)
  */
 float quickselect_complex(complex float* arr, int n, int k)
 {
-	long i, ir, j, l, mid;
+	bart_dim_t i, ir, j, l, mid;
 	float a;
 	complex float ca;
 
@@ -618,7 +618,7 @@ void save_command_line(int argc, char* argv[static argc])
 
 
 
-void print_long(int D, const long arr[D])
+void print_long(int D, const bart_dim_t arr[D])
 {
 	for (int i = 0; i < D; i++)
 		printf("arr[%i] = %ld\n", i, arr[i]);
@@ -643,7 +643,7 @@ void print_complex(int D, const complex float arr[D])
 }
 
 
-int bitcount(unsigned long flags)
+int bitcount(bart_flags_t flags)
 {
 	int N = 0;
 
@@ -667,7 +667,7 @@ bool safe_isfinite(float x)
 }
 
 
-static bool long_mul_overflow_p(long a, long b)
+static bool long_mul_overflow_p(bart_dim_t a, bart_dim_t b)
 {
 	bool of = false;
 
@@ -679,13 +679,13 @@ static bool long_mul_overflow_p(long a, long b)
 	return of;
 }
 
-long io_calc_size(int D, const long dims[D?:1], size_t size)
+bart_dim_t io_calc_size(int D, const bart_dim_t dims[D?:1], size_t size)
 {
 	if (0 == D)
-		return (long)size;
+		return (bart_stride_t)size;
 
-	long a = io_calc_size(D - 1, dims + 1, size);
-	long b = dims[0];
+	bart_dim_t a = io_calc_size(D - 1, dims + 1, size);
+	bart_dim_t b = dims[0];
 
 	if ((a < 0) || (b < 0))
 		return -1;
@@ -753,7 +753,7 @@ void ptr_append_printf(const char** prefix, const char* fmt, ...)
 	*prefix = *PTR_PASS(result);
 }
 
-char* ptr_print_dims(int D, const long dims[D])
+char* ptr_print_dims(int D, const bart_dim_t dims[D])
 {
 	char* result = ptr_printf("[");
 
@@ -776,7 +776,7 @@ char* ptr_print_dims(int D, const long dims[D])
 
 static const char* spec = "xyzcmnopqsfrtuvw";
 
-char* construct_filename(int D, const long loopdims[D], const long pos[D], const char* prefix, const char* ext)
+char* construct_filename(int D, const bart_dim_t loopdims[D], const bart_dim_t pos[D], const char* prefix, const char* ext)
 {
 	// Prepare output filename
 

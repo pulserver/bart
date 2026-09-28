@@ -31,9 +31,9 @@
  * @param istr1 must be of the form {1, dim[0]} or {1}
  * @param iptr1
  **/
-void reduce_zadd_inner_gpu(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
+void reduce_zadd_inner_gpu(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
 {
-	long size = 8;
+	bart_dim_t size = 8;
 
 	assert((2 == N) || (1 == N));
 	assert((0 == ostr[0]));
@@ -68,9 +68,9 @@ void reduce_zadd_inner_gpu(int N, const long dims[N], const long ostr[N], comple
  * @param istr1 must be of the form {1, dim[0]}
  * @param iptr1
  **/
-void reduce_zadd_outer_gpu(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
+void reduce_zadd_outer_gpu(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
 {
-	long size = 8;
+	bart_dim_t size = 8;
 
 	assert(2 == N);
 	assert(((1 == dims[0]) || (size == ostr[0])) && (0 == ostr[1]));
@@ -98,15 +98,15 @@ void reduce_zadd_outer_gpu(int N, const long dims[N], const long ostr[N], comple
  * @param istr1 must be of the form {1, dim[0]} or {1}
  * @param iptr1
  **/
-void reduce_zadd_gemv(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
+void reduce_zadd_gemv(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
 {
 	assert(optr == iptr1);
 
 	for (int i = 0; i < N; i++)
 		assert(ostr[i] == istr1[i]);
 
-	long one_dims[N];
-	long one_strs[N];
+	bart_dim_t one_dims[N];
+	bart_stride_t one_strs[N];
 	md_select_dims(N, ~md_nontriv_strides(N, ostr) & md_nontriv_strides(N, istr2), one_dims, dims);
 	md_calc_strides(N, one_strs, one_dims, CFL_SIZE);
 
@@ -126,9 +126,9 @@ void reduce_zadd_gemv(int N, const long dims[N], const long ostr[N], complex flo
  * @param istr1 must be of the form {1, dim[0]} or {1}
  * @param iptr1
  **/
-void reduce_add_inner_gpu(int N, const long dims[N], const long ostr[N], float* optr, const long istr1[N], const float* iptr1, const long istr2[N], const float* iptr2)
+void reduce_add_inner_gpu(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], float* optr, const bart_stride_t istr1[N], const float* iptr1, const bart_stride_t istr2[N], const float* iptr2)
 {
-	long size = 4;
+	bart_dim_t size = 4;
 
 	assert((2 == N) || (1 == N));
 	assert((0 == ostr[0]));
@@ -163,9 +163,9 @@ void reduce_add_inner_gpu(int N, const long dims[N], const long ostr[N], float* 
  * @param istr1 must be of the form {1, dim[0]}
  * @param iptr1
  **/
-void reduce_add_outer_gpu(int N, const long dims[N], const long ostr[N], float* optr, const long istr1[N], const float* iptr1, const long istr2[N], const float* iptr2)
+void reduce_add_outer_gpu(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], float* optr, const bart_stride_t istr1[N], const float* iptr1, const bart_stride_t istr2[N], const float* iptr2)
 {
-	long size = 4;
+	bart_dim_t size = 4;
 
 	assert(2 == N);
 	assert(((1 == dims[0]) || (size == ostr[0])) && (0 == ostr[1]));
@@ -193,15 +193,15 @@ void reduce_add_outer_gpu(int N, const long dims[N], const long ostr[N], float* 
  * @param istr1 must be of the form {1, dim[0]} or {1}
  * @param iptr1
  **/
-void reduce_add_gemv(int N, const long dims[N], const long ostr[N], float* optr, const long istr1[N], const float* iptr1, const long istr2[N], const float* iptr2)
+void reduce_add_gemv(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], float* optr, const bart_stride_t istr1[N], const float* iptr1, const bart_stride_t istr2[N], const float* iptr2)
 {
 	assert(optr == iptr1);
 
 	for (int i = 0; i < N; i++)
 		assert(ostr[i] == istr1[i]);
 
-	long one_dims[N];
-	long one_strs[N];
+	bart_dim_t one_dims[N];
+	bart_stride_t one_strs[N];
 	md_select_dims(N, ~md_nontriv_strides(N, ostr) & md_nontriv_strides(N, istr2), one_dims, dims);
 	md_calc_strides(N, one_strs, one_dims, FL_SIZE);
 
@@ -222,9 +222,9 @@ void reduce_add_gemv(int N, const long dims[N], const long ostr[N], float* optr,
  * @param istr1 must be of the form {1, dim[0]} or {1}
  * @param iptr1
  **/
-void reduce_zmax_inner_gpu(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
+void reduce_zmax_inner_gpu(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
 {
-	long size = 8;
+	bart_dim_t size = 8;
 
 	assert((2 == N) || (1 == N));
 	assert((0 == ostr[0]));
@@ -259,9 +259,9 @@ void reduce_zmax_inner_gpu(int N, const long dims[N], const long ostr[N], comple
  * @param istr1 must be of the form {1, dim[0]}
  * @param iptr1
  **/
-void reduce_zmax_outer_gpu(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
+void reduce_zmax_outer_gpu(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
 {
-	long size = 8;
+	bart_dim_t size = 8;
 
 	assert(2 == N);
 	assert(((1 == dims[0]) || (size == ostr[0])) && (0 == ostr[1]));

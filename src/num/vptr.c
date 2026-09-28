@@ -44,20 +44,20 @@
 struct vptr_hint_s {
 
 	int N;
-	long* dims;
+	bart_dim_t* dims;
 
-	long* rank;
-	unsigned long mpi_flags;
+	bart_dim_t* rank;
+	bart_flags_t mpi_flags;
 
-	unsigned long loop_flags;
+	bart_flags_t loop_flags;
 
 	struct shared_obj_s sptr;
 };
 
-static int hint_get_rank(int N, const long pos[N], struct vptr_hint_s* hint)
+static int hint_get_rank(int N, const bart_dim_t pos[N], struct vptr_hint_s* hint)
 {
-	long offset = 0;
-	long stride = 1;
+	bart_stride_t offset = 0;
+	bart_stride_t stride = 1;
 
 	for (int i = 0; i < MIN(N, hint->N); i++) {
 
@@ -87,17 +87,17 @@ static void vptr_hint_del(const struct shared_obj_s* sptr)
 	xfree(hint);
 }
 
-struct vptr_hint_s* hint_mpi_create(unsigned long mpi_flags, int N, const long dims[N])
+struct vptr_hint_s* hint_mpi_create(bart_flags_t mpi_flags, int N, const bart_dim_t dims[N])
 {
 	return vptr_hint_create(mpi_flags, N, dims, 0);
 }
 
-struct vptr_hint_s* hint_delayed_create(unsigned long delayed_flags)
+struct vptr_hint_s* hint_delayed_create(bart_flags_t delayed_flags)
 {
-	return vptr_hint_create(0UL, 1, MD_DIMS(1), delayed_flags);
+	return vptr_hint_create(UINT64_C(0), 1, MD_DIMS(1), delayed_flags);
 }
 
-struct vptr_hint_s* vptr_hint_create(unsigned long mpi_flags, int N, const long dims[N], unsigned long delayed_flags)
+struct vptr_hint_s* vptr_hint_create(bart_flags_t mpi_flags, int N, const bart_dim_t dims[N], bart_flags_t delayed_flags)
 {
 	assert(0 <= N);
 
@@ -105,7 +105,7 @@ struct vptr_hint_s* vptr_hint_create(unsigned long mpi_flags, int N, const long 
 
 	x->loop_flags = delayed_flags;
 
-	long mdims[N];
+	bart_dim_t mdims[N];
 	md_select_dims(N, mpi_flags, mdims, dims);
 
 	int procs = mpi_get_num_procs();
@@ -126,28 +126,28 @@ struct vptr_hint_s* vptr_hint_create(unsigned long mpi_flags, int N, const long 
 	mpi_flags &= md_nontriv_dims(N, mdims);
 
 	x->N = N;
-	x->dims = ARR_CLONE(long[N], mdims);
+	x->dims = ARR_CLONE(bart_dim_t[N], mdims);
 
-	long tdims[N];
+	bart_dim_t tdims[N];
 	for (int i = 0; i < N; i++)
 		tdims[N - 1 - i] = mdims[i];
 
 
-	long tot = md_calc_size(N, mdims);
+	bart_dim_t tot = md_calc_size(N, mdims);
 
-	long rank1[tot];
-	long rank2[tot];
+	bart_dim_t rank1[tot];
+	bart_dim_t rank2[tot];
 
-	for (long i = 0; i < tot; i++)
+	for (bart_dim_t i = 0; i < tot; i++)
 		rank1[i] = i % max_proc;
 
 	int order[N];
 	for (int i = 0; i < N; i++)
 		order[i] = N - 1 - i;
 
-	md_permute(N, order, mdims, rank2, tdims, rank1, sizeof(long));
+	md_permute(N, order, mdims, rank2, tdims, rank1, sizeof(bart_dim_t));
 
-	x->rank = ARR_CLONE(long[md_calc_size(N, mdims)], rank2);
+	x->rank = ARR_CLONE(bart_dim_t[md_calc_size(N, mdims)], rank2);
 
 	x->mpi_flags = mpi_flags;
 
@@ -164,7 +164,7 @@ void vptr_hint_free(struct vptr_hint_s* hint)
 	shared_obj_destroy(&hint->sptr);
 }
 
-unsigned long vptr_delayed_loop_flags(const void* ptr)
+bart_flags_t vptr_delayed_loop_flags(const void* ptr)
 {
 	struct vptr_hint_s* hint = vptr_get_hint(ptr);
 	return hint ? hint->loop_flags : 0;
@@ -182,14 +182,14 @@ struct vptr_mem_s {
 
 	int num_blocks;
 	void** mem;
-	long block_size;
-	unsigned long flags;
+	bart_dim_t block_size;
+	bart_flags_t flags;
 };
 
-struct vptr_mem_s vptr_mem_default = { NULL, 1, NULL, 0, 0UL };
+struct vptr_mem_s vptr_mem_default = { NULL, 1, NULL, 0, UINT64_C(0) };
 
-long vptr_size[VPTR_LOC_MAX] = { 0 };
-long vptr_peak[VPTR_LOC_MAX] = { 0 };
+bart_dim_t vptr_size[VPTR_LOC_MAX] = { 0 };
+bart_dim_t vptr_peak[VPTR_LOC_MAX] = { 0 };
 
 const char* vptr_loc_name[VPTR_LOC_MAX] = { "CPU", "GPU", "CFL", "ANY" };
 
@@ -204,7 +204,7 @@ static enum VPTR_LOC vptr_loc_sameplace(enum VPTR_LOC loc)
 	}
 }
 
-static void vptr_update_size(enum VPTR_LOC loc, long size)
+static void vptr_update_size(enum VPTR_LOC loc, bart_dim_t size)
 {
 #pragma omp atomic
 	vptr_size[loc] += size ;
@@ -225,7 +225,7 @@ static void vptr_mem_block_init(struct vptr_mem_s* mem)
 #pragma omp critical(vptr_mem_init)
 	if (NULL == mem->mem) {
 
-		long tdims[mem->shape->N];
+		bart_dim_t tdims[mem->shape->N];
 
 		md_select_dims(mem->shape->N, mem->flags, tdims, mem->shape->dims);
 
@@ -236,7 +236,7 @@ static void vptr_mem_block_init(struct vptr_mem_s* mem)
 		for (int i = 0; i < mem->num_blocks; i++)
 			mem->mem[i] = NULL;
 
-		mem->block_size = (long)mem->shape->size * md_calc_size(mem->shape->N, mem->shape->dims) / mem->num_blocks;
+		mem->block_size = (bart_dim_t)mem->shape->size * md_calc_size(mem->shape->N, mem->shape->dims) / mem->num_blocks;
 	}
 }
 
@@ -320,18 +320,18 @@ static void vptr_mem_free(struct vptr_mem_s* mem, enum VPTR_LOC loc, bool free)
 
 
 
-static void* vptr_mem_block_resolve(struct vptr_mem_s* mem, enum VPTR_LOC loc, bool clear, long offset)
+static void* vptr_mem_block_resolve(struct vptr_mem_s* mem, enum VPTR_LOC loc, bool clear, bart_stride_t offset)
 {
-	unsigned long dflags = md_nontriv_dims(mem->shape->N, mem->shape->dims);
+	bart_flags_t dflags = md_nontriv_dims(mem->shape->N, mem->shape->dims);
 
-	long idx = md_reravel_index(mem->shape->N, mem->flags & dflags, dflags, mem->shape->dims, offset / (long)mem->shape->size);
+	bart_dim_t idx = md_reravel_index(mem->shape->N, mem->flags & dflags, dflags, mem->shape->dims, offset / (bart_dim_t)mem->shape->size);
 
 	vptr_mem_block_init(mem);
 
 #pragma omp critical(vptr_mem_resolve)
 	vptr_mem_block_alloc(mem, idx, loc, clear);
 
-	return mem->mem[idx] + md_reravel_index(mem->shape->N, ~mem->flags & dflags, dflags, mem->shape->dims, offset / (long)mem->shape->size) * (long)mem->shape->size + (offset % (long)mem->shape->size);
+	return mem->mem[idx] + md_reravel_index(mem->shape->N, ~mem->flags & dflags, dflags, mem->shape->dims, offset / (bart_dim_t)mem->shape->size) * (bart_dim_t)mem->shape->size + (offset % (bart_dim_t)mem->shape->size);
 }
 
 
@@ -619,7 +619,7 @@ static struct mem_s* vptr_reserve_int(size_t len)
 	x->shape.size = 0;
 
 	x->blocks.shape = &x->shape;
-	x->blocks.flags = 0UL;
+	x->blocks.flags = UINT64_C(0);
 	x->blocks.mem = NULL;
 
 	x->range.D = 0;
@@ -737,7 +737,7 @@ void vptr_unset_clear(const void* ptr)
 	}
 }
 
-static void vptr_set_dims_int(struct mem_s* mem, int N, const long dims[N], size_t size, struct vptr_hint_s* hint)
+static void vptr_set_dims_int(struct mem_s* mem, int N, const bart_dim_t dims[N], size_t size, struct vptr_hint_s* hint)
 {
 	assert(0 == mem->range.D);
 
@@ -746,14 +746,14 @@ static void vptr_set_dims_int(struct mem_s* mem, int N, const long dims[N], size
 		assert(mem->len == (size_t)md_calc_size(N, dims) * size);
 
 		mem->shape.N = N;
-		mem->shape.dims = ARR_CLONE(long[N], dims);
+		mem->shape.dims = ARR_CLONE(bart_dim_t[N], dims);
 		mem->shape.size = size;
 
 		mem->hint = vptr_hint_ref(hint);
 
 		if (NULL != hint) {
 
-			assert(md_check_compat(MIN(N, hint->N), ~0UL, dims, hint->dims));
+			assert(md_check_compat(MIN(N, hint->N), ~UINT64_C(0), dims, hint->dims));
 
 			mem->blocks.flags = hint->mpi_flags;
 		}
@@ -765,12 +765,12 @@ static void vptr_set_dims_int(struct mem_s* mem, int N, const long dims[N], size
 
 		assert(mem->shape.N == N);
 		assert(mem->shape.size == size);
-		assert(md_check_compat(N, ~0UL, mem->shape.dims, dims));
+		assert(md_check_compat(N, ~UINT64_C(0), mem->shape.dims, dims));
 		assert(hint == mem->hint);
 	}
 }
 
-void vptr_set_dims(const void* ptr, int N, const long dims[N], size_t size, struct vptr_hint_s* hint)
+void vptr_set_dims(const void* ptr, int N, const bart_dim_t dims[N], size_t size, struct vptr_hint_s* hint)
 {
 	struct mem_s* mem = search(ptr, false);
 
@@ -818,9 +818,9 @@ void vptr_set_dims_sameplace(const void* x, const void* ref)
 	}
 }
 
-static struct mem_s* vptr_create(int N, const long dims[N], size_t size, struct vptr_hint_s* hint)
+static struct mem_s* vptr_create(int N, const bart_dim_t dims[N], size_t size, struct vptr_hint_s* hint)
 {
-	long len = md_calc_size(N, dims) * (long)size;
+	bart_dim_t len = md_calc_size(N, dims) * (bart_stride_t)size;
 
 	struct mem_s* mem = vptr_reserve_int((size_t)len);
 
@@ -848,11 +848,11 @@ void* vptr_resolve_range(const void* ptr)
 	if (0 == mem->range.D)
 		return (void*)ptr;
 
-	long offset = ptr - mem->ptr;
+	bart_stride_t offset = ptr - mem->ptr;
 	int i = 0;
 
-	while (offset >= (long)mem->range.sub_ptr[i]->len)
-		offset -= (long)mem->range.sub_ptr[i++]->len;
+	while (offset >= (bart_dim_t)mem->range.sub_ptr[i]->len)
+		offset -= (bart_dim_t)mem->range.sub_ptr[i++]->len;
 
 	return mem->range.sub_ptr[i]->ptr + offset;
 }
@@ -898,7 +898,7 @@ const struct vptr_shape_s* vptr_get_shape(const void* ptr)
 }
 
 
-long vptr_get_offset(const void* ptr)
+bart_stride_t vptr_get_offset(const void* ptr)
 {
 	struct mem_s* mem = search(ptr, false);
 	assert(mem);
@@ -985,7 +985,7 @@ void vptr_set_cpu(const void* ptr)
 	vptr_update_loc(mem, VPTR_CPU);
 }
 
-void vptr_set_loop_flags(const void* x, unsigned long flags)
+void vptr_set_loop_flags(const void* x, bart_flags_t flags)
 {
 	if (0 == flags)
 		return;
@@ -998,7 +998,7 @@ void vptr_set_loop_flags(const void* x, unsigned long flags)
 }
 
 
-void vptr_free_mem(int N, const long dims[N], const long strs[N], const void *ptr, size_t size)
+void vptr_free_mem(int N, const bart_dim_t dims[N], const bart_stride_t strs[N], const void *ptr, size_t size)
 {
 	struct mem_s* mem = search(ptr, false);
 
@@ -1022,18 +1022,18 @@ void vptr_free_mem(int N, const long dims[N], const long strs[N], const void *pt
 	if ((~mem->blocks.flags & md_nontriv_dims(mem->shape.N, mem->shape.dims)) & ~md_nontriv_dims(N, dims))
 		return;
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
-	md_unravel_index(N, pos, ~0UL, mem->shape.dims, (ptr - mem->ptr) / (long)mem->shape.size);
+	md_unravel_index(N, pos, ~UINT64_C(0), mem->shape.dims, (ptr - mem->ptr) / (bart_dim_t)mem->shape.size);
 
 	assert(0 == md_ravel_index(N, pos, ~mem->blocks.flags, mem->shape.dims));
 
-	unsigned long lflags = md_nontriv_dims(N, dims) & mem->blocks.flags;
+	bart_flags_t lflags = md_nontriv_dims(N, dims) & mem->blocks.flags;
 	for (int i = 0; i < N; i++)
 		assert(!MD_IS_SET(lflags, i) || 0 == pos[i]);
 
 	do {
-		long idx = md_ravel_index(N, pos, mem->blocks.flags, mem->shape.dims);
+		bart_dim_t idx = md_ravel_index(N, pos, mem->blocks.flags, mem->shape.dims);
 
 		vptr_mem_block_free(&mem->blocks, idx, mem->loc, mem->free);
 
@@ -1084,14 +1084,14 @@ bool vptr_free(const void* ptr)
 	return true;
 }
 
-void* vptr_alloc(int N, const long dims[N], size_t size, struct vptr_hint_s* hint)
+void* vptr_alloc(int N, const bart_dim_t dims[N], size_t size, struct vptr_hint_s* hint)
 {
 	struct mem_s* mem = vptr_create(N, dims, size, hint);
 	return mem->ptr;
 }
 
 // returns NULL if ref is not a virtual pointer.
-void* vptr_alloc_sameplace(int N, const long dims[N], size_t size, const void* ref)
+void* vptr_alloc_sameplace(int N, const bart_dim_t dims[N], size_t size, const void* ref)
 {
 	struct mem_s* mem = search(ref, false);
 
@@ -1148,7 +1148,7 @@ void* vptr_move_cpu(const void* ptr)
 	return ret->ptr;
 }
 
-void* vptr_wrap(int N, const long dims[N], size_t size, const void* ptr, struct vptr_hint_s* hint, bool free, bool writeback)
+void* vptr_wrap(int N, const bart_dim_t dims[N], size_t size, const void* ptr, struct vptr_hint_s* hint, bool free, bool writeback)
 {
 	assert(!is_vptr(ptr));
 
@@ -1170,7 +1170,7 @@ void* vptr_wrap(int N, const long dims[N], size_t size, const void* ptr, struct 
 	return mem->ptr;
 }
 
-void* vptr_wrap_sameplace(int N, const long dims[N], size_t size, const void* ptr, const void* ref, bool free, bool writeback)
+void* vptr_wrap_sameplace(int N, const bart_dim_t dims[N], size_t size, const void* ptr, const void* ref, bool free, bool writeback)
 {
 	assert(!is_vptr(ptr));
 
@@ -1181,7 +1181,7 @@ void* vptr_wrap_sameplace(int N, const long dims[N], size_t size, const void* pt
 	return vptr_wrap(N, dims, size, ptr, mem->hint, free, writeback);
 }
 
-void* vptr_wrap_cfl(int N, const long dims[N], size_t size, const void* ptr, struct vptr_hint_s* hint, bool free, bool writeback)
+void* vptr_wrap_cfl(int N, const bart_dim_t dims[N], size_t size, const void* ptr, struct vptr_hint_s* hint, bool free, bool writeback)
 {
 	assert(!is_vptr(ptr));
 
@@ -1242,15 +1242,15 @@ void* vptr_wrap_range(int D, void* ptr[D], bool free)
  * if a bit is not set in any return flag, we access only a slice of the memory
  * if a bit is only set in one return flag, we can access the memory in a single loop
 */
-void loop_access_dims(int N, unsigned long flags[N], const long adims[N], const long astrs[N], int D, const long mdims[D], long offset)
+void loop_access_dims(int N, bart_flags_t flags[N], const bart_dim_t adims[N], const bart_stride_t astrs[N], int D, const bart_dim_t mdims[D], bart_stride_t offset)
 {
-	long mstrs[D];
+	bart_stride_t mstrs[D];
 	md_calc_strides(D, mstrs, mdims, 1);
 
-	long mpos[D];
-	md_unravel_index(D, mpos, ~0UL, mdims, offset);
+	bart_dim_t mpos[D];
+	md_unravel_index(D, mpos, ~UINT64_C(0), mdims, offset);
 
-	long adims2[MIN(N, D)];
+	bart_dim_t adims2[MIN(N, D)];
 	for (int i = 0; i < MIN(N, D); i++)
 		adims2[i] = adims[i] + mpos[i];
 
@@ -1259,18 +1259,18 @@ void loop_access_dims(int N, unsigned long flags[N], const long adims[N], const 
 	    && (N < D || 1 == md_calc_size(N - D, adims + D))) {
 
 		for (int i = 0; i < N; i++)
-			flags[i] = 1 < adims[i] ? MD_BIT(i) : 0ul;
+			flags[i] = 1 < adims[i] ? MD_BIT(i) : UINT64_C(0);
 
 		return;
 	}
 
-	long dstrs[N][D];
+	bart_stride_t dstrs[N][D];
 	for (int i = 0; i < N; i++) {
 
 		md_set_dims(D, dstrs[i], 0);
 
 		if (0 != astrs[i])
-			md_unravel_index(D, dstrs[i], ~0UL, mdims, labs(astrs[i]));
+			md_unravel_index(D, dstrs[i], ~UINT64_C(0), mdims, labs(astrs[i]));
 
 		if (0 > astrs[i])
 			for (int j = 0; j < D; j++)
@@ -1293,14 +1293,14 @@ void loop_access_dims(int N, unsigned long flags[N], const long adims[N], const 
 	}
 
 	//which dimensions are affected by a move in this dimension
-	unsigned long affect_flags[D];
+	bart_flags_t affect_flags[D];
 
 	for (int i = 0; i < D; i++) {
 
 		affect_flags[i] = MD_BIT(i);
 
-		long mlposj = mlpos[i];
-		long muposj = mupos[i];
+		bart_dim_t mlposj = mlpos[i];
+		bart_dim_t muposj = mupos[i];
 
 		for (int j = i; j < D - 1; j++) {
 
@@ -1322,7 +1322,7 @@ void loop_access_dims(int N, unsigned long flags[N], const long adims[N], const 
 
 	for(int i = 0; i < N; i++) {
 
-		flags[i] = 0ul;
+		flags[i] = UINT64_C(0);
 
 		for(int j = 0; j < D; j++)
 			if (0 != dstrs[i][j])
@@ -1331,7 +1331,7 @@ void loop_access_dims(int N, unsigned long flags[N], const long adims[N], const 
 }
 
 static bool check_valid_loop_access(const struct mem_s* mem, int N,
-		const long dims[N], const long strs[N], size_t size, const void* ptr, bool throw_error)
+		const bart_dim_t dims[N], const bart_stride_t strs[N], size_t size, const void* ptr, bool throw_error)
 {
 	const void* minp = ptr;
 	const void* maxp = ptr + size - 1;
@@ -1356,13 +1356,13 @@ static bool check_valid_loop_access(const struct mem_s* mem, int N,
 	return valid;
 }
 
-static void size_to_dims(int N, long odims[N + 1], const long idims[N], size_t size)
+static void size_to_dims(int N, bart_dim_t odims[N + 1], const bart_dim_t idims[N], size_t size)
 {
-	odims[0] = (long)size;
+	odims[0] = (bart_stride_t)size;
 	md_copy_dims(N, odims + 1, idims);
 }
 
-static void size_to_strs(int N, long ostrs[N + 1], const long istrs[N], size_t /*size*/)
+static void size_to_strs(int N, bart_stride_t ostrs[N + 1], const bart_stride_t istrs[N], size_t /*size*/)
 {
 	ostrs[0] = 1;
 	md_copy_dims(N, ostrs + 1, istrs);
@@ -1373,27 +1373,27 @@ static void size_to_strs(int N, long ostrs[N + 1], const long istrs[N], size_t /
 /**
  * Returns which dimensions cannot be accessed using the same resolved pointer
  */
-unsigned long vptr_block_loop_flags(int N, const long dims[N], const long strs[N], const void* ptr, size_t size, bool contiguous_strs)
+bart_flags_t vptr_block_loop_flags(int N, const bart_dim_t dims[N], const bart_stride_t strs[N], const void* ptr, size_t size, bool contiguous_strs)
 {
 	ptr = vptr_resolve_range(ptr);
 	struct mem_s* mem = search(ptr, false);
 
 	if (NULL == mem)
-		return 0UL;
+		return UINT64_C(0);
 
 	check_valid_loop_access(mem, N, dims, strs, size, ptr, true);
 
-	unsigned long lflags = mem->blocks.flags;
+	bart_flags_t lflags = mem->blocks.flags;
 
 	if (NULL != mem->hint)
 		lflags |= mem->hint->mpi_flags;
 
 	if (0 == lflags)
-		return 0UL;
+		return UINT64_C(0);
 
-	long mdims[mem->shape.N + 1];
-	long tdims[N + 1];
-	long tstrs[N + 1];
+	bart_dim_t mdims[mem->shape.N + 1];
+	bart_dim_t tdims[N + 1];
+	bart_stride_t tstrs[N + 1];
 
 	size_to_dims(mem->shape.N, mdims, mem->shape.dims, mem->shape.size);
 	size_to_dims(N, tdims, dims, size);
@@ -1402,11 +1402,11 @@ unsigned long vptr_block_loop_flags(int N, const long dims[N], const long strs[N
 	md_select_dims(N + 1, md_nontriv_strides(N + 1, tstrs), tdims, tdims);
 	md_select_strides(N + 1, md_nontriv_dims(N + 1, tdims), tstrs, tstrs);
 
-	unsigned long flags[N + 1] = { }; // GCC ANALYZER
+	bart_flags_t flags[N + 1] = { }; // GCC ANALYZER
 
 	loop_access_dims(N + 1, flags, tdims, tstrs, mem->shape.N + 1, mdims, ptr - mem->ptr);
 
-	unsigned long ret_flags = 0;
+	bart_flags_t ret_flags = 0;
 
 	for (int i = 1; i < N + 1; i++)
 		if (0 != (lflags & (flags[i] / 2)))
@@ -1425,7 +1425,7 @@ unsigned long vptr_block_loop_flags(int N, const long dims[N], const long strs[N
 	return ret_flags;
 }
 
-void vptr_contiguous_strs(int N, const void* ptr, unsigned long lflags, long nstrs[N], const long ostrs[N])
+void vptr_contiguous_strs(int N, const void* ptr, bart_flags_t lflags, bart_stride_t nstrs[N], const bart_stride_t ostrs[N])
 {
 	ptr = vptr_resolve_range(ptr);
 	struct mem_s* mem = search(ptr, false);
@@ -1439,8 +1439,8 @@ void vptr_contiguous_strs(int N, const void* ptr, unsigned long lflags, long nst
 	}
 
 	int Nm = mem->shape.N + 1;
-	long mdims[Nm];
-	mdims[0] = (long)mem->shape.size;
+	bart_dim_t mdims[Nm];
+	mdims[0] = (bart_dim_t)mem->shape.size;
 	md_copy_dims(mem->shape.N, mdims + 1, mem->shape.dims);
 
 	for (int i = 0; i < N; i++) {
@@ -1451,7 +1451,7 @@ void vptr_contiguous_strs(int N, const void* ptr, unsigned long lflags, long nst
 			continue;
 		}
 
-		unsigned long flags = ~(mem->blocks.flags << 1) & md_nontriv_dims(Nm, mdims);
+		bart_flags_t flags = ~(mem->blocks.flags << 1) & md_nontriv_dims(Nm, mdims);
 		nstrs[i] = md_reravel_index(Nm, flags, md_nontriv_dims(Nm, mdims), mdims,
 					labs(ostrs[i])) * ((ostrs[i] < 0) ? -1 : 1);
 	}
@@ -1467,7 +1467,7 @@ bool is_mpi(const void* ptr)
 {
 	struct mem_s* mem = search(ptr, false);
 
-	return mem && mem->hint && (mem->hint->mpi_flags != 0UL);
+	return mem && mem->hint && (mem->hint->mpi_flags != UINT64_C(0));
 }
 
 
@@ -1486,11 +1486,11 @@ int mpi_ptr_get_rank(const void* ptr)
 
 	int N = MAX(mem->shape.N, h->N);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
 	// position in allocation
-	md_unravel_index(mem->shape.N, pos, ~0UL, mem->shape.dims, (ptr - mem->ptr) / (long)mem->shape.size);
+	md_unravel_index(mem->shape.N, pos, ~UINT64_C(0), mem->shape.dims, (ptr - mem->ptr) / (bart_dim_t)mem->shape.size);
 
 	return hint_get_rank(h->N, pos, mem->hint);
 }
@@ -1510,13 +1510,13 @@ static bool mpi_accessible_from_mem(const struct mem_s* mem, const void* ptr, in
 	struct vptr_hint_s* h = mem->hint;
 	int N = MAX(mem->shape.N, h->N);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
-	md_unravel_index(mem->shape.N, pos, ~0UL, mem->shape.dims, (ptr - mem->ptr) / (long)mem->shape.size);
+	md_unravel_index(mem->shape.N, pos, ~UINT64_C(0), mem->shape.dims, (ptr - mem->ptr) / (bart_dim_t)mem->shape.size);
 
 
-	unsigned long loop_flags = ~md_nontriv_dims(mem->shape.N, mem->shape.dims);
+	bart_flags_t loop_flags = ~md_nontriv_dims(mem->shape.N, mem->shape.dims);
 
 	loop_flags &= h->mpi_flags;
 
@@ -1616,7 +1616,7 @@ void vptr_assert_sameplace(int N, void* nptr[N])
 			continue;
 
 		if (   (hint_ref->N != mem->hint->N)
-		    || !md_check_equal_dims(hint_ref->N, hint_ref->dims, mem->hint->dims, ~0UL)) {
+		    || !md_check_equal_dims(hint_ref->N, hint_ref->dims, mem->hint->dims, ~UINT64_C(0))) {
 
 			debug_print_dims(DP_INFO, hint_ref->N, hint_ref->dims);
 			debug_print_dims(DP_INFO, mem->hint->N, mem->hint->dims);
@@ -1656,10 +1656,10 @@ bool mpi_is_set_reduction_buffer(const void* ptr)
 	return mem->reduction_buffer;
 }
 
-bool mpi_is_reduction(int N, const long dims[N], const long ostrs[N], const void* optr, size_t osize, const long istrs[N], const void* iptr, size_t isize)
+bool mpi_is_reduction(int N, const bart_dim_t dims[N], const bart_stride_t ostrs[N], const void* optr, size_t osize, const bart_stride_t istrs[N], const void* iptr, size_t isize)
 {
 	struct vptr_mapped_dims_s* mdims = vptr_map_dims(N, dims, 2,
-					(const long*[2]) { ostrs, istrs },
+					(const bart_dim_t*[2]) { ostrs, istrs },
 					(const size_t[2]){ osize, isize },
 					(void*[2]){ (void*)optr, (void*)iptr });
 
@@ -1669,7 +1669,7 @@ bool mpi_is_reduction(int N, const long dims[N], const long ostrs[N], const void
 
 		while (NULL != mdims) {
 
-			const long (*mstrs)[mdims->D][mdims->N] = (void*) mdims->strs;
+			const bart_stride_t (*mstrs)[mdims->D][mdims->N] = (void*) mdims->strs;
 
 			if (mpi_is_reduction(mdims->N, mdims->dims,
 						(*mstrs)[0], mdims->ptr[0], osize,
@@ -1697,21 +1697,21 @@ bool mpi_is_reduction(int N, const long dims[N], const long ostrs[N], const void
 	if (0 == (imem->hint->mpi_flags & md_nontriv_dims(imem->shape.N, imem->shape.dims)))
 		return false;
 
-	unsigned long flags = 0;
+	bart_flags_t flags = 0;
 	flags |= vptr_block_loop_flags(N, dims, istrs, iptr, isize, true);
 	flags |= vptr_block_loop_flags(N, dims, ostrs, optr, osize, true);
 
 	if (0 == flags)
 		return false;
 
-	long imem_strs[imem->shape.N];
-	long omem_strs[omem->shape.N];
+	bart_stride_t imem_strs[imem->shape.N];
+	bart_stride_t omem_strs[omem->shape.N];
 
 	md_calc_strides(imem->shape.N, imem_strs, imem->shape.dims, imem->shape.size);
 	md_calc_strides(omem->shape.N, omem_strs, omem->shape.dims, omem->shape.size);
 
-	unsigned long imem_flags = imem->hint->mpi_flags & md_nontriv_dims(imem->shape.N, imem->shape.dims);
-	unsigned long omem_flags = omem->hint->mpi_flags & md_nontriv_dims(omem->shape.N, omem->shape.dims);
+	bart_flags_t imem_flags = imem->hint->mpi_flags & md_nontriv_dims(imem->shape.N, imem->shape.dims);
+	bart_flags_t omem_flags = omem->hint->mpi_flags & md_nontriv_dims(omem->shape.N, omem->shape.dims);
 
 	for (int i = 0; i < N; i++) {
 
@@ -1756,7 +1756,7 @@ bool vptr_is_same_type(const void *ptr1, const void *ptr2)
 	assert(NULL != vptr2);
 
 	return (vptr1->hint == vptr2->hint)
-	    && md_check_equal_dims(MIN(vptr1->shape.N, vptr2->shape.N), vptr1->shape.dims, vptr2->shape.dims, ~0ul)
+	    && md_check_equal_dims(MIN(vptr1->shape.N, vptr2->shape.N), vptr1->shape.dims, vptr2->shape.dims, ~UINT64_C(0))
 	    && (md_calc_size(vptr1->shape.N, vptr1->shape.dims) == md_calc_size(vptr2->shape.N, vptr2->shape.dims))
 	    && (vptr1->shape.size == vptr2->shape.size)
 	    && vptr1->loc == vptr2->loc;
@@ -1764,8 +1764,8 @@ bool vptr_is_same_type(const void *ptr1, const void *ptr2)
 
 
 
-static struct vptr_mapped_dims_s* vptr_mem_map_dims(int N, const long odims[N],
-		int D, const long* ostrs[D], const size_t size[D], void* ptr[D],
+static struct vptr_mapped_dims_s* vptr_mem_map_dims(int N, const bart_dim_t odims[N],
+		int D, const bart_stride_t* ostrs[D], const size_t size[D], void* ptr[D],
 		const struct mem_s* mem[D], bool check_changed)
 {
 	int Nmem = 0;
@@ -1787,10 +1787,10 @@ static struct vptr_mapped_dims_s* vptr_mem_map_dims(int N, const long odims[N],
 			Nred++;
 #endif
 
-	long maxdims[Nmem + Nsize];
+	bart_dim_t maxdims[Nmem + Nsize];
 	md_singleton_dims(Nmem + Nsize, maxdims);
 
-	long strs[D][Nred + Nmem + Nsize];
+	bart_stride_t strs[D][Nred + Nmem + Nsize];
 
 	for (int i = 0; i < D; i++) {
 
@@ -1799,7 +1799,7 @@ static struct vptr_mapped_dims_s* vptr_mem_map_dims(int N, const long odims[N],
 		if (NULL == mem[i] || 1 == mem[i]->shape.N)
 			continue;
 
-		long tdims[Nmem + Nsize];
+		bart_dim_t tdims[Nmem + Nsize];
 		md_singleton_dims(Nmem + Nsize, tdims);
 
 		md_copy_dims(mem[i]->shape.N, tdims, mem[i]->shape.dims);
@@ -1807,15 +1807,15 @@ static struct vptr_mapped_dims_s* vptr_mem_map_dims(int N, const long odims[N],
 
 		for (int j = 0; j < Nsize; j++) {
 
-			if (MD_IS_SET((unsigned long)j, i))
+			if (MD_IS_SET((bart_flags_t)j, i))
 				continue;
 
-			strs[i][j + Nmem] = (long)size[i];
-			tdims[j + Nmem] = (long)mem[i]->shape.size / strs[i][j + Nmem];
+			strs[i][j + Nmem] = (bart_stride_t)size[i];
+			tdims[j + Nmem] = (bart_dim_t)mem[i]->shape.size / strs[i][j + Nmem];
 		}
 
 #if 0
-		md_max_dims(Nmem + Nsize, ~0UL, maxdims, maxdims, tdims);
+		md_max_dims(Nmem + Nsize, ~UINT64_C(0), maxdims, maxdims, tdims);
 #else
 		// avoid dependency of unsigned long size (wasm)
 		for (int j = 0; j < Nmem + Nsize; j++)
@@ -1823,10 +1823,10 @@ static struct vptr_mapped_dims_s* vptr_mem_map_dims(int N, const long odims[N],
 #endif
 	}
 
-	unsigned long set_flag = 0UL;
+	bart_flags_t set_flag = UINT64_C(0);
 	bool split = false;
 
-	long dims[Nred + Nmem + Nsize];
+	bart_dim_t dims[Nred + Nmem + Nsize];
 	md_singleton_dims(Nmem + Nsize, dims);
 
 	for (int i = 0, ip = Nmem + Nsize; i < N; i++) {
@@ -1870,7 +1870,7 @@ static struct vptr_mapped_dims_s* vptr_mem_map_dims(int N, const long odims[N],
 				if (!match)
 					continue;
 
-				long dim = MIN(maxdims[k], dims[j]);
+				bart_dim_t dim = MIN(maxdims[k], dims[j]);
 
 				while ((0 != (dims[j] % dim)) || (0 != (maxdims[k] % dim)))
 					dim--;
@@ -1909,9 +1909,9 @@ static struct vptr_mapped_dims_s* vptr_mem_map_dims(int N, const long odims[N],
 
 	int Nnew = Nred_final + Nmem;
 
-	unsigned long flag = md_nontriv_dims(Nmem, dims);
+	bart_flags_t flag = md_nontriv_dims(Nmem, dims);
 
-	long nstrs[D][Nnew];
+	bart_stride_t nstrs[D][Nnew];
 
 	for (int i = 0; i < D; i++)
 		md_select_strides(Nmem, flag, nstrs[i], strs[i]);
@@ -1932,7 +1932,7 @@ static struct vptr_mapped_dims_s* vptr_mem_map_dims(int N, const long odims[N],
 
 		bool same = (N >= Nmem);
 
-		if (!md_check_equal_dims(MIN(Nmem, N), dims, odims, ~0UL))
+		if (!md_check_equal_dims(MIN(Nmem, N), dims, odims, ~UINT64_C(0)))
 			same = false;
 
 		for (int i = 0; i < D; i++)
@@ -1947,9 +1947,9 @@ static struct vptr_mapped_dims_s* vptr_mem_map_dims(int N, const long odims[N],
 	PTR_ALLOC(struct vptr_mapped_dims_s, x);
 
 	x->N = Nnew;
-	x->dims = ARR_CLONE(long[x->N], dims);
+	x->dims = ARR_CLONE(bart_dim_t[x->N], dims);
 	x->D = D;
-	x->strs = ARR_CLONE(long[x->D * x->N], nstrs);
+	x->strs = ARR_CLONE(bart_dim_t[x->D * x->N], nstrs);
 	x->ptr = ARR_CLONE(void*[x->D], ptr);
 	x->next = NULL;
 
@@ -1957,7 +1957,7 @@ static struct vptr_mapped_dims_s* vptr_mem_map_dims(int N, const long odims[N],
 }
 
 
-struct vptr_mapped_dims_s* vptr_map_dims(int N, const long dims[N], int D, const long* strs[D], const size_t size[D], void* ptr[D])
+struct vptr_mapped_dims_s* vptr_map_dims(int N, const bart_dim_t dims[N], int D, const bart_stride_t* strs[D], const size_t size[D], void* ptr[D])
 {
 	const struct mem_s* mem[D];
 
@@ -1993,7 +1993,7 @@ struct vptr_mapped_dims_s* vptr_map_dims(int N, const long dims[N], int D, const
 
 	assert(1 == N); // Cannot split vptr range with non flat dimensions
 
-	long dim = dims[0];
+	bart_dim_t dim = dims[0];
 
 	for (int i = 0; i < D; i++) {
 
@@ -2002,14 +2002,14 @@ struct vptr_mapped_dims_s* vptr_map_dims(int N, const long dims[N], int D, const
 
 		assert(0 <= strs[i][0]); // Cannot split vptr range with negative strides
 
-		dim = MIN(dim, ((long)mem[i]->len - (tptr[i] - mem[i]->ptr)) / strs[i][0]);
+		dim = MIN(dim, ((bart_dim_t)mem[i]->len - (tptr[i] - mem[i]->ptr)) / strs[i][0]);
 	}
 
 	assert(0 < dim);
 
 	struct vptr_mapped_dims_s* ret = vptr_mem_map_dims(1, &dim, D, strs, size, tptr, mem, false);
 
-	long rdim = dims[0] - dim;
+	bart_dim_t rdim = dims[0] - dim;
 
 	for (int i = 0; i < D; i++)
 		tptr[i] = ptr[i] + dim * strs[i][0];
@@ -2035,11 +2035,11 @@ struct vptr_mapped_dims_s* vptr_mapped_dims_free_and_next(struct vptr_mapped_dim
 	return ret;
 }
 
-bool vptr_check_init(int D, const long dim[D], const long str[D], const void* ptr)
+bool vptr_check_init(int D, const bart_dim_t dim[D], const bart_stride_t str[D], const void* ptr)
 {
-	unsigned long loop_flags = vptr_block_loop_flags(D, dim, str, ptr, 1, true);
+	bart_flags_t loop_flags = vptr_block_loop_flags(D, dim, str, ptr, 1, true);
 
-	long pos[D?:1];
+	bart_dim_t pos[D?:1];
 	md_set_dims(D, pos, 0);
 
 	bool init = true;
@@ -2060,8 +2060,8 @@ bool vptr_check_init(int D, const long dim[D], const long str[D], const void* pt
 		if (!mpi_accessible_mult(1, &nptr))
 			continue;
 
-		unsigned long dflags = md_nontriv_dims(mem->shape.N, mem->shape.dims);
-		long idx = md_reravel_index(mem->shape.N, mem->blocks.flags & dflags, dflags, mem->shape.dims, (ptr - mem->ptr) / (long)mem->shape.size);
+		bart_flags_t dflags = md_nontriv_dims(mem->shape.N, mem->shape.dims);
+		bart_dim_t idx = md_reravel_index(mem->shape.N, mem->blocks.flags & dflags, dflags, mem->shape.dims, (ptr - mem->ptr) / (bart_dim_t)mem->shape.size);
 		init = init && (NULL != mem->blocks.mem[idx]);
 
 	} while (md_next(D, dim, loop_flags, pos));
@@ -2069,11 +2069,11 @@ bool vptr_check_init(int D, const long dim[D], const long str[D], const void* pt
 	return init;
 }
 
-bool vptr_check_free(int D, const long dim[D], const long str[D], const void* ptr)
+bool vptr_check_free(int D, const bart_dim_t dim[D], const bart_stride_t str[D], const void* ptr)
 {
-	unsigned long loop_flags = vptr_block_loop_flags(D, dim, str, ptr, 1, true);
+	bart_flags_t loop_flags = vptr_block_loop_flags(D, dim, str, ptr, 1, true);
 
-	long pos[D?:1];
+	bart_dim_t pos[D?:1];
 	md_set_dims(D, pos, 0);
 
 	struct mem_s* mem = search(ptr, false);
@@ -2091,8 +2091,8 @@ bool vptr_check_free(int D, const long dim[D], const long str[D], const void* pt
 		if (!mpi_accessible_mult(1, &nptr))
 			continue;
 
-		unsigned long dflags = md_nontriv_dims(mem->shape.N, mem->shape.dims);
-		long idx = md_reravel_index(mem->shape.N, mem->blocks.flags & dflags, dflags, mem->shape.dims, (ptr - mem->ptr) / (long)mem->shape.size);
+		bart_flags_t dflags = md_nontriv_dims(mem->shape.N, mem->shape.dims);
+		bart_dim_t idx = md_reravel_index(mem->shape.N, mem->blocks.flags & dflags, dflags, mem->shape.dims, (ptr - mem->ptr) / (bart_dim_t)mem->shape.size);
 		free = free && (NULL == mem->blocks.mem[idx]);
 
 	} while (md_next(D, dim, loop_flags, pos));

@@ -1,5 +1,5 @@
 
 
 
-extern int dicom_write(const char* name, int cols, int rows, long inum, const unsigned char* img);
+extern int dicom_write(const char* name, int cols, int rows, bart_dim_t inum, const unsigned char* img);
 

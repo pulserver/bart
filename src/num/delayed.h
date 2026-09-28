@@ -17,21 +17,21 @@ enum delayed_md_fun_type {
 
 struct list_s;
 struct vptr_fun_data_s;
-typedef void (*vptr_fun_t)(struct vptr_fun_data_s* data, int N, int D, const long* dims[__VLA(N)], const long* strs[__VLA(N)], void* args[__VLA(N)]);
+typedef void (*vptr_fun_t)(struct vptr_fun_data_s* data, int N, int D, const bart_dim_t* dims[__VLA(N)], const bart_stride_t* strs[__VLA(N)], void* args[__VLA(N)]);
 
-extern void exec_vptr_fun_delayed(vptr_fun_t fun, struct vptr_fun_data_s* data, int N, int D, unsigned long lflags, unsigned long wflags, unsigned long rflags, const long* dims[__VLA(N)], const long* strs[__VLA(N)], void* ptr[__VLA(N)], size_t sizes[__VLA(N)], bool resolve);
+extern void exec_vptr_fun_delayed(vptr_fun_t fun, struct vptr_fun_data_s* data, int N, int D, bart_flags_t lflags, bart_flags_t wflags, bart_flags_t rflags, const bart_dim_t* dims[__VLA(N)], const bart_stride_t* strs[__VLA(N)], void* ptr[__VLA(N)], size_t sizes[__VLA(N)], bool resolve);
 
 extern void debug_delayed_queue(int dl, struct list_s* ops_queue, bool nested);
 extern void delayed_compute(const void* ptr);
 
 extern bool is_delayed(const void* ptr);
-extern void delayed_alloc(const void* ptr, int N, const long dims[__VLA(N)], size_t size);
-extern void delayed_free(const void* ptr, int N, const long dims[__VLA(N)], size_t size);
+extern void delayed_alloc(const void* ptr, int N, const bart_dim_t dims[__VLA(N)], size_t size);
+extern void delayed_free(const void* ptr, int N, const bart_dim_t dims[__VLA(N)], size_t size);
 
-extern bool delayed_queue_copy(int D, const long dim[__VLA(D)], const long ostr[__VLA(D)], void* optr, const long istr[__VLA(D)], const void* iptr, size_t size);
-extern bool delayed_queue_circ_shift(int D, const long dimensions[D], const long center[D], const long str1[D], void* dst, const long str2[D], const void* src, size_t size);
-extern bool delayed_queue_clear(int D, const long dim[__VLA(D)], const long str[__VLA(D)], void* ptr, size_t size);
-extern bool delayed_queue_make_op(enum delayed_md_fun_type type, size_t offset, int D, const long dim[__VLA(D)], int N, const long* strs[__VLA(N)], const void* ptr[__VLA(N)], const size_t sizes[__VLA(N)]);
+extern bool delayed_queue_copy(int D, const bart_dim_t dim[__VLA(D)], const bart_stride_t ostr[__VLA(D)], void* optr, const bart_stride_t istr[__VLA(D)], const void* iptr, size_t size);
+extern bool delayed_queue_circ_shift(int D, const bart_dim_t dimensions[D], const bart_dim_t center[D], const bart_stride_t str1[D], void* dst, const bart_stride_t str2[D], const void* src, size_t size);
+extern bool delayed_queue_clear(int D, const bart_dim_t dim[__VLA(D)], const bart_stride_t str[__VLA(D)], void* ptr, size_t size);
+extern bool delayed_queue_make_op(enum delayed_md_fun_type type, size_t offset, int D, const bart_dim_t dim[__VLA(D)], int N, const bart_stride_t* strs[__VLA(N)], const void* ptr[__VLA(N)], const size_t sizes[__VLA(N)]);
 
 //extern for testing, dont use!
 
@@ -55,8 +55,8 @@ extern bool delayed_op_is_clear(const struct delayed_op_s* op);
 extern bool delayed_op_is_chain(const struct delayed_op_s* op);
 
 extern void debug_mpeak_queue(int dl, struct list_s* ops_queue, bool node);
-extern long compute_mpeak(struct list_s* ops_queue, bool node);
-extern long compute_mchange(struct list_s* ops_queue, bool node);
+extern bart_dim_t compute_mpeak(struct list_s* ops_queue, bool node);
+extern bart_dim_t compute_mchange(struct list_s* ops_queue, bool node);
 
 
 #include "misc/cppwrap.h"

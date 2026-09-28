@@ -96,10 +96,10 @@ void bart_lock_destroy(bart_lock_t* lock)
 struct bart_cond {
 
 #ifdef __APPLE__
-	long counter;
+	bart_dim_t counter;
 	pthread_cond_t cnd;
 #else
-	long counter;
+	bart_dim_t counter;
 	cnd_t cnd;
 #endif
 };
@@ -121,7 +121,7 @@ bart_cond_t* bart_cond_create(void)
 
 void bart_cond_wait(bart_cond_t* cond, bart_lock_t* lock)
 {
-	long counter = cond->counter;
+	bart_dim_t counter = cond->counter;
 
 #ifdef __APPLE__
 	while (counter == cond->counter)

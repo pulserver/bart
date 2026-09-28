@@ -1,21 +1,21 @@
 
 #include <stdlib.h>
 
-extern void merge_dims(int D, int N, long dims[N], long (*ostrs[D])[N]);
-extern int remove_empty_dims(int D, int N, long dims[N], long (*ostrs[D])[N]);
+extern void merge_dims(int D, int N, bart_dim_t dims[N], bart_stride_t (*ostrs[D])[N]);
+extern int remove_empty_dims(int D, int N, bart_dim_t dims[N], bart_stride_t (*ostrs[D])[N]);
 
-extern int simplify_dims(int D, int N, long dims[N], long (*strs[D])[N]);
-extern int optimize_dims(int D, int N, long dims[N], long (*strs[D])[N]);
-extern int optimize_dims_gpu(int D, int N, long dims[N], long (*strs[D])[N]);
-extern int min_blockdim(int D, int N, const long dims[N], long (*strs[D])[N], size_t size[D]);
-extern unsigned long dims_parallel(int D, unsigned long io, int N, const long dims[N], long (*strs[D])[N], size_t size[D]);
-extern unsigned long parallelizable(int D, unsigned int io, int N, const long dims[N], const long (*strs[D])[N], size_t size[D]);
+extern int simplify_dims(int D, int N, bart_dim_t dims[N], bart_stride_t (*strs[D])[N]);
+extern int optimize_dims(int D, int N, bart_dim_t dims[N], bart_stride_t (*strs[D])[N]);
+extern int optimize_dims_gpu(int D, int N, bart_dim_t dims[N], bart_stride_t (*strs[D])[N]);
+extern int min_blockdim(int D, int N, const bart_dim_t dims[N], bart_stride_t (*strs[D])[N], size_t size[D]);
+extern bart_flags_t dims_parallel(int D, bart_flags_t io, int N, const bart_dim_t dims[N], bart_stride_t (*strs[D])[N], size_t size[D]);
+extern bart_flags_t parallelizable(int D, unsigned int io, int N, const bart_dim_t dims[N], const bart_stride_t (*strs[D])[N], size_t size[D]);
 
 struct vec_ops;
 
 struct nary_opt_data_s {
 
-	long size;
+	bart_dim_t size;
 	const struct vec_ops* ops;
 };
 
@@ -23,6 +23,6 @@ struct nary_opt_data_s {
 
 typedef CLOSURE_TYPE(void, (struct nary_opt_data_s* data, void* ptr[])) md_nary_opt_fun_t;
 
-extern void optimized_nop(int N, unsigned long io, int D, const long dim[D], const long (*nstr[N])[D?:1], void* const nptr[N], size_t sizes[N], md_nary_opt_fun_t too);
+extern void optimized_nop(int N, bart_flags_t io, int D, const bart_dim_t dim[D], const bart_stride_t (*nstr[N])[D?:1], void* const nptr[N], size_t sizes[N], md_nary_opt_fun_t too);
 #define optimized_nop(N, io, D, dim, nstr, nptr, sizes, too) \
 	optimized_nop(N, io, D, dim, nstr, nptr, sizes, CLOSURE(md_nary_opt_fun_t, too));

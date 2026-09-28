@@ -54,12 +54,12 @@ static bool use_simple_convcorr = true;
  * @param size size of data structures, e.g. complex float
  * @param too three-op multiply function
  */
-static void optimized_threeop_oii(int D, const long dim[D], const long ostr[D], void* optr, const long istr1[D], const void* iptr1, const long istr2[D], const void* iptr2, size_t sizes[3], md_nary_opt_fun_t too)
+static void optimized_threeop_oii(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], void* optr, const bart_stride_t istr1[D], const void* iptr1, const bart_stride_t istr2[D], const void* iptr2, size_t sizes[3], md_nary_opt_fun_t too)
 {
-	const long (*nstr[3])[D?D:1] = { (const long (*)[D?D:1])ostr, (const long (*)[D?D:1])istr1, (const long (*)[D?D:1])istr2 };
+	const bart_stride_t (*nstr[3])[D?D:1] = { (const bart_stride_t (*)[D?D:1])ostr, (const bart_stride_t (*)[D?D:1])istr1, (const bart_stride_t (*)[D?D:1])istr2 };
 	void *nptr[3] = { optr, (void*)iptr1, (void*)iptr2 };
 
-	unsigned long io = 1UL + ((iptr1 == optr) ? 2 : 0) + ((iptr2 == optr) ? 4 : 0);
+	bart_flags_t io = UINT64_C(1) + ((iptr1 == optr) ? 2 : 0) + ((iptr2 == optr) ? 4 : 0);
 
 	(optimized_nop)(3, io, D, dim, nstr, nptr, sizes, too);
 }
@@ -98,38 +98,38 @@ zconvcorr_bwd_in_algo_f* algos_bwd_in_gpu[] = {
 
 //detect if strides describe convolution
 static bool detect_convcorr(	int N,
-				long nodims[N], long nidims[N], long nkdims[N],
-				long nostrs[N], long nistrs[N], long nkstrs[N],
-				long dilation[N], long strides[N],
-				unsigned long* ptr_flag, bool* ptr_conv,
-				const long dims[2 * N], const long ostrs[2 * N], const long istrs[2 * N], const long kstrs[2 * N],
+				bart_dim_t nodims[N], bart_dim_t nidims[N], bart_dim_t nkdims[N],
+				bart_stride_t nostrs[N], bart_stride_t nistrs[N], bart_stride_t nkstrs[N],
+				bart_dim_t dilation[N], bart_stride_t strides[N],
+				bart_flags_t* ptr_flag, bool* ptr_conv,
+				const bart_dim_t dims[2 * N], const bart_stride_t ostrs[2 * N], const bart_stride_t istrs[2 * N], const bart_stride_t kstrs[2 * N],
 				size_t size);
 
 
 //functions detecting strides for a specific call and running the algorithms
-static bool simple_zconvcorr_fwd(	int N, const long dims[N],
-					const long ostrs[N], complex float* optr,
-					const long istrs1[N], const complex float* iptr1,
-					const long istrs2[N], const complex float* iptr2);
-static bool simple_zconvcorr_bwd_in(	int N, const long dims[N],
-					const long ostrs[N], complex float* optr,
-					const long istrs1[N], const complex float* iptr1,
-					const long istrs2[N], const complex float* iptr2);
-static bool simple_zconvcorr_bwd_krn(	int N, const long dims[N],
-					const long ostrs[N], complex float* optr,
-					const long istrs1[N], const complex float* iptr1,
-					const long istrs2[N], const complex float* iptr2);
+static bool simple_zconvcorr_fwd(	int N, const bart_dim_t dims[N],
+					const bart_stride_t ostrs[N], complex float* optr,
+					const bart_stride_t istrs1[N], const complex float* iptr1,
+					const bart_stride_t istrs2[N], const complex float* iptr2);
+static bool simple_zconvcorr_bwd_in(	int N, const bart_dim_t dims[N],
+					const bart_stride_t ostrs[N], complex float* optr,
+					const bart_stride_t istrs1[N], const complex float* iptr1,
+					const bart_stride_t istrs2[N], const complex float* iptr2);
+static bool simple_zconvcorr_bwd_krn(	int N, const bart_dim_t dims[N],
+					const bart_stride_t ostrs[N], complex float* optr,
+					const bart_stride_t istrs1[N], const complex float* iptr1,
+					const bart_stride_t istrs2[N], const complex float* iptr2);
 
 
 static bool detect_convcorr(	int N,
-				long nodims[N], long nidims[N], long nkdims[N],
-				long nostrs[N], long nistrs[N], long nkstrs[N],
-				long dilation[N], long strides[N],
-				unsigned long* ptr_flag, bool* ptr_conv,
-				const long dims[2 * N], const long ostrs[2 * N], const long istrs[2 * N], const long kstrs[2 * N],
+				bart_dim_t nodims[N], bart_dim_t nidims[N], bart_dim_t nkdims[N],
+				bart_stride_t nostrs[N], bart_stride_t nistrs[N], bart_stride_t nkstrs[N],
+				bart_dim_t dilation[N], bart_stride_t strides[N],
+				bart_flags_t* ptr_flag, bool* ptr_conv,
+				const bart_dim_t dims[2 * N], const bart_stride_t ostrs[2 * N], const bart_stride_t istrs[2 * N], const bart_stride_t kstrs[2 * N],
 				size_t size)
 {
-	long istrs_triv = (long)size;
+	bart_dim_t istrs_triv = (bart_stride_t)size;
 
 	*ptr_flag = 0;
 	*ptr_conv = true;
@@ -156,7 +156,7 @@ static bool detect_convcorr(	int N,
 
 			nostrs[i] = ostrs[i];
 
-			long test_strides[] = { istrs[i] / istrs_triv, 1, 2, 3, 4, 5, 6, 7, 8 };
+			bart_stride_t test_strides[] = { istrs[i] / istrs_triv, 1, 2, 3, 4, 5, 6, 7, 8 };
 			bool found = false;
 
 			for (int j = 0; !found && j < (int)ARRAY_SIZE(test_strides); j++) {
@@ -218,17 +218,17 @@ static bool detect_convcorr(	int N,
 		return false;
 
 #if 1 // this is a cross check, that the detected dims/strides reproduce the input strides/dims
-	long tdims[2 * N];
-	long tostrs[2 * N];
-	long tistrs[2 * N];
-	long tkstrs[2 * N];
+	bart_dim_t tdims[2 * N];
+	bart_stride_t tostrs[2 * N];
+	bart_stride_t tistrs[2 * N];
+	bart_stride_t tkstrs[2 * N];
 
 	calc_convcorr_geom_strs_dil(	N, *ptr_flag,
 					tdims, tostrs, tkstrs, tistrs,
 					nodims, nostrs, nkdims, nkstrs, nidims, nistrs,
 					dilation, strides, *ptr_conv, false);
 
-	assert(md_check_equal_dims(2 * N, tdims, dims, ~0UL));
+	assert(md_check_equal_dims(2 * N, tdims, dims, ~UINT64_C(0)));
 	assert(md_check_equal_dims(2 * N, tostrs, ostrs, md_nontriv_dims(2 * N, dims)));
 	assert(md_check_equal_dims(2 * N, tistrs, istrs, md_nontriv_dims(2 * N, dims)));
 	assert(md_check_equal_dims(2 * N, tkstrs, kstrs, md_nontriv_dims(2 * N, dims)));
@@ -237,10 +237,10 @@ static bool detect_convcorr(	int N,
 }
 
 
-bool simple_zconvcorr(	int N, const long dims[N],
-			const long ostrs[N], complex float* optr,
-			const long istrs1[N], const complex float* iptr1,
-			const long istrs2[N], const complex float* iptr2)
+bool simple_zconvcorr(	int N, const bart_dim_t dims[N],
+			const bart_stride_t ostrs[N], complex float* optr,
+			const bart_stride_t istrs1[N], const complex float* iptr1,
+			const bart_stride_t istrs2[N], const complex float* iptr2)
 {
 	if (!use_simple_convcorr)
 		return false;
@@ -262,10 +262,10 @@ bool simple_zconvcorr(	int N, const long dims[N],
 
 
 //The following three function detect a (transposed) convolution and run the specific algorithms
-static bool simple_zconvcorr_fwd(	int N, const long dims[N],
-					const long ostrs[N], complex float* optr,
-					const long istrs1[N], const complex float* iptr1,
-					const long istrs2[N], const complex float* iptr2)
+static bool simple_zconvcorr_fwd(	int N, const bart_dim_t dims[N],
+					const bart_stride_t ostrs[N], complex float* optr,
+					const bart_stride_t istrs1[N], const complex float* iptr1,
+					const bart_stride_t istrs2[N], const complex float* iptr2)
 {
 	if (0 != N % 2)
 		return false;
@@ -274,18 +274,18 @@ static bool simple_zconvcorr_fwd(	int N, const long dims[N],
 
 	size_t size = CFL_SIZE;
 
-	unsigned long flags;
+	bart_flags_t flags;
 	bool conv;
-	long nodims[N];
-	long nidims[N];
-	long nkdims[N];
+	bart_dim_t nodims[N];
+	bart_dim_t nidims[N];
+	bart_dim_t nkdims[N];
 
-	long nostrs[N];
-	long nistrs[N];
-	long nkstrs[N];
+	bart_stride_t nostrs[N];
+	bart_stride_t nistrs[N];
+	bart_stride_t nkstrs[N];
 
-	long dilation[N];
-	long strides[N];
+	bart_dim_t dilation[N];
+	bart_stride_t strides[N];
 
 	complex float* out = NULL;
 	const complex float* in = NULL;
@@ -324,21 +324,21 @@ static bool simple_zconvcorr_fwd(	int N, const long dims[N],
 	if (!result)
 		return false;
 
-	long tdims[2 * N];
-	long tostrs[2 * N];
-	long tistrs[2 * N];
-	long tkstrs[2 * N];
+	bart_dim_t tdims[2 * N];
+	bart_stride_t tostrs[2 * N];
+	bart_stride_t tistrs[2 * N];
+	bart_stride_t tkstrs[2 * N];
 
 	krn -= calc_convcorr_geom_strs_dil(	N, flags,
 						tdims, tostrs, tkstrs, tistrs,
 						nodims, nostrs,
 						nkdims, nkstrs,
 						nidims, nistrs,
-						dilation, strides, conv, false) / (long)size;
+						dilation, strides, conv, false) / (bart_stride_t)size;
 
 #ifdef USE_GPU
 	if (cuda_ondevice(out))
-		for (int i = 0; (unsigned long)i < sizeof(algos_fwd_gpu) / sizeof(algos_fwd_gpu[0]); i++)
+		for (int i = 0; (bart_flags_t)i < sizeof(algos_fwd_gpu) / sizeof(algos_fwd_gpu[0]); i++)
 			if (algos_fwd_gpu[i](	N,
 						nodims, nostrs, out,
 						nidims, nistrs, in,
@@ -348,7 +348,7 @@ static bool simple_zconvcorr_fwd(	int N, const long dims[N],
 
 	if (!cuda_ondevice(out))
 #endif
-		for (int i = 0; (unsigned long)i < sizeof(algos_fwd_cpu) / sizeof(algos_fwd_cpu[0]); i++)
+		for (int i = 0; (bart_flags_t)i < sizeof(algos_fwd_cpu) / sizeof(algos_fwd_cpu[0]); i++)
 			if (algos_fwd_cpu[i](	N,
 						nodims, nostrs, out,
 						nidims, nistrs, in,
@@ -360,10 +360,10 @@ static bool simple_zconvcorr_fwd(	int N, const long dims[N],
 }
 
 
-static bool simple_zconvcorr_bwd_in(	int N, const long dims[N],
-					const long ostrs[N], complex float* optr,
-					const long istrs1[N], const complex float* iptr1,
-					const long istrs2[N], const complex float* iptr2)
+static bool simple_zconvcorr_bwd_in(	int N, const bart_dim_t dims[N],
+					const bart_stride_t ostrs[N], complex float* optr,
+					const bart_stride_t istrs1[N], const complex float* iptr1,
+					const bart_stride_t istrs2[N], const complex float* iptr2)
 {
 	if (0 != N % 2)
 		return false;
@@ -372,18 +372,18 @@ static bool simple_zconvcorr_bwd_in(	int N, const long dims[N],
 
 	size_t size = CFL_SIZE;
 
-	unsigned long flags;
+	bart_flags_t flags;
 	bool conv;
-	long nodims[N];
+	bart_dim_t nodims[N];
 	long nidims[N] = { };	// GCC ANALYZER
-	long nkdims[N];
+	bart_dim_t nkdims[N];
 
-	long nostrs[N];
-	long nistrs[N];
-	long nkstrs[N];
+	bart_stride_t nostrs[N];
+	bart_stride_t nistrs[N];
+	bart_stride_t nkstrs[N];
 
-	long dilation[N];
-	long strides[N];
+	bart_dim_t dilation[N];
+	bart_stride_t strides[N];
 
 	const complex float* out = NULL;
 	complex float* in = NULL;
@@ -422,21 +422,21 @@ static bool simple_zconvcorr_bwd_in(	int N, const long dims[N],
 	if (!result)
 		return false;
 
-	long tdims[2 * N];
-	long tostrs[2 * N];
-	long tistrs[2 * N];
-	long tkstrs[2 * N];
+	bart_dim_t tdims[2 * N];
+	bart_stride_t tostrs[2 * N];
+	bart_stride_t tistrs[2 * N];
+	bart_stride_t tkstrs[2 * N];
 
 	krn -= calc_convcorr_geom_strs_dil(	N, flags,
 						tdims, tostrs, tkstrs, tistrs,
 						nodims, nostrs,
 						nkdims, nkstrs,
 						nidims, nistrs,
-						dilation, strides, conv, false) / (long)size;
+						dilation, strides, conv, false) / (bart_stride_t)size;
 
 #ifdef USE_GPU
 	if (cuda_ondevice(out))
-		for(int i = 0; (unsigned long)i < sizeof(algos_bwd_in_gpu) / sizeof(algos_bwd_in_gpu[0]); i++)
+		for(int i = 0; (bart_flags_t)i < sizeof(algos_bwd_in_gpu) / sizeof(algos_bwd_in_gpu[0]); i++)
 			if (algos_bwd_in_gpu[i](	N,
 							nodims, nostrs, out,
 							nidims, nistrs, in,
@@ -451,7 +451,7 @@ static bool simple_zconvcorr_bwd_in(	int N, const long dims[N],
 #else
 	if (true)
 #endif
-	for(int i = 0; (unsigned long)i < sizeof(algos_bwd_in_cpu) / sizeof(algos_bwd_in_cpu[0]); i++)
+	for(int i = 0; (bart_flags_t)i < sizeof(algos_bwd_in_cpu) / sizeof(algos_bwd_in_cpu[0]); i++)
 		if (algos_bwd_in_cpu[i](	N,
 						nodims, nostrs, out,
 						nidims, nistrs, in,
@@ -463,10 +463,10 @@ static bool simple_zconvcorr_bwd_in(	int N, const long dims[N],
 }
 
 
-static bool simple_zconvcorr_bwd_krn(	int N, const long dims[N],
-					const long ostrs[N], complex float* optr,
-					const long istrs1[N], const complex float* iptr1,
-					const long istrs2[N], const complex float* iptr2)
+static bool simple_zconvcorr_bwd_krn(	int N, const bart_dim_t dims[N],
+					const bart_stride_t ostrs[N], complex float* optr,
+					const bart_stride_t istrs1[N], const complex float* iptr1,
+					const bart_stride_t istrs2[N], const complex float* iptr2)
 {
 	if (0 != N % 2)
 		return false;
@@ -475,18 +475,18 @@ static bool simple_zconvcorr_bwd_krn(	int N, const long dims[N],
 
 	size_t size = CFL_SIZE;
 
-	unsigned long flags;
+	bart_flags_t flags;
 	bool conv;
-	long nodims[N];
+	bart_dim_t nodims[N];
 	long nidims[N] = { };	// GCC ANAYLZER
-	long nkdims[N];
+	bart_dim_t nkdims[N];
 
-	long nostrs[N];
-	long nistrs[N];
-	long nkstrs[N];
+	bart_stride_t nostrs[N];
+	bart_stride_t nistrs[N];
+	bart_stride_t nkstrs[N];
 
-	long dilation[N];
-	long strides[N];
+	bart_dim_t dilation[N];
+	bart_stride_t strides[N];
 
 	const complex float* out = NULL;
 	const complex float* in = NULL;
@@ -525,21 +525,21 @@ static bool simple_zconvcorr_bwd_krn(	int N, const long dims[N],
 	if (!result)
 		return false;
 
-	long tdims[2 * N];
-	long tostrs[2 * N];
-	long tistrs[2 * N];
-	long tkstrs[2 * N];
+	bart_dim_t tdims[2 * N];
+	bart_stride_t tostrs[2 * N];
+	bart_stride_t tistrs[2 * N];
+	bart_stride_t tkstrs[2 * N];
 
 	krn -= calc_convcorr_geom_strs_dil(	N, flags,
 						tdims, tostrs, tkstrs, tistrs,
 						nodims, nostrs,
 						nkdims, nkstrs,
 						nidims, nistrs,
-						dilation, strides, conv, false) / (long)size;
+						dilation, strides, conv, false) / (bart_stride_t)size;
 
 #ifdef USE_GPU
 	if (cuda_ondevice(out))
-		for(int i = 0; (unsigned long)i < sizeof(algos_bwd_krn_gpu) / sizeof(algos_bwd_krn_gpu[0]); i++)
+		for(int i = 0; (bart_flags_t)i < sizeof(algos_bwd_krn_gpu) / sizeof(algos_bwd_krn_gpu[0]); i++)
 			if (algos_bwd_krn_gpu[i](	N,
 							nodims, nostrs, out,
 							nidims, nistrs, in,
@@ -553,7 +553,7 @@ static bool simple_zconvcorr_bwd_krn(	int N, const long dims[N],
 #else
 	if (true)
 #endif
-		for(int i = 0; (unsigned long)i < sizeof(algos_bwd_krn_cpu) / sizeof(algos_bwd_krn_cpu[0]); i++)
+		for(int i = 0; (bart_flags_t)i < sizeof(algos_bwd_krn_cpu) / sizeof(algos_bwd_krn_cpu[0]); i++)
 			if (algos_bwd_krn_cpu[i](	N,
 							nodims, nostrs, out,
 							nidims, nistrs, in,
@@ -569,10 +569,10 @@ static bool simple_zconvcorr_bwd_krn(	int N, const long dims[N],
  * Checks if params correspond to convcorr which is channel first and contiguous in memory
  */
 static bool check_trivial_cf(	int N,
-				long odims[N], long ostrs[N],
-				long idims[N], long istrs[N],
-				long kdims[N], long kstrs[N],
-				unsigned long flags,
+				bart_dim_t odims[N], bart_stride_t ostrs[N],
+				bart_dim_t idims[N], bart_stride_t istrs[N],
+				bart_dim_t kdims[N], bart_stride_t kstrs[N],
+				bart_flags_t flags,
 				size_t size)
 {
 	// Check conv dims
@@ -597,12 +597,12 @@ static bool check_trivial_cf(	int N,
 	return true;
 }
 
-static bool check_trivial_strs_dil(int N, const long dilation[N], const long strides[N])
+static bool check_trivial_strs_dil(int N, const bart_dim_t dilation[N], const bart_stride_t strides[N])
 {
-	if ((NULL != dilation) && (!md_check_equal_dims(N, dilation, MD_SINGLETON_DIMS(N), ~0UL)))
+	if ((NULL != dilation) && (!md_check_equal_dims(N, dilation, MD_SINGLETON_DIMS(N), ~UINT64_C(0))))
 		return false;
 
-	if ((NULL != strides) && (!md_check_equal_dims(N, strides, MD_SINGLETON_DIMS(N), ~0UL)))
+	if ((NULL != strides) && (!md_check_equal_dims(N, strides, MD_SINGLETON_DIMS(N), ~UINT64_C(0))))
 		return false;
 
 	return true;
@@ -610,10 +610,10 @@ static bool check_trivial_strs_dil(int N, const long dilation[N], const long str
 
 
 bool zconvcorr_fwd_im2col_cf_cpu(int N,
-				long odims[N], long ostrs[N], complex float* out,
-				long idims[N], long istrs[N], const complex float* in,
-				long kdims[N], long kstrs[N], const complex float* krn,
-				unsigned long flags, const long dilation[N], const long strides[N], bool conv)
+				bart_dim_t odims[N], bart_stride_t ostrs[N], complex float* out,
+				bart_dim_t idims[N], bart_stride_t istrs[N], const complex float* in,
+				bart_dim_t kdims[N], bart_stride_t kstrs[N], const complex float* krn,
+				bart_flags_t flags, const bart_dim_t dilation[N], const bart_stride_t strides[N], bool conv)
 {
 #ifdef NO_BLAS
 	return false;
@@ -634,53 +634,53 @@ bool zconvcorr_fwd_im2col_cf_cpu(int N,
 	if (conv)
 		return false;
 
-	long dims_mat[8]; // (1 | nr_in_channel, kx, ky, kz | outx, outy, outz)
+	bart_dim_t dims_mat[8]; // (1 | nr_in_channel, kx, ky, kz | outx, outy, outz)
 
 	md_copy_dims(5, dims_mat, kdims);
 	md_copy_dims(3, dims_mat + 5, odims + 2);
 
 
-	long kdims_mat[8]; // (nr_filter | nr_in_channel, kx, ky, kz | 1, 1, 1 )
+	bart_dim_t kdims_mat[8]; // (nr_filter | nr_in_channel, kx, ky, kz | 1, 1, 1 )
 
 	md_select_dims(8, MD_BIT(5) - 1, kdims_mat, dims_mat);
 
 
-	long idims_mat[N + 3]; // (1 | nr_in_channel, kx, ky, kz | outx, outy, outz | ... )
+	bart_dim_t idims_mat[N + 3]; // (1 | nr_in_channel, kx, ky, kz | outx, outy, outz | ... )
 
-	md_select_dims(8, ~1ul , idims_mat, dims_mat);
+	md_select_dims(8, ~UINT64_C(1) , idims_mat, dims_mat);
 	md_copy_dims(N - 5, idims_mat + 8, idims + 5);
 
 
-	long odims_mat[8]; // (nr_filter | 1, 1, 1, 1 | outx, outy, outz)
+	bart_dim_t odims_mat[8]; // (nr_filter | 1, 1, 1, 1 | outx, outy, outz)
 
 	md_select_dims(8, MD_BIT(0) | MD_BIT(5) | MD_BIT(6) | MD_BIT(7), odims_mat, dims_mat);
 
 
-	long istrs_mat[8];
+	bart_dim_t istrs_mat[8];
 
 	md_copy_strides(5, istrs_mat, MD_STRIDES(5, idims, CFL_SIZE));
 	md_copy_strides(3, istrs_mat + 5, MD_STRIDES(5, idims, CFL_SIZE) + 2);
 
 
-	long osize = odims[0] * odims[1] * odims[2] * odims[3] * odims[4];
-	long ksize = kdims[0] * kdims[1] * kdims[2] * kdims[3] * kdims[4];
-	long isize = idims[0] * idims[1] * idims[2] * idims[3] * idims[4];
+	bart_dim_t osize = odims[0] * odims[1] * odims[2] * odims[3] * odims[4];
+	bart_dim_t ksize = kdims[0] * kdims[1] * kdims[2] * kdims[3] * kdims[4];
+	bart_dim_t isize = idims[0] * idims[1] * idims[2] * idims[3] * idims[4];
 
-	long M1 = dims_mat[0];
-	long K1 = dims_mat[1] * dims_mat[2] * dims_mat[3] * dims_mat[4];
-	long N1 = dims_mat[5] * dims_mat[6] * dims_mat[7];
+	bart_dim_t M1 = dims_mat[0];
+	bart_dim_t K1 = dims_mat[1] * dims_mat[2] * dims_mat[3] * dims_mat[4];
+	bart_dim_t N1 = dims_mat[5] * dims_mat[6] * dims_mat[7];
 
-	long* idims_matP = idims_mat; // clang
-	long* istrs_matP = istrs_mat;
+	bart_dim_t* idims_matP = idims_mat; // clang
+	bart_dim_t* istrs_matP = istrs_mat;
 
-	long mdims[N - 5];
+	bart_dim_t mdims[N - 5];
 
 	md_tenmul_dims(N - 5, mdims, odims + 5, idims + 5, kdims + 5);
 
 
 	NESTED(void, nary_zconvcorr3D_I2C_CF, (struct nary_opt_data_s* data, void* ptr[]))
 	{
-		for (long i = 0; i < data->size; i++){
+		for (bart_dim_t i = 0; i < data->size; i++){
 
 			complex float* imat_tmp = md_alloc_sameplace(8, idims_matP, CFL_SIZE, in);
 
@@ -698,7 +698,7 @@ bool zconvcorr_fwd_im2col_cf_cpu(int N,
 	};
 
 	optimized_threeop_oii(N - 5, mdims, ostrs + 5, (void*)out, istrs + 5, (void*)in, kstrs + 5, (void*)krn,
-				(size_t[3]){ (size_t)(osize * (long)CFL_SIZE), (size_t)(isize * (long)CFL_SIZE), (size_t)(ksize * (long)CFL_SIZE) },
+				(size_t[3]){ (size_t)(osize * (bart_stride_t)CFL_SIZE), (size_t)(isize * (bart_stride_t)CFL_SIZE), (size_t)(ksize * (bart_stride_t)CFL_SIZE) },
 				CLOSURE(md_nary_opt_fun_t, nary_zconvcorr3D_I2C_CF));
 
 	debug_printf(DP_DEBUG3, "conv by %s \n", __func__);
@@ -709,10 +709,10 @@ bool zconvcorr_fwd_im2col_cf_cpu(int N,
 
 
 bool zconvcorr_bwd_krn_im2col_cf_cpu(int N,
-				long odims[N], long ostrs[N], const complex float* out,
-				long idims[N], long istrs[N], const complex float* in,
-				long kdims[N], long kstrs[N], complex float* krn,
-				unsigned long flags, const long dilation[N], const long strides[N], bool conv)
+				bart_dim_t odims[N], bart_stride_t ostrs[N], const complex float* out,
+				bart_dim_t idims[N], bart_stride_t istrs[N], const complex float* in,
+				bart_dim_t kdims[N], bart_stride_t kstrs[N], complex float* krn,
+				bart_flags_t flags, const bart_dim_t dilation[N], const bart_stride_t strides[N], bool conv)
 {
 #ifdef NO_BLAS
 	return false;
@@ -736,52 +736,52 @@ bool zconvcorr_bwd_krn_im2col_cf_cpu(int N,
 		return false;
 
 
-	long dims_mat[8]; // (1 | nr_in_channel, kx, ky, kz | outx, outy, outz)
+	bart_dim_t dims_mat[8]; // (1 | nr_in_channel, kx, ky, kz | outx, outy, outz)
 
 	md_copy_dims(5, dims_mat, kdims);
 	md_copy_dims(3, dims_mat + 5, odims + 2);
 
 
-	long kdims_mat[8]; // (nr_filter | nr_in_channel, kx, ky, kz | 1, 1, 1 )
+	bart_dim_t kdims_mat[8]; // (nr_filter | nr_in_channel, kx, ky, kz | 1, 1, 1 )
 
 	md_select_dims(8, MD_BIT(5) - 1, kdims_mat, dims_mat);
 
 
-	long idims_mat[N + 3]; // (1 | nr_in_channel, kx, ky, kz | outx, outy, outz | ... )
+	bart_dim_t idims_mat[N + 3]; // (1 | nr_in_channel, kx, ky, kz | outx, outy, outz | ... )
 
-	md_select_dims(8, ~1ul , idims_mat, dims_mat);
+	md_select_dims(8, ~UINT64_C(1) , idims_mat, dims_mat);
 	md_copy_dims(N - 5, idims_mat + 8, idims + 5);
 
 
-	long odims_mat[8]; // (nr_filter | 1, 1, 1, 1 | outx, outy, outz)
+	bart_dim_t odims_mat[8]; // (nr_filter | 1, 1, 1, 1 | outx, outy, outz)
 
 	md_select_dims(8, MD_BIT(0) | MD_BIT(5) | MD_BIT(6) | MD_BIT(7), odims_mat, dims_mat);
 
 
-	long istrs_mat[8];
+	bart_dim_t istrs_mat[8];
 
 	md_copy_strides(5, istrs_mat, MD_STRIDES(5, idims, size));
 	md_copy_strides(3, istrs_mat + 5, MD_STRIDES(5, idims, size) + 2);
 
-	long osize = odims[0] * odims[1] * odims[2] * odims[3] * odims[4];
-	long ksize = kdims[0] * kdims[1] * kdims[2] * kdims[3] * kdims[4];
-	long isize = idims[0] * idims[1] * idims[2] * idims[3] * idims[4];
+	bart_dim_t osize = odims[0] * odims[1] * odims[2] * odims[3] * odims[4];
+	bart_dim_t ksize = kdims[0] * kdims[1] * kdims[2] * kdims[3] * kdims[4];
+	bart_dim_t isize = idims[0] * idims[1] * idims[2] * idims[3] * idims[4];
 
-	long M1 = dims_mat[0];
-	long K1 = dims_mat[1] * dims_mat[2] * dims_mat[3] * dims_mat[4];
-	long N1 = dims_mat[5] * dims_mat[6] * dims_mat[7];
+	bart_dim_t M1 = dims_mat[0];
+	bart_dim_t K1 = dims_mat[1] * dims_mat[2] * dims_mat[3] * dims_mat[4];
+	bart_dim_t N1 = dims_mat[5] * dims_mat[6] * dims_mat[7];
 
-	long* idims_matP = idims_mat; // clang
-	long* istrs_matP = istrs_mat;
+	bart_dim_t* idims_matP = idims_mat; // clang
+	bart_dim_t* istrs_matP = istrs_mat;
 
-	long mdims[N - 5];
+	bart_dim_t mdims[N - 5];
 
 	md_tenmul_dims(N - 5, mdims, odims + 5, idims + 5, kdims + 5);
 
 
 	NESTED(void, nary_zconvcorr_im2col, (struct nary_opt_data_s* data, void* ptr[]))
 	{
-		for (long i = 0; i < data->size; i++){
+		for (bart_dim_t i = 0; i < data->size; i++){
 
 			complex float* imat_tmp = md_alloc_sameplace(8, idims_matP, size, in);
 
@@ -798,7 +798,7 @@ bool zconvcorr_bwd_krn_im2col_cf_cpu(int N,
 	};
 
 	optimized_threeop_oii(N - 5, mdims, kstrs + 5, (void*)krn, istrs + 5, (void*)in, ostrs + 5, (void*)out,
-				(size_t[3]){ (size_t)(ksize * (long)CFL_SIZE), (size_t)(isize * (long)CFL_SIZE), (size_t)(osize * (long)CFL_SIZE) },
+				(size_t[3]){ (size_t)(ksize * (bart_stride_t)CFL_SIZE), (size_t)(isize * (bart_stride_t)CFL_SIZE), (size_t)(osize * (bart_stride_t)CFL_SIZE) },
 				CLOSURE(md_nary_opt_fun_t, nary_zconvcorr_im2col));
 
 	debug_printf(DP_DEBUG3, "conv by %s \n", __func__);
@@ -809,10 +809,10 @@ bool zconvcorr_bwd_krn_im2col_cf_cpu(int N,
 
 
 bool zconvcorr_bwd_in_im2col_cf_cpu(int N,
-				long odims[N], long ostrs[N], const complex float* out,
-				long idims[N], long istrs[N], complex float* in,
-				long kdims[N], long kstrs[N], const complex float* krn,
-				unsigned long flags, const long dilation[N], const long strides[N], bool conv)
+				bart_dim_t odims[N], bart_stride_t ostrs[N], const complex float* out,
+				bart_dim_t idims[N], bart_stride_t istrs[N], complex float* in,
+				bart_dim_t kdims[N], bart_stride_t kstrs[N], const complex float* krn,
+				bart_flags_t flags, const bart_dim_t dilation[N], const bart_stride_t strides[N], bool conv)
 {
 #ifdef NO_BLAS
 	return false;
@@ -835,53 +835,53 @@ bool zconvcorr_bwd_in_im2col_cf_cpu(int N,
 		return false;
 
 
-	long dims_mat[8]; // (1 | nr_in_channel, kx, ky, kz | outx, outy, outz)
+	bart_dim_t dims_mat[8]; // (1 | nr_in_channel, kx, ky, kz | outx, outy, outz)
 
 	md_copy_dims(5, dims_mat, kdims);
 	md_copy_dims(3, dims_mat + 5, odims + 2);
 
 
-	long kdims_mat[8]; // (nr_filter | nr_in_channel, kx, ky, kz | 1, 1, 1 )
+	bart_dim_t kdims_mat[8]; // (nr_filter | nr_in_channel, kx, ky, kz | 1, 1, 1 )
 
 	md_select_dims(8, MD_BIT(5) - 1, kdims_mat, dims_mat);
 
 
-	long idims_mat[N + 3]; // (1 | nr_in_channel, kx, ky, kz | outx, outy, outz | ... )
+	bart_dim_t idims_mat[N + 3]; // (1 | nr_in_channel, kx, ky, kz | outx, outy, outz | ... )
 
-	md_select_dims(8, ~1ul , idims_mat, dims_mat);
+	md_select_dims(8, ~UINT64_C(1) , idims_mat, dims_mat);
 	md_copy_dims(N - 5, idims_mat + 8, idims + 5);
 
 
-	long odims_mat[8]; // (nr_filter | 1, 1, 1, 1 | outx, outy, outz)
+	bart_dim_t odims_mat[8]; // (nr_filter | 1, 1, 1, 1 | outx, outy, outz)
 
 	md_select_dims(8, MD_BIT(0) | MD_BIT(5) | MD_BIT(6) | MD_BIT(7), odims_mat, dims_mat);
 
 
-	long istrs_mat[8];
+	bart_dim_t istrs_mat[8];
 
 	md_copy_strides(5, istrs_mat, MD_STRIDES(5, idims, CFL_SIZE));
 	md_copy_strides(3, istrs_mat + 5, MD_STRIDES(5, idims, CFL_SIZE) + 2);
 
 
-	long osize = odims[0] * odims[1] * odims[2] * odims[3] * odims[4];
-	long ksize = kdims[0] * kdims[1] * kdims[2] * kdims[3] * kdims[4];
-	long isize = idims[0] * idims[1] * idims[2] * idims[3] * idims[4];
+	bart_dim_t osize = odims[0] * odims[1] * odims[2] * odims[3] * odims[4];
+	bart_dim_t ksize = kdims[0] * kdims[1] * kdims[2] * kdims[3] * kdims[4];
+	bart_dim_t isize = idims[0] * idims[1] * idims[2] * idims[3] * idims[4];
 
-	long M1 = dims_mat[0];
-	long K1 = dims_mat[1] * dims_mat[2] * dims_mat[3] * dims_mat[4];
-	long N1 = dims_mat[5] * dims_mat[6] * dims_mat[7];
+	bart_dim_t M1 = dims_mat[0];
+	bart_dim_t K1 = dims_mat[1] * dims_mat[2] * dims_mat[3] * dims_mat[4];
+	bart_dim_t N1 = dims_mat[5] * dims_mat[6] * dims_mat[7];
 
-	long* idims_matP = idims_mat; // clang
-	long* istrs_matP = istrs_mat;
+	bart_dim_t* idims_matP = idims_mat; // clang
+	bart_dim_t* istrs_matP = istrs_mat;
 
-	long mdims[N - 5];
+	bart_dim_t mdims[N - 5];
 
 	md_tenmul_dims(N - 5, mdims, odims + 5, idims + 5, kdims + 5);
 
 
 	NESTED(void, nary_zconvcorr3D_I2C_CF, (struct nary_opt_data_s* data, void* ptr[]))
 	{
-		for (long i = 0; i < data->size; i++){
+		for (bart_dim_t i = 0; i < data->size; i++){
 
 			complex float* imat_tmp = md_alloc_sameplace(8, idims_matP, CFL_SIZE, in);
 			md_clear(8, idims_matP, imat_tmp, CFL_SIZE);
@@ -901,7 +901,7 @@ bool zconvcorr_bwd_in_im2col_cf_cpu(int N,
 	};
 
 	optimized_threeop_oii(N - 5, mdims, istrs + 5, (void*)in, ostrs + 5, (void*)out, kstrs + 5, (void*)krn,
-				(size_t[3]){ (size_t)(osize * (long)CFL_SIZE), (size_t)(isize * (long)CFL_SIZE), (size_t)(ksize * (long)CFL_SIZE) },
+				(size_t[3]){ (size_t)(osize * (bart_stride_t)CFL_SIZE), (size_t)(isize * (bart_stride_t)CFL_SIZE), (size_t)(ksize * (bart_stride_t)CFL_SIZE) },
 				CLOSURE(md_nary_opt_fun_t, nary_zconvcorr3D_I2C_CF));
 
 	debug_printf(DP_DEBUG3, "conv by %s \n", __func__);
@@ -913,10 +913,10 @@ bool zconvcorr_bwd_in_im2col_cf_cpu(int N,
 
 #ifdef USE_GPU
 bool zconvcorr_fwd_im2col_cf_gpu(int N,
-				long odims[N], long ostrs[N], complex float* out,
-				long idims[N], long istrs[N], const complex float* in,
-				long kdims[N], long kstrs[N], const complex float* krn,
-				unsigned long flags, const long dilation[N], const long strides[N], bool conv)
+				bart_dim_t odims[N], bart_stride_t ostrs[N], complex float* out,
+				bart_dim_t idims[N], bart_stride_t istrs[N], const complex float* in,
+				bart_dim_t kdims[N], bart_stride_t kstrs[N], const complex float* krn,
+				bart_flags_t flags, const bart_dim_t dilation[N], const bart_stride_t strides[N], bool conv)
 {
 	if (!cuda_ondevice(out))
 		return false;
@@ -935,30 +935,30 @@ bool zconvcorr_fwd_im2col_cf_gpu(int N,
 	// image	(1 | nr_in_channel, kx, ky, kz | outx, outy, outz | ... )
 	// output 	(nr_filter | 1, 1, 1, 1 | outx, outy, outz)
 
-	long osize = odims[0] * odims[1] * odims[2] * odims[3] * odims[4];
-	long ksize = kdims[0] * kdims[1] * kdims[2] * kdims[3] * kdims[4];
-	long isize = idims[0] * idims[1] * idims[2] * idims[3] * idims[4];
+	bart_dim_t osize = odims[0] * odims[1] * odims[2] * odims[3] * odims[4];
+	bart_dim_t ksize = kdims[0] * kdims[1] * kdims[2] * kdims[3] * kdims[4];
+	bart_dim_t isize = idims[0] * idims[1] * idims[2] * idims[3] * idims[4];
 
-	long M1 = kdims[0];
-	long K1 = kdims[1] * kdims[2] * kdims[3] * kdims[4];
-	long N1 = odims[2] * odims[3] * odims[4];
+	bart_dim_t M1 = kdims[0];
+	bart_dim_t K1 = kdims[1] * kdims[2] * kdims[3] * kdims[4];
+	bart_dim_t N1 = odims[2] * odims[3] * odims[4];
 
-	long imat_size = K1 * N1;
+	bart_dim_t imat_size = K1 * N1;
 
-	long mdims[N - 5];
+	bart_dim_t mdims[N - 5];
 
 	md_tenmul_dims(N - 5, mdims, odims + 5, idims + 5, kdims + 5);
 
 	//clang
-	const long* odimsp = odims;
-	const long* idimsp = idims;
-	const long* kdimsp = kdims;
-	const long* dilationp = dilation;
-	const long* stridesp = strides;
+	const bart_dim_t* odimsp = odims;
+	const bart_dim_t* idimsp = idims;
+	const bart_dim_t* kdimsp = kdims;
+	const bart_dim_t* dilationp = dilation;
+	const bart_dim_t* stridesp = strides;
 
 	NESTED(void, nary_zconvcorr_im2col, (struct nary_opt_data_s* data, void* ptr[]))
 	{
-		for (long i = 0; i < data->size; i++){
+		for (bart_dim_t i = 0; i < data->size; i++){
 
 			complex float* imat_tmp = md_alloc_gpu(1, &imat_size, CFL_SIZE);
 			cuda_im2col(imat_tmp, (const complex float*)ptr[1] + i * isize, odimsp, idimsp, kdimsp, dilationp, stridesp);
@@ -973,7 +973,7 @@ bool zconvcorr_fwd_im2col_cf_gpu(int N,
 	};
 
 	optimized_threeop_oii(N - 5, mdims, ostrs + 5, (void*)out, istrs + 5, (void*)in, kstrs + 5, (void*)krn,
-				(size_t[3]){ (size_t)((long)CFL_SIZE * osize), (size_t)((long)CFL_SIZE * isize), (size_t)((long)CFL_SIZE * ksize) },
+				(size_t[3]){ (size_t)((bart_stride_t)CFL_SIZE * osize), (size_t)((bart_stride_t)CFL_SIZE * isize), (size_t)((bart_stride_t)CFL_SIZE * ksize) },
 				nary_zconvcorr_im2col);
 
 	debug_printf(DP_DEBUG3, "conv by %s \n", __func__);
@@ -985,10 +985,10 @@ bool zconvcorr_fwd_im2col_cf_gpu(int N,
 
 #ifdef USE_GPU
 bool zconvcorr_bwd_krn_im2col_cf_gpu(int N,
-				long odims[N], long ostrs[N], const complex float* out,
-				long idims[N], long istrs[N], const complex float* in,
-				long kdims[N], long kstrs[N], complex float* krn,
-				unsigned long flags, const long dilation[N], const long strides[N], bool conv)
+				bart_dim_t odims[N], bart_stride_t ostrs[N], const complex float* out,
+				bart_dim_t idims[N], bart_stride_t istrs[N], const complex float* in,
+				bart_dim_t kdims[N], bart_stride_t kstrs[N], complex float* krn,
+				bart_flags_t flags, const bart_dim_t dilation[N], const bart_stride_t strides[N], bool conv)
 {
 	if (!cuda_ondevice(out))
 		return false;
@@ -1009,30 +1009,30 @@ bool zconvcorr_bwd_krn_im2col_cf_gpu(int N,
 	// image	(1 | nr_in_channel, kx, ky, kz | outx, outy, outz | ... )
 	// output 	(nr_filter | 1, 1, 1, 1 | outx, outy, outz)
 
-	long osize = odims[0] * odims[1] * odims[2] * odims[3] * odims[4];
-	long ksize = kdims[0] * kdims[1] * kdims[2] * kdims[3] * kdims[4];
-	long isize = idims[0] * idims[1] * idims[2] * idims[3] * idims[4];
+	bart_dim_t osize = odims[0] * odims[1] * odims[2] * odims[3] * odims[4];
+	bart_dim_t ksize = kdims[0] * kdims[1] * kdims[2] * kdims[3] * kdims[4];
+	bart_dim_t isize = idims[0] * idims[1] * idims[2] * idims[3] * idims[4];
 
-	long M1 = kdims[0];
-	long K1 = kdims[1] * kdims[2] * kdims[3] * kdims[4];
-	long N1 = odims[2] * odims[3] * odims[4];
+	bart_dim_t M1 = kdims[0];
+	bart_dim_t K1 = kdims[1] * kdims[2] * kdims[3] * kdims[4];
+	bart_dim_t N1 = odims[2] * odims[3] * odims[4];
 
-	long imat_size = K1 * N1;
+	bart_dim_t imat_size = K1 * N1;
 
-	long mdims[N - 5];
+	bart_dim_t mdims[N - 5];
 
 	md_tenmul_dims(N - 5, mdims, odims + 5, idims + 5, kdims + 5);
 
 		//clang
-	const long* odimsp = odims;
-	const long* idimsp = idims;
-	const long* kdimsp = kdims;
-	const long* dilationp = dilation;
-	const long* stridesp = strides;
+	const bart_dim_t* odimsp = odims;
+	const bart_dim_t* idimsp = idims;
+	const bart_dim_t* kdimsp = kdims;
+	const bart_dim_t* dilationp = dilation;
+	const bart_dim_t* stridesp = strides;
 
 	NESTED(void, nary_zconvcorr_im2col, (struct nary_opt_data_s* data, void* ptr[]))
 	{
-		for (long i = 0; i < data->size; i++){
+		for (bart_dim_t i = 0; i < data->size; i++){
 
 			complex float* imat_tmp = md_alloc_gpu(1, &imat_size, size);
 			cuda_im2col(imat_tmp, (const complex float*)ptr[1] + i * isize, odimsp, idimsp, kdimsp, dilationp, stridesp);
@@ -1047,7 +1047,7 @@ bool zconvcorr_bwd_krn_im2col_cf_gpu(int N,
 	};
 
 	optimized_threeop_oii(N - 5, mdims, kstrs + 5, (void*)krn, istrs + 5, (void*)in, ostrs + 5, (void*)out,
-				(size_t[3]){ (size_t)((long)CFL_SIZE * ksize), (size_t)((long)CFL_SIZE * isize), (size_t)((long)CFL_SIZE * osize) },
+				(size_t[3]){ (size_t)((bart_stride_t)CFL_SIZE * ksize), (size_t)((bart_stride_t)CFL_SIZE * isize), (size_t)((bart_stride_t)CFL_SIZE * osize) },
 				nary_zconvcorr_im2col);
 
 	debug_printf(DP_DEBUG3, "conv by %s \n", __func__);
@@ -1059,10 +1059,10 @@ bool zconvcorr_bwd_krn_im2col_cf_gpu(int N,
 
 #ifdef USE_GPU
 bool zconvcorr_bwd_in_im2col_cf_gpu(int N,
-				long odims[N], long ostrs[N], const complex float* out,
-				long idims[N], long istrs[N], complex float* in,
-				long kdims[N], long kstrs[N], const complex float* krn,
-				unsigned long flags, const long dilation[N], const long strides[N], bool conv)
+				bart_dim_t odims[N], bart_stride_t ostrs[N], const complex float* out,
+				bart_dim_t idims[N], bart_stride_t istrs[N], complex float* in,
+				bart_dim_t kdims[N], bart_stride_t kstrs[N], const complex float* krn,
+				bart_flags_t flags, const bart_dim_t dilation[N], const bart_stride_t strides[N], bool conv)
 {
 	if (!cuda_ondevice(out))
 		return false;
@@ -1089,30 +1089,30 @@ bool zconvcorr_bwd_in_im2col_cf_gpu(int N,
 	// image	(1 | nr_in_channel, kx, ky, kz | outx, outy, outz | ... )
 	// output 	(nr_filter | 1, 1, 1, 1 | outx, outy, outz)
 
-	long osize = odims[0] * odims[1] * odims[2] * odims[3] * odims[4];
-	long ksize = kdims[0] * kdims[1] * kdims[2] * kdims[3] * kdims[4];
-	long isize = idims[0] * idims[1] * idims[2] * idims[3] * idims[4];
+	bart_dim_t osize = odims[0] * odims[1] * odims[2] * odims[3] * odims[4];
+	bart_dim_t ksize = kdims[0] * kdims[1] * kdims[2] * kdims[3] * kdims[4];
+	bart_dim_t isize = idims[0] * idims[1] * idims[2] * idims[3] * idims[4];
 
-	long M1 = kdims[0];
-	long K1 = kdims[1] * kdims[2] * kdims[3] * kdims[4];
-	long N1 = odims[2] * odims[3] * odims[4];
+	bart_dim_t M1 = kdims[0];
+	bart_dim_t K1 = kdims[1] * kdims[2] * kdims[3] * kdims[4];
+	bart_dim_t N1 = odims[2] * odims[3] * odims[4];
 
-	long imat_size = K1 * N1;
+	bart_dim_t imat_size = K1 * N1;
 
-	long mdims[N - 5];
+	bart_dim_t mdims[N - 5];
 
 	md_tenmul_dims(N - 5, mdims, odims + 5, idims + 5, kdims + 5);
 
 	//clang
-	const long* odimsp = odims;
-	const long* idimsp = idims;
-	const long* kdimsp = kdims;
-	const long* dilationp = dilation;
-	const long* stridesp = strides;
+	const bart_dim_t* odimsp = odims;
+	const bart_dim_t* idimsp = idims;
+	const bart_dim_t* kdimsp = kdims;
+	const bart_dim_t* dilationp = dilation;
+	const bart_dim_t* stridesp = strides;
 
 	NESTED(void, nary_zconvcorr_im2col, (struct nary_opt_data_s* data, void* ptr[]))
 	{
-		for (long i = 0; i < data->size; i++){
+		for (bart_dim_t i = 0; i < data->size; i++){
 
 			complex float* imat_tmp = md_alloc_gpu(1, &imat_size, CFL_SIZE);
 			md_clear(1, &imat_size, imat_tmp, CFL_SIZE);
@@ -1131,7 +1131,7 @@ bool zconvcorr_bwd_in_im2col_cf_gpu(int N,
 	};
 
 	optimized_threeop_oii(N - 5, mdims, istrs + 5, (void*)in, ostrs + 5, (void*)out, kstrs + 5, (void*)krn,
-				(size_t[3]){ (size_t)((long)CFL_SIZE * isize), (size_t)((long)CFL_SIZE * osize), (size_t)((long)CFL_SIZE * ksize) },
+				(size_t[3]){ (size_t)((bart_stride_t)CFL_SIZE * isize), (size_t)((bart_stride_t)CFL_SIZE * osize), (size_t)((bart_stride_t)CFL_SIZE * ksize) },
 				nary_zconvcorr_im2col);
 
 	debug_printf(DP_DEBUG3, "conv by %s \n", __func__);
@@ -1141,16 +1141,16 @@ bool zconvcorr_bwd_in_im2col_cf_gpu(int N,
 #endif
 
 static void test_zconvcorr_fwd_ref(	int N,
-					long odims[N], long ostrs[N], complex float* optr,
-					long idims[N], long istrs[N], const complex float* iptr,
-					long kdims[N], long kstrs[N], const complex float* kptr,
-					unsigned long flags, const long dilation[N], const long strides[N], bool conv
+					bart_dim_t odims[N], bart_stride_t ostrs[N], complex float* optr,
+					bart_dim_t idims[N], bart_stride_t istrs[N], const complex float* iptr,
+					bart_dim_t kdims[N], bart_stride_t kstrs[N], const complex float* kptr,
+					bart_flags_t flags, const bart_dim_t dilation[N], const bart_stride_t strides[N], bool conv
 				)
 {
-	long tdims[2 * N];
-	long tostrs[2 * N];
-	long tistrs[2 * N];
-	long tkstrs[2 * N];
+	bart_dim_t tdims[2 * N];
+	bart_stride_t tostrs[2 * N];
+	bart_stride_t tistrs[2 * N];
+	bart_stride_t tkstrs[2 * N];
 
 	int shift = calc_convcorr_geom_strs_dil(N, flags, tdims, tostrs, tkstrs, tistrs,
 						odims, ostrs,
@@ -1164,16 +1164,16 @@ static void test_zconvcorr_fwd_ref(	int N,
 }
 
 static void test_zconvcorr_bwd_krn_ref(	int N,
-					long odims[N], long ostrs[N], const complex float* optr,
-					long idims[N], long istrs[N], const complex float* iptr,
-					long kdims[N], long kstrs[N], complex float* kptr,
-					unsigned long flags, const long dilation[N], const long strides[N], bool conv
+					bart_dim_t odims[N], bart_stride_t ostrs[N], const complex float* optr,
+					bart_dim_t idims[N], bart_stride_t istrs[N], const complex float* iptr,
+					bart_dim_t kdims[N], bart_stride_t kstrs[N], complex float* kptr,
+					bart_flags_t flags, const bart_dim_t dilation[N], const bart_stride_t strides[N], bool conv
 				)
 {
-	long tdims[2 * N];
-	long tostrs[2 * N];
-	long tistrs[2 * N];
-	long tkstrs[2 * N];
+	bart_dim_t tdims[2 * N];
+	bart_stride_t tostrs[2 * N];
+	bart_stride_t tistrs[2 * N];
+	bart_stride_t tkstrs[2 * N];
 
 	int shift = calc_convcorr_geom_strs_dil(N, flags, tdims, tostrs, tkstrs, tistrs,
 						odims, ostrs,
@@ -1187,16 +1187,16 @@ static void test_zconvcorr_bwd_krn_ref(	int N,
 }
 
 static void test_zconvcorr_bwd_in_ref(	int N,
-					long odims[N], long ostrs[N], const complex float* optr,
-					long idims[N], long istrs[N], complex float* iptr,
-					long kdims[N], long kstrs[N], const complex float* kptr,
-					unsigned long flags, const long dilation[N], const long strides[N], bool conv
+					bart_dim_t odims[N], bart_stride_t ostrs[N], const complex float* optr,
+					bart_dim_t idims[N], bart_stride_t istrs[N], complex float* iptr,
+					bart_dim_t kdims[N], bart_stride_t kstrs[N], const complex float* kptr,
+					bart_flags_t flags, const bart_dim_t dilation[N], const bart_stride_t strides[N], bool conv
 				)
 {
-	long tdims[2 * N];
-	long tostrs[2 * N];
-	long tistrs[2 * N];
-	long tkstrs[2 * N];
+	bart_dim_t tdims[2 * N];
+	bart_stride_t tostrs[2 * N];
+	bart_stride_t tistrs[2 * N];
+	bart_stride_t tkstrs[2 * N];
 
 	int shift = calc_convcorr_geom_strs_dil(N, flags, tdims, tostrs, tkstrs, tistrs,
 						odims, ostrs,
@@ -1211,11 +1211,11 @@ static void test_zconvcorr_bwd_in_ref(	int N,
 
 
 bool test_zconvcorr_fwd(	int N,
-				long odims[N], long ostrs[N],
-				long idims[N], long istrs[N],
-				long kdims[N], long kstrs[N],
-				unsigned long flags, const long dilation[N], const long strides[N], bool conv,
-				float max_nrmse, bool gpu, long min_no_algos)
+				bart_dim_t odims[N], bart_stride_t ostrs[N],
+				bart_dim_t idims[N], bart_stride_t istrs[N],
+				bart_dim_t kdims[N], bart_stride_t kstrs[N],
+				bart_flags_t flags, const bart_dim_t dilation[N], const bart_stride_t strides[N], bool conv,
+				float max_nrmse, bool gpu, bart_dim_t min_no_algos)
 {
 	bool result = true;
 
@@ -1241,7 +1241,7 @@ bool test_zconvcorr_fwd(	int N,
 
 	test_zconvcorr_fwd_ref(N, odims, ostrs, optr_ref, idims, istrs, iptr, kdims, kstrs, kptr, flags, dilation, strides, conv);
 
-	long counter = 0;
+	bart_dim_t counter = 0;
 
 #ifdef USE_GPU
 	int nr_algos = gpu ? ARRAY_SIZE(algos_fwd_gpu) : ARRAY_SIZE(algos_fwd_cpu);
@@ -1283,11 +1283,11 @@ bool test_zconvcorr_fwd(	int N,
 }
 
 bool test_zconvcorr_bwd_in(	int N,
-				long odims[N], long ostrs[N],
-				long idims[N], long istrs[N],
-				long kdims[N], long kstrs[N],
-				unsigned long flags, const long dilation[N], const long strides[N], bool conv,
-				float max_nrmse, bool gpu, long min_no_algos)
+				bart_dim_t odims[N], bart_stride_t ostrs[N],
+				bart_dim_t idims[N], bart_stride_t istrs[N],
+				bart_dim_t kdims[N], bart_stride_t kstrs[N],
+				bart_flags_t flags, const bart_dim_t dilation[N], const bart_stride_t strides[N], bool conv,
+				float max_nrmse, bool gpu, bart_dim_t min_no_algos)
 {
 	bool result = true;
 
@@ -1313,7 +1313,7 @@ bool test_zconvcorr_bwd_in(	int N,
 
 	test_zconvcorr_bwd_in_ref(N, odims, ostrs, optr, idims, istrs, iptr_ref, kdims, kstrs, kptr, flags, dilation, strides, conv);
 
-	long counter = 0;
+	bart_dim_t counter = 0;
 
 #ifdef USE_GPU
 	int nr_algos = gpu ? ARRAY_SIZE(algos_bwd_in_gpu) : ARRAY_SIZE(algos_bwd_in_cpu);
@@ -1354,11 +1354,11 @@ bool test_zconvcorr_bwd_in(	int N,
 }
 
 bool test_zconvcorr_bwd_krn(	int N,
-				long odims[N], long ostrs[N],
-				long idims[N], long istrs[N],
-				long kdims[N], long kstrs[N],
-				unsigned long flags, const long dilation[N], const long strides[N], bool conv,
-				float max_nrmse, bool gpu, long min_no_algos)
+				bart_dim_t odims[N], bart_stride_t ostrs[N],
+				bart_dim_t idims[N], bart_stride_t istrs[N],
+				bart_dim_t kdims[N], bart_stride_t kstrs[N],
+				bart_flags_t flags, const bart_dim_t dilation[N], const bart_stride_t strides[N], bool conv,
+				float max_nrmse, bool gpu, bart_dim_t min_no_algos)
 {
 	bool result = true;
 
@@ -1384,7 +1384,7 @@ bool test_zconvcorr_bwd_krn(	int N,
 
 	test_zconvcorr_bwd_krn_ref(N, odims, ostrs, optr, idims, istrs, iptr, kdims, kstrs, kptr_ref, flags, dilation, strides, conv);
 
-	long counter = 0;
+	bart_dim_t counter = 0;
 
 #ifdef USE_GPU
 	int nr_algos = gpu ? ARRAY_SIZE(algos_bwd_krn_gpu) : ARRAY_SIZE(algos_bwd_krn_cpu);

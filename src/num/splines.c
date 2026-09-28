@@ -11,9 +11,9 @@
 #include "splines.h"
 
 
-static long binomial(int n, int k)
+static bart_dim_t binomial(int n, int k)
 {
-	long result = 1;
+	bart_dim_t result = 1;
 
 	for (int i = 1; i <= k; i++)
 		result *= (n + 1 - i);

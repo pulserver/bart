@@ -71,9 +71,9 @@ extern void cholesky(int N, complex float A[N][N]);
 extern void cholesky_solve(int N, complex float x[N], const complex float L[N][N], const complex float b[N]);
 extern void cholesky_double(int N, complex double A[N][N]);
 extern void cholesky_solve_double(int N, complex double x[N], const complex double L[N][N], const complex double b[N]);
-extern complex float vec_mean(long D, const complex float src[D]);
-extern void vec_axpy(long N, complex float x[N], complex float alpha, const complex float y[N]);
-extern void vec_sadd(long D, complex float alpha, complex float dst[D], const complex float src[D]);
+extern complex float vec_mean(bart_dim_t D, const complex float src[D]);
+extern void vec_axpy(bart_dim_t N, complex float x[N], complex float alpha, const complex float y[N]);
+extern void vec_sadd(bart_dim_t D, complex float alpha, complex float dst[D], const complex float src[D]);
 extern void thomas_algorithm(int N, complex float f[N], const complex float A[N][3], const complex float d[N]);
 
 extern void mat_band_reorder(int A, int B, double mat[A][A], double band[B][A], bool upper);

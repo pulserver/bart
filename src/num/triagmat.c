@@ -20,7 +20,7 @@
 
 // lapack convention packed storage converted to 0 based indexing
 // (netlib.org/lapack/lug/node123.html)
-long upper_triag_idx(long i, long j)
+bart_dim_t upper_triag_idx(bart_dim_t i, bart_dim_t j)
 {
 	if (i > j)
 		return -1 * upper_triag_idx(j, i);
@@ -30,22 +30,22 @@ long upper_triag_idx(long i, long j)
 
 // Integer square root
 // (using linear search, descending)
-static long isqrt(long y)
+static bart_dim_t isqrt(bart_dim_t y)
 {
 	assert(0 <= y);
 
-	long ret = lround(sqrt(y));
+	bart_dim_t ret = lround(sqrt(y));
 	assert(y == ret * ret);
 
 	return ret;
 }
 
 
-complex float* hermite_to_uppertriag(int dim1, int dim2, int dimt, int N, long out_dims[N], const long* dims, const complex float* src)
+complex float* hermite_to_uppertriag(int dim1, int dim2, int dimt, int N, bart_dim_t out_dims[N], const bart_dim_t* dims, const complex float* src)
 {
 	assert(dims[dim1] == dims[dim2]);
 
-	long dim = (dim1 == dim2) ? isqrt(dims[dim1]) : dims[dim1];
+	bart_dim_t dim = (dim1 == dim2) ? isqrt(dims[dim1]) : dims[dim1];
 
 	md_copy_dims(N, out_dims, dims);
 	out_dims[dim1] = 1;
@@ -57,11 +57,11 @@ complex float* hermite_to_uppertriag(int dim1, int dim2, int dimt, int N, long o
 
 	complex float* out = md_alloc_sameplace(N, out_dims, CFL_SIZE, src);
 
-	long slc_dims[N];
+	bart_dim_t slc_dims[N];
 	md_select_dims(N, ~MD_BIT(dimt), slc_dims, out_dims);
 
-	long ipos[N];
-	long opos[N];
+	bart_dim_t ipos[N];
+	bart_dim_t opos[N];
 
 	md_set_dims(N, ipos, 0);
 	md_set_dims(N, opos, 0);
@@ -92,12 +92,12 @@ complex float* hermite_to_uppertriag(int dim1, int dim2, int dimt, int N, long o
 	return out;
 }
 
-complex float* uppertriag_to_hermite(int dim1, int dim2, int dimt, int N, long out_dims[N], const long* dims, const complex float* src)
+complex float* uppertriag_to_hermite(int dim1, int dim2, int dimt, int N, bart_dim_t out_dims[N], const bart_dim_t* dims, const complex float* src)
 {
-	long ldim = 1;
-	long udim = dims[dimt];
+	bart_dim_t ldim = 1;
+	bart_dim_t udim = dims[dimt];
 
-	long dim = 1;
+	bart_dim_t dim = 1;
 
 	while (ldim < udim) {
 
@@ -123,16 +123,16 @@ complex float* uppertriag_to_hermite(int dim1, int dim2, int dimt, int N, long o
 
 	complex float* out = md_alloc_sameplace(N, out_dims, CFL_SIZE, src);
 
-	long slc_dims[N];
+	bart_dim_t slc_dims[N];
 	md_select_dims(N, ~MD_BIT(dimt), slc_dims, dims);
 
-	long ipos[N];
-	long opos[N];
+	bart_dim_t ipos[N];
+	bart_dim_t opos[N];
 
 	md_set_dims(N, ipos, 0);
 	md_set_dims(N, opos, 0);
 
-	long ostrs[N];
+	bart_stride_t ostrs[N];
 	md_calc_strides(N, ostrs, out_dims, CFL_SIZE);
 
 	for (int i = 0; i < dim; i++) {
@@ -162,11 +162,11 @@ complex float* uppertriag_to_hermite(int dim1, int dim2, int dimt, int N, long o
 	return out;
 }
 
-float* symmetric_to_uppertriag(int dim1, int dim2, int dimt, int N, long out_dims[N], const long* dims, const float* src)
+float* symmetric_to_uppertriag(int dim1, int dim2, int dimt, int N, bart_dim_t out_dims[N], const bart_dim_t* dims, const float* src)
 {
 	assert(dims[dim1] == dims[dim2]);
 
-	long dim = (dim1 == dim2) ? isqrt(dims[dim1]) : dims[dim1];
+	bart_dim_t dim = (dim1 == dim2) ? isqrt(dims[dim1]) : dims[dim1];
 
 	md_copy_dims(N, out_dims, dims);
 	out_dims[dim1] = 1;
@@ -178,11 +178,11 @@ float* symmetric_to_uppertriag(int dim1, int dim2, int dimt, int N, long out_dim
 
 	float* out = md_alloc_sameplace(N, out_dims, FL_SIZE, src);
 
-	long slc_dims[N];
+	bart_dim_t slc_dims[N];
 	md_select_dims(N, ~MD_BIT(dimt), slc_dims, out_dims);
 
-	long ipos[N];
-	long opos[N];
+	bart_dim_t ipos[N];
+	bart_dim_t opos[N];
 
 	md_set_dims(N, ipos, 0);
 	md_set_dims(N, opos, 0);
@@ -213,12 +213,12 @@ float* symmetric_to_uppertriag(int dim1, int dim2, int dimt, int N, long out_dim
 	return out;
 }
 
-float* uppertriag_to_symmetric(int dim1, int dim2, int dimt, int N, long out_dims[N], const long* dims, const float* src)
+float* uppertriag_to_symmetric(int dim1, int dim2, int dimt, int N, bart_dim_t out_dims[N], const bart_dim_t* dims, const float* src)
 {
-	long ldim = 1;
-	long udim = dims[dimt];
+	bart_dim_t ldim = 1;
+	bart_dim_t udim = dims[dimt];
 
-	long dim = 1;
+	bart_dim_t dim = 1;
 
 	while (ldim < udim) {
 
@@ -244,16 +244,16 @@ float* uppertriag_to_symmetric(int dim1, int dim2, int dimt, int N, long out_dim
 
 	float* out = md_alloc_sameplace(N, out_dims, FL_SIZE, src);
 
-	long slc_dims[N];
+	bart_dim_t slc_dims[N];
 	md_select_dims(N, ~MD_BIT(dimt), slc_dims, dims);
 
-	long ipos[N];
-	long opos[N];
+	bart_dim_t ipos[N];
+	bart_dim_t opos[N];
 
 	md_set_dims(N, ipos, 0);
 	md_set_dims(N, opos, 0);
 
-	long ostrs[N];
+	bart_stride_t ostrs[N];
 	md_calc_strides(N, ostrs, out_dims, FL_SIZE);
 
 	for (int i = 0; i < dim; i++) {
@@ -279,28 +279,28 @@ float* uppertriag_to_symmetric(int dim1, int dim2, int dimt, int N, long out_dim
 }
 
 
-void md_ztenmul_upper_triag2(int dim1, int dim2, int N, const long dims[N], const long ostrs[N], complex float* dst, const long istrs[N], const complex float* src, const long /*mdims*/[N], const long mstrs[N], const complex float* mat)
+void md_ztenmul_upper_triag2(int dim1, int dim2, int N, const bart_dim_t dims[N], const bart_stride_t ostrs[N], complex float* dst, const bart_stride_t istrs[N], const complex float* src, const bart_dim_t /*mdims*/[N], const bart_stride_t mstrs[N], const complex float* mat)
 {
 	md_clear2(N, dims, ostrs, dst, CFL_SIZE);
 
-	long slc_dims[N];
+	bart_dim_t slc_dims[N];
 	md_select_dims(N, ~(MD_BIT(dim1) | MD_BIT(dim2)), slc_dims, dims);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
 	do {
 
-		long offset = labs(upper_triag_idx(pos[dim1], pos[dim2])) * MAX(mstrs[dim1], mstrs[dim2]) / (long)CFL_SIZE;
+		bart_stride_t offset = labs(upper_triag_idx(pos[dim1], pos[dim2])) * MAX(mstrs[dim1], mstrs[dim2]) / (bart_stride_t)CFL_SIZE;
 
 		(0 > upper_triag_idx(pos[dim1], pos[dim2]) ? md_zfmac2 : md_zfmacc2)(N, slc_dims, ostrs, &MD_ACCESS(N, ostrs, pos, dst), istrs, &MD_ACCESS(N, istrs, pos, src), mstrs, mat + offset);
 
 	} while (md_next(N, dims, MD_BIT(dim1) | MD_BIT(dim2), pos));
 }
 
-void md_ztenmul_upper_triag(int dim1, int dim2, int N, const long odims[N], complex float* dst, const long idims[N], const complex float* src, const long mdims[N], const complex float* mat)
+void md_ztenmul_upper_triag(int dim1, int dim2, int N, const bart_dim_t odims[N], complex float* dst, const bart_dim_t idims[N], const complex float* src, const bart_dim_t mdims[N], const complex float* mat)
 {
-	long msize = MAX(MAX(MAX(odims[dim1], odims[dim2]), idims[dim1]), idims[dim2]);
+	bart_dim_t msize = MAX(MAX(MAX(odims[dim1], odims[dim2]), idims[dim1]), idims[dim2]);
 
 	assert(1 == odims[dim1] || msize == odims[dim1]);
 	assert(1 == odims[dim2] || msize == odims[dim2]);
@@ -309,23 +309,23 @@ void md_ztenmul_upper_triag(int dim1, int dim2, int N, const long odims[N], comp
 	assert(mdims[dim1] * mdims[dim2] == msize * (msize + 1) / 2);
 	assert(1 == mdims[dim1] || 1 == mdims[dim2]);
 
-	long max_dims[N];
+	bart_dim_t max_dims[N];
 	md_select_dims(N, ~(MD_BIT(dim1) | MD_BIT(dim2)), max_dims, mdims);
 
-	assert(md_check_compat(N, ~0UL, odims, idims));
-	assert(md_check_compat(N, ~0UL, max_dims, odims));
-	assert(md_check_compat(N, ~0UL, max_dims, idims));
+	assert(md_check_compat(N, ~UINT64_C(0), odims, idims));
+	assert(md_check_compat(N, ~UINT64_C(0), max_dims, odims));
+	assert(md_check_compat(N, ~UINT64_C(0), max_dims, idims));
 
-	md_max_dims(N, ~0UL, max_dims, max_dims, odims);
-	md_max_dims(N, ~0UL, max_dims, max_dims, idims);
+	md_max_dims(N, ~UINT64_C(0), max_dims, max_dims, odims);
+	md_max_dims(N, ~UINT64_C(0), max_dims, max_dims, idims);
 
-	long ostrs[N];
+	bart_stride_t ostrs[N];
 	md_calc_strides(N, ostrs, odims, CFL_SIZE);
 
-	long istrs[N];
+	bart_stride_t istrs[N];
 	md_calc_strides(N, istrs, idims, CFL_SIZE);
 
-	long mstrs[N];
+	bart_stride_t mstrs[N];
 	md_calc_strides(N, mstrs, mdims, CFL_SIZE);
 
 	md_ztenmul_upper_triag2(dim1, dim2, N, max_dims, ostrs, dst, istrs, src, mdims, mstrs, mat);
@@ -342,14 +342,14 @@ struct vptr_md_fmac_upper_triag_s {
 
 DEF_TYPEID(vptr_md_fmac_upper_triag_s);
 
-static void vptr_md_fmac_upper_triag2(vptr_fun_data_t* _data, int N, int D, const long* dims[N], const long* strs[N], void* args[N])
+static void vptr_md_fmac_upper_triag2(vptr_fun_data_t* _data, int N, int D, const bart_dim_t* dims[N], const bart_stride_t* strs[N], void* args[N])
 {
 	int dim1 = CAST_DOWN(vptr_md_fmac_upper_triag_s, _data)->dim1;
 	int dim2 = CAST_DOWN(vptr_md_fmac_upper_triag_s, _data)->dim2;
 
 #ifdef USE_GPU
 	if (   (D > 5) && (5 == dim1) && (6 == dim2)
-	    && (2 == dims[0][D - 1]) && ((long)FL_SIZE == strs[0][D - 1]) && ((long)FL_SIZE == strs[1][D - 1]) && (0 == strs[2][D - 1])
+	    && (2 == dims[0][D - 1]) && ((bart_stride_t)FL_SIZE == strs[0][D - 1]) && ((bart_stride_t)FL_SIZE == strs[1][D - 1]) && (0 == strs[2][D - 1])
 	    && (1 == dims[0][4])
 	    && (4 <= md_calc_blockdim(D, dims[0], strs[0], CFL_SIZE))
 	    && (4 <= md_calc_blockdim(D, dims[1], strs[1], CFL_SIZE))
@@ -359,14 +359,14 @@ static void vptr_md_fmac_upper_triag2(vptr_fun_data_t* _data, int N, int D, cons
 	    && (md_nontriv_strides(2, strs[0] + 5) != md_nontriv_strides(2, strs[1] + 5))
 	    && cuda_ondevice(args[0]) && !is_vptr(args[0])) {
 
-		long pos[D];
+		bart_dim_t pos[D];
 		md_set_dims(D, pos, 0);
 
 		do {
 			cuda_zrfmac_upper_triagmat(md_calc_size(3, dims[0]), dims[0][3], MAX(dims[0][5], dims[0][6]),
-							MAX(strs[0][5], strs[0][6]) / (long)FL_SIZE,
-							MAX(strs[1][5], strs[1][6]) / (long)FL_SIZE,
-							MAX(strs[2][5], strs[2][6]) / (long)FL_SIZE,
+							MAX(strs[0][5], strs[0][6]) / (bart_stride_t)FL_SIZE,
+							MAX(strs[1][5], strs[1][6]) / (bart_stride_t)FL_SIZE,
+							MAX(strs[2][5], strs[2][6]) / (bart_stride_t)FL_SIZE,
 							&MD_ACCESS(D, strs[0], pos, (float*)args[0]),
 							&MD_ACCESS(D, strs[1], pos, (float*)args[1]),
 							&MD_ACCESS(D, strs[2], pos, (float*)args[2]));
@@ -378,14 +378,14 @@ static void vptr_md_fmac_upper_triag2(vptr_fun_data_t* _data, int N, int D, cons
 #endif
 
 
-	long slc_dims[D];
+	bart_dim_t slc_dims[D];
 	md_select_dims(D, ~(MD_BIT(dim1) | MD_BIT(dim2)), slc_dims, dims[0]);
 
-	long pos[D];
+	bart_dim_t pos[D];
 	md_set_dims(D, pos, 0);
 
 	do {
-		long offset = labs(upper_triag_idx(pos[dim1], pos[dim2])) * MAX(strs[2][dim1], strs[2][dim2]) / (long)FL_SIZE;
+		bart_stride_t offset = labs(upper_triag_idx(pos[dim1], pos[dim2])) * MAX(strs[2][dim1], strs[2][dim2]) / (bart_stride_t)FL_SIZE;
 
 		md_fmac2(D, slc_dims, strs[0], &MD_ACCESS(D, strs[0], pos, (float*)args[0]), strs[1], &MD_ACCESS(D, strs[1], pos, (float*)args[1]), strs[2], (float*)args[2] + offset);
 
@@ -393,15 +393,15 @@ static void vptr_md_fmac_upper_triag2(vptr_fun_data_t* _data, int N, int D, cons
 }
 
 
-void md_tenmul_upper_triag2(int dim1, int dim2, int N, const long dims[N], const long ostrs[N], float* dst, const long istrs[N], const float* src, const long mdims[N], const long mstrs[N], const float* mat)
+void md_tenmul_upper_triag2(int dim1, int dim2, int N, const bart_dim_t dims[N], const bart_stride_t ostrs[N], float* dst, const bart_stride_t istrs[N], const float* src, const bart_dim_t mdims[N], const bart_stride_t mstrs[N], const float* mat)
 {
 	md_clear2(N, dims, ostrs, dst, FL_SIZE);
 
-	long ndims[N];
-	long nmdims[N];
-	long nostrs[N];
-	long nistrs[N];
-	long nmstrs[N];
+	bart_dim_t ndims[N];
+	bart_dim_t nmdims[N];
+	bart_stride_t nostrs[N];
+	bart_stride_t nistrs[N];
+	bart_stride_t nmstrs[N];
 
 	for (int i = 0; i < N; i++) {
 
@@ -421,12 +421,12 @@ void md_tenmul_upper_triag2(int dim1, int dim2, int N, const long dims[N], const
 	_d->dim1 = dim1;
 	_d->dim2 = dim2;
 
-	exec_vptr_fun(vptr_md_fmac_upper_triag2, CAST_UP(PTR_PASS(_d)), 3, N, ~(MD_BIT(dim1) | MD_BIT(dim2)), MD_BIT(0), MD_BIT(0) | MD_BIT(1) | MD_BIT(2), (const long*[3]) { ndims, ndims, nmdims }, (const long*[3]) { nostrs, nistrs, nmstrs }, (float*[3]) { dst, (void*) src, (void*)mat });
+	exec_vptr_fun(vptr_md_fmac_upper_triag2, CAST_UP(PTR_PASS(_d)), 3, N, ~(MD_BIT(dim1) | MD_BIT(dim2)), MD_BIT(0), MD_BIT(0) | MD_BIT(1) | MD_BIT(2), (const bart_dim_t*[3]) { ndims, ndims, nmdims }, (const bart_dim_t*[3]) { nostrs, nistrs, nmstrs }, (float*[3]) { dst, (void*) src, (void*)mat });
 }
 
-void md_tenmul_upper_triag(int dim1, int dim2, int N, const long odims[N], float* dst, const long idims[N], const float* src, const long mdims[N], const float* mat)
+void md_tenmul_upper_triag(int dim1, int dim2, int N, const bart_dim_t odims[N], float* dst, const bart_dim_t idims[N], const float* src, const bart_dim_t mdims[N], const float* mat)
 {
-	long msize = MAX(MAX(MAX(odims[dim1], odims[dim2]), idims[dim1]), idims[dim2]);
+	bart_dim_t msize = MAX(MAX(MAX(odims[dim1], odims[dim2]), idims[dim1]), idims[dim2]);
 
 	assert(1 == odims[dim1] || msize == odims[dim1]);
 	assert(1 == odims[dim2] || msize == odims[dim2]);
@@ -435,23 +435,23 @@ void md_tenmul_upper_triag(int dim1, int dim2, int N, const long odims[N], float
 	assert(mdims[dim1] * mdims[dim2] == msize * (msize + 1) / 2);
 	assert(1 == mdims[dim1] || 1 == mdims[dim2]);
 
-	long max_dims[N];
+	bart_dim_t max_dims[N];
 	md_select_dims(N, ~(MD_BIT(dim1) | MD_BIT(dim2)), max_dims, mdims);
 
-	assert(md_check_compat(N, ~0UL, odims, idims));
-	assert(md_check_compat(N, ~0UL, max_dims, odims));
-	assert(md_check_compat(N, ~0UL, max_dims, idims));
+	assert(md_check_compat(N, ~UINT64_C(0), odims, idims));
+	assert(md_check_compat(N, ~UINT64_C(0), max_dims, odims));
+	assert(md_check_compat(N, ~UINT64_C(0), max_dims, idims));
 
-	md_max_dims(N, ~0UL, max_dims, max_dims, odims);
-	md_max_dims(N, ~0UL, max_dims, max_dims, idims);
+	md_max_dims(N, ~UINT64_C(0), max_dims, max_dims, odims);
+	md_max_dims(N, ~UINT64_C(0), max_dims, max_dims, idims);
 
-	long ostrs[N];
+	bart_stride_t ostrs[N];
 	md_calc_strides(N, ostrs, odims, FL_SIZE);
 
-	long istrs[N];
+	bart_stride_t istrs[N];
 	md_calc_strides(N, istrs, idims, FL_SIZE);
 
-	long mstrs[N];
+	bart_stride_t mstrs[N];
 	md_calc_strides(N, mstrs, mdims, FL_SIZE);
 
 	md_tenmul_upper_triag2(dim1, dim2, N, max_dims, ostrs, dst, istrs, src, mdims, mstrs, mat);
