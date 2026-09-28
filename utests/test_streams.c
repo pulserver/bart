@@ -9,6 +9,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#endif
+
 #include "misc/list.h"
 
 #include "misc/stream.h"
@@ -21,6 +26,16 @@
 
 // FIXME: for some reason we want to abort
 #define UTEST_ERR	abort()
+
+// A binary pipe with the 64 KiB buffer Linux gives one by default.
+static int open_pipe(int pipefds[2])
+{
+#ifdef _WIN32
+	return _pipe(pipefds, 1 << 16, _O_BINARY);
+#else
+	return pipe(pipefds);
+#endif
+}
 
 static bool generic_test_stream_transcode(struct stream_msg* out, const struct stream_msg msg_ref)
 {
@@ -89,7 +104,7 @@ static bool test_stream_transceive(void)
 	struct stream_msg msg_default = { .type = STREAM_MSG_INVALID };
 
 	int pipefds[2];
-	if (0 != pipe(pipefds))
+	if (0 != open_pipe(pipefds))
 		UTEST_ERR;
 
 	msg_ref = (struct stream_msg){ .type = STREAM_MSG_INDEX, .data.index = 2 };
@@ -120,7 +135,7 @@ static bool test_comm_msg2(void)
 {
 	int pipefds[2];
 
-	if (0 != pipe(pipefds))
+	if (0 != open_pipe(pipefds))
 		UTEST_ERR;
 
 	complex float a[3] = { 1, 2, 3 };
@@ -159,7 +174,7 @@ static bool test_comm_followup(void)
 {
 	int pipefds[2];
 
-	if (0 != pipe(pipefds))
+	if (0 != open_pipe(pipefds))
 		UTEST_ERR;
 
 	struct stream_msg msg_ref = { .type = STREAM_MSG_INDEX, .data.index = 2 };
@@ -222,7 +237,7 @@ static bool test_stream_sync(void)
 {
 	int pipefds[2];
 
-	if (0 != pipe(pipefds))
+	if (0 != open_pipe(pipefds))
 		UTEST_ERR;
 
 	stream_t strm_in, strm_out;
@@ -261,7 +276,7 @@ static bool test_binary_stream(void)
 {
 	int pipefds[2];
 
-	if (0 != pipe(pipefds))
+	if (0 != open_pipe(pipefds))
 		UTEST_ERR;
 
 	bart_dim_t dims[2] = { 1, 3 };
@@ -310,7 +325,7 @@ static bool test_stream_events(void)
 {
 	int pipefds[2];
 
-	if (0 != pipe(pipefds))
+	if (0 != open_pipe(pipefds))
 		UTEST_ERR;
 
 	stream_t strm_in, strm_out;
