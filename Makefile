@@ -184,6 +184,10 @@ endif
 #OPT += -ffp-contract=off
 CPPFLAGS ?= -Wall -Wextra
 CFLAGS ?= $(OPT) -Wmissing-prototypes -Wincompatible-pointer-types -Wsign-conversion -Wwrite-strings
+# A format that does not match the width of its argument, or an array of one
+# integer type passed where another is expected, is wrong on some platform
+# even where the two happen to have the same width here.
+CFLAGS += -Werror=format -Werror=incompatible-pointer-types
 CXXFLAGS ?= $(OPT)
 
 ifeq ($(BUILDTYPE), MacOSX)
