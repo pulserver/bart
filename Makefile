@@ -630,6 +630,8 @@ CPPFLAGS += $(FFTW_H) $(BLAS_H)
 # librt
 ifeq ($(BUILDTYPE), MacOSX)
 	LIBRT :=
+else ifeq ($(BUILDTYPE), MSYS)
+	LIBRT :=
 else
 	LIBRT := -lrt
 endif
