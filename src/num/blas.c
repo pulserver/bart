@@ -264,8 +264,8 @@ void blas2_cgemm(char transa, char transb, bart_dim_t M, bart_dim_t N, bart_dim_
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
-		CUBLAS_CALL(cublasCgemm(get_handle_device(), cublas_trans(transa), cublas_trans(transb), M, N, K, (const cuComplex*)alpha,
-			    (const cuComplex*)A, lda, (const cuComplex*)B, ldb, (const cuComplex*)beta, (cuComplex*)C, ldc));
+		CUBLAS_CALL(cublasCgemm(get_handle_device(), cublas_trans(transa), cublas_trans(transb), checked_int(M), checked_int(N), checked_int(K), (const cuComplex*)alpha,
+			    (const cuComplex*)A, checked_int(lda), (const cuComplex*)B, checked_int(ldb), (const cuComplex*)beta, (cuComplex*)C, checked_int(ldc)));
 
 		return;
 	}
@@ -273,7 +273,7 @@ void blas2_cgemm(char transa, char transb, bart_dim_t M, bart_dim_t N, bart_dim_
 
 	BLAS_CALL(cblas_cgemm(CblasColMajor, ('T' == transa) ? CblasTrans : (('C' == transa) ? CblasConjTrans : CblasNoTrans),
 		    ('T' == transb) ? CblasTrans : (('C' == transb) ? CblasConjTrans : CblasNoTrans),
-		    M, N, K, (void*)alpha, (void*)A, lda, (void*)B, ldb, (void*)beta, (void*)C, ldc));
+		    checked_int(M), checked_int(N), checked_int(K), (void*)alpha, (void*)A, checked_int(lda), (void*)B, checked_int(ldb), (void*)beta, (void*)C, checked_int(ldc)));
 }
 
 
@@ -283,8 +283,8 @@ void blas_cgemm(char transa, char transb, bart_dim_t M, bart_dim_t N,  bart_dim_
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
-		CUBLAS_CALL(cublasCgemm(get_handle_host(), cublas_trans(transa), cublas_trans(transb), M, N, K, (const cuComplex*)(&alpha),
-			    (const cuComplex*)A, lda, (const cuComplex*)B, ldb, (const cuComplex*)(&beta), (cuComplex*)C, ldc));
+		CUBLAS_CALL(cublasCgemm(get_handle_host(), cublas_trans(transa), cublas_trans(transb), checked_int(M), checked_int(N), checked_int(K), (const cuComplex*)(&alpha),
+			    (const cuComplex*)A, checked_int(lda), (const cuComplex*)B, checked_int(ldb), (const cuComplex*)(&beta), (cuComplex*)C, checked_int(ldc)));
 
 		return;
 	}
@@ -292,7 +292,7 @@ void blas_cgemm(char transa, char transb, bart_dim_t M, bart_dim_t N,  bart_dim_
 
 	BLAS_CALL(cblas_cgemm(CblasColMajor, ('T' == transa) ? CblasTrans : (('C' == transa) ? CblasConjTrans : CblasNoTrans),
 		    ('T' == transb) ? CblasTrans : (('C' == transb) ? CblasConjTrans : CblasNoTrans),
-		    M, N, K, (void*)(&alpha), (void*)A, lda, (void*)B, ldb, (void*)(&beta), (void*)C, ldc));
+		    checked_int(M), checked_int(N), checked_int(K), (void*)(&alpha), (void*)A, checked_int(lda), (void*)B, checked_int(ldb), (void*)(&beta), (void*)C, checked_int(ldc)));
 }
 
 
@@ -302,15 +302,15 @@ void blas2_cgemv(char trans, bart_dim_t M, bart_dim_t N, const complex float* al
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
-		CUBLAS_CALL(cublasCgemv(get_handle_device(), cublas_trans(trans), M, N, (const cuComplex*)alpha,
-			    (const cuComplex*)A, lda, (const cuComplex*)x, incx, (const cuComplex*)beta, (cuComplex*)y, incy));
+		CUBLAS_CALL(cublasCgemv(get_handle_device(), cublas_trans(trans), checked_int(M), checked_int(N), (const cuComplex*)alpha,
+			    (const cuComplex*)A, checked_int(lda), (const cuComplex*)x, checked_int(incx), (const cuComplex*)beta, (cuComplex*)y, checked_int(incy)));
 
 		return;
 	}
 #endif
 
 	BLAS_CALL(cblas_cgemv(CblasColMajor, ('T' == trans) ? CblasTrans : (('C' == trans) ? CblasConjTrans : CblasNoTrans),
-		    M, N, (void*)alpha, (void*)A, lda, (void*)x, incx, (void*)beta, (void*)y, incy));
+		    checked_int(M), checked_int(N), (void*)alpha, (void*)A, checked_int(lda), (void*)x, checked_int(incx), (void*)beta, (void*)y, checked_int(incy)));
 }
 
 
@@ -320,15 +320,15 @@ void blas_cgemv(char trans, bart_dim_t M, bart_dim_t N, complex float alpha, bar
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
-		CUBLAS_CALL(cublasCgemv(get_handle_host(), cublas_trans(trans), M, N, (const cuComplex*)&alpha,
-			    (const cuComplex*)A, lda, (const cuComplex*)x, incx, (const cuComplex*)&beta, (cuComplex*)y, incy));
+		CUBLAS_CALL(cublasCgemv(get_handle_host(), cublas_trans(trans), checked_int(M), checked_int(N), (const cuComplex*)&alpha,
+			    (const cuComplex*)A, checked_int(lda), (const cuComplex*)x, checked_int(incx), (const cuComplex*)&beta, (cuComplex*)y, checked_int(incy)));
 
 		return;
 	}
 #endif
 
 	BLAS_CALL(cblas_cgemv(CblasColMajor, ('T' == trans) ? CblasTrans : (('C' == trans) ? CblasConjTrans : CblasNoTrans),
-		    M, N, (void*)&alpha, (void*)A, lda, (void*)x, incx, (void*)&beta, (void*)y, incy));
+		    checked_int(M), checked_int(N), (void*)&alpha, (void*)A, checked_int(lda), (void*)x, checked_int(incx), (void*)&beta, (void*)y, checked_int(incy)));
 }
 
 
@@ -338,14 +338,14 @@ void blas2_cgeru(bart_dim_t M, bart_dim_t N, const complex float* alpha, bart_di
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
-		CUBLAS_CALL(cublasCgeru(get_handle_device(), M, N, (const cuComplex*)alpha,
-			    (const cuComplex*)x, incx, (const cuComplex*)y, incy, (cuComplex*)A, lda));
+		CUBLAS_CALL(cublasCgeru(get_handle_device(), checked_int(M), checked_int(N), (const cuComplex*)alpha,
+			    (const cuComplex*)x, checked_int(incx), (const cuComplex*)y, checked_int(incy), (cuComplex*)A, checked_int(lda)));
 
 		return;
 	}
 #endif
 
-	BLAS_CALL(cblas_cgeru(CblasColMajor, M, N, alpha, x, incx, y, incy, A, lda));
+	BLAS_CALL(cblas_cgeru(CblasColMajor, checked_int(M), checked_int(N), alpha, x, checked_int(incx), y, checked_int(incy), A, checked_int(lda)));
 }
 
 
@@ -355,14 +355,14 @@ void blas_cgeru(bart_dim_t M, bart_dim_t N, complex float alpha, bart_dim_t incx
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
-		CUBLAS_CALL(cublasCgeru(get_handle_host(), M, N, (const cuComplex*)&alpha,
-			    (const cuComplex*)x, incx, (const cuComplex*)y, incy, (cuComplex*)A, lda));
+		CUBLAS_CALL(cublasCgeru(get_handle_host(), checked_int(M), checked_int(N), (const cuComplex*)&alpha,
+			    (const cuComplex*)x, checked_int(incx), (const cuComplex*)y, checked_int(incy), (cuComplex*)A, checked_int(lda)));
 
 		return;
 	}
 #endif
 
-	BLAS_CALL(cblas_cgeru(CblasColMajor, M, N, &alpha, x, incx, y, incy, (float*)A, lda));
+	BLAS_CALL(cblas_cgeru(CblasColMajor, checked_int(M), checked_int(N), &alpha, x, checked_int(incx), y, checked_int(incy), (float*)A, checked_int(lda)));
 }
 
 
@@ -372,13 +372,13 @@ void blas2_caxpy(bart_dim_t N, const complex float* alpha, bart_dim_t incx, cons
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
-		CUBLAS_CALL(cublasCaxpy(get_handle_device(), N, (const cuComplex*)alpha, (const cuComplex*)x, incx, (cuComplex*)y, incy));
+		CUBLAS_CALL(cublasCaxpy(get_handle_device(), checked_int(N), (const cuComplex*)alpha, (const cuComplex*)x, checked_int(incx), (cuComplex*)y, checked_int(incy)));
 
 		return;
 	}
 #endif
 
-	BLAS_CALL(cblas_caxpy(N, alpha, x, incx, y, incy));
+	BLAS_CALL(cblas_caxpy(checked_int(N), alpha, x, checked_int(incx), y, checked_int(incy)));
 }
 
 
@@ -388,13 +388,13 @@ void blas_caxpy(bart_dim_t N, const complex float alpha, bart_dim_t incx, const 
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
-		CUBLAS_CALL(cublasCaxpy(get_handle_host(), N, (const cuComplex*)&alpha, (const cuComplex*)x, incx, (cuComplex*)y, incy));
+		CUBLAS_CALL(cublasCaxpy(get_handle_host(), checked_int(N), (const cuComplex*)&alpha, (const cuComplex*)x, checked_int(incx), (cuComplex*)y, checked_int(incy)));
 
 		return;
 	}
 #endif
 
-	BLAS_CALL(cblas_caxpy(N, &alpha, x, incx, y, incy));
+	BLAS_CALL(cblas_caxpy(checked_int(N), &alpha, x, checked_int(incx), y, checked_int(incy)));
 }
 
 
@@ -404,13 +404,13 @@ void blas2_cscal(bart_dim_t N, const complex float* alpha, bart_dim_t incx, comp
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
-		CUBLAS_CALL(cublasCscal(get_handle_device(), N, (const cuComplex*)alpha, (cuComplex*)x, incx));
+		CUBLAS_CALL(cublasCscal(get_handle_device(), checked_int(N), (const cuComplex*)alpha, (cuComplex*)x, checked_int(incx)));
 
 		return;
 	}
 #endif
 
-	BLAS_CALL(cblas_cscal(N, alpha, x, incx));
+	BLAS_CALL(cblas_cscal(checked_int(N), alpha, x, checked_int(incx)));
 }
 
 
@@ -420,13 +420,13 @@ void blas_cscal(bart_dim_t N, const complex float alpha, bart_dim_t incx, comple
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
-		CUBLAS_CALL(cublasCscal(get_handle_host(), N, (const cuComplex*)&alpha, (cuComplex*)x, incx));
+		CUBLAS_CALL(cublasCscal(get_handle_host(), checked_int(N), (const cuComplex*)&alpha, (cuComplex*)x, checked_int(incx)));
 
 		return;
 	}
 #endif
 
-	BLAS_CALL(cblas_cscal(N, &alpha, x, incx));
+	BLAS_CALL(cblas_cscal(checked_int(N), &alpha, x, checked_int(incx)));
 }
 
 
@@ -436,13 +436,13 @@ void blas2_cdotu(complex float* result, bart_dim_t N, bart_dim_t incx, const com
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
-		CUBLAS_CALL(cublasCdotu(get_handle_device(), N, (const cuComplex*)x, incx, (const cuComplex*)y, incy, (cuComplex*)result));
+		CUBLAS_CALL(cublasCdotu(get_handle_device(), checked_int(N), (const cuComplex*)x, checked_int(incx), (const cuComplex*)y, checked_int(incy), (cuComplex*)result));
 
 		return;
 	}
 #endif
 
-	BLAS_CALL(cblas_cdotu_sub(N, x, incx, y, incy, (void*)result));
+	BLAS_CALL(cblas_cdotu_sub(checked_int(N), x, checked_int(incx), y, checked_int(incy), (void*)result));
 }
 
 
@@ -452,7 +452,7 @@ void blas2_sgemm(char transa, char transb, bart_dim_t M, bart_dim_t N, bart_dim_
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
-		CUBLAS_CALL(cublasSgemm(get_handle_device(), cublas_trans(transa), cublas_trans(transb), M, N, K, alpha, A, lda, B, ldb, beta, C, ldc));
+		CUBLAS_CALL(cublasSgemm(get_handle_device(), cublas_trans(transa), cublas_trans(transb), checked_int(M), checked_int(N), checked_int(K), alpha, A, checked_int(lda), B, checked_int(ldb), beta, C, checked_int(ldc)));
 
 		return;
 	}
@@ -460,7 +460,7 @@ void blas2_sgemm(char transa, char transb, bart_dim_t M, bart_dim_t N, bart_dim_
 
 	BLAS_CALL(cblas_sgemm(CblasColMajor, ('T' == transa) ? CblasTrans : (('C' == transa) ? CblasConjTrans : CblasNoTrans),
 		    ('T' == transb) ? CblasTrans : (('C' == transb) ? CblasConjTrans : CblasNoTrans),
-		    M, N, K, *alpha, A, lda, B, ldb, *beta, C, ldc));
+		    checked_int(M), checked_int(N), checked_int(K), *alpha, A, checked_int(lda), B, checked_int(ldb), *beta, C, checked_int(ldc)));
 }
 
 
@@ -470,7 +470,7 @@ void blas_sgemm(char transa, char transb, bart_dim_t M, bart_dim_t N,  bart_dim_
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
-		CUBLAS_CALL(cublasSgemm(get_handle_host(), cublas_trans(transa), cublas_trans(transb), M, N, K, &alpha, A, lda, B, ldb, &beta, C, ldc));
+		CUBLAS_CALL(cublasSgemm(get_handle_host(), cublas_trans(transa), cublas_trans(transb), checked_int(M), checked_int(N), checked_int(K), &alpha, A, checked_int(lda), B, checked_int(ldb), &beta, C, checked_int(ldc)));
 
 		return;
 	}
@@ -478,7 +478,7 @@ void blas_sgemm(char transa, char transb, bart_dim_t M, bart_dim_t N,  bart_dim_
 
 	BLAS_CALL(cblas_sgemm(CblasColMajor, ('T' == transa) ? CblasTrans : (('C' == transa) ? CblasConjTrans : CblasNoTrans),
 		    ('T' == transb) ? CblasTrans : (('C' == transb) ? CblasConjTrans : CblasNoTrans),
-		    M, N, K, alpha, A, lda, B, ldb, beta, C, ldc));
+		    checked_int(M), checked_int(N), checked_int(K), alpha, A, checked_int(lda), B, checked_int(ldb), beta, C, checked_int(ldc)));
 }
 
 
@@ -488,15 +488,15 @@ void blas2_sgemv(char trans, bart_dim_t M, bart_dim_t N, const float* alpha, bar
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
-		CUBLAS_CALL(cublasSgemv(get_handle_device(), cublas_trans(trans), M, N, alpha,
-			    A, lda, x, incx, beta, y, incy));
+		CUBLAS_CALL(cublasSgemv(get_handle_device(), cublas_trans(trans), checked_int(M), checked_int(N), alpha,
+			    A, checked_int(lda), x, checked_int(incx), beta, y, checked_int(incy)));
 
 		return;
 	}
 #endif
 
-	BLAS_CALL(cblas_sgemv(CblasColMajor, ('T' == trans) ? CblasTrans : CblasNoTrans, M, N, *alpha,
-			A, lda, x, incx, *beta, y, incy));
+	BLAS_CALL(cblas_sgemv(CblasColMajor, ('T' == trans) ? CblasTrans : CblasNoTrans, checked_int(M), checked_int(N), *alpha,
+			A, checked_int(lda), x, checked_int(incx), *beta, y, checked_int(incy)));
 }
 
 
@@ -506,15 +506,15 @@ void blas_sgemv(char trans, bart_dim_t M, bart_dim_t N, const float alpha, bart_
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
-		CUBLAS_CALL(cublasSgemv(get_handle_host(), cublas_trans(trans), M, N, &alpha,
-			A, lda, x, incx, &beta, y, incy));
+		CUBLAS_CALL(cublasSgemv(get_handle_host(), cublas_trans(trans), checked_int(M), checked_int(N), &alpha,
+			A, checked_int(lda), x, checked_int(incx), &beta, y, checked_int(incy)));
 
 		return;
 	}
 #endif
 
-	BLAS_CALL(cblas_sgemv(CblasColMajor, ('T' == trans) ? CblasTrans : CblasNoTrans, M, N, alpha,
-			A, lda, x, incx, beta, y, incy));
+	BLAS_CALL(cblas_sgemv(CblasColMajor, ('T' == trans) ? CblasTrans : CblasNoTrans, checked_int(M), checked_int(N), alpha,
+			A, checked_int(lda), x, checked_int(incx), beta, y, checked_int(incy)));
 }
 
 
@@ -524,12 +524,12 @@ void blas2_sger(bart_dim_t M, bart_dim_t N, const float* alpha, bart_dim_t incx,
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
-		CUBLAS_CALL(cublasSger(get_handle_device(), M, N, alpha, x, incx, y, incy, A, lda));
+		CUBLAS_CALL(cublasSger(get_handle_device(), checked_int(M), checked_int(N), alpha, x, checked_int(incx), y, checked_int(incy), A, checked_int(lda)));
 		return;
 	}
 #endif
 
-	BLAS_CALL(cblas_sger(CblasColMajor, M, N, *alpha, x, incx, y, incy, A, lda));
+	BLAS_CALL(cblas_sger(CblasColMajor, checked_int(M), checked_int(N), *alpha, x, checked_int(incx), y, checked_int(incy), A, checked_int(lda)));
 }
 
 
@@ -539,12 +539,12 @@ void blas_sger(bart_dim_t M, bart_dim_t N, const float alpha, bart_dim_t incx, c
 #ifdef USE_GPU
 	if (cuda_ondevice(A)) {
 
-		CUBLAS_CALL(cublasSger(get_handle_host(), M, N, &alpha, x, incx, y, incy, A, lda));
+		CUBLAS_CALL(cublasSger(get_handle_host(), checked_int(M), checked_int(N), &alpha, x, checked_int(incx), y, checked_int(incy), A, checked_int(lda)));
 		return;
 	}
 #endif
 
-	BLAS_CALL(cblas_sger(CblasColMajor, M, N, alpha, x, incx, y, incy, A, lda));
+	BLAS_CALL(cblas_sger(CblasColMajor, checked_int(M), checked_int(N), alpha, x, checked_int(incx), y, checked_int(incy), A, checked_int(lda)));
 }
 
 
@@ -554,13 +554,13 @@ void blas2_saxpy(bart_dim_t N, const float* alpha, bart_dim_t incx, const float*
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
-		CUBLAS_CALL(cublasSaxpy(get_handle_device(), N, alpha, x, incx, y, incy));
+		CUBLAS_CALL(cublasSaxpy(get_handle_device(), checked_int(N), alpha, x, checked_int(incx), y, checked_int(incy)));
 
 		return;
 	}
 #endif
 
-	BLAS_CALL(cblas_saxpy(N, *alpha, x, incx, y, incy));
+	BLAS_CALL(cblas_saxpy(checked_int(N), *alpha, x, checked_int(incx), y, checked_int(incy)));
 }
 
 
@@ -570,13 +570,13 @@ void blas_saxpy(bart_dim_t N, const float alpha, bart_dim_t incx, const float* x
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
-		CUBLAS_CALL(cublasSaxpy(get_handle_host(), N, &alpha, x, incx, y, incy));
+		CUBLAS_CALL(cublasSaxpy(get_handle_host(), checked_int(N), &alpha, x, checked_int(incx), y, checked_int(incy)));
 
 		return;
 	}
 #endif
 
-	BLAS_CALL(cblas_saxpy(N, alpha, x, incx, y, incy));
+	BLAS_CALL(cblas_saxpy(checked_int(N), alpha, x, checked_int(incx), y, checked_int(incy)));
 }
 
 
@@ -586,13 +586,13 @@ void blas2_sscal(bart_dim_t N, const float* alpha, bart_dim_t incx, float* x)
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
-		CUBLAS_CALL(cublasSscal(get_handle_device(), N, alpha, x, incx));
+		CUBLAS_CALL(cublasSscal(get_handle_device(), checked_int(N), alpha, x, checked_int(incx)));
 
 		return;
 	}
 #endif
 
-	BLAS_CALL(cblas_sscal(N, *alpha, x, incx));
+	BLAS_CALL(cblas_sscal(checked_int(N), *alpha, x, checked_int(incx)));
 }
 
 
@@ -602,13 +602,13 @@ void blas_sscal(bart_dim_t N, float alpha, bart_dim_t incx, float* x)
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
-		CUBLAS_CALL(cublasSscal(get_handle_host(), N, &alpha, x, incx));
+		CUBLAS_CALL(cublasSscal(get_handle_host(), checked_int(N), &alpha, x, checked_int(incx)));
 
 		return;
 	}
 #endif
 
-	BLAS_CALL(cblas_sscal(N, alpha, x, incx));
+	BLAS_CALL(cblas_sscal(checked_int(N), alpha, x, checked_int(incx)));
 }
 
 
@@ -618,13 +618,13 @@ void blas2_sdot(float* result, bart_dim_t N, bart_dim_t incx, const float* x, ba
 #ifdef USE_GPU
 	if (cuda_ondevice(x)) {
 
-		CUBLAS_CALL(cublasSdot(get_handle_device(), N, x, incx, y, incy, result));
+		CUBLAS_CALL(cublasSdot(get_handle_device(), checked_int(N), x, checked_int(incx), y, checked_int(incy), result));
 
 		return;
 	}
 #endif
 
-	BLAS_CALL(*result = cblas_sdot(N, x, incx, y, incy));
+	BLAS_CALL(*result = cblas_sdot(checked_int(N), x, checked_int(incx), y, checked_int(incy)));
 }
 
 
@@ -635,7 +635,7 @@ void blas_cdgmm(bart_dim_t M, bart_dim_t N, bool left_mul, const complex float* 
 	if (cuda_ondevice(A)) {
 
 		CUBLAS_CALL(cublasCdgmm(get_handle_device(), left_mul ? CUBLAS_SIDE_LEFT : CUBLAS_SIDE_RIGHT,
-			    M, N, (const cuComplex*)A, lda, (const cuComplex*)x, incx, (cuComplex*)C, ldc));
+			    checked_int(M), checked_int(N), (const cuComplex*)A, checked_int(lda), (const cuComplex*)x, checked_int(incx), (cuComplex*)C, checked_int(ldc)));
 
 		return;
 	}
@@ -653,7 +653,7 @@ void blas_sdgmm(bart_dim_t M, bart_dim_t N, bool left_mul, const float* A, bart_
 	if (cuda_ondevice(A)) {
 
 		CUBLAS_CALL(cublasSdgmm(get_handle_device(), left_mul ? CUBLAS_SIDE_LEFT : CUBLAS_SIDE_RIGHT,
-			    M, N, A, lda, x, incx, C, ldc));
+			    checked_int(M), checked_int(N), A, checked_int(lda), x, checked_int(incx), C, checked_int(ldc)));
 
 		return;
 	}
@@ -674,7 +674,7 @@ void blas_cmatcopy(char trans, bart_dim_t M, bart_dim_t N, complex float alpha, 
 		complex float zero = 0.;
 
 		CUBLAS_CALL(cublasCgeam(get_handle_host(), cublas_trans(trans), cublas_trans('N'),
-			    M, N, (const cuComplex*)&alpha, (const cuComplex*)A, lda, (const cuComplex*)&zero, (const cuComplex*)B, ldb, (cuComplex*)B, ldb));
+			    checked_int(M), checked_int(N), (const cuComplex*)&alpha, (const cuComplex*)A, checked_int(lda), (const cuComplex*)&zero, (const cuComplex*)B, checked_int(ldb), (cuComplex*)B, checked_int(ldb)));
 
 		return;
 	}
@@ -696,7 +696,7 @@ void blas2_cmatcopy(char trans, bart_dim_t M, bart_dim_t N, const complex float*
 		cuda_clear(8, zero);
 
 		CUBLAS_CALL(cublasCgeam(get_handle_host(), cublas_trans(trans), cublas_trans('N'),
-			    M, N, (const cuComplex*)alpha, (const cuComplex*)A, lda, (const cuComplex*)zero, (const cuComplex*)B, ldb, (cuComplex*)B, ldb));
+			    checked_int(M), checked_int(N), (const cuComplex*)alpha, (const cuComplex*)A, checked_int(lda), (const cuComplex*)zero, (const cuComplex*)B, checked_int(ldb), (cuComplex*)B, checked_int(ldb)));
 
 		cuda_free(zero);
 
@@ -719,7 +719,7 @@ void blas_smatcopy(char trans, bart_dim_t M, bart_dim_t N, float alpha, const fl
 		float zero = 0.;
 
 		CUBLAS_CALL(cublasSgeam(get_handle_host(), cublas_trans(trans), cublas_trans('N'),
-			    M, N, &alpha, A, lda, &zero, B, ldb, B, ldb));
+			    checked_int(M), checked_int(N), &alpha, A, checked_int(lda), &zero, B, checked_int(ldb), B, checked_int(ldb)));
 
 		return;
 	}
@@ -741,7 +741,7 @@ void blas2_smatcopy(char trans, bart_dim_t M, bart_dim_t N, const float* alpha, 
 		cuda_clear(4, zero);
 
 		CUBLAS_CALL(cublasSgeam(get_handle_host(), cublas_trans(trans), cublas_trans('N'),
-			    M, N, alpha, A, lda, zero, B, ldb, B, ldb));
+			    checked_int(M), checked_int(N), alpha, A, checked_int(lda), zero, B, checked_int(ldb), B, checked_int(ldb)));
 
 		cuda_free(zero);
 
@@ -760,7 +760,7 @@ void blas_csyrk(char uplo, char trans, bart_dim_t N, bart_dim_t K, const complex
 	assert('U' == uplo);
 	assert(('T' == trans) || ('N' == trans));
 
-	cblas_csyrk(CblasColMajor, CblasUpper, ('T' == trans) ? CblasTrans : CblasNoTrans, N, K, &alpha, (void*)A, lda, (void*)&beta, (void*)C, ldc);
+	cblas_csyrk(CblasColMajor, CblasUpper, ('T' == trans) ? CblasTrans : CblasNoTrans, checked_int(N), checked_int(K), &alpha, (void*)A, checked_int(lda), (void*)&beta, (void*)C, checked_int(ldc));
 }
 
 

@@ -173,16 +173,16 @@ static struct fft_cuda_plan_s* fft_cuda_plan0(int D, const bart_dim_t dimensions
 	bart_dim_t batchistr[l];
 	bart_dim_t batchostr[l];
 
-	int lis = dims[0].is;
-	int los = dims[0].os;
+	int lis = checked_int(dims[0].is);
+	int los = checked_int(dims[0].os);
 	int idist;
 	int odist;
 	int cubs = 1;
 	int bi;
 	int bo;
 
-	int istride = dims[0].is;
-	int ostride = dims[0].os;
+	int istride = checked_int(dims[0].is);
+	int ostride = checked_int(dims[0].os);
 
 	if (k > 3)
 		goto errout;
@@ -192,12 +192,12 @@ static struct fft_cuda_plan_s* fft_cuda_plan0(int D, const bart_dim_t dimensions
 		// assert(dims[i].is == lis);
 		// assert(dims[i].os == los);
 
-		cudims[k - 1 - i] = dims[i].n;
-		cuiemb[k - 1 - i] = dims[i].n;
-		cuoemb[k - 1 - i] = dims[i].n;
+		cudims[k - 1 - i] = checked_int(dims[i].n);
+		cuiemb[k - 1 - i] = checked_int(dims[i].n);
+		cuoemb[k - 1 - i] = checked_int(dims[i].n);
 
-		lis = dims[i].n * dims[i].is;
-		los = dims[i].n * dims[i].os;
+		lis = checked_int(dims[i].n * dims[i].is);
+		los = checked_int(dims[i].n * dims[i].os);
 	}
 
 	for (int i = 0; i < l; i++) {
@@ -222,9 +222,9 @@ static struct fft_cuda_plan_s* fft_cuda_plan0(int D, const bart_dim_t dimensions
 
 	if (bi > 0) {
 
-		idist = hmdims[0].is;
-		odist = hmdims[0].os;
-		cubs = md_calc_size(bi, batchdims);
+		idist = checked_int(hmdims[0].is);
+		odist = checked_int(hmdims[0].os);
+		cubs = checked_int(md_calc_size(bi, batchdims));
 	}
 
 	if (l != bi) {

@@ -139,6 +139,15 @@ void error(const char* fmt, ...)
 }
 
 
+int checked_int(bart_dim_t x)
+{
+	if ((x < INT_MIN) || (x > INT_MAX))
+		error("%" PRId64 " does not fit in the int a library call takes.\n", x);
+
+	return (int)x;
+}
+
+
 int error_catcher(int fun(int argc, char* argv[argc]), int argc, char* argv[argc])
 {
 	int ret = -1;
