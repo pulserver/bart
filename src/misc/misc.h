@@ -90,6 +90,10 @@ extern noreturn void error(const char* str, ...) __attribute__((format(printf,1,
 extern __attribute__((noreturn, format(printf,1,2))) void error(const char* str, ...);
 #endif
 
+// A dimension or stride handed to a library that takes an int (BLAS,
+// LAPACK, cuFFT); an error rather than a truncation when it does not fit.
+extern int checked_int(bart_dim_t x);
+
 
 #ifdef USE_DWARF
 #undef assert
