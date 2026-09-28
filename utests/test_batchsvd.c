@@ -40,7 +40,7 @@ static bool test_batch_svthresh_tall(void)
 		{ 0., 0., 0. },
 	} };
 
-	long dims[3] = { 3, 5, 1 };
+	bart_dim_t dims[3] = { 3, 5, 1 };
 
 	UT_RETURN_ASSERT(md_znrmse(3, dims, &ref[0][0][0], &inout[0][0][0]) < UT_TOL);
 }
@@ -63,7 +63,7 @@ static bool test_batch_svthresh_wide(void)
 		{ 0., 0., 0., 0., 0. },
 	} };
 
-	long dims[3] = { 5, 3, 1 };
+	bart_dim_t dims[3] = { 5, 3, 1 };
 
 	UT_RETURN_ASSERT(md_znrmse(3, dims, &ref[0][0][0], &inout[0][0][0]) < UT_TOL);
 }

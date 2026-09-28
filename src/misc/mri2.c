@@ -24,13 +24,13 @@
 
 
 
-void data_consistency(const long dims[DIMS], complex float* dst, const complex float* pattern, const complex float* kspace1, const complex float* kspace2)
+void data_consistency(const bart_dim_t dims[DIMS], complex float* dst, const complex float* pattern, const complex float* kspace1, const complex float* kspace2)
 {
 	assert(1 == dims[MAPS_DIM]);
 
-	long strs[DIMS];
-	long dims1[DIMS];
-	long strs1[DIMS];
+	bart_stride_t strs[DIMS];
+	bart_dim_t dims1[DIMS];
+	bart_stride_t strs1[DIMS];
 
 	md_select_dims(DIMS, ~COIL_FLAG, dims1, dims);
 	md_calc_strides(DIMS, strs1, dims1, CFL_SIZE);
@@ -47,16 +47,16 @@ void data_consistency(const long dims[DIMS], complex float* dst, const complex f
 
 
 
-void estimate_pattern(int D, const long dims[D], unsigned long flags, complex float* pattern, const complex float* kspace_data)
+void estimate_pattern(int D, const bart_dim_t dims[D], bart_flags_t flags, complex float* pattern, const complex float* kspace_data)
 {
 	md_zrss(D, dims, flags, pattern, kspace_data);
 
-	long dims2[D];
-	long strs2[D];
+	bart_dim_t dims2[D];
+	bart_stride_t strs2[D];
 	md_select_dims(D, ~flags, dims2, dims);
 	md_calc_strides(D, strs2, dims2, CFL_SIZE);
 
-	long strs1[D];
+	bart_stride_t strs1[D];
 	md_singleton_strides(D, strs1);
 
 	complex float* tmp = md_alloc_sameplace(D, dims2, CFL_SIZE, kspace_data);
@@ -70,11 +70,11 @@ void estimate_pattern(int D, const long dims[D], unsigned long flags, complex fl
 }
 
 
-static void calib_readout_pos(const long caldims[DIMS], long calpos[DIMS], const long in_dims[DIMS], const complex float* in_data)
+static void calib_readout_pos(const bart_dim_t caldims[DIMS], bart_dim_t calpos[DIMS], const bart_dim_t in_dims[DIMS], const complex float* in_data)
 {
 	// now move along readout to find maximum energy
 
-	long in_strs[DIMS];
+	bart_stride_t in_strs[DIMS];
 	md_calc_strides(DIMS, in_strs, in_dims, CFL_SIZE);
 
 	int maxind = 0;
@@ -84,8 +84,8 @@ static void calib_readout_pos(const long caldims[DIMS], long calpos[DIMS], const
 
 		calpos[READ_DIM] = r;
 
-		long offset = md_calc_offset(DIMS, calpos, in_strs);
-		float energy = md_znorm2(DIMS, caldims, in_strs, in_data + offset / (long)CFL_SIZE);
+		bart_stride_t offset = md_calc_offset(DIMS, calpos, in_strs);
+		float energy = md_znorm2(DIMS, caldims, in_strs, in_data + offset / (bart_stride_t)CFL_SIZE);
 
 		if (energy > maxeng) {
 
@@ -98,9 +98,9 @@ static void calib_readout_pos(const long caldims[DIMS], long calpos[DIMS], const
 }
 
 
-void calib_geom(long caldims[DIMS], long calpos[DIMS], const long calsize[3], const long in_dims[DIMS], const complex float* in_data)
+void calib_geom(bart_dim_t caldims[DIMS], bart_dim_t calpos[DIMS], const bart_dim_t calsize[3], const bart_dim_t in_dims[DIMS], const complex float* in_data)
 {
-	long pat_dims[DIMS];
+	bart_dim_t pat_dims[DIMS];
 
 	assert(1 == in_dims[MAPS_DIM]);
 
@@ -121,7 +121,7 @@ void calib_geom(long caldims[DIMS], long calpos[DIMS], const long calsize[3], co
 
 
 
-	long pat_strs[DIMS];
+	bart_stride_t pat_strs[DIMS];
 	md_calc_strides(DIMS, pat_strs, pat_dims, CFL_SIZE);
 
 	bool stop[3] = { false, false, false };
@@ -146,10 +146,10 @@ void calib_geom(long caldims[DIMS], long calpos[DIMS], const long calsize[3], co
 
 		//	printf("Try: %ld %ld %ld %ld\n", caldims[1], caldims[2], calpos[1], calpos[2]);
 
-			long offset = md_calc_offset(DIMS, calpos, pat_strs);
+			bart_stride_t offset = md_calc_offset(DIMS, calpos, pat_strs);
 			float si = sqrtf((float)caldims[0] * (float)caldims[1] * (float)caldims[2]);
 
-			if (si != md_znorm2(DIMS, caldims, pat_strs, pattern + offset / (long)CFL_SIZE)) {
+			if (si != md_znorm2(DIMS, caldims, pat_strs, pattern + offset / (bart_stride_t)CFL_SIZE)) {
 
 				caldims[i]--;
 				calpos[i] = (in_dims[i] - caldims[i]) / 2;
@@ -168,13 +168,13 @@ void calib_geom(long caldims[DIMS], long calpos[DIMS], const long calsize[3], co
 
 
 
-complex float* extract_calib2(long caldims[DIMS], const long calsize[3], const long in_dims[DIMS], const long in_strs[DIMS], const complex float* in_data, bool fixed)
+complex float* extract_calib2(bart_dim_t caldims[DIMS], const bart_dim_t calsize[3], const bart_dim_t in_dims[DIMS], const bart_stride_t in_strs[DIMS], const complex float* in_data, bool fixed)
 {
 	// first extract center of size in_dims[0], calsize[1], calsize[2], and then process further to save time
 
-	long tmp_dims[DIMS];
-	long tmp_pos[DIMS];
-	long tmp_strs[DIMS];
+	bart_dim_t tmp_dims[DIMS];
+	bart_dim_t tmp_pos[DIMS];
+	bart_stride_t tmp_strs[DIMS];
 
 	md_copy_dims(DIMS, tmp_dims, in_dims);
 	md_set_dims(DIMS, tmp_pos, 0);
@@ -192,7 +192,7 @@ complex float* extract_calib2(long caldims[DIMS], const long calsize[3], const l
 
 	md_copy_block2(DIMS, tmp_pos, tmp_dims, tmp_strs, tmp_data, in_dims, in_strs, in_data, CFL_SIZE);
 
-	long calpos[DIMS];
+	bart_dim_t calpos[DIMS];
 	calib_geom(caldims, calpos, calsize, tmp_dims, tmp_data);
 
 	if (fixed) { // we should probably change calib_geom instead
@@ -205,7 +205,7 @@ complex float* extract_calib2(long caldims[DIMS], const long calsize[3], const l
 		}
 	}
 
-	debug_printf(DP_DEBUG1, "Calibration region...  (size: %ldx%ldx%ld, pos: %ldx%ldx%ld)\n",
+	debug_printf(DP_DEBUG1, "Calibration region...  (size: %" PRId64 "x%" PRId64 "x%" PRId64 ", pos: %" PRId64 "x%" PRId64 "x%" PRId64 ")\n",
 				caldims[0], caldims[1], caldims[2], calpos[0] + tmp_pos[0], calpos[1] + tmp_pos[1], calpos[2] + tmp_pos[2]);
 
 	complex float* cal_data = md_alloc_sameplace(DIMS, caldims, CFL_SIZE, tmp_data);
@@ -217,9 +217,9 @@ complex float* extract_calib2(long caldims[DIMS], const long calsize[3], const l
 }
 
 
-complex float* extract_calib(long caldims[DIMS], const long calsize[3], const long in_dims[DIMS], const complex float* in_data, bool fixed)
+complex float* extract_calib(bart_dim_t caldims[DIMS], const bart_dim_t calsize[3], const bart_dim_t in_dims[DIMS], const complex float* in_data, bool fixed)
 {
-	long in_strs[DIMS];
+	bart_stride_t in_strs[DIMS];
 	md_calc_strides(DIMS, in_strs, in_dims, CFL_SIZE);
 	return extract_calib2(caldims, calsize, in_dims, in_strs, in_data, fixed);
 }
@@ -228,7 +228,7 @@ complex float* extract_calib(long caldims[DIMS], const long calsize[3], const lo
 /**
  * Estimate image dimensions from trajectory
  */
-void estimate_im_dims(int N, unsigned long flags, long dims[N], const long tdims[N], const complex float* traj)
+void estimate_im_dims(int N, bart_flags_t flags, bart_dim_t dims[N], const bart_dim_t tdims[N], const complex float* traj)
 {
 	if (is_vptr(traj)) {
 
@@ -247,7 +247,7 @@ void estimate_im_dims(int N, unsigned long flags, long dims[N], const long tdims
 	for (int i = 0; i < T; i++)
 		max_dims[i] = 0.;
 
-	for (long i = 0; i < md_calc_size(N - 1, tdims + 1); i++)
+	for (bart_dim_t i = 0; i < md_calc_size(N - 1, tdims + 1); i++)
 		for(int j = 0; j < tdims[0]; j++)
 			max_dims[j] = MAX(cabsf(traj[j + tdims[0] * i]), max_dims[j]);
 
@@ -266,18 +266,18 @@ void estimate_im_dims(int N, unsigned long flags, long dims[N], const long tdims
 /**
  * Estimate fast square image dimensions from trajectory
  */
-void estimate_fast_sq_im_dims(int N, long dims[3], const long tdims[N], const complex float* traj)
+void estimate_fast_sq_im_dims(int N, bart_dim_t dims[3], const bart_dim_t tdims[N], const complex float* traj)
 {
 	float max_dims[3] = { 0., 0., 0. };
 
-	for (long i = 0; i < md_calc_size(N - 1, tdims + 1); i++)
+	for (bart_dim_t i = 0; i < md_calc_size(N - 1, tdims + 1); i++)
 		for(int j = 0; j < 3; j++)
 			max_dims[j] = MAX(cabsf(traj[j + tdims[0] * i]), max_dims[j]);
 
 
 	// 2* is needed since we take the absolute value of the trajectory above, and it is scaled from
 	// -DIM/2 to DIM/2
-	long max_square = 2 * MAX(MAX(max_dims[0], max_dims[1]), max_dims[2]);
+	bart_dim_t max_square = 2 * MAX(MAX(max_dims[0], max_dims[1]), max_dims[2]);
 
 
 	// compute next fast size for Fourier transform.
@@ -285,16 +285,16 @@ void estimate_fast_sq_im_dims(int N, long dims[3], const long tdims[N], const co
 	// i.e. 2, 3, 5 (and possibly 7?)
 
 	// to avoid an infinite loop here, we constrain our search
-	long fast_size = max_square;
+	bart_dim_t fast_size = max_square;
 
 	for ( ; fast_size <= 4 * max_square; ++fast_size) {
 
-		long n = fast_size;
+		bart_dim_t n = fast_size;
 
-		while (0 == n % 2l) { n /= 2l; }
-		while (0 == n % 3l) { n /= 3l; }
-		while (0 == n % 5l) { n /= 5l; }
-		while (0 == n % 7l) { n /= 7l; }
+		while (0 == n % 2) { n /= 2; }
+		while (0 == n % 3) { n /= 3; }
+		while (0 == n % 5) { n /= 5; }
+		while (0 == n % 7) { n /= 7; }
 
 		if (n <= 1)
 			break;

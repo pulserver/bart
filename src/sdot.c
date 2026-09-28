@@ -41,8 +41,8 @@ int main_sdot(int argc, char* argv[argc])
 	num_init();
 
 	int N = DIMS;
-	long in1_dims[N];
-	long in2_dims[N];
+	bart_dim_t in1_dims[N];
+	bart_dim_t in2_dims[N];
 
 	complex float* in1_data = load_cfl(in1_file, N, in1_dims);
 	complex float* in2_data = load_cfl(in2_file, N, in2_dims);

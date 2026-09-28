@@ -35,7 +35,7 @@
 #include "activation.h"
 
 
-static const struct nlop_s* append_activation_bias_internal(const struct nlop_s* network, int o, enum ACTIVATION activation, unsigned long bflags, bool bias);
+static const struct nlop_s* append_activation_bias_internal(const struct nlop_s* network, int o, enum ACTIVATION activation, bart_flags_t bflags, bool bias);
 
 
 /**
@@ -46,7 +46,7 @@ static const struct nlop_s* append_activation_bias_internal(const struct nlop_s*
  * @param activation type of activation
  * @param bflags (bias flags) In case of ACT_SOFTMAX, ~bflags is interpreted as batchflags.
  */
-const struct nlop_s* append_activation(const struct nlop_s* network, int o, enum ACTIVATION activation, unsigned long bflags)
+const struct nlop_s* append_activation(const struct nlop_s* network, int o, enum ACTIVATION activation, bart_flags_t bflags)
 {
 	return append_activation_bias_internal(network, o, activation, bflags, false);
 }
@@ -60,7 +60,7 @@ const struct nlop_s* append_activation(const struct nlop_s* network, int o, enum
  * @param activation type of activation
  * @param bflags select the dims of the bias, i.e. the dims which are not shared. In case of ACT_SOFTMAX, ~bflags is interpreted as batchflags.
  */
-const struct nlop_s* append_activation_bias(const struct nlop_s* network, int o, enum ACTIVATION activation, unsigned long bflags)
+const struct nlop_s* append_activation_bias(const struct nlop_s* network, int o, enum ACTIVATION activation, bart_flags_t bflags)
 {
 	return append_activation_bias_internal(network, o, activation, bflags, true);
 }
@@ -68,7 +68,7 @@ const struct nlop_s* append_activation_bias(const struct nlop_s* network, int o,
 
 
 
-static const struct nlop_s* append_activation_bias_internal(const struct nlop_s* network, int o, enum ACTIVATION activation, unsigned long bflags, bool bias)
+static const struct nlop_s* append_activation_bias_internal(const struct nlop_s* network, int o, enum ACTIVATION activation, bart_flags_t bflags, bool bias)
 {
 	int NI = nlop_get_nr_in_args(network);
 	int NO = nlop_get_nr_out_args(network);
@@ -79,10 +79,10 @@ static const struct nlop_s* append_activation_bias_internal(const struct nlop_s*
 
 	int N = nlop_generic_codomain(network, o)->N;
 
-	long dims[N];
+	bart_dim_t dims[N];
 	md_copy_dims(N, dims, nlop_generic_codomain(network, o)->dims);
 
-	long bdims[N];
+	bart_dim_t bdims[N];
 	md_select_dims(N, bflags, bdims, dims);
 
 	switch (activation) {
@@ -143,7 +143,7 @@ static const struct nlop_s* append_activation_bias_internal(const struct nlop_s*
 	if (!bias)
 		return network;
 
-	long bdims_layer[N];
+	bart_dim_t bdims_layer[N];
 	int j = 0;
 
 	for (int i = 0; i < N; i++) {
@@ -165,8 +165,8 @@ struct bias_op_s {
 	nlop_data_t super;
 
 	int N;
-	const long* dims;
-	const long* bdims;
+	const bart_dim_t* dims;
+	const bart_dim_t* bdims;
 };
 
 DEF_TYPEID(bias_op_s);
@@ -219,7 +219,7 @@ static void bias_op_free(const nlop_data_t* _data)
 }
 
 
-const struct nlop_s* nlop_bias_create(int N, const long dims[N], const long bdims[N])
+const struct nlop_s* nlop_bias_create(int N, const bart_dim_t dims[N], const bart_dim_t bdims[N])
 {
 	PTR_ALLOC(struct bias_op_s, data);
 	SET_TYPEID(bias_op_s, data);
@@ -229,27 +229,27 @@ const struct nlop_s* nlop_bias_create(int N, const long dims[N], const long bdim
 	for (int i = 0; i < N; i++)
 		assert((1 == bdims[i]) || (dims[i] == bdims[i]));
 
-	PTR_ALLOC(long[N], tdims);
+	PTR_ALLOC(bart_dim_t[N], tdims);
 	md_copy_dims(N, *tdims, dims);
 	data->dims = *PTR_PASS(tdims);
 
-	PTR_ALLOC(long[N], tbdims);
+	PTR_ALLOC(bart_dim_t[N], tbdims);
 	md_copy_dims(N, *tbdims, bdims);
 	data->bdims = *PTR_PASS(tbdims);
 
-	long nl_odims[1][N];
+	bart_dim_t nl_odims[1][N];
 	md_copy_dims(N, nl_odims[0], dims);
 
-	long nl_idims[2][N];
+	bart_dim_t nl_idims[2][N];
 	md_copy_dims(N, nl_idims[0], dims);
 	md_copy_dims(N, nl_idims[1], bdims);
 
 
-	long nl_ostrs[1][N];
+	bart_stride_t nl_ostrs[1][N];
 	md_copy_strides(N, nl_ostrs[0], MD_STRIDES(N, nl_odims[0], CFL_SIZE));
 
 
-	long nl_istrs[2][N];
+	bart_stride_t nl_istrs[2][N];
 	md_copy_strides(N, nl_istrs[0], MD_STRIDES(N, nl_idims[0], CFL_SIZE));
 	md_copy_strides(N, nl_istrs[1], MD_STRIDES(N, nl_idims[1], CFL_SIZE));
 
@@ -264,7 +264,7 @@ struct relu_s {
 	nlop_data_t super;
 
 	int N;
-	const long* rdims;
+	const bart_dim_t* rdims;
 
 	int M;
 	uint32_t* der;
@@ -280,7 +280,7 @@ static void relu_apply(const nlop_data_t* _data, complex float* _dst, const comp
 	struct relu_s* d = CAST_DOWN(relu_s, _data);
 
 	int N = d->N;
-	const long* dims = d->rdims;
+	const bart_dim_t* dims = d->rdims;
 
 	float* dst = (float*)_dst;
 	const float* src = (float*)_src;
@@ -309,7 +309,7 @@ static void relu_apply(const nlop_data_t* _data, complex float* _dst, const comp
 
 	md_free(d->der);
 
-	long M = md_calc_size(N, dims);
+	bart_dim_t M = md_calc_size(N, dims);
 
 	d->M = (M + 31) / 32;
 	d->der = md_alloc_sameplace(1, MD_DIMS(d->M), sizeof(uint32_t), src);
@@ -362,7 +362,7 @@ static void relu_deradj(const nlop_data_t* _data, int o, int i, complex float* _
 	assert(0 == o);
 
 	int N = d->N;
-	const long* dims = d->rdims;
+	const bart_dim_t* dims = d->rdims;
 
 	float* dst = (float*)_dst;
 	const float* src = (float*)_src;
@@ -386,17 +386,17 @@ static void relu_deradj(const nlop_data_t* _data, int o, int i, complex float* _
  * Create leaky RELU nlop with slope control parameter a
  * f(x) = {x, if x >= 0; ax, if x < 0}
  */
-const struct nlop_s* nlop_leaky_relu_create(int N, const long dims[N], float slope_parameter)
+const struct nlop_s* nlop_leaky_relu_create(int N, const bart_dim_t dims[N], float slope_parameter)
 {
 	PTR_ALLOC(struct relu_s, data);
 	SET_TYPEID(relu_s, data);
 
 	data->N = N + 1;
-	long rdims[N + 1];
+	bart_dim_t rdims[N + 1];
 	rdims[0] = 2;
 	md_copy_dims(N, rdims + 1, dims);
 
-	data->rdims = ARR_CLONE(long[N + 1], rdims);
+	data->rdims = ARR_CLONE(bart_dim_t[N + 1], rdims);
 
 	data->slope_param = slope_parameter;
 	data->der = NULL;
@@ -404,9 +404,9 @@ const struct nlop_s* nlop_leaky_relu_create(int N, const long dims[N], float slo
 	return nlop_create(N, dims, N, dims,  CAST_UP(PTR_PASS(data)), relu_apply, relu_deradj, relu_deradj, NULL, NULL, relu_free);
 }
 
-const struct nlop_s* nlop_relu_create(int N, const long dims[N])
+const struct nlop_s* nlop_relu_create(int N, const bart_dim_t dims[N])
 {
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
 	return nlop_leaky_relu_create(N, dims, 0.);
@@ -418,7 +418,7 @@ struct softmax_s {
 	nlop_data_t super;
 
 	complex float* tmp;
-	unsigned long batch_flag;
+	bart_flags_t batch_flag;
 
 	int N;
 
@@ -526,7 +526,7 @@ static void softmax_free(const nlop_data_t* _data)
 	xfree(d);
 }
 
-const struct nlop_s* nlop_softmax_create(int N, const long dims[N], unsigned long batch_flag)
+const struct nlop_s* nlop_softmax_create(int N, const bart_dim_t dims[N], bart_flags_t batch_flag)
 {
 	PTR_ALLOC(struct softmax_s, data);
 	SET_TYPEID(softmax_s, data);
@@ -534,7 +534,7 @@ const struct nlop_s* nlop_softmax_create(int N, const long dims[N], unsigned lon
 	data->N = N;
 	data->tmp = NULL;
 
-	long batchdims[N];
+	bart_dim_t batchdims[N];
 	md_select_dims(N, batch_flag, batchdims, dims);
 
 	data->dom = iovec_create(N, dims, CFL_SIZE);
@@ -552,7 +552,7 @@ struct sigmoid_s {
 
 DEF_TYPEID(sigmoid_s);
 
-static void sigmoid_apply(const nlop_data_t* /*_data*/, int N, const long dims[N], float* dst, const float* src, float* der)
+static void sigmoid_apply(const nlop_data_t* /*_data*/, int N, const bart_dim_t dims[N], float* dst, const float* src, float* der)
 {
 	float one = 1.;
 	float* ones = md_alloc_sameplace(N, dims, FL_SIZE, dst);
@@ -579,7 +579,7 @@ static void sigmoid_free(const nlop_data_t* _data)
 	xfree(_data);
 }
 
-const struct nlop_s* nlop_sigmoid_create(int N, const long dims[N])
+const struct nlop_s* nlop_sigmoid_create(int N, const bart_dim_t dims[N])
 {
 	PTR_ALLOC(struct sigmoid_s, data);
 	SET_TYPEID(sigmoid_s, data);
@@ -596,7 +596,7 @@ const struct nlop_s* nlop_sigmoid_create(int N, const long dims[N])
  * f(z) = 0.5(1+cos(arg(z)))z = (|z|+z)^2/(4|z|)
  * PHD thesis Patrick Virtue : https://www2.eecs.berkeley.edu/Pubs/TechRpts/2019/EECS-2019-126.pdf
  */
-const struct nlop_s* nlop_cardioid_create(int N, const long dims[N])
+const struct nlop_s* nlop_cardioid_create(int N, const bart_dim_t dims[N])
 {
 	auto result = nlop_zabs_create(N, dims);
 
@@ -622,7 +622,7 @@ const struct nlop_s* nlop_cardioid_create(int N, const long dims[N])
  * f(z) = z / (c + |z| / r)
  * PHD thesis Patrick Virtue : https://www2.eecs.berkeley.edu/Pubs/TechRpts/2019/EECS-2019-126.pdf
  */
-const struct nlop_s* nlop_siglog_create(int N, const long dims[N], float c, float r)
+const struct nlop_s* nlop_siglog_create(int N, const bart_dim_t dims[N], float c, float r)
 {
 	auto result = nlop_zdiv_reg_create(N, dims, c);
 
@@ -638,7 +638,7 @@ const struct nlop_s* nlop_siglog_create(int N, const long dims[N], float c, floa
  * f(z) = (1 - exp(-|z|^2/(2s^2)))*z/|z|
  * PHD thesis Patrick Virtue : https://www2.eecs.berkeley.edu/Pubs/TechRpts/2019/EECS-2019-126.pdf
  */
-const struct nlop_s* nlop_igaussian_create(int N, const long dims[N], float sigma)
+const struct nlop_s* nlop_igaussian_create(int N, const bart_dim_t dims[N], float sigma)
 {
 	auto result = nlop_tenmul_create(N, dims, dims, dims);
 

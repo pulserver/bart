@@ -19,10 +19,10 @@
 static bool test_padding(void)
 {
 	enum { N = 2 };
-	long dims_in[N] = { 3, 2 };
-	long dims_out[N] = { 7, 4 };
+	bart_dim_t dims_in[N] = { 3, 2 };
+	bart_dim_t dims_out[N] = { 7, 4 };
 
-	long pad[] = { 2, 1 };
+	bart_dim_t pad[] = { 2, 1 };
 
 	complex float in[] = {
 		1, 2, 3,
@@ -87,7 +87,7 @@ static bool test_padding(void)
 	linop_free(lin_pad);
 	err += md_zrmse(2, dims_out, exp_cyc, out);
 
-	long pad_down[] = { -2, -1 };
+	bart_dim_t pad_down[] = { -2, -1 };
 
 	lin_pad = linop_padding_create(2, dims_out, PAD_VALID, pad_down, pad_down);
 	linop_forward_unchecked(lin_pad, in, out);
@@ -105,9 +105,9 @@ UT_REGISTER_TEST(test_padding);
 static bool test_padding_adjoint(void)
 {
 	enum { N = 2 };
-	long dims_in[N] = { 3, 2 };
-	long dims_out[N] = { 7, 4 };
-	long pad[] = { 2, 1 };
+	bart_dim_t dims_in[N] = { 3, 2 };
+	bart_dim_t dims_out[N] = { 7, 4 };
+	bart_dim_t pad[] = { 2, 1 };
 
 	const struct linop_s* lin_pad;
 	float err = 0;
@@ -127,7 +127,7 @@ static bool test_padding_adjoint(void)
 	err += linop_test_adjoint(lin_pad);
 	linop_free(lin_pad);
 
-	long pad_down[] = { -2, -1 };
+	bart_dim_t pad_down[] = { -2, -1 };
 
 	lin_pad = linop_padding_create(2, dims_out, PAD_VALID, pad_down, pad_down);
 	err += linop_test_adjoint(lin_pad);

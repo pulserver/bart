@@ -47,7 +47,7 @@ struct prox_normaleq_data {
 	void* cgconf;
 	float* adj;
 
-	long size;
+	bart_dim_t size;
 };
 
 static DEF_TYPEID(prox_normaleq_data);
@@ -182,7 +182,7 @@ const struct operator_p_s* prox_lineq_create(const struct linop_s* op, const com
 	SET_TYPEID(prox_lineq_data, pdata);
 
 	int N = linop_domain(op)->N;
-	const long* dims = linop_domain(op)->dims;
+	const bart_dim_t* dims = linop_domain(op)->dims;
 
 	pdata->op = op;
 
@@ -283,7 +283,7 @@ extern const struct operator_p_s* prox_nlgrad_create(const struct nlop_s* op, in
 	if (grad_nlop) {
 
 		assert(dom->N == cod->N);
-		assert(md_check_equal_dims(dom->N, dom->dims, cod->dims, ~0UL));
+		assert(md_check_equal_dims(dom->N, dom->dims, cod->dims, ~UINT64_C(0)));
 		
 	} else {
 
@@ -308,7 +308,7 @@ struct auto_norm_s {
 
 	enum norm norm;
 
-	unsigned long flags;
+	bart_flags_t flags;
 	const struct operator_p_s* op;
 };
 
@@ -322,10 +322,10 @@ static void auto_norm_apply(const operator_data_t* _data, float mu, complex floa
 
 	int N = io->N;
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_select_dims(N, ~data->flags, sdims, io->dims);
 
-	long sstrs[N];
+	bart_stride_t sstrs[N];
 	md_calc_strides(N, sstrs, sdims, CFL_SIZE);
 
 #if 0
@@ -334,11 +334,11 @@ static void auto_norm_apply(const operator_data_t* _data, float mu, complex floa
 	md_zrss(N, io->dims, data->flags, scale, x);
 	md_zdiv2(N, io->dims, io->strs, y, io->strs, x, sstrs, scale);
 #else
-	long pos[N];
+	bart_dim_t pos[N];
 	for (int i = 0; i < N; i++)
 		pos[i] = 0;
 
-	long xdims[N];
+	bart_dim_t xdims[N];
 	md_select_dims(N, data->flags, xdims, io->dims);
 
 	complex float* scale = md_alloc(N, sdims, CFL_SIZE);
@@ -398,7 +398,7 @@ static void auto_norm_del(const operator_data_t* _data)
  * the normalization after application of the operator.
  *
  */
-const struct operator_p_s* op_p_auto_normalize(const struct operator_p_s* op, unsigned long flags, enum norm norm)
+const struct operator_p_s* op_p_auto_normalize(const struct operator_p_s* op, bart_flags_t flags, enum norm norm)
 {
 	PTR_ALLOC(struct auto_norm_s, data);
 	SET_TYPEID(auto_norm_s, data);
@@ -411,16 +411,16 @@ const struct operator_p_s* op_p_auto_normalize(const struct operator_p_s* op, un
 	auto io_out = operator_p_codomain(op);
 
 	int N = io_in->N;
-	long dims[N];
+	bart_dim_t dims[N];
 	md_copy_dims(N, dims, io_in->dims);
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
 	assert(N == io_out->N);
-	assert(md_check_compat(N, 0L, dims, io_out->dims));
-	assert(md_check_compat(N, 0L, strs, io_in->strs));
-	assert(md_check_compat(N, 0L, strs, io_out->strs));
+	assert(md_check_compat(N, 0, dims, io_out->dims));
+	assert(md_check_compat(N, 0, strs, io_in->strs));
+	assert(md_check_compat(N, 0, strs, io_out->strs));
 
 	return operator_p_create(N, dims, N, dims, CAST_UP(PTR_PASS(data)), auto_norm_apply, auto_norm_del);
 }

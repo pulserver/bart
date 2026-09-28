@@ -31,7 +31,7 @@
 #include "meco.h"
 
 
-struct meco_s meco_create(const long dims[DIMS], const long y_dims[DIMS], const long x_dims[DIMS], const complex float* mask, const complex float* TE, const complex float* psf, enum meco_model sel_model, bool real_pd, enum fat_spec fat_spec, const float* scale_fB0, const struct noir_model_conf_s* conf)
+struct meco_s meco_create(const bart_dim_t dims[DIMS], const bart_dim_t y_dims[DIMS], const bart_dim_t x_dims[DIMS], const complex float* mask, const complex float* TE, const complex float* psf, enum meco_model sel_model, bool real_pd, enum fat_spec fat_spec, const float* scale_fB0, const struct noir_model_conf_s* conf)
 {
 	struct meco_s ret;
 	struct noir_s nlinv = noir_create(dims, mask, psf, conf);

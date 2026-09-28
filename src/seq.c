@@ -56,9 +56,9 @@ int main_seq(int argc, char* argv[argc])
 	};
 
 	float dt = -1.;
-	long samples = -1;
+	bart_dim_t samples = -1;
 	double rel_shift[3] = { };
-	long raga_full_frames = 0;
+	bart_dim_t raga_full_frames = 0;
 	float dist = 1.;
 
 	struct bart_seq* seq = bart_seq_alloc("");
@@ -69,7 +69,7 @@ int main_seq(int argc, char* argv[argc])
 	bool chrono = false;
 	bool support = false;
 
-	long custom_params_long[SEQ_MAX_PARAMS_LONG] = { 0 };
+	bart_dim_t custom_params_long[SEQ_MAX_PARAMS_LONG] = { 0 };
 	double custom_params_double[SEQ_MAX_PARAMS_DOUBLE] = { 0. };
 
 	const struct opt_s opts[] = {
@@ -163,7 +163,7 @@ int main_seq(int argc, char* argv[argc])
 
 		if (1 == seq->conf->loop_dims[TIME_DIM]) {
 
-			debug_printf(DP_INFO, "Set total number of spokes to %ld (full frame for RAGA encoding)\n", seq->conf->loop_dims[PHS1_DIM]);
+			debug_printf(DP_INFO, "Set total number of spokes to %" PRId64 " (full frame for RAGA encoding)\n", seq->conf->loop_dims[PHS1_DIM]);
 			seq->conf->loop_dims[TIME_DIM] = seq->conf->loop_dims[PHS1_DIM];
 		}
 	}
@@ -171,7 +171,7 @@ int main_seq(int argc, char* argv[argc])
 
 	seq_ui_interface_loop_dims(0, seq->conf, DIMS, seq->conf->loop_dims);
 
-	const long total_slices = get_slices(seq->conf);
+	const bart_dim_t total_slices = get_slices(seq->conf);
 
 	if ((0. < fabs(rel_shift[0])) || (0. < fabs(rel_shift[1])) || (0. < fabs(rel_shift[2]))) {
 
@@ -235,16 +235,16 @@ int main_seq(int argc, char* argv[argc])
 	}
 
 
-	debug_printf(DP_INFO, "loops: %ld \t dims: ", md_calc_size(DIMS, seq->conf->loop_dims));
+	debug_printf(DP_INFO, "loops: %" PRId64 " \t dims: ", md_calc_size(DIMS, seq->conf->loop_dims));
 	debug_print_dims(DP_INFO, DIMS, seq->conf->loop_dims);
 
-	long kernel_dims[DIMS];
+	bart_dim_t kernel_dims[DIMS];
 	md_select_dims(DIMS, ~(COEFF_FLAG | COEFF2_FLAG | ITER_FLAG), kernel_dims, seq->conf->loop_dims);
 
-	debug_printf(DP_INFO, "kernels: %ld \t dims: ", md_calc_size(DIMS, kernel_dims));
+	debug_printf(DP_INFO, "kernels: %" PRId64 " \t dims: ", md_calc_size(DIMS, kernel_dims));
 	debug_print_dims(DP_INFO, DIMS, kernel_dims);
 
-	long mdims[DIMS];
+	bart_dim_t mdims[DIMS];
 	md_select_dims(DIMS, ~TE_FLAG, mdims, kernel_dims);
 
 	int E = 0;
@@ -270,29 +270,29 @@ int main_seq(int argc, char* argv[argc])
 	double g2[samples][mdims[READ_DIM]];
 	float m0[samples][3];
 
-	long mstrs[DIMS];
+	bart_stride_t mstrs[DIMS];
 	md_calc_strides(DIMS, mstrs, mdims, CFL_SIZE);
 
-	long adims[DIMS];
+	bart_dim_t adims[DIMS];
 	md_copy_dims(DIMS, adims, kernel_dims);
 
 	adims[PHS2_DIM] *= adims[PHS1_DIM]; // consistency with traj tool
 	adims[PHS1_DIM] = seq->conf->geom.baseres * seq->conf->phys.os;
 	adims[READ_DIM] = 5;
 
-	long adc_dims[DIMS];
+	bart_dim_t adc_dims[DIMS];
 	md_select_dims(DIMS, (READ_FLAG | PHS1_FLAG | TE_FLAG), adc_dims, adims);
 
-	long adc_strs[DIMS];
+	bart_stride_t adc_strs[DIMS];
 	md_calc_strides(DIMS, adc_strs, adc_dims, CFL_SIZE);
 
-	long astrs[DIMS];
+	bart_stride_t astrs[DIMS];
 	md_calc_strides(DIMS, astrs, adims, CFL_SIZE);
 
-	long ind_dims[DIMS];
+	bart_dim_t ind_dims[DIMS];
 	md_select_dims(DIMS, ~(READ_FLAG | PHS1_FLAG), ind_dims, adims);
 
-	long ind_strs[DIMS];
+	bart_stride_t ind_strs[DIMS];
 	md_calc_strides(DIMS, ind_strs, ind_dims, CFL_SIZE);
 
 	complex float* out_grad = NULL;
@@ -376,7 +376,7 @@ int main_seq(int argc, char* argv[argc])
 		seq_compute_moment0(samples, m0, ddt, E, seq->event);
 
 
-		long pos_save[DIMS]; // FIXME use separate function
+		bart_dim_t pos_save[DIMS]; // FIXME use separate function
 		md_copy_dims(DIMS, pos_save, seq->state->pos);
 
 		// revert incomplete RAGA frame handling from flash()

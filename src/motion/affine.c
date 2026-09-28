@@ -149,7 +149,7 @@ static void affine_init_zero(complex float* dst)
 			affine_set(i, j, dst, 0);
 }
 
-static void affine_grid2world(const long dims[3], complex float* aff)
+static void affine_grid2world(const bart_dim_t dims[3], complex float* aff)
 {
 	affine_init_id(aff);
 
@@ -160,7 +160,7 @@ static void affine_grid2world(const long dims[3], complex float* aff)
 	}
 }
 
-static void affine_world2grid(const long dims[3], complex float* aff)
+static void affine_world2grid(const bart_dim_t dims[3], complex float* aff)
 {
 	affine_init_id(aff);
 
@@ -171,7 +171,7 @@ static void affine_world2grid(const long dims[3], complex float* aff)
 	}
 }
 
-static const struct nlop_s* nlop_affine_grid2world(const long dims[3])
+static const struct nlop_s* nlop_affine_grid2world(const bart_dim_t dims[3])
 {
 	complex float aff[12];
 	affine_init_id(aff);
@@ -185,7 +185,7 @@ static const struct nlop_s* nlop_affine_grid2world(const long dims[3])
 	return nlop_const_create(2, MD_DIMS(3, 4), true, aff);
 }
 
-static const struct nlop_s* nlop_affine_world2grid(const long dims[3])
+static const struct nlop_s* nlop_affine_world2grid(const bart_dim_t dims[3])
 {
 	complex float aff[12];
 	affine_init_id(aff);
@@ -199,7 +199,7 @@ static const struct nlop_s* nlop_affine_world2grid(const long dims[3])
 	return nlop_const_create(2, MD_DIMS(3, 4), true, aff);
 }
 
-const struct nlop_s* nlop_affine_to_grid_F(const struct nlop_s* affine, const long sdims[3], const long mdims[3])
+const struct nlop_s* nlop_affine_to_grid_F(const struct nlop_s* affine, const bart_dim_t sdims[3], const bart_dim_t mdims[3])
 {
 	affine = nlop_affine_chain_FF(affine, nlop_affine_grid2world(sdims));
 	affine = nlop_affine_chain_FF(nlop_affine_world2grid(mdims), affine);
@@ -425,13 +425,13 @@ const struct nlop_s* nlop_affine_3D(void)
 
 
 
-const struct nlop_s* nlop_affine_compute_pos(int dim, int N, const long sdims[N], const long mdims[N], const struct nlop_s* affine)
+const struct nlop_s* nlop_affine_compute_pos(int dim, int N, const bart_dim_t sdims[N], const bart_dim_t mdims[N], const struct nlop_s* affine)
 {
-	long dims[N + 1];
+	bart_dim_t dims[N + 1];
 	md_copy_dims(N, dims, sdims);
 	dims[N] = 4;
 
-	NESTED(complex float, pos_kernel, (const long pos[]))
+	NESTED(complex float, pos_kernel, (const bart_dim_t pos[]))
 	{
 		complex float ret = (3 == pos[dim + 1]) ? 1 : pos[pos[dim + 1]];
 
@@ -441,12 +441,12 @@ const struct nlop_s* nlop_affine_compute_pos(int dim, int N, const long sdims[N]
 	complex float* pos = md_alloc(N + 1, dims, CFL_SIZE);
 	md_parallel_zsample(N + 1, dims, pos, pos_kernel);
 
-	long pdims[N + 1];
+	bart_dim_t pdims[N + 1];
 	md_copy_dims(N, pdims, sdims);
 	pdims[dim] = 3;
 	pdims[N] = 1;
 
-	long adims[N + 1];
+	bart_dim_t adims[N + 1];
 	md_singleton_dims(N, adims);
 	adims[dim] = 3;
 	adims[N] = 4;
@@ -463,11 +463,11 @@ const struct nlop_s* nlop_affine_compute_pos(int dim, int N, const long sdims[N]
 	return nlop_append_FF(affine, 0, nlop_from_linop_F(lop));
 }
 
-void affine_interpolate(int ord, const complex float* affine, const long _odims[3], complex float* dst, const long _idims[3], const complex float* src)
+void affine_interpolate(int ord, const complex float* affine, const bart_dim_t _odims[3], complex float* dst, const bart_dim_t _idims[3], const complex float* src)
 {
-	long odims[4];
-	long idims[4];
-	long cdims[4];
+	bart_dim_t odims[4];
+	bart_dim_t idims[4];
+	bart_dim_t cdims[4];
 
 	md_copy_dims(3, odims, _odims);
 	md_copy_dims(3, idims, _idims);
@@ -490,7 +490,7 @@ void affine_interpolate(int ord, const complex float* affine, const long _odims[
 	affine_chain_complex(tmp, affine, g2w);
 	affine_chain_complex(affine_grid, w2g, tmp);
 
-	NESTED(complex float, pos_kernel, (const long pos[]))
+	NESTED(complex float, pos_kernel, (const bart_dim_t pos[]))
 	{
 		complex float ret = affine_get(pos[3], 3, affine_grid_p);
 
@@ -511,12 +511,12 @@ void affine_interpolate(int ord, const complex float* affine, const long _odims[
 
 
 
-static const struct nlop_s* nlop_image_transform_affine_create(int ord, long _sdims[3], long _mdims[3], const struct nlop_s* trafo)
+static const struct nlop_s* nlop_image_transform_affine_create(int ord, bart_dim_t _sdims[3], bart_dim_t _mdims[3], const struct nlop_s* trafo)
 {
 
-	long sdims[4];
-	long mdims[4];
-	long cdims[4];
+	bart_dim_t sdims[4];
+	bart_dim_t mdims[4];
+	bart_dim_t cdims[4];
 
 	md_copy_dims(3, sdims, _sdims);
 	md_copy_dims(3, mdims, _mdims);
@@ -530,7 +530,7 @@ static const struct nlop_s* nlop_image_transform_affine_create(int ord, long _sd
 	nlop = nlop_affine_compute_pos(3, 4, sdims, mdims, nlop);
 
 
-	auto intp = nlop_interpolate_create(3, 7ul, ord, (1 == ord), 4, sdims, cdims, mdims);
+	auto intp = nlop_interpolate_create(3, 7, ord, (1 == ord), 4, sdims, cdims, mdims);
 	intp = nlop_reshape_in_F(intp, 0, 3, mdims);
 	intp = nlop_reshape_out_F(intp, 0, 3, sdims);
 
@@ -539,8 +539,8 @@ static const struct nlop_s* nlop_image_transform_affine_create(int ord, long _sd
 
 
 static const struct nlop_s* affine_reg_nlop_create(
-	      long sdims[3], const complex float* img_static, const complex float* msk_static,
-	      long mdims[3], const complex float* img_moving, const complex float* msk_moving,
+	      bart_dim_t sdims[3], const complex float* img_static, const complex float* msk_static,
+	      bart_dim_t mdims[3], const complex float* img_moving, const complex float* msk_moving,
 	      const struct nlop_s* trafo, bool gpu, bool cubic)
 {
 	float smin =  FLT_MAX;
@@ -548,10 +548,10 @@ static const struct nlop_s* affine_reg_nlop_create(
 	float mmin =  FLT_MAX;
 	float mmax = -FLT_MIN;
 
-	long stot = sdims[0] * sdims[1] * sdims[2];
-	long mtot = mdims[0] * mdims[1] * mdims[2];
+	bart_dim_t stot = sdims[0] * sdims[1] * sdims[2];
+	bart_dim_t mtot = mdims[0] * mdims[1] * mdims[2];
 
-	for (long i = 0; i < stot; i++) {
+	for (bart_dim_t i = 0; i < stot; i++) {
 
 		if (NULL != msk_static)
 			if (0. == msk_static[i])
@@ -561,7 +561,7 @@ static const struct nlop_s* affine_reg_nlop_create(
 		smax = MAX(smax, cabsf(img_static[i]));
 	}
 
-	for (long i = 0; i < mtot; i++) {
+	for (bart_dim_t i = 0; i < mtot; i++) {
 
 		if (NULL != msk_moving)
 			if (0. == msk_moving[i])
@@ -607,13 +607,13 @@ static const struct nlop_s* affine_reg_nlop_create(
 }
 
 
-static void gaussian_filter_3D(float sigma, const long dims[3], complex float* dst, const complex float* src)
+static void gaussian_filter_3D(float sigma, const bart_dim_t dims[3], complex float* dst, const complex float* src)
 {
 	const struct linop_s* lop_conv = linop_identity_create(3, dims);
 
 	for (int i = 0; i < 3; i++) {
 
-		long fsize = MIN(8. * sigma + 1, dims[i]);
+		bart_dim_t fsize = MIN(8. * sigma + 1, dims[i]);
 
 		complex float filter[fsize];
 
@@ -629,7 +629,7 @@ static void gaussian_filter_3D(float sigma, const long dims[3], complex float* d
 		for (int i = 0; i < fsize; i++)
 			filter[i] /= tot;
 
-		long fdims[3] = { 1, 1, 1 };
+		bart_dim_t fdims[3] = { 1, 1, 1 };
 		fdims[i] = fsize;
 
 		lop_conv = linop_chain_FF(linop_conv_create(3, MD_BIT(i), CONV_TRUNCATED, CONV_SYMMETRIC, dims, dims, fdims, filter), lop_conv);
@@ -644,7 +644,7 @@ static void gaussian_filter_3D(float sigma, const long dims[3], complex float* d
 
 
 
-void affine_reg(bool gpu, bool cubic, complex float* affine, const struct nlop_s* _trafo, long sdims[3], const complex float* img_static, const complex float* msk_static, long mdims[3], const complex float* img_moving, const complex float* msk_moving, int N, float sigma[N], float factor[N])
+void affine_reg(bool gpu, bool cubic, complex float* affine, const struct nlop_s* _trafo, bart_dim_t sdims[3], const complex float* img_static, const complex float* msk_static, bart_dim_t mdims[3], const complex float* img_moving, const complex float* msk_moving, int N, float sigma[N], float factor[N])
 {
 	int npars = nlop_domain(_trafo)->dims[0];
 
@@ -659,7 +659,7 @@ void affine_reg(bool gpu, bool cubic, complex float* affine, const struct nlop_s
 		const complex float* wimg_static = img_static;
 		const complex float* wimg_moving = img_moving;
 
-		long cdims[3];
+		bart_dim_t cdims[3];
 		md_copy_dims(3, cdims, sdims);
 
 		if (0. != sigma[i]) {

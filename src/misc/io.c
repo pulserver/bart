@@ -44,6 +44,7 @@ static void toolgraph_add_input(const char* node, const char* file);
 static void toolgraph_save_iofiles(void);
 
 
+static int xdprintf(int fd, const char* fmt, ...) __attribute__((format(BART_PRINTF,2,3)));
 static int xdprintf(int fd, const char* fmt, ...)
 {
 	va_list ap;
@@ -377,14 +378,14 @@ bool io_check_if_opened(const char* name)
 }
 
 
-int write_cfl_header(int fd, const char* filename, int n, const long dimensions[n])
+int write_cfl_header(int fd, const char* filename, int n, const bart_dim_t dimensions[n])
 {
 	int written = 0;
 
 	written += xdprintf(fd, "# Dimensions\n");
 
 	for (int i = 0; i < n; i++)
-		written += xdprintf(fd, "%ld ", dimensions[i]);
+		written += xdprintf(fd, "%" PRId64 " ", dimensions[i]);
 
 	written += xdprintf(fd, "\n");
 
@@ -426,7 +427,7 @@ int write_cfl_header(int fd, const char* filename, int n, const long dimensions[
 }
 
 
-int write_stream_header(int fd, const char* dataname, int D, const long dims[D])
+int write_stream_header(int fd, const char* dataname, int D, const bart_dim_t dims[D])
 {
 	// determine header length first by writing it to /dev/null
 #ifdef _WIN32
@@ -468,7 +469,7 @@ int write_stream_header(int fd, const char* dataname, int D, const long dims[D])
 }
 
 
-static int parse_cfl_header_len(long N, const char header[N + 1])
+static int parse_cfl_header_len(bart_dim_t N, const char header[N + 1])
 {
 	int pos = 0;
 	int delta = 0;
@@ -492,7 +493,7 @@ static int parse_cfl_header_len(long N, const char header[N + 1])
 }
 
 
-int read_cfl_header2(int N, char header[N + 1], int fd, const char* hdrname, char** file, char** cmd, int n, long dimensions[n])
+int read_cfl_header2(int N, char header[N + 1], int fd, const char* hdrname, char** file, char** cmd, int n, bart_dim_t dimensions[n])
 {
 	*file = NULL;
 	memset(header, 0, (size_t)(N + 1));
@@ -539,7 +540,7 @@ int read_cfl_header2(int N, char header[N + 1], int fd, const char* hdrname, cha
 }
 
 
-int read_cfl_header(int fd, const char* hdrname, char** file, char** cmd, int n, long dimensions[n])
+int read_cfl_header(int fd, const char* hdrname, char** file, char** cmd, int n, bart_dim_t dimensions[n])
 {
 	char header[IO_MAX_HDR_SIZE + 1];
 
@@ -548,7 +549,7 @@ int read_cfl_header(int fd, const char* hdrname, char** file, char** cmd, int n,
 
 
 
-int parse_cfl_header(long N, const char header[N + 1], char** file, char** cmd, char** node, int n, long dimensions[n])
+int parse_cfl_header(bart_dim_t N, const char header[N + 1], char** file, char** cmd, char** node, int n, bart_dim_t dimensions[n])
 {
 	*file = NULL;
 
@@ -573,10 +574,10 @@ int parse_cfl_header(long N, const char header[N + 1], char** file, char** cmd, 
 			for (int i = 0; i < n; i++)
 				dimensions[i] = 1;
 
-			long val;
+			bart_dim_t val;
 			int i = 0;
 
-			while (1 == sscanf(header + pos, "%ld%n", &val, &delta)) {
+			while (1 == sscanf(header + pos, "%" SCNd64 "%n", &val, &delta)) {
 
 				pos += delta;
 
@@ -674,14 +675,14 @@ out:
  * @param n[D] number of dimensions per array
  * @param dimensions[D] pointer to dimensions of each array
  */
-int write_multi_cfl_header(int fd, const char* filename, long num_ele, int D, int n[D], const long* dimensions[D])
+int write_multi_cfl_header(int fd, const char* filename, bart_dim_t num_ele, int D, int n[D], const bart_dim_t* dimensions[D])
 {
-	xdprintf(fd, "# Dimensions\n%ld \n", num_ele);
+	xdprintf(fd, "# Dimensions\n%" PRId64 " \n", num_ele);
 
 	xdprintf(fd, "# SizesDimensions\n");
 
 	for (int i = 0; i < D; i++)
-		xdprintf(fd, "%ld ", n[i]);
+		xdprintf(fd, "%d ", n[i]);
 
 	xdprintf(fd, "\n");
 
@@ -690,7 +691,7 @@ int write_multi_cfl_header(int fd, const char* filename, long num_ele, int D, in
 	for (int i = 0; i < D; i++) {
 
 		for (int j = 0; j < n[i]; j++)
-			xdprintf(fd, "%ld ", dimensions[i][j]);
+			xdprintf(fd, "%" PRId64 " ", dimensions[i][j]);
 
 		xdprintf(fd, "\n");
 	}
@@ -742,12 +743,12 @@ int write_multi_cfl_header(int fd, const char* filename, long num_ele, int D, in
  *
  * @return number of arrays in file
  */
-int read_multi_cfl_header(int fd, char** file, int D_max, int n_max, int n[D_max], long dimensions[D_max][n_max])
+int read_multi_cfl_header(int fd, char** file, int D_max, int n_max, int n[D_max], bart_dim_t dimensions[D_max][n_max])
 {
 	*file = NULL;
 	char header[IO_MAX_HDR_SIZE + 1] = { };
 
-	long dims[1];
+	bart_dim_t dims[1];
 	int max = read_cfl_header2(IO_MAX_HDR_SIZE, header, fd, NULL, file, NULL, 1, dims);
 
 	if (-1 == max)
@@ -759,8 +760,8 @@ int read_multi_cfl_header(int fd, char** file, int D_max, int n_max, int n[D_max
 	bool multi_cfl = false;
 
 	int D = 0;
-	long num_ele = dims[0];
-	long num_ele_dims = 0;
+	bart_dim_t num_ele = dims[0];
+	bart_dim_t num_ele_dims = 0;
 
 	while (true) {
 
@@ -776,9 +777,9 @@ int read_multi_cfl_header(int fd, char** file, int D_max, int n_max, int n[D_max
 			for (int i = 0; i < D_max; i++)
 				n[i] = 0;
 
-			long val;
+			bart_dim_t val;
 
-			while (1 == sscanf(header + pos, "%ld%n", &val, &delta)) {
+			while (1 == sscanf(header + pos, "%" SCNd64 "%n", &val, &delta)) {
 
 				pos += delta;
 
@@ -809,12 +810,12 @@ int read_multi_cfl_header(int fd, char** file, int D_max, int n_max, int n[D_max
 				for (int j = 0; j < n_max; j++)
 					dimensions[i][j] = 1;
 
-			long val;
+			bart_dim_t val;
 			int i = 0;
 			int j = 0;
-			long size_tensor = 1;
+			bart_dim_t size_tensor = 1;
 
-			while (1 == sscanf(header + pos, "%ld%n", &val, &delta)) {
+			while (1 == sscanf(header + pos, "%" SCNd64 "%n", &val, &delta)) {
 
 				pos += delta;
 
@@ -866,10 +867,10 @@ out:
 
 
 
-int write_coo(int fd, int n, const long dimensions[n])
+int write_coo(int fd, int n, const bart_dim_t dimensions[n])
 {
 	char header[4096];
-	long len = (long)ARRAY_SIZE(header);
+	bart_dim_t len = (bart_stride_t)ARRAY_SIZE(header);
 	memset(header, 0, 4096);
 
 	int pos = 0;
@@ -883,14 +884,14 @@ int write_coo(int fd, int n, const long dimensions[n])
 	pos += ret;
 	len -= ret;
 
-	long start = 0;
-	long stride = 1;
+	bart_dim_t start = 0;
+	bart_stride_t stride = 1;
 
 	for (int i = 0; i < n; i++) {
 
-		long size = dimensions[i];
+		bart_dim_t size = dimensions[i];
 
-		ret = snprintf(header + pos, (size_t)len, "[%ld\t%ld\t%ld\t%ld]\n", start, stride * size, size, stride);
+		ret = snprintf(header + pos, (size_t)len, "[%" PRId64 "\t%" PRId64 "\t%" PRId64 "\t%" PRId64 "]\n", start, stride * size, size, stride);
 
 		if ((ret < 0) || (ret >= len))
 			return -1;
@@ -908,7 +909,7 @@ int write_coo(int fd, int n, const long dimensions[n])
 }
 
 
-int read_coo(int fd, int n, long dimensions[n])
+int read_coo(int fd, int n, bart_dim_t dimensions[n])
 {
 	char header[4096];
 
@@ -941,9 +942,9 @@ int read_coo(int fd, int n, long dimensions[n])
 
 	for (int i = 0; i < dim; i++) {
 
-		long val;
+		bart_dim_t val;
 
-		if (1 != sscanf(header + pos, "[%*d %*d %ld %*d]\n%n", &val, &delta))
+		if (1 != sscanf(header + pos, "[%*d %*d %" SCNd64 " %*d]\n%n", &val, &delta))
 			return -1;
 
 		pos += delta;
@@ -988,7 +989,7 @@ enum ra_types {
 #define err_assert(x)	({ if (!(x)) { debug_printf(DP_ERROR, "%s", #x); return -1; } })
 
 
-int read_ra(int fd, int n, long dimensions[n])
+int read_ra(int fd, int n, bart_dim_t dimensions[n])
 {
 	struct ra_hdr_s header;
 
@@ -1011,20 +1012,20 @@ int read_ra(int fd, int n, long dimensions[n])
 	for (int i = 0; i < (int)header.ndims; i++) {
 
 		if (i < n)
-			dimensions[i] = (long)dims[i];
+			dimensions[i] = (bart_dim_t)dims[i];
 		else
 			err_assert(1 == dims[i]);
 	}
 
 	// this can overflow, but we check in mmio
-	err_assert((long)header.size == md_calc_size(n, dimensions) * (long)sizeof(complex float));
+	err_assert((bart_dim_t)header.size == md_calc_size(n, dimensions) * (bart_stride_t)sizeof(complex float));
 
 	return 0;
 }
 
 
 
-int write_ra(int fd, int n, const long dimensions[n])
+int write_ra(int fd, int n, const bart_dim_t dimensions[n])
 {
 	struct ra_hdr_s header = {
 
@@ -1032,7 +1033,7 @@ int write_ra(int fd, int n, const long dimensions[n])
 		.flags = 0ULL,
 		.eltype = RA_TYPE_COMPLEX,
 		.elbyte = sizeof(complex float),
-		.size = (size_t)(md_calc_size(n, dimensions) * (long)sizeof(complex float)),
+		.size = (size_t)(md_calc_size(n, dimensions) * (bart_stride_t)sizeof(complex float)),
 		.ndims = (size_t)n,
 	};
 

@@ -41,7 +41,7 @@ struct nlop_wrapper_s {
 	struct iter_op_data_s super;
 
 	struct noir_s* noir;
-	long split;
+	bart_dim_t split;
 };
 
 DEF_TYPEID(nlop_wrapper_s);
@@ -77,7 +77,7 @@ const struct noir_conf_s noir_defaults = {
 };
 
 
-void noir_recon(const struct noir_conf_s* conf, const long dims[DIMS], complex float* img, complex float* sens, complex float* ksens, const complex float* ref, const complex float* pattern, const complex float* mask, const complex float* kspace_data)
+void noir_recon(const struct noir_conf_s* conf, const bart_dim_t dims[DIMS], complex float* img, complex float* sens, complex float* ksens, const complex float* ref, const complex float* pattern, const complex float* mask, const complex float* kspace_data)
 {
 	struct noir_model_conf_s mconf = noir_model_conf_defaults;
 	mconf.rvc = conf->rvc;
@@ -95,20 +95,20 @@ void noir_recon(const struct noir_conf_s* conf, const long dims[DIMS], complex f
 		mconf.ptrn_flags |= COIL_FLAG;
 
 
-	long imgs_dims[DIMS];
-	long coil_dims[DIMS];
-	long data_dims[DIMS];
+	bart_dim_t imgs_dims[DIMS];
+	bart_dim_t coil_dims[DIMS];
+	bart_dim_t data_dims[DIMS];
 
 
 	md_select_dims(DIMS, ~COIL_FLAG, imgs_dims, dims);
 	md_select_dims(DIMS, ~mconf.cnstcoil_flags, coil_dims, dims);
 	md_select_dims(DIMS, ~MAPS_FLAG, data_dims, dims);
 
-	long skip = md_calc_size(DIMS, imgs_dims);
-	long size = skip + md_calc_size(DIMS, coil_dims);
-	long data_size = md_calc_size(DIMS, data_dims);
+	bart_dim_t skip = md_calc_size(DIMS, imgs_dims);
+	bart_dim_t size = skip + md_calc_size(DIMS, coil_dims);
+	bart_dim_t data_size = md_calc_size(DIMS, data_dims);
 
-	long d1[1] = { size };
+	bart_dim_t d1[1] = { size };
 	// variable which is optimized by the IRGNM
 	complex float* x = md_alloc_sameplace(1, d1, CFL_SIZE, kspace_data);
 

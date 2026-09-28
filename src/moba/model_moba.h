@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include <complex.h>
 
 #include "misc/mri.h"
@@ -37,8 +38,8 @@ struct mobafit_model_config {
 };
 
 
-extern struct mobamod moba_create(const long dims[DIMS], const complex float* mask, const complex float* T1, const complex float* TE, const complex float* b1,
+extern struct mobamod moba_create(const bart_dim_t dims[DIMS], const complex float* mask, const complex float* T1, const complex float* TE, const complex float* b1,
 		const complex float* b0, const float* scale_fB0, const complex float* psf, const struct noir_model_conf_s* conf, struct moba_conf_s* data);
 
-const struct nlop_s* moba_get_nlop(struct mobafit_model_config* data, const long out_dims[DIMS], const long param_dims[DIMS], const long enc_dims[DIMS], complex float* enc);
+const struct nlop_s* moba_get_nlop(struct mobafit_model_config* data, const bart_dim_t out_dims[DIMS], const bart_dim_t param_dims[DIMS], const bart_dim_t enc_dims[DIMS], complex float* enc);
 

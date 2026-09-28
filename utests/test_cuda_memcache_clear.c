@@ -30,7 +30,7 @@ static bool test_cuda_memcache_clear(void)
 
 	enum { test_dims = 7 };
 
-	const long dims[test_dims] = { 4, 4, 4, 4, 4, 4, 1 };
+	const bart_dim_t dims[test_dims] = { 4, 4, 4, 4, 4, 4, 1 };
 
 	const unsigned int D = test_dims;
 

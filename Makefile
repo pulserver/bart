@@ -142,8 +142,9 @@ ifeq ($(UNAME),CYGWIN_NT-10.0)
 endif
 
 
-ifneq (,$(findstring MSYS,$(UNAME)))
+ifneq (,$(findstring MSYS,$(UNAME))$(findstring MINGW,$(UNAME)))
 	BUILDTYPE = MSYS
+	CPPFLAGS += -DNO_FIFO -DBARTLIB_STATIC
 	#LDFLAGS += -lucrtbase # support for %F, %T formatting codes in strftime()
 	#LDFLAGS += -static-libgomp
 	NOLAPACKE ?= 1
@@ -184,6 +185,10 @@ endif
 #OPT += -ffp-contract=off
 CPPFLAGS ?= -Wall -Wextra
 CFLAGS ?= $(OPT) -Wmissing-prototypes -Wincompatible-pointer-types -Wsign-conversion -Wwrite-strings
+# A format that does not match the width of its argument, or an array of one
+# integer type passed where another is expected, is wrong on some platform
+# even where the two happen to have the same width here.
+CFLAGS += -Werror=format -Werror=incompatible-pointer-types
 CXXFLAGS ?= $(OPT)
 
 ifeq ($(BUILDTYPE), MacOSX)
@@ -625,6 +630,8 @@ CPPFLAGS += $(FFTW_H) $(BLAS_H)
 # librt
 ifeq ($(BUILDTYPE), MacOSX)
 	LIBRT :=
+else ifeq ($(BUILDTYPE), MSYS)
+	LIBRT :=
 else
 	LIBRT := -lrt
 endif
@@ -839,7 +846,7 @@ MODULES_test_seq += -lseq -lsimu -lnoncart
 MODULES_test_pulseq += -lseq -lnoncart
 
 # lib num
-UTARGETS += test_multind test_flpmath test_splines test_linalg test_polynom test_window test_conv
+UTARGETS += test_multind test_dimtypes test_flpmath test_splines test_linalg test_polynom test_window test_conv
 UTARGETS += test_ode test_nlmeans test_rand test_matexp test_delayed
 UTARGETS += test_blas test_mdfft test_ops test_ops_p test_flpmath2 test_convcorr test_specfun test_qform test_fft test_gaussians test_md_gaussians
 UTARGETS += test_lapack

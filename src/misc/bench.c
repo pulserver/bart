@@ -24,14 +24,14 @@ static void bench_sync(bool sync_gpu)
 	return;
 }
 
-void run_bench(long rounds, bool print, bool sync_gpu, bench_f fun)
+void run_bench(bart_dim_t rounds, bool print, bool sync_gpu, bench_f fun)
 {
 	double runtimes[rounds];
 	memset(runtimes, 0, sizeof runtimes); // maybe-uninitialized
 
 	bench_sync(sync_gpu);
 
-	for (long i = 0; i < rounds; ++i) {
+	for (bart_dim_t i = 0; i < rounds; ++i) {
 
 		double tic = timestamp();
 
@@ -50,7 +50,7 @@ void run_bench(long rounds, bool print, bool sync_gpu, bench_f fun)
 
 	debug_printf(DP_DEBUG2, "Runtimes: ");
 
-	for (long i = 0; i < rounds; ++i) {
+	for (bart_dim_t i = 0; i < rounds; ++i) {
 
 		sum += runtimes[i];
 		min = MIN(min, runtimes[i]);

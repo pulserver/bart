@@ -2,6 +2,8 @@
 #ifndef _SEQ_MISC_H
 #define _SEQ_MISC_H
 
+#include "misc/dimtypes.h"
+
 struct seq_config;
 
 extern double slice_amplitude(const struct seq_config* seq);
@@ -13,7 +15,7 @@ struct grad_trapezoid;
 struct grad_limits;
 extern int gradient_prepare_with_timing(struct grad_trapezoid* grad, double moment, const struct seq_config* seq);
 
-extern long get_slices(const struct seq_config* seq);
+extern bart_dim_t get_slices(const struct seq_config* seq);
 
 #endif // _SEQ_MISC_H
 

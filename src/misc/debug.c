@@ -53,7 +53,7 @@ double timestamp(void)
 }
 
 
-void dump_cfl(const char* name, int D, const long dimensions[D], const complex float* src)
+void dump_cfl(const char* name, int D, const bart_dim_t dimensions[D], const complex float* src)
 {
 	io_reserve_output(name);
 
@@ -64,7 +64,7 @@ void dump_cfl(const char* name, int D, const long dimensions[D], const complex f
 	unmap_cfl(D, dimensions, out);
 }
 
-void dump_multi_cfl(const char* name, int N, int D[N], const long* dimensions[N], const complex float* x[N])
+void dump_multi_cfl(const char* name, int N, int D[N], const bart_dim_t* dimensions[N], const complex float* x[N])
 {
 	complex float* args[N];
 	create_multi_cfl(name, N, D, dimensions, args);
@@ -97,7 +97,7 @@ static void get_datetime_str(int len, char* datetime_str)
 	time_t tv = time(NULL);
 	struct tm* dt = gmtime(&tv);
 
-	strftime(datetime_str, (size_t)len, "%F %T", dt);
+	strftime(datetime_str, (size_t)len, "%Y-%m-%d %H:%M:%S", dt);
 }
 
 #define RESET	"\033[0m"
@@ -121,7 +121,7 @@ void debug_vprintf(int level, const char* fmt, va_list ap)
 		if (NULL != str) {
 
 			errno = 0;
-			long r = strtol(str, NULL, 10);
+			bart_dim_t r = strtoll(str, NULL, 10);
 
 			if ((errno == 0) && (0 <= r) && (r < 10))
 				debug_level = r;
@@ -152,7 +152,7 @@ void debug_vprintf(int level, const char* fmt, va_list ap)
 			if (NULL != str) {
 
 				errno = 0;
-				long r = strtol(str, NULL, 10);
+				bart_dim_t r = strtoll(str, NULL, 10);
 
 				if ((errno == 0) && (1 <= r))
 					cmd = ptr_printf(" (%s)", command_line ?: "bart wrapper");

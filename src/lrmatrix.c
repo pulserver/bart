@@ -41,7 +41,7 @@ struct s_data {
 
 	operator_data_t super;
 
-	long size;
+	bart_dim_t size;
 };
 
 static DEF_TYPEID(s_data);
@@ -85,8 +85,8 @@ int main_lrmatrix(int argc, char* argv[argc])
 	float rho = 0.25;
 	int blkskip = 2;
 	bool randshift = true;
-	unsigned long mflags = 1;
-	unsigned long flags = ~0UL;
+	bart_flags_t mflags = 1;
+	bart_flags_t flags = ~UINT64_C(0);
 	const char* sum_str = NULL;
 	bool noise = false;
         bool decom = false;
@@ -126,14 +126,14 @@ int main_lrmatrix(int argc, char* argv[argc])
 		llr = true;
 
 
-	long idims[DIMS];
-	long odims[DIMS];
+	bart_dim_t idims[DIMS];
+	bart_dim_t odims[DIMS];
 
 	// Load input
 	complex float* idata = load_cfl(in_file, DIMS, idims);
 
 	// Get levels and block dimensions
-	long blkdims[MAX_LEV][DIMS];
+	bart_dim_t blkdims[MAX_LEV][DIMS];
 	int levels;
 
 	if (llr)
@@ -184,19 +184,19 @@ int main_lrmatrix(int argc, char* argv[argc])
 
         if (!decom) {
 
-                sampling_op = linop_cdiag_create(DIMS, idims, ~0UL, pattern);
+                sampling_op = linop_cdiag_create(DIMS, idims, ~UINT64_C(0), pattern);
                 sum_op = linop_chain_FF(sum_op, sampling_op);
         }
 
 	const struct operator_p_s* sum_prox = prox_lineq_create(sum_op, idata);
-	const struct operator_p_s* lr_prox = lrthresh_create(odims, randshift, mflags, (const long (*)[])blkdims, 1., noise, remove_mean, false);
+	const struct operator_p_s* lr_prox = lrthresh_create(odims, randshift, mflags, (const bart_dim_t (*)[])blkdims, 1., noise, remove_mean, false);
 
 	// put into iter2 format
 	int num_funs = 2;
 	const struct linop_s* eye_op = linop_identity_create(DIMS, odims);
 	const struct linop_s* ops[2] = { eye_op, eye_op };
 	const struct operator_p_s* prox_ops[2] = { sum_prox, lr_prox };
-	long size = 2 * md_calc_size(DIMS, odims);
+	bart_dim_t size = 2 * md_calc_size(DIMS, odims);
 
 	struct s_data s_data = { { &TYPEID(s_data) }, size / 2 };
 

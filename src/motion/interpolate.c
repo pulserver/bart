@@ -34,7 +34,7 @@
 
 
 
-typedef void CLOSURE_TYPE(interp_update_t)(long ind, float d);
+typedef void CLOSURE_TYPE(interp_update_t)(bart_dim_t ind, float d);
 
 #ifndef __clang__
 #define VLA(x) x
@@ -45,7 +45,7 @@ typedef void CLOSURE_TYPE(interp_update_t)(long ind, float d);
 #endif
 
 
-void md_positions(int N, int d, unsigned long flags, const long sdims[N], const long pdims[N], complex float* pos)
+void md_positions(int N, int d, bart_flags_t flags, const bart_dim_t sdims[N], const bart_dim_t pdims[N], complex float* pos)
 {
 	assert(d < N);
 	assert(pdims[d] == bitcount(flags));
@@ -60,17 +60,17 @@ void md_positions(int N, int d, unsigned long flags, const long sdims[N], const 
 	}
 #endif
 
-	long map[bitcount(flags)];
+	bart_dim_t map[bitcount(flags)];
 	for (int i = 0, ip = 0; i < N; i++)
 		if (MD_IS_SET(flags, i))
 			map[ip++] = i;
 
-	const long* mapp = map;
+	const bart_dim_t* mapp = map;
 
-	const long* sdimsp = sdims;
-	const long* pdimsp = pdims;
+	const bart_dim_t* sdimsp = sdims;
+	const bart_dim_t* pdimsp = pdims;
 
-	NESTED(complex float, pos_kernel, (const long pos[]))
+	NESTED(complex float, pos_kernel, (const bart_dim_t pos[]))
 	{
 		float world = (pos[mapp[pos[d]]] - (pdimsp[mapp[pos[d]]] / 2)) / (float)pdimsp[mapp[pos[d]]];
 		complex float ret = sdimsp[mapp[pos[d]]] * world + (sdimsp[mapp[pos[d]]] / 2);
@@ -193,7 +193,7 @@ static float dspline(int ord, float x)
 
 
 
-static void interp_point_gen(int N, const long gdims[VLA(N)], const long gstrs[VLA(N)], const float coor[VLA(N)], int ord, float width, interp_update_t update)
+static void interp_point_gen(int N, const bart_dim_t gdims[VLA(N)], const bart_stride_t gstrs[VLA(N)], const float coor[VLA(N)], int ord, float width, interp_update_t update)
 {
 #ifndef __clang__
 	int sti[N];
@@ -214,7 +214,7 @@ static void interp_point_gen(int N, const long gdims[VLA(N)], const long gstrs[V
 			return;
 	}
 
-	__block NESTED(void, interp_point_r, (int N, long ind, float d))	// __block for recursion
+	__block NESTED(void, interp_point_r, (int N, bart_dim_t ind, float d))	// __block for recursion
 	{
 		if (0 == N) {
 
@@ -227,7 +227,7 @@ static void interp_point_gen(int N, const long gdims[VLA(N)], const long gstrs[V
 			for (int w = sti[N]; w <= eni[N]; w++) {
 
 				float d2 = d * spline(ord,  coor[N] - (float)w);
-				long ind2 = ind + w * gstrs[N] / (long)CFL_SIZE;
+				bart_dim_t ind2 = ind + w * gstrs[N] / (bart_stride_t)CFL_SIZE;
 
 				interp_point_r(N, ind2, d2);
 			}
@@ -237,9 +237,9 @@ static void interp_point_gen(int N, const long gdims[VLA(N)], const long gstrs[V
 	interp_point_r(N, 0, 1.);
 }
 
-static void interp_point(int N, const long gdims[VLA(N)], const long gstrs[VLA(N)], const complex float* grid, const float coor[VLA(N)], complex float* intp, int ord, float width)
+static void interp_point(int N, const bart_dim_t gdims[VLA(N)], const bart_stride_t gstrs[VLA(N)], const complex float* grid, const float coor[VLA(N)], complex float* intp, int ord, float width)
 {
-	NESTED(void, update, (long ind, float d))
+	NESTED(void, update, (bart_dim_t ind, float d))
 	{
 		__real(intp[0]) += __real(grid[ind]) * d;
 		__imag(intp[0]) += __imag(grid[ind]) * d;
@@ -248,9 +248,9 @@ static void interp_point(int N, const long gdims[VLA(N)], const long gstrs[VLA(N
 	interp_point_gen(N, gdims, gstrs, coor, ord, width, update);
 }
 
-static void interp_pointH(int N, const long gdims[VLA(N)], const long gstrs[VLA(N)], complex float* grid, const float coor[VLA(N)], const complex float* intp, int ord, float width)
+static void interp_pointH(int N, const bart_dim_t gdims[VLA(N)], const bart_stride_t gstrs[VLA(N)], complex float* grid, const float coor[VLA(N)], const complex float* intp, int ord, float width)
 {
-	NESTED(void, update, (long ind, float d))
+	NESTED(void, update, (bart_dim_t ind, float d))
 	{
 		// we are allowed to update real and imaginary part independently which works atomically
 #pragma 	omp atomic
@@ -262,60 +262,60 @@ static void interp_pointH(int N, const long gdims[VLA(N)], const long gstrs[VLA(
 	interp_point_gen(N, gdims, gstrs, coor, ord, width, update);
 }
 
-static void interpolate2(int ord, int M, const long dims[M], const long istrs[M], complex float* intp, const long cstrs[M], long cstrs_dir, const complex float* coor, const long gdims[M], const long gstrs[M], const complex float* grid)
+static void interpolate2(int ord, int M, const bart_dim_t dims[M], const bart_stride_t istrs[M], complex float* intp, const bart_stride_t cstrs[M], bart_dim_t cstrs_dir, const complex float* coor, const bart_dim_t gdims[M], const bart_stride_t gstrs[M], const complex float* grid)
 {
-	const long* istrsp = istrs;
-	const long* gstrsp = gstrs;
-	const long* cstrsp = cstrs;
-	const long* gdimsp = gdims;
+	const bart_dim_t* istrsp = istrs;
+	const bart_dim_t* gstrsp = gstrs;
+	const bart_dim_t* cstrsp = cstrs;
+	const bart_dim_t* gdimsp = gdims;
 
-	NESTED(void, interp_kernel, (const long pos[]))
+	NESTED(void, interp_kernel, (const bart_dim_t pos[]))
 	{
-		long ioffset = md_calc_offset(M, istrsp, pos) / (long)CFL_SIZE;
-		long coffset = md_calc_offset(M, cstrsp, pos) / (long)CFL_SIZE;
+		bart_stride_t ioffset = md_calc_offset(M, istrsp, pos) / (bart_stride_t)CFL_SIZE;
+		bart_stride_t coffset = md_calc_offset(M, cstrsp, pos) / (bart_stride_t)CFL_SIZE;
 
 		float coord[M];
 		for (int i = 0; i < M; i++)
-			coord[i] = crealf(coor[coffset + i * cstrs_dir / (long)CFL_SIZE]);
+			coord[i] = crealf(coor[coffset + i * cstrs_dir / (bart_stride_t)CFL_SIZE]);
 
 		interp_point(M, gdimsp, gstrsp, grid, coord, intp + ioffset, ord, ord + 1);
 	};
 
-	md_parallel_loop(M, dims, ~1ul, interp_kernel);
+	md_parallel_loop(M, dims, ~UINT64_C(1), interp_kernel);
 }
 
-static void interpolateH2(int ord, int M, const long gdims[M], const long gstrs[M], complex float* grid, const long dims[M], const long istrs[M], const complex float* intp, const long cstrs[M], long cstrs_dir, const complex float* coor)
+static void interpolateH2(int ord, int M, const bart_dim_t gdims[M], const bart_stride_t gstrs[M], complex float* grid, const bart_dim_t dims[M], const bart_stride_t istrs[M], const complex float* intp, const bart_stride_t cstrs[M], bart_dim_t cstrs_dir, const complex float* coor)
 {
-	const long* istrsp = istrs;
-	const long* gstrsp = gstrs;
-	const long* cstrsp = cstrs;
-	const long* gdimsp = gdims;
+	const bart_dim_t* istrsp = istrs;
+	const bart_dim_t* gstrsp = gstrs;
+	const bart_dim_t* cstrsp = cstrs;
+	const bart_dim_t* gdimsp = gdims;
 
-	NESTED(void, interp_kernel, (const long pos[]))
+	NESTED(void, interp_kernel, (const bart_dim_t pos[]))
 	{
-		long ioffset = md_calc_offset(M, istrsp, pos) / (long)CFL_SIZE;
-		long coffset = md_calc_offset(M, cstrsp, pos) / (long)CFL_SIZE;
+		bart_stride_t ioffset = md_calc_offset(M, istrsp, pos) / (bart_stride_t)CFL_SIZE;
+		bart_stride_t coffset = md_calc_offset(M, cstrsp, pos) / (bart_stride_t)CFL_SIZE;
 
 		float coord[M];
 		for (int i = 0; i < M; i++)
-			coord[i] = crealf(coor[coffset + i * cstrs_dir / (long)CFL_SIZE]);
+			coord[i] = crealf(coor[coffset + i * cstrs_dir / (bart_stride_t)CFL_SIZE]);
 
 		interp_pointH(M, gdimsp, gstrsp, grid, coord, intp + ioffset, ord, ord + 1);
 	};
 
-	md_parallel_loop(M, dims, ~1ul, interp_kernel);
+	md_parallel_loop(M, dims, ~UINT64_C(1), interp_kernel);
 }
 
-static void interpolate_compute_red(int d, unsigned long flags,
-					int M, long idims_red[M], long istrs_red[M], long cstrs_red[M], long gdims_red[M], long gstrs_red[M],
-					int N, const long dims[N], const long istrs[N], const long cstrs[N], const long gdims[N], const long gstrs[N])
+static void interpolate_compute_red(int d, bart_flags_t flags,
+					int M, bart_dim_t idims_red[M], bart_dim_t istrs_red[M], bart_dim_t cstrs_red[M], bart_dim_t gdims_red[M], bart_dim_t gstrs_red[M],
+					int N, const bart_dim_t dims[N], const bart_stride_t istrs[N], const bart_stride_t cstrs[N], const bart_dim_t gdims[N], const bart_stride_t gstrs[N])
 {
 	assert(!MD_IS_SET(flags, d));
 	assert((0 <= d) && (d < N));
 	assert(dims[d] == bitcount(flags));
 	assert(M == bitcount(flags));
 
-	unsigned long bflags = ~MD_BIT(d) & ~flags;
+	bart_flags_t bflags = ~MD_BIT(d) & ~flags;
 	assert(md_check_equal_dims(N, gdims, dims, bflags & md_nontriv_dims(N, gdims)));
 
 	for (int i = 0, ip = 0; i < N; i++) {
@@ -332,25 +332,25 @@ static void interpolate_compute_red(int d, unsigned long flags,
 	}
 }
 
-static void md_interpolate2_int(int d, unsigned long flags, int ord, int N, const long dims[N], const long istrs[N], complex float* intp, const long cstrs[N], const complex float* coor, const long gdims[N], const long gstrs[N], const complex float* grid)
+static void md_interpolate2_int(int d, bart_flags_t flags, int ord, int N, const bart_dim_t dims[N], const bart_stride_t istrs[N], complex float* intp, const bart_stride_t cstrs[N], const complex float* coor, const bart_dim_t gdims[N], const bart_stride_t gstrs[N], const complex float* grid)
 {
 	int M = bitcount(flags);
-	long gdims_red[M];
-	long gstrs_red[M];
-	long idims_red[M];
-	long istrs_red[M];
-	long cstrs_red[M];
+	bart_dim_t gdims_red[M];
+	bart_dim_t gstrs_red[M];
+	bart_dim_t idims_red[M];
+	bart_dim_t istrs_red[M];
+	bart_dim_t cstrs_red[M];
 
 	interpolate_compute_red(d, flags, M, idims_red, istrs_red, cstrs_red, gdims_red, gstrs_red,
 				N, dims, istrs, cstrs, gdims, gstrs);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
 	do {
-		long ioffset = md_calc_offset(N, istrs, pos) / (long)CFL_SIZE;
-		long coffset = md_calc_offset(N, cstrs, pos) / (long)CFL_SIZE;
-		long goffset = md_calc_offset(N, gstrs, pos) / (long)CFL_SIZE;
+		bart_stride_t ioffset = md_calc_offset(N, istrs, pos) / (bart_stride_t)CFL_SIZE;
+		bart_stride_t coffset = md_calc_offset(N, cstrs, pos) / (bart_stride_t)CFL_SIZE;
+		bart_stride_t goffset = md_calc_offset(N, gstrs, pos) / (bart_stride_t)CFL_SIZE;
 
 #ifdef USE_CUDA
 		if (cuda_ondevice(coor))
@@ -362,25 +362,25 @@ static void md_interpolate2_int(int d, unsigned long flags, int ord, int N, cons
 	} while (md_next(N, dims, ~flags & ~MD_BIT(d), pos));
 }
 
-static void md_interpolateH2_int(int d, unsigned long flags, int ord, int N, const long gdims[N], const long gstrs[N], complex float* grid, const long dims[N], const long istrs[N], const complex float* intp, const long cstrs[N], const complex float* coor)
+static void md_interpolateH2_int(int d, bart_flags_t flags, int ord, int N, const bart_dim_t gdims[N], const bart_stride_t gstrs[N], complex float* grid, const bart_dim_t dims[N], const bart_stride_t istrs[N], const complex float* intp, const bart_stride_t cstrs[N], const complex float* coor)
 {
 	int M = bitcount(flags);
-	long gdims_red[M];
-	long gstrs_red[M];
-	long idims_red[M];
-	long istrs_red[M];
-	long cstrs_red[M];
+	bart_dim_t gdims_red[M];
+	bart_dim_t gstrs_red[M];
+	bart_dim_t idims_red[M];
+	bart_dim_t istrs_red[M];
+	bart_dim_t cstrs_red[M];
 
 	interpolate_compute_red(d, flags, M, idims_red, istrs_red, cstrs_red, gdims_red, gstrs_red,
 				N, dims, istrs, cstrs, gdims, gstrs);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
 	do {
-		long ioffset = md_calc_offset(N, istrs, pos) / (long)CFL_SIZE;
-		long coffset = md_calc_offset(N, cstrs, pos) / (long)CFL_SIZE;
-		long goffset = md_calc_offset(N, gstrs, pos) / (long)CFL_SIZE;
+		bart_stride_t ioffset = md_calc_offset(N, istrs, pos) / (bart_stride_t)CFL_SIZE;
+		bart_stride_t coffset = md_calc_offset(N, cstrs, pos) / (bart_stride_t)CFL_SIZE;
+		bart_stride_t goffset = md_calc_offset(N, gstrs, pos) / (bart_stride_t)CFL_SIZE;
 
 #ifdef USE_CUDA
 		if (cuda_ondevice(coor))
@@ -400,19 +400,19 @@ struct vptr_interpolate_s {
 
 	int d;
 	int ord;
-	unsigned long flags;
+	bart_flags_t flags;
 };
 
 DEF_TYPEID(vptr_interpolate_s);
 
-static void md_interpolate2_vptr(vptr_fun_data_t* _data, int N, int D, const long* dims[N], const long* strs[N], void* args[N])
+static void md_interpolate2_vptr(vptr_fun_data_t* _data, int N, int D, const bart_dim_t* dims[N], const bart_stride_t* strs[N], void* args[N])
 {
 	auto d = CAST_DOWN(vptr_interpolate_s, _data);
 
 	md_interpolate2_int(d->d, d->flags, d->ord, D, dims[0], strs[0], args[0], strs[1], args[1], dims[2], strs[2], args[2]);
 }
 
-static void md_interpolate2H_vptr(vptr_fun_data_t* _data, int N, int D, const long* dims[N], const long* strs[N], void* args[N])
+static void md_interpolate2H_vptr(vptr_fun_data_t* _data, int N, int D, const bart_dim_t* dims[N], const bart_stride_t* strs[N], void* args[N])
 {
 	auto d = CAST_DOWN(vptr_interpolate_s, _data);
 
@@ -420,7 +420,7 @@ static void md_interpolate2H_vptr(vptr_fun_data_t* _data, int N, int D, const lo
 }
 
 
-void md_interpolate2(int d, unsigned long flags, int ord, int N, const long dims[N], const long istrs[N], complex float* intp, const long cstrs[N], const complex float* coor, const long gdims[N], const long gstrs[N], const complex float* grid)
+void md_interpolate2(int d, bart_flags_t flags, int ord, int N, const bart_dim_t dims[N], const bart_stride_t istrs[N], complex float* intp, const bart_stride_t cstrs[N], const complex float* coor, const bart_dim_t gdims[N], const bart_stride_t gstrs[N], const complex float* grid)
 {
 	PTR_ALLOC(struct vptr_interpolate_s, _d);
 	SET_TYPEID(vptr_interpolate_s, _d);
@@ -430,12 +430,12 @@ void md_interpolate2(int d, unsigned long flags, int ord, int N, const long dims
 	_d->flags = flags;
 
 	exec_vptr_zfun(md_interpolate2_vptr, CAST_UP(PTR_PASS(_d)), 3, N, ~flags & ~MD_BIT(d), MD_BIT(0), MD_BIT(0) | MD_BIT(1) | MD_BIT(2),
-			(const long*[3]) { dims, dims, gdims },
-			(const long*[3]) { istrs, cstrs, gstrs },
+			(const bart_dim_t*[3]) { dims, dims, gdims },
+			(const bart_dim_t*[3]) { istrs, cstrs, gstrs },
 			(complex float*[3]) { intp, (void*)coor, (void*)grid });
 }
 
-void md_interpolateH2(int d, unsigned long flags, int ord, int N, const long gdims[N], const long gstrs[N], complex float* grid, const long dims[N], const long istrs[N], const complex float* intp, const long cstrs[N], const complex float* coor)
+void md_interpolateH2(int d, bart_flags_t flags, int ord, int N, const bart_dim_t gdims[N], const bart_stride_t gstrs[N], complex float* grid, const bart_dim_t dims[N], const bart_stride_t istrs[N], const complex float* intp, const bart_stride_t cstrs[N], const complex float* coor)
 {
 	PTR_ALLOC(struct vptr_interpolate_s, _d);
 	SET_TYPEID(vptr_interpolate_s, _d);
@@ -445,8 +445,8 @@ void md_interpolateH2(int d, unsigned long flags, int ord, int N, const long gdi
 	_d->flags = flags;
 
 	exec_vptr_zfun(md_interpolate2H_vptr, CAST_UP(PTR_PASS(_d)), 3, N, ~flags & ~MD_BIT(d), MD_BIT(0), MD_BIT(0) | MD_BIT(1) | MD_BIT(2),
-			(const long*[3]) { gdims, dims, dims },
-			(const long*[3]) { gstrs, istrs, cstrs },
+			(const bart_dim_t*[3]) { gdims, dims, dims },
+			(const bart_dim_t*[3]) { gstrs, istrs, cstrs },
 			(complex float*[3]) { grid, (void*)intp, (void*)coor });
 }
 
@@ -455,7 +455,7 @@ void md_interpolateH2(int d, unsigned long flags, int ord, int N, const long gdi
 
 
 
-static void interp_point_adj_coor_gen(int N, const long gdims[VLA(N)], const long gstrs[VLA(N)], const float coor[VLA(N)], int ord, float width, int dir, interp_update_t update)
+static void interp_point_adj_coor_gen(int N, const bart_dim_t gdims[VLA(N)], const bart_stride_t gstrs[VLA(N)], const float coor[VLA(N)], int ord, float width, int dir, interp_update_t update)
 {
 #ifndef __clang__
 	int sti[N];
@@ -476,7 +476,7 @@ static void interp_point_adj_coor_gen(int N, const long gdims[VLA(N)], const lon
 			return;
 	}
 
-	__block NESTED(void, interp_point_r, (int N, long ind, float d))	// __block for recursion
+	__block NESTED(void, interp_point_r, (int N, bart_dim_t ind, float d))	// __block for recursion
 	{
 		if (0 == N) {
 
@@ -489,7 +489,7 @@ static void interp_point_adj_coor_gen(int N, const long gdims[VLA(N)], const lon
 			for (int w = sti[N]; w <= eni[N]; w++) {
 
 				float d2 = d * ((N == dir) ? dspline: spline)(ord,  coor[N] - (float)w);
-				long ind2 = ind + w * gstrs[N] / (long)CFL_SIZE;
+				bart_dim_t ind2 = ind + w * gstrs[N] / (bart_stride_t)CFL_SIZE;
 
 				interp_point_r(N, ind2, d2);
 			}
@@ -501,9 +501,9 @@ static void interp_point_adj_coor_gen(int N, const long gdims[VLA(N)], const lon
 
 
 
-static void interp_point_adj_coor(int N, const long gdims[VLA(N)], const long gstrs[VLA(N)], const complex float* grid, const float coor[VLA(N)], complex float* dcoor, int ord, float width, int dir, complex float dintp)
+static void interp_point_adj_coor(int N, const bart_dim_t gdims[VLA(N)], const bart_stride_t gstrs[VLA(N)], const complex float* grid, const float coor[VLA(N)], complex float* dcoor, int ord, float width, int dir, complex float dintp)
 {
-	NESTED(void, update, (long ind, float d))
+	NESTED(void, update, (bart_dim_t ind, float d))
 	{
 		float tmp = crealf(conjf(grid[ind]) * dintp * d);
 #pragma 	omp atomic
@@ -513,48 +513,48 @@ static void interp_point_adj_coor(int N, const long gdims[VLA(N)], const long gs
 	interp_point_adj_coor_gen(N, gdims, gstrs, coor, ord, width, dir, update);
 }
 
-static void interpolate_adj_coor2(int ord, int M, const long dims[M], const long istrs[M], const complex float* dintp, const long cstrs[M], long cstrs_dir, const complex float* coor, complex float* dcoor, const long gdims[M], const long gstrs[M], const complex float* grid)
+static void interpolate_adj_coor2(int ord, int M, const bart_dim_t dims[M], const bart_stride_t istrs[M], const complex float* dintp, const bart_stride_t cstrs[M], bart_dim_t cstrs_dir, const complex float* coor, complex float* dcoor, const bart_dim_t gdims[M], const bart_stride_t gstrs[M], const complex float* grid)
 {
-	const long* istrsp = istrs;
-	const long* gstrsp = gstrs;
-	const long* cstrsp = cstrs;
-	const long* gdimsp = gdims;
+	const bart_dim_t* istrsp = istrs;
+	const bart_dim_t* gstrsp = gstrs;
+	const bart_dim_t* cstrsp = cstrs;
+	const bart_dim_t* gdimsp = gdims;
 
-	NESTED(void, interp_kernel, (const long pos[]))
+	NESTED(void, interp_kernel, (const bart_dim_t pos[]))
 	{
-		long ioffset = md_calc_offset(M, istrsp, pos) / (long)CFL_SIZE;
-		long coffset = md_calc_offset(M, cstrsp, pos) / (long)CFL_SIZE;
+		bart_stride_t ioffset = md_calc_offset(M, istrsp, pos) / (bart_stride_t)CFL_SIZE;
+		bart_stride_t coffset = md_calc_offset(M, cstrsp, pos) / (bart_stride_t)CFL_SIZE;
 
 		float coord[M];
 		for (int i = 0; i < M; i++)
-			coord[i] = crealf(coor[coffset + i * cstrs_dir / (long)CFL_SIZE]);
+			coord[i] = crealf(coor[coffset + i * cstrs_dir / (bart_stride_t)CFL_SIZE]);
 
 		for (int i = 0; i < M; i++)
-			interp_point_adj_coor(M, gdimsp, gstrsp, grid, coord, dcoor + coffset + i * cstrs_dir / (long)CFL_SIZE, ord, ord + 1, i, dintp[ioffset]);
+			interp_point_adj_coor(M, gdimsp, gstrsp, grid, coord, dcoor + coffset + i * cstrs_dir / (bart_stride_t)CFL_SIZE, ord, ord + 1, i, dintp[ioffset]);
 	};
 
-	md_parallel_loop(M, dims, ~1ul, interp_kernel);
+	md_parallel_loop(M, dims, ~UINT64_C(1), interp_kernel);
 }
 
-static void md_interpolate_adj_coor2_int(int d, unsigned long flags, int ord, int N, const long dims[N], const long cstrs[N], const complex float* coor, complex float* dcoor, const long istrs[N], const complex float* dintp, const long gdims[N], const long gstrs[N], const complex float* grid)
+static void md_interpolate_adj_coor2_int(int d, bart_flags_t flags, int ord, int N, const bart_dim_t dims[N], const bart_stride_t cstrs[N], const complex float* coor, complex float* dcoor, const bart_stride_t istrs[N], const complex float* dintp, const bart_dim_t gdims[N], const bart_stride_t gstrs[N], const complex float* grid)
 {
 	int M = bitcount(flags);
-	long gdims_red[M];
-	long gstrs_red[M];
-	long idims_red[M];
-	long istrs_red[M];
-	long cstrs_red[M];
+	bart_dim_t gdims_red[M];
+	bart_dim_t gstrs_red[M];
+	bart_dim_t idims_red[M];
+	bart_dim_t istrs_red[M];
+	bart_dim_t cstrs_red[M];
 
 	interpolate_compute_red(d, flags, M, idims_red, istrs_red, cstrs_red, gdims_red, gstrs_red,
 				N, dims, istrs, cstrs, gdims, gstrs);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
 	do {
-		long ioffset = md_calc_offset(N, istrs, pos) / (long)CFL_SIZE;
-		long coffset = md_calc_offset(N, cstrs, pos) / (long)CFL_SIZE;
-		long goffset = md_calc_offset(N, gstrs, pos) / (long)CFL_SIZE;
+		bart_stride_t ioffset = md_calc_offset(N, istrs, pos) / (bart_stride_t)CFL_SIZE;
+		bart_stride_t coffset = md_calc_offset(N, cstrs, pos) / (bart_stride_t)CFL_SIZE;
+		bart_stride_t goffset = md_calc_offset(N, gstrs, pos) / (bart_stride_t)CFL_SIZE;
 
 #ifdef USE_CUDA
 		if (cuda_ondevice(dcoor))
@@ -571,7 +571,7 @@ static void md_interpolate_adj_coor2_int(int d, unsigned long flags, int ord, in
 
 
 
-static void interp_point_der_gen(int N, const long gdims[VLA(N)], const long gstrs[VLA(N)], const float coor[VLA(N)], const float dcoor[VLA(N)], int ord, float width, interp_update_t update)
+static void interp_point_der_gen(int N, const bart_dim_t gdims[VLA(N)], const bart_stride_t gstrs[VLA(N)], const float coor[VLA(N)], const float dcoor[VLA(N)], int ord, float width, interp_update_t update)
 {
 #ifndef __clang__
 	int sti[N];
@@ -592,7 +592,7 @@ static void interp_point_der_gen(int N, const long gdims[VLA(N)], const long gst
 			return;
 	}
 
-	__block NESTED(void, dinterp_point_r, (int N, long ind, float d, float dd))	// __block for recursion
+	__block NESTED(void, dinterp_point_r, (int N, bart_dim_t ind, float d, float dd))	// __block for recursion
 	{
 		if (0 == N) {
 
@@ -609,7 +609,7 @@ static void interp_point_der_gen(int N, const long gdims[VLA(N)], const long gst
 
 				float dd2 = dd * spline(ord, coor[N] - (float)w);
 
-				long ind2 = ind + w * gstrs[N] / (long)CFL_SIZE;
+				bart_dim_t ind2 = ind + w * gstrs[N] / (bart_stride_t)CFL_SIZE;
 
 				dinterp_point_r(N, ind2, d2, dd2);
 			}
@@ -619,9 +619,9 @@ static void interp_point_der_gen(int N, const long gdims[VLA(N)], const long gst
 	dinterp_point_r(N, 0, 0., 1.);
 }
 
-static void der_interp_point(int N, const long gdims[VLA(N)], const long gstrs[VLA(N)], const complex float* grid, const float coor[VLA(N)], const float dcoor[VLA(N)], complex float* dintp, int ord, float width)
+static void der_interp_point(int N, const bart_dim_t gdims[VLA(N)], const bart_stride_t gstrs[VLA(N)], const complex float* grid, const float coor[VLA(N)], const float dcoor[VLA(N)], complex float* dintp, int ord, float width)
 {
-	NESTED(void, update, (long ind, float d))
+	NESTED(void, update, (bart_dim_t ind, float d))
 	{
 		__real(dintp[0]) += __real(grid[ind]) * d;
 		__imag(dintp[0]) += __imag(grid[ind]) * d;
@@ -630,53 +630,53 @@ static void der_interp_point(int N, const long gdims[VLA(N)], const long gstrs[V
 	interp_point_der_gen(N, gdims, gstrs, coor, dcoor, ord, width, update);
 }
 
-static void interpolate_der_coor2(int ord, int M, const long dims[M], const long istrs[M], complex float* dintp, const long cstrs[M], long cstrs_dir, const complex float* coor, const complex float* dcoor, const long gdims[M], const long gstrs[M], const complex float* grid)
+static void interpolate_der_coor2(int ord, int M, const bart_dim_t dims[M], const bart_stride_t istrs[M], complex float* dintp, const bart_stride_t cstrs[M], bart_dim_t cstrs_dir, const complex float* coor, const complex float* dcoor, const bart_dim_t gdims[M], const bart_stride_t gstrs[M], const complex float* grid)
 {
-	const long* istrsp = istrs;
-	const long* gstrsp = gstrs;
-	const long* cstrsp = cstrs;
-	const long* gdimsp = gdims;
+	const bart_dim_t* istrsp = istrs;
+	const bart_dim_t* gstrsp = gstrs;
+	const bart_dim_t* cstrsp = cstrs;
+	const bart_dim_t* gdimsp = gdims;
 
-	NESTED(void, interp_kernel, (const long pos[]))
+	NESTED(void, interp_kernel, (const bart_dim_t pos[]))
 	{
-		long ioffset = md_calc_offset(M, istrsp, pos) / (long)CFL_SIZE;
-		long coffset = md_calc_offset(M, cstrsp, pos) / (long)CFL_SIZE;
+		bart_stride_t ioffset = md_calc_offset(M, istrsp, pos) / (bart_stride_t)CFL_SIZE;
+		bart_stride_t coffset = md_calc_offset(M, cstrsp, pos) / (bart_stride_t)CFL_SIZE;
 
 		float coord[M];
 		float dcoord[M];
 
 		for (int i = 0; i < M; i++) {
 
-			coord[i] = crealf(coor[coffset + i * cstrs_dir / (long)CFL_SIZE]);
-			dcoord[i] = crealf(dcoor[coffset + i * cstrs_dir / (long)CFL_SIZE]);
+			coord[i] = crealf(coor[coffset + i * cstrs_dir / (bart_stride_t)CFL_SIZE]);
+			dcoord[i] = crealf(dcoor[coffset + i * cstrs_dir / (bart_stride_t)CFL_SIZE]);
 		}
 
 		der_interp_point(M, gdimsp, gstrsp, grid, coord, dcoord, dintp + ioffset, ord, ord + 1);
 	};
 
-	md_parallel_loop(M, dims, ~1ul, interp_kernel);
+	md_parallel_loop(M, dims, ~UINT64_C(1), interp_kernel);
 }
 
 
-static void md_interpolate_der_coor2_int(int d, unsigned long flags, int ord, int N, const long dims[N], const long istrs[N], complex float* dintp, const long cstrs[N], const complex float* coor, const complex float* dcoor, const long gdims[N], const long gstrs[N], const complex float* grid)
+static void md_interpolate_der_coor2_int(int d, bart_flags_t flags, int ord, int N, const bart_dim_t dims[N], const bart_stride_t istrs[N], complex float* dintp, const bart_stride_t cstrs[N], const complex float* coor, const complex float* dcoor, const bart_dim_t gdims[N], const bart_stride_t gstrs[N], const complex float* grid)
 {
 	int M = bitcount(flags);
-	long gdims_red[M];
-	long gstrs_red[M];
-	long idims_red[M];
-	long istrs_red[M];
-	long cstrs_red[M];
+	bart_dim_t gdims_red[M];
+	bart_dim_t gstrs_red[M];
+	bart_dim_t idims_red[M];
+	bart_dim_t istrs_red[M];
+	bart_dim_t cstrs_red[M];
 
 	interpolate_compute_red(d, flags, M, idims_red, istrs_red, cstrs_red, gdims_red, gstrs_red,
 				N, dims, istrs, cstrs, gdims, gstrs);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
 	do {
-		long ioffset = md_calc_offset(N, istrs, pos) / (long)CFL_SIZE;
-		long coffset = md_calc_offset(N, cstrs, pos) / (long)CFL_SIZE;
-		long goffset = md_calc_offset(N, gstrs, pos) / (long)CFL_SIZE;
+		bart_stride_t ioffset = md_calc_offset(N, istrs, pos) / (bart_stride_t)CFL_SIZE;
+		bart_stride_t coffset = md_calc_offset(N, cstrs, pos) / (bart_stride_t)CFL_SIZE;
+		bart_stride_t goffset = md_calc_offset(N, gstrs, pos) / (bart_stride_t)CFL_SIZE;
 
 #ifdef USE_CUDA
 		if (cuda_ondevice(dcoor))
@@ -695,26 +695,26 @@ struct vptr_interpolate_der_coor_s {
 
 	int d;
 	int ord;
-	unsigned long flags;
+	bart_flags_t flags;
 };
 
 DEF_TYPEID(vptr_interpolate_der_coor_s);
 
-static void md_interpolate_der_coor2_vptr(vptr_fun_data_t* _data, int N, int D, const long* dims[N], const long* strs[N], void* args[N])
+static void md_interpolate_der_coor2_vptr(vptr_fun_data_t* _data, int N, int D, const bart_dim_t* dims[N], const bart_stride_t* strs[N], void* args[N])
 {
 	auto d = CAST_DOWN(vptr_interpolate_der_coor_s, _data);
 
 	md_interpolate_der_coor2_int(d->d, d->flags, d->ord, D, dims[0], strs[0], args[0], strs[1], args[1], args[2], dims[3], strs[3], args[3]);
 }
 
-static void md_interpolate_adj_coor2_vptr(vptr_fun_data_t* _data, int N, int D, const long* dims[N], const long* strs[N], void* args[N])
+static void md_interpolate_adj_coor2_vptr(vptr_fun_data_t* _data, int N, int D, const bart_dim_t* dims[N], const bart_stride_t* strs[N], void* args[N])
 {
 	auto d = CAST_DOWN(vptr_interpolate_der_coor_s, _data);
 
 	md_interpolate_adj_coor2_int(d->d, d->flags, d->ord, D, dims[0], strs[0], args[0], args[1], strs[2], args[2], dims[3], strs[3], args[3]);
 }
 
-void md_interpolate_der_coor2(int d, unsigned long flags, int ord, int N, const long dims[N], const long istrs[N], complex float* dintp, const long cstrs[N], const complex float* coor, const complex float* dcoor, const long gdims[N], const long gstrs[N], const complex float* grid)
+void md_interpolate_der_coor2(int d, bart_flags_t flags, int ord, int N, const bart_dim_t dims[N], const bart_stride_t istrs[N], complex float* dintp, const bart_stride_t cstrs[N], const complex float* coor, const complex float* dcoor, const bart_dim_t gdims[N], const bart_stride_t gstrs[N], const complex float* grid)
 {
 	PTR_ALLOC(struct vptr_interpolate_der_coor_s, _d);
 	SET_TYPEID(vptr_interpolate_der_coor_s, _d);
@@ -724,13 +724,13 @@ void md_interpolate_der_coor2(int d, unsigned long flags, int ord, int N, const 
 	_d->flags = flags;
 
 	exec_vptr_zfun(md_interpolate_der_coor2_vptr, CAST_UP(PTR_PASS(_d)), 4, N, ~flags & ~ MD_BIT(d), MD_BIT(0), MD_BIT(0) | MD_BIT(1) | MD_BIT(2) | MD_BIT(3),
-			(const long*[4]) { dims, dims, dims, gdims },
-			(const long*[4]) { istrs, cstrs, cstrs, gstrs },
+			(const bart_dim_t*[4]) { dims, dims, dims, gdims },
+			(const bart_dim_t*[4]) { istrs, cstrs, cstrs, gstrs },
 			(complex float*[4]) { dintp, (void*)coor, (void*)dcoor, (void*)grid });
 }
 
 
-void md_interpolate_adj_coor2(int d, unsigned long flags, int ord, int N, const long dims[N], const long cstrs[N], const complex float* coor, complex float* dcoor, const long istrs[N], const complex float* dintp, const long gdims[N], const long gstrs[N], const complex float* grid)
+void md_interpolate_adj_coor2(int d, bart_flags_t flags, int ord, int N, const bart_dim_t dims[N], const bart_stride_t cstrs[N], const complex float* coor, complex float* dcoor, const bart_stride_t istrs[N], const complex float* dintp, const bart_dim_t gdims[N], const bart_stride_t gstrs[N], const complex float* grid)
 {
 	PTR_ALLOC(struct vptr_interpolate_der_coor_s, _d);
 	SET_TYPEID(vptr_interpolate_der_coor_s, _d);
@@ -740,51 +740,51 @@ void md_interpolate_adj_coor2(int d, unsigned long flags, int ord, int N, const 
 	_d->flags = flags;
 
 	exec_vptr_zfun(md_interpolate_adj_coor2_vptr, CAST_UP(PTR_PASS(_d)), 4, N, ~flags & ~ MD_BIT(d), MD_BIT(1), MD_BIT(0) | MD_BIT(1) | MD_BIT(2) | MD_BIT(3),
-			(const long*[4]) { dims, dims, dims, gdims },
-			(const long*[4]) { cstrs, cstrs, istrs, gstrs },
+			(const bart_dim_t*[4]) { dims, dims, dims, gdims },
+			(const bart_dim_t*[4]) { cstrs, cstrs, istrs, gstrs },
 			(complex float*[4]) { (void*)coor, dcoor, (void*)dintp, (void*)grid });
 }
 
 
-void md_interpolate(int d, unsigned long flags, int ord, int N, const long idims[N], complex float* intp, const long cdims[N], const complex float* coor, const long gdims[N], const complex float* grid)
+void md_interpolate(int d, bart_flags_t flags, int ord, int N, const bart_dim_t idims[N], complex float* intp, const bart_dim_t cdims[N], const complex float* coor, const bart_dim_t gdims[N], const complex float* grid)
 {
-	assert(md_check_compat(N, ~0ul, idims, cdims));
+	assert(md_check_compat(N, ~UINT64_C(0), idims, cdims));
 
-	long dims[N];
-	md_max_dims(N, ~0ul, dims, idims, cdims);
+	bart_dim_t dims[N];
+	md_max_dims(N, ~UINT64_C(0), dims, idims, cdims);
 
 	md_clear(N, idims, intp, CFL_SIZE);
 	md_interpolate2(d, flags, ord, N, dims, MD_STRIDES(N, idims, CFL_SIZE), intp, MD_STRIDES(N, cdims, CFL_SIZE), coor, gdims, MD_STRIDES(N, gdims, CFL_SIZE), grid);
 }
 
-void md_interpolateH(int d, unsigned long flags, int ord, int N, const long gdims[N], complex float* grid, const long idims[N], const complex float* intp, const long cdims[N], const complex float* coor)
+void md_interpolateH(int d, bart_flags_t flags, int ord, int N, const bart_dim_t gdims[N], complex float* grid, const bart_dim_t idims[N], const complex float* intp, const bart_dim_t cdims[N], const complex float* coor)
 {
-	assert(md_check_compat(N, ~0ul, idims, cdims));
+	assert(md_check_compat(N, ~UINT64_C(0), idims, cdims));
 
-	long dims[N];
-	md_max_dims(N, ~0ul, dims, idims, cdims);
+	bart_dim_t dims[N];
+	md_max_dims(N, ~UINT64_C(0), dims, idims, cdims);
 
 	md_clear(N, gdims, grid, CFL_SIZE);
 	md_interpolateH2(d, flags, ord, N, gdims, MD_STRIDES(N, gdims, CFL_SIZE), grid, dims, MD_STRIDES(N, idims, CFL_SIZE), intp, MD_STRIDES(N, cdims, CFL_SIZE), coor);
 }
 
-void md_interpolate_adj_coor(int d, unsigned long flags, int ord, int N, const long cdims[N], const complex float* coor, complex float* dcoor, const long idims[N], const complex float* dintp, const long gdims[N], const complex float* grid)
+void md_interpolate_adj_coor(int d, bart_flags_t flags, int ord, int N, const bart_dim_t cdims[N], const complex float* coor, complex float* dcoor, const bart_dim_t idims[N], const complex float* dintp, const bart_dim_t gdims[N], const complex float* grid)
 {
-	assert(md_check_compat(N, ~0ul, idims, cdims));
+	assert(md_check_compat(N, ~UINT64_C(0), idims, cdims));
 
-	long dims[N];
-	md_max_dims(N, ~0ul, dims, idims, cdims);
+	bart_dim_t dims[N];
+	md_max_dims(N, ~UINT64_C(0), dims, idims, cdims);
 
 	md_clear(N, cdims, dcoor, CFL_SIZE);
 	md_interpolate_adj_coor2(d, flags, ord, N, dims, MD_STRIDES(N, cdims, CFL_SIZE), coor, dcoor, MD_STRIDES(N, idims, CFL_SIZE), dintp, gdims, MD_STRIDES(N, gdims, CFL_SIZE), grid);
 }
 
-static void md_interpolate_adj_coor_shifted(int d, unsigned long flags, int ord, int N, const long cdims[N], const complex float* coor, complex float* dcoor, const long idims[N], const complex float* dintp, const long gdims[N], const complex float* grid)
+static void md_interpolate_adj_coor_shifted(int d, bart_flags_t flags, int ord, int N, const bart_dim_t cdims[N], const complex float* coor, complex float* dcoor, const bart_dim_t idims[N], const complex float* dintp, const bart_dim_t gdims[N], const complex float* grid)
 {
-	assert(md_check_compat(N, ~0ul, idims, cdims));
+	assert(md_check_compat(N, ~UINT64_C(0), idims, cdims));
 
-	long dims[N];
-	md_max_dims(N, ~0ul, dims, idims, cdims);
+	bart_dim_t dims[N];
+	md_max_dims(N, ~UINT64_C(0), dims, idims, cdims);
 
 	md_clear(N, cdims, dcoor, CFL_SIZE);
 
@@ -795,10 +795,10 @@ static void md_interpolate_adj_coor_shifted(int d, unsigned long flags, int ord,
 
 		md_copy(N, cdims, tmp, coor, CFL_SIZE);
 
-		complex float* _coor = tmp + i * MD_STRIDES(N, cdims, CFL_SIZE)[d] / (long)CFL_SIZE;
+		complex float* _coor = tmp + i * MD_STRIDES(N, cdims, CFL_SIZE)[d] / (bart_stride_t)CFL_SIZE;
 		md_zsadd2(N, idims, MD_STRIDES(N, cdims, CFL_SIZE), _coor, MD_STRIDES(N, cdims, CFL_SIZE), _coor, -0.5);
 
-		complex float* _dcoor = dcoor + i * MD_STRIDES(N, cdims, CFL_SIZE)[d] / (long)CFL_SIZE;
+		complex float* _dcoor = dcoor + i * MD_STRIDES(N, cdims, CFL_SIZE)[d] / (bart_stride_t)CFL_SIZE;
 		md_interpolate2(d, flags, ord, N, dims, MD_STRIDES(N, cdims, CFL_SIZE), _dcoor, MD_STRIDES(N, cdims, CFL_SIZE), tmp, gdims, MD_STRIDES(N, gdims, CFL_SIZE), grid);
 
 		md_zsmul2(N, idims, MD_STRIDES(N, cdims, CFL_SIZE), _dcoor, MD_STRIDES(N, cdims, CFL_SIZE), _dcoor, -1);
@@ -812,24 +812,24 @@ static void md_interpolate_adj_coor_shifted(int d, unsigned long flags, int ord,
 	md_zmulc2(N, dims, MD_STRIDES(N, cdims, CFL_SIZE), dcoor, MD_STRIDES(N, idims, CFL_SIZE), dintp, MD_STRIDES(N, cdims, CFL_SIZE), dcoor);
 }
 
-void md_interpolate_der_coor(int d, unsigned long flags, int ord, int N, const long idims[N], complex float* dintp, const long cdims[N], const complex float* coor, const complex float* dcoor, const long gdims[N], const complex float* grid)
+void md_interpolate_der_coor(int d, bart_flags_t flags, int ord, int N, const bart_dim_t idims[N], complex float* dintp, const bart_dim_t cdims[N], const complex float* coor, const complex float* dcoor, const bart_dim_t gdims[N], const complex float* grid)
 {
-	assert(md_check_compat(N, ~0ul, idims, cdims));
+	assert(md_check_compat(N, ~UINT64_C(0), idims, cdims));
 
-	long dims[N];
-	md_max_dims(N, ~0ul, dims, idims, cdims);
+	bart_dim_t dims[N];
+	md_max_dims(N, ~UINT64_C(0), dims, idims, cdims);
 
 	md_clear(N, idims, dintp, CFL_SIZE);
 	md_interpolate_der_coor2(d, flags, ord, N, dims, MD_STRIDES(N, idims, CFL_SIZE), dintp, MD_STRIDES(N, cdims, CFL_SIZE), coor, dcoor, gdims, MD_STRIDES(N, gdims, CFL_SIZE), grid);
 }
 
-void md_resample(unsigned long flags, int ord, int N, const long _odims[N], complex float* dst, const long _idims[N], const complex float* src)
+void md_resample(bart_flags_t flags, int ord, int N, const bart_dim_t _odims[N], complex float* dst, const bart_dim_t _idims[N], const complex float* src)
 {
 	assert(md_check_equal_dims(N, _odims, _idims, ~flags));
 
-	long odims[N + 1];
-	long idims[N + 1];
-	long cdims[N + 1];
+	bart_dim_t odims[N + 1];
+	bart_dim_t idims[N + 1];
+	bart_dim_t cdims[N + 1];
 
 	md_copy_dims(N, odims, _odims);
 	md_copy_dims(N, idims, _idims);
@@ -860,13 +860,13 @@ struct lop_interp_s {
 	linop_data_t super;
 
 	int N;
-	long* idims;
-	long* cdims;
-	long* gdims;
+	bart_dim_t* idims;
+	bart_dim_t* cdims;
+	bart_dim_t* gdims;
 
 	int d;
 	int ord;
-	unsigned long flags;
+	bart_flags_t flags;
 
 	struct multiplace_array_s* coor;
 };
@@ -900,15 +900,15 @@ static void lop_interpH(const linop_data_t* _data, complex float* dst, const com
 	md_interpolateH(d->d, d->flags, d->ord, d->N, d->gdims, dst, d->idims, src, d->cdims, multiplace_read(d->coor, dst));
 }
 
-const struct linop_s* linop_interpolate_create(int d, unsigned long flags, int ord, int N, const long idims[N], const long cdims[N], const complex float* coor, const long gdims[N])
+const struct linop_s* linop_interpolate_create(int d, bart_flags_t flags, int ord, int N, const bart_dim_t idims[N], const bart_dim_t cdims[N], const complex float* coor, const bart_dim_t gdims[N])
 {
 	PTR_ALLOC(struct lop_interp_s, data);
 	SET_TYPEID(lop_interp_s, data);
 
 	data->N = N;
-	data->idims = ARR_CLONE(long[N], idims);
-	data->cdims = ARR_CLONE(long[N], cdims);
-	data->gdims = ARR_CLONE(long[N], gdims);
+	data->idims = ARR_CLONE(bart_dim_t[N], idims);
+	data->cdims = ARR_CLONE(bart_dim_t[N], cdims);
+	data->gdims = ARR_CLONE(bart_dim_t[N], gdims);
 
 	data->d = d;
 	data->ord = ord;
@@ -926,13 +926,13 @@ struct nlop_interp_s {
 	nlop_data_t super;
 
 	int N;
-	long* idims;
-	long* cdims;
-	long* gdims;
+	bart_dim_t* idims;
+	bart_dim_t* cdims;
+	bart_dim_t* gdims;
 
 	int d;
 	int ord;
-	unsigned long flags;
+	bart_flags_t flags;
 
 	complex float* coor;
 	complex float* grid;
@@ -1004,15 +1004,15 @@ static void nlop_interp_adj(const nlop_data_t* _data, int /*o*/, int /*i*/, comp
 	(d->shifted_grad ? md_interpolate_adj_coor_shifted : md_interpolate_adj_coor)(d->d, d->flags, d->ord, d->N, d->cdims, d->coor, dst, d->idims, src, d->gdims, d->grid);
 }
 
-const struct nlop_s* nlop_interpolate_create(int d, unsigned long flags, int ord, bool shifted_grad, int N, const long idims[N], const long cdims[N], const long gdims[N])
+const struct nlop_s* nlop_interpolate_create(int d, bart_flags_t flags, int ord, bool shifted_grad, int N, const bart_dim_t idims[N], const bart_dim_t cdims[N], const bart_dim_t gdims[N])
 {
 	PTR_ALLOC(struct nlop_interp_s, data);
 	SET_TYPEID(nlop_interp_s, data);
 
 	data->N = N;
-	data->idims = ARR_CLONE(long[N], idims);
-	data->cdims = ARR_CLONE(long[N], cdims);
-	data->gdims = ARR_CLONE(long[N], gdims);
+	data->idims = ARR_CLONE(bart_dim_t[N], idims);
+	data->cdims = ARR_CLONE(bart_dim_t[N], cdims);
+	data->gdims = ARR_CLONE(bart_dim_t[N], gdims);
 
 	data->shifted_grad = shifted_grad;
 
@@ -1023,8 +1023,8 @@ const struct nlop_s* nlop_interpolate_create(int d, unsigned long flags, int ord
 	data->coor = NULL;
 	data->grid = NULL;
 
-	long nl_odims[1][N];
-	long nl_idims[2][N];
+	bart_dim_t nl_odims[1][N];
+	bart_dim_t nl_idims[2][N];
 
 	md_copy_dims(N, nl_odims[0], idims);
 	md_copy_dims(N, nl_idims[0], gdims);

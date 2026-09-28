@@ -63,18 +63,18 @@ struct config_nlop_mri_s {
 	int N;
 	int ND;
 
-	long* img_dims;
-	long* col_dims;
-	long* cim_dims;
-	long* ksp_dims;
-	long* bas_dims;
-	long* pat_dims;
-	long* trj_dims;
-	long* psf_dims;
+	bart_dim_t* img_dims;
+	bart_dim_t* col_dims;
+	bart_dim_t* cim_dims;
+	bart_dim_t* ksp_dims;
+	bart_dim_t* bas_dims;
+	bart_dim_t* pat_dims;
+	bart_dim_t* trj_dims;
+	bart_dim_t* psf_dims;
 
-	long* pat_dims_merged;
-	long* fftmod_precomp_img_dims;
-	long* fftmod_precomp_ksp_dims;
+	bart_dim_t* pat_dims_merged;
+	bart_dim_t* fftmod_precomp_img_dims;
+	bart_dim_t* fftmod_precomp_ksp_dims;
 	struct multiplace_array_s* fftmod_precomp_img;
 	struct multiplace_array_s* fftmod_precomp_ksp;
 
@@ -139,18 +139,18 @@ static struct config_nlop_mri_s* sense_model_config_init(int N, int ND)
 		.N = N,
 		.ND = ND,
 
-		.img_dims = *TYPE_ALLOC(long[N]),
-		.col_dims = *TYPE_ALLOC(long[N]),
-		.cim_dims = *TYPE_ALLOC(long[N]),
-		.ksp_dims = *TYPE_ALLOC(long[N]),
-		.bas_dims = *TYPE_ALLOC(long[N]),
-		.pat_dims = *TYPE_ALLOC(long[N]),
-		.trj_dims = *TYPE_ALLOC(long[N]),
-		.psf_dims = *TYPE_ALLOC(long[ND]),
+		.img_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.col_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.cim_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.ksp_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.bas_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.pat_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.trj_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.psf_dims = *TYPE_ALLOC(bart_dim_t[ND]),
 
-		.pat_dims_merged = *TYPE_ALLOC(long[N]),
-		.fftmod_precomp_img_dims = *TYPE_ALLOC(long[N]),
-		.fftmod_precomp_ksp_dims = *TYPE_ALLOC(long[N]),
+		.pat_dims_merged = *TYPE_ALLOC(bart_dim_t[N]),
+		.fftmod_precomp_img_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.fftmod_precomp_ksp_dims = *TYPE_ALLOC(bart_dim_t[N]),
 
 		.fftmod_precomp_img = NULL,
 		.fftmod_precomp_ksp = NULL,
@@ -172,7 +172,7 @@ static struct config_nlop_mri_s* sense_model_config_init(int N, int ND)
 	return PTR_PASS(result);
 }
 
-struct config_nlop_mri_s* sense_model_config_cart_create(int N, const long ksp_dims[N], const long img_dims[N], const long col_dims[N], const long pat_dims[N])
+struct config_nlop_mri_s* sense_model_config_cart_create(int N, const bart_dim_t ksp_dims[N], const bart_dim_t img_dims[N], const bart_dim_t col_dims[N], const bart_dim_t pat_dims[N])
 {
 	assert(N == DIMS);
 	struct config_nlop_mri_s* result = sense_model_config_init(N, N);
@@ -185,16 +185,16 @@ struct config_nlop_mri_s* sense_model_config_cart_create(int N, const long ksp_d
 	md_copy_dims(N, result->psf_dims, pat_dims);
 	md_copy_dims(N, result->col_dims, col_dims);
 
-	long ksp_dims2[N];
+	bart_dim_t ksp_dims2[N];
 	md_copy_dims(N, ksp_dims2, ksp_dims);
 	md_copy_dims(3, ksp_dims2, col_dims);
 
-	long max_dims[N];
+	bart_dim_t max_dims[N];
 	md_singleton_dims(N, max_dims);
 
-	md_max_dims(N, ~0UL, max_dims, ksp_dims2, max_dims);
-	md_max_dims(N, ~0UL, max_dims, img_dims, max_dims);
-	md_max_dims(N, ~0UL, max_dims, col_dims, max_dims);
+	md_max_dims(N, ~UINT64_C(0), max_dims, ksp_dims2, max_dims);
+	md_max_dims(N, ~UINT64_C(0), max_dims, img_dims, max_dims);
+	md_max_dims(N, ~UINT64_C(0), max_dims, col_dims, max_dims);
 
 	md_select_dims(N, ~MAPS_FLAG, result->cim_dims, max_dims);
 
@@ -213,7 +213,7 @@ struct config_nlop_mri_s* sense_model_config_cart_create(int N, const long ksp_d
 
 	md_select_dims(N, md_nontriv_dims(N, result->fftmod_precomp_ksp_dims) | md_nontriv_dims(N, result->pat_dims),result->pat_dims_merged, result->ksp_dims);
 
-	if (!md_check_equal_dims(N, ksp_dims, ksp_dims2, ~0UL)) {
+	if (!md_check_equal_dims(N, ksp_dims, ksp_dims2, ~UINT64_C(0))) {
 
 		md_select_dims(N, FFT_FLAGS, result->fftmod_precomp_img_dims, result->img_dims);
 
@@ -238,9 +238,9 @@ struct config_nlop_mri_s* sense_model_config_cart_create(int N, const long ksp_d
 
 
 struct config_nlop_mri_s* sense_model_config_noncart_create(int N,
-	const long trj_dims[N], const long wgh_dims[N], const long ksp_dims[N],
-	const long cim_dims[N],	const long img_dims[N], const long col_dims[N],
-	const long bas_dims[N], const complex float* basis,
+	const bart_dim_t trj_dims[N], const bart_dim_t wgh_dims[N], const bart_dim_t ksp_dims[N],
+	const bart_dim_t cim_dims[N],	const bart_dim_t img_dims[N], const bart_dim_t col_dims[N],
+	const bart_dim_t bas_dims[N], const complex float* basis,
 	struct nufft_conf_s conf)
 {
 	assert(N == DIMS);
@@ -254,12 +254,12 @@ struct config_nlop_mri_s* sense_model_config_noncart_create(int N,
 	md_copy_dims(N, result->trj_dims, trj_dims);
 	md_copy_dims(N, result->cim_dims, cim_dims);
 
-	long max_dims[N];
+	bart_dim_t max_dims[N];
 	md_singleton_dims(N, max_dims);
 
-	md_max_dims(N, ~0UL, max_dims, cim_dims, max_dims);
-	md_max_dims(N, ~0UL, max_dims, img_dims, max_dims);
-	md_max_dims(N, ~0UL, max_dims, col_dims, max_dims);
+	md_max_dims(N, ~UINT64_C(0), max_dims, cim_dims, max_dims);
+	md_max_dims(N, ~UINT64_C(0), max_dims, img_dims, max_dims);
+	md_max_dims(N, ~UINT64_C(0), max_dims, col_dims, max_dims);
 
 	md_select_dims(N, 7, result->psf_dims, max_dims);
 	result->psf_dims[N] = 1;
@@ -379,7 +379,7 @@ struct sense_model_s* sense_model_create(const struct config_nlop_mri_s* config)
 
 		result->sense = linop_clone(result->coils);
 
-		if (!md_check_equal_dims(config->N, config->cim_dims, config->ksp_dims, ~0UL))
+		if (!md_check_equal_dims(config->N, config->cim_dims, config->ksp_dims, ~UINT64_C(0)))
 			result->sense = linop_chain_FF(result->sense, linop_resize_center_create(config->N, config->ksp_dims, config->cim_dims));
 
 		result->sense = linop_chain_FF(result->sense, linop_fft_create(config->N, config->ksp_dims, FFT_FLAGS));
@@ -425,25 +425,25 @@ int sense_model_get_N(struct config_nlop_mri_s* model)
 	return model->N;
 }
 
-void sense_model_get_img_dims(struct config_nlop_mri_s* model, int N, long img_dims[N])
+void sense_model_get_img_dims(struct config_nlop_mri_s* model, int N, bart_dim_t img_dims[N])
 {
 	assert(N == model->N);
 	md_copy_dims(N, img_dims, model->img_dims);
 }
 
-void sense_model_get_col_dims(struct config_nlop_mri_s* model, int N, long col_dims[N])
+void sense_model_get_col_dims(struct config_nlop_mri_s* model, int N, bart_dim_t col_dims[N])
 {
 	assert(N == model->N);
 	md_copy_dims(N, col_dims, model->col_dims);
 }
 
-void sense_model_get_cim_dims(struct config_nlop_mri_s* model, int N, long cim_dims[N])
+void sense_model_get_cim_dims(struct config_nlop_mri_s* model, int N, bart_dim_t cim_dims[N])
 {
 	assert(N == model->N);
 	md_copy_dims(N, cim_dims, model->cim_dims);
 }
 
-void sense_model_get_ksp_dims(struct config_nlop_mri_s* model, int N, long ksp_dims[N])
+void sense_model_get_ksp_dims(struct config_nlop_mri_s* model, int N, bart_dim_t ksp_dims[N])
 {
 	assert(N == model->N);
 	md_copy_dims(N, ksp_dims, model->ksp_dims);
@@ -464,7 +464,7 @@ struct sense_model_set_data_s {
 	bool output_psf;
 
 	int N;
-	long* dims;
+	bart_dim_t* dims;
 
 	const struct sense_model_s* model;
 };
@@ -552,14 +552,14 @@ static void sense_model_set_data_del(const nlop_data_t* _data)
  * Output tensors:
  * dummy:	dims
  */
-static const struct nlop_s* nlop_sense_model_set_data_create(int N, const long dims[N], struct sense_model_s* model, bool output_psf)
+static const struct nlop_s* nlop_sense_model_set_data_create(int N, const bart_dim_t dims[N], struct sense_model_s* model, bool output_psf)
 {
 	PTR_ALLOC(struct sense_model_set_data_s, data);
 	SET_TYPEID(sense_model_set_data_s, data);
 
 	data->model = sense_model_ref(model);
 	data->N = N;
-	data->dims = *TYPE_ALLOC(long[N]);
+	data->dims = *TYPE_ALLOC(bart_dim_t[N]);
 
 	md_copy_dims(N, data->dims, dims);
 
@@ -567,14 +567,14 @@ static const struct nlop_s* nlop_sense_model_set_data_create(int N, const long d
 
 	int NM = MAX(N, model->config->ND);
 
-	long nl_odims[2][NM];
+	bart_dim_t nl_odims[2][NM];
 	md_singleton_dims(NM, nl_odims[0]);
 	md_singleton_dims(NM, nl_odims[1]);
 
 	md_copy_dims(N, nl_odims[0], data->dims);
 	md_copy_dims(model->config->ND, nl_odims[1], model->config->psf_dims);
 
-	long nl_idims[3][NM];
+	bart_dim_t nl_idims[3][NM];
 	md_singleton_dims(NM, nl_idims[0]);
 	md_singleton_dims(NM, nl_idims[1]);
 	md_singleton_dims(NM, nl_idims[2]);
@@ -624,12 +624,12 @@ static const struct nlop_s* nlop_sense_model_set_data_create(int N, const long d
  * Output tensors:
  * dummy:	dims
  */
-const struct nlop_s* nlop_sense_model_set_data_batch_create(int N, const long dims[N], int Nb, struct sense_model_s* models[Nb])
+const struct nlop_s* nlop_sense_model_set_data_batch_create(int N, const bart_dim_t dims[N], int Nb, struct sense_model_s* models[Nb])
 {
 	assert(N >= models[0]->config->N);
 	assert(dims[BATCH_DIM] == Nb);
 
-	long dims2[N];
+	bart_dim_t dims2[N];
 	md_select_dims(N, ~BATCH_FLAG, dims2, dims);
 
 	const struct nlop_s* nlops[Nb];
@@ -694,14 +694,14 @@ static void sense_model_set_data_noncart_fun(const nlop_data_t* _data, int Narg,
  * Output tensors:
  * dummy:	dims
  */
-static const struct nlop_s* nlop_sense_model_set_data_noncart_create(int N, const long dims[N], struct sense_model_s* model, bool output_psf)
+static const struct nlop_s* nlop_sense_model_set_data_noncart_create(int N, const bart_dim_t dims[N], struct sense_model_s* model, bool output_psf)
 {
 	PTR_ALLOC(struct sense_model_set_data_s, data);
 	SET_TYPEID(sense_model_set_data_s, data);
 
 	data->model = sense_model_ref(model);
 	data->N = N;
-	data->dims = *TYPE_ALLOC(long[N]);
+	data->dims = *TYPE_ALLOC(bart_dim_t[N]);
 
 	md_copy_dims(N, data->dims, dims);
 
@@ -709,14 +709,14 @@ static const struct nlop_s* nlop_sense_model_set_data_noncart_create(int N, cons
 
 	int NM = MAX(N, model->config->ND);
 
-	long nl_odims[2][NM];
+	bart_dim_t nl_odims[2][NM];
 	md_singleton_dims(NM, nl_odims[0]);
 	md_singleton_dims(NM, nl_odims[1]);
 
 	md_copy_dims(N, nl_odims[0], data->dims);
 	md_copy_dims(model->config->ND, nl_odims[1], model->config->psf_dims);
 
-	long nl_idims[4][NM];
+	bart_dim_t nl_idims[4][NM];
 	md_singleton_dims(NM, nl_idims[0]);
 	md_singleton_dims(NM, nl_idims[1]);
 	md_singleton_dims(NM, nl_idims[2]);
@@ -808,7 +808,7 @@ const struct nlop_s* nlop_sense_normal_create(int Nb, struct sense_model_s* mode
 	return nlop_stack_multiple_F(Nb, nlops, 1, istack_dim, 1, ostack_dim, true, multigpu);
 }
 
-const struct nlop_s* nlop_sense_normal_inv_create(int Nb, struct sense_model_s* models[Nb], struct iter_conjgrad_conf* iter_conf, unsigned long lambda_flags)
+const struct nlop_s* nlop_sense_normal_inv_create(int Nb, struct sense_model_s* models[Nb], struct iter_conjgrad_conf* iter_conf, bart_flags_t lambda_flags)
 {
 	struct nlop_norm_inv_conf norm_inv_conf = {
 
@@ -830,13 +830,13 @@ const struct nlop_s* nlop_sense_normal_inv_create(int Nb, struct sense_model_s* 
 	return nlop_stack_multiple_F(Nb, nlops, 2, istack_dim, 1, ostack_dim, true, multigpu);
 }
 
-const struct nlop_s* nlop_sense_dc_prox_create(int Nb, struct sense_model_s* models[Nb], struct iter_conjgrad_conf* iter_conf, unsigned long lambda_flags)
+const struct nlop_s* nlop_sense_dc_prox_create(int Nb, struct sense_model_s* models[Nb], struct iter_conjgrad_conf* iter_conf, bart_flags_t lambda_flags)
 {
 	auto result = nlop_sense_normal_inv_create(Nb, models, iter_conf, lambda_flags);
 
 	int N = models[0]->config->N;
-	long img_dims[N];
-	long lam_dims[N];
+	bart_dim_t img_dims[N];
+	bart_dim_t lam_dims[N];
 
 	md_copy_dims(N, img_dims, nlop_generic_domain(result, 0)->dims);
 	md_copy_dims(N, lam_dims, nlop_generic_domain(result, 1)->dims);
@@ -849,13 +849,13 @@ const struct nlop_s* nlop_sense_dc_prox_create(int Nb, struct sense_model_s* mod
 	return result;
 }
 
-const struct nlop_s* nlop_sense_dc_grad_create(int Nb, struct sense_model_s* models[Nb], unsigned long lambda_flags)
+const struct nlop_s* nlop_sense_dc_grad_create(int Nb, struct sense_model_s* models[Nb], bart_flags_t lambda_flags)
 {
 	auto result = nlop_sense_normal_create(Nb, models);
 
 	int N = models[0]->config->N;
-	long img_dims[N];
-	long lam_dims[N];
+	bart_dim_t img_dims[N];
+	bart_dim_t lam_dims[N];
 
 	md_copy_dims(N, img_dims, nlop_generic_domain(result, 0)->dims);
 	md_select_dims(N, lambda_flags, lam_dims, img_dims);
@@ -866,11 +866,11 @@ const struct nlop_s* nlop_sense_dc_grad_create(int Nb, struct sense_model_s* mod
 	return result;
 }
 
-const struct nlop_s* nlop_sense_scale_maxeigen_create(int Nb, struct sense_model_s* models[Nb], int N, const long dims[N])
+const struct nlop_s* nlop_sense_scale_maxeigen_create(int Nb, struct sense_model_s* models[Nb], int N, const bart_dim_t dims[N])
 {
 	assert(N >= models[0]->config->N);
 
-	long dims_scl[N];
+	bart_dim_t dims_scl[N];
 	md_select_dims(N, ~BATCH_FLAG, dims_scl, dims);
 
 	const struct nlop_s* nlops[Nb];
@@ -894,7 +894,7 @@ const struct nlop_s* nlop_sense_scale_maxeigen_create(int Nb, struct sense_model
 	else
 		result = nlop_stack_multiple_F(Nb, nlops, 1, istack_dim, 1, ostack_dim, true , multigpu);
 
-	long odims[N];
+	bart_dim_t odims[N];
 	md_select_dims(N, BATCH_FLAG, odims, dims);
 
 	result = nlop_reshape_out_F(result, 0, N, odims);
@@ -1009,7 +1009,7 @@ const struct nlop_s* nlop_mri_normal_create(int Nb, const struct config_nlop_mri
 
 
 
-static const struct nlop_s* nlop_mri_normal_inv_slice_create(int N, const long lam_dims[N], const struct config_nlop_mri_s* conf, struct iter_conjgrad_conf* iter_conf)
+static const struct nlop_s* nlop_mri_normal_inv_slice_create(int N, const bart_dim_t lam_dims[N], const struct config_nlop_mri_s* conf, struct iter_conjgrad_conf* iter_conf)
 {
 	assert(NULL != conf);
 
@@ -1056,7 +1056,7 @@ static const struct nlop_s* nlop_mri_normal_inv_slice_create(int N, const long l
  * Output tensors:
  * image:	img_dims: 	(Nx, Ny, Nz, 1,  ..., Nb )
  */
-const struct nlop_s* nlop_mri_normal_inv_create(int N, const long lam_dims[N], int Nb, const struct config_nlop_mri_s* conf, struct iter_conjgrad_conf* iter_conf)
+const struct nlop_s* nlop_mri_normal_inv_create(int N, const bart_dim_t lam_dims[N], int Nb, const struct config_nlop_mri_s* conf, struct iter_conjgrad_conf* iter_conf)
 {
 	if (1 == Nb)
 		return nlop_mri_normal_inv_slice_create(N, lam_dims, conf, iter_conf);
@@ -1098,11 +1098,11 @@ const struct nlop_s* nlop_mri_normal_inv_create(int N, const long lam_dims[N], i
  * Output tensors:
  * image:	idims: 	(Nx, Ny, Nz, 1, ..., Nb)
  */
-const struct nlop_s* nlop_mri_dc_prox_create(int N, const long lam_dims[N], int Nb, const struct config_nlop_mri_s* conf, struct iter_conjgrad_conf* iter_conf)
+const struct nlop_s* nlop_mri_dc_prox_create(int N, const bart_dim_t lam_dims[N], int Nb, const struct config_nlop_mri_s* conf, struct iter_conjgrad_conf* iter_conf)
 {
 	auto result = nlop_mri_normal_inv_create(N, lam_dims, Nb, conf, iter_conf);
 
-	long img_dims[N];
+	bart_dim_t img_dims[N];
 	md_copy_dims(N, img_dims, nlop_generic_codomain(result, 0)->dims);
 
 	result = nlop_chain2_swap_FF(nlop_zaxpbz_create(N, img_dims, 1., 1.), 0, result, 0); //in: lambda*x0, AHy, coil, pattern, lambda
@@ -1184,10 +1184,10 @@ struct mri_scale_rss_s {
 	nlop_data_t super;
 	int N;
 
-	unsigned long rss_flag;
-	unsigned long bat_flag;
+	bart_flags_t rss_flag;
+	bart_flags_t bat_flag;
 
-	const long* col_dims;
+	const bart_dim_t* col_dims;
 
 	bool mean;
 };
@@ -1204,8 +1204,8 @@ static void mri_scale_rss_fun(const nlop_data_t* _data, complex float* dst, cons
 
 	if (d->mean) {
 
-		long bdims[N];
-		long idims[N];
+		bart_dim_t bdims[N];
+		bart_dim_t idims[N];
 		md_select_dims(N, d->bat_flag, bdims, d->col_dims);
 		md_select_dims(N, ~d->rss_flag, idims, d->col_dims);
 
@@ -1238,7 +1238,7 @@ const struct nlop_s* nlop_mri_scale_rss_create(int Nb, const struct config_nlop_
 	PTR_ALLOC(struct mri_scale_rss_s, data);
 	SET_TYPEID(mri_scale_rss_s, data);
 
-	PTR_ALLOC(long[conf->N], col_dims);
+	PTR_ALLOC(bart_dim_t[conf->N], col_dims);
 
 	int N = conf->N;
 	assert(DIMS == N);
@@ -1252,8 +1252,8 @@ const struct nlop_s* nlop_mri_scale_rss_create(int Nb, const struct config_nlop_
 	data->rss_flag = (~md_nontriv_dims(conf->N, conf->img_dims)) & (md_nontriv_dims(conf->N, conf->col_dims));
 	data->mean = true;
 
-	long odims[N];
-	long idims[N];
+	bart_dim_t odims[N];
+	bart_dim_t idims[N];
 	md_copy_dims(N, idims, conf->cim_dims);
 	md_copy_dims(N, odims, conf->img_dims);
 

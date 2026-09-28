@@ -46,7 +46,7 @@ int main_tensorflow(int argc, char* argv[argc])
 	const char* key = NULL;
 
 	const char** files = NULL;
-	long batchsize = 1;
+	bart_dim_t batchsize = 1;
 	bool nodes = false;
 	
 	struct arg_s args[] = {
@@ -85,7 +85,7 @@ int main_tensorflow(int argc, char* argv[argc])
 
 		assert(count == II + OO);
 
-		long dims[count][DIMS];
+		bart_dim_t dims[count][DIMS];
 		
 		void* args[count];
 
@@ -94,7 +94,7 @@ int main_tensorflow(int argc, char* argv[argc])
 			args[OO + i] = load_cfl(files[i], DIMS, dims[OO + i]);
 			auto dom = nlop_generic_domain(nlop, i);
 			assert(DIMS >= dom->N);
-			assert(md_check_equal_dims(dom->N, dom->dims, dims[OO + i], ~0UL));
+			assert(md_check_equal_dims(dom->N, dom->dims, dims[OO + i], ~UINT64_C(0)));
 		}
 
 		for (int i = 0; i < OO; i++) {

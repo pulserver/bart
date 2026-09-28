@@ -83,7 +83,7 @@ static float fista_formula(const struct ravine_conf conf, float ft)
  * (Nesterov 1983)
  */
 static void ravine(const struct vec_iter_s* vops, const struct ravine_conf conf,
-		long N, float* ftp, float* xa, float* xb)
+		bart_dim_t N, float* ftp, float* xa, float* xb)
 {
 	float ft = *ftp;
 	float tfo = ft;
@@ -122,7 +122,7 @@ static float optista_gamma(int i, int N, const float theta[N + 1])
 #endif
 
 void landweber_sym(int maxiter, float epsilon, float alpha,
-	long N,
+	bart_dim_t N,
 	const struct vec_iter_s* vops,
 	struct iter_op_s op,
 	float* x, const float* b,
@@ -178,7 +178,7 @@ void landweber_sym(int maxiter, float epsilon, float alpha,
  * @param b observations
  * @param monitor compute objective value, errors, etc.
  */
-void ist(int maxiter, float epsilon, float tau, bool last, long N,
+void ist(int maxiter, float epsilon, float tau, bool last, bart_dim_t N,
 		const struct vec_iter_s* vops,
 		ist_continuation_t ist_continuation,
 		struct iter_op_s op,
@@ -255,7 +255,7 @@ void ist(int maxiter, float epsilon, float tau, bool last, long N,
 void fista(int maxiter, float epsilon, float tau, float alpha,
 	bool last,
 	struct ravine_conf cf,
-	long N,
+	bart_dim_t N,
 	const struct vec_iter_s* vops,
 	ist_continuation_t ist_continuation,
 	struct iter_op_s op,
@@ -324,7 +324,7 @@ void fista(int maxiter, float epsilon, float tau, float alpha,
  *  Landweber L. An iteration formula for Fredholm integral equations of the
  *  first kind. Amer. J. Math. 1951; 73, 615-624.
  */
-void landweber(int maxiter, float epsilon, float alpha, long N, long M,
+void landweber(int maxiter, float epsilon, float alpha, bart_dim_t N, bart_dim_t M,
 	const struct vec_iter_s* vops,
 	struct iter_op_s op,
 	struct iter_op_s adj,
@@ -367,7 +367,7 @@ void landweber(int maxiter, float epsilon, float alpha, long N, long M,
  *
  */
 void eulermaruyama(int maxiter, float alpha,
-	float step, long N,
+	float step, bart_dim_t N,
 	const struct vec_iter_s* vops,
 	struct iter_op_s op,
 	struct iter_op_p_s* thresh,
@@ -404,18 +404,18 @@ void eulermaruyama(int maxiter, float alpha,
  *
  */
 void eulermaruyama_precond(int maxiter, float alpha,
-	float step, long N,
+	float step, bart_dim_t N,
 	const struct vec_iter_s* vops,
 	struct iter_op_s op,
 	struct iter_op_p_s* thresh,
 	float* x, const float* b,
-	long M,
+	bart_dim_t M,
 	struct iter_op_s prec_adj,
 	struct iter_op_s prec_normal,
 	float precond_diag,
 	int precond_max_iter,
 	float precond_tol,
-	long batchsize,
+	bart_dim_t batchsize,
 	struct iter_monitor_s* monitor)
 {
 	float* r = vops->allocate(N);
@@ -495,7 +495,7 @@ void eulermaruyama_precond(int maxiter, float alpha,
  * @param b observations
  */
 float conjgrad(int maxiter, float l2lambda, float epsilon,
-	long N,
+	bart_dim_t N,
 	const struct vec_iter_s* vops,
 	struct iter_op_s linop,
 	float* x, const float* b,
@@ -587,7 +587,7 @@ cleanup:
  * @param b observations
  */
 void conjgrad_batch(int maxiter, float l2lambda, float* l2lambda_bat, float epsilon,
-	long N, long Bi, long Bo,
+	bart_dim_t N, bart_dim_t Bi, bart_dim_t Bo,
 	const struct vec_iter_s* vops,
 	struct iter_op_s linop,
 	float* x, const float* b,
@@ -695,7 +695,7 @@ cleanup:
  * to a least-squares problem where the quadratic regularization applies to the difference
  * to 'x0'.
  */
-void irgnm(int iter, float alpha, float alpha_min, float redu, long N, long M,
+void irgnm(int iter, float alpha, float alpha_min, float redu, bart_dim_t N, bart_dim_t M,
 	const struct vec_iter_s* vops,
 	struct iter_op_s op,
 	struct iter_op_s adj,
@@ -753,7 +753,7 @@ void irgnm(int iter, float alpha, float alpha_min, float redu, long N, long M,
  * This version has an extra call to DF, but we can use a generic regularized
  * least-squares solver.
  */
-void irgnm2(int iter, float alpha, float alpha_min, float alpha_min0, float redu, long N, long M,
+void irgnm2(int iter, float alpha, float alpha_min, float alpha_min0, float redu, bart_dim_t N, bart_dim_t M,
 	const struct vec_iter_s* vops,
 	struct iter_op_s op,
 	struct iter_op_s der,
@@ -812,7 +812,7 @@ void irgnm2(int iter, float alpha, float alpha_min, float alpha_min0, float redu
  *
  */
 void levenberg_marquardt(int maxiter, int cgiter, float l2lambda, float redu,
-	long N, long M, long Bi, long Bo,
+	bart_dim_t N, bart_dim_t M, bart_dim_t Bi, bart_dim_t Bo,
 	const struct vec_iter_s* vops,
 	struct iter_op_s op,
 	struct iter_op_s adj,
@@ -821,8 +821,8 @@ void levenberg_marquardt(int maxiter, int cgiter, float l2lambda, float redu,
 	struct iter_op_s callback,
 	struct iter_monitor_s* monitor)
 {
-	long NT = 2 * N * Bi * Bo;
-	long MT = 2 * M * Bi * Bo;
+	bart_dim_t NT = 2 * N * Bi * Bo;
+	bart_dim_t MT = 2 * M * Bi * Bo;
 
 	float* r = vops->allocate(MT);
 	float* b = vops->allocate(NT);
@@ -895,7 +895,7 @@ void levenberg_marquardt(int maxiter, int cgiter, float l2lambda, float redu,
  * Minimize residual by calling each min_op in turn.
  */
 void altmin(int iter, float alpha, float redu,
-	    long N,
+	    bart_dim_t N,
 	    const struct vec_iter_s* vops,
 	    int NI,
 	    struct iter_nlop_s op,
@@ -910,7 +910,7 @@ void altmin(int iter, float alpha, float redu,
 	float* args[1 + NI];
 	args[0] = r;
 
-	for (long i = 0; i < NI; ++i)
+	for (bart_dim_t i = 0; i < NI; ++i)
 		args[1 + i] = x[i];
 
 	for (int i = 0; i < iter; i++) {
@@ -945,7 +945,7 @@ void altmin(int iter, float alpha, float redu,
 void pocs(int maxiter,
 	int D, struct iter_op_p_s proj_ops[static D],
 	const struct vec_iter_s* vops,
-	long /*N*/, float* x,
+	bart_dim_t /*N*/, float* x,
 	struct iter_monitor_s* monitor)
 {
 	for (int i = 0; i < maxiter; i++) {
@@ -964,7 +964,7 @@ void pocs(int maxiter,
  *  Power iteration
  */
 double power(int maxiter,
-	long N,
+	bart_dim_t N,
 	const struct vec_iter_s* vops,
 	struct iter_op_s op,
 	float* u, float* b)
@@ -1012,7 +1012,7 @@ double power(int maxiter,
  */
 void chambolle_pock(float alpha, int maxiter, float epsilon, float tau, float sigma,
 	float sigma_tau_ratio, float theta, float decay, bool adapt_stepsize,
-	int O, long N, long M[O],
+	int O, bart_dim_t N, bart_dim_t M[O],
 	const struct vec_iter_s* vops,
 	struct iter_op_s op_norm,
 	struct iter_op_s op_forw[O],
@@ -1276,7 +1276,7 @@ static float compute_objective(int NO, int NI, struct iter_nlop_s nlop, float* a
  * @param adj array of adjoint operators
  * @param vops vector operators
  **/
-static void getgrad(int NI, bool in_optimize_flag[NI], long isize[NI], float* grad[NI], int NO, bool out_optimize_flag[NO], struct iter_op_arr_s adj, const struct vec_iter_s* vops)
+static void getgrad(int NI, bool in_optimize_flag[NI], bart_dim_t isize[NI], float* grad[NI], int NO, bool out_optimize_flag[NO], struct iter_op_arr_s adj, const struct vec_iter_s* vops)
 {
 	float* one = vops->allocate(2);
 	float one_var[2] = { 1., 0. };	// complex
@@ -1351,8 +1351,8 @@ static void getgrad(int NI, bool in_optimize_flag[NI], long isize[NI], float* gr
 void sgd(	int epochs, int batches,
 		float learning_rate, float batchnorm_momentum,
 		const float (*learning_rate_schedule)[epochs][batches],
-		int NI, long isize[NI], enum IN_TYPE in_type[NI], float* x[NI],
-		int NO, long osize[NO], enum OUT_TYPE out_type[NI],
+		int NI, bart_dim_t isize[NI], enum IN_TYPE in_type[NI], float* x[NI],
+		int NO, bart_dim_t osize[NO], enum OUT_TYPE out_type[NI],
 		int N_batch, int N_total,
 		const struct vec_iter_s* vops,
 		struct iter_nlop_s nlop, struct iter_op_arr_s adj,
@@ -1367,7 +1367,7 @@ void sgd(	int epochs, int batches,
 	float* args[NO + NI];
 
 	float* x_batch_gen[NI]; //arrays which are filled by batch generator
-	long N_batch_gen = 0;
+	bart_dim_t N_batch_gen = 0;
 
 	bool in_optimize_flag[NI];
 	bool out_optimize_flag[NO];
@@ -1569,8 +1569,8 @@ void sgd(	int epochs, int batches,
  * @param callback UNUSED
  * @param monitor UNUSED
  */
-void iPALM(	long NI, long isize[NI], enum IN_TYPE in_type[NI], float* x[const NI], float* x_old[NI],
-		long NO, long osize[NO], enum OUT_TYPE out_type[NO],
+void iPALM(	bart_dim_t NI, bart_dim_t isize[NI], enum IN_TYPE in_type[NI], float* x[const NI], float* x_old[NI],
+		bart_dim_t NO, bart_dim_t osize[NO], enum OUT_TYPE out_type[NO],
 		int N_batch, int epoch_start, int epoch_end,
 		const struct vec_iter_s* vops,
 		float alpha[NI], float beta[NI], bool convex[NI], bool trivial_stepsize, bool reduce_momentum,
@@ -1584,7 +1584,7 @@ void iPALM(	long NI, long isize[NI], enum IN_TYPE in_type[NI], float* x[const NI
 		struct monitor_iter6_s* monitor, const struct iter_dump_s* dump)
 {
 	float* x_batch_gen[NI]; //arrays which are filled by batch generator
-	long N_batch_gen = 0;
+	bart_dim_t N_batch_gen = 0;
 
 	float* args[NO + NI];
 

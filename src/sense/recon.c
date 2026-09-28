@@ -81,7 +81,7 @@ void debug_print_sense_conf(int level, const struct sense_conf* conf)
 
 const struct operator_p_s* sense_recon_create(const struct sense_conf* conf,
 		  const struct linop_s* sense_op,
-		  const long pat_dims[DIMS],
+		  const bart_dim_t pat_dims[DIMS],
 		  italgo_fun2_t italgo, iter_conf* iconf,
 		  const complex float* init,
 		  int num_funs,
@@ -98,14 +98,14 @@ const struct operator_p_s* sense_recon_create(const struct sense_conf* conf,
 
 	assert(DIMS == linop_codomain(sense_op)->N);
 
-	long ksp_dims[DIMS];
+	bart_dim_t ksp_dims[DIMS];
 	md_copy_dims(DIMS, ksp_dims, linop_codomain(sense_op)->dims);
 
 	if (1 < conf->rwiter) {
 
 		assert(!conf->bpsense); // not compatible
 
-		unsigned long flags = 0;
+		bart_flags_t flags = 0;
 		for (int i = 0; i < DIMS; i++)
 			if (pat_dims[i] > 1)
 				flags = MD_SET(flags, i);

@@ -37,19 +37,19 @@
 
 
 
-static struct mobamod T1_create_internal(const long dims[DIMS], const complex float* mask, const complex float* TI, const complex float* psf,
+static struct mobamod T1_create_internal(const bart_dim_t dims[DIMS], const complex float* mask, const complex float* TI, const complex float* psf,
 				float scaling_M0, float scaling_R1s, const struct noir_model_conf_s* conf, float fov)
 {
-	long data_dims[DIMS];
+	bart_dim_t data_dims[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, data_dims, dims);
 
 	struct noir_s nlinv = noir_create(data_dims, mask, psf, conf);
 	struct mobamod ret;
 
-	long map_dims[DIMS];
-	long out_dims[DIMS];
-	long in_dims[DIMS];
-	long TI_dims[DIMS];
+	bart_dim_t map_dims[DIMS];
+	bart_dim_t out_dims[DIMS];
+	bart_dim_t in_dims[DIMS];
+	bart_dim_t TI_dims[DIMS];
 
 	md_select_dims(DIMS, conf->fft_flags|TIME_FLAG|TIME2_FLAG, map_dims, dims);
 	md_select_dims(DIMS, conf->fft_flags|TE_FLAG|TIME_FLAG|TIME2_FLAG, out_dims, dims);
@@ -62,15 +62,15 @@ static struct mobamod T1_create_internal(const long dims[DIMS], const complex fl
 
 	if (conf->noncart) { // overgridding with factor two
 
-		long map_dims2[DIMS];
-		long out_dims2[DIMS];
-		long in_dims2[DIMS];
+		bart_dim_t map_dims2[DIMS];
+		bart_dim_t out_dims2[DIMS];
+		bart_dim_t in_dims2[DIMS];
 
 		md_copy_dims(DIMS, map_dims2, map_dims);
 		md_copy_dims(DIMS, out_dims2, out_dims);
 		md_copy_dims(DIMS, in_dims2, in_dims);
 
-		long red_fov[3];
+		bart_dim_t red_fov[3];
 
 		for (int i = 0; i < 3; i++)
 			red_fov[i] = (1 == map_dims[i]) ? 1 : (map_dims[i] * fov);
@@ -109,10 +109,10 @@ static struct mobamod T1_create_internal(const long dims[DIMS], const complex fl
 }
 
 
-struct mobamod T1_create(const long dims[DIMS], const complex float* mask, const complex float* TI, const complex float* psf,
+struct mobamod T1_create(const bart_dim_t dims[DIMS], const complex float* mask, const complex float* TI, const complex float* psf,
 			float scaling_M0, float scaling_R1s, const struct noir_model_conf_s* conf, float fov)
 {
-	unsigned long bat_flags = TIME_FLAG | TIME2_FLAG;
+	bart_flags_t bat_flags = TIME_FLAG | TIME2_FLAG;
 	int bat_idx = TIME_DIM;
 
 	if (1 < dims[TIME2_DIM]) {
@@ -125,22 +125,22 @@ struct mobamod T1_create(const long dims[DIMS], const complex float* mask, const
 	    	}
 	}
 
-	long bat_dims[DIMS];
-	long dims_slc[DIMS];
+	bart_dim_t bat_dims[DIMS];
+	bart_dim_t dims_slc[DIMS];
 
 	md_select_dims(DIMS,  bat_flags, bat_dims, dims);
 	md_select_dims(DIMS, ~bat_flags, dims_slc, dims);
 
-	long psf_dims[DIMS];
+	bart_dim_t psf_dims[DIMS];
 	md_select_dims(DIMS, conf->ptrn_flags & ~COEFF_FLAG, psf_dims, dims);
 
-	long psf_dims_slc[DIMS];
+	bart_dim_t psf_dims_slc[DIMS];
 	md_select_dims(DIMS, ~bat_flags, psf_dims_slc, psf_dims);
 
-	long TI_dims[DIMS];
+	bart_dim_t TI_dims[DIMS];
 	md_select_dims(DIMS, TE_FLAG|TIME_FLAG|TIME2_FLAG, TI_dims, dims);
 
-	long TI_dims_slc[DIMS];
+	bart_dim_t TI_dims_slc[DIMS];
 	md_select_dims(DIMS, ~bat_flags, TI_dims_slc, TI_dims);
 
 	int N = md_calc_size(DIMS, bat_dims);
@@ -148,7 +148,7 @@ struct mobamod T1_create(const long dims[DIMS], const complex float* mask, const
 	const struct linop_s* lop = NULL;
 	const struct nlop_s* nlops[N];
 
-	long pos[DIMS];
+	bart_dim_t pos[DIMS];
 	md_singleton_strides(DIMS, pos);
 
 	int i = 0;

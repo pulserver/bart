@@ -34,7 +34,7 @@ static void zexp_free(const nlop_data_t* _data)
 	xfree(_data);
 }
 
-static void zexp_apply(const nlop_data_t* /*_data*/, int N, const long dims[N], complex float* dst, const complex float* src, complex float* der)
+static void zexp_apply(const nlop_data_t* /*_data*/, int N, const bart_dim_t dims[N], complex float* dst, const complex float* src, complex float* der)
 {
 	md_zexp(N, dims, dst, src);
 
@@ -42,7 +42,7 @@ static void zexp_apply(const nlop_data_t* /*_data*/, int N, const long dims[N], 
 		md_copy(N, dims, der, dst, CFL_SIZE);
 }
 
-const struct nlop_s* nlop_zexp_create(int N, const long dims[N])
+const struct nlop_s* nlop_zexp_create(int N, const bart_dim_t dims[N])
 {
 	PTR_ALLOC(struct zexp_s, data);
 	SET_TYPEID(zexp_s, data);
@@ -67,7 +67,7 @@ static void zlog_free(const nlop_data_t* _data)
 	xfree(_data);
 }
 
-static void zlog_apply(const nlop_data_t* /*_data*/, int N, const long dims[N], complex float* dst, const complex float* src, complex float* der)
+static void zlog_apply(const nlop_data_t* /*_data*/, int N, const bart_dim_t dims[N], complex float* dst, const complex float* src, complex float* der)
 {
 	if (NULL != der) {
 
@@ -78,7 +78,7 @@ static void zlog_apply(const nlop_data_t* /*_data*/, int N, const long dims[N], 
 	md_zlog(N, dims, dst, src);
 }
 
-const struct nlop_s* nlop_zlog_create(int N, const long dims[N])
+const struct nlop_s* nlop_zlog_create(int N, const bart_dim_t dims[N])
 {
 	PTR_ALLOC(struct zlog_s, data);
 	SET_TYPEID(zlog_s, data);

@@ -2,6 +2,7 @@
 #ifndef _MECO_H
 #define _MECO_H 1
 
+#include "misc/dimtypes.h"
 #include <complex.h>
 
 struct linop_s;
@@ -30,12 +31,12 @@ enum meco_weights_fB0 {
 };
 
 extern int get_num_of_coeff(enum meco_model sel_model);
-extern unsigned long get_PD_flag(enum meco_model sel_model);
-extern unsigned long get_R2S_flag(enum meco_model sel_model);
-extern unsigned long get_fB0_flag(enum meco_model sel_model);
+extern bart_flags_t get_PD_flag(enum meco_model sel_model);
+extern bart_flags_t get_R2S_flag(enum meco_model sel_model);
+extern bart_flags_t get_fB0_flag(enum meco_model sel_model);
 
 
-extern void meco_calc_fat_modu(int N, const long dims[N], const complex float TE[*], complex float dst[*], enum fat_spec fat_spec);
+extern void meco_calc_fat_modu(int N, const bart_dim_t dims[N], const complex float TE[*], complex float dst[*], enum fat_spec fat_spec);
 
 extern const complex float* meco_get_scaling(struct nlop_s* op);
 extern const struct linop_s* meco_get_fB0_trafo(struct nlop_s* op);
@@ -44,7 +45,7 @@ extern void meco_back_fB0(const struct linop_s* op, complex float* dst, const co
 
 extern int meco_get_weight_fB0_type(struct nlop_s* op);
 
-extern struct nlop_s* nlop_meco_create(int N, const long y_dims[N], const long x_dims[N], const complex float* TE, enum meco_model sel_model, bool real_pd, enum fat_spec fat_spec, const float* scale_fB0);
+extern struct nlop_s* nlop_meco_create(int N, const bart_dim_t y_dims[N], const bart_dim_t x_dims[N], const complex float* TE, enum meco_model sel_model, bool real_pd, enum fat_spec fat_spec, const float* scale_fB0);
 
 #endif // _MECO_H
 

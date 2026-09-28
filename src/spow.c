@@ -43,7 +43,7 @@ int main_spow(int argc, char* argv[argc])
 	num_init();
 
 	const int N = DIMS;
-	long dims[N];
+	bart_dim_t dims[N];
 	complex float* idata = load_cfl(in_file, N, dims);
 	complex float* odata = create_cfl(out_file, N, dims);
 		

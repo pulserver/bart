@@ -33,9 +33,9 @@ static const char help_str[] = "Perform wavelet transform.";
 
 int main_wavelet(int argc, char* argv[argc])
 {
-	unsigned long flags = 0;
+	bart_flags_t flags = 0;
 	int count = 0;
-	long* adims = NULL;
+	bart_dim_t* adims = NULL;
 	const char* in_file = NULL;
 	const char* out_file = NULL;
 
@@ -72,11 +72,11 @@ int main_wavelet(int argc, char* argv[argc])
 
 
 	const int N = DIMS;
-	long idims[N];
+	bart_dim_t idims[N];
 
 	complex float* idata = load_cfl(in_file, N, idims);
 
-	long dims[N];
+	bart_dim_t dims[N];
 	md_copy_dims(N, dims, idims);
 
 	if (adj) {
@@ -91,17 +91,17 @@ int main_wavelet(int argc, char* argv[argc])
 			error("Number of flagged dimensions does not match");
 	}
 
-	long minsize[N];
+	bart_dim_t minsize[N];
 
 	for (int i = 0; i < N; i++)
 		minsize[i] = MD_IS_SET(flags, i) ? 16 : dims[i];
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
 	const struct linop_s* w = linop_wavelet_create(N, flags, dims, strs, wtype, minsize, false);
 
-	long odims[N];
+	bart_dim_t odims[N];
 	md_copy_dims(N, odims, (adj ? linop_domain : linop_codomain)(w)->dims);
 
 	complex float* odata = create_cfl(out_file, N, odims);

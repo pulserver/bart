@@ -120,7 +120,7 @@ static const char* print_node_arg(const struct node_s* _node)
 
 		auto tmp = name;
 
-		name = ptr_printf("%s %ld", tmp, iov->dims[i]);
+		name = ptr_printf("%s %" PRId64, tmp, iov->dims[i]);
 
 		xfree(tmp);
 	}
@@ -246,7 +246,7 @@ graph_t operator_graph_permute_F(graph_t op, int N, const int perm[N])
 	return perm_ext_graphs_F(op, N, perm);
 }
 
-graph_t operator_graph_reshape_F(graph_t op, int i, int N, const long dims[N])
+graph_t operator_graph_reshape_F(graph_t op, int i, int N, const bart_dim_t dims[N])
 {
 	auto node = CAST_DOWN(node_arg_s, (node_t)list_get_item(op->ext_nodes, i));
 	size_t size = node->iov->size;
@@ -510,7 +510,7 @@ static graph_t operator_graph_optimize_linops_F_internal(graph_t graph, node_cmp
 	return graph;
 }
 
-static graph_t create_sum_graph(bool multi_sum, int II, int out_index, int N, const long dims[N])
+static graph_t create_sum_graph(bool multi_sum, int II, int out_index, int N, const bart_dim_t dims[N])
 {
 	const struct operator_s* sum_op = NULL;
 
@@ -719,8 +719,8 @@ const struct operator_s* operator_graph_createF(graph_t graph)
 
 	bool ioflags[N];
 	int D[N];
-	const long* dims[N];
-	const long* strs[N];
+	const bart_dim_t* dims[N];
+	const bart_stride_t* strs[N];
 
 	for (int i = 0; i < N; i++) {
 

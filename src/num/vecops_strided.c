@@ -63,27 +63,27 @@ void deactivate_strided_vecops(void)
 	use_strided_vecops = false;
 }
 
-typedef int (*md_check_3op_t)(int N, long ndims[N], long nostrs[N], long nistrs1[N], long nistrs2[N], const long dims[N], const long ostrs[N], const long istrs1[N], const long istrs2[N], size_t size);
-typedef int (*md_check_2op_t)(int N, long ndims[N], long nostrs[N], long nistrs[N], const long dims[N], const long ostrs[N], const long istrs[N], size_t size);
+typedef int (*md_check_3op_t)(int N, bart_dim_t ndims[N], bart_stride_t nostrs[N], bart_stride_t nistrs1[N], bart_stride_t nistrs2[N], const bart_dim_t dims[N], const bart_stride_t ostrs[N], const bart_stride_t istrs1[N], const bart_stride_t istrs2[N], size_t size);
+typedef int (*md_check_2op_t)(int N, bart_dim_t ndims[N], bart_stride_t nostrs[N], bart_stride_t nistrs[N], const bart_dim_t dims[N], const bart_stride_t ostrs[N], const bart_stride_t istrs[N], size_t size);
 
-typedef void (*md_3op_t)(int D, const long dims[D], const long ostrs[D], float* optr, const long istrs1[D], const float* iptr1, const long istrs2[D], const float* iptr2);
-typedef void (*md_s2op_t)(int D, const long dims[D], const long ostrs[D], float* optr, const long istrs[D], const float* iptr, float val);
-typedef void (*md_z3op_t)(int D, const long dims[D], const long ostrs[D], complex float* optr, const long istrs1[D], const complex float* iptr1, const long istrs2[D], const complex float* iptr2);
+typedef void (*md_3op_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], float* optr, const bart_stride_t istrs1[D], const float* iptr1, const bart_stride_t istrs2[D], const float* iptr2);
+typedef void (*md_s2op_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], float* optr, const bart_stride_t istrs[D], const float* iptr, float val);
+typedef void (*md_z3op_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs1[D], const complex float* iptr1, const bart_stride_t istrs2[D], const complex float* iptr2);
 
-static void perm_z3op(	int D, const long dims[D], int order[D],
-			unsigned long oflag, complex float* out,
-			unsigned long iflag1, const complex float* in1,
-			unsigned long iflag2, const complex float* in2,
+static void perm_z3op(	int D, const bart_dim_t dims[D], int order[D],
+			bart_flags_t oflag, complex float* out,
+			bart_flags_t iflag1, const complex float* in1,
+			bart_flags_t iflag2, const complex float* in2,
 			md_z3op_t fun, bool ignore_out)
 {
-	long dims_p[D];
+	bart_dim_t dims_p[D];
 	md_permute_dims(D, order, dims_p, dims);
 
 	int order_p[D];
 
-	unsigned long oflag_p = 0;
-	unsigned long iflag1_p = 0;
-	unsigned long iflag2_p = 0;
+	bart_flags_t oflag_p = 0;
+	bart_flags_t iflag1_p = 0;
+	bart_flags_t iflag2_p = 0;
 
 	for (int i = 0; i < D; i++) {
 
@@ -97,12 +97,12 @@ static void perm_z3op(	int D, const long dims[D], int order[D],
 			iflag2_p = MD_SET(iflag2_p, order[i]);
 	}
 
-	long odims[D];
-	long odims_p[D];
-	long idims1[D];
-	long idims1_p[D];
-	long idims2[D];
-	long idims2_p[D];
+	bart_dim_t odims[D];
+	bart_dim_t odims_p[D];
+	bart_dim_t idims1[D];
+	bart_dim_t idims1_p[D];
+	bart_dim_t idims2[D];
+	bart_dim_t idims2_p[D];
 
 	md_select_dims(D, oflag_p, odims_p, dims_p);
 	md_select_dims(D, oflag, odims, dims);
@@ -131,13 +131,13 @@ static void perm_z3op(	int D, const long dims[D], int order[D],
 	md_free(out_p);
 }
 
-static void md_zfmac_transp(int D, const long dims[D], const long ostr[D], complex float* out, const long istr1[D], const complex float* in1, const long istr2[D], const complex float* in2)
+static void md_zfmac_transp(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* out, const bart_stride_t istr1[D], const complex float* in1, const bart_stride_t istr2[D], const complex float* in2)
 {
 	assert(2 == D);
 
-	unsigned long oflag = 0;
-	unsigned long iflag1 = 0;
-	unsigned long iflag2 = 0;
+	bart_flags_t oflag = 0;
+	bart_flags_t iflag1 = 0;
+	bart_flags_t iflag2 = 0;
 
 	for (int i = 0; i < D; i++) {
 
@@ -209,12 +209,12 @@ struct simple_s2op_check {
  * @param size size of data structures, e.g. complex float
  * @param too three-op multiply function
  */
-static void optimized_threeop_oii(int D, const long dim[D], const long ostr[D], void* optr, const long istr1[D], const void* iptr1, const long istr2[D], const void* iptr2, size_t sizes[3], md_nary_opt_fun_t too)
+static void optimized_threeop_oii(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], void* optr, const bart_stride_t istr1[D], const void* iptr1, const bart_stride_t istr2[D], const void* iptr2, size_t sizes[3], md_nary_opt_fun_t too)
 {
-	const long (*nstr[3])[D?D:1] = { (const long (*)[D?D:1])ostr, (const long (*)[D?D:1])istr1, (const long (*)[D?D:1])istr2 };
+	const bart_stride_t (*nstr[3])[D?D:1] = { (const bart_stride_t (*)[D?D:1])ostr, (const bart_stride_t (*)[D?D:1])istr1, (const bart_stride_t (*)[D?D:1])istr2 };
 	void *nptr[3] = { optr, (void*)iptr1, (void*)iptr2 };
 
-	unsigned long io = 1UL + ((iptr1 == optr) ? 2 : 0) + ((iptr2 == optr) ? 4 : 0);
+	bart_flags_t io = UINT64_C(1) + ((iptr1 == optr) ? 2 : 0) + ((iptr2 == optr) ? 4 : 0);
 
 	optimized_nop(3, io, D, dim, nstr, nptr, sizes, too);
 }
@@ -225,15 +225,15 @@ static void optimized_threeop_oii(int D, const long dim[D], const long ostr[D], 
  * Checks if strides strides define a matrix,
  * i.e. one dimension is continuously in memory and followed by the other
  */
-static bool is_matrix(const long dims[3], const long strs[3], int i1, int i2, size_t size)
+static bool is_matrix(const bart_dim_t dims[3], const bart_stride_t strs[3], int i1, int i2, size_t size)
 {
 	assert(i1 != i2);
 
-	bool a = (   (strs[i1] == (long)size)
-		  && (strs[i2] == (long)size * dims[i1]));
+	bool a = (   (strs[i1] == (bart_stride_t)size)
+		  && (strs[i2] == (bart_stride_t)size * dims[i1]));
 
-	bool b = (   (strs[i2] == (long)size)
-		  && (strs[i1] == (long)size * dims[i2]));
+	bool b = (   (strs[i2] == (bart_stride_t)size)
+		  && (strs[i1] == (bart_stride_t)size * dims[i2]));
 
 	return a || b;
 }
@@ -249,7 +249,7 @@ static bool is_matrix(const long dims[3], const long strs[3], int i1, int i2, si
  *
  * Fixme: we could loose restriction for matrix lying contiguously in memory
  */
-static int check_gemm(int N, long ndims[N], long nostrs[N], long nistrs1[N], long nistrs2[N], const long dims[N], const long ostrs[N], const long istrs1[N], const long istrs2[N], size_t size)
+static int check_gemm(int N, bart_dim_t ndims[N], bart_stride_t nostrs[N], bart_stride_t nistrs1[N], bart_stride_t nistrs2[N], const bart_dim_t dims[N], const bart_stride_t ostrs[N], const bart_stride_t istrs1[N], const bart_stride_t istrs2[N], size_t size)
 {
 	if (3 > N)
 		return -1;
@@ -289,7 +289,7 @@ static int check_gemm(int N, long ndims[N], long nostrs[N], long nistrs1[N], lon
 	matrix = matrix && is_matrix(dims, istrs2, (ipos2 + 1) % 3, (ipos2 + 2) % 3, size);
 
 	// ipos1 is permuted to index 2:
-	matrix = matrix && (ostrs[ipos1] > (long)size);
+	matrix = matrix && (ostrs[ipos1] > (bart_stride_t)size);
 
 	if (!matrix)
 		return -1;
@@ -327,7 +327,7 @@ static int check_gemm(int N, long ndims[N], long nostrs[N], long nistrs1[N], lon
  * nistrs1: (s, (ndim[0]+x)*s) or ((ndim[1]+x)*s, s)
  * nistrs2: (0, s)
  */
-static int check_gemv(int N, long ndims[N], long nostrs[N], long nistrs1[N], long nistrs2[N], const long dims[N], const long ostrs[N], const long istrs1[N], const long istrs2[N], size_t size)
+static int check_gemv(int N, bart_dim_t ndims[N], bart_stride_t nostrs[N], bart_stride_t nistrs1[N], bart_stride_t nistrs2[N], const bart_dim_t dims[N], const bart_stride_t ostrs[N], const bart_stride_t istrs1[N], const bart_stride_t istrs2[N], size_t size)
 {
 	if (2 > N)
 		return -1;
@@ -347,12 +347,12 @@ static int check_gemv(int N, long ndims[N], long nostrs[N], long nistrs1[N], lon
 
 	bool matvecmul = true;
 
-	matvecmul = matvecmul && (0 == nostrs[0] % (long)size) && ((long)size <= nostrs[0]) && (0 == nostrs[1]);	//(s*x, 0)
-	matvecmul = matvecmul && (0 == nistrs2[1] % (long)size) && ((long)size <= nistrs2[1]) && (0 == nistrs2[0]);	//(0, s*x)
+	matvecmul = matvecmul && (0 == nostrs[0] % (bart_stride_t)size) && ((bart_stride_t)size <= nostrs[0]) && (0 == nostrs[1]);	//(s*x, 0)
+	matvecmul = matvecmul && (0 == nistrs2[1] % (bart_stride_t)size) && ((bart_stride_t)size <= nistrs2[1]) && (0 == nistrs2[0]);	//(0, s*x)
 
-	matvecmul = matvecmul && (0 == nistrs1[0] % (long)size) && (0 == nistrs1[1] % (long)size);
-	matvecmul = matvecmul && (   (((long)size == nistrs1[0]) && ((long)size * ndims[0] <= nistrs1[1]))
-				  || (((long)size == nistrs1[1]) && ((long)size * ndims[1] <= nistrs1[0])) );		//nistrs1: (s, (ndim[0]+x)*s) or ((ndim[1]+x)*s, s)
+	matvecmul = matvecmul && (0 == nistrs1[0] % (bart_stride_t)size) && (0 == nistrs1[1] % (bart_stride_t)size);
+	matvecmul = matvecmul && (   (((bart_stride_t)size == nistrs1[0]) && ((bart_stride_t)size * ndims[0] <= nistrs1[1]))
+				  || (((bart_stride_t)size == nistrs1[1]) && ((bart_stride_t)size * ndims[1] <= nistrs1[0])) );		//nistrs1: (s, (ndim[0]+x)*s) or ((ndim[1]+x)*s, s)
 
 	if (!matvecmul)
 		return -1;
@@ -370,9 +370,9 @@ static int check_gemv(int N, long ndims[N], long nostrs[N], long nistrs1[N], lon
  * nistrs1: (s*(1+x), 0)
  * nistrs2: (0, s*(1+x))
  */
-static int check_ger(int N, long ndims[N], long nostrs[N], long nistrs1[N], long nistrs2[N], const long dims[N], const long ostrs[N], const long istrs1[N], const long istrs2[N], size_t size)
+static int check_ger(int N, bart_dim_t ndims[N], bart_stride_t nostrs[N], bart_stride_t nistrs1[N], bart_stride_t nistrs2[N], const bart_dim_t dims[N], const bart_stride_t ostrs[N], const bart_stride_t istrs1[N], const bart_stride_t istrs2[N], size_t size)
 {
-	if ((2 > N) || (((long)size != ostrs[0]) && ((long)size != ostrs[1])))
+	if ((2 > N) || (((bart_stride_t)size != ostrs[0]) && ((bart_stride_t)size != ostrs[1])))
 		return -1;
 
 	int perm[N];
@@ -380,8 +380,8 @@ static int check_ger(int N, long ndims[N], long nostrs[N], long nistrs1[N], long
 	for (int i = 2; i < N; i++)
 		perm[i] = i;
 
-	perm[0] = (ostrs[0] == (long)size) ? 0 : 1;
-	perm[1] = (ostrs[0] == (long)size) ? 1 : 0;
+	perm[0] = (ostrs[0] == (bart_stride_t)size) ? 0 : 1;
+	perm[1] = (ostrs[0] == (bart_stride_t)size) ? 1 : 0;
 
 	md_permute_dims(N, perm, ndims, dims);
 	md_permute_dims(N, perm, nostrs, ostrs);
@@ -389,9 +389,9 @@ static int check_ger(int N, long ndims[N], long nostrs[N], long nistrs1[N], long
 	md_permute_dims(N, perm, nistrs2, istrs2);
 
 	bool ger = true;
-	ger = ger && (0 == nistrs1[1]) && (0 < nistrs1[0]) && (0 == nistrs1[0] % (long)size);
-	ger = ger && (0 == nistrs2[0]) && (0 < nistrs2[1]) && (0 == nistrs2[1] % (long)size);
-	ger = ger && ((long)size == nostrs[0]) && (0 == nostrs[1] % (long)size) && (nostrs[0] * ndims[0] <= nostrs[1]);
+	ger = ger && (0 == nistrs1[1]) && (0 < nistrs1[0]) && (0 == nistrs1[0] % (bart_stride_t)size);
+	ger = ger && (0 == nistrs2[0]) && (0 < nistrs2[1]) && (0 == nistrs2[1] % (bart_stride_t)size);
+	ger = ger && ((bart_stride_t)size == nostrs[0]) && (0 == nostrs[1] % (bart_stride_t)size) && (nostrs[0] * ndims[0] <= nostrs[1]);
 
 	return ger ? 2 : -1;
 }
@@ -406,10 +406,10 @@ static int check_ger(int N, long ndims[N], long nostrs[N], long nistrs1[N], long
  * nistrs1: (s*(1+x))
  * nistrs2: (0)
  */
-static int check_axpy(int N, long ndims[N], long nostrs[N], long nistrs1[N], long nistrs2[N], const long dims[N], const long ostrs[N], const long istrs1[N], const long istrs2[N], size_t size)
+static int check_axpy(int N, bart_dim_t ndims[N], bart_stride_t nostrs[N], bart_stride_t nistrs1[N], bart_stride_t nistrs2[N], const bart_dim_t dims[N], const bart_stride_t ostrs[N], const bart_stride_t istrs1[N], const bart_stride_t istrs2[N], size_t size)
 {
-	if ((1 > N) || (   (0 != ostrs[0] % (long)size) || (0 >= ostrs[0])
-			|| (0 != istrs1[0] % (long)size) || (0 >= istrs1[0])
+	if ((1 > N) || (   (0 != ostrs[0] % (bart_stride_t)size) || (0 >= ostrs[0])
+			|| (0 != istrs1[0] % (bart_stride_t)size) || (0 >= istrs1[0])
 			|| (0 != istrs2[0])))
 		return -1;
 
@@ -431,15 +431,15 @@ static int check_axpy(int N, long ndims[N], long nostrs[N], long nistrs1[N], lon
  * nistrs1: (s*x)
  * nistrs2: (s*x)
  */
-static int check_dot(int N, long ndims[N], long nostrs[N], long nistrs1[N], long nistrs2[N], const long dims[N], const long ostrs[N], const long istrs1[N], const long istrs2[N], size_t size)
+static int check_dot(int N, bart_dim_t ndims[N], bart_stride_t nostrs[N], bart_stride_t nistrs1[N], bart_stride_t nistrs2[N], const bart_dim_t dims[N], const bart_stride_t ostrs[N], const bart_stride_t istrs1[N], const bart_stride_t istrs2[N], size_t size)
 {
 	if ((1 > N) || (   (0 != ostrs[0])
-			|| (0 != istrs1[0] % (long)size) || (0 >= istrs1[0])
-			|| (0 != istrs2[0] % (long)size) || (0 >= istrs2[0]) ))
+			|| (0 != istrs1[0] % (bart_stride_t)size) || (0 >= istrs1[0])
+			|| (0 != istrs2[0] % (bart_stride_t)size) || (0 >= istrs2[0]) ))
 		return -1;
 
 	//FIXME: due to bug in openBLAS
-	if ((long)size != istrs1[0] || (long)size != istrs2[0])
+	if ((bart_stride_t)size != istrs1[0] || (bart_stride_t)size != istrs2[0])
 		return -1;
 
 	md_copy_dims(N, ndims, dims);
@@ -459,11 +459,11 @@ static int check_dot(int N, long ndims[N], long nostrs[N], long nistrs1[N], long
  * nistrs1: (s, s*dim[0])
  * nistrs2: (s, s*dim[0])
  */
-static int check_dot_outer(int N, long ndims[N], long nostrs[N], long nistrs1[N], long nistrs2[N], const long dims[N], const long ostrs[N], const long istrs1[N], const long istrs2[N], size_t size)
+static int check_dot_outer(int N, bart_dim_t ndims[N], bart_stride_t nostrs[N], bart_stride_t nistrs1[N], bart_stride_t nistrs2[N], const bart_dim_t dims[N], const bart_stride_t ostrs[N], const bart_stride_t istrs1[N], const bart_stride_t istrs2[N], size_t size)
 {
-	if ((1 > N) || (   ((long)size != ostrs[0])  || (0 != ostrs[1])
-			|| ((long)size != istrs1[0]) || ((long)size * dims[0] != istrs1[1])
-			|| ((long)size != istrs2[0]) || ((long)size * dims[0] != istrs2[1]) ))
+	if ((1 > N) || (   ((bart_stride_t)size != ostrs[0])  || (0 != ostrs[1])
+			|| ((bart_stride_t)size != istrs1[0]) || ((bart_stride_t)size * dims[0] != istrs1[1])
+			|| ((bart_stride_t)size != istrs2[0]) || ((bart_stride_t)size * dims[0] != istrs2[1]) ))
 		return -1;
 
 	if (128 < dims[0])
@@ -489,19 +489,19 @@ static int check_dot_outer(int N, long ndims[N], long nostrs[N], long nistrs1[N]
  * istr1:	[s, 4s, 0]
  * istr2:	[s, 0, 2s]
  */
-static int check_batched_select(int N, long ndims[N], long nostrs[N], long nistrs1[N], long nistrs2[N], const long dims[N], const long ostrs[N], const long istrs1[N], const long istrs2[N], size_t size)
+static int check_batched_select(int N, bart_dim_t ndims[N], bart_stride_t nostrs[N], bart_stride_t nistrs1[N], bart_stride_t nistrs2[N], const bart_dim_t dims[N], const bart_stride_t ostrs[N], const bart_stride_t istrs1[N], const bart_stride_t istrs2[N], size_t size)
 {
-	long todims[N];
-	long tidims1[N];
-	long tidims2[N];
+	bart_dim_t todims[N];
+	bart_dim_t tidims1[N];
+	bart_dim_t tidims2[N];
 
 	md_select_dims(N, MD_BIT(0) | md_nontriv_strides(N, ostrs), todims, dims);
 	md_select_dims(N, MD_BIT(0) | md_nontriv_strides(N, istrs1), tidims1, dims);
 	md_select_dims(N, MD_BIT(0) | md_nontriv_strides(N, istrs2), tidims2, dims);
 
-	long tostrs[N];
-	long tistrs1[N];
-	long tistrs2[N];
+	bart_stride_t tostrs[N];
+	bart_stride_t tistrs1[N];
+	bart_stride_t tistrs2[N];
 
 	md_calc_strides(N, tostrs, todims, size);
 	md_calc_strides(N, tistrs1, tidims1, size);
@@ -533,7 +533,7 @@ static int check_batched_select(int N, long ndims[N], long nostrs[N], long nistr
  * istr1:	[0, s, 0]
  * istr2:	[s, 0, 2s]
  */
-static int check_unfold(int N, long ndims[N], long nostrs[N], long nistrs1[N], long nistrs2[N], const long dims[N], const long ostrs[N], const long istrs1[N], const long istrs2[N], size_t size)
+static int check_unfold(int N, bart_dim_t ndims[N], bart_stride_t nostrs[N], bart_stride_t nistrs1[N], bart_stride_t nistrs2[N], const bart_dim_t dims[N], const bart_stride_t ostrs[N], const bart_stride_t istrs1[N], const bart_stride_t istrs2[N], size_t size)
 {
 
 	if (0 == ostrs[0])
@@ -549,7 +549,7 @@ static int check_unfold(int N, long ndims[N], long nostrs[N], long nistrs1[N], l
 	if (0 == i)
 		return -1;
 
-	if ((1 == i) && ((long)size == ostrs[0]) && ((long)size == istrs1[0]) && ((long)size == istrs2[0]))
+	if ((1 == i) && ((bart_stride_t)size == ostrs[0]) && ((bart_stride_t)size == istrs1[0]) && ((bart_stride_t)size == istrs2[0]))
 		return -1; // simple vecop case
 
 	md_copy_dims(N, ndims, dims);
@@ -569,7 +569,7 @@ static int check_unfold(int N, long ndims[N], long nostrs[N], long nistrs1[N], l
  * nistrs1: (s, s*(dims[0] + x))
  * nistrs2: (s*x, 0) or (0, s*x)
  */
-static int check_dgmm(int N, long ndims[N], long nostrs[N], long nistrs1[N], long nistrs2[N], const long dims[N], const long ostrs[N], const long istrs1[N], const long istrs2[N], size_t size)
+static int check_dgmm(int N, bart_dim_t ndims[N], bart_stride_t nostrs[N], bart_stride_t nistrs1[N], bart_stride_t nistrs2[N], const bart_dim_t dims[N], const bart_stride_t ostrs[N], const bart_stride_t istrs1[N], const bart_stride_t istrs2[N], size_t size)
 {
 	if (2 > N)
 		return -1;
@@ -579,8 +579,8 @@ static int check_dgmm(int N, long ndims[N], long nostrs[N], long nistrs1[N], lon
 	for (int i = 2; i < N; i++)
 		perm[i] = i;
 
-	perm[0] = (ostrs[0] == (long)size) ? 0 : 1;
-	perm[1] = (ostrs[0] == (long)size) ? 1 : 0;
+	perm[0] = (ostrs[0] == (bart_stride_t)size) ? 0 : 1;
+	perm[1] = (ostrs[0] == (bart_stride_t)size) ? 1 : 0;
 
 	md_permute_dims(N, perm, ndims, dims);
 	md_permute_dims(N, perm, nostrs, ostrs);
@@ -588,9 +588,9 @@ static int check_dgmm(int N, long ndims[N], long nostrs[N], long nistrs1[N], lon
 	md_permute_dims(N, perm, nistrs2, istrs2);
 
 	bool dgmm = true;
-	dgmm = dgmm && ((long)size == nostrs[0]) && (0 == nostrs[1] % (long)size) && ((long)size * ndims[0] <= nostrs[1]);
-	dgmm = dgmm && ((long)size == nistrs1[0]) && (0 == nistrs1[1] % (long)size) && ((long)size * ndims[0] <= nistrs1[1]);
-	dgmm = dgmm && (0 == nistrs2[0] % (long)size) && (0 == nistrs2[1] % (long)size);
+	dgmm = dgmm && ((bart_stride_t)size == nostrs[0]) && (0 == nostrs[1] % (bart_stride_t)size) && ((bart_stride_t)size * ndims[0] <= nostrs[1]);
+	dgmm = dgmm && ((bart_stride_t)size == nistrs1[0]) && (0 == nistrs1[1] % (bart_stride_t)size) && ((bart_stride_t)size * ndims[0] <= nistrs1[1]);
+	dgmm = dgmm && (0 == nistrs2[0] % (bart_stride_t)size) && (0 == nistrs2[1] % (bart_stride_t)size);
 	dgmm = dgmm && (0 == nistrs2[0] * nistrs2[1]);
 	dgmm = dgmm && ((0 < nistrs2[0]) || (0 < nistrs2[1]));
 
@@ -609,7 +609,7 @@ static int check_dgmm(int N, long ndims[N], long nostrs[N], long nistrs1[N], lon
  * nistrs1: (s, 0, ...)
  * nistrs2: (s, s * dim[0], ...)
  */
-static int check_reduce_outer(int N, long ndims[N], long nostrs[N], long nistrs1[N], long nistrs2[N], const long dims[N], const long ostrs[N], const long istrs1[N], const long istrs2[N], size_t size)
+static int check_reduce_outer(int N, bart_dim_t ndims[N], bart_stride_t nostrs[N], bart_stride_t nistrs1[N], bart_stride_t nistrs2[N], const bart_dim_t dims[N], const bart_stride_t ostrs[N], const bart_stride_t istrs1[N], const bart_stride_t istrs2[N], size_t size)
 {
 	for (int i = 0; i < N; i++)
 		if (ostrs[i] != istrs1[i])
@@ -620,7 +620,7 @@ static int check_reduce_outer(int N, long ndims[N], long nostrs[N], long nistrs1
 
 	int cont = -1;
 	for (int i = 0; i < N; i++)
-		if ((1 != dims[i]) && ((long)size == ostrs[i]) && ((long)size == istrs1[i]) && ((long)size == istrs2[i]))
+		if ((1 != dims[i]) && ((bart_stride_t)size == ostrs[i]) && ((bart_stride_t)size == istrs1[i]) && ((bart_stride_t)size == istrs2[i]))
 			cont = i;
 
 	if (-1 == cont)
@@ -628,7 +628,7 @@ static int check_reduce_outer(int N, long ndims[N], long nostrs[N], long nistrs1
 
 	int reduce = -1;
 	for (int i = 0; i < N; i++)
-		if ((1 != dims[i]) && (0 == ostrs[i]) && ((long)size * dims[cont] == istrs2[i]))
+		if ((1 != dims[i]) && (0 == ostrs[i]) && ((bart_stride_t)size * dims[cont] == istrs2[i]))
 			reduce = i;
 
 	if (-1 == reduce)
@@ -663,7 +663,7 @@ static int check_reduce_outer(int N, long ndims[N], long nostrs[N], long nistrs1
  * nistrs1: (0) or (0, s)
  * nistrs2: (s) or (s, s * dim[0])
  */
-static int check_reduce_inner(int N, long ndims[N], long nostrs[N], long nistrs1[N], long nistrs2[N], const long dims[N], const long ostrs[N], const long istrs1[N], const long istrs2[N], size_t size)
+static int check_reduce_inner(int N, bart_dim_t ndims[N], bart_stride_t nostrs[N], bart_stride_t nistrs1[N], bart_stride_t nistrs2[N], const bart_dim_t dims[N], const bart_stride_t ostrs[N], const bart_stride_t istrs1[N], const bart_stride_t istrs2[N], size_t size)
 {
 	for (int i = 0; i < N; i++)
 		if (ostrs[i] != istrs1[i])
@@ -675,7 +675,7 @@ static int check_reduce_inner(int N, long ndims[N], long nostrs[N], long nistrs1
 	int reduce = -1;
 
 	for (int i = 0; i < N; i++)
-		if ((1 != dims[i]) && (0 == ostrs[i]) && ((long)size == istrs2[i]))
+		if ((1 != dims[i]) && (0 == ostrs[i]) && ((bart_stride_t)size == istrs2[i]))
 			reduce = i;
 
 	if (-1 == reduce)
@@ -700,30 +700,30 @@ static int check_reduce_inner(int N, long ndims[N], long nostrs[N], long nistrs1
 	if (1 == N)
 		return 1;
 
-	bool reduce2 = ((long)size == ostrs[1]);
-	reduce2 &= ((long)size == istrs1[1]);
-	reduce2 &= ((long)size * dims[0] == istrs2[1]);
+	bool reduce2 = ((bart_stride_t)size == ostrs[1]);
+	reduce2 &= ((bart_stride_t)size == istrs1[1]);
+	reduce2 &= ((bart_stride_t)size * dims[0] == istrs2[1]);
 
 	return reduce2 ? 2 : 1;
 }
 
 
 // computes the size of an array with strides
-static long get_block_size(int N, const long dims[N], const long strs[N], size_t size0)
+static bart_dim_t get_block_size(int N, const bart_dim_t dims[N], const bart_stride_t strs[N], size_t size0)
 {
-	long size = (long)size0;
+	bart_dim_t size = (bart_stride_t)size0;
 
 	for (int i = 0; i < N; i++)
-		size += (dims[i] - 1) * labs(strs[i]);
+		size += (dims[i] - 1) * llabs(strs[i]);
 
 	return size;
 }
 
 
 static bool simple_z3op(int N_checks, struct simple_z3op_check strided_calls[N_checks], const char* fun_name,
-		int N, const long _dims[N],
-		const long _ostrs[N], complex float* out, const long _istrs1[N], const complex float* in1,
-		const long _istrs2[N], const complex float* in2,
+		int N, const bart_dim_t _dims[N],
+		const bart_stride_t _ostrs[N], complex float* out, const bart_stride_t _istrs1[N], const complex float* in1,
+		const bart_stride_t _istrs2[N], const complex float* in2,
 		bool symmetric, bool conj)
 {
 	if (!use_strided_vecops)
@@ -735,26 +735,26 @@ static bool simple_z3op(int N_checks, struct simple_z3op_check strided_calls[N_c
 	if (is_vptr(out) || is_vptr(in1) || is_vptr(in2))
 		return false;
 
-	long dims[N];
-	long ostrs[N];
-	long istrs1[N];
-	long istrs2[N];
+	bart_dim_t dims[N];
+	bart_stride_t ostrs[N];
+	bart_stride_t istrs1[N];
+	bart_stride_t istrs2[N];
 
 	md_copy_dims(N, dims, _dims);
 	md_copy_strides(N, ostrs, _ostrs);
 	md_copy_strides(N, istrs1, _istrs1);
 	md_copy_strides(N, istrs2, _istrs2);
 
-	long (*nstr[3])[N?N:1] = { (long (*)[N?N:1])ostrs, (long (*)[N?N:1])istrs1, (long (*)[N?N:1])istrs2 };
+	bart_stride_t (*nstr[3])[N?N:1] = { (bart_stride_t (*)[N?N:1])ostrs, (bart_stride_t (*)[N?N:1])istrs1, (bart_stride_t (*)[N?N:1])istrs2 };
 	N = simplify_dims(3, N, dims, nstr);
 
 	if ((1 == N) && (CFL_SIZE == ostrs[0]) && (CFL_SIZE == istrs1[0]) && (CFL_SIZE == istrs2[0]))
 		return false;
 
-	long ndims[N];
-	long nostrs[N];
-	long nistrs1[N];
-	long nistrs2[N];
+	bart_dim_t ndims[N];
+	bart_stride_t nostrs[N];
+	bart_stride_t nistrs1[N];
+	bart_stride_t nistrs2[N];
 	memset(ndims, 0, sizeof ndims);		// -fanalyzer uninitialized
 	memset(nostrs, 0, sizeof nostrs);	// -fanalyzer uninitialized
 	memset(nistrs1, 0, sizeof nistrs1);	// -fanalyzer uninitialized
@@ -778,7 +778,7 @@ static bool simple_z3op(int N_checks, struct simple_z3op_check strided_calls[N_c
 	}
 #endif
 
-	long bdims[N];
+	bart_dim_t bdims[N];
 	md_select_dims(N, md_nontriv_strides(N, istrs2), bdims, dims);
 
 	if (conj && (N != md_calc_blockdim(N, bdims, istrs2, CFL_SIZE)))
@@ -810,7 +810,7 @@ static bool simple_z3op(int N_checks, struct simple_z3op_check strided_calls[N_c
 
 			if (conj) {
 
-				long size_tmp = get_block_size(N, dims, istrs2, CFL_SIZE) / (long)CFL_SIZE;
+				bart_dim_t size_tmp = get_block_size(N, dims, istrs2, CFL_SIZE) / (bart_stride_t)CFL_SIZE;
 
 				conj_in = md_alloc_sameplace(1, &size_tmp, CFL_SIZE, in2);
 
@@ -838,7 +838,7 @@ static bool simple_z3op(int N_checks, struct simple_z3op_check strided_calls[N_c
 
 			if (conj) {
 
-				long size_tmp = get_block_size(N, dims, istrs2, CFL_SIZE) / (long)CFL_SIZE;
+				bart_dim_t size_tmp = get_block_size(N, dims, istrs2, CFL_SIZE) / (bart_stride_t)CFL_SIZE;
 
 				conj_in = md_alloc_sameplace(1, &size_tmp, CFL_SIZE, in2);
 
@@ -855,17 +855,17 @@ static bool simple_z3op(int N_checks, struct simple_z3op_check strided_calls[N_c
 		return false;
 
 	// FIXME: blas calls are not save with large input dimensions
-	if (!strided_call.long_dims && (   ((long)(INT_MAX / 2) < get_block_size(N_in, ndims, nostrs, CFL_SIZE) / (long)CFL_SIZE)
-					|| ((long)(INT_MAX / 2) < get_block_size(N_in, ndims, nistrs1, CFL_SIZE) / (long)CFL_SIZE)
-					|| ((long)(INT_MAX / 2) < get_block_size(N_in, ndims, nistrs2, CFL_SIZE) / (long)CFL_SIZE))) {
+	if (!strided_call.long_dims && (   ((bart_dim_t)(INT_MAX / 2) < get_block_size(N_in, ndims, nostrs, CFL_SIZE) / (bart_stride_t)CFL_SIZE)
+					|| ((bart_dim_t)(INT_MAX / 2) < get_block_size(N_in, ndims, nistrs1, CFL_SIZE) / (bart_stride_t)CFL_SIZE)
+					|| ((bart_dim_t)(INT_MAX / 2) < get_block_size(N_in, ndims, nistrs2, CFL_SIZE) / (bart_stride_t)CFL_SIZE))) {
 
 		md_free(conj_in);
 		return false;
 	}
 
-	long osize = get_block_size(N_in, ndims, nostrs, CFL_SIZE);
-	long isize1 = get_block_size(N_in, ndims, nistrs1, CFL_SIZE);
-	long isize2 = get_block_size(N_in, ndims, nistrs2, CFL_SIZE);
+	bart_dim_t osize = get_block_size(N_in, ndims, nostrs, CFL_SIZE);
+	bart_dim_t isize1 = get_block_size(N_in, ndims, nistrs1, CFL_SIZE);
+	bart_dim_t isize2 = get_block_size(N_in, ndims, nistrs2, CFL_SIZE);
 
 	if ((0 == osize) || (0 == isize1) || (0 == isize2)) {
 
@@ -875,15 +875,15 @@ static bool simple_z3op(int N_checks, struct simple_z3op_check strided_calls[N_c
 
 
 	// clang
-	long* ndims_ptr = &ndims[0];
-	long* nostrs_ptr = &nostrs[0];
-	long* nistrs1_ptr = &nistrs1[0];
-	long* nistrs2_ptr = &nistrs2[0];
+	bart_dim_t* ndims_ptr = &ndims[0];
+	bart_dim_t* nostrs_ptr = &nostrs[0];
+	bart_dim_t* nistrs1_ptr = &nistrs1[0];
+	bart_dim_t* nistrs2_ptr = &nistrs2[0];
 
 
 	NESTED(void, nary_inner_z3op, (struct nary_opt_data_s* data, void* ptr[]))
 	{
-		for (long i = 0; i < data->size; i++)
+		for (bart_dim_t i = 0; i < data->size; i++)
 			strided_call.strided_kernel(	N_in, ndims_ptr,
 					nostrs_ptr, (complex float*)(ptr[0] + i * osize),
 					nistrs1_ptr, (const complex float*)(ptr[1] + i * isize1),
@@ -919,10 +919,10 @@ static bool simple_z3op(int N_checks, struct simple_z3op_check strided_calls[N_c
 
 
 static bool simple_3op(int N_checks, struct simple_3op_check strided_calls[N_checks], const char* fun_name,
-		int N, const long _dims[N],
-		const long _ostrs[N], float* out,
-		const long _istrs1[N], const float* in1,
-		const long _istrs2[N], const float* in2,
+		int N, const bart_dim_t _dims[N],
+		const bart_stride_t _ostrs[N], float* out,
+		const bart_stride_t _istrs1[N], const float* in1,
+		const bart_stride_t _istrs2[N], const float* in2,
 		bool symmetric)
 {
 	if (!use_strided_vecops)
@@ -934,26 +934,26 @@ static bool simple_3op(int N_checks, struct simple_3op_check strided_calls[N_che
 	if (is_vptr(out) || is_vptr(in1) || is_vptr(in2))
 		return false;
 
-	long dims[N];
-	long ostrs[N];
-	long istrs1[N];
-	long istrs2[N];
+	bart_dim_t dims[N];
+	bart_stride_t ostrs[N];
+	bart_stride_t istrs1[N];
+	bart_stride_t istrs2[N];
 
 	md_copy_dims(N, dims, _dims);
 	md_copy_strides(N, ostrs, _ostrs);
 	md_copy_strides(N, istrs1, _istrs1);
 	md_copy_strides(N, istrs2, _istrs2);
 
-	long (*nstr[3])[N?N:1] = { (long (*)[N?N:1])ostrs, (long (*)[N?N:1])istrs1, (long (*)[N?N:1])istrs2 };
+	bart_stride_t (*nstr[3])[N?N:1] = { (bart_stride_t (*)[N?N:1])ostrs, (bart_stride_t (*)[N?N:1])istrs1, (bart_stride_t (*)[N?N:1])istrs2 };
 	N = simplify_dims(3, N, dims, nstr);
 
 	if ((1 == N) && (FL_SIZE == ostrs[0]) && (FL_SIZE == istrs1[0]) && (FL_SIZE == istrs2[0]))
 		return false;
 
-	long ndims[N];
-	long nostrs[N];
-	long nistrs1[N];
-	long nistrs2[N];
+	bart_dim_t ndims[N];
+	bart_stride_t nostrs[N];
+	bart_stride_t nistrs1[N];
+	bart_stride_t nistrs2[N];
 
 	const float* tin1 = NULL;
 	const float* tin2 = NULL;
@@ -1019,28 +1019,28 @@ static bool simple_3op(int N_checks, struct simple_3op_check strided_calls[N_che
 		return false;
 
 	// FIXME: blas calls are not save with large input dimensions
-	if (!strided_call.long_dims && (   ((long)(INT_MAX / 2) < get_block_size(N_in, ndims, nostrs, FL_SIZE) / (long)FL_SIZE)
-					|| ((long)(INT_MAX / 2) < get_block_size(N_in, ndims, nistrs1, FL_SIZE) / (long)FL_SIZE)
-					|| ((long)(INT_MAX / 2) < get_block_size(N_in, ndims, nistrs2, FL_SIZE) / (long)FL_SIZE)))
+	if (!strided_call.long_dims && (   ((bart_dim_t)(INT_MAX / 2) < get_block_size(N_in, ndims, nostrs, FL_SIZE) / (bart_stride_t)FL_SIZE)
+					|| ((bart_dim_t)(INT_MAX / 2) < get_block_size(N_in, ndims, nistrs1, FL_SIZE) / (bart_stride_t)FL_SIZE)
+					|| ((bart_dim_t)(INT_MAX / 2) < get_block_size(N_in, ndims, nistrs2, FL_SIZE) / (bart_stride_t)FL_SIZE)))
 		return false;
 
-	long osize = get_block_size(N_in, ndims, nostrs, FL_SIZE);
-	long isize1 = get_block_size(N_in, ndims, nistrs1, FL_SIZE);
-	long isize2 = get_block_size(N_in, ndims, nistrs2, FL_SIZE);
+	bart_dim_t osize = get_block_size(N_in, ndims, nostrs, FL_SIZE);
+	bart_dim_t isize1 = get_block_size(N_in, ndims, nistrs1, FL_SIZE);
+	bart_dim_t isize2 = get_block_size(N_in, ndims, nistrs2, FL_SIZE);
 
 	if ((0 == osize) || (0 == isize1) || (0 == isize2))
 		return false; //cross check: data for inner kernel is contiguous in memory
 
 	// clang
-	long* ndims_ptr = &ndims[0];
-	long* nostrs_ptr = &nostrs[0];
-	long* nistrs1_ptr = &nistrs1[0];
-	long* nistrs2_ptr = &nistrs2[0];
+	bart_dim_t* ndims_ptr = &ndims[0];
+	bart_dim_t* nostrs_ptr = &nostrs[0];
+	bart_dim_t* nistrs1_ptr = &nistrs1[0];
+	bart_dim_t* nistrs2_ptr = &nistrs2[0];
 
 
 	NESTED(void, nary_inner_3op, (struct nary_opt_data_s* data, void* ptr[]))
 	{
-		for (long i = 0; i < data->size; i++)
+		for (bart_dim_t i = 0; i < data->size; i++)
 			strided_call.strided_kernel(	N_in, ndims_ptr,
 					nostrs_ptr, (float*)(ptr[0] + i * osize),
 					nistrs1_ptr, (const float*)(ptr[1] + i * isize1),
@@ -1074,18 +1074,18 @@ static bool simple_3op(int N_checks, struct simple_3op_check strided_calls[N_che
 
 #if 0
 //not used yet
-static bool simple_s2op(int N_checks, struct simple_s2op_check strided_calls[N_checks], int N, const long dims[N], const long ostrs[N], float* out, const long istrs[N], const float* in, float val)
+static bool simple_s2op(int N_checks, struct simple_s2op_check strided_calls[N_checks], int N, const bart_dim_t dims[N], const bart_stride_t ostrs[N], float* out, const bart_stride_t istrs[N], const float* in, float val)
 {
 	if (!use_strided_vecops)
 		return false;
 
-	long size = 4;
+	bart_dim_t size = 4;
 
-	long ndims[N];
-	long nostrs[N];
-	long nistrs[N];
+	bart_dim_t ndims[N];
+	bart_stride_t nostrs[N];
+	bart_stride_t nistrs[N];
 
-	long N_in = -1;
+	bart_dim_t N_in = -1;
 	md_s2op_t strided_kernel = NULL;
 
 	for (int i = 0; i < N_checks; i++) {
@@ -1120,14 +1120,14 @@ static bool simple_s2op(int N_checks, struct simple_s2op_check strided_calls[N_c
 	}
 
 	//clang
-	long* ndims_ptr = &ndims[0];
-	long* nostrs_ptr = &nostrs[0];
-	long* nistrs1_ptr = &nistrs[0];
+	bart_dim_t* ndims_ptr = &ndims[0];
+	bart_dim_t* nostrs_ptr = &nostrs[0];
+	bart_dim_t* nistrs1_ptr = &nistrs[0];
 
 
 	NESTED(void, nary_inner_z3op, (struct nary_opt_data_s* data, void* ptr[]))
 	{
-		for (long i = 0; i < data->size; i++)
+		for (bart_dim_t i = 0; i < data->size; i++)
 			strided_kernel(	N_in, ndims_ptr,
 					nostrs_ptr, (float*)(ptr[0] + i * osize),
 					nistrs1_ptr, (const float*)(ptr[1] + i * isize),
@@ -1142,7 +1142,7 @@ static bool simple_s2op(int N_checks, struct simple_s2op_check strided_calls[N_c
 }
 #endif
 
-bool simple_zfmac(int N, const long dims[N], const long ostrs[N], complex float* out, const long istrs1[N], const complex float* in1, const long istrs2[N], const complex float* in2)
+bool simple_zfmac(int N, const bart_dim_t dims[N], const bart_stride_t ostrs[N], complex float* out, const bart_stride_t istrs1[N], const complex float* in1, const bart_stride_t istrs2[N], const complex float* in2)
 {
 	if (!use_strided_vecops)
 		return false;
@@ -1165,7 +1165,7 @@ bool simple_zfmac(int N, const long dims[N], const long ostrs[N], complex float*
 				N, dims, ostrs, out, istrs1, in1, istrs2, in2, true, false);
 }
 
-bool simple_zfmacc(int N, const long dims[N], const long ostrs[N], complex float* out, const long istrs1[N], const complex float* in1, const long istrs2[N], const complex float* in2)
+bool simple_zfmacc(int N, const bart_dim_t dims[N], const bart_stride_t ostrs[N], complex float* out, const bart_stride_t istrs1[N], const complex float* in1, const bart_stride_t istrs2[N], const complex float* in2)
 {
 	struct simple_z3op_check strided_calls_direct[] = {
 		OPT_Z3OP(check_batched_select,	zfmacc_gpu_batched_loop, true, false, false, false, true),
@@ -1189,7 +1189,7 @@ bool simple_zfmacc(int N, const long dims[N], const long ostrs[N], complex float
 				N, dims, ostrs, out, istrs1, in1, istrs2, in2, true, true);
 }
 
-bool simple_fmac(int N, const long dims[N], const long ostrs[N], float* out, const long istrs1[N], const float* in1, const long istrs2[N], const float* in2)
+bool simple_fmac(int N, const bart_dim_t dims[N], const bart_stride_t ostrs[N], float* out, const bart_stride_t istrs1[N], const float* in1, const bart_stride_t istrs2[N], const float* in2)
 {
 	struct simple_3op_check strided_calls[] = {
 		OPT_3OP(check_gemm,  blas_fmac_sgemm, true, true, false, false, false),
@@ -1204,7 +1204,7 @@ bool simple_fmac(int N, const long dims[N], const long ostrs[N], float* out, con
 				N, dims, ostrs, out, istrs1, in1, istrs2, in2, true);
 }
 
-bool simple_zmul(int N, const long dims[N], const long ostrs[N], complex float* out, const long istrs1[N], const complex float* in1, const long istrs2[N], const complex float* in2)
+bool simple_zmul(int N, const bart_dim_t dims[N], const bart_stride_t ostrs[N], complex float* out, const bart_stride_t istrs1[N], const complex float* in1, const bart_stride_t istrs2[N], const complex float* in2)
 {
 	struct simple_z3op_check strided_calls[] = {
 		OPT_Z3OP(check_unfold, zmul_gpu_unfold, true, false, true, false, true),
@@ -1217,7 +1217,7 @@ bool simple_zmul(int N, const long dims[N], const long ostrs[N], complex float* 
 				N, dims, ostrs, out, istrs1, in1, istrs2, in2, true, false);
 }
 
-bool simple_zmulc(int N, const long dims[N], const long ostrs[N], complex float* out, const long istrs1[N], const complex float* in1, const long istrs2[N], const complex float* in2)
+bool simple_zmulc(int N, const bart_dim_t dims[N], const bart_stride_t ostrs[N], complex float* out, const bart_stride_t istrs1[N], const complex float* in1, const bart_stride_t istrs2[N], const complex float* in2)
 {
 	struct simple_z3op_check strided_calls_direct[] = {
 		OPT_Z3OP(check_unfold,	zmulc_gpu_unfold, true, false, true, false, true),
@@ -1237,7 +1237,7 @@ bool simple_zmulc(int N, const long dims[N], const long ostrs[N], complex float*
 				N, dims, ostrs, out, istrs1, in1, istrs2, in2, true, true);
 }
 
-bool simple_mul(int N, const long dims[N], const long ostrs[N], float* out, const long istrs1[N], const float* in1, const long istrs2[N], const float* in2)
+bool simple_mul(int N, const bart_dim_t dims[N], const bart_stride_t ostrs[N], float* out, const bart_stride_t istrs1[N], const float* in1, const bart_stride_t istrs2[N], const float* in2)
 {
 	struct simple_3op_check strided_calls[] = {
 		OPT_3OP(check_unfold,	mul_gpu_unfold, true, false, true, false, true),
@@ -1250,7 +1250,7 @@ bool simple_mul(int N, const long dims[N], const long ostrs[N], float* out, cons
 				N, dims, ostrs, out, istrs1, in1, istrs2, in2, true);
 }
 
-bool simple_zadd(int N, const long dims[N], const long ostrs[N], complex float* out, const long istrs1[N], const complex float* in1, const long istrs2[N], const complex float* in2)
+bool simple_zadd(int N, const bart_dim_t dims[N], const bart_stride_t ostrs[N], complex float* out, const bart_stride_t istrs1[N], const complex float* in1, const bart_stride_t istrs2[N], const complex float* in2)
 {
 	struct simple_z3op_check strided_calls[] = {
 		OPT_Z3OP(check_unfold,		zadd_gpu_unfold, true, false, false, false, true),
@@ -1266,7 +1266,7 @@ bool simple_zadd(int N, const long dims[N], const long ostrs[N], complex float* 
 				N, dims, ostrs, out, istrs1, in1, istrs2, in2, true, false);
 }
 
-bool simple_add(int N, const long dims[N], const long ostrs[N], float* out, const long istrs1[N], const float* in1, const long istrs2[N], const float* in2)
+bool simple_add(int N, const bart_dim_t dims[N], const bart_stride_t ostrs[N], float* out, const bart_stride_t istrs1[N], const float* in1, const bart_stride_t istrs2[N], const float* in2)
 {
 	if (2 == dims[N - 1] && FL_SIZE == ostrs[N - 1] && FL_SIZE == istrs1[N - 1] && FL_SIZE == istrs2[N - 1]) {
 
@@ -1288,7 +1288,7 @@ bool simple_add(int N, const long dims[N], const long ostrs[N], float* out, cons
 				N, dims, ostrs, out, istrs1, in1, istrs2, in2, true);
 }
 
-bool simple_zmax(int N, const long dims[N], const long ostrs[N], complex float* out, const long istrs1[N], const complex float* in1, const long istrs2[N], const complex float* in2)
+bool simple_zmax(int N, const bart_dim_t dims[N], const bart_stride_t ostrs[N], complex float* out, const bart_stride_t istrs1[N], const complex float* in1, const bart_stride_t istrs2[N], const complex float* in2)
 {
 	struct simple_z3op_check strided_calls[] = {
 		OPT_Z3OP(check_reduce_outer,	reduce_zmax_outer_gpu, true, false, false, true, false),
@@ -1299,32 +1299,32 @@ bool simple_zmax(int N, const long dims[N], const long ostrs[N], complex float* 
 				N, dims, ostrs, out, istrs1, in1, istrs2, in2, true, false);
 }
 
-bool simple_fmacD(int N, const long dims[N], const long ostrs[N], double* out, const long istrs1[N], const float* in1, const long istrs2[N], const float* in2)
+bool simple_fmacD(int N, const bart_dim_t dims[N], const bart_stride_t ostrs[N], double* out, const bart_stride_t istrs1[N], const float* in1, const bart_stride_t istrs2[N], const float* in2)
 {
-	long tdims[N];
-	long tostrs[N];
-	long tistrs1[N];
-	long tistrs2[N];
+	bart_dim_t tdims[N];
+	bart_stride_t tostrs[N];
+	bart_stride_t tistrs1[N];
+	bart_stride_t tistrs2[N];
 
 	md_copy_dims(N, tdims, dims);
 	md_copy_strides(N, tostrs, ostrs);
 	md_copy_strides(N, tistrs1, istrs1);
 	md_copy_strides(N, tistrs2, istrs2);
 
-	long (*strs[3])[N] = { &tostrs, &tistrs1, &tistrs2 };
+	bart_stride_t (*strs[3])[N] = { &tostrs, &tistrs1, &tistrs2 };
 
 	N = optimize_dims_gpu(3, N, tdims, strs);
 
-	const long* tdims_p = tdims;
-	const long* tostrs_p = tostrs;
-	const long* tistrs1_p = tistrs1;
-	const long* tistrs2_p = tistrs2;
+	const bart_dim_t* tdims_p = tdims;
+	const bart_dim_t* tostrs_p = tostrs;
+	const bart_dim_t* tistrs1_p = tistrs1;
+	const bart_dim_t* tistrs2_p = tistrs2;
 
 	if (0 < N && (1 < tdims[0]) && (0 == tostrs[0]) && (FL_SIZE == tistrs1[0]) && (FL_SIZE == tistrs2[0])) {
 
 		NESTED(void, nary_inner_3op, (struct nary_opt_data_s* data, void* ptr[]))
 		{
-			for (long i = 0; i < data->size; i++)
+			for (bart_dim_t i = 0; i < data->size; i++)
 				fmacD_dot(1, tdims_p, tostrs_p, (double*)(ptr[0]) + i,
 						tistrs1_p, (const float*)(ptr[1]) + i * tdims_p[0],
 						tistrs2_p, (const float*)(ptr[2]) + i * tdims_p[0]);
@@ -1340,32 +1340,32 @@ bool simple_fmacD(int N, const long dims[N], const long ostrs[N], double* out, c
 	return false;
 }
 
-bool simple_zfmaccD(int N, const long dims[N], const long ostrs[N], complex double* out, const long istrs1[N], const complex float* in1, const long istrs2[N], const complex float* in2)
+bool simple_zfmaccD(int N, const bart_dim_t dims[N], const bart_stride_t ostrs[N], complex double* out, const bart_stride_t istrs1[N], const complex float* in1, const bart_stride_t istrs2[N], const complex float* in2)
 {
-	long tdims[N];
-	long tostrs[N];
-	long tistrs1[N];
-	long tistrs2[N];
+	bart_dim_t tdims[N];
+	bart_stride_t tostrs[N];
+	bart_stride_t tistrs1[N];
+	bart_stride_t tistrs2[N];
 
 	md_copy_dims(N, tdims, dims);
 	md_copy_strides(N, tostrs, ostrs);
 	md_copy_strides(N, tistrs1, istrs1);
 	md_copy_strides(N, tistrs2, istrs2);
 
-	long (*strs[3])[N] = { &tostrs, &tistrs1, &tistrs2 };
+	bart_stride_t (*strs[3])[N] = { &tostrs, &tistrs1, &tistrs2 };
 
 	N = optimize_dims_gpu(3, N, tdims, strs);
 
-	const long* tdims_p = tdims;
-	const long* tostrs_p = tostrs;
-	const long* tistrs1_p = tistrs1;
-	const long* tistrs2_p = tistrs2;
+	const bart_dim_t* tdims_p = tdims;
+	const bart_dim_t* tostrs_p = tostrs;
+	const bart_dim_t* tistrs1_p = tistrs1;
+	const bart_dim_t* tistrs2_p = tistrs2;
 
 	if (0 < N && (1 < tdims[0]) && (0 == tostrs[0]) && (CFL_SIZE == tistrs1[0]) && (CFL_SIZE == tistrs2[0])) {
 
 		NESTED(void, nary_inner_3op, (struct nary_opt_data_s* data, void* ptr[]))
 		{
-			for (long i = 0; i < data->size; i++)
+			for (bart_dim_t i = 0; i < data->size; i++)
 				zfmaccD_dot(1, tdims_p, tostrs_p, (complex double*)(ptr[0]) + i,
 						tistrs1_p, (const complex float*)(ptr[1]) + i * tdims_p[0],
 						tistrs2_p, (const complex float*)(ptr[2]) + i * tdims_p[0]);

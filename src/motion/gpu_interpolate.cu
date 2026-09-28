@@ -23,9 +23,9 @@
 #include "gpu_interpolate.h"
 
 
-__device__ void device_unravel_index(int D, long pos[__VLA(D)], unsigned long flags, const long dims[__VLA(D)], long index)
+__device__ void device_unravel_index(int D, bart_dim_t pos[__VLA(D)], bart_flags_t flags, const bart_dim_t dims[__VLA(D)], bart_dim_t index)
 {
-	long ind = index;
+	bart_dim_t ind = index;
 
 	for (int d = 0; d < D; ++d) {
 
@@ -43,22 +43,22 @@ struct pos_data {
 
 	int N;
 	int d;
-	long sdims[MAXPOS];
-	long pdims[MAXPOS];
-	long map[MAXPOS];
+	bart_dim_t sdims[MAXPOS];
+	bart_dim_t pdims[MAXPOS];
+	bart_dim_t map[MAXPOS];
 };
 
 
-__global__ void kern_positions(const struct pos_data pd, long N, cuFloatComplex* dst)
+__global__ void kern_positions(const struct pos_data pd, bart_dim_t N, cuFloatComplex* dst)
 {
 	int start = threadIdx.x + blockDim.x * blockIdx.x;
 	int stride = blockDim.x * gridDim.x;
 
-	long pos[MAXPOS] = { 0 };
+	bart_dim_t pos[MAXPOS] = { 0 };
 
-	for (long i = start; i < N; i += stride) {
+	for (bart_dim_t i = start; i < N; i += stride) {
 
-		device_unravel_index(pd.N, pos, ~0ul, pd.pdims, i);
+		device_unravel_index(pd.N, pos, ~UINT64_C(0), pd.pdims, i);
 
 		float world = (pos[pd.map[pos[pd.d]]] - (pd.pdims[pd.map[pos[pd.d]]] / 2)) / (float)pd.pdims[pd.map[pos[pd.d]]];
 		float ret = pd.sdims[pd.map[pos[pd.d]]] * world + (pd.sdims[pd.map[pos[pd.d]]] / 2);
@@ -67,7 +67,7 @@ __global__ void kern_positions(const struct pos_data pd, long N, cuFloatComplex*
 	}
 }
 
-void cuda_positions(int N, int d, unsigned long flags, const long sdims[__VLA(N)], const long pdims[__VLA(N)], _Complex float* pos)
+void cuda_positions(int N, int d, bart_flags_t flags, const bart_dim_t sdims[__VLA(N)], const bart_dim_t pdims[__VLA(N)], _Complex float* pos)
 {
 	assert(N <= MAXPOS);
 
@@ -82,7 +82,7 @@ void cuda_positions(int N, int d, unsigned long flags, const long sdims[__VLA(N)
 		if (MD_IS_SET(flags, i))
 			pd.map[ip++] = i;
 
-	long tot = md_calc_size(N, pdims);
+	bart_dim_t tot = md_calc_size(N, pdims);
 
 	dim3 cu_block = getBlockSize(tot, (const void*)kern_positions);
 	dim3 cu_grid = getGridSize(tot, (const void*)kern_positions);
@@ -194,15 +194,15 @@ struct intp_data {
 
 	int ord;
 	float width;
-	long coor_dir_dim_str;
+	bart_stride_t coor_dir_dim_str;
 
 	int N;
-	long grid_dims[INTP_DIMS];
-	long intp_dims[INTP_DIMS];
+	bart_dim_t grid_dims[INTP_DIMS];
+	bart_dim_t intp_dims[INTP_DIMS];
 
-	long intp_strs[INTP_DIMS];
-	long coor_strs[INTP_DIMS];
-	long grid_strs[INTP_DIMS];
+	bart_stride_t intp_strs[INTP_DIMS];
+	bart_stride_t coor_strs[INTP_DIMS];
+	bart_stride_t grid_strs[INTP_DIMS];
 
 };
 
@@ -258,19 +258,19 @@ __device__ static void intp_point_r(const struct intp_data* id, const struct int
 	assert(3 == INTP_DIMS);
 
 	float d[INTP_DIMS];
-	long ind[INTP_DIMS];
+	bart_dim_t ind[INTP_DIMS];
 
-	for (long z = idd->sti[2]; z <= idd->eni[2]; z++) {
+	for (bart_dim_t z = idd->sti[2]; z <= idd->eni[2]; z++) {
 
 		d[2] = spline(id->ord, (idd->coor[2] - (float)z));
 		ind[2] = z * id->grid_strs[2];
 
-		for (long y = idd->sti[1]; y <= idd->eni[1]; y++) {
+		for (bart_dim_t y = idd->sti[1]; y <= idd->eni[1]; y++) {
 
 			d[1] = spline(id->ord, (idd->coor[1] - (float)y)) * d[2];
 			ind[1] = y * id->grid_strs[1] + ind[2];
 
-			for (long x = idd->sti[0]; x <= idd->eni[0]; x++) {
+			for (bart_dim_t x = idd->sti[0]; x <= idd->eni[0]; x++) {
 
 				d[0] = spline(id->ord, (idd->coor[0] - (float)x)) * d[1];
 				ind[0] = x * id->grid_strs[0] + ind[1];
@@ -299,7 +299,7 @@ __global__ static void kern_intp(struct intp_data conf, const cuFloatComplex* co
 	stride[1] = blockDim.y * gridDim.y;
 	stride[2] = blockDim.z * gridDim.z;
 
-	long pos[3];
+	bart_dim_t pos[3];
 
 	struct intp_data_device idd;
 
@@ -308,8 +308,8 @@ __global__ static void kern_intp(struct intp_data conf, const cuFloatComplex* co
 	for (pos[0] = start[0]; pos[0] < conf.intp_dims[0]; pos[0] += stride[0]) {
 
 
-		long offset_coor = 0;
-		long offset_intp = 0;
+		bart_stride_t offset_coor = 0;
+		bart_stride_t offset_intp = 0;
 
 		for (int i = 0; i < conf.N; i++) {
 
@@ -327,15 +327,15 @@ __global__ static void kern_intp(struct intp_data conf, const cuFloatComplex* co
 }
 
 static struct intp_data cuda_intp_get_data(int M, 
-			const long grid_dims[__VLA(M)], const long grid_strs[__VLA(M)],
-			const long intp_dims[__VLA(M)], const long intp_strs[__VLA(M)],
-							const long coor_strs[__VLA(M)], long coor_dir_dim_str, int ord, float width)
+			const bart_dim_t grid_dims[__VLA(M)], const bart_stride_t grid_strs[__VLA(M)],
+			const bart_dim_t intp_dims[__VLA(M)], const bart_stride_t intp_strs[__VLA(M)],
+							const bart_stride_t coor_strs[__VLA(M)], bart_stride_t coor_dir_dim_str, int ord, float width)
 {
 	struct intp_data id = {
 
 		.ord = ord,
 		.width = width,
-		.coor_dir_dim_str = coor_dir_dim_str / (long)CFL_SIZE,
+		.coor_dir_dim_str = coor_dir_dim_str / (bart_stride_t)CFL_SIZE,
 		
 		.N = M,
 	};
@@ -360,15 +360,15 @@ static struct intp_data cuda_intp_get_data(int M,
 
 template<_Bool adjoint>
 static void cuda_intp_temp(int M, 
-			const long grid_dims[__VLA(M)], const long grid_strs[__VLA(M)], _Complex float* grid,
-			const long intp_dims[__VLA(M)], const long intp_strs[__VLA(M)], _Complex float* intp,
-							const long coor_strs[__VLA(M)], long coor_dir_dim_str, const _Complex float* coor,
+			const bart_dim_t grid_dims[__VLA(M)], const bart_stride_t grid_strs[__VLA(M)], _Complex float* grid,
+			const bart_dim_t intp_dims[__VLA(M)], const bart_stride_t intp_strs[__VLA(M)], _Complex float* intp,
+							const bart_stride_t coor_strs[__VLA(M)], bart_stride_t coor_dir_dim_str, const _Complex float* coor,
 			int ord, float width)
 {
 	struct intp_data id = cuda_intp_get_data(M, grid_dims, grid_strs, intp_dims, intp_strs, coor_strs, coor_dir_dim_str, ord, width);
 
-	dim3 cu_block = getBlockSize3((const long*)id.intp_dims, (const void*)kern_intp<adjoint>);
-	dim3 cu_grid = getGridSize3((const long*)id.intp_dims, (const void*)kern_intp<adjoint>);
+	dim3 cu_block = getBlockSize3((const bart_dim_t*)id.intp_dims, (const void*)kern_intp<adjoint>);
+	dim3 cu_grid = getGridSize3((const bart_dim_t*)id.intp_dims, (const void*)kern_intp<adjoint>);
 
 	if (adjoint)
 		kern_intp<true><<<cu_grid, cu_block, 0, cuda_get_stream()>>>(id, (const cuFloatComplex*)coor, (cuFloatComplex*)grid, (const cuFloatComplex*)intp);
@@ -379,17 +379,17 @@ static void cuda_intp_temp(int M,
 }
 
 void cuda_interpolate2(int ord, int M, 
-			const long intp_dims[__VLA(M)], const long intp_strs[__VLA(M)], _Complex float* intp,
-							const long coor_strs[__VLA(M)], long coor_dir_dim_str, const _Complex float* coor,
-			const long grid_dims[__VLA(M)], const long grid_strs[__VLA(M)], const _Complex float* grid)
+			const bart_dim_t intp_dims[__VLA(M)], const bart_stride_t intp_strs[__VLA(M)], _Complex float* intp,
+							const bart_stride_t coor_strs[__VLA(M)], bart_stride_t coor_dir_dim_str, const _Complex float* coor,
+			const bart_dim_t grid_dims[__VLA(M)], const bart_stride_t grid_strs[__VLA(M)], const _Complex float* grid)
 {
 	cuda_intp_temp<false>(M, grid_dims, grid_strs, (_Complex float*)grid, intp_dims, intp_strs, intp, coor_strs, coor_dir_dim_str, coor, ord, ord + 1);
 }
 
 void cuda_interpolateH2(int ord, int M, 
-		const long grid_dims[__VLA(M)], const long grid_strs[__VLA(M)], _Complex float* grid,
-		const long intp_dims[__VLA(M)], const long intp_strs[__VLA(M)], const _Complex float* intp,
-						const long coor_strs[__VLA(M)], long coor_dir_dim_str, const _Complex float* coor)
+		const bart_dim_t grid_dims[__VLA(M)], const bart_stride_t grid_strs[__VLA(M)], _Complex float* grid,
+		const bart_dim_t intp_dims[__VLA(M)], const bart_stride_t intp_strs[__VLA(M)], const _Complex float* intp,
+						const bart_stride_t coor_strs[__VLA(M)], bart_stride_t coor_dir_dim_str, const _Complex float* coor)
 {
 	cuda_intp_temp<true>(M, grid_dims, grid_strs, grid, intp_dims, intp_strs, (_Complex float*)intp, coor_strs, coor_dir_dim_str, coor, ord, ord + 1);
 }
@@ -411,19 +411,19 @@ __device__ static void intp_point_adj_coor(const struct intp_data* id, const str
 	assert(3 == INTP_DIMS);
 
 	float d[INTP_DIMS];
-	long ind[INTP_DIMS];
+	bart_dim_t ind[INTP_DIMS];
 
-	for (long z = idd->sti[2]; z <= idd->eni[2]; z++) {
+	for (bart_dim_t z = idd->sti[2]; z <= idd->eni[2]; z++) {
 
 		d[2] = ((2 == idd->dir) ? dspline: spline)(id->ord, (idd->coor[2] - (float)z));
 		ind[2] = z * id->grid_strs[2];
 
-		for (long y = idd->sti[1]; y <= idd->eni[1]; y++) {
+		for (bart_dim_t y = idd->sti[1]; y <= idd->eni[1]; y++) {
 
 			d[1] = ((1 == idd->dir) ? dspline: spline)(id->ord, (idd->coor[1] - (float)y)) * d[2];
 			ind[1] = y * id->grid_strs[1] + ind[2];
 
-			for (long x = idd->sti[0]; x <= idd->eni[0]; x++) {
+			for (bart_dim_t x = idd->sti[0]; x <= idd->eni[0]; x++) {
 
 				d[0] = ((0 == idd->dir) ? dspline: spline)(id->ord, (idd->coor[0] - (float)x)) * d[1];
 				ind[0] = x * id->grid_strs[0] + ind[1];
@@ -451,7 +451,7 @@ __global__ static void kern_intp_point_adj_coor(struct intp_data conf, const cuF
 	stride[1] = blockDim.y * gridDim.y;
 	stride[2] = blockDim.z * gridDim.z;
 
-	long pos[3];
+	bart_dim_t pos[3];
 
 	struct intp_data_device idd;
 
@@ -459,8 +459,8 @@ __global__ static void kern_intp_point_adj_coor(struct intp_data conf, const cuF
 	for (pos[1] = start[1]; pos[1] < conf.intp_dims[1]; pos[1] += stride[1])
 	for (pos[0] = start[0]; pos[0] < conf.intp_dims[0]; pos[0] += stride[0]) {
 
-		long offset_coor = 0;
-		long offset_intp = 0;
+		bart_stride_t offset_coor = 0;
+		bart_stride_t offset_intp = 0;
 
 		for (int i = 0; i < conf.N; i++) {
 
@@ -480,14 +480,14 @@ __global__ static void kern_intp_point_adj_coor(struct intp_data conf, const cuF
 
 
 void cuda_interpolate_adj_coor2(int ord, int M, 
-			const long intp_dims[__VLA(M)], const long intp_strs[__VLA(M)], const _Complex float* dintp,
-							const long coor_strs[__VLA(M)], long coor_dir_dim_str, const _Complex float* coor, _Complex float* dcoor,
-			const long grid_dims[__VLA(M)], const long grid_strs[__VLA(M)], const _Complex float* grid)
+			const bart_dim_t intp_dims[__VLA(M)], const bart_stride_t intp_strs[__VLA(M)], const _Complex float* dintp,
+							const bart_stride_t coor_strs[__VLA(M)], bart_stride_t coor_dir_dim_str, const _Complex float* coor, _Complex float* dcoor,
+			const bart_dim_t grid_dims[__VLA(M)], const bart_stride_t grid_strs[__VLA(M)], const _Complex float* grid)
 {
 	struct intp_data id = cuda_intp_get_data(M, grid_dims, grid_strs, intp_dims, intp_strs, coor_strs, coor_dir_dim_str, ord, ord + 1);
 
-	dim3 cu_block = getBlockSize3((const long*)id.intp_dims, (const void*)kern_intp_point_adj_coor);
-	dim3 cu_grid = getGridSize3((const long*)id.intp_dims, (const void*)kern_intp_point_adj_coor);
+	dim3 cu_block = getBlockSize3((const bart_dim_t*)id.intp_dims, (const void*)kern_intp_point_adj_coor);
+	dim3 cu_grid = getGridSize3((const bart_dim_t*)id.intp_dims, (const void*)kern_intp_point_adj_coor);
 
 	kern_intp_point_adj_coor<<<cu_grid, cu_block, 0, cuda_get_stream() >>>(id, (const cuFloatComplex*)coor, (cuFloatComplex*)dcoor, (const cuFloatComplex*)grid, (const cuFloatComplex*)dintp);
 
@@ -504,9 +504,9 @@ __device__ static void intp_point_der_coor(const struct intp_data* id, const str
 
 	float d[INTP_DIMS];
 	float dd[INTP_DIMS];
-	long ind[INTP_DIMS];
+	bart_dim_t ind[INTP_DIMS];
 
-	for (long z = idd->sti[2]; z <= idd->eni[2]; z++) {
+	for (bart_dim_t z = idd->sti[2]; z <= idd->eni[2]; z++) {
 
 		dd[2] = spline(id->ord, (idd->coor[2] - (float)z));
 		
@@ -514,7 +514,7 @@ __device__ static void intp_point_der_coor(const struct intp_data* id, const str
 
 		ind[2] = z * id->grid_strs[2];
 
-		for (long y = idd->sti[1]; y <= idd->eni[1]; y++) {
+		for (bart_dim_t y = idd->sti[1]; y <= idd->eni[1]; y++) {
 
 			dd[1] = spline(id->ord, (idd->coor[1] - (float)y)) * dd[2];
 			
@@ -523,7 +523,7 @@ __device__ static void intp_point_der_coor(const struct intp_data* id, const str
 			
 			ind[1] = y * id->grid_strs[1] + ind[2];
 
-			for (long x = idd->sti[0]; x <= idd->eni[0]; x++) {
+			for (bart_dim_t x = idd->sti[0]; x <= idd->eni[0]; x++) {
 
 				dd[0] = spline(id->ord, (idd->coor[0] - (float)x)) * dd[1];
 				
@@ -552,7 +552,7 @@ __global__ static void kern_intp_point_der_coor(struct intp_data conf, const cuF
 	stride[1] = blockDim.y * gridDim.y;
 	stride[2] = blockDim.z * gridDim.z;
 
-	long pos[3];
+	bart_dim_t pos[3];
 
 	struct intp_data_device idd;
 
@@ -560,8 +560,8 @@ __global__ static void kern_intp_point_der_coor(struct intp_data conf, const cuF
 	for (pos[1] = start[1]; pos[1] < conf.intp_dims[1]; pos[1] += stride[1])
 	for (pos[0] = start[0]; pos[0] < conf.intp_dims[0]; pos[0] += stride[0]) {
 
-		long offset_coor = 0;
-		long offset_intp = 0;
+		bart_stride_t offset_coor = 0;
+		bart_stride_t offset_intp = 0;
 
 		for (int i = 0; i < conf.N; i++) {
 
@@ -577,14 +577,14 @@ __global__ static void kern_intp_point_der_coor(struct intp_data conf, const cuF
 
 
 void cuda_interpolate_der_coor2(int ord, int M, 
-			const long intp_dims[__VLA(M)], const long intp_strs[__VLA(M)], _Complex float* dintp,
-							const long coor_strs[__VLA(M)], long coor_dir_dim_str, const _Complex float* coor, const _Complex float* dcoor,
-			const long grid_dims[__VLA(M)], const long grid_strs[__VLA(M)], const _Complex float* grid)
+			const bart_dim_t intp_dims[__VLA(M)], const bart_stride_t intp_strs[__VLA(M)], _Complex float* dintp,
+							const bart_stride_t coor_strs[__VLA(M)], bart_stride_t coor_dir_dim_str, const _Complex float* coor, const _Complex float* dcoor,
+			const bart_dim_t grid_dims[__VLA(M)], const bart_stride_t grid_strs[__VLA(M)], const _Complex float* grid)
 {
 	struct intp_data id = cuda_intp_get_data(M, grid_dims, grid_strs, intp_dims, intp_strs, coor_strs, coor_dir_dim_str, ord, ord + 1);
 
-	dim3 cu_block = getBlockSize3((const long*)id.intp_dims, (const void*)kern_intp_point_der_coor);
-	dim3 cu_grid = getGridSize3((const long*)id.intp_dims, (const void*)kern_intp_point_der_coor);
+	dim3 cu_block = getBlockSize3((const bart_dim_t*)id.intp_dims, (const void*)kern_intp_point_der_coor);
+	dim3 cu_grid = getGridSize3((const bart_dim_t*)id.intp_dims, (const void*)kern_intp_point_der_coor);
 
 	kern_intp_point_der_coor<<<cu_grid, cu_block, 0, cuda_get_stream() >>>(id, (const cuFloatComplex*)coor, (const cuFloatComplex*)dcoor, (const cuFloatComplex*)grid, (cuFloatComplex*)dintp);
 

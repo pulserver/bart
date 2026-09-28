@@ -32,7 +32,7 @@
 
 #include "utest.h"
 
-static const struct nlop_s* get_gaussian_score(int N, const long dims[N], const complex float var, const float mean)
+static const struct nlop_s* get_gaussian_score(int N, const bart_dim_t dims[N], const complex float var, const float mean)
 {
 	complex float* meana = md_alloc(N, dims, CFL_SIZE);
 	md_zfill(N, dims, meana, mean);
@@ -51,7 +51,7 @@ static bool test_nlop_score_to_expect(void)
 	// if the gaussian variance is much smaller than the additional noise,
 	// the expectation should be the mean
 	enum { N = 4 };
-	long dims[N] = { 2, 3, 1, 1, };
+	bart_dim_t dims[N] = { 2, 3, 1, 1, };
 	complex float mean = 10;
 
 	const struct nlop_s* score_nlop = get_gaussian_score(N, dims, 0.1f, mean);
@@ -82,7 +82,7 @@ UT_REGISTER_TEST(test_nlop_score_to_expect);
 static bool test_nlop_score_to_expect_reverse(void)
 {
 	enum { N = 4 };
-	long dims[N] = { 2, 3, 1, 1 };
+	bart_dim_t dims[N] = { 2, 3, 1, 1 };
 
 	const struct nlop_s* score_nlop1 = get_gaussian_score(N, dims, 0.1f, 0.3);
 	const struct nlop_s* score_nlop2 = nlop_expectation_to_score(nlop_score_to_expectation(get_gaussian_score(N, dims, 0.1f, 0.3)));
@@ -100,7 +100,7 @@ static bool test_nlop_score_to_expect_reverse(void)
 UT_REGISTER_TEST(test_nlop_score_to_expect_reverse);
 
 
-static const struct nn_s* get_gaussian_score_nn(int N, const long dims[N], const complex float var, const float mean)
+static const struct nn_s* get_gaussian_score_nn(int N, const bart_dim_t dims[N], const complex float var, const float mean)
 {
 	return nn_from_nlop_F(get_gaussian_score(N, dims, var, mean));
 }
@@ -110,7 +110,7 @@ static bool test_nn_score_to_expect(void)
 	// if the gaussian variance is much smaller than the additional noise,
 	// the expectation should be the mean
 	enum { N = 4 };
-	long dims[N] = { 2, 3, 1, 1 };
+	bart_dim_t dims[N] = { 2, 3, 1, 1 };
 	complex float mean = 10;
 
 	const struct nn_s* score_nlop = get_gaussian_score_nn(N, dims, 0.1f, mean);
@@ -141,7 +141,7 @@ UT_REGISTER_TEST(test_nn_score_to_expect);
 static bool test_nn_score_to_expect_reverse(void)
 {
 	enum { N = 4 };
-	long dims[N] = { 2, 3, 1, 1 };
+	bart_dim_t dims[N] = { 2, 3, 1, 1 };
 
 	const struct nn_s* score_nlop1 = get_gaussian_score_nn(N, dims, 0.1f, 0.3);
 	const struct nn_s* score_nlop2 = nn_expectation_to_score(nn_score_to_expectation(get_gaussian_score_nn(N, dims, 0.1f, 0.3)));

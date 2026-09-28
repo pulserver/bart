@@ -35,8 +35,8 @@ int main_walsh(int argc, char* argv[argc])
 		ARG_OUTFILE(true, &out_file, "output"),
 	};
 
-	long bsize[3] = { 20, 20, 20 };
-	long calsize[3] = { 24, 24, 24 };
+	bart_dim_t bsize[3] = { 20, 20, 20 };
+	bart_dim_t calsize[3] = { 24, 24, 24 };
 
 	const struct opt_s opts[] = {
 
@@ -49,7 +49,7 @@ int main_walsh(int argc, char* argv[argc])
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
 
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 
 	complex float* in_data = load_cfl(in_file, DIMS, dims);
 
@@ -60,11 +60,11 @@ int main_walsh(int argc, char* argv[argc])
 	if (1 != dims[MAPS_DIM])
 		error("Maps dimension must have size one");
 
-	long caldims[DIMS];
+	bart_dim_t caldims[DIMS];
 	complex float* cal_data = extract_calib(caldims, calsize, dims, in_data, false);
 	unmap_cfl(DIMS, dims, in_data);
 
-	debug_printf(DP_INFO, "Calibration region %ldx%ldx%ld\n", caldims[0], caldims[1], caldims[2]);
+	debug_printf(DP_INFO, "Calibration region %" PRId64 "x%" PRId64 "x%" PRId64 "\n", caldims[0], caldims[1], caldims[2]);
 
 	dims[COIL_DIM] = dims[COIL_DIM] * (dims[COIL_DIM] + 1) / 2;
 

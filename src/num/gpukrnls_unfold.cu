@@ -23,12 +23,12 @@
 
 #define BLOCKSIZE 512
 
-static int blocksize(long N)
+static int blocksize(bart_dim_t N)
 {
 	return BLOCKSIZE;
 }
 
-static long gridsize(long N)
+static bart_dim_t gridsize(bart_dim_t N)
 {
 	// to ensure that "start" does not overflow we need to restrict gridsize!
 	return MIN((N + BLOCKSIZE - 1) / BLOCKSIZE, 65536 - 1);
@@ -37,11 +37,11 @@ static long gridsize(long N)
 
 struct cuda_strides_3D {
 
-	long dims[3];
-	long ostrs[3];
-	long istrs1[3];
-	long istrs2[3];
-	unsigned long total;
+	bart_dim_t dims[3];
+	bart_stride_t ostrs[3];
+	bart_stride_t istrs1[3];
+	bart_stride_t istrs2[3];
+	uint64_t total;
 };
 
 static struct cuda_strides_3D strs_ini = {
@@ -50,7 +50,7 @@ static struct cuda_strides_3D strs_ini = {
 	.ostrs = { 0, 0, 0},
 	.istrs1 = { 0, 0, 0},
 	.istrs2 = { 0, 0, 0},
-	.total = 1UL,
+	.total = 1,
 };
 
 typedef void(*fOp)(float*, float, float);
@@ -63,25 +63,25 @@ template <fOp fop, int N>
 __global__ static void kern_fop_unfold_generic(cuda_strides_3D strs, float* dst, const float* src1, const float* src2)
 {
 
-	unsigned long start = (unsigned long)blockIdx.x * (unsigned long)blockDim.x + (unsigned long)threadIdx.x;
-	unsigned long stride = (unsigned long)blockDim.x * (unsigned long)gridDim.x;
+	uint64_t start = (uint64_t)blockIdx.x * (uint64_t)blockDim.x + (uint64_t)threadIdx.x;
+	uint64_t stride = (uint64_t)blockDim.x * (uint64_t)gridDim.x;
 
-	for (unsigned long i = start; i < strs.total; i += stride) {
+	for (uint64_t i = start; i < strs.total; i += stride) {
 
-		long ooffset = 0;
-		long ioffset1 = 0;
-		long ioffset2 = 0;
+		bart_stride_t ooffset = 0;
+		bart_stride_t ioffset1 = 0;
+		bart_stride_t ioffset2 = 0;
 
-		unsigned long tmp = i;
+		uint64_t tmp = i;
 
 		for (int j = 0; j < N; j++) {
 
-			unsigned long id = tmp % (unsigned long)strs.dims[j];
-			tmp /= (unsigned long)strs.dims[j];
+			uint64_t id = tmp % (uint64_t)strs.dims[j];
+			tmp /= (uint64_t)strs.dims[j];
 
-			ooffset += (long)id * strs.ostrs[j];
-			ioffset1 += (long)id * strs.istrs1[j];
-			ioffset2 += (long)id * strs.istrs2[j];
+			ooffset += (bart_dim_t)id * strs.ostrs[j];
+			ioffset1 += (bart_dim_t)id * strs.istrs1[j];
+			ioffset2 += (bart_dim_t)id * strs.istrs2[j];
 		}
 
 		fop(dst + ooffset, src1[ioffset1], src2[ioffset2]);
@@ -91,25 +91,25 @@ __global__ static void kern_fop_unfold_generic(cuda_strides_3D strs, float* dst,
 template <zOp zop, int N>
 __global__ static void kern_zop_unfold_generic(cuda_strides_3D strs, cuFloatComplex* dst, const cuFloatComplex* src1, const cuFloatComplex* src2)
 {
-	unsigned long start = (unsigned long)blockIdx.x * (unsigned long)blockDim.x + (unsigned long)threadIdx.x;
-	unsigned long stride = (unsigned long)blockDim.x * (unsigned long)gridDim.x;
+	uint64_t start = (uint64_t)blockIdx.x * (uint64_t)blockDim.x + (uint64_t)threadIdx.x;
+	uint64_t stride = (uint64_t)blockDim.x * (uint64_t)gridDim.x;
 
-	for (unsigned long i = start; i < (unsigned long)strs.total; i += stride) {
+	for (uint64_t i = start; i < (uint64_t)strs.total; i += stride) {
 
-		long ooffset = 0;
-		long ioffset1 = 0;
-		long ioffset2 = 0;
+		bart_stride_t ooffset = 0;
+		bart_stride_t ioffset1 = 0;
+		bart_stride_t ioffset2 = 0;
 
-		unsigned long tmp = i;
+		uint64_t tmp = i;
 
 		for (int j = 0; j < N; j++) {
 
-			unsigned long id = tmp % (unsigned long)strs.dims[j];
-			tmp /= (unsigned long)strs.dims[j];
+			uint64_t id = tmp % (uint64_t)strs.dims[j];
+			tmp /= (uint64_t)strs.dims[j];
 
-			ooffset += (long)id * strs.ostrs[j];
-			ioffset1 += (long)id * strs.istrs1[j];
-			ioffset2 += (long)id * strs.istrs2[j];
+			ooffset += (bart_dim_t)id * strs.ostrs[j];
+			ioffset1 += (bart_dim_t)id * strs.istrs1[j];
+			ioffset2 += (bart_dim_t)id * strs.istrs2[j];
 		}
 
 		zop(dst + ooffset, src1[ioffset1], src2[ioffset2]);
@@ -117,7 +117,7 @@ __global__ static void kern_zop_unfold_generic(cuda_strides_3D strs, cuFloatComp
 }
 
 
-static cuda_strides_3D get_strides(int D, const long dims[], const long ostrs[], const long istrs1[], const long istrs2[], size_t size)
+static cuda_strides_3D get_strides(int D, const bart_dim_t dims[], const bart_stride_t ostrs[], const bart_stride_t istrs1[], const bart_stride_t istrs2[], size_t size)
 {
 	assert(D <= 3);
 
@@ -136,13 +136,13 @@ static cuda_strides_3D get_strides(int D, const long dims[], const long ostrs[],
 	for (int i = 0; i < D; i++)
 		tot *= (unsigned long long)strs.dims[i];
 
-	strs.total = (unsigned long)tot;
+	strs.total = (uint64_t)tot;
 
 	return strs;
 }
 
 template <fOp fop, int N>
-static void cuda_fop_unfoldt(int D, const long dims[], const long ostrs[], float* dst, const long istrs1[], const float* src1, const long istrs2[], const float* src2)
+static void cuda_fop_unfoldt(int D, const bart_dim_t dims[], const bart_stride_t ostrs[], float* dst, const bart_stride_t istrs1[], const float* src1, const bart_stride_t istrs2[], const float* src2)
 {
 	assert(D <= 3);
 
@@ -155,7 +155,7 @@ static void cuda_fop_unfoldt(int D, const long dims[], const long ostrs[], float
 }
 
 template <fOp fop>
-static void cuda_fop_unfold(int D, const long dims[], const long ostrs[], float* dst, const long istrs1[], const float* src1, const long istrs2[], const float* src2)
+static void cuda_fop_unfold(int D, const bart_dim_t dims[], const bart_stride_t ostrs[], float* dst, const bart_stride_t istrs1[], const float* src1, const bart_stride_t istrs2[], const float* src2)
 {
 	switch (D) {
 
@@ -174,7 +174,7 @@ static void cuda_fop_unfold(int D, const long dims[], const long ostrs[], float*
 }
 
 template <zOp zop, int N>
-static void cuda_zop_unfoldt(int D, const long dims[], const long ostrs[], _Complex float* dst, const long istrs1[], const _Complex float* src1, const long istrs2[], const _Complex float* src2)
+static void cuda_zop_unfoldt(int D, const bart_dim_t dims[], const bart_stride_t ostrs[], _Complex float* dst, const bart_stride_t istrs1[], const _Complex float* src1, const bart_stride_t istrs2[], const _Complex float* src2)
 {
 	assert(D <= 3);
 
@@ -187,7 +187,7 @@ static void cuda_zop_unfoldt(int D, const long dims[], const long ostrs[], _Comp
 }
 
 template <zOp zop>
-static void cuda_zop_unfold(int D, const long dims[], const long ostrs[], _Complex float* dst, const long istrs1[], const _Complex float* src1, const long istrs2[], const _Complex float* src2)
+static void cuda_zop_unfold(int D, const bart_dim_t dims[], const bart_stride_t ostrs[], _Complex float* dst, const bart_stride_t istrs1[], const _Complex float* src1, const bart_stride_t istrs2[], const _Complex float* src2)
 {
 	switch (D) {
 
@@ -210,7 +210,7 @@ __device__ __forceinline__ static void cuda_device_add(float* dst, float x, floa
 	*dst = x + y;
 }
 
-extern "C" void cuda_add_unfold(int D, const long dims[], const long ostrs[], float* dst, const long istrs1[], const float* src1, const long istrs2[], const float* src2)
+extern "C" void cuda_add_unfold(int D, const bart_dim_t dims[], const bart_stride_t ostrs[], float* dst, const bart_stride_t istrs1[], const float* src1, const bart_stride_t istrs2[], const float* src2)
 {
 	cuda_fop_unfold<cuda_device_add>(D, dims, ostrs, dst, istrs1, src1, istrs2, src2);
 }
@@ -220,7 +220,7 @@ __device__ __forceinline__ static void cuda_device_zadd(cuFloatComplex* dst, cuF
 	*dst = make_cuFloatComplex(x.x + y.x, x.y + y.y);
 }
 
-extern "C" void cuda_zadd_unfold(int D, const long dims[], const long ostrs[], _Complex float* dst, const long istrs1[], const _Complex float* src1, const long istrs2[], const _Complex float* src2)
+extern "C" void cuda_zadd_unfold(int D, const bart_dim_t dims[], const bart_stride_t ostrs[], _Complex float* dst, const bart_stride_t istrs1[], const _Complex float* src1, const bart_stride_t istrs2[], const _Complex float* src2)
 {
 	cuda_zop_unfold<cuda_device_zadd>(D, dims, ostrs, dst, istrs1, src1, istrs2, src2);
 }
@@ -230,7 +230,7 @@ __device__ __forceinline__ static void cuda_device_mul(float* dst, float x, floa
 	*dst = x * y;
 }
 
-extern "C" void cuda_mul_unfold(int D, const long dims[], const long ostrs[], float* dst, const long istrs1[], const float* src1, const long istrs2[], const float* src2)
+extern "C" void cuda_mul_unfold(int D, const bart_dim_t dims[], const bart_stride_t ostrs[], float* dst, const bart_stride_t istrs1[], const float* src1, const bart_stride_t istrs2[], const float* src2)
 {
 	cuda_fop_unfold<cuda_device_mul>(D, dims, ostrs, dst, istrs1, src1, istrs2, src2);
 }
@@ -240,7 +240,7 @@ __device__ __forceinline__ static void cuda_device_zmul(cuFloatComplex* dst, cuF
 	*dst = cuCmulf(x, y);
 }
 
-extern "C" void cuda_zmul_unfold(int D, const long dims[], const long ostrs[], _Complex float* dst, const long istrs1[], const _Complex float* src1, const long istrs2[], const _Complex float* src2)
+extern "C" void cuda_zmul_unfold(int D, const bart_dim_t dims[], const bart_stride_t ostrs[], _Complex float* dst, const bart_stride_t istrs1[], const _Complex float* src1, const bart_stride_t istrs2[], const _Complex float* src2)
 {
 	cuda_zop_unfold<cuda_device_zmul>(D, dims, ostrs, dst, istrs1, src1, istrs2, src2);
 }
@@ -250,7 +250,7 @@ __device__ __forceinline__ static void cuda_device_zmulc(cuFloatComplex* dst, cu
 	*dst = cuCmulf(x, cuConjf(y));
 }
 
-extern "C" void cuda_zmulc_unfold(int D, const long dims[], const long ostrs[], _Complex float* dst, const long istrs1[], const _Complex float* src1, const long istrs2[], const _Complex float* src2)
+extern "C" void cuda_zmulc_unfold(int D, const bart_dim_t dims[], const bart_stride_t ostrs[], _Complex float* dst, const bart_stride_t istrs1[], const _Complex float* src1, const bart_stride_t istrs2[], const _Complex float* src2)
 {
 	cuda_zop_unfold<cuda_device_zmulc>(D, dims, ostrs, dst, istrs1, src1, istrs2, src2);
 }
@@ -261,7 +261,7 @@ __device__ __forceinline__ static void cuda_device_fmac(float* dst, float x, flo
 	*dst += x * y;
 }
 
-extern "C" void cuda_fmac_unfold(int D, const long dims[], const long ostrs[], float* dst, const long istrs1[], const float* src1, const long istrs2[], const float* src2)
+extern "C" void cuda_fmac_unfold(int D, const bart_dim_t dims[], const bart_stride_t ostrs[], float* dst, const bart_stride_t istrs1[], const float* src1, const bart_stride_t istrs2[], const float* src2)
 {
 	cuda_fop_unfold<cuda_device_fmac>(D, dims, ostrs, dst, istrs1, src1, istrs2, src2);
 }
@@ -271,7 +271,7 @@ __device__ __forceinline__ static void cuda_device_zfmac(cuFloatComplex* dst, cu
 	*dst = cuCaddf(*dst, cuCmulf(x, y));
 }
 
-extern "C" void cuda_zfmac_unfold(int D, const long dims[], const long ostrs[], _Complex float* dst, const long istrs1[], const _Complex float* src1, const long istrs2[], const _Complex float* src2)
+extern "C" void cuda_zfmac_unfold(int D, const bart_dim_t dims[], const bart_stride_t ostrs[], _Complex float* dst, const bart_stride_t istrs1[], const _Complex float* src1, const bart_stride_t istrs2[], const _Complex float* src2)
 {
 	cuda_zop_unfold<cuda_device_zfmac>(D, dims, ostrs, dst, istrs1, src1, istrs2, src2);
 }
@@ -281,7 +281,7 @@ __device__ __forceinline__ static void cuda_device_zfmacc(cuFloatComplex* dst, c
 	*dst = cuCaddf(*dst, cuCmulf(x, cuConjf(y)));
 }
 
-extern "C" void cuda_zfmacc_unfold(int D, const long dims[], const long ostrs[], _Complex float* dst, const long istrs1[], const _Complex float* src1, const long istrs2[], const _Complex float* src2)
+extern "C" void cuda_zfmacc_unfold(int D, const bart_dim_t dims[], const bart_stride_t ostrs[], _Complex float* dst, const bart_stride_t istrs1[], const _Complex float* src1, const bart_stride_t istrs2[], const _Complex float* src2)
 {
 	cuda_zop_unfold<cuda_device_zfmacc>(D, dims, ostrs, dst, istrs1, src1, istrs2, src2);
 }

@@ -59,11 +59,11 @@ struct data {
 	const complex float* pattern;
 	const complex float* fftmod_mat;
 
-	long dims_ksp[DIMS];
-	long dims_pat[DIMS];
+	bart_dim_t dims_ksp[DIMS];
+	bart_dim_t dims_pat[DIMS];
 
-	long strs_ksp[DIMS];
-	long strs_pat[DIMS];
+	bart_stride_t strs_ksp[DIMS];
+	bart_stride_t strs_pat[DIMS];
 };
 
 static DEF_TYPEID(data);
@@ -85,11 +85,11 @@ static complex float cthresh(float lambda, complex float x)
 
 
 
-static void robust_consistency(float lambda, const long dims[DIMS], complex float* dst, const complex float* pattern, const complex float* kspace)
+static void robust_consistency(float lambda, const bart_dim_t dims[DIMS], complex float* dst, const complex float* pattern, const complex float* kspace)
 {
 	assert(1 == dims[MAPS_DIM]);
 
-	long size = md_calc_size(DIMS, dims);
+	bart_dim_t size = md_calc_size(DIMS, dims);
 
 	for (int i = 0; i < size; i++)
 		if (1. == pattern[i % (size / dims[COIL_DIM])])
@@ -102,7 +102,7 @@ static void sparsity_proj_apply(const operator_data_t* _data, float mu, complex 
 {
 	const auto data = CAST_DOWN(data, _data);
 
-	const long* dims = data->dims_ksp;
+	const bart_dim_t* dims = data->dims_ksp;
 
 	ifft(DIMS, dims, FFT_FLAGS, dst, src);
 	// FIXME fftmod is slow
@@ -162,7 +162,7 @@ static float compute_norm(const void* _data, const float* ksp)
 }
 
 
-void pocs_recon(const long dims[DIMS], const struct operator_p_s* thresh, int maxiter, float alpha, float lambda, complex float* result, const complex float* maps, const complex float* pattern, const complex float* kspace)
+void pocs_recon(const bart_dim_t dims[DIMS], const struct operator_p_s* thresh, int maxiter, float alpha, float lambda, complex float* result, const complex float* maps, const complex float* pattern, const complex float* kspace)
 {
 	struct iter_pocs_conf pconf = iter_pocs_defaults;
 	pconf.maxiter = maxiter;
@@ -170,18 +170,18 @@ void pocs_recon(const long dims[DIMS], const struct operator_p_s* thresh, int ma
 	pocs_recon2(iter2_pocs, &pconf, NULL, dims, thresh, alpha, lambda, result, maps, pattern, kspace);
 }
 
-void pocs_recon2(italgo_fun2_t italgo, void* iconf, const struct linop_s* ops[3], const long dims[DIMS], const struct operator_p_s* thresh_op, float alpha, float lambda, complex float* result, const complex float* maps, const complex float* pattern, const complex float* kspace)
+void pocs_recon2(italgo_fun2_t italgo, void* iconf, const struct linop_s* ops[3], const bart_dim_t dims[DIMS], const struct operator_p_s* thresh_op, float alpha, float lambda, complex float* result, const complex float* maps, const complex float* pattern, const complex float* kspace)
 {
-	long dims_pat[DIMS];
-	long dims_img[DIMS];
-	long dims_ksp[DIMS];
+	bart_dim_t dims_pat[DIMS];
+	bart_dim_t dims_img[DIMS];
+	bart_dim_t dims_ksp[DIMS];
 
 	md_select_dims(DIMS, ~(COIL_FLAG | MAPS_FLAG), dims_pat, dims);
 	md_select_dims(DIMS, ~(MAPS_FLAG), dims_ksp, dims);
 	md_select_dims(DIMS, ~(COIL_FLAG), dims_img, dims);
 
-	long strs_pat[DIMS];
-	long strs_ksp[DIMS];
+	bart_stride_t strs_pat[DIMS];
+	bart_stride_t strs_ksp[DIMS];
 
 	md_calc_strides(DIMS, strs_pat, dims_pat, CFL_SIZE);
 	md_calc_strides(DIMS, strs_ksp, dims_ksp, CFL_SIZE);
@@ -200,7 +200,7 @@ void pocs_recon2(italgo_fun2_t italgo, void* iconf, const struct linop_s* ops[3]
 	md_copy_strides(DIMS, data.strs_ksp, strs_ksp);
 	md_copy_strides(DIMS, data.strs_pat, strs_pat);
 
-	data.sense_op = sense_init(0UL, dims, FFT_FLAGS|MAPS_FLAG|COIL_FLAG, maps);
+	data.sense_op = sense_init(0, dims, FFT_FLAGS|MAPS_FLAG|COIL_FLAG, maps);
 
 	data.thresh = thresh_op;
 
@@ -232,7 +232,7 @@ void pocs_recon2(italgo_fun2_t italgo, void* iconf, const struct linop_s* ops[3]
 
 	const struct operator_p_s* xupdate_op = operator_p_create(DIMS, dims_ksp, DIMS, dims_ksp, CAST_UP(&data), xupdate_apply, proj_del);
 
-	long size = 2 * md_calc_size(DIMS, dims_ksp);
+	bart_dim_t size = 2 * md_calc_size(DIMS, dims_ksp);
 
 	md_clear(DIMS, dims_ksp, result, CFL_SIZE);
 
@@ -254,7 +254,7 @@ void pocs_recon2(italgo_fun2_t italgo, void* iconf, const struct linop_s* ops[3]
 
 
 #ifdef USE_CUDA
-void pocs_recon_gpu(const long dims[DIMS], const struct operator_p_s* thresh, int maxiter, float alpha, float lambda, complex float* result, const complex float* maps, const complex float* pattern, const complex float* kspace)
+void pocs_recon_gpu(const bart_dim_t dims[DIMS], const struct operator_p_s* thresh, int maxiter, float alpha, float lambda, complex float* result, const complex float* maps, const complex float* pattern, const complex float* kspace)
 {
 	struct iter_pocs_conf pconf = iter_pocs_defaults;
 	pconf.maxiter = maxiter;
@@ -263,10 +263,10 @@ void pocs_recon_gpu(const long dims[DIMS], const struct operator_p_s* thresh, in
 }
 
 
-void pocs_recon_gpu2(italgo_fun2_t italgo, void* iconf, const struct linop_s** ops, const long dims[DIMS], const struct operator_p_s* thresh, float alpha, float lambda, complex float* result, const complex float* maps, const complex float* pattern, const complex float* kspace)
+void pocs_recon_gpu2(italgo_fun2_t italgo, void* iconf, const struct linop_s** ops, const bart_dim_t dims[DIMS], const struct operator_p_s* thresh, float alpha, float lambda, complex float* result, const complex float* maps, const complex float* pattern, const complex float* kspace)
 {
-	long dims_pat[DIMS];
-	long dims_ksp[DIMS];
+	bart_dim_t dims_pat[DIMS];
+	bart_dim_t dims_ksp[DIMS];
 
 	md_select_dims(DIMS, ~(COIL_FLAG | MAPS_FLAG), dims_pat, dims);
 	md_select_dims(DIMS, ~MAPS_FLAG, dims_ksp, dims);

@@ -285,9 +285,9 @@ static nn_t unet_sort_names(nn_t network, struct network_unet_s* unet)
 
 struct nn_conv_block_s {
 
-	unsigned long conv_flag;
-	unsigned long channel_flag;
-	unsigned long group_flag;
+	bart_flags_t conv_flag;
+	bart_flags_t channel_flag;
+	bart_flags_t group_flag;
 
 	bool adjoint;
 	bool conv;
@@ -310,7 +310,7 @@ struct nn_conv_block_s {
 
 static nn_t nn_unet_append_conv_block(	nn_t network, int o, const char* oname,
 					struct nn_conv_block_s* config,
-					int N, const long kdims[N], const long strides[N], const long dilations[N],
+					int N, const bart_dim_t kdims[N], const bart_stride_t strides[N], const bart_dim_t dilations[N],
 					enum NETWORK_STATUS status)
 {
 	if (config->init_zero && config->use_bn)
@@ -331,7 +331,7 @@ static nn_t nn_unet_append_conv_block(	nn_t network, int o, const char* oname,
 	stack = config->stack && nn_is_name_in_in_args(network, name);
 	name_working = stack ? name_tmp : name;
 
-	unsigned long in_flag = (config->adjoint ? out_flag_conv_generic : in_flag_conv_generic)(N, config->conv_flag, config->channel_flag, config->group_flag);
+	bart_flags_t in_flag = (config->adjoint ? out_flag_conv_generic : in_flag_conv_generic)(N, config->conv_flag, config->channel_flag, config->group_flag);
 
 	const struct initializer_s* init_conv = NULL;
 
@@ -391,7 +391,7 @@ static nn_t nn_unet_append_conv_block(	nn_t network, int o, const char* oname,
 
 			//append gamma for batchnorm
 			auto iov = nn_generic_codomain(network, 0, NULL);
-			long gdims [iov->N];
+			bart_dim_t gdims [iov->N];
 			md_select_dims(iov->N, config->channel_flag | config->group_flag, gdims, iov->dims);
 
 			auto nn_scale_gamma = nn_from_nlop_F(nlop_tenmul_create(iov->N, iov->dims, iov->dims, gdims));
@@ -429,7 +429,7 @@ static nn_t nn_unet_append_conv_block(	nn_t network, int o, const char* oname,
 
 		//append weights for instance norm
 		auto iov = nn_generic_codomain(network, 0, NULL);
-		long gdims [iov->N];
+		bart_dim_t gdims [iov->N];
 		md_select_dims(iov->N, config->channel_flag | config->group_flag, gdims, iov->dims);
 
 		auto nn_scale_gamma = nn_from_nlop_F(nlop_tenmul_create(iov->N, iov->dims, iov->dims, gdims));
@@ -494,7 +494,7 @@ static bool get_init_zero(struct network_unet_s* unet, int /*level*/, bool last_
 }
 
 static nn_t unet_append_conv_block(	nn_t network, struct network_unet_s* unet,
-					int N, const long kdims[N], enum ACTIVATION activation,
+					int N, const bart_dim_t kdims[N], enum ACTIVATION activation,
 					int level, bool after, bool last_layer,
 					const char* name_prefix, enum NETWORK_STATUS status)
 {
@@ -521,7 +521,7 @@ static nn_t unet_append_conv_block(	nn_t network, struct network_unet_s* unet,
 	config.stack = true;
 	config.name_prefix = name_prefix;
 
-	long kdims_a[N];
+	bart_dim_t kdims_a[N];
 	md_copy_dims(N, kdims_a, kdims);
 
 	if (last_layer && unet->use_nnunet_last) {
@@ -541,7 +541,7 @@ static nn_t unet_append_conv_block(	nn_t network, struct network_unet_s* unet,
 }
 
 
-static nn_t unet_sample_fft_create(struct network_unet_s* unet, int N, const long dims[N], long down_dims[N], bool up, enum NETWORK_STATUS /*status*/)
+static nn_t unet_sample_fft_create(struct network_unet_s* unet, int N, const bart_dim_t dims[N], bart_dim_t down_dims[N], bool up, enum NETWORK_STATUS /*status*/)
 {
 	for (int i = 0; i < N; i++)
 		down_dims[i] = MD_IS_SET(unet->conv_flag, i) ? MAX(1, round(dims[i] / unet->reduce_factor)) : dims[i];
@@ -567,11 +567,11 @@ static nn_t unet_sample_fft_create(struct network_unet_s* unet, int N, const lon
 	return nn_from_nlop_F(nlop_from_linop_F(linop_result));
 }
 
-static nn_t unet_sample_conv_strided_create(struct network_unet_s* unet, int N, const long dims[N], long down_dims[N], bool up, int level, enum NETWORK_STATUS status)
+static nn_t unet_sample_conv_strided_create(struct network_unet_s* unet, int N, const bart_dim_t dims[N], bart_dim_t down_dims[N], bool up, int level, enum NETWORK_STATUS status)
 {
-	long kdims[N];
-	long strides[N];
-	long dilations[N];
+	bart_dim_t kdims[N];
+	bart_stride_t strides[N];
+	bart_dim_t dilations[N];
 
 	md_singleton_dims(N, kdims);
 	md_singleton_dims(N, strides);
@@ -582,7 +582,7 @@ static nn_t unet_sample_conv_strided_create(struct network_unet_s* unet, int N, 
 	if (unet->reduce_factor != roundf(unet->reduce_factor))
 		error("Convolution can only be used for integer downsampling\n");
 
-	long stride = lroundf(unet->reduce_factor);
+	bart_stride_t stride = llroundf(unet->reduce_factor);
 
 	for (int i = 0; i < N; i++) {
 
@@ -634,11 +634,11 @@ static nn_t unet_sample_conv_strided_create(struct network_unet_s* unet, int N, 
 	return result;
 }
 
-static nn_t nnunet_sample_conv_strided_create(struct network_unet_s* unet, int N, const long dims[N], long down_dims[N], bool up, int level, enum NETWORK_STATUS status)
+static nn_t nnunet_sample_conv_strided_create(struct network_unet_s* unet, int N, const bart_dim_t dims[N], bart_dim_t down_dims[N], bool up, int level, enum NETWORK_STATUS status)
 {
-	long kdims[N];
-	long strides[N];
-	long dilations[N];
+	bart_dim_t kdims[N];
+	bart_stride_t strides[N];
+	bart_dim_t dilations[N];
 
 	md_singleton_dims(N, kdims);
 	md_singleton_dims(N, strides);
@@ -649,7 +649,7 @@ static nn_t nnunet_sample_conv_strided_create(struct network_unet_s* unet, int N
 	if (unet->reduce_factor != roundf(unet->reduce_factor))
 		error("Convolution can only be used for integer downsampling\n");
 
-	long stride = lroundf(unet->reduce_factor);
+	bart_stride_t stride = llroundf(unet->reduce_factor);
 
 	for (int i = 0; i < N; i++) {
 
@@ -702,7 +702,7 @@ static nn_t nnunet_sample_conv_strided_create(struct network_unet_s* unet, int N
 	return result;
 }
 
-static nn_t unet_downsample_create(struct network_unet_s* unet, int N, const long dims[N], long down_dims[N], int level, enum NETWORK_STATUS status)
+static nn_t unet_downsample_create(struct network_unet_s* unet, int N, const bart_dim_t dims[N], bart_dim_t down_dims[N], int level, enum NETWORK_STATUS status)
 {
 	switch (unet->ds_method) {
 
@@ -719,7 +719,7 @@ static nn_t unet_downsample_create(struct network_unet_s* unet, int N, const lon
 	assert(0);
 }
 
-static nn_t unet_upsample_create(struct network_unet_s* unet, int N, const long dims[N], long down_dims[N], int level, enum NETWORK_STATUS status)
+static nn_t unet_upsample_create(struct network_unet_s* unet, int N, const bart_dim_t dims[N], bart_dim_t down_dims[N], int level, enum NETWORK_STATUS status)
 {
 	switch (unet->us_method) {
 
@@ -736,7 +736,7 @@ static nn_t unet_upsample_create(struct network_unet_s* unet, int N, const long 
 	assert(0);
 }
 
-static void unet_get_kdims(const struct network_unet_s* config, int N, long kdims[N], int level)
+static void unet_get_kdims(const struct network_unet_s* config, int N, bart_dim_t kdims[N], int level)
 {
 	if (0 != md_calc_size(config->N, config->kdims)) {
 
@@ -747,8 +747,8 @@ static void unet_get_kdims(const struct network_unet_s* config, int N, long kdim
 		assert(1 == bitcount(config->channel_flag));
 		assert(3 >= bitcount(config->conv_flag));
 
-		long tdims[3] = {config->Kx, config->Ky, config->Kz};
-		long* tdim = tdims;
+		bart_dim_t tdims[3] = {config->Kx, config->Ky, config->Kz};
+		bart_dim_t* tdim = tdims;
 
 		for (int i = 0; i < N; i++) {
 
@@ -774,19 +774,19 @@ static void unet_get_kdims(const struct network_unet_s* config, int N, long kdim
 			continue;
 
 		for (int j = 0; j < level; j++)
-			kdims[i] = lroundf(kdims[i] * config->channel_factor > config->max_channels ? config->max_channels : kdims[i] * config->channel_factor);
+			kdims[i] = llroundf(kdims[i] * config->channel_factor > config->max_channels ? config->max_channels : kdims[i] * config->channel_factor);
 	}
 }
 
-static nn_t unet_lowest_level_create(struct network_unet_s* unet, int N, const long odims[N], const long idims[N], int level, enum NETWORK_STATUS status)
+static nn_t unet_lowest_level_create(struct network_unet_s* unet, int N, const bart_dim_t odims[N], const bart_dim_t idims[N], int level, enum NETWORK_STATUS status)
 {
 	assert(0 < level);
-	long kdims[N];
+	bart_dim_t kdims[N];
 	unet_get_kdims(unet, N, kdims, level);
 
-	long Nl = unet->Nl_lowest;
+	bart_dim_t Nl = unet->Nl_lowest;
 
-	long okdims[N];
+	bart_dim_t okdims[N];
 	md_copy_dims(N, okdims, kdims);
 
 	for (int i = 0; i < N; i++)
@@ -794,10 +794,10 @@ static nn_t unet_lowest_level_create(struct network_unet_s* unet, int N, const l
 			okdims[i] = odims[i];
 
 	//if dim for group index are not equal in the last layer, we make it a channel dim
-	unsigned long ichannel_flag = unet->channel_flag;
-	unsigned long igroup_flag = unet->group_flag;
-	unsigned long ochannel_flag = unet->channel_flag;
-	unsigned long ogroup_flag = unet->group_flag;
+	bart_flags_t ichannel_flag = unet->channel_flag;
+	bart_flags_t igroup_flag = unet->group_flag;
+	bart_flags_t ochannel_flag = unet->channel_flag;
+	bart_flags_t ogroup_flag = unet->group_flag;
 
 	//we try to stack as many weights as possible
 	//if the shape of the first conv block equals the following (init_same == true), it is stacked
@@ -828,7 +828,7 @@ static nn_t unet_lowest_level_create(struct network_unet_s* unet, int N, const l
 		}
 	}
 
-	last_same = last_same && md_check_equal_dims(N, kdims, okdims, ~0UL);
+	last_same = last_same && md_check_equal_dims(N, kdims, okdims, ~UINT64_C(0));
 	last_same = last_same && (ogroup_flag == unet->group_flag) && (ochannel_flag == unet->channel_flag);
 
 	if (!init_same)
@@ -879,16 +879,16 @@ static nn_t unet_lowest_level_create(struct network_unet_s* unet, int N, const l
 }
 
 
-static nn_t unet_level_create(struct network_unet_s* unet, int N, const long odims[N], const long idims[N], int level, enum NETWORK_STATUS status)
+static nn_t unet_level_create(struct network_unet_s* unet, int N, const bart_dim_t odims[N], const bart_dim_t idims[N], int level, enum NETWORK_STATUS status)
 {
 	if (level + 1 == unet->N_level)
 		return unet_lowest_level_create(unet, N, odims, idims, level, status);
 
-	long kdims[N];
+	bart_dim_t kdims[N];
 	unet_get_kdims(unet, N, kdims, level);
 
 
-	long okdims[N];
+	bart_dim_t okdims[N];
 	md_copy_dims(N, okdims, kdims);
 
 	for (int i = 0; i < N; i++)
@@ -896,10 +896,10 @@ static nn_t unet_level_create(struct network_unet_s* unet, int N, const long odi
 			okdims[i] = odims[i];
 
 	//if dim for group index are not equal in the last layer, we make it a channel dim
-	unsigned long ichannel_flag = unet->channel_flag;
-	unsigned long igroup_flag = unet->group_flag;
-	unsigned long ochannel_flag = unet->channel_flag;
-	unsigned long ogroup_flag = unet->group_flag;
+	bart_flags_t ichannel_flag = unet->channel_flag;
+	bart_flags_t igroup_flag = unet->group_flag;
+	bart_flags_t ochannel_flag = unet->channel_flag;
+	bart_flags_t ogroup_flag = unet->group_flag;
 
 	//we try to stack as many weights as possible
 	//if the shape of the first conv block equals the following (init_same == true), it is stacked
@@ -930,11 +930,11 @@ static nn_t unet_level_create(struct network_unet_s* unet, int N, const long odi
 		}
 	}
 
-	last_same = last_same && md_check_equal_dims(N, kdims, okdims, ~0UL);
+	last_same = last_same && md_check_equal_dims(N, kdims, okdims, ~UINT64_C(0));
 	last_same = last_same && (ogroup_flag == unet->group_flag) && (ochannel_flag == unet->channel_flag);
 
-	long Nl_before = init_same ? unet->Nl_before : unet->Nl_before - 1;
-	long Nl_after = last_same ? unet->Nl_after : unet->Nl_after - 1;
+	bart_dim_t Nl_before = init_same ? unet->Nl_before : unet->Nl_before - 1;
+	bart_dim_t Nl_after = last_same ? unet->Nl_after : unet->Nl_after - 1;
 
 	if (0 == level) {
 
@@ -966,9 +966,9 @@ static nn_t unet_level_create(struct network_unet_s* unet, int N, const long odi
 	}
 
 	//create lower level unet
-	long down_dims_in[N];
+	bart_dim_t down_dims_in[N];
 	auto nn_ds = unet_downsample_create(unet, N, nn_generic_codomain(result, 0, NULL)->dims, down_dims_in, level, status);
-	long down_dims_out[N];
+	bart_dim_t down_dims_out[N];
 	auto nn_us = unet_upsample_create(unet, N, nn_generic_codomain(result, 0, NULL)->dims, down_dims_out, level, status);
 
 	//FIXME: currently, a level is not allowed to change spatial dimensions (valid convolution)
@@ -978,10 +978,10 @@ static nn_t unet_level_create(struct network_unet_s* unet, int N, const long odi
 	lower_level = nn_chain2_swap_FF(nn_ds, 0, NULL, lower_level, 0, NULL);
 	lower_level = nn_chain2_swap_FF(lower_level, 0, NULL, nn_us, 0, NULL);
 
-	long tdims[N];
+	bart_dim_t tdims[N];
 	md_copy_dims(N, tdims, nn_generic_codomain(result, 0, NULL)->dims);
 
-	long stack_dims[N];
+	bart_dim_t stack_dims[N];
 	md_copy_dims(N, stack_dims, nn_generic_codomain(result, 0, NULL)->dims);
 	stack_dims[0] = tdims[0] * 2;
 
@@ -1043,7 +1043,7 @@ static nn_t unet_level_create(struct network_unet_s* unet, int N, const long odi
 	return result;
 }
 
-nn_t network_unet_create(const struct network_s* _unet, int NO, const long odims[NO], int NI, const long idims[NI], enum NETWORK_STATUS status)
+nn_t network_unet_create(const struct network_s* _unet, int NO, const bart_dim_t odims[NO], int NI, const bart_dim_t idims[NI], enum NETWORK_STATUS status)
 {
 	assert(NO == NI);
 	int N = NO;

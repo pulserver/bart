@@ -77,10 +77,10 @@ static void help_reg(void)
 
 
 static
-const struct linop_s* sense_nc_init(const long max_dims[DIMS], const long map_dims[DIMS], const complex float* maps, const long ksp_dims[DIMS], const long traj_dims[DIMS], const complex float* traj, struct nufft_conf_s conf, struct operator_s** precond_op)
+const struct linop_s* sense_nc_init(const bart_dim_t max_dims[DIMS], const bart_dim_t map_dims[DIMS], const complex float* maps, const bart_dim_t ksp_dims[DIMS], const bart_dim_t traj_dims[DIMS], const complex float* traj, struct nufft_conf_s conf, struct operator_s** precond_op)
 {
-	long coilim_dims[DIMS];
-	long img_dims[DIMS];
+	bart_dim_t coilim_dims[DIMS];
+	bart_dim_t img_dims[DIMS];
 	md_select_dims(DIMS, ~MAPS_FLAG, coilim_dims, max_dims);
 	md_select_dims(DIMS, ~COIL_FLAG, img_dims, max_dims);
 
@@ -102,8 +102,8 @@ struct reg_s {
 
 	enum { L1WAV, TV, LLR, MLR, IMAGL1, IMAGL2, L1IMG, L2IMG } xform;
 
-	unsigned long xflags;
-	unsigned long jflags;
+	bart_flags_t xflags;
+	bart_flags_t jflags;
 
 	float lambda;
 };
@@ -141,13 +141,13 @@ static bool opt_reg(void* ptr, char c, const char* optarg)
 		if (strcmp(rt, "W") == 0) {
 
 			regs[r].xform = L1WAV;
-			int ret = sscanf(optarg, "%*[^:]:%lu:%lu:%f", &regs[r].xflags, &regs[r].jflags, &regs[r].lambda);
+			int ret = sscanf(optarg, "%*[^:]:%" SCNu64 ":%" SCNu64 ":%f", &regs[r].xflags, &regs[r].jflags, &regs[r].lambda);
 			assert(3 == ret);
 
 		} else if (strcmp(rt, "L") == 0) {
 
 			regs[r].xform = LLR;
-			int ret = sscanf(optarg, "%*[^:]:%lu:%lu:%f", &regs[r].xflags, &regs[r].jflags, &regs[r].lambda);
+			int ret = sscanf(optarg, "%*[^:]:%" SCNu64 ":%" SCNu64 ":%f", &regs[r].xflags, &regs[r].jflags, &regs[r].lambda);
 			assert(3 == ret);
 
 		} else if (strcmp(rt, "M") == 0) {
@@ -158,20 +158,20 @@ static bool opt_reg(void* ptr, char c, const char* optarg)
 			regs[r].lambda = regs[0].lambda;
 
 			regs[0].xform = MLR;
-			int ret = sscanf(optarg, "%*[^:]:%lu:%lu:%f", &regs[0].xflags, &regs[0].jflags, &regs[0].lambda);
+			int ret = sscanf(optarg, "%*[^:]:%" SCNu64 ":%" SCNu64 ":%f", &regs[0].xflags, &regs[0].jflags, &regs[0].lambda);
 			assert(3 == ret);
 
 		} else if (strcmp(rt, "T") == 0) {
 
 			regs[r].xform = TV;
-			int ret = sscanf(optarg, "%*[^:]:%lu:%lu:%f", &regs[r].xflags, &regs[r].jflags, &regs[r].lambda);
+			int ret = sscanf(optarg, "%*[^:]:%" SCNu64 ":%" SCNu64 ":%f", &regs[r].xflags, &regs[r].jflags, &regs[r].lambda);
 			assert(3 == ret);
 			p->algo = ADMM;
 
 		} else if (strcmp(rt, "R1") == 0) {
 
 			regs[r].xform = IMAGL1;
-			int ret = sscanf(optarg, "%*[^:]:%lu:%f", &regs[r].jflags, &regs[r].lambda);
+			int ret = sscanf(optarg, "%*[^:]:%" SCNu64 ":%f", &regs[r].jflags, &regs[r].lambda);
 			assert(2 == ret);
 			regs[r].xflags = 0u;
 			p->algo = ADMM;
@@ -179,7 +179,7 @@ static bool opt_reg(void* ptr, char c, const char* optarg)
 		} else if (strcmp(rt, "R2") == 0) {
 
 			regs[r].xform = IMAGL2;
-			int ret = sscanf(optarg, "%*[^:]:%lu:%f", &regs[r].jflags, &regs[r].lambda);
+			int ret = sscanf(optarg, "%*[^:]:%" SCNu64 ":%f", &regs[r].jflags, &regs[r].lambda);
 			assert(2 == ret);
 			regs[r].xflags = 0u;
 			p->algo = ADMM;
@@ -187,7 +187,7 @@ static bool opt_reg(void* ptr, char c, const char* optarg)
 		} else if (strcmp(rt, "I") == 0) {
 
 			regs[r].xform = L1IMG;
-			int ret = sscanf(optarg, "%*[^:]:%lu:%f", &regs[r].jflags, &regs[r].lambda);
+			int ret = sscanf(optarg, "%*[^:]:%" SCNu64 ":%f", &regs[r].jflags, &regs[r].lambda);
 			assert(2 == ret);
 			regs[r].xflags = 0u;
 
@@ -330,13 +330,13 @@ int main_sqpics(int argc, char* argv[argc])
 		warm_start = true;
 
 
-	long max_dims[DIMS];
-	long map_dims[DIMS];
-	long pat_dims[DIMS];
-	long img_dims[DIMS];
-	long coilim_dims[DIMS];
-	long ksp_dims[DIMS];
-	long traj_dims[DIMS];
+	bart_dim_t max_dims[DIMS];
+	bart_dim_t map_dims[DIMS];
+	bart_dim_t pat_dims[DIMS];
+	bart_dim_t img_dims[DIMS];
+	bart_dim_t coilim_dims[DIMS];
+	bart_dim_t ksp_dims[DIMS];
+	bart_dim_t traj_dims[DIMS];
 
 
 
@@ -372,7 +372,7 @@ int main_sqpics(int argc, char* argv[argc])
 		debug_printf(DP_INFO, "GPU reconstruction\n");
 
 	if (map_dims[MAPS_DIM] > 1)
-		debug_printf(DP_INFO, "%ld maps.\nESPIRiT reconstruction.\n", map_dims[MAPS_DIM]);
+		debug_printf(DP_INFO, "%" PRId64 " maps.\nESPIRiT reconstruction.\n", map_dims[MAPS_DIM]);
 
 	if (hogwild)
 		debug_printf(DP_INFO, "Hogwild stepsize\n");
@@ -410,10 +410,10 @@ int main_sqpics(int argc, char* argv[argc])
 
 		// print some statistics
 
-		long T = md_calc_size(DIMS, pat_dims);
-		long samples = (long)pow(md_znorm(DIMS, pat_dims, pattern), 2.);
+		bart_dim_t T = md_calc_size(DIMS, pat_dims);
+		bart_dim_t samples = (bart_dim_t)pow(md_znorm(DIMS, pat_dims, pattern), 2.);
 
-		debug_printf(DP_INFO, "Size: %ld Samples: %ld Acc: %.2f\n", T, samples, (float)T / (float)samples);
+		debug_printf(DP_INFO, "Size: %" PRId64 " Samples: %" PRId64 " Acc: %.2f\n", T, samples, (float)T / (float)samples);
 	}
 
 	if (NULL == traj_file) {
@@ -441,7 +441,7 @@ int main_sqpics(int argc, char* argv[argc])
 	struct operator_s* precond_op = NULL;
 
 	if (NULL == traj_file)
-		forward_op = sense_init(0UL, max_dims, FFT_FLAGS|COIL_FLAG|MAPS_FLAG, maps);
+		forward_op = sense_init(0, max_dims, FFT_FLAGS|COIL_FLAG|MAPS_FLAG, maps);
 	else
 		forward_op = sense_nc_init(max_dims, map_dims, maps, ksp_dims, traj_dims, traj, nuconf, &precond_op);
 
@@ -494,7 +494,7 @@ int main_sqpics(int argc, char* argv[argc])
 	const struct operator_p_s* thresh_ops[NUM_REGS] = { NULL };
 	const struct linop_s* trafos[NUM_REGS] = { NULL };
 	int nr_penalties = ropts.r;
-	long blkdims[MAX_LEV][DIMS];
+	bart_dim_t blkdims[MAX_LEV][DIMS];
 	int levels;
 
 
@@ -510,12 +510,12 @@ int main_sqpics(int argc, char* argv[argc])
 
 			debug_printf(DP_INFO, "l1-wavelet regularization: %f\n", regs[nr].lambda);
 
-			long minsize[DIMS] = { [0 ... DIMS - 1] = 1 };
+			bart_dim_t minsize[DIMS] = { [0 ... DIMS - 1] = 1 };
 			minsize[0] = MIN(img_dims[0], 16);
 			minsize[1] = MIN(img_dims[1], 16);
 			minsize[2] = MIN(img_dims[2], 16);
 
-			unsigned long wflags = 0UL;
+			bart_flags_t wflags = 0;
 
 			for (int i = 0; i < DIMS; i++) {
 
@@ -558,7 +558,7 @@ int main_sqpics(int argc, char* argv[argc])
 			int remove_mean = 0;
 
 			trafos[nr] = linop_identity_create(DIMS, img_dims);
-			thresh_ops[nr] = lrthresh_create(img_dims, randshift, regs[nr].xflags, (const long (*)[DIMS])blkdims, regs[nr].lambda, false, remove_mean, false);
+			thresh_ops[nr] = lrthresh_create(img_dims, randshift, regs[nr].xflags, (const bart_dim_t (*)[DIMS])blkdims, regs[nr].lambda, false, remove_mean, false);
 			break;
 
 		case MLR:
@@ -574,7 +574,7 @@ int main_sqpics(int argc, char* argv[argc])
 				blkdims[l][MAPS_DIM] = 1;
 
 			trafos[nr] = linop_identity_create(DIMS, img_dims);
-			thresh_ops[nr] = lrthresh_create(img_dims, randshift, regs[nr].xflags, (const long (*)[DIMS])blkdims, regs[nr].lambda, false, 0, false);
+			thresh_ops[nr] = lrthresh_create(img_dims, randshift, regs[nr].xflags, (const bart_dim_t (*)[DIMS])blkdims, regs[nr].lambda, false, 0, false);
 
 			const struct linop_s* decom_op = linop_scaled_sum_create(DIMS, img_dims, LEVEL_FLAG);
 			const struct linop_s* tmp_op = forward_op;
@@ -643,7 +643,7 @@ int main_sqpics(int argc, char* argv[argc])
 	md_clear(DIMS, img_dims, image, CFL_SIZE);
 
 
-	long img_truth_dims[DIMS];
+	bart_dim_t img_truth_dims[DIMS];
 	complex float* image_truth = NULL;
 
 	if (im_truth) {
@@ -652,7 +652,7 @@ int main_sqpics(int argc, char* argv[argc])
 		//md_zsmul(DIMS, img_dims, image_truth, image_truth, 1. / scaling);
 	}
 
-	long img_start_dims[DIMS];
+	bart_dim_t img_start_dims[DIMS];
 	complex float* image_start = NULL;
 
 	if (warm_start) {
@@ -692,7 +692,7 @@ int main_sqpics(int argc, char* argv[argc])
 	mmconf.RELTOL = 0.;
 
 
-	long size = 2 * md_calc_size(DIMS, img_dims);
+	bart_dim_t size = 2 * md_calc_size(DIMS, img_dims);
 	iter2_admm(CAST_UP(&mmconf), NULL, nr_penalties, thresh_ops, trafos, *biases, NULL, size, (float*)image, NULL, NULL);
 
 

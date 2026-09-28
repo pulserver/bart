@@ -285,7 +285,7 @@ static nn_t reconet_normalization(nn_t network)
 
 		auto iov = nn_generic_domain(network, 0, name);
 
-		long sdims[iov->N];
+		bart_dim_t sdims[iov->N];
 		md_select_dims(iov->N, BATCH_FLAG, sdims, iov->dims);
 
 		auto nn_scale = nn_from_nlop_F(nlop_tenmul_create(iov->N, iov->dims, iov->dims, sdims));
@@ -318,7 +318,7 @@ static nn_t reconet_normalization(nn_t network)
 
 		auto iov = nn_generic_codomain(network, 0, name);
 
-		long sdims[iov->N];
+		bart_dim_t sdims[iov->N];
 		md_select_dims(iov->N, BATCH_FLAG, sdims, iov->dims);
 
 		auto nlop_scale = nlop_tenmul_create(iov->N, iov->dims, iov->dims, sdims);
@@ -441,8 +441,8 @@ static nn_t nn_init_create(const struct reconet_s* config, int Nb, struct sense_
 
 	int N = sense_model_get_N(config->sense_config);
 
-	long img_dims[N];
-	long scl_dims[N];
+	bart_dim_t img_dims[N];
+	bart_dim_t scl_dims[N];
 
 	sense_model_get_img_dims(config->sense_config, N, img_dims);
 	img_dims[BATCH_DIM] = Nb;
@@ -494,9 +494,9 @@ static nn_t nn_init_create(const struct reconet_s* config, int Nb, struct sense_
  * INDEX_0:	idims:	(Ux, Uy, Uz, 1, Nb)
  * [batchnorm output]
  */
-static nn_t network_block_create(const struct reconet_s* config, int N, const long img_dims[N], enum NETWORK_STATUS status)
+static nn_t network_block_create(const struct reconet_s* config, int N, const bart_dim_t img_dims[N], enum NETWORK_STATUS status)
 {
-	long timg_dims[N];
+	bart_dim_t timg_dims[N];
 	md_copy_dims(N, timg_dims, img_dims);
 
 	if (!config->one_channel_per_map)
@@ -533,8 +533,8 @@ static nn_t network_block_create(const struct reconet_s* config, int N, const lo
 
 		if (config->network->residual) {
 
-			long pos[N];
-			long res_dims[N];
+			bart_dim_t pos[N];
+			bart_dim_t res_dims[N];
 
 			for (int i = 0; i < N; i++)
 				pos[i] = 0;
@@ -580,7 +580,7 @@ static nn_t reconet_cell_create(const struct reconet_s* config, int Nb, struct s
 {
 	int N = sense_model_get_N(config->sense_config);
 
-	long img_dims[N];
+	bart_dim_t img_dims[N];
 	sense_model_get_img_dims(config->sense_config, N, img_dims);
 	img_dims[BATCH_DIM] = Nb;
 
@@ -710,8 +710,8 @@ static nn_t reconet_create(const struct reconet_s* config, int Nb, enum NETWORK_
 
 	if (nn_is_name_in_in_args(network, "lambda")) {
 
-		long out_dims[N + 1];
-		long lam_dims[N + 1]; // different lambda for different iteration
+		bart_dim_t out_dims[N + 1];
+		bart_dim_t lam_dims[N + 1]; // different lambda for different iteration
 
 		md_copy_dims(N + 1, out_dims, nn_generic_domain(network, 0, "lambda")->dims);
 		md_select_dims(N + 1, MD_BIT(N), lam_dims, out_dims);
@@ -730,7 +730,7 @@ static nn_t reconet_create(const struct reconet_s* config, int Nb, enum NETWORK_
 			network = nn_mark_dup_F(network, "psf");
 		}
 
-		if (!md_check_equal_dims(N + 1, lam_dims, out_dims, ~0UL)) {
+		if (!md_check_equal_dims(N + 1, lam_dims, out_dims, ~UINT64_C(0))) {
 
 			network = nn_chain2_swap_FF(nn_from_nlop_F(nlop_from_linop_F(linop_repmat_create(N + 1, out_dims, ~MD_BIT(N)))), 0, NULL, network, 0, "lambda");
 			network = nn_set_input_name_F(network, 0, "lambda");
@@ -753,7 +753,7 @@ static nn_t reconet_create(const struct reconet_s* config, int Nb, enum NETWORK_
 
 	if (nn_is_name_in_in_args(network, "lambda_init")) {
 
-		long ldims[N];
+		bart_dim_t ldims[N];
 
 		md_copy_dims(N, ldims, nn_generic_domain(network, 0, "lambda_init")->dims);
 
@@ -771,7 +771,7 @@ static nn_t reconet_create(const struct reconet_s* config, int Nb, enum NETWORK_
 		network = nn_set_initializer_F(network, 0, "lambda_init", init_const_create(config->init_lambda_init));
 	}
 
-	long img_dims[N];
+	bart_dim_t img_dims[N];
 	sense_model_get_img_dims(config->sense_config, N, img_dims);
 	img_dims[BATCH_DIM] = Nb;
 
@@ -864,10 +864,10 @@ static nn_t reconet_train_create(const struct reconet_s* config, int Nb, bool va
 	const struct iovec_s* cod = nn_generic_codomain(train_op, 0, "reconstruction");
 
 	int N = cod->N;
-	long out_dims[N];
+	bart_dim_t out_dims[N];
 	md_copy_dims(N, out_dims, cod->dims);
 
-	long scl_dims[N];
+	bart_dim_t scl_dims[N];
 	md_select_dims(N, BATCH_FLAG, scl_dims, out_dims);
 
 	auto loss_op = valid 	? val_measure_create(config->valid_loss, N, out_dims)
@@ -915,9 +915,9 @@ static nn_t reconet_apply_op_create(const struct reconet_s* config)
 
 	if (config->coil_image) {
 
-		long cim_dims[N];
-		long img_dims[N];
-		long col_dims[N];
+		bart_dim_t cim_dims[N];
+		bart_dim_t img_dims[N];
+		bart_dim_t col_dims[N];
 
 		sense_model_get_cim_dims(config->sense_config, N, cim_dims);
 		sense_model_get_img_dims(config->sense_config, N, img_dims);
@@ -937,15 +937,15 @@ static nn_t reconet_apply_op_create(const struct reconet_s* config)
 
 
 void train_reconet(	struct reconet_s* config,
-			long Nb_train, struct named_data_list_s* train_data,
-			long Nb_valid, struct named_data_list_s* valid_data)
+			bart_dim_t Nb_train, struct named_data_list_s* train_data,
+			bart_dim_t Nb_valid, struct named_data_list_s* valid_data)
 {
-	unsigned long bat_flags = BATCH_FLAG;
+	bart_flags_t bat_flags = BATCH_FLAG;
 
 	auto ref_iov = named_data_list_get_iovec(train_data, "reference");
 
 	config->coil_image = (1 != ref_iov->dims[COIL_DIM]);
-	long ntot = ref_iov->dims[BATCH_DIM];
+	bart_dim_t ntot = ref_iov->dims[BATCH_DIM];
 
 	iovec_free(ref_iov);
 
@@ -1027,7 +1027,7 @@ void train_reconet(	struct reconet_s* config,
 			auto iov_weight = config->weights->iovs[weight_index];
 			auto iov_train_op = nlop_generic_domain(nn_get_nlop(nn_train), i);
 
-			assert(md_check_equal_dims(iov_weight->N, iov_weight->dims, iov_train_op->dims, ~0UL));
+			assert(md_check_equal_dims(iov_weight->N, iov_weight->dims, iov_train_op->dims, ~UINT64_C(0)));
 
 			src[i] = (float*)config->weights->tensors[weight_index];
 			weight_index++;
@@ -1160,7 +1160,7 @@ void eval_reconet(struct reconet_s* config, struct named_data_list_s* data)
 
 	int N = sense_model_get_N(config->sense_config);
 
-	long tout_dims[N];
+	bart_dim_t tout_dims[N];
 	md_select_dims(N, ~BATCH_FLAG, tout_dims, dom_rec->dims);
 	auto loss = val_measure_create(config->valid_loss, N, tout_dims);
 	int NL = nn_get_nr_out_args(loss);
@@ -1173,25 +1173,25 @@ void eval_reconet(struct reconet_s* config, struct named_data_list_s* data)
 	for (int i = 0; i < N - 1; i++)
 		loss_op = nlop_append_singleton_dim_out_F(loss_op, 0);
 
-	long tloss_dims[N];
+	bart_dim_t tloss_dims[N];
 	md_select_dims(N, BATCH_FLAG, tloss_dims, dom_rec->dims);
 	tloss_dims[0] = NL;
 
 	complex float* tloss = md_alloc(N, tloss_dims, CFL_SIZE);
 
 	int DO[1] = { N };
-	const long* odims[1] = { tloss_dims };
+	const bart_dim_t* odims[1] = { tloss_dims };
 	complex float* loss_arr[1] = { tloss };
 
 	int DI[] = { N, N };
-	const long* idims[2] = { dom_rec->dims, dom_rec->dims };
+	const bart_dim_t* idims[2] = { dom_rec->dims, dom_rec->dims };
 	const complex float* input_arr[2] = { tmp_out, named_data_list_get_data(data, "reference") };
 
 	nlop_generic_apply_loop(loss_op, BATCH_FLAG, 1, DO , odims, loss_arr, 2, DI, idims, input_arr);
 	nlop_free(loss_op);
 
 	complex float losses[NL];
-	md_zavg(N, tloss_dims, ~1UL, losses, tloss);
+	md_zavg(N, tloss_dims, ~UINT64_C(1), losses, tloss);
 
 	for (int i = 0; i < NL; i++)
 		debug_printf(DP_INFO, "%s: %e\n", nn_get_out_name_from_arg_index(loss, i, false), crealf(losses[i]));

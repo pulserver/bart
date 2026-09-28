@@ -24,7 +24,7 @@
 #define SCALE_GRAD 0.82
 
 
-int prep_grad_ro(struct grad_trapezoid* grad, long echo, const struct seq_config* seq);
+int prep_grad_ro(struct grad_trapezoid* grad, bart_dim_t echo, const struct seq_config* seq);
 
 
 static double start_rf(const struct seq_config* seq)
@@ -35,13 +35,13 @@ static double start_rf(const struct seq_config* seq)
 	return round_up_raster(min_delay, seq->sys.raster_rf);
 }
 
-static double start_adc(long echo, const struct seq_config* seq)
+static double start_adc(bart_dim_t echo, const struct seq_config* seq)
 {
 	return round_up_raster(start_rf(seq) + seq->phys.rf_duration / 2. + seq->phys.te + echo * seq->phys.te_delta
 				- adc_time_to_echo(seq), seq->sys.raster_rf);
 }
 
-static double ro_shift(long echo, const struct seq_config* seq)
+static double ro_shift(bart_dim_t echo, const struct seq_config* seq)
 {
 	double adc_start = start_adc(echo, seq);
 
@@ -64,19 +64,19 @@ static double available_time_RF_SLI(int ro, const struct seq_config* seq)
 		- ro_shift(0, seq);
 }
 
-static double ro_time_to_echo(long echo, const struct seq_config* seq)
+static double ro_time_to_echo(bart_dim_t echo, const struct seq_config* seq)
 {
 	return ro_shift(echo, seq) + adc_time_to_echo(seq);
 }
 
-static long ro_time_after_echo(long echo, const struct seq_config* seq)
+static bart_dim_t ro_time_after_echo(bart_dim_t echo, const struct seq_config* seq)
 {
 	return round_up_raster(adc_duration(seq) + ro_shift(echo, seq), seq->sys.raster_grad) 
 		- ro_time_to_echo(echo, seq);
 }
 
 
-static double ro_momentum_to_echo(long echo, const struct seq_config* seq)
+static double ro_momentum_to_echo(bart_dim_t echo, const struct seq_config* seq)
 {
 	double amp = ro_amplitude(seq);
 
@@ -85,7 +85,7 @@ static double ro_momentum_to_echo(long echo, const struct seq_config* seq)
 		+ ro_shift(echo, seq) + adc_time_to_echo(seq));
 }
 
-static double ro_momentum_after_echo(long echo, const struct seq_config* seq)
+static double ro_momentum_after_echo(bart_dim_t echo, const struct seq_config* seq)
 {
 	struct grad_trapezoid grad;
 	prep_grad_ro(&grad, echo, seq);
@@ -93,14 +93,14 @@ static double ro_momentum_after_echo(long echo, const struct seq_config* seq)
 	return grad_momentum(&grad) - ro_momentum_to_echo(echo, seq);
 }
 
-static double ro_blip_angle(const long pos[DIMS], const struct seq_config* seq)
+static double ro_blip_angle(const bart_dim_t pos[DIMS], const struct seq_config* seq)
 {
 	if (0 < pos[TE_DIM]) {
 
 		double angle_curr = get_rot_angle(pos, seq);
 		double moment_curr = ro_momentum_to_echo(pos[TE_DIM], seq);
 
-		long pos2[DIMS];
+		bart_dim_t pos2[DIMS];
 		md_copy_dims(DIMS, pos2, pos);
 		pos2[TE_DIM] = pos[TE_DIM] - 1;
 
@@ -116,14 +116,14 @@ static double ro_blip_angle(const long pos[DIMS], const struct seq_config* seq)
 	return 0.;
 }
 
-static double ro_blip_moment(const long pos[DIMS], const struct seq_config* seq)
+static double ro_blip_moment(const bart_dim_t pos[DIMS], const struct seq_config* seq)
 {
 	if (0 < pos[TE_DIM]) {
 
 		double angle_curr = get_rot_angle(pos, seq);
 		double moment_curr = ro_momentum_to_echo(pos[TE_DIM], seq);
 
-		long pos2[DIMS];
+		bart_dim_t pos2[DIMS];
 		md_copy_dims(DIMS, pos2, pos);
 		pos2[TE_DIM] = pos[TE_DIM] - 1;
 
@@ -141,7 +141,7 @@ static double ro_blip_moment(const long pos[DIMS], const struct seq_config* seq)
 
 static int prep_grad_ro_deph(struct grad_trapezoid* grad, const struct seq_config* seq)
 {
-	const long echo = 0;
+	const bart_dim_t echo = 0;
 
 	struct grad_limits limits = seq->sys.grad;
 	limits.max_amplitude *= SCALE_GRAD;
@@ -153,13 +153,13 @@ static int prep_grad_ro_deph(struct grad_trapezoid* grad, const struct seq_confi
 }
 
 
-static int prep_grad_ro_blip(struct grad_trapezoid* grad, long echo, const struct seq_config* seq)
+static int prep_grad_ro_blip(struct grad_trapezoid* grad, bart_dim_t echo, const struct seq_config* seq)
 {
 	*grad = (struct grad_trapezoid){ 0 };
 
 	if (0 < echo) {
 
-		long pos0[DIMS] = { [TE_DIM] = echo };
+		bart_dim_t pos0[DIMS] = { [TE_DIM] = echo };
 		pos0[TE_DIM] = echo;
 
 		double moment = ro_blip_moment(pos0, seq);
@@ -171,7 +171,7 @@ static int prep_grad_ro_blip(struct grad_trapezoid* grad, long echo, const struc
 }
 
 
-int prep_grad_ro(struct grad_trapezoid* grad, long echo, const struct seq_config* seq)
+int prep_grad_ro(struct grad_trapezoid* grad, bart_dim_t echo, const struct seq_config* seq)
 {
 	*grad = (struct grad_trapezoid){ 0 };
 
@@ -269,14 +269,14 @@ void min_te_flash(const struct seq_config* seq, double* min_te, double* fill_te)
 	if (1 < seq->loop_dims[TE_DIM]) {
 
 		struct grad_trapezoid grad;
-		long pos0[DIMS] = { };
+		bart_dim_t pos0[DIMS] = { };
 		pos0[TE_DIM] = 1;
 		grad_hard(&grad, ro_blip_moment(pos0, seq), seq->sys.grad);
 
 		blip_time = grad_total_time(&grad);
 	}
 
-	for (long echo = 0; echo < seq->loop_dims[TE_DIM]; echo++) {
+	for (bart_dim_t echo = 0; echo < seq->loop_dims[TE_DIM]; echo++) {
 
 		if (0 < echo)
 			time += blip_time;
@@ -294,7 +294,7 @@ void min_te_flash(const struct seq_config* seq, double* min_te, double* fill_te)
 	time = 0;
 	fill_te[0] = seq->phys.te - min_te[0];
 
-	for (long echo = 1; echo < seq->loop_dims[TE_DIM]; echo++) {
+	for (bart_dim_t echo = 1; echo < seq->loop_dims[TE_DIM]; echo++) {
 
 		time += fill_te[echo - 1];
 		fill_te[echo] = seq->phys.te + echo * seq->phys.te_delta - min_te[echo] - time;

@@ -42,13 +42,13 @@
 
 #include "cnn.h"
 
-nn_t network_create(const struct network_s* config, int _NO, const long _odims[_NO], int _NI, const long _idims[_NI], enum NETWORK_STATUS status)
+nn_t network_create(const struct network_s* config, int _NO, const bart_dim_t _odims[_NO], int _NI, const bart_dim_t _idims[_NI], enum NETWORK_STATUS status)
 {
 	int NO = _NO;
 	int NI = _NI;
 
-	long odims[NO];
-	long idims[NI];
+	bart_dim_t odims[NO];
+	bart_dim_t idims[NI];
 
 	md_copy_dims(NO, odims, _odims);
 	md_copy_dims(NI, idims, _idims);
@@ -65,7 +65,7 @@ nn_t network_create(const struct network_s* config, int _NO, const long _odims[_
 		return ret;
 	}
 
-	long channel = 1;
+	bart_dim_t channel = 1;
 
 	if (config->bart_to_channel_first) {
 
@@ -75,9 +75,9 @@ nn_t network_create(const struct network_s* config, int _NO, const long _odims[_
 		NO = 5;
 		NI = 5;
 
-		unsigned long channel_flag = (~(FFT_FLAGS | BATCH_FLAG)) & (md_nontriv_dims(_NO, _odims));
+		bart_flags_t channel_flag = (~(FFT_FLAGS | BATCH_FLAG)) & (md_nontriv_dims(_NO, _odims));
 
-		long chn_dims[_NO];
+		bart_dim_t chn_dims[_NO];
 		md_select_dims(_NO, channel_flag, chn_dims, _odims);
 		channel = md_calc_size(_NO, chn_dims);
 
@@ -97,7 +97,7 @@ nn_t network_create(const struct network_s* config, int _NO, const long _odims[_
 
 		const struct nlop_s* nlop_norm = nlop_norm_create(NI, idims, config->norm_batch_flag, config->norm, true);
 
-		long sodims[NO];
+		bart_dim_t sodims[NO];
 		md_select_dims(NO, config->norm_batch_flag, sodims, odims);
 		nlop_norm = nlop_reshape_out_F(nlop_norm, 1, NO, sodims);
 
@@ -127,7 +127,7 @@ nn_t network_create(const struct network_s* config, int _NO, const long _odims[_
 			int iperm[5] = { 3, 0, 1, 2, 4 };
 			int operm[5] = { 1, 2, 3, 0, 4 };
 
-			long dims[5];
+			bart_dim_t dims[5];
 			md_permute_dims(5, operm, dims, idims);
 
 			result = nn_chain2_swap_FF(nn_from_nlop_F(nlop_from_linop_F(linop_permute_create(5, iperm, dims))), 0, NULL, result, 0, NULL);
@@ -141,9 +141,9 @@ nn_t network_create(const struct network_s* config, int _NO, const long _odims[_
 	return result;
 }
 
-static nn_t network_resnet_create(const struct network_s* _config, int NO, const long odims[NO], int NI, const long idims[NI], enum NETWORK_STATUS status);
-static nn_t network_varnet_create(const struct network_s* _config, int NO, const long odims[NO], int NI, const long idims[NI], enum NETWORK_STATUS status);
-static nn_t network_mnist_create(const struct network_s* _config, int NO, const long odims[NO], int NI, const long idims[NI], enum NETWORK_STATUS status);
+static nn_t network_resnet_create(const struct network_s* _config, int NO, const bart_dim_t odims[NO], int NI, const bart_dim_t idims[NI], enum NETWORK_STATUS status);
+static nn_t network_varnet_create(const struct network_s* _config, int NO, const bart_dim_t odims[NO], int NI, const bart_dim_t idims[NI], enum NETWORK_STATUS status);
+static nn_t network_mnist_create(const struct network_s* _config, int NO, const bart_dim_t odims[NO], int NI, const bart_dim_t idims[NI], enum NETWORK_STATUS status);
 
 DEF_TYPEID(network_resnet_s);
 
@@ -201,7 +201,7 @@ struct network_resnet_s network_resnet_default = {
 };
 
 
-static void network_resnet_get_kdims(const struct network_resnet_s* config, int N, long kdims[N])
+static void network_resnet_get_kdims(const struct network_resnet_s* config, int N, bart_dim_t kdims[N])
 {
 	if (0 != md_calc_size(config->N, config->kdims)) {
 
@@ -212,8 +212,8 @@ static void network_resnet_get_kdims(const struct network_resnet_s* config, int 
 	assert(1 == bitcount(config->channel_flag));
 	assert(3 >= bitcount(config->conv_flag));
 
-	long tdims[3] = {config->Kx, config->Ky, config->Kz};
-	long* tdim = tdims;
+	bart_dim_t tdims[3] = {config->Kx, config->Ky, config->Kz};
+	bart_dim_t* tdim = tdims;
 
 	for (int i = 0; i < N; i++) {
 
@@ -246,7 +246,7 @@ static void network_resnet_get_kdims(const struct network_resnet_s* config, int 
  * INDEX_0:	odims
  * batchnorm
  */
-static nn_t network_resnet_create(const struct network_s* _config, int NO, const long odims[NO], int NI, const long idims[NI], enum NETWORK_STATUS status)
+static nn_t network_resnet_create(const struct network_s* _config, int NO, const bart_dim_t odims[NO], int NI, const bart_dim_t idims[NI], enum NETWORK_STATUS status)
 {
 	int Nw = ARRAY_SIZE(resnet_sorted_weight_names);
 
@@ -267,7 +267,7 @@ static nn_t network_resnet_create(const struct network_s* _config, int NO, const
 	assert(config->N == N);
 	assert(0 <= N);
 
-	long kdims[N];
+	bart_dim_t kdims[N];
 	network_resnet_get_kdims(config, N, kdims);
 
 	nn_t result = nn_from_nlop_F(nlop_from_linop_F(linop_identity_create(N, idims)));
@@ -275,8 +275,8 @@ static nn_t network_resnet_create(const struct network_s* _config, int NO, const
 	auto conv_init = init_kaiming_create(in_flag_conv(true), false, false, 0);
 
 	//if dim for group index are not equal in the first layer, we make it a chennl dim
-	unsigned long tchannel_flag = config->channel_flag;
-	unsigned long tgroup_flag = config->group_flag;
+	bart_flags_t tchannel_flag = config->channel_flag;
+	bart_flags_t tgroup_flag = config->group_flag;
 
 	for (int i = 0; i < N; i++) {
 
@@ -330,7 +330,7 @@ static nn_t network_resnet_create(const struct network_s* _config, int NO, const
 		result = nn_stack_dup_by_name_F(result);
 	}
 
-	long ldims[N];
+	bart_dim_t ldims[N];
 	md_copy_dims(N, ldims, kdims);
 
 	for (int i = 0; i < N; i++)
@@ -366,7 +366,7 @@ static nn_t network_resnet_create(const struct network_s* _config, int NO, const
 
 		//append gamma for batchnorm
 		auto iov = nn_generic_codomain(result, 0, NULL);
-		long gdims [iov->N];
+		bart_dim_t gdims [iov->N];
 		md_select_dims(iov->N, config->channel_flag | config->group_flag, gdims, iov->dims);
 
 
@@ -449,7 +449,7 @@ struct network_varnet_s network_varnet_default = {
 };
 
 
-static nn_t network_varnet_create(const struct network_s* _config, int NO, const long odims[NO], int NI, const long idims[NI], enum NETWORK_STATUS /*status*/)
+static nn_t network_varnet_create(const struct network_s* _config, int NO, const bart_dim_t odims[NO], int NI, const bart_dim_t idims[NI], enum NETWORK_STATUS /*status*/)
 {
 	assert(NO == NI);
 	int N = NO;
@@ -457,25 +457,25 @@ static nn_t network_varnet_create(const struct network_s* _config, int NO, const
 	auto config = CAST_DOWN(network_varnet_s, _config);
 
 	assert(5 == N);
-	assert(md_check_equal_dims(N, idims, odims, ~0UL));
+	assert(md_check_equal_dims(N, idims, odims, ~UINT64_C(0)));
 
 	//Padding
-	long pad_up[5] = { 0, (config->Kx - 1), (config->Ky - 1), (config->Kz - 1), 0 };
-	long pad_down[5] = { 0, -(config->Kx - 1), -(config->Ky - 1), -(config->Kz - 1), 0 };
-	long ker_size[3] = { config->Kx, config->Ky, config->Kz };
+	bart_dim_t pad_up[5] = { 0, (config->Kx - 1), (config->Ky - 1), (config->Kz - 1), 0 };
+	bart_dim_t pad_down[5] = { 0, -(config->Kx - 1), -(config->Ky - 1), -(config->Kz - 1), 0 };
+	bart_dim_t ker_size[3] = { config->Kx, config->Ky, config->Kz };
 
-	long Nc = idims[0];
-	long Ux = idims[1];
-	long Uy = idims[2];
-	long Uz = idims[3];
-	long Nb = idims[4];
+	bart_dim_t Nc = idims[0];
+	bart_dim_t Ux = idims[1];
+	bart_dim_t Uy = idims[2];
+	bart_dim_t Uz = idims[3];
+	bart_dim_t Nb = idims[4];
 
 	//working dims
-	long zdimsw[5] = { config->Nf, Ux + 2 * (config->Kx - 1), Uy + 2 * (config->Ky - 1), Uz + 2 * (config->Kz - 1), Nb };
-	long rbfdims[3] = { config->Nf, (Ux + 2 * (config->Kx - 1)) * (Uy + 2 * (config->Ky - 1)) * (Uz + 2 * (config->Kz - 1)) * Nb, config->Nw };
+	bart_dim_t zdimsw[5] = { config->Nf, Ux + 2 * (config->Kx - 1), Uy + 2 * (config->Ky - 1), Uz + 2 * (config->Kz - 1), Nb };
+	bart_dim_t rbfdims[3] = { config->Nf, (Ux + 2 * (config->Kx - 1)) * (Uy + 2 * (config->Ky - 1)) * (Uz + 2 * (config->Kz - 1)) * Nb, config->Nw };
 
 	//operator dims
-	long wdims[2] = {config->Nf, config->Nw};
+	bart_dim_t wdims[2] = {config->Nf, config->Nw};
 
 	const struct nlop_s* nlop_result = nlop_from_linop_F(linop_identity_create(5, idims)); // in: u
 	//nlop_result = nlop_chain2_FF(nlop_result, 0, padu, 0); // in: u
@@ -533,19 +533,19 @@ struct network_s network_mnist_default = {
 	.debug = false,
 };
 
-static nn_t network_mnist_create(const struct network_s* /*_config*/, int NO, const long odims[NO], int NI, const long idims[NI], enum NETWORK_STATUS status)
+static nn_t network_mnist_create(const struct network_s* /*_config*/, int NO, const bart_dim_t odims[NO], int NI, const bart_dim_t idims[NI], enum NETWORK_STATUS status)
 {
 	assert(2 == NO);
 	assert(10 == odims[0]);
 	assert(idims[2] == odims[1]);
 	assert(3 == NI);
 
-	long dims[5] = { 1, idims[0], idims[1], 1, idims[2] };
+	bart_dim_t dims[5] = { 1, idims[0], idims[1], 1, idims[2] };
 
 	nn_t network = nn_from_nlop_F(nlop_from_linop(linop_reshape_create(5, dims, NI, idims)));
 
-	long kernel_size[] = { 3, 3, 1 };
-	long pool_size[] = { 2, 2, 1 };
+	bart_dim_t kernel_size[] = { 3, 3, 1 };
+	bart_dim_t pool_size[] = { 2, 2, 1 };
 
 	bool conv = false;
 

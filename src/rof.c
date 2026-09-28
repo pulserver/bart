@@ -43,7 +43,7 @@ struct reg {
 	const struct operator_p_s* prox;
 };
 
-static struct reg tvreg(unsigned long flags, float lambda, int N, const long dims[N])
+static struct reg tvreg(bart_flags_t flags, float lambda, int N, const bart_dim_t dims[N])
 {
 	struct reg reg;
 
@@ -57,7 +57,7 @@ static struct reg tvreg(unsigned long flags, float lambda, int N, const long dim
 int main_rof(int argc, char* argv[argc])
 {
 	float lambda = 0.;
-	unsigned long flags = 0;
+	bart_flags_t flags = 0;
 	const char* in_file = NULL;
 	const char* out_file = NULL;
 
@@ -75,7 +75,7 @@ int main_rof(int argc, char* argv[argc])
 
 	num_init();
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	
 	complex float* in_data = load_cfl(in_file, DIMS, dims);
 	complex float* out_data = create_cfl(out_file, DIMS, dims);

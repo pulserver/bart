@@ -188,7 +188,7 @@ void mpi_sync(void)
 
 #ifdef USE_MPI
 #ifdef USE_CUDA
-static void mpi_bcast_selected_gpu(bool tag, void* ptr, long size, int root)
+static void mpi_bcast_selected_gpu(bool tag, void* ptr, bart_dim_t size, int root)
 {
 	if (1 == mpi_get_num_procs())
 		return;
@@ -210,7 +210,7 @@ static void mpi_bcast_selected_gpu(bool tag, void* ptr, long size, int root)
 #endif
 #endif
 
-void mpi_bcast_selected(bool tag, void* ptr, long size, int root)
+void mpi_bcast_selected(bool tag, void* ptr, bart_dim_t size, int root)
 {
 #ifdef USE_MPI
 	if (1 == mpi_get_num_procs())
@@ -232,7 +232,7 @@ void mpi_bcast_selected(bool tag, void* ptr, long size, int root)
 
 	if (tag) {
 
-		for (long n = 0; n < size; n += INT_MAX / 2)
+		for (bart_dim_t n = 0; n < size; n += INT_MAX / 2)
 			MPI_Bcast(ptr + n, MIN(size - n, INT_MAX / 2), MPI_BYTE, 0, comm_sub);
 	}
 
@@ -245,15 +245,15 @@ void mpi_bcast_selected(bool tag, void* ptr, long size, int root)
 #endif
 }
 
-void mpi_bcast(void* ptr, long size, int root)
+void mpi_bcast(void* ptr, bart_dim_t size, int root)
 {
 	mpi_bcast_selected(true, ptr, size, root);
 }
 
 
-void mpi_bcast2(int N, const long dims[N], const long strs[N], void* ptr, long size, int root)
+void mpi_bcast2(int N, const bart_dim_t dims[N], const bart_stride_t strs[N], void* ptr, bart_dim_t size, int root)
 {
-	long tdims[N];
+	bart_dim_t tdims[N];
 	md_copy_dims(N, tdims, dims);
 
 	for (int i = 0; i < N; i++) {
@@ -278,7 +278,7 @@ void mpi_bcast2(int N, const long dims[N], const long strs[N], void* ptr, long s
 * Data transfer API
 **/
 
-void mpi_copy(void* dst, long size, const void* src, int sender_rank, int recv_rank)
+void mpi_copy(void* dst, bart_dim_t size, const void* src, int sender_rank, int recv_rank)
 {
 	if (sender_rank == recv_rank) {
 
@@ -313,7 +313,7 @@ void mpi_copy(void* dst, long size, const void* src, int sender_rank, int recv_r
 			cuda_sync_stream();
 #endif
 
-		for (long n = 0; n < size; n += INT_MAX / 2)
+		for (bart_dim_t n = 0; n < size; n += INT_MAX / 2)
 			MPI_Send(src2 + n, MIN(size - n, INT_MAX / 2), MPI_BYTE, recv_rank, 0, mpi_get_comm());
 
 #ifdef USE_CUDA
@@ -334,7 +334,7 @@ void mpi_copy(void* dst, long size, const void* src, int sender_rank, int recv_r
 		}
 #endif
 
-		for (long n = 0; n < size; n += INT_MAX / 2)
+		for (bart_dim_t n = 0; n < size; n += INT_MAX / 2)
 			MPI_Recv(dst2 + n, MIN(size - n, INT_MAX / 2), MPI_BYTE, sender_rank, 0, mpi_get_comm(), MPI_STATUS_IGNORE);
 
 #ifdef USE_CUDA
@@ -354,13 +354,13 @@ void mpi_copy(void* dst, long size, const void* src, int sender_rank, int recv_r
 #endif
 }
 
-void mpi_copy2(int N, const long dim[N], const long ostr[N], void* optr, const long istr[N], const void* iptr, long size, int sender_rank, int recv_rank)
+void mpi_copy2(int N, const bart_dim_t dim[N], const bart_stride_t ostr[N], void* optr, const bart_stride_t istr[N], const void* iptr, bart_dim_t size, int sender_rank, int recv_rank)
 {
-	const long (*nstr[2])[N] = { (const long (*)[N])ostr, (const long (*)[N])istr };
+	const bart_stride_t (*nstr[2])[N] = { (const bart_stride_t (*)[N])ostr, (const bart_stride_t (*)[N])istr };
 
 	NESTED(void, nary_copy_mpi, (struct nary_opt_data_s* opt_data, void* ptr[]))
 	{
-		long size2 = size * opt_data->size;
+		bart_dim_t size2 = size * opt_data->size;
 
 		mpi_copy(ptr[0], size2, ptr[1], sender_rank, recv_rank);
 	};
@@ -377,7 +377,7 @@ void mpi_copy2(int N, const long dim[N], const long ostr[N], void* optr, const l
  * @param pval source (rank == 0) /destination (rank != 0) buffer
  * @param size size in bytes which should be copied
  */
-void mpi_sync_val(void* pval, long size)
+void mpi_sync_val(void* pval, bart_dim_t size)
 {
 	mpi_bcast(pval, size, 0);
 }
@@ -394,10 +394,10 @@ void mpi_sync_val(void* pval, long size)
  * @param src buffer that holds enough data to spread to buffers
  * @param size size of a single element
  */
-void mpi_scatter_batch(void* dst, long count, const void* src, size_t size)
+void mpi_scatter_batch(void* dst, bart_dim_t count, const void* src, size_t size)
 {
 #ifdef USE_MPI
-	count *= (long)size;
+	count *= (bart_stride_t)size;
 	assert(count < INT_MAX);
 
 	MPI_Scatter(src, count, MPI_BYTE, ((0 == mpi_get_rank()) && (dst == src)) ? MPI_IN_PLACE : dst,
@@ -424,10 +424,10 @@ void mpi_scatter_batch(void* dst, long count, const void* src, size_t size)
  * @param size size of a single element
  * @param to_all distribute values to all
  */
-void mpi_gather_batch(void* dst, long count, const void* src, size_t size)
+void mpi_gather_batch(void* dst, bart_dim_t count, const void* src, size_t size)
 {
 #ifdef USE_MPI
-	count *= (long)size;
+	count *= (bart_stride_t)size;
 	assert(count < INT_MAX);
 
 	MPI_Gather(((0 == mpi_get_rank()) && (dst == src)) ? MPI_IN_PLACE : src, count,
@@ -447,11 +447,11 @@ void mpi_gather_batch(void* dst, long count, const void* src, size_t size)
 
 #ifdef USE_MPI
 #ifdef USE_CUDA
-static void mpi_reduce_land_gpu(long N, bool vec[N])
+static void mpi_reduce_land_gpu(bart_dim_t N, bool vec[N])
 {
 	print_cuda_aware_warning();
 
-	long size = (long)sizeof(bool[N]);
+	bart_dim_t size = (bart_stride_t)sizeof(bool[N]);
 
 	bool* tmp = xmalloc((size_t)size);
 	cuda_memcpy(size, tmp, vec);
@@ -464,7 +464,7 @@ static void mpi_reduce_land_gpu(long N, bool vec[N])
 #endif
 #endif
 
-void mpi_reduce_land(long N, bool vec[__VLA(N)])
+void mpi_reduce_land(bart_dim_t N, bool vec[__VLA(N)])
 {
 	if (1 == mpi_get_num_procs())
 		error("MPI reduction requested but only run by one process!\n");
@@ -481,7 +481,7 @@ void mpi_reduce_land(long N, bool vec[__VLA(N)])
 		cuda_sync_stream();
 #endif
 
-	for (long n = 0; n < N; n += INT_MAX / 2)
+	for (bart_dim_t n = 0; n < N; n += INT_MAX / 2)
 		MPI_Allreduce(MPI_IN_PLACE, vec + n, MIN(N - n, INT_MAX / 2), MPI_C_BOOL, MPI_LAND, mpi_get_comm());
 #else
 	(void)vec;
@@ -497,7 +497,7 @@ static void mpi_allreduce_sum_gpu(int N, float vec[N], MPI_Comm comm)
 
 		print_cuda_aware_warning();
 
-		long size = (long)sizeof(float[N]);
+		bart_dim_t size = (bart_stride_t)sizeof(float[N]);
 
 		float* tmp = xmalloc((size_t)size);
 		cuda_memcpy(size, tmp, vec);
@@ -519,7 +519,7 @@ static void mpi_allreduce_sum_gpu(int N, float vec[N], MPI_Comm comm)
 #endif
 
 #ifdef USE_MPI
-static void mpi_reduce_sum_kernel(long N, float vec[N])
+static void mpi_reduce_sum_kernel(bart_dim_t N, float vec[N])
 {
 	if (1 == mpi_get_num_procs())
 		error("MPI reduction requested but only run by one process!\n");
@@ -533,7 +533,7 @@ static void mpi_reduce_sum_kernel(long N, float vec[N])
 
 		vec = vptr_resolve(vec);
 
-		for (long n = 0; n < N; n += INT_MAX / 2)
+		for (bart_dim_t n = 0; n < N; n += INT_MAX / 2)
 			mpi_allreduce_sum_gpu(MIN(N - n, INT_MAX / 2), vec + n, comm_sub);
 	}
 
@@ -543,12 +543,12 @@ static void mpi_reduce_sum_kernel(long N, float vec[N])
 
 
 #ifdef USE_MPI
-void mpi_reduce_sum_vector(long N, float vec[N])
+void mpi_reduce_sum_vector(bart_dim_t N, float vec[N])
 {
 	if (1 == mpi_get_num_procs())
 		error("MPI reduction requested but only run by one process!\n");
 
-	for (long n = 0; n < N; n += INT_MAX / 2)
+	for (bart_dim_t n = 0; n < N; n += INT_MAX / 2)
 		mpi_allreduce_sum_gpu(MIN(N - n, INT_MAX / 2), vec + n, mpi_get_comm());
 }
 #endif
@@ -561,7 +561,7 @@ static void mpi_allreduce_sumD_gpu(int N, double vec[N], MPI_Comm comm)
 
 		print_cuda_aware_warning();
 
-		long size = (long)sizeof(double[N]);
+		bart_dim_t size = (bart_stride_t)sizeof(double[N]);
 
 		float* tmp = xmalloc((size_t)size);
 		cuda_memcpy(size, tmp, vec);
@@ -582,7 +582,7 @@ static void mpi_allreduce_sumD_gpu(int N, double vec[N], MPI_Comm comm)
 #endif
 
 #ifdef USE_MPI
-static void mpi_reduce_sumD_kernel(long N, double vec[N])
+static void mpi_reduce_sumD_kernel(bart_dim_t N, double vec[N])
 {
 	if (1 == mpi_get_num_procs())
 		error("MPI reduction requested but only run by one process!\n");
@@ -596,7 +596,7 @@ static void mpi_reduce_sumD_kernel(long N, double vec[N])
 
 		double *vec2 = vptr_resolve(vec);
 
-		for (long n = 0; n < N; n += INT_MAX / 2)
+		for (bart_dim_t n = 0; n < N; n += INT_MAX / 2)
 			mpi_allreduce_sumD_gpu(MIN(N - n, INT_MAX / 2), vec2 + n, comm_sub);
 	}
 
@@ -614,7 +614,7 @@ struct vptr_mpi_reduce_s {
 DEF_TYPEID(vptr_mpi_reduce_s);
 
 
-static void reduce_sum_int(vptr_fun_data_t* d, int N, int D, const long* dims[N], const long* strs[N], void* args[N])
+static void reduce_sum_int(vptr_fun_data_t* d, int N, int D, const bart_dim_t* dims[N], const bart_stride_t* strs[N], void* args[N])
 {
 	size_t size = (CAST_DOWN(vptr_mpi_reduce_s, d)->use_double) ? DL_SIZE : FL_SIZE;
 	if (CAST_DOWN(vptr_mpi_reduce_s, d)->use_complex)
@@ -623,12 +623,12 @@ static void reduce_sum_int(vptr_fun_data_t* d, int N, int D, const long* dims[N]
 	int ND = md_calc_blockdim(D, dims[0], strs[0], size);
 
 #ifdef USE_MPI
-	long tot = md_calc_size(ND, dims[0]);
+	bart_dim_t tot = md_calc_size(ND, dims[0]);
 	if (CAST_DOWN(vptr_mpi_reduce_s, d)->use_complex)
 		tot *= 2;
 #endif
 
-	long pos[D];
+	bart_dim_t pos[D];
 	md_set_dims(D, pos, 0);
 
 	do {
@@ -652,7 +652,7 @@ static void reduce_sum_int(vptr_fun_data_t* d, int N, int D, const long* dims[N]
 			else
 #endif
 			{
-				for (long i = 0; i < tot; i++)
+				for (bart_dim_t i = 0; i < tot; i++)
 					((double*)optr)[i] += ((double*)rptr)[i];
 			}
 		}
@@ -677,7 +677,7 @@ static void reduce_sum_int(vptr_fun_data_t* d, int N, int D, const long* dims[N]
 }
 
 
-void mpi_reduce_sum(int N, const long dims[N], float* optr, float* rptr)
+void mpi_reduce_sum(int N, const bart_dim_t dims[N], float* optr, float* rptr)
 {
 	PTR_ALLOC(struct vptr_mpi_reduce_s, _d);
 	SET_TYPEID(vptr_mpi_reduce_s, _d);
@@ -685,10 +685,10 @@ void mpi_reduce_sum(int N, const long dims[N], float* optr, float* rptr)
 	_d->use_double = false;
 	_d->use_complex = false;
 
-	exec_vptr_fun_gen(reduce_sum_int, CAST_UP(PTR_PASS(_d)), 2, N, ~0UL, 3UL, 3UL, (const long*[2]) { dims, dims }, (const long*[2]) { MD_STRIDES(N, dims, FL_SIZE), MD_STRIDES(N, dims, FL_SIZE) }, (void*[2]) { optr, rptr }, (size_t[2]){ FL_SIZE, FL_SIZE }, false);
+	exec_vptr_fun_gen(reduce_sum_int, CAST_UP(PTR_PASS(_d)), 2, N, ~UINT64_C(0), 3, 3, (const bart_dim_t*[2]) { dims, dims }, (const bart_dim_t*[2]) { MD_STRIDES(N, dims, FL_SIZE), MD_STRIDES(N, dims, FL_SIZE) }, (void*[2]) { optr, rptr }, (size_t[2]){ FL_SIZE, FL_SIZE }, false);
 }
 
-void mpi_reduce_zsum(int N, const long dims[N], complex float* optr, complex float* rptr)
+void mpi_reduce_zsum(int N, const bart_dim_t dims[N], complex float* optr, complex float* rptr)
 {
 	PTR_ALLOC(struct vptr_mpi_reduce_s, _d);
 	SET_TYPEID(vptr_mpi_reduce_s, _d);
@@ -696,11 +696,11 @@ void mpi_reduce_zsum(int N, const long dims[N], complex float* optr, complex flo
 	_d->use_double = false;
 	_d->use_complex = true;
 
-	exec_vptr_fun_gen(reduce_sum_int, CAST_UP(PTR_PASS(_d)), 2, N, ~0UL, 3UL, 3UL, (const long*[2]) { dims, dims }, (const long*[2]) { MD_STRIDES(N, dims, CFL_SIZE), MD_STRIDES(N, dims, CFL_SIZE) }, (void*[2]) { optr, rptr }, (size_t[2]){ CFL_SIZE, CFL_SIZE }, false);
+	exec_vptr_fun_gen(reduce_sum_int, CAST_UP(PTR_PASS(_d)), 2, N, ~UINT64_C(0), 3, 3, (const bart_dim_t*[2]) { dims, dims }, (const bart_dim_t*[2]) { MD_STRIDES(N, dims, CFL_SIZE), MD_STRIDES(N, dims, CFL_SIZE) }, (void*[2]) { optr, rptr }, (size_t[2]){ CFL_SIZE, CFL_SIZE }, false);
 
 }
 
-void mpi_reduce_zsum_vector(long N, complex float ptr[N])
+void mpi_reduce_zsum_vector(bart_dim_t N, complex float ptr[N])
 {
 #ifdef USE_MPI
 	mpi_reduce_sum_vector(2 * N, (float*)ptr);
@@ -711,7 +711,7 @@ void mpi_reduce_zsum_vector(long N, complex float ptr[N])
 }
 
 
-void mpi_reduce_sumD(int N, const long dims[N], double* optr, double* rptr)
+void mpi_reduce_sumD(int N, const bart_dim_t dims[N], double* optr, double* rptr)
 {
 	PTR_ALLOC(struct vptr_mpi_reduce_s, _d);
 	SET_TYPEID(vptr_mpi_reduce_s, _d);
@@ -719,10 +719,10 @@ void mpi_reduce_sumD(int N, const long dims[N], double* optr, double* rptr)
 	_d->use_double = true;
 	_d->use_complex = false;
 
-	exec_vptr_fun_gen(reduce_sum_int, CAST_UP(PTR_PASS(_d)), 2, N, ~0UL, 3UL, 3UL, (const long*[2]) { dims, dims }, (const long*[2]) { MD_STRIDES(N, dims, DL_SIZE), MD_STRIDES(N, dims, DL_SIZE) }, (void*[2]) { optr, rptr }, (size_t[2]){ DL_SIZE, DL_SIZE }, false);
+	exec_vptr_fun_gen(reduce_sum_int, CAST_UP(PTR_PASS(_d)), 2, N, ~UINT64_C(0), 3, 3, (const bart_dim_t*[2]) { dims, dims }, (const bart_dim_t*[2]) { MD_STRIDES(N, dims, DL_SIZE), MD_STRIDES(N, dims, DL_SIZE) }, (void*[2]) { optr, rptr }, (size_t[2]){ DL_SIZE, DL_SIZE }, false);
 }
 
-void mpi_reduce_zsumD(int N, const long dims[N], complex double* optr, complex double* rptr)
+void mpi_reduce_zsumD(int N, const bart_dim_t dims[N], complex double* optr, complex double* rptr)
 {
 	PTR_ALLOC(struct vptr_mpi_reduce_s, _d);
 	SET_TYPEID(vptr_mpi_reduce_s, _d);
@@ -730,7 +730,7 @@ void mpi_reduce_zsumD(int N, const long dims[N], complex double* optr, complex d
 	_d->use_double = true;
 	_d->use_complex = true;
 
-	exec_vptr_fun_gen(reduce_sum_int, CAST_UP(PTR_PASS(_d)), 2, N, ~0UL, 3UL, 3UL, (const long*[2]) { dims, dims }, (const long*[2]) { MD_STRIDES(N, dims, CDL_SIZE), MD_STRIDES(N, dims, CDL_SIZE) }, (void*[2]) { optr, rptr }, (size_t[2]){ CDL_SIZE, CDL_SIZE }, false);
+	exec_vptr_fun_gen(reduce_sum_int, CAST_UP(PTR_PASS(_d)), 2, N, ~UINT64_C(0), 3, 3, (const bart_dim_t*[2]) { dims, dims }, (const bart_dim_t*[2]) { MD_STRIDES(N, dims, CDL_SIZE), MD_STRIDES(N, dims, CDL_SIZE) }, (void*[2]) { optr, rptr }, (size_t[2]){ CDL_SIZE, CDL_SIZE }, false);
 }
 
 void* mpi_reduction_sum_buffer_create(const void* ptr)
@@ -753,9 +753,9 @@ void mpi_reduction_sum_buffer(float* optr, float* rptr)
 	optr -= vptr_get_offset(optr);
 	rptr -= vptr_get_offset(rptr);
 
-	long dims[] = { (long)vptr_get_len(optr) / (long)FL_SIZE };
-	long stride[] = { (long)FL_SIZE };
-	const long* strides[] = { stride, stride };
+	bart_dim_t dims[] = { (bart_dim_t)vptr_get_len(optr) / (bart_stride_t)FL_SIZE };
+	bart_stride_t stride[] = { (bart_stride_t)FL_SIZE };
+	const bart_stride_t* strides[] = { stride, stride };
 	size_t sizes[] = { FL_SIZE, FL_SIZE };
 	void* ptr[] = { optr, rptr };
 
@@ -799,9 +799,9 @@ void mpi_reduction_sumD_buffer(double* optr, double* rptr)
 	optr -= vptr_get_offset(optr);
 	rptr -= vptr_get_offset(rptr);
 
-	long dims[] = { (long)vptr_get_len(optr) / (long)DL_SIZE };
-	long stride[] = { (long)DL_SIZE };
-	const long* strides[] = { stride, stride };
+	bart_dim_t dims[] = { (bart_dim_t)vptr_get_len(optr) / (bart_stride_t)DL_SIZE };
+	bart_stride_t stride[] = { (bart_stride_t)DL_SIZE };
+	const bart_stride_t* strides[] = { stride, stride };
 	size_t sizes[] = { DL_SIZE, DL_SIZE };
 	void* ptr[] = { optr, rptr };
 

@@ -55,7 +55,7 @@ int main_trajcor(int argc, char* argv[argc])
 	num_init();
 
 
-	long dimstraj[DIMS];
+	bart_dim_t dimstraj[DIMS];
 
 	complex float* traj = load_cfl(inputtraj_file, DIMS, dimstraj);
 
@@ -67,12 +67,12 @@ int main_trajcor(int argc, char* argv[argc])
 	complex float* outtraj = create_cfl(outputtraj_file, DIMS, dimstraj);
 	md_copy(DIMS, dimstraj, outtraj, traj, CFL_SIZE);
 
-	long gdmat_dims[DIMS];
+	bart_dim_t gdmat_dims[DIMS];
 	md_singleton_dims(DIMS, gdmat_dims);
 	gdmat_dims[0] = 3; // 3x3 matrix for gradient delays
 	gdmat_dims[0] = 3; // 3x3 matrix for gradient delays
 
-	long gdims[DIMS];
+	bart_dim_t gdims[DIMS];
 	complex float* delays = NULL;
 
 	if (NULL != gdelays_file) {
@@ -94,18 +94,18 @@ int main_trajcor(int argc, char* argv[argc])
 			delays[i] = gdelays[i];
 	}
 
-	long mat_dims[DIMS];
+	bart_dim_t mat_dims[DIMS];
 	md_copy_dims(DIMS, mat_dims, gdims);
 	mat_dims[0] = 3;
 	mat_dims[1] = 3;
 	complex float* mat = md_alloc_sameplace(DIMS, mat_dims, CFL_SIZE, traj);
 	md_clear(DIMS, mat_dims, mat, CFL_SIZE);
 
-	long slc_dims[DIMS];
-	md_select_dims(DIMS, ~3UL, slc_dims, gdims);
+	bart_dim_t slc_dims[DIMS];
+	md_select_dims(DIMS, ~UINT64_C(3), slc_dims, gdims);
 
-	long mat_strs[DIMS];
-	long gstrs[DIMS];
+	bart_stride_t mat_strs[DIMS];
+	bart_stride_t gstrs[DIMS];
 	md_calc_strides(DIMS, mat_strs, mat_dims, CFL_SIZE);
 	md_calc_strides(DIMS, gstrs, gdims, CFL_SIZE);
 
@@ -127,13 +127,13 @@ int main_trajcor(int argc, char* argv[argc])
 	unmap_cfl(DIMS, gdims, delays);
 
 
-	long dir_dims[DIMS];
+	bart_dim_t dir_dims[DIMS];
 	md_select_dims(DIMS, ~MD_BIT(1), dir_dims, dimstraj);
 
 	complex float* dir = md_alloc_sameplace(DIMS, dir_dims, CFL_SIZE, traj);
 	traj_radial_direction(DIMS, dir_dims, dir, dimstraj, traj);
 
-	long tdir_dims[DIMS];
+	bart_dim_t tdir_dims[DIMS];
 	md_transpose_dims(DIMS, 0, 1, tdir_dims, dir_dims);
 
 	complex float* offset = md_alloc_sameplace(DIMS, dir_dims, CFL_SIZE, traj);
@@ -142,7 +142,7 @@ int main_trajcor(int argc, char* argv[argc])
 	if (!transverse) {
 
 		// project offset onto direction of spoke
-		long ddims[DIMS];
+		bart_dim_t ddims[DIMS];
 		md_select_dims(DIMS, ~MD_BIT(0), ddims, dir_dims);
 		complex float* delay = md_alloc_sameplace(DIMS, ddims, CFL_SIZE, dir);
 		md_ztenmul(DIMS, ddims, delay, dir_dims, dir, dir_dims, offset);

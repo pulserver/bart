@@ -50,8 +50,8 @@ int main_ssa(int argc, char* argv[argc])
 	int rm_mean = 1;
 	int rank = 0;
 	bool zeropad = true;
-	long kernel_dims[3] = { 1, 1, 1 };
-	long group = 0;
+	bart_dim_t kernel_dims[3] = { 1, 1, 1 };
+	bart_dim_t group = 0;
 
 	const struct opt_s opts[] = {
 
@@ -92,7 +92,7 @@ int main_ssa(int argc, char* argv[argc])
 	}
 
 
-	long in_dims[DIMS];
+	bart_dim_t in_dims[DIMS];
 	complex float* in = load_cfl(src_file, DIMS, in_dims);
 
 	if (!md_check_dimensions(DIMS, in_dims, ~(READ_FLAG|PHS1_FLAG)))
@@ -101,11 +101,11 @@ int main_ssa(int argc, char* argv[argc])
 
 	if (rm_mean || normalize) {
 
-		long in_strs[DIMS];
+		bart_stride_t in_strs[DIMS];
 		md_calc_strides(DIMS, in_strs, in_dims, CFL_SIZE);
 
-		long singleton_dims[DIMS];
-		long singleton_strs[DIMS];
+		bart_dim_t singleton_dims[DIMS];
+		bart_stride_t singleton_strs[DIMS];
 		md_select_dims(DIMS, ~READ_FLAG, singleton_dims, in_dims);
 		md_calc_strides(DIMS, singleton_strs, singleton_dims, CFL_SIZE);
 
@@ -131,7 +131,7 @@ int main_ssa(int argc, char* argv[argc])
 	}
 
 
-	long cal0_dims[DIMS];
+	bart_dim_t cal0_dims[DIMS];
 	md_copy_dims(DIMS, cal0_dims, in_dims);
 
 	if (zeropad)
@@ -142,16 +142,16 @@ int main_ssa(int argc, char* argv[argc])
 
 	md_resize_center(DIMS, cal0_dims, cal, in_dims, in, CFL_SIZE); 
 
-	long cal_dims[DIMS];
+	bart_dim_t cal_dims[DIMS];
 	md_transpose_dims(DIMS, 1, 3, cal_dims, cal0_dims);
 
 
 	debug_printf(DP_INFO, backproj_file ? "Performing SSA\n" : "Performing SSA-FARY\n");
 
-	long A_dims[2];
+	bart_dim_t A_dims[2];
 	complex float* A = calibration_matrix(A_dims, kernel_dims, cal_dims, cal);
 
-	long N = A_dims[0];
+	bart_dim_t N = A_dims[0];
 
 	bool econ = A_dims[0] > A_dims[1];
 
@@ -159,11 +159,11 @@ int main_ssa(int argc, char* argv[argc])
 	if (use_compat_to_version("v0.9.00"))
 		econ = false;
 
-	long U_dims[2] = { N, econ ? MIN(A_dims[1], N) : N };
+	bart_dim_t U_dims[2] = { N, econ ? MIN(A_dims[1], N) : N };
 	complex float* U = create_cfl(EOF_file, 2, U_dims);
 
 	complex float* back = NULL;
-	long back_dims[DIMS];
+	bart_dim_t back_dims[DIMS];
 
 	if (NULL != backproj_file) {
 
@@ -181,7 +181,7 @@ int main_ssa(int argc, char* argv[argc])
 
 	if (NULL != S_file) {
 
-		long S_dims[1] = { N };
+		bart_dim_t S_dims[1] = { N };
 		complex float* S = create_cfl(S_file, 1, S_dims);
 
 		for (int i = 0; i < N; i++)

@@ -2,6 +2,8 @@
 #ifndef _ITER_MONITOR_H
 #define _ITER_MONITOR_H
 
+#include "misc/dimtypes.h"
+
 
 struct iter_monitor_s;
 struct vec_iter_s;
@@ -29,12 +31,12 @@ typedef struct iter_monitor_s iter_monitor_t;
 extern void iter_monitor(struct iter_monitor_s* monitor, const struct vec_iter_s* ops, const float* x);
 extern void iter_history(struct iter_monitor_s* monitor, const struct iter_history_s*);
 
-extern struct iter_monitor_s* iter_monitor_create(long N, const float* image_truth,
+extern struct iter_monitor_s* iter_monitor_create(bart_dim_t N, const float* image_truth,
 		void* data, float (*object)(const void* data, const float* x));
 
 struct monitor_iter6_s;
 
-typedef void (*monitor_iter6_fun_t)(struct monitor_iter6_s* data, int epoch, int batch, int numbatches, float objective, long NI, const float* x[NI], char* post_string);
+typedef void (*monitor_iter6_fun_t)(struct monitor_iter6_s* data, int epoch, int batch, int numbatches, float objective, bart_dim_t NI, const float* x[NI], char* post_string);
 typedef void (*monitor_iter6_free_t)(const struct monitor_iter6_s* data);
 
 struct monitor_iter6_s {
@@ -44,6 +46,6 @@ struct monitor_iter6_s {
 	monitor_iter6_free_t free;
 };
 
-void monitor_iter6(struct monitor_iter6_s* monitor, int epoch, int batch, int num_batches, float objective, long NI, const float* x[const NI], char* post_string);
+void monitor_iter6(struct monitor_iter6_s* monitor, int epoch, int batch, int num_batches, float objective, bart_dim_t NI, const float* x[const NI], char* post_string);
 
 #endif // _ITER_MONITOR_H

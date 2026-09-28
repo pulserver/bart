@@ -26,7 +26,7 @@
 
 #include "smath.h"
 
-typedef const struct nlop_s* (*nlop_diag_create_t)(int N, const long[N]);
+typedef const struct nlop_s* (*nlop_diag_create_t)(int N, const bart_dim_t[N]);
 
 static arg_t snlop_diag_append(arg_t arg, nlop_diag_create_t create, bool keep)
 {
@@ -36,7 +36,7 @@ static arg_t snlop_diag_append(arg_t arg, nlop_diag_create_t create, bool keep)
 	return snlop_append_nlop_F(arg, nlop, keep);
 }
 
-typedef struct linop_s* (*linop_diag_create_t)(int N, const long[N]);
+typedef struct linop_s* (*linop_diag_create_t)(int N, const bart_dim_t[N]);
 
 static arg_t snlop_linop_diag_append(arg_t arg, linop_diag_create_t create, bool keep)
 {
@@ -177,18 +177,18 @@ arg_t snlop_spow_F(arg_t arg, complex float pow)
 }
 
 
-arg_t snlop_cdiag(arg_t arg, int _N, const long dims[_N], const complex float* diag)
+arg_t snlop_cdiag(arg_t arg, int _N, const bart_dim_t dims[_N], const complex float* diag)
 {
 	const struct iovec_s* iov = arg_get_iov(arg);
 
 	int N = MAX(_N, iov->N);
 
-	long ndims[N];
+	bart_dim_t ndims[N];
 	md_singleton_dims(N, ndims);
 	md_copy_dims(_N, ndims, dims);
 
 	assert(! (md_nontriv_dims(N, ndims) & (~md_nontriv_dims(iov->N, iov->dims))));
-	assert(md_check_compat(iov->N, ~0UL, ndims, iov->dims));
+	assert(md_check_compat(iov->N, ~UINT64_C(0), ndims, iov->dims));
 
 	const struct nlop_s* nlop = nlop_from_linop_F(linop_cdiag_create(N, iov->dims, md_nontriv_dims(N, iov->dims), diag));
 	nlop = nlop_reshape_in_F(nlop, 0, _N, dims);
@@ -196,18 +196,18 @@ arg_t snlop_cdiag(arg_t arg, int _N, const long dims[_N], const complex float* d
 	return snlop_append_nlop_F(arg, nlop, true);
 }
 
-arg_t snlop_cdiag_F(arg_t arg, int _N, const long dims[_N], const complex float* diag)
+arg_t snlop_cdiag_F(arg_t arg, int _N, const bart_dim_t dims[_N], const complex float* diag)
 {
 	const struct iovec_s* iov = arg_get_iov(arg);
 
 	int N = MAX(_N, iov->N);
 
-	long ndims[N];
+	bart_dim_t ndims[N];
 	md_singleton_dims(N, ndims);
 	md_copy_dims(_N, ndims, dims);
 
 	assert(! (md_nontriv_dims(N, ndims) & (~md_nontriv_dims(iov->N, iov->dims))));
-	assert(md_check_compat(iov->N, ~0UL, ndims, iov->dims));
+	assert(md_check_compat(iov->N, ~UINT64_C(0), ndims, iov->dims));
 
 	const struct nlop_s* nlop = nlop_from_linop_F(linop_cdiag_create(N, iov->dims, md_nontriv_dims(N, iov->dims), diag));
 	nlop = nlop_reshape_in_F(nlop, 0, _N, dims);
@@ -234,22 +234,22 @@ arg_t snlop_scale_F(arg_t arg, complex float scale)
 }
 
 
-arg_t snlop_fmac(arg_t arg, int _N, const long dims[_N], const complex float* ten, unsigned long oflags)
+arg_t snlop_fmac(arg_t arg, int _N, const bart_dim_t dims[_N], const complex float* ten, bart_flags_t oflags)
 {
 	const struct iovec_s* iov = arg_get_iov(arg);
 
 	int N = MAX(_N, iov->N);
 
-	long mdims[N];
+	bart_dim_t mdims[N];
 	md_singleton_dims(N, mdims);
 	md_copy_dims(_N, mdims, dims);
 
-	assert(md_check_compat(iov->N, ~0UL, mdims, iov->dims));
+	assert(md_check_compat(iov->N, ~UINT64_C(0), mdims, iov->dims));
 
-	md_max_dims(iov->N, ~0UL, mdims, mdims, iov->dims);
+	md_max_dims(iov->N, ~UINT64_C(0), mdims, mdims, iov->dims);
 
-	unsigned long iflags = ~md_nontriv_dims(iov->N, iov->dims);
-	unsigned long tflags = ~md_nontriv_dims(_N, dims);
+	bart_flags_t iflags = ~md_nontriv_dims(iov->N, iov->dims);
+	bart_flags_t tflags = ~md_nontriv_dims(_N, dims);
 
 	const struct nlop_s* nlop = nlop_from_linop_F(linop_fmac_create(N, mdims, oflags, iflags, tflags, ten));
 	nlop = nlop_reshape_in_F(nlop, 0, iov->N, iov->dims);
@@ -257,22 +257,22 @@ arg_t snlop_fmac(arg_t arg, int _N, const long dims[_N], const complex float* te
 	return snlop_append_nlop_F(arg, nlop, true);
 }
 
-arg_t snlop_fmac_F(arg_t arg, int _N, const long dims[_N], const complex float* ten, unsigned long oflags)
+arg_t snlop_fmac_F(arg_t arg, int _N, const bart_dim_t dims[_N], const complex float* ten, bart_flags_t oflags)
 {
 	const struct iovec_s* iov = arg_get_iov(arg);
 
 	int N = MAX(_N, iov->N);
 
-	long mdims[N];
+	bart_dim_t mdims[N];
 	md_singleton_dims(N, mdims);
 	md_copy_dims(_N, mdims, dims);
 
-	assert(md_check_compat(iov->N, ~0UL, mdims, iov->dims));
+	assert(md_check_compat(iov->N, ~UINT64_C(0), mdims, iov->dims));
 
-	md_max_dims(N, ~0UL, mdims, mdims, iov->dims);
+	md_max_dims(N, ~UINT64_C(0), mdims, mdims, iov->dims);
 
-	unsigned long iflags = ~md_nontriv_dims(iov->N, iov->dims);
-	unsigned long tflags = ~md_nontriv_dims(_N, dims);
+	bart_flags_t iflags = ~md_nontriv_dims(iov->N, iov->dims);
+	bart_flags_t tflags = ~md_nontriv_dims(_N, dims);
 
 	const struct nlop_s* nlop = nlop_from_linop_F(linop_fmac_create(N, mdims, oflags, iflags, tflags, ten));
 	nlop = nlop_reshape_in_F(nlop, 0, iov->N, iov->dims);
@@ -282,15 +282,15 @@ arg_t snlop_fmac_F(arg_t arg, int _N, const long dims[_N], const complex float* 
 
 
 
-arg_t snlop_mul(arg_t a, arg_t b, unsigned long flags)
+arg_t snlop_mul(arg_t a, arg_t b, bart_flags_t flags)
 {
 	const struct iovec_s* iova = arg_get_iov(a);
 	const struct iovec_s* iovb = arg_get_iov(b);
 
 	int N = MAX(iova->N, iovb->N);
-	long adims[N];
-	long bdims[N];
-	long mdims[N];
+	bart_dim_t adims[N];
+	bart_dim_t bdims[N];
+	bart_dim_t mdims[N];
 
 	md_singleton_dims(N, adims);
 	md_singleton_dims(N, bdims);
@@ -298,7 +298,7 @@ arg_t snlop_mul(arg_t a, arg_t b, unsigned long flags)
 	md_copy_dims(iova->N, adims, iova->dims);
 	md_copy_dims(iovb->N, bdims, iovb->dims);
 
-	md_max_dims(N, ~0UL, mdims, adims, bdims);
+	md_max_dims(N, ~UINT64_C(0), mdims, adims, bdims);
 	md_select_dims(N, ~flags, mdims, mdims);
 
 	const struct nlop_s* nlop = nlop_tenmul_create(N, mdims, adims, bdims);
@@ -309,15 +309,15 @@ arg_t snlop_mul(arg_t a, arg_t b, unsigned long flags)
 	return snlop_append_nlop_generic_F(2, (arg_t[2]){ a, b }, nlop, true);
 }
 
-arg_t snlop_mul_F(arg_t a, arg_t b, unsigned long flags)
+arg_t snlop_mul_F(arg_t a, arg_t b, bart_flags_t flags)
 {
 	const struct iovec_s* iova = arg_get_iov(a);
 	const struct iovec_s* iovb = arg_get_iov(b);
 
 	int N = MAX(iova->N, iovb->N);
-	long adims[N];
-	long bdims[N];
-	long mdims[N];
+	bart_dim_t adims[N];
+	bart_dim_t bdims[N];
+	bart_dim_t mdims[N];
 
 	md_singleton_dims(N, adims);
 	md_singleton_dims(N, bdims);
@@ -325,7 +325,7 @@ arg_t snlop_mul_F(arg_t a, arg_t b, unsigned long flags)
 	md_copy_dims(iova->N, adims, iova->dims);
 	md_copy_dims(iovb->N, bdims, iovb->dims);
 
-	md_max_dims(N, ~0UL, mdims, adims, bdims);
+	md_max_dims(N, ~UINT64_C(0), mdims, adims, bdims);
 	md_select_dims(N, ~flags, mdims, mdims);
 
 	const struct nlop_s* nlop = nlop_tenmul_create(N, mdims, adims, bdims);
@@ -336,7 +336,7 @@ arg_t snlop_mul_F(arg_t a, arg_t b, unsigned long flags)
 	return snlop_append_nlop_generic_F(2, (arg_t[2]){ a, b }, nlop, false);
 }
 
-arg_t snlop_div(arg_t a, arg_t b, unsigned long flags)
+arg_t snlop_div(arg_t a, arg_t b, bart_flags_t flags)
 {
 	assert(arg_check(a));
 	assert(arg_check(b));
@@ -366,7 +366,7 @@ arg_t snlop_mul_simple(arg_t a, arg_t b)
 
 
 
-arg_t snlop_div_F(arg_t a, arg_t b, unsigned long flags)
+arg_t snlop_div_F(arg_t a, arg_t b, bart_flags_t flags)
 {
 	arg_t inv = snlop_inv_F(b);
 	return snlop_mul_F(a, inv, flags);
@@ -379,9 +379,9 @@ arg_t snlop_axpbz(arg_t a, arg_t b, complex float sa, complex float sb)
 	const struct iovec_s* iovb = arg_get_iov(b);
 
 	int N = MAX(iova->N, iovb->N);
-	long adims[N];
-	long bdims[N];
-	long mdims[N];
+	bart_dim_t adims[N];
+	bart_dim_t bdims[N];
+	bart_dim_t mdims[N];
 
 	md_singleton_dims(N, adims);
 	md_singleton_dims(N, bdims);
@@ -389,7 +389,7 @@ arg_t snlop_axpbz(arg_t a, arg_t b, complex float sa, complex float sb)
 	md_copy_dims(iova->N, adims, iova->dims);
 	md_copy_dims(iovb->N, bdims, iovb->dims);
 
-	md_max_dims(N, ~0UL, mdims, adims, bdims);
+	md_max_dims(N, ~UINT64_C(0), mdims, adims, bdims);
 
 	const struct nlop_s* nlop = nlop_zaxpbz2_create(N, mdims, md_nontriv_dims(N, adims), sa, md_nontriv_dims(N, bdims), sb);
 
@@ -405,9 +405,9 @@ arg_t snlop_axpbz_F(arg_t a, arg_t b, complex float sa, complex float sb)
 	const struct iovec_s* iovb = arg_get_iov(b);
 
 	int N = MAX(iova->N, iovb->N);
-	long adims[N];
-	long bdims[N];
-	long mdims[N];
+	bart_dim_t adims[N];
+	bart_dim_t bdims[N];
+	bart_dim_t mdims[N];
 
 	md_singleton_dims(N, adims);
 	md_singleton_dims(N, bdims);
@@ -415,7 +415,7 @@ arg_t snlop_axpbz_F(arg_t a, arg_t b, complex float sa, complex float sb)
 	md_copy_dims(iova->N, adims, iova->dims);
 	md_copy_dims(iovb->N, bdims, iovb->dims);
 
-	md_max_dims(N, ~0UL, mdims, adims, bdims);
+	md_max_dims(N, ~UINT64_C(0), mdims, adims, bdims);
 
 	const struct nlop_s* nlop = nlop_zaxpbz2_create(N, mdims, md_nontriv_dims(N, adims), sa, md_nontriv_dims(N, bdims), sb);
 

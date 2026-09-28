@@ -80,7 +80,7 @@ static bool checkeps(float eps)
 }
 
 
-static bool check_ops(long size,
+static bool check_ops(bart_dim_t size,
 	const struct operator_s* normaleq_op,
 	int D,
 	const struct operator_p_s* prox_ops[D],
@@ -231,7 +231,7 @@ void iter2_conjgrad(const iter_conf* _conf,
 		const struct linop_s* ops[D],
 		const float* biases[D],
 		const struct operator_p_s* /*xupdate_op*/,
-		long size, float* image, const float* image_adj,
+		bart_dim_t size, float* image, const float* image_adj,
 		struct iter_monitor_s* monitor)
 {
 	assert(0 == D);
@@ -243,8 +243,8 @@ void iter2_conjgrad(const iter_conf* _conf,
 
 	auto conf = CAST_DOWN(iter_conjgrad_conf, _conf);
 
-	long Bo = conf->Bo;
-	long Bi = conf->Bi;
+	bart_dim_t Bo = conf->Bo;
+	bart_dim_t Bi = conf->Bi;
 
 	const struct operator_s* t_normaleq_op = vptr_get_normaleq_op(normaleq_op, image);
 
@@ -277,7 +277,7 @@ void iter2_ist(const iter_conf* _conf,
 		const struct linop_s* ops[D],
 		const float* biases[D],
 		const struct operator_p_s* /*xupdate_op*/,
-		long size, float* image, const float* image_adj,
+		bart_dim_t size, float* image, const float* image_adj,
 		struct iter_monitor_s* monitor)
 {
 	assert(D == 1);
@@ -326,7 +326,7 @@ void iter2_eulermaruyama(const iter_conf* _conf,
 		const struct linop_s* ops[D],
 		const float* biases[D],
 		const struct operator_p_s* /*xupdate_op*/,
-		long size, float* image, const float* image_adj,
+		bart_dim_t size, float* image, const float* image_adj,
 		struct iter_monitor_s* monitor)
 {
 	assert(D == 1);
@@ -379,7 +379,7 @@ void iter2_fista(const iter_conf* _conf,
 		const struct linop_s* ops[D],
 		const float* biases[D],
 		const struct operator_p_s* /*xupdate_op*/,
-		long size, float* image, const float* image_adj,
+		bart_dim_t size, float* image, const float* image_adj,
 		struct iter_monitor_s* monitor)
 {
 	assert(D == 1);
@@ -457,7 +457,7 @@ void iter2_chambolle_pock(const iter_conf* _conf,
 		const struct linop_s* ops[D],
 		const float* biases[D],
 		const struct operator_p_s* /*xupdate_op*/,
-		long size, float* image, const float* image_adj,
+		bart_dim_t size, float* image, const float* image_adj,
 		struct iter_monitor_s* monitor)
 {
 	assert(NULL == biases);
@@ -501,7 +501,7 @@ void iter2_chambolle_pock(const iter_conf* _conf,
 		operator_p_free(prox_G2);
 	}
 
-	long M[D?:1];
+	bart_dim_t M[D?:1];
 
 	struct iter_op_s lop_frw[D?:1];
 	struct iter_op_s lop_adj[D?:1];
@@ -584,7 +584,7 @@ void iter2_admm(const iter_conf* _conf,
 		const struct linop_s* ops[D],
 		const float* biases[D],
 		const struct operator_p_s* xupdate_op,
-		long size, float* image, const float* image_adj,
+		bart_dim_t size, float* image, const float* image_adj,
 		struct iter_monitor_s* monitor)
 {
 	auto conf = CAST_DOWN(iter_admm_conf, _conf);
@@ -642,7 +642,7 @@ void iter2_admm(const iter_conf* _conf,
 	admm_plan.xupdate = OPERATOR_P2ITOP(xupdate_op);
 
 
-	long z_dims[D ?: 1];
+	bart_dim_t z_dims[D ?: 1];
 
 	for (int i = 0; i < D; i++)
 		z_dims[i] = 2 * md_calc_size(linop_codomain(ops[i])->N, linop_codomain(ops[i])->dims);
@@ -676,7 +676,7 @@ void iter2_pocs(const iter_conf* _conf,
 		const struct linop_s* ops[D],
 		const float* biases[D],
 		const struct operator_p_s* /*xupdate_op*/,
-		long size, float* image, const float* image_adj,
+		bart_dim_t size, float* image, const float* image_adj,
 		struct iter_monitor_s* monitor)
 {
 	auto conf = CAST_DOWN(iter_pocs_conf, _conf);
@@ -705,7 +705,7 @@ void iter2_niht(const iter_conf* _conf,
 		const struct linop_s* ops[D],
 		const float* /*biases*/[D],
 		const struct operator_p_s* /*xupdate_op*/,
-		long size, float* image, const float* image_adj,
+		bart_dim_t size, float* image, const float* image_adj,
 		struct iter_monitor_s* monitor)
 {
 	assert(D == 1);
@@ -750,7 +750,7 @@ void iter2_call_iter(const iter_conf* _conf,
 		const struct linop_s* ops[D],
 		const float* biases[D],
 		const struct operator_p_s* /*xupdate_op*/,
-		long size, float* image, const float* image_adj,
+		bart_dim_t size, float* image, const float* image_adj,
 		struct iter_monitor_s* monitor)
 {
 	assert(D <= 1);

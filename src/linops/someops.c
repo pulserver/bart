@@ -44,10 +44,10 @@ struct cdiag_s {
 	linop_data_t super;
 
 	int N;
-	const long* dims;
-	const long* strs;
-	const long* ddims;
-	const long* dstrs;
+	const bart_dim_t* dims;
+	const bart_stride_t* strs;
+	const bart_dim_t* ddims;
+	const bart_stride_t* dstrs;
 
 	struct multiplace_array_s* diag;
 	struct multiplace_array_s* normal;
@@ -108,7 +108,7 @@ static void cdiag_free(const linop_data_t* _data)
 	xfree(data);
 }
 
-static struct linop_s* linop_gdiag_create(int N, const long dims[N], unsigned long flags, const complex float* diag, bool rdiag)
+static struct linop_s* linop_gdiag_create(int N, const bart_dim_t dims[N], bart_flags_t flags, const complex float* diag, bool rdiag)
 {
 	PTR_ALLOC(struct cdiag_s, data);
 	SET_TYPEID(cdiag_s, data);
@@ -116,10 +116,10 @@ static struct linop_s* linop_gdiag_create(int N, const long dims[N], unsigned lo
 	data->rmul = rdiag;
 
 	data->N = N;
-	PTR_ALLOC(long[N], ddims);
-	PTR_ALLOC(long[N], dstrs);
-	PTR_ALLOC(long[N], dims2);
-	PTR_ALLOC(long[N], strs);
+	PTR_ALLOC(bart_dim_t[N], ddims);
+	PTR_ALLOC(bart_dim_t[N], dstrs);
+	PTR_ALLOC(bart_dim_t[N], dims2);
+	PTR_ALLOC(bart_dim_t[N], strs);
 
 	md_select_dims(N, flags, *ddims, dims);
 	md_calc_strides(N, *dstrs, *ddims, CFL_SIZE);
@@ -151,7 +151,7 @@ static struct linop_s* linop_gdiag_create(int N, const long dims[N], unsigned lo
  * @param flags bitmask specifying the dimensions present in diag
  * @param diag diagonal matrix
  */
-struct linop_s* linop_cdiag_create(int N, const long dims[N], unsigned long flags, const complex float* diag)
+struct linop_s* linop_cdiag_create(int N, const bart_dim_t dims[N], bart_flags_t flags, const complex float* diag)
 {
 	return linop_gdiag_create(N, dims, flags, diag, false);
 }
@@ -165,18 +165,18 @@ struct linop_s* linop_cdiag_create(int N, const long dims[N], unsigned long flag
  * @param flags bitmask specifying the dimensions present in diag
  * @param diag diagonal matrix
  */
-struct linop_s* linop_rdiag_create(int N, const long dims[N], unsigned long flags, const complex float* diag)
+struct linop_s* linop_rdiag_create(int N, const bart_dim_t dims[N], bart_flags_t flags, const complex float* diag)
 {
 	return linop_gdiag_create(N, dims, flags, diag, true);
 }
 
-void linop_gdiag_set_diag(const struct linop_s* lop, int N, const long ddims[N], const complex float* diag)
+void linop_gdiag_set_diag(const struct linop_s* lop, int N, const bart_dim_t ddims[N], const complex float* diag)
 {
 	auto _data = linop_get_data(lop);
 	auto data = CAST_DOWN(cdiag_s, _data);
 
 	assert(data->N == N);
-	assert(md_check_equal_dims(N, ddims, data->ddims, ~0UL));
+	assert(md_check_equal_dims(N, ddims, data->ddims, ~UINT64_C(0)));
 
 	multiplace_free(data->diag);
 	multiplace_free(data->normal);
@@ -185,13 +185,13 @@ void linop_gdiag_set_diag(const struct linop_s* lop, int N, const long ddims[N],
 	data->diag = multiplace_move(N, data->ddims, CFL_SIZE, diag);
 }
 
-void linop_gdiag_set_diag_F(const struct linop_s* lop, int N, const long ddims[N], const complex float* diag)
+void linop_gdiag_set_diag_F(const struct linop_s* lop, int N, const bart_dim_t ddims[N], const complex float* diag)
 {
 	auto _data = linop_get_data(lop);
 	auto data = CAST_DOWN(cdiag_s, _data);
 
 	assert(data->N == N);
-	assert(md_check_equal_dims(N, ddims, data->ddims, ~0UL));
+	assert(md_check_equal_dims(N, ddims, data->ddims, ~UINT64_C(0)));
 
 	multiplace_free(data->diag);
 	multiplace_free(data->normal);
@@ -200,13 +200,13 @@ void linop_gdiag_set_diag_F(const struct linop_s* lop, int N, const long ddims[N
 	data->diag = multiplace_move_F(N, data->ddims, CFL_SIZE, diag);
 }
 
-void linop_gdiag_set_diag_ref(const struct linop_s* lop, int N, const long ddims[N], const complex float* diag)
+void linop_gdiag_set_diag_ref(const struct linop_s* lop, int N, const bart_dim_t ddims[N], const complex float* diag)
 {
 	auto _data = linop_get_data(lop);
 	auto data = CAST_DOWN(cdiag_s, _data);
 
 	assert(data->N == N);
-	assert(md_check_equal_dims(N, ddims, data->ddims, ~0UL));
+	assert(md_check_equal_dims(N, ddims, data->ddims, ~UINT64_C(0)));
 
 	multiplace_free(data->diag);
 	multiplace_free(data->normal);
@@ -220,8 +220,8 @@ struct scale_s {
 	linop_data_t super;
 
 	int N;
-	const long* dims;
-	const long* strs;
+	const bart_dim_t* dims;
+	const bart_stride_t* strs;
 	complex float scale;
 };
 
@@ -266,7 +266,7 @@ static void scale_free(const linop_data_t* _data)
  * @param scale scaling factor a
  */
 
-struct linop_s* linop_scale_create(int N, const long dims[N], const complex float scale)
+struct linop_s* linop_scale_create(int N, const bart_dim_t dims[N], const complex float scale)
 {
 	if (1 == scale)
 		return linop_identity_create(N, dims);
@@ -277,8 +277,8 @@ struct linop_s* linop_scale_create(int N, const long dims[N], const complex floa
 	data->scale = scale;
 
 	data->N = N;
-	PTR_ALLOC(long[N], dims2);
-	PTR_ALLOC(long[N], strs);
+	PTR_ALLOC(bart_dim_t[N], dims2);
+	PTR_ALLOC(bart_dim_t[N], strs);
 
 	md_copy_dims(N, *dims2, dims);
 	md_calc_strides(N, *strs, dims, CFL_SIZE);
@@ -296,7 +296,7 @@ struct zconj_s {
 	linop_data_t super;
 
 	int N;
-	const long* dims;
+	const bart_dim_t* dims;
 };
 
 DEF_TYPEID(zconj_s);
@@ -317,12 +317,12 @@ static void zconj_del(const linop_data_t* _data)
 }
 
 
-struct linop_s* linop_zconj_create(int N, const long dims[N])
+struct linop_s* linop_zconj_create(int N, const bart_dim_t dims[N])
 {
 	PTR_ALLOC(struct zconj_s, data);
 	SET_TYPEID(zconj_s, data);
 
-	PTR_ALLOC(long[N], ndims);
+	PTR_ALLOC(bart_dim_t[N], ndims);
 	md_copy_dims(N, *ndims, dims);
 
 	data->N = N;
@@ -338,7 +338,7 @@ struct zreal_s {
 	linop_data_t super;
 
 	int N;
-	const long* dims;
+	const bart_dim_t* dims;
 };
 
 static DEF_TYPEID(zreal_s);
@@ -363,14 +363,14 @@ static void zreal_free(const linop_data_t* _data)
  * @param dims dimensions
  */
 
-struct linop_s* linop_zreal_create(int N, const long dims[N])
+struct linop_s* linop_zreal_create(int N, const bart_dim_t dims[N])
 {
 	PTR_ALLOC(struct zreal_s, data);
 	SET_TYPEID(zreal_s, data);
 
 	data->N = N;
 
-	PTR_ALLOC(long[N], dims2);
+	PTR_ALLOC(bart_dim_t[N], dims2);
 	md_copy_dims(N, *dims2, dims);
 
 	data->dims = *PTR_PASS(dims2);
@@ -385,7 +385,7 @@ struct linop_s* linop_zreal_create(int N, const long dims[N])
  * @param N number of dimensions
  * @param dims dimensions of input (domain)
  */
-struct linop_s* linop_identity_create(int N, const long dims[N])
+struct linop_s* linop_identity_create(int N, const bart_dim_t dims[N])
 {
 	auto op = operator_identity_create(N, dims);
 	auto result = linop_from_ops(op, op, op, NULL);
@@ -405,10 +405,10 @@ struct copy_block_s {
 
 	int N;
 
-	const long* odims;
-	const long* idims;
+	const bart_dim_t* odims;
+	const bart_dim_t* idims;
 
-	const long* pos;
+	const bart_dim_t* pos;
 };
 
 static DEF_TYPEID(copy_block_s);
@@ -454,15 +454,15 @@ static void copy_block_free(const linop_data_t* _data)
 	xfree(data);
 }
 
-struct linop_s* linop_copy_block_create(int N, const long pos[N], const long odims[N], const long idims[N])
+struct linop_s* linop_copy_block_create(int N, const bart_dim_t pos[N], const bart_dim_t odims[N], const bart_dim_t idims[N])
 {
 	PTR_ALLOC(struct copy_block_s, data);
 	SET_TYPEID(copy_block_s, data);
 
 	data->N = N;
-	data->odims = ARR_CLONE(long[N], odims);
-	data->idims = ARR_CLONE(long[N], idims);
-	data->pos = ARR_CLONE(long[N], pos);
+	data->odims = ARR_CLONE(bart_dim_t[N], odims);
+	data->idims = ARR_CLONE(bart_dim_t[N], idims);
+	data->pos = ARR_CLONE(bart_dim_t[N], pos);
 
 	return linop_create(N, odims, N, idims, CAST_UP(PTR_PASS(data)), copy_block_forward, copy_block_adjoint, NULL, NULL, copy_block_free);
 }
@@ -477,25 +477,25 @@ struct linop_s* linop_copy_block_create(int N, const long pos[N], const long odi
  * @param out_dims output dimensions
  * @param in_dims input dimensions
  */
-struct linop_s* linop_resize_center_create(int N, const long out_dims[N], const long in_dims[N])
+struct linop_s* linop_resize_center_create(int N, const bart_dim_t out_dims[N], const bart_dim_t in_dims[N])
 {
-	long pos[N];
+	bart_dim_t pos[N];
 	for (int i = 0; i < N; i++)
-		pos[i] = labs((out_dims[i] / 2) - (in_dims[i] / 2));
+		pos[i] = llabs((out_dims[i] / 2) - (in_dims[i] / 2));
 
 
 	return linop_copy_block_create(N, pos, out_dims, in_dims);
 }
 
-struct linop_s* linop_resize_create(int N, const long out_dims[N], const long in_dims[N])
+struct linop_s* linop_resize_create(int N, const bart_dim_t out_dims[N], const bart_dim_t in_dims[N])
 {
 	//FIXME: inconsistent with md_resize
 	return linop_resize_center_create(N, out_dims, in_dims);
 }
 
-struct linop_s* linop_expand_create(int N, const long out_dims[N], const long in_dims[N])
+struct linop_s* linop_expand_create(int N, const bart_dim_t out_dims[N], const bart_dim_t in_dims[N])
 {
-	long pos[N];
+	bart_dim_t pos[N];
 	for (int i = 0; i < N; i++)
 		pos[i] = 0;
 
@@ -509,25 +509,25 @@ struct padding_op_s {
 	linop_data_t super;
 
 	int N;
-	const long* strs_out;
+	const bart_stride_t* strs_out;
 
-	const long* dims_for;
-	const long* strs_for;
-	long offset_out_for;
-	long offset_in_for;
+	const bart_dim_t* dims_for;
+	const bart_stride_t* strs_for;
+	bart_stride_t offset_out_for;
+	bart_stride_t offset_in_for;
 
-	const long* dims_mid;
-	const long* strs_mid;
-	long offset_out_mid;
-	long offset_in_mid;
+	const bart_dim_t* dims_mid;
+	const bart_stride_t* strs_mid;
+	bart_stride_t offset_out_mid;
+	bart_stride_t offset_in_mid;
 
-	const long* dims_after;
-	const long* strs_after;
-	long offset_out_after;
-	long offset_in_after;
+	const bart_dim_t* dims_after;
+	const bart_stride_t* strs_after;
+	bart_stride_t offset_out_after;
+	bart_stride_t offset_in_after;
 
-	const long* dims_in;
-	const long* dims_out;
+	const bart_dim_t* dims_in;
+	const bart_dim_t* dims_out;
 };
 
 static DEF_TYPEID(padding_op_s);
@@ -588,12 +588,12 @@ static void padding_free(const linop_data_t* _data)
 	xfree(data);
 }
 
-struct linop_s* linop_padding_create_onedim(int N, const long dims[N], enum PADDING pad_type, int pad_dim, long pad_for, long pad_after)
+struct linop_s* linop_padding_create_onedim(int N, const bart_dim_t dims[N], enum PADDING pad_type, int pad_dim, bart_dim_t pad_for, bart_dim_t pad_after)
 {
 	if ((PAD_VALID == pad_type) || (PAD_SAME == pad_type) || (PAD_CAUSAL == pad_type)) {
 
-		long pad_for_arr[N];
-		long pad_after_arr[N];
+		bart_dim_t pad_for_arr[N];
+		bart_dim_t pad_after_arr[N];
 
 		for (int i = 0; i < N; i++) {
 
@@ -607,51 +607,51 @@ struct linop_s* linop_padding_create_onedim(int N, const long dims[N], enum PADD
 	assert(pad_dim < N);
 	assert(0 <= pad_for * pad_after); // same sign or zero
 
-	PTR_ALLOC(long[N], dims_for);
-	PTR_ALLOC(long[N], dims_mid);
-	PTR_ALLOC(long[N], dims_after);
-	PTR_ALLOC(long[N], dims_out);
+	PTR_ALLOC(bart_dim_t[N], dims_for);
+	PTR_ALLOC(bart_dim_t[N], dims_mid);
+	PTR_ALLOC(bart_dim_t[N], dims_after);
+	PTR_ALLOC(bart_dim_t[N], dims_out);
 
 	md_copy_dims(N, *dims_for, dims);
 	md_copy_dims(N, *dims_mid, dims);
 	md_copy_dims(N, *dims_after, dims);
 	md_copy_dims(N, *dims_out, dims);
 
-	(*dims_for)[pad_dim] = MAX(0l, pad_for);
+	(*dims_for)[pad_dim] = MAX(0, pad_for);
 	(*dims_mid)[pad_dim] = MIN(dims[pad_dim], dims[pad_dim] + pad_for + pad_after);
-	(*dims_after)[pad_dim] = MAX(0l, pad_after);
+	(*dims_after)[pad_dim] = MAX(0, pad_after);
 
 	(*dims_out)[pad_dim] += (pad_for + pad_after);
 
-	PTR_ALLOC(long[N], strs_out);
-	PTR_ALLOC(long[N], strs_for);
-	PTR_ALLOC(long[N], strs_mid);
-	PTR_ALLOC(long[N], strs_after);
+	PTR_ALLOC(bart_dim_t[N], strs_out);
+	PTR_ALLOC(bart_dim_t[N], strs_for);
+	PTR_ALLOC(bart_dim_t[N], strs_mid);
+	PTR_ALLOC(bart_dim_t[N], strs_after);
 
 	md_calc_strides(N, *strs_out, *dims_out, CFL_SIZE);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_singleton_strides(N, pos);
 
-	long offset_out_for = 0;
-	long offset_out_mid = 0;
-	long offset_out_after = 0;
-	long offset_in_for = 0;
-	long offset_in_mid = 0;
-	long offset_in_after = 0;
+	bart_stride_t offset_out_for = 0;
+	bart_stride_t offset_out_mid = 0;
+	bart_stride_t offset_out_after = 0;
+	bart_stride_t offset_in_for = 0;
+	bart_stride_t offset_in_mid = 0;
+	bart_stride_t offset_in_after = 0;
 
 
-	offset_out_for = md_calc_offset(N, *strs_out, pos) / (long)CFL_SIZE;
+	offset_out_for = md_calc_offset(N, *strs_out, pos) / (bart_stride_t)CFL_SIZE;
 
 	pos[pad_dim] += MAX(0, pad_for);
-	offset_out_mid = md_calc_offset(N, *strs_out, pos) / (long)CFL_SIZE;
+	offset_out_mid = md_calc_offset(N, *strs_out, pos) / (bart_stride_t)CFL_SIZE;
 
 	pos[pad_dim] += (*dims_mid)[pad_dim];
-	offset_out_after = md_calc_offset(N, *strs_out, pos) / (long)CFL_SIZE;
+	offset_out_after = md_calc_offset(N, *strs_out, pos) / (bart_stride_t)CFL_SIZE;
 
 	md_singleton_strides(N, pos); //pos = {0, 0, ...}
 
-	long strs_in[N];
+	bart_stride_t strs_in[N];
 	md_calc_strides(N, strs_in, dims, CFL_SIZE);
 
 	if ((0 > pad_for) || (0 > pad_after)) // reduction will always be valid type
@@ -671,7 +671,7 @@ struct linop_s* linop_padding_create_onedim(int N, const long dims[N], enum PADD
 
 		pos[pad_dim] = pad_for - 1;
 
-		offset_in_for = md_calc_offset(N, strs_in , pos) / (long)CFL_SIZE;
+		offset_in_for = md_calc_offset(N, strs_in , pos) / (bart_stride_t)CFL_SIZE;
 
 		md_calc_strides(N, *strs_for, dims, CFL_SIZE);
 		(*strs_for)[pad_dim] = -(*strs_for)[pad_dim];
@@ -680,7 +680,7 @@ struct linop_s* linop_padding_create_onedim(int N, const long dims[N], enum PADD
 		md_calc_strides(N, *strs_mid, dims, CFL_SIZE);
 
 		pos[pad_dim] = dims[pad_dim] - 1;
-		offset_in_after = md_calc_offset(N, strs_in , pos) / (long)CFL_SIZE;
+		offset_in_after = md_calc_offset(N, strs_in , pos) / (bart_stride_t)CFL_SIZE;
 
 		md_calc_strides(N, *strs_after, dims, CFL_SIZE);
 		(*strs_after)[pad_dim] = -(*strs_after)[pad_dim];
@@ -694,7 +694,7 @@ struct linop_s* linop_padding_create_onedim(int N, const long dims[N], enum PADD
 
 		pos[pad_dim] = pad_for;
 
-		offset_in_for = md_calc_offset(N, strs_in , pos) / (long)CFL_SIZE;
+		offset_in_for = md_calc_offset(N, strs_in , pos) / (bart_stride_t)CFL_SIZE;
 
 		md_calc_strides(N, *strs_for, dims, CFL_SIZE);
 		(*strs_for)[pad_dim] = -(*strs_for)[pad_dim];
@@ -703,7 +703,7 @@ struct linop_s* linop_padding_create_onedim(int N, const long dims[N], enum PADD
 		md_calc_strides(N, *strs_mid, dims, CFL_SIZE);
 
 		pos[pad_dim] = dims[pad_dim] - 2;
-		offset_in_after = md_calc_offset(N, strs_in , pos) / (long)CFL_SIZE;
+		offset_in_after = md_calc_offset(N, strs_in , pos) / (bart_stride_t)CFL_SIZE;
 
 		md_calc_strides(N, *strs_after, dims, CFL_SIZE);
 		(*strs_after)[pad_dim] = -(*strs_after)[pad_dim];
@@ -717,14 +717,14 @@ struct linop_s* linop_padding_create_onedim(int N, const long dims[N], enum PADD
 
 		pos[pad_dim] = dims[pad_dim] - pad_for;
 
-		offset_in_for = md_calc_offset(N, strs_in , pos) / (long)CFL_SIZE;
+		offset_in_for = md_calc_offset(N, strs_in , pos) / (bart_stride_t)CFL_SIZE;
 		md_calc_strides(N, *strs_for, dims, CFL_SIZE);
 
 		offset_in_mid = 0;
 		md_calc_strides(N, *strs_mid, dims, CFL_SIZE);
 
 		pos[pad_dim] = 0;
-		offset_in_after = md_calc_offset(N, strs_in , pos) / (long)CFL_SIZE;
+		offset_in_after = md_calc_offset(N, strs_in , pos) / (bart_stride_t)CFL_SIZE;
 		md_calc_strides(N, *strs_after, dims, CFL_SIZE);
 
 		break;
@@ -733,11 +733,11 @@ struct linop_s* linop_padding_create_onedim(int N, const long dims[N], enum PADD
 		assert(0);
 	}
 
-	PTR_ALLOC(long[N], dims_in);
+	PTR_ALLOC(bart_dim_t[N], dims_in);
 
 	md_copy_dims(N, *dims_in, dims);
 
-	long dims_out2[N];
+	bart_dim_t dims_out2[N];
 	md_copy_dims(N, dims_out2, *dims_out);
 
 
@@ -768,19 +768,19 @@ struct linop_s* linop_padding_create_onedim(int N, const long dims[N], enum PADD
 	return linop_create(N, dims_out2, N, dims, CAST_UP(PTR_PASS(data)), padding_forward, padding_adjoint, NULL, NULL, padding_free);
 }
 
-struct linop_s* linop_padding_create(int N, const long dims[N], enum PADDING pad_type, long pad_for[N], long pad_after[N])
+struct linop_s* linop_padding_create(int N, const bart_dim_t dims[N], enum PADDING pad_type, bart_dim_t pad_for[N], bart_dim_t pad_after[N])
 {
 	for (int i = 0; i < N; i++)
 		assert(0 <= pad_for[i] * pad_after[i]); // same sign or zero
 
 	if ((PAD_VALID == pad_type) || (PAD_SAME == pad_type) || (PAD_CAUSAL == pad_type)) {
 
-		long pos[N];
-		long odims[N];
+		bart_dim_t pos[N];
+		bart_dim_t odims[N];
 
 		for (int i = 0; i < N; i++) {
 
-			pos[i] = labs(pad_for[i]);
+			pos[i] = llabs(pad_for[i]);
 			odims[i] = dims[i] + pad_after[i] + pad_for[i];
 		}
 
@@ -803,9 +803,9 @@ struct extract_op_s {
 	linop_data_t super;
 
 	int N;
-	const long* pos;
-	const long* in_dims;
-	const long* out_dims;
+	const bart_dim_t* pos;
+	const bart_dim_t* in_dims;
+	const bart_dim_t* out_dims;
 };
 
 static DEF_TYPEID(extract_op_s);
@@ -837,34 +837,34 @@ static void extract_free(const linop_data_t* _data)
 	xfree(data);
 }
 
-extern struct linop_s* linop_extract_create(int N, const long pos[N], const long out_dims[N], const long in_dims[N])
+extern struct linop_s* linop_extract_create(int N, const bart_dim_t pos[N], const bart_dim_t out_dims[N], const bart_dim_t in_dims[N])
 {
 	PTR_ALLOC(struct extract_op_s, data);
 	SET_TYPEID(extract_op_s, data);
 
 	data->N = N;
-	data->pos = *TYPE_ALLOC(long[N]);
-	data->out_dims = *TYPE_ALLOC(long[N]);
-	data->in_dims = *TYPE_ALLOC(long[N]);
+	data->pos = *TYPE_ALLOC(bart_dim_t[N]);
+	data->out_dims = *TYPE_ALLOC(bart_dim_t[N]);
+	data->in_dims = *TYPE_ALLOC(bart_dim_t[N]);
 
-	md_copy_dims(N, (long*)data->pos, pos);
-	md_copy_dims(N, (long*)data->out_dims, out_dims);
-	md_copy_dims(N, (long*)data->in_dims, in_dims);
+	md_copy_dims(N, (bart_dim_t*)data->pos, pos);
+	md_copy_dims(N, (bart_dim_t*)data->out_dims, out_dims);
+	md_copy_dims(N, (bart_dim_t*)data->in_dims, in_dims);
 
 	return linop_create(N, out_dims, N, in_dims, CAST_UP(PTR_PASS(data)), extract_forward, extract_adjoint, NULL, NULL, extract_free);
 }
 
-extern struct linop_s* linop_slice_create(int N, unsigned long flags, const long pos[N], const long dims[N])
+extern struct linop_s* linop_slice_create(int N, bart_flags_t flags, const bart_dim_t pos[N], const bart_dim_t dims[N])
 {
-	long odim[N];
+	bart_dim_t odim[N];
 	md_select_dims(N, ~flags, odim, dims);
 
 	return linop_extract_create(N, pos, odim, dims);
 }
 
-extern struct linop_s* linop_slice_one_create(int N, int idx, long pos, const long dims[N])
+extern struct linop_s* linop_slice_one_create(int N, int idx, bart_dim_t pos, const bart_dim_t dims[N])
 {
-	long _pos[N];
+	bart_dim_t _pos[N];
 	md_set_dims(N, _pos, 0);
 
 	_pos[idx] = pos;
@@ -875,7 +875,7 @@ extern struct linop_s* linop_slice_one_create(int N, int idx, long pos, const lo
 	return linop_slice_create(N, MD_BIT(idx), _pos, dims);
 }
 
-struct linop_s* linop_reshape_create(int A, const long out_dims[A], int B, const long in_dims[B])
+struct linop_s* linop_reshape_create(int A, const bart_dim_t out_dims[A], int B, const bart_dim_t in_dims[B])
 {
 	PTR_ALLOC(struct linop_s, c);
 
@@ -894,9 +894,9 @@ struct reshape_flagged_s {
 	linop_data_t super;
 
 	int N;
-	unsigned long flags;
-	const long* idims;
-	const long* odims;
+	bart_flags_t flags;
+	const bart_dim_t* idims;
+	const bart_dim_t* odims;
 };
 
 static DEF_TYPEID(reshape_flagged_s);
@@ -937,7 +937,7 @@ static void reshape_free(const linop_data_t* _data)
 
 
 
-struct linop_s* linop_reshape2_create(int N, unsigned long flags, const long out_dims[N], const long in_dims[N])
+struct linop_s* linop_reshape2_create(int N, bart_flags_t flags, const bart_dim_t out_dims[N], const bart_dim_t in_dims[N])
 {
 	if (md_check_equal_dims(N, MD_STRIDES(N, out_dims, CFL_SIZE), MD_STRIDES(N, in_dims, CFL_SIZE), ~flags))
 		return linop_reshape_create(N, out_dims, N, in_dims);
@@ -949,8 +949,8 @@ struct linop_s* linop_reshape2_create(int N, unsigned long flags, const long out
 	assert(md_calc_size(N, out_dims) == md_calc_size(N, in_dims));
 
 	data->N = N;
-	data->odims = ARR_CLONE(long[N], out_dims);
-	data->idims = ARR_CLONE(long[N], in_dims);
+	data->odims = ARR_CLONE(bart_dim_t[N], out_dims);
+	data->idims = ARR_CLONE(bart_dim_t[N], in_dims);
 	data->flags = flags;
 
 	return linop_create(N, out_dims, N, in_dims, CAST_UP(PTR_PASS(data)), reshape_forward, reshape_adjoint, reshape_normal, NULL, reshape_free);
@@ -963,8 +963,8 @@ struct permute_op_s {
 	linop_data_t super;
 
 	int N;
-	const long* idims;
-	const long* odims;
+	const bart_dim_t* idims;
+	const bart_dim_t* odims;
 	const int* order;
 	const int* order_adj;
 };
@@ -1005,9 +1005,9 @@ static void permute_free(const linop_data_t* _data)
 }
 
 
-struct linop_s* linop_permute_create(int N, const int order[N], const long idims[N])
+struct linop_s* linop_permute_create(int N, const int order[N], const bart_dim_t idims[N])
 {
-	long odims[N];
+	bart_dim_t odims[N];
 	md_permute_dims(N, order, odims, idims);
 
 	int order_adj[N];
@@ -1019,8 +1019,8 @@ struct linop_s* linop_permute_create(int N, const int order[N], const long idims
 
 	data->N = N;
 
-	long* tidims = *TYPE_ALLOC(long[N]);
-	long* todims = *TYPE_ALLOC(long[N]);
+	bart_dim_t* tidims = *TYPE_ALLOC(bart_dim_t[N]);
+	bart_dim_t* todims = *TYPE_ALLOC(bart_dim_t[N]);
 	int* torder = *TYPE_ALLOC(int[N]);
 	int* torder_adj = *TYPE_ALLOC(int[N]);
 
@@ -1042,7 +1042,7 @@ struct linop_s* linop_permute_create(int N, const int order[N], const long idims
 	return linop_create(N, odims, N, idims, CAST_UP(PTR_PASS(data)), permute_forward, permute_adjoint, permute_normal, NULL, permute_free);
 }
 
-extern struct linop_s* linop_permute_create(int N, const int order[N], const long idims[N]);
+extern struct linop_s* linop_permute_create(int N, const int order[N], const bart_dim_t idims[N]);
 
 struct transpose_op_s {
 
@@ -1051,7 +1051,7 @@ struct transpose_op_s {
 	int N;
 	int a;
 	int b;
-	const long* dims;
+	const bart_dim_t* dims;
 };
 
 static DEF_TYPEID(transpose_op_s);
@@ -1060,7 +1060,7 @@ static void transpose_forward(const linop_data_t* _data, complex float* dst, con
 {
 	auto data = CAST_DOWN(transpose_op_s, _data);
 
-	long odims[data->N];
+	bart_dim_t odims[data->N];
 	md_copy_dims(data->N, odims, data->dims);
 	odims[data->a] = data->dims[data->b];
 	odims[data->b] = data->dims[data->a];
@@ -1072,7 +1072,7 @@ static void transpose_adjoint(const linop_data_t* _data, complex float* dst, con
 {
 	auto data = CAST_DOWN(transpose_op_s, _data);
 
-	long odims[data->N];
+	bart_dim_t odims[data->N];
 	md_copy_dims(data->N, odims, data->dims);
 	odims[data->a] = data->dims[data->b];
 	odims[data->b] = data->dims[data->a];
@@ -1097,7 +1097,7 @@ static void transpose_free(const linop_data_t* _data)
 }
 
 
-struct linop_s* linop_transpose_create(int N, int a, int b, const long dims[N])
+struct linop_s* linop_transpose_create(int N, int a, int b, const bart_dim_t dims[N])
 {
 	assert((0 <= a) && (a < N));
 	assert((0 <= b) && (b < N));
@@ -1110,11 +1110,11 @@ struct linop_s* linop_transpose_create(int N, int a, int b, const long dims[N])
 	data->a = a;
 	data->b = b;
 
-	long* idims = *TYPE_ALLOC(long[N]);
+	bart_dim_t* idims = *TYPE_ALLOC(bart_dim_t[N]);
 	md_copy_dims(N, idims, dims);
 	data->dims = idims;
 
-	long odims[N];
+	bart_dim_t odims[N];
 	md_copy_dims(N, odims, dims);
 	odims[a] = idims[b];
 	odims[b] = idims[a];
@@ -1124,15 +1124,15 @@ struct linop_s* linop_transpose_create(int N, int a, int b, const long dims[N])
 }
 
 
-struct linop_s* linop_shift_create(int N, const long dims[N], int shift_dim, long shift, enum PADDING pad_type)
+struct linop_s* linop_shift_create(int N, const bart_dim_t dims[N], int shift_dim, bart_dim_t shift, enum PADDING pad_type)
 {
 	auto lop_pad = linop_padding_create_onedim(N, dims, pad_type, shift_dim, MAX(shift, 0), MAX(-shift, 0));
 
-	long dims_exp[N];
+	bart_dim_t dims_exp[N];
 	md_copy_dims(N, dims_exp, dims);
-	dims_exp[shift_dim] += labs(shift);
+	dims_exp[shift_dim] += llabs(shift);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 	if (0 > shift)
 		pos[shift_dim] = -shift;
@@ -1151,8 +1151,8 @@ struct flip_op_s {
 	linop_data_t super;
 
 	int N;
-	unsigned long flags;
-	const long* dims;
+	bart_flags_t flags;
+	const bart_dim_t* dims;
 };
 
 static DEF_TYPEID(flip_op_s);
@@ -1179,7 +1179,7 @@ static void flip_free(const linop_data_t* _data)
 }
 
 
-struct linop_s* linop_flip_create(int N, const long dims[N], unsigned long flags)
+struct linop_s* linop_flip_create(int N, const bart_dim_t dims[N], bart_flags_t flags)
 {
 	PTR_ALLOC(struct flip_op_s, data);
 	SET_TYPEID(flip_op_s, data);
@@ -1187,7 +1187,7 @@ struct linop_s* linop_flip_create(int N, const long dims[N], unsigned long flags
 	data->N = N;
 	data->flags = flags;
 
-	long* ndims = *TYPE_ALLOC(long[N]);
+	bart_dim_t* ndims = *TYPE_ALLOC(bart_dim_t[N]);
 	md_copy_dims(N, ndims, dims);
 	data->dims = ndims;
 
@@ -1201,19 +1201,19 @@ struct add_strided_s {
 
 	int N;
 
-	const long* dims;
+	const bart_dim_t* dims;
 
-	const long* istrs;
-	const long* ostrs;
+	const bart_stride_t* istrs;
+	const bart_stride_t* ostrs;
 
 	int OO;
-	const long* odims;
+	const bart_dim_t* odims;
 
 	int II;
-	const long* idims;
+	const bart_dim_t* idims;
 
-	long ooffset;
-	long ioffset;
+	bart_stride_t ooffset;
+	bart_stride_t ioffset;
 };
 
 static DEF_TYPEID(add_strided_s);
@@ -1249,22 +1249,22 @@ static void add_strided_free(const linop_data_t* _data)
 }
 
 
-struct linop_s* linop_add_strided_create(int N, const long dims[N], const long ostrs[N], const long istrs[N],
-					int OO, const long odims[OO], int II, const long idims[II])
+struct linop_s* linop_add_strided_create(int N, const bart_dim_t dims[N], const bart_stride_t ostrs[N], const bart_stride_t istrs[N],
+					int OO, const bart_dim_t odims[OO], int II, const bart_dim_t idims[II])
 {
 	PTR_ALLOC(struct add_strided_s, data);
 	SET_TYPEID(add_strided_s, data);
 
 	data->N = N;
-	data->dims = ARR_CLONE(long[N], dims);
-	data->ostrs = ARR_CLONE(long[N], ostrs);
-	data->istrs = ARR_CLONE(long[N], istrs);
+	data->dims = ARR_CLONE(bart_dim_t[N], dims);
+	data->ostrs = ARR_CLONE(bart_dim_t[N], ostrs);
+	data->istrs = ARR_CLONE(bart_dim_t[N], istrs);
 
 	data->OO = OO;
 	data->II = II;
 
-	data->odims = ARR_CLONE(long[OO], odims);
-	data->idims = ARR_CLONE(long[II], idims);
+	data->odims = ARR_CLONE(bart_dim_t[OO], odims);
+	data->idims = ARR_CLONE(bart_dim_t[II], idims);
 
 	data->ioffset = 0;
 	data->ooffset = 0;
@@ -1272,9 +1272,9 @@ struct linop_s* linop_add_strided_create(int N, const long dims[N], const long o
 	return linop_create(OO, odims, II, idims, CAST_UP(PTR_PASS(data)), add_strided_forward, add_strided_adjoint, NULL, NULL, add_strided_free);
 }
 
-struct linop_s* linop_hankelization_create(int N, const long dims[N], int dim, int window_dim, int window_size)
+struct linop_s* linop_hankelization_create(int N, const bart_dim_t dims[N], int dim, int window_dim, int window_size)
 {
-	long odims[N];
+	bart_dim_t odims[N];
 	md_copy_dims(N, odims, dims);
 
 	assert(1 == odims[window_dim]);
@@ -1282,8 +1282,8 @@ struct linop_s* linop_hankelization_create(int N, const long dims[N], int dim, i
 
 	odims[window_dim] = window_size;
 	odims[dim] -= window_size - 1;
-	long ostrs[N];
-	long istrs[N];
+	bart_stride_t ostrs[N];
+	bart_stride_t istrs[N];
 
 	md_calc_strides(N, ostrs, odims, CFL_SIZE);
 	md_calc_strides(N, istrs, dims, CFL_SIZE);
@@ -1306,13 +1306,13 @@ struct operator_matrix_s {
 #endif
 	int N;
 
-	const long* mat_dims;
-	const long* out_dims;
-	const long* in_dims;
+	const bart_dim_t* mat_dims;
+	const bart_dim_t* out_dims;
+	const bart_dim_t* in_dims;
 
-	const long* grm_dims;
-	const long* gin_dims;
-	const long* gout_dims;
+	const bart_dim_t* grm_dims;
+	const bart_dim_t* gin_dims;
+	const bart_dim_t* gout_dims;
 };
 
 static DEF_TYPEID(operator_matrix_s);
@@ -1404,7 +1404,7 @@ static void linop_matrix_del(const linop_data_t* _data)
 }
 
 
-static void shadow_dims(int N, long out[2 * N], const long in[N])
+static void shadow_dims(int N, bart_dim_t out[2 * N], const bart_dim_t in[N])
 {
 	for (int i = 0; i < N; i++) {
 
@@ -1424,11 +1424,11 @@ static void shadow_dims(int N, long out[2 * N], const long in[N])
  * 1 A A A/A - input
  * A A A A   - batch
  */
-static struct operator_matrix_s* linop_matrix_priv2(int N, const long out_dims[N], const long in_dims[N], const long matrix_dims[N], const complex float* matrix)
+static struct operator_matrix_s* linop_matrix_priv2(int N, const bart_dim_t out_dims[N], const bart_dim_t in_dims[N], const bart_dim_t matrix_dims[N], const complex float* matrix)
 {
 	// to get assertions and cost estimate
 
-	long max_dims[N];
+	bart_dim_t max_dims[N];
 	md_tenmul_dims(N, max_dims, out_dims, in_dims, matrix_dims);
 
 
@@ -1437,15 +1437,15 @@ static struct operator_matrix_s* linop_matrix_priv2(int N, const long out_dims[N
 
 	data->N = N;
 
-	PTR_ALLOC(long[N], out_dims1);
+	PTR_ALLOC(bart_dim_t[N], out_dims1);
 	md_copy_dims(N, *out_dims1, out_dims);
 	data->out_dims = *PTR_PASS(out_dims1);
 
-	PTR_ALLOC(long[N], mat_dims1);
+	PTR_ALLOC(bart_dim_t[N], mat_dims1);
 	md_copy_dims(N, *mat_dims1, matrix_dims);
 	data->mat_dims = *PTR_PASS(mat_dims1);
 
-	PTR_ALLOC(long[N], in_dims1);
+	PTR_ALLOC(bart_dim_t[N], in_dims1);
 	md_copy_dims(N, *in_dims1, in_dims);
 	data->in_dims = *PTR_PASS(in_dims1);
 
@@ -1464,21 +1464,21 @@ static struct operator_matrix_s* linop_matrix_priv2(int N, const long out_dims[N
 #if 1
 	// pre-multiply gram matrix (if there is a cost reduction)
 
-	unsigned long out_flags = md_nontriv_dims(N, out_dims);
-	unsigned long in_flags = md_nontriv_dims(N, in_dims);
+	bart_flags_t out_flags = md_nontriv_dims(N, out_dims);
+	bart_flags_t in_flags = md_nontriv_dims(N, in_dims);
 
-	unsigned long del_flags = in_flags & ~out_flags;
-	unsigned long new_flags = out_flags & ~in_flags;
+	bart_flags_t del_flags = in_flags & ~out_flags;
+	bart_flags_t new_flags = out_flags & ~in_flags;
 
 	/* we double (again) for the gram matrix
 	 */
 
-	PTR_ALLOC(long[2 * N], mat_dims2);
-	PTR_ALLOC(long[2 * N], in_dims2);
-	PTR_ALLOC(long[2 * N], gmt_dims2);
-	PTR_ALLOC(long[2 * N], gin_dims2);
-	PTR_ALLOC(long[2 * N], grm_dims2);
-	PTR_ALLOC(long[2 * N], gout_dims2);
+	PTR_ALLOC(bart_dim_t[2 * N], mat_dims2);
+	PTR_ALLOC(bart_dim_t[2 * N], in_dims2);
+	PTR_ALLOC(bart_dim_t[2 * N], gmt_dims2);
+	PTR_ALLOC(bart_dim_t[2 * N], gin_dims2);
+	PTR_ALLOC(bart_dim_t[2 * N], grm_dims2);
+	PTR_ALLOC(bart_dim_t[2 * N], gout_dims2);
 
 	shadow_dims(N, *gmt_dims2, matrix_dims);
 	shadow_dims(N, *mat_dims2, matrix_dims);
@@ -1523,15 +1523,15 @@ static struct operator_matrix_s* linop_matrix_priv2(int N, const long out_dims[N
 	}
 
 
-	long gmx_dims[2 * N];
+	bart_dim_t gmx_dims[2 * N];
 	md_tenmul_dims(2 * N, gmx_dims, *gout_dims2, *gin_dims2, *grm_dims2);
 
-	long mult_mat = md_calc_size(N, max_dims);
-	long mult_gram = md_calc_size(2 * N, gmx_dims);
+	bart_dim_t mult_mat = md_calc_size(N, max_dims);
+	bart_dim_t mult_gram = md_calc_size(2 * N, gmx_dims);
 
 	if (mult_gram < 2 * mult_mat) {	// FIXME: rethink
 
-		debug_printf(DP_DEBUG2, "Gram matrix: 2x %ld vs %ld\n", mult_mat, mult_gram);
+		debug_printf(DP_DEBUG2, "Gram matrix: 2x %" PRId64 " vs %" PRId64 "\n", mult_mat, mult_gram);
 
 		complex float* mat_gram = md_alloc(2 * N, *grm_dims2, CFL_SIZE);
 
@@ -1557,20 +1557,20 @@ static struct operator_matrix_s* linop_matrix_priv2(int N, const long out_dims[N
 }
 
 
-static struct operator_matrix_s* linop_matrix_priv(int N, const long out_dims[N], const long in_dims[N], const long matrix_dims[N], const complex float* matrix)
+static struct operator_matrix_s* linop_matrix_priv(int N, const bart_dim_t out_dims[N], const bart_dim_t in_dims[N], const bart_dim_t matrix_dims[N], const complex float* matrix)
 {
-	unsigned long out_flags = md_nontriv_dims(N, out_dims);
-	unsigned long in_flags = md_nontriv_dims(N, in_dims);
+	bart_flags_t out_flags = md_nontriv_dims(N, out_dims);
+	bart_flags_t in_flags = md_nontriv_dims(N, in_dims);
 
-	unsigned long del_flags = in_flags & ~out_flags;
+	bart_flags_t del_flags = in_flags & ~out_flags;
 
 	/* we double dimensions for chaining which can lead to
 	 * matrices with the same input and output dimension
 	 */
 
-	long out_dims2[2 * N];
-	long mat_dims2[2 * N];
-	long in_dims2[2 * N];
+	bart_dim_t out_dims2[2 * N];
+	bart_dim_t mat_dims2[2 * N];
+	bart_dim_t in_dims2[2 * N];
 
 	shadow_dims(N, out_dims2, out_dims);
 	shadow_dims(N, mat_dims2, matrix_dims);
@@ -1613,7 +1613,7 @@ static struct operator_matrix_s* linop_matrix_priv(int N, const long out_dims[N]
  * @param matrix_dims dimensions of the matrix
  * @param matrix matrix data
  */
-struct linop_s* linop_matrix_create(int N, const long out_dims[N], const long in_dims[N], const long matrix_dims[N], const complex float* matrix)
+struct linop_s* linop_matrix_create(int N, const bart_dim_t out_dims[N], const bart_dim_t in_dims[N], const bart_dim_t matrix_dims[N], const complex float* matrix)
 {
 	struct operator_matrix_s* data = linop_matrix_priv(N, out_dims, in_dims, matrix_dims, matrix);
 
@@ -1642,24 +1642,24 @@ struct linop_s* linop_matrix_chain(const struct linop_s* a, const struct linop_s
 
 	int D = linop_domain(a)->N;
 
-	unsigned long outB_flags = md_nontriv_dims(D, linop_codomain(b)->dims);
-	unsigned long inB_flags = md_nontriv_dims(D, linop_domain(b)->dims);
+	bart_flags_t outB_flags = md_nontriv_dims(D, linop_codomain(b)->dims);
+	bart_flags_t inB_flags = md_nontriv_dims(D, linop_domain(b)->dims);
 
-	unsigned long delB_flags = inB_flags & ~outB_flags;
+	bart_flags_t delB_flags = inB_flags & ~outB_flags;
 
 	int N = a_data->N;
 	assert(N == 2 * D);
 
-	long in_dims[N];
+	bart_dim_t in_dims[N];
 	md_copy_dims(N, in_dims, a_data->in_dims);
 
-	long matA_dims[N];
+	bart_dim_t matA_dims[N];
 	md_copy_dims(N, matA_dims, a_data->mat_dims);
 
-	long matB_dims[N];
+	bart_dim_t matB_dims[N];
 	md_copy_dims(N, matB_dims, b_data->mat_dims);
 
-	long out_dims[N];
+	bart_dim_t out_dims[N];
 	md_copy_dims(N, out_dims, b_data->out_dims);
 
 	for (int i = 0; i < D; i++) {
@@ -1675,18 +1675,18 @@ struct linop_s* linop_matrix_chain(const struct linop_s* a, const struct linop_s
 	}
 
 
-	long matrix_dims[N];
+	bart_dim_t matrix_dims[N];
 	md_singleton_dims(N, matrix_dims);
 
-	unsigned long iflags = md_nontriv_dims(N, in_dims);
-	unsigned long oflags = md_nontriv_dims(N, out_dims);
-	unsigned long flags = iflags | oflags;
+	bart_flags_t iflags = md_nontriv_dims(N, in_dims);
+	bart_flags_t oflags = md_nontriv_dims(N, out_dims);
+	bart_flags_t flags = iflags | oflags;
 
 	// we combine a and b and sum over dims not in input or output
 
 	md_max_dims(N, flags, matrix_dims, matA_dims, matB_dims);
 
-	debug_printf(DP_DEBUG1, "tensor chain: %ld x %ld -> %ld\n",
+	debug_printf(DP_DEBUG1, "tensor chain: %" PRId64 " x %" PRId64 " -> %" PRId64 "\n",
 			md_calc_size(N, matA_dims), md_calc_size(N, matB_dims), md_calc_size(N, matrix_dims));
 
 
@@ -1728,9 +1728,9 @@ struct fft_linop_s {
 	float nscale;
 
 	int N;
-	unsigned long flags;
-	long* dims;
-	long* strs;
+	bart_flags_t flags;
+	bart_dim_t* dims;
+	bart_stride_t* strs;
 };
 
 static DEF_TYPEID(fft_linop_s);
@@ -1783,7 +1783,7 @@ static void fft_linop_normal(const linop_data_t* _data, complex float* out, cons
  * @param dims dimensions of input
  * @param flags bitmask of the dimensions to apply the Fourier transform
  */
-struct linop_s* linop_fft_create(int N, const long dims[N], unsigned long flags)
+struct linop_s* linop_fft_create(int N, const bart_dim_t dims[N], bart_flags_t flags)
 {
 	PTR_ALLOC(struct fft_linop_s, data);
 	SET_TYPEID(fft_linop_s, data);
@@ -1791,13 +1791,13 @@ struct linop_s* linop_fft_create(int N, const long dims[N], unsigned long flags)
 	data->N = N;
 	data->flags = flags;
 
-	data->dims = *TYPE_ALLOC(long[N]);
+	data->dims = *TYPE_ALLOC(bart_dim_t[N]);
 	md_copy_dims(N, data->dims, dims);
 
-	data->strs = *TYPE_ALLOC(long[N]);
+	data->strs = *TYPE_ALLOC(bart_dim_t[N]);
 	md_calc_strides(N, data->strs, data->dims, CFL_SIZE);
 
-	long fft_dims[N];
+	bart_dim_t fft_dims[N];
 	md_select_dims(N, flags, fft_dims, dims);
 	data->nscale = (float)md_calc_size(N, fft_dims);
 
@@ -1811,7 +1811,7 @@ struct linop_s* linop_fft_create(int N, const long dims[N], unsigned long flags)
  * @param dims dimensions of input
  * @param flags bitmask of the dimensions to apply the Fourier transform
  */
-struct linop_s* linop_ifft_create(int N, const long dims[N], unsigned long flags)
+struct linop_s* linop_ifft_create(int N, const bart_dim_t dims[N], bart_flags_t flags)
 {
 	struct linop_s* lop_fft = linop_fft_create(N, dims, flags);
 	struct linop_s* lop_ifft = (struct linop_s*)linop_get_adjoint(lop_fft);
@@ -1821,10 +1821,10 @@ struct linop_s* linop_ifft_create(int N, const long dims[N], unsigned long flags
 }
 
 
-static struct linop_s* linop_fft_create_priv(	int N, const long dims[N], unsigned long flags,
-						bool forward, unsigned long center_flags, unsigned long unitary_flags,
-						unsigned long pre_flags, const complex float* pre_diag,
-						unsigned long post_flags, const complex float* post_diag)
+static struct linop_s* linop_fft_create_priv(	int N, const bart_dim_t dims[N], bart_flags_t flags,
+						bool forward, bart_flags_t center_flags, bart_flags_t unitary_flags,
+						bart_flags_t pre_flags, const complex float* pre_diag,
+						bart_flags_t post_flags, const complex float* post_diag)
 {
 	flags = flags & md_nontriv_dims(N, dims);
 	center_flags = center_flags & flags;
@@ -1834,12 +1834,12 @@ static struct linop_s* linop_fft_create_priv(	int N, const long dims[N], unsigne
 
 	if (0 != (center_flags | unitary_flags)) {
 
-		long fft_mod_dims[N];
+		bart_dim_t fft_mod_dims[N];
 		md_select_dims(N, center_flags, fft_mod_dims, dims);
 
 		complex float* fftmod_a = md_alloc(N, fft_mod_dims, CFL_SIZE);
 
-		long fft_scale_dims[N];
+		bart_dim_t fft_scale_dims[N];
 		md_select_dims(N, unitary_flags, fft_scale_dims, dims);
 		md_zfill(N, fft_mod_dims, fftmod_a, 1. / sqrtf(sqrtf(md_calc_size(N, fft_scale_dims))));
 
@@ -1873,7 +1873,7 @@ static struct linop_s* linop_fft_create_priv(	int N, const long dims[N], unsigne
  * @param dims dimensions of input
  * @param flags bitmask of the dimensions to apply the Fourier transform
  */
-struct linop_s* linop_fftc_create(int N, const long dims[N], unsigned long flags)
+struct linop_s* linop_fftc_create(int N, const bart_dim_t dims[N], bart_flags_t flags)
 {
 	return linop_fft_create_priv(N, dims, flags, true, flags, flags, 0, NULL, 0, NULL);
 }
@@ -1886,7 +1886,7 @@ struct linop_s* linop_fftc_create(int N, const long dims[N], unsigned long flags
  * @param dims dimensions of input
  * @param flags bitmask of the dimensions to apply the Fourier transform
  */
-struct linop_s* linop_ifftc_create(int N, const long dims[N], unsigned long flags)
+struct linop_s* linop_ifftc_create(int N, const bart_dim_t dims[N], bart_flags_t flags)
 {
 	return linop_fft_create_priv(N, dims, flags, false, flags, flags, 0, NULL, 0, NULL);
 }
@@ -1904,8 +1904,8 @@ struct linop_s* linop_ifftc_create(int N, const long dims[N], unsigned long flag
  * @param post_flags bitmask of the dimensions of the post-chained diag operator
  * @param post_diag diagonal of the post-chained diag operator
  */
-struct linop_s* linop_fft_generic_create(int N, const long dims[N], unsigned long flags, unsigned long center_flags, unsigned long unitary_flags,
-					   unsigned long pre_flag, const complex float* pre_diag, unsigned long post_flag, const complex float* post_diag)
+struct linop_s* linop_fft_generic_create(int N, const bart_dim_t dims[N], bart_flags_t flags, bart_flags_t center_flags, bart_flags_t unitary_flags,
+					   bart_flags_t pre_flag, const complex float* pre_diag, bart_flags_t post_flag, const complex float* post_diag)
 {
 	return linop_fft_create_priv(N, dims, flags, true, center_flags, unitary_flags, pre_flag, pre_diag, post_flag, post_diag);
 }
@@ -1924,8 +1924,8 @@ struct linop_s* linop_fft_generic_create(int N, const long dims[N], unsigned lon
  * @param post_flags bitmask of the dimensions of the post-chained diag operator
  * @param post_diag diagonal of the post-chained diag operator
  */
-struct linop_s* linop_ifft_generic_create(int N, const long dims[N], unsigned long flags, unsigned long center_flags, unsigned long unitary_flags,
-					    unsigned long pre_flag, const complex float* pre_diag, unsigned long post_flag, const complex float* post_diag)
+struct linop_s* linop_ifft_generic_create(int N, const bart_dim_t dims[N], bart_flags_t flags, bart_flags_t center_flags, bart_flags_t unitary_flags,
+					    bart_flags_t pre_flag, const complex float* pre_diag, bart_flags_t post_flag, const complex float* post_diag)
 {
 	return linop_fft_create_priv(N, dims, flags, false, center_flags, unitary_flags, pre_flag, pre_diag, post_flag, post_diag);
 }
@@ -1936,8 +1936,8 @@ struct linop_cdf97_s {
 	linop_data_t super;
 
 	int N;
-	const long* dims;
-	unsigned long flags;
+	const bart_dim_t* dims;
+	bart_flags_t flags;
 };
 
 static DEF_TYPEID(linop_cdf97_s);
@@ -1983,12 +1983,12 @@ static void linop_cdf97_free(const linop_data_t* _data)
  * @param dims dimensions of input
  * @param flags bitmask of the dimensions to apply the Fourier transform
  */
-struct linop_s* linop_cdf97_create(int N, const long dims[N], unsigned long flags)
+struct linop_s* linop_cdf97_create(int N, const bart_dim_t dims[N], bart_flags_t flags)
 {
 	PTR_ALLOC(struct linop_cdf97_s, data);
 	SET_TYPEID(linop_cdf97_s, data);
 
-	PTR_ALLOC(long[N], ndims);
+	PTR_ALLOC(bart_dim_t[N], ndims);
 	md_copy_dims(N, *ndims, dims);
 
 	data->N = N;
@@ -2045,8 +2045,8 @@ static void linop_conv_free(const linop_data_t* _data)
  * @param kdims kernel dimensions
  * @param krn convolution kernel
  */
-struct linop_s* linop_conv_create(int N, unsigned long flags, enum conv_type ctype, enum conv_mode cmode, const long odims[N],
-                const long idims[N], const long kdims[N], const complex float* krn)
+struct linop_s* linop_conv_create(int N, bart_flags_t flags, enum conv_type ctype, enum conv_mode cmode, const bart_dim_t odims[N],
+                const bart_dim_t idims[N], const bart_dim_t kdims[N], const complex float* krn)
 {
 	PTR_ALLOC(struct conv_data_s, data);
 	SET_TYPEID(conv_data_s, data);
@@ -2057,11 +2057,11 @@ struct linop_s* linop_conv_create(int N, unsigned long flags, enum conv_type cty
 }
 
 
-struct linop_s* linop_conv_gaussian_create(int N, enum conv_type ctype, const long dims[N], const float sigma[N])
+struct linop_s* linop_conv_gaussian_create(int N, enum conv_type ctype, const bart_dim_t dims[N], const float sigma[N])
 {
-	unsigned long flags = 0;
+	bart_flags_t flags = 0;
 
-	long kdims[N];
+	bart_dim_t kdims[N];
 	md_singleton_dims(N, kdims);
 
 	for (int i = 0; i < N; i++) {
@@ -2096,7 +2096,7 @@ struct linop_s* linop_conv_gaussian_create(int N, enum conv_type ctype, const lo
 		for (int j = 0; j < kdims[i]; j++)
 			filter[j] /= tot;
 
-		long fdims[N];
+		bart_dim_t fdims[N];
 		md_select_dims(N, MD_BIT(i), fdims, kdims);
 
 		md_zmul2(N, kdims, MD_STRIDES(N, kdims, CFL_SIZE), krn, MD_STRIDES(N, kdims, CFL_SIZE), krn, MD_STRIDES(N, fdims, CFL_SIZE), filter);
@@ -2120,7 +2120,7 @@ struct linop_s* linop_conv_gaussian_create(int N, enum conv_type ctype, const lo
  * @param in_dims       Input dimensions
  * @param hadamard_dim  Dimension to apply Hadamard transform (must be power of 2)
  */
-struct linop_s* linop_hadamard_create(int N, const long in_dims[N], int hadamard_dim)
+struct linop_s* linop_hadamard_create(int N, const bart_dim_t in_dims[N], int hadamard_dim)
 {
 	int size = in_dims[hadamard_dim];
 
@@ -2130,11 +2130,11 @@ struct linop_s* linop_hadamard_create(int N, const long in_dims[N], int hadamard
 
 	assert((size > 1) && ((size & (size - 1)) == 0));
 
-	long in2_dims[N + 1];
+	bart_dim_t in2_dims[N + 1];
 	md_copy_dims(N, in2_dims, in_dims);
 	in2_dims[N] = 1;
 
-	long matr_dims[N + 1];
+	bart_dim_t matr_dims[N + 1];
 	md_select_dims(N + 1, MD_BIT(hadamard_dim), matr_dims, in2_dims);
 	matr_dims[N] = size;
 
@@ -2163,7 +2163,7 @@ struct linop_s* linop_hadamard_create(int N, const long in_dims[N], int hadamard
 
 	md_zsmul(N + 1, matr_dims, matrix, matrix, -1.0f / sqrtf((float)size));
 
-	long out_dims[N + 1];
+	bart_dim_t out_dims[N + 1];
 	md_select_dims(N + 1, ~MD_BIT(hadamard_dim), out_dims, in2_dims);
 	out_dims[N] = size;
 

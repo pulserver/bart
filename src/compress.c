@@ -54,8 +54,8 @@ int main_compress(int argc, char* argv[argc])
 
 	num_init();
 
-	long idims[DIMS];
-	long mdims[DIMS];
+	bart_dim_t idims[DIMS];
+	bart_dim_t mdims[DIMS];
 
 	complex float* in = load_cfl(in_file, DIMS, idims);
 	complex float* mask = load_cfl(mask_file, DIMS, mdims);
@@ -69,13 +69,13 @@ int main_compress(int argc, char* argv[argc])
 		error("Dimensions of input and mask do not match!\n");
 	}
 
-	long* index = md_alloc_sameplace(DIMS, mdims, sizeof(long), mask);
+	bart_dim_t* index = md_alloc_sameplace(DIMS, mdims, sizeof(bart_dim_t), mask);
 
-	long max = md_compress_mask_to_index(DIMS, mdims, index, mask);
+	bart_dim_t max = md_compress_mask_to_index(DIMS, mdims, index, mask);
 
 	if (decompress) {
 
-		long odims[DIMS];
+		bart_dim_t odims[DIMS];
 		md_decompress_dims(DIMS, odims, idims, mdims);
 
 		complex float* out = create_cfl(out_file, DIMS, odims);
@@ -86,7 +86,7 @@ int main_compress(int argc, char* argv[argc])
 
 	} else {
 
-		long odims[DIMS];
+		bart_dim_t odims[DIMS];
 		md_compress_dims(DIMS, odims, idims, mdims, max);
 
 		complex float* out = create_cfl(out_file, DIMS, odims);

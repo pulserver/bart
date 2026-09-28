@@ -21,7 +21,7 @@
 #include "num/multind.h"
 
 
-static dim3 getBlockSize2(long Bi, long Bo, const void* func)
+static dim3 getBlockSize2(bart_dim_t Bi, bart_dim_t Bo, const void* func)
 {
 	int block[3] = { 1, 1, 1};
 
@@ -47,12 +47,12 @@ static dim3 getBlockSize2(long Bi, long Bo, const void* func)
 	return dim3(block[0], block[1], block[2]);
 }
 
-static long gridsize_int(long N, int blocksize)
+static bart_dim_t gridsize_int(bart_dim_t N, int blocksize)
 {
 	return MIN(65535, (N + blocksize - 1) / blocksize); // 65535 is maximum for y and z dim
 }
 
-static dim3 getGridSize2(long Bi, long Bo, const void* func)
+static dim3 getGridSize2(bart_dim_t Bi, bart_dim_t Bo, const void* func)
 {
 	int block[3] = { 1, 1, 1};
 
@@ -80,22 +80,22 @@ static dim3 getGridSize2(long Bi, long Bo, const void* func)
 
 
 
-__global__ static void kern_xpay_bat(long Bi, long N, long Bo, const float* _beta, cuFloatComplex* _a, const cuFloatComplex* _x)
+__global__ static void kern_xpay_bat(bart_dim_t Bi, bart_dim_t N, bart_dim_t Bo, const float* _beta, cuFloatComplex* _a, const cuFloatComplex* _x)
 {
-	long bi_sta = threadIdx.x + blockDim.x * blockIdx.x;
-	long bi_str = blockDim.x * gridDim.x;
+	bart_dim_t bi_sta = threadIdx.x + blockDim.x * blockIdx.x;
+	bart_stride_t bi_str = blockDim.x * gridDim.x;
 
-	long bo_sta = threadIdx.y + blockDim.y * blockIdx.y;
-	long bo_str = blockDim.y * gridDim.y;
+	bart_dim_t bo_sta = threadIdx.y + blockDim.y * blockIdx.y;
+	bart_stride_t bo_str = blockDim.y * gridDim.y;
 
-	for (long bi = bi_sta; bi < Bi; bi += bi_str) {
-		for (long bo = bo_sta; bo < Bo; bo += bo_str) {
+	for (bart_dim_t bi = bi_sta; bi < Bi; bi += bi_str) {
+		for (bart_dim_t bo = bo_sta; bo < Bo; bo += bo_str) {
 
 			float beta = _beta[bi + Bi * bo];
 
-			for (long i = 0; i < N; i++) {
+			for (bart_dim_t i = 0; i < N; i++) {
 
-				long idx = bi + Bi * i + Bi * N * bo;
+				bart_dim_t idx = bi + Bi * i + Bi * N * bo;
 
 				cuFloatComplex x = _x[idx];
 				cuFloatComplex a = _a[idx];
@@ -109,14 +109,14 @@ __global__ static void kern_xpay_bat(long Bi, long N, long Bo, const float* _bet
 	}
 }
 
-extern "C" void cuda_xpay_bat(long Bi, long N, long Bo, const float* beta, float* a, const float* x)
+extern "C" void cuda_xpay_bat(bart_dim_t Bi, bart_dim_t N, bart_dim_t Bo, const float* beta, float* a, const float* x)
 {
 	if (1 == Bi && (Bo * 1000 < N)) {
 
 		float* beta_cpu = (float*) xmalloc(sizeof(float) * Bo);
 		cuda_memcpy(sizeof(float) * Bo, beta_cpu, beta);
 
-		for (long bo = 0; bo < Bo; bo++)
+		for (bart_dim_t bo = 0; bo < Bo; bo++)
 			cuda_xpay(2 * N, beta_cpu[bo], a + 2 * N * bo, x + 2 * N * bo);
 		free(beta_cpu);
 		return;
@@ -129,22 +129,22 @@ extern "C" void cuda_xpay_bat(long Bi, long N, long Bo, const float* beta, float
 	CUDA_KERNEL_ERROR;
 }
 
-__global__ static void kern_axpy_bat(long Bi, long N, long Bo, cuFloatComplex* _a, const float* _alpha, const cuFloatComplex* _x)
+__global__ static void kern_axpy_bat(bart_dim_t Bi, bart_dim_t N, bart_dim_t Bo, cuFloatComplex* _a, const float* _alpha, const cuFloatComplex* _x)
 {
-	long bi_sta = threadIdx.x + blockDim.x * blockIdx.x;
-	long bi_str = blockDim.x * gridDim.x;
+	bart_dim_t bi_sta = threadIdx.x + blockDim.x * blockIdx.x;
+	bart_stride_t bi_str = blockDim.x * gridDim.x;
 
-	long bo_sta = threadIdx.y + blockDim.y * blockIdx.y;
-	long bo_str = blockDim.y * gridDim.y;
+	bart_dim_t bo_sta = threadIdx.y + blockDim.y * blockIdx.y;
+	bart_stride_t bo_str = blockDim.y * gridDim.y;
 
-	for (long bi = bi_sta; bi < Bi; bi += bi_str) {
-		for (long bo = bo_sta; bo < Bo; bo += bo_str) {
+	for (bart_dim_t bi = bi_sta; bi < Bi; bi += bi_str) {
+		for (bart_dim_t bo = bo_sta; bo < Bo; bo += bo_str) {
 
 			float alpha = _alpha[bi + Bi * bo];
 
-			for (long i = 0; i < N; i++) {
+			for (bart_dim_t i = 0; i < N; i++) {
 
-				long idx = bi + Bi * i + Bi * N * bo;
+				bart_dim_t idx = bi + Bi * i + Bi * N * bo;
 
 				cuFloatComplex x = _x[idx];
 				cuFloatComplex a = _a[idx];
@@ -159,14 +159,14 @@ __global__ static void kern_axpy_bat(long Bi, long N, long Bo, cuFloatComplex* _
 }
 
 
-extern "C" void cuda_axpy_bat(long Bi, long N, long Bo, float* a, const float* alpha, const float* x)
+extern "C" void cuda_axpy_bat(bart_dim_t Bi, bart_dim_t N, bart_dim_t Bo, float* a, const float* alpha, const float* x)
 {
 	if (1 == Bi && (Bo * 1000 < N)) {
 
 		float* alpha_cpu = (float*) xmalloc(sizeof(float) * Bo);
 		cuda_memcpy(sizeof(float) * Bo, alpha_cpu, alpha);
 
-		for (long bo = 0; bo < Bo; bo++)
+		for (bart_dim_t bo = 0; bo < Bo; bo++)
 			cuda_axpbz(2 * N, a + 2 * N * bo, 1, a + 2 * N * bo, alpha_cpu[bo], x + 2 * N * bo);
 
 		free(alpha_cpu);
@@ -181,22 +181,22 @@ extern "C" void cuda_axpy_bat(long Bi, long N, long Bo, float* a, const float* a
 }
 
 
-__global__ static void kern_dot_bat(long Bi, long N, long Bo, float* dst, const cuFloatComplex* _src1, const cuFloatComplex* _src2)
+__global__ static void kern_dot_bat(bart_dim_t Bi, bart_dim_t N, bart_dim_t Bo, float* dst, const cuFloatComplex* _src1, const cuFloatComplex* _src2)
 {
-	long bi_sta = threadIdx.x + blockDim.x * blockIdx.x;
-	long bi_str = blockDim.x * gridDim.x;
+	bart_dim_t bi_sta = threadIdx.x + blockDim.x * blockIdx.x;
+	bart_stride_t bi_str = blockDim.x * gridDim.x;
 
-	long bo_sta = threadIdx.y + blockDim.y * blockIdx.y;
-	long bo_str = blockDim.y * gridDim.y;
+	bart_dim_t bo_sta = threadIdx.y + blockDim.y * blockIdx.y;
+	bart_stride_t bo_str = blockDim.y * gridDim.y;
 
-	for (long bi = bi_sta; bi < Bi; bi += bi_str) {
-		for (long bo = bo_sta; bo < Bo; bo += bo_str) {
+	for (bart_dim_t bi = bi_sta; bi < Bi; bi += bi_str) {
+		for (bart_dim_t bo = bo_sta; bo < Bo; bo += bo_str) {
 
 			double ret = 0;
 
-			for (long i = 0; i < N; i++) {
+			for (bart_dim_t i = 0; i < N; i++) {
 
-				long idx = bi + Bi * i + Bi * N * bo;
+				bart_dim_t idx = bi + Bi * i + Bi * N * bo;
 
 				cuFloatComplex src1 = _src1[idx];
 				cuFloatComplex src2 = _src2[idx];
@@ -210,13 +210,13 @@ __global__ static void kern_dot_bat(long Bi, long N, long Bo, float* dst, const 
 	}
 }
 
-extern "C" void cuda_dot_bat(long Bi, long N, long Bo, float* dst, const float* x, const float* y)
+extern "C" void cuda_dot_bat(bart_dim_t Bi, bart_dim_t N, bart_dim_t Bo, float* dst, const float* x, const float* y)
 {
 	if (1 == Bi && (Bo * 1000 < N)) {
 
 		float* dst_cpu = (float*) xmalloc(sizeof(float) * Bo);
 
-		for (long bo = 0; bo < Bo; bo++)
+		for (bart_dim_t bo = 0; bo < Bo; bo++)
 			dst_cpu[bo] = cuda_dot(2 * N, x + 2 * N * bo, y + 2 * N * bo);
 
 		cuda_memcpy(sizeof(float) * Bo, dst, dst_cpu);

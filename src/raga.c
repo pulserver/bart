@@ -41,7 +41,7 @@ int main_raga(int argc, char* argv[argc])
 	int raga_inc = 0;
 	int tiny_gold = 0;
 	bool double_base = true;
-	long dims[DIMS] = { [0 ... DIMS - 1] = 1  };
+	bart_dim_t dims[DIMS] = { [0 ... DIMS - 1] = 1  };
 
 	const struct opt_s opts[] = {
 
@@ -88,14 +88,14 @@ int main_raga(int argc, char* argv[argc])
 	complex float* indices = md_alloc(DIMS, dims, CFL_SIZE);
 	md_clear(DIMS, dims, indices, CFL_SIZE);
 
-	long odims[DIMS];
+	bart_dim_t odims[DIMS];
 	md_transpose_dims(DIMS, PHS2_DIM, PHS1_DIM, odims, dims);
 
 	complex float* odata = create_cfl(out_file, DIMS, odims);
 	md_clear(DIMS, odims, odata, CFL_SIZE);
 
 
-	long strs[DIMS];
+	bart_stride_t strs[DIMS];
 	md_calc_strides(DIMS, strs, dims, CFL_SIZE);
 
 	struct traj_conf conf = traj_defaults;
@@ -106,14 +106,14 @@ int main_raga(int argc, char* argv[argc])
 	conf.double_base = double_base;
 	conf.raga_inc = raga_increment(conf.Y  / (conf.double_base ? 1 : 2), conf.tiny_gold);
 
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 	int p = 0;
 
 	do {
-		MD_ACCESS(DIMS, strs, pos, indices) = raga_increment_from_pos(seq_loop_order_avg_outer, pos, ~0UL, dims, &conf);
+		MD_ACCESS(DIMS, strs, pos, indices) = raga_increment_from_pos(seq_loop_order_avg_outer, pos, ~UINT64_C(0), dims, &conf);
 		p++;
 
-	} while (md_next_permuted(DIMS, seq_loop_order_avg_outer, dims, ~1UL, pos));
+	} while (md_next_permuted(DIMS, seq_loop_order_avg_outer, dims, ~UINT64_C(1), pos));
 
 	assert(p == md_calc_size(DIMS, dims));
 

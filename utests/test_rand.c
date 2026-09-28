@@ -31,21 +31,21 @@
 #ifndef DO_SPEEDTEST
 enum { rounds = 1 };
 enum { N = 5 };
-long dims[N] = { 10, 7, 3, 16,128 };
+bart_dim_t dims[N] = { 10, 7, 3, 16,128 };
 #else
 enum { rounds = 5 };
 #if 1
 // 2 GiB
 enum { N = 5 };
-long dims[N] = { 128,64,64,8,64};
+bart_dim_t dims[N] = { 128,64,64,8,64};
 #else
 // 64 GiB
 enum { N = 6 };
-long dims[N] = { 1024,64,64,8,16,16};
+bart_dim_t dims[N] = { 1024,64,64,8,16,16};
 #endif
 #endif
 
-typedef void (*md_rand_t)(int D, const long dims[D], complex float* dst);
+typedef void (*md_rand_t)(int D, const bart_dim_t dims[D], complex float* dst);
 
 static bool test_threads_rand(md_rand_t function, const char* name)
 {
@@ -74,7 +74,7 @@ static bool test_threads_rand(md_rand_t function, const char* name)
 
 	num_rand_init(0xDEADBEEF);
 	if (print_bench)
-		bart_printf("times (%s, %ld elements, ~%.2f GiB, %2d rounds):\tsingle thread: ", name, md_calc_size(N, dims), gibi, rounds);
+		bart_printf("times (%s, %" PRId64 " elements, ~%.2f GiB, %2d rounds):\tsingle thread: ", name, md_calc_size(N, dims), gibi, rounds);
 	run_bench(rounds, print_bench, sync_gpu, f_st);
 
 
@@ -157,7 +157,7 @@ static double uniform_cdf(double x)
 	return x;
 }
 
-static bool kolmogorov_smirnov(long N, double* x, enum distribution dist, const char* testname)
+static bool kolmogorov_smirnov(bart_dim_t N, double* x, enum distribution dist, const char* testname)
 {
 
 	qsort(x, (size_t) N, DL_SIZE, dcomp);
@@ -165,7 +165,7 @@ static bool kolmogorov_smirnov(long N, double* x, enum distribution dist, const 
 
 	double ks_stat = -1;
 
-	for (long i = 0; i < N; ++i) {
+	for (bart_dim_t i = 0; i < N; ++i) {
 
 
 		double cdfi;
@@ -201,10 +201,10 @@ static bool test_ks_uniform_integers()
 {
 	num_rand_init(0xDEADBEEF);
 
-	long range = ks_N/10;
+	bart_dim_t range = ks_N/10;
 
 	double* x = md_alloc(1, MD_DIMS(ks_N), DL_SIZE);
-	for (long i = 0; i < md_calc_size(1, MD_DIMS(ks_N)); i++) {
+	for (bart_dim_t i = 0; i < md_calc_size(1, MD_DIMS(ks_N)); i++) {
 
 		x[i] = (double) rand_range(range) / (range - 1);
 	}
@@ -284,13 +284,13 @@ static bool test_rand_range()
 static bool test_var(void)
 {
 	enum { N = 1};
-	const long dims[N] = { 1000 };
+	const bart_dim_t dims[N] = { 1000 };
 
 	complex float* data = md_alloc(N, dims, CFL_SIZE);
 	complex float var;
 
 	md_gaussian_rand(N, dims, data);	
-	md_zvar(N, dims, ~0UL, &var, data);
+	md_zvar(N, dims, ~UINT64_C(0), &var, data);
 
 	md_free(data);
 
@@ -305,7 +305,7 @@ UT_REGISTER_TEST(test_var);
 static bool test_mpi(void)
 {
 	enum { N = 3};
-	const long dims[N] = { 16, 4, 7 };
+	const bart_dim_t dims[N] = { 16, 4, 7 };
 
 	complex float* data1 = md_alloc(N, dims, CFL_SIZE);
 	complex float* data2 = md_alloc_mpi(N, 2, dims, CFL_SIZE);

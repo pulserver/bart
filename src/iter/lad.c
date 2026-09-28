@@ -32,7 +32,7 @@
 
 
 
-const struct lad_conf lad_defaults = { 5, 0.1, ~0u, &lsqr_defaults };
+const struct lad_conf lad_defaults = { 5, 0.1, ~UINT64_C(0), &lsqr_defaults };
 
 
 
@@ -50,10 +50,10 @@ void lad2(	int N, const struct lad_conf* conf,
 		int num_funs,
 		const struct operator_p_s* prox_funs[num_funs],
 		const struct linop_s* prox_linops[num_funs],
-		const long x_dims[static N], complex float* x,
-		const long y_dims[static N], const complex float* y)
+		const bart_dim_t x_dims[static N], complex float* x,
+		const bart_dim_t y_dims[static N], const complex float* y)
 {
-	long w_dims[N];
+	bart_dim_t w_dims[N];
 	md_select_dims(N, conf->wflags, w_dims, y_dims);
 
 	complex float* weights = md_alloc_sameplace(N, w_dims, CFL_SIZE, y);
@@ -71,7 +71,7 @@ void lad2(	int N, const struct lad_conf* conf,
 
 		md_zrss(N, y_dims, ~(conf->wflags), weights, tmp2);
 
-		for (long l = 0; l < md_calc_size(N, w_dims); l++)
+		for (bart_dim_t l = 0; l < md_calc_size(N, w_dims); l++)
 			if (weights[l] != 0.)
 				weights[l] = 1. / sqrtf(MAX(conf->gamma, cabsf(weights[l])));
 
@@ -94,8 +94,8 @@ void lad(	int N, const struct lad_conf* conf,
 		italgo_fun_t italgo, iter_conf* iconf,
 		const struct linop_s* model_op,
 		const struct operator_p_s* prox_funs,
-		const long x_dims[static N], complex float* x,
-		const long y_dims[static N], const complex float* y)
+		const bart_dim_t x_dims[static N], complex float* x,
+		const bart_dim_t y_dims[static N], const complex float* y)
 {
 	lad2(N, conf, iter2_call_iter, CAST_UP(&((struct iter_call_s){ { &TYPEID(iter_call_s), 1. }, italgo, iconf })),
 		model_op, (NULL != prox_funs) ? 1 : 0, &prox_funs, NULL,

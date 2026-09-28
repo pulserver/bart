@@ -113,8 +113,8 @@ int main_wavepsf(int argc, char* argv[argc])
 	}
 
 	// Interpolate to sx via sinc interpolation
-	const long wavepoint_dims[1] = {wavepoints};
-	const long interp_dims[1] = {sx};
+	const bart_dim_t wavepoint_dims[1] = {wavepoints};
+	const bart_dim_t interp_dims[1] = {sx};
 
 	complex float k_phasepercm[wavepoints]; 
 
@@ -152,7 +152,7 @@ int main_wavepsf(int argc, char* argv[argc])
 		md_zexpj(1, interp_dims, psf[ydx], phase);
 	}
 
-	const long psf_dims[3] = { sx, sy, 1 };
+	const bart_dim_t psf_dims[3] = { sx, sy, 1 };
 
 	complex float* psf_cfl = create_cfl(out_file, 3, psf_dims);
 

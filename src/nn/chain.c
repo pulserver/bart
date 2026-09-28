@@ -132,7 +132,7 @@ nn_t nn_real_output_F(nn_t op, int o, const char* oname)
  *
  * @returns nn_t with reshaped output
  */
-nn_t nn_reshape_out(nn_t op, int o, const char* oname, int N, const long odims[N])
+nn_t nn_reshape_out(nn_t op, int o, const char* oname, int N, const bart_dim_t odims[N])
 {
 	o = nn_get_out_arg_index(op, o, oname);
 	auto result = nn_from_nlop_F(nlop_reshape_out(nn_get_nlop(op), o, N, odims));
@@ -157,7 +157,7 @@ nn_t nn_reshape_out(nn_t op, int o, const char* oname, int N, const long odims[N
  *
  * @returns nn_t with reshaped input
  */
-nn_t nn_reshape_in(nn_t op, int i, const char* iname, int N, const long idims[N])
+nn_t nn_reshape_in(nn_t op, int i, const char* iname, int N, const bart_dim_t idims[N])
 {
 	i = nn_get_in_arg_index(op, i, iname);
 	auto result = nn_from_nlop_F(nlop_reshape_in(nn_get_nlop(op), i, N, idims));
@@ -194,7 +194,7 @@ nn_t nn_reshape_in(nn_t op, int i, const char* iname, int N, const long idims[N]
  *
  * @returns nn_t with reshaped output
  */
-nn_t nn_reshape_out_F(nn_t op, int o, const char* oname, int NO, const long odims[NO])
+nn_t nn_reshape_out_F(nn_t op, int o, const char* oname, int NO, const bart_dim_t odims[NO])
 {
 	auto result = nn_reshape_out(op, o, oname, NO, odims);
 	nn_free(op);
@@ -212,7 +212,7 @@ nn_t nn_reshape_out_F(nn_t op, int o, const char* oname, int NO, const long odim
  *
  * @returns nn_t with reshaped input
  */
-nn_t nn_reshape_in_F(nn_t op, int i, const char* iname, int NI, const long idims[NI])
+nn_t nn_reshape_in_F(nn_t op, int i, const char* iname, int NI, const bart_dim_t idims[NI])
 {
 	auto result = nn_reshape_in(op, i, iname, NI, idims);
 	nn_free(op);
@@ -232,7 +232,7 @@ nn_t nn_reshape_in_F(nn_t op, int i, const char* iname, int NI, const long idims
 nn_t nn_append_singleton_dim_in_F(nn_t op, int i, const char* iname)
 {
 	auto iov = nn_generic_domain(op, i, iname);
-	long dims[iov->N + 1];
+	bart_dim_t dims[iov->N + 1];
 	md_copy_dims(iov->N, dims, iov->dims);
 	dims[iov->N] = 1;
 
@@ -252,7 +252,7 @@ nn_t nn_append_singleton_dim_in_F(nn_t op, int i, const char* iname)
 nn_t nn_append_singleton_dim_out_F(nn_t op, int o, const char* oname)
 {
 	auto iov = nn_generic_codomain(op, o, oname);
-	long dims[iov->N + 1];
+	bart_dim_t dims[iov->N + 1];
 
 	md_copy_dims(iov->N, dims, iov->dims);
 	dims[iov->N] = 1;
@@ -1588,8 +1588,8 @@ nn_t nn_stack_multigpu_F(int N , nn_t x[N], int stack_dim)
 	int II = nn_get_nr_in_args(x[0]);
 	int OO = nn_get_nr_out_args(x[0]);
 
-	long ltot = 0;
-	long lwgh[N];
+	bart_dim_t ltot = 0;
+	bart_dim_t lwgh[N];
 
 	for (int i = 0; i < N; i++) {
 

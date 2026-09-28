@@ -31,7 +31,7 @@
 #include "walsh.h"
 
 
-void walsh(const long bsize[3], const long dims[DIMS], complex float* sens, const long caldims[DIMS], const complex float* data)
+void walsh(const bart_dim_t bsize[3], const bart_dim_t dims[DIMS], complex float* sens, const bart_dim_t caldims[DIMS], const complex float* data)
 {
 	assert(1 == caldims[MAPS_DIM]);
 	assert(1 == dims[MAPS_DIM]);
@@ -40,11 +40,11 @@ void walsh(const long bsize[3], const long dims[DIMS], complex float* sens, cons
 	int cosize = channels * (channels + 1) / 2;
 	assert(dims[COIL_DIM] == cosize);
 
-	long dims1[DIMS];
+	bart_dim_t dims1[DIMS];
 	md_copy_dims(DIMS, dims1, dims);
 	dims1[COIL_DIM] = channels;
 
-	long kdims[4];
+	bart_dim_t kdims[4];
 	kdims[0] = MIN(bsize[0], dims[0]);
 	kdims[1] = MIN(bsize[1], dims[1]);
 	kdims[2] = MIN(bsize[2], dims[2]);
@@ -52,7 +52,7 @@ void walsh(const long bsize[3], const long dims[DIMS], complex float* sens, cons
 	md_resize_center(DIMS, dims1, sens, caldims, data, CFL_SIZE);
 	ifftc(DIMS, dims1, FFT_FLAGS, sens, sens);
 
-	long odims[DIMS];
+	bart_dim_t odims[DIMS];
 	md_copy_dims(DIMS, odims, dims1);
 
 	for (int i = 0; i < 3; i++)
@@ -62,7 +62,7 @@ void walsh(const long bsize[3], const long dims[DIMS], complex float* sens, cons
 #if 0
 	md_resizec(DIMS, odims, tmp, dims1, sens, CFL_SIZE);
 #else
-	long cen[DIMS] = { };
+	bart_dim_t cen[DIMS] = { };
 
 	for (int i = 0; i < 3; i++)
 		cen[i] = (odims[i] - dims[i] + 1) / 2;
@@ -74,7 +74,7 @@ void walsh(const long bsize[3], const long dims[DIMS], complex float* sens, cons
 	md_free(tmp1);
 #endif
 
-	long calmat_dims[2];
+	bart_dim_t calmat_dims[2];
 	complex float* cm = calibration_matrix(calmat_dims, kdims, odims, tmp);
 	md_free(tmp);
 
@@ -110,16 +110,16 @@ void walsh(const long bsize[3], const long dims[DIMS], complex float* sens, cons
 /**
  * Computes walsh calibration matrix but sums over the shifted blocks
  */
-static void avg_walsh_matrix(const long bsize[3], const long dims[DIMS], complex float* sens, const long caldims[DIMS], const complex float* data)
+static void avg_walsh_matrix(const bart_dim_t bsize[3], const bart_dim_t dims[DIMS], complex float* sens, const bart_dim_t caldims[DIMS], const complex float* data)
 {
 	assert(1 == dims[MAPS_DIM]);
 	int channels = caldims[COIL_DIM];
 
-	long dims1[DIMS];
+	bart_dim_t dims1[DIMS];
 	md_copy_dims(DIMS, dims1, dims);
 	dims1[COIL_DIM] = channels;
 
-	long kdims[4];
+	bart_dim_t kdims[4];
 	kdims[0] = MIN(bsize[0], dims[0]);
 	kdims[1] = MIN(bsize[1], dims[1]);
 	kdims[2] = MIN(bsize[2], dims[2]);
@@ -127,7 +127,7 @@ static void avg_walsh_matrix(const long bsize[3], const long dims[DIMS], complex
 	md_resize_center(DIMS, dims1, sens, caldims, data, CFL_SIZE);
 	ifftc(DIMS, dims1, FFT_FLAGS, sens, sens);
 
-	long odims[DIMS];
+	bart_dim_t odims[DIMS];
 	md_copy_dims(DIMS, odims, dims1);
 
 	for (int i = 0; i < 3; i++)
@@ -135,7 +135,7 @@ static void avg_walsh_matrix(const long bsize[3], const long dims[DIMS], complex
 
 	complex float* tmp = md_alloc(DIMS, odims, CFL_SIZE);
 
-	long cen[DIMS] = { };
+	bart_dim_t cen[DIMS] = { };
 
 	for (int i = 0; i < 3; i++)
 		cen[i] = (odims[i] - dims[i] + 1) / 2;
@@ -145,13 +145,13 @@ static void avg_walsh_matrix(const long bsize[3], const long dims[DIMS], complex
 	md_circ_shift(DIMS, odims, cen, tmp, tmp1, CFL_SIZE);
 	md_free(tmp1);
 
-	long tdims[2 * DIMS];
+	bart_dim_t tdims[2 * DIMS];
 	md_singleton_dims(2 * DIMS, tdims);
 	md_copy_dims(DIMS, tdims, dims);
 	md_copy_dims(3, tdims + DIMS, kdims);
 
-	long tostrs[2 * DIMS];
-	long tistrs[2 * DIMS];
+	bart_stride_t tostrs[2 * DIMS];
+	bart_stride_t tistrs[2 * DIMS];
 
 	md_calc_strides(DIMS, tostrs, tdims, CFL_SIZE);
 	md_singleton_strides(DIMS, tostrs + DIMS);
@@ -168,15 +168,15 @@ static void avg_walsh_matrix(const long bsize[3], const long dims[DIMS], complex
  * We assume the coils are the right singular vector, so we obtain left singular vectors by multiplication of coils with the
  * calibration matrix. We only need the average of the blocks (which can be precomputed).
  */
-void phase_normalization(const long bsize[3], const long dims[DIMS], complex float* sens, const long caldims[DIMS], const complex float* data)
+void phase_normalization(const bart_dim_t bsize[3], const bart_dim_t dims[DIMS], complex float* sens, const bart_dim_t caldims[DIMS], const complex float* data)
 {
-	long ndims[DIMS];
+	bart_dim_t ndims[DIMS];
 	md_select_dims(DIMS, ~MAPS_FLAG, ndims, dims);
 
 	complex float* tmp = md_alloc(DIMS, ndims, CFL_SIZE);
 	avg_walsh_matrix(bsize, ndims, tmp, caldims, data);
 
-	long pdims[DIMS];
+	bart_dim_t pdims[DIMS];
 	md_select_dims(DIMS, ~COIL_FLAG, pdims, dims);
 	complex float* phase = md_alloc(DIMS, ndims, CFL_SIZE);
 

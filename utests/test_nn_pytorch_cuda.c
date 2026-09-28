@@ -46,17 +46,17 @@ static bool test_nn_pytorch_gpu(void)
 
 	enum { N = 2 };
 
-	long dims[N] = { 5, 3};
-	long dims1[N] = { 5, 1};
-	long dims2[N] = { 1, 3};
-	long dims0[N] = { 1, 1};
+	bart_dim_t dims[N] = { 5, 3};
+	bart_dim_t dims1[N] = { 5, 1};
+	bart_dim_t dims2[N] = { 1, 3};
+	bart_dim_t dims0[N] = { 1, 1};
 
 	const struct nlop_s* nlop = nlop_tenmul_create(N, dims, dims1, dims2);
 	nlop = nlop_append_FF(nlop, 0, nlop_from_linop_F(linop_zreal_create(N, dims)));
 	nlop = nlop_chain2_keep_FF(nlop, 0, nlop_from_linop_F(linop_sum_create(N, dims, MD_BIT(1))), 0);
 	nlop = nlop_shift_output_F(nlop, 1, 0);
 
-	const struct nlop_s* nlop_pytorch = nlop_pytorch_create("./utests/test_nn_pytorch.pt", 2, (int[2]) { N, N }, (const long*[2]) {dims1, dims2 }, true);
+	const struct nlop_s* nlop_pytorch = nlop_pytorch_create("./utests/test_nn_pytorch.pt", 2, (int[2]) { N, N }, (const bart_dim_t*[2]) {dims1, dims2 }, true);
 	nlop_pytorch = nlop_assign_gpu_F(nlop_pytorch, 0);
 
 	nlop_debug(DP_DEBUG1, nlop_pytorch);

@@ -79,7 +79,7 @@ const struct nlop_s* nlop_tf_create(const char* /*path*/)
 	error("BART is build without TensorFlow support!\nRebuild with \"TENSORFLOW=1\"\n");
 }
 
-void tf_shared_graph_set_batch_size(const struct tf_shared_graph_s* /*x*/, long /*batch_size*/)
+void tf_shared_graph_set_batch_size(const struct tf_shared_graph_s* /*x*/, bart_dim_t /*batch_size*/)
 {
 	error("BART is build without TensorFlow support!\nRebuild with \"TENSORFLOW=1\"\n");
 }
@@ -426,7 +426,7 @@ struct tf_shared_graph_s {
 
 	const char* weight_init;
 
-	long batch_size;
+	bart_dim_t batch_size;
 };
 
 static void tf_shared_graph_del(const struct shared_obj_s* sptr)
@@ -479,7 +479,7 @@ void tf_shared_graph_list_operations(const struct tf_shared_graph_s*x)
 	size_t counter = 0;
 	
 	while (NULL != (oper = TF_GraphNextOperation(x->graph, &pos)))
-		debug_printf(DP_INFO, "%lu: %s\n", counter++, TF_OperationName(oper));
+		debug_printf(DP_INFO, "%zu: %s\n", counter++, TF_OperationName(oper));
 }
 
 const struct tf_shared_graph_s* tf_shared_graph_create(const char* path, const char* signature_key)
@@ -557,7 +557,7 @@ const struct tf_shared_graph_s* tf_shared_graph_create(const char* path, const c
 	return PTR_PASS(x);
 }
 
-void tf_shared_graph_set_batch_size(const struct tf_shared_graph_s* x, long batch_size)
+void tf_shared_graph_set_batch_size(const struct tf_shared_graph_s* x, bart_dim_t batch_size)
 {
 	((struct tf_shared_graph_s*)x)->batch_size = batch_size;
 }
@@ -623,7 +623,7 @@ struct tf_arg {
 	const int64_t* dims;
 };
 
-static struct tf_arg process_arg(const struct tf_shared_graph_s* graph, const char* name, bool required, long batch_size)
+static struct tf_arg process_arg(const struct tf_shared_graph_s* graph, const char* name, bool required, bart_dim_t batch_size)
 {
 	struct tf_arg arg;
 
@@ -650,7 +650,7 @@ static struct tf_arg process_arg(const struct tf_shared_graph_s* graph, const ch
 	if (! ((TF_COMPLEX64 == type) || (TF_FLOAT == type)))
 		error("TensorFlow: Argument \"%s:%d\" has unsupported type. Only single precision (complex) floats are supported.\n");
 
-	long tdims[arg.N ?: 1];
+	bart_dim_t tdims[arg.N ?: 1];
 
 	TF_GraphGetTensorShape(graph->graph, arg.out, tdims, arg.N, graph->status);
 
@@ -712,7 +712,7 @@ static bool cmp_arg(struct tf_arg arg1, struct tf_arg arg2)
 
 
 
-static TF_Tensor* tensor_allocate(const struct tf_shared_graph_s* graph, const char* name, long batch_size)
+static TF_Tensor* tensor_allocate(const struct tf_shared_graph_s* graph, const char* name, bart_dim_t batch_size)
 {
 	struct TF_Output arg = get_output(graph, name);
 
@@ -720,7 +720,7 @@ static TF_Tensor* tensor_allocate(const struct tf_shared_graph_s* graph, const c
 
 	enum TF_DataType type = TF_OperationOutputType(arg);
 
-	long tdims[N ?: 1];
+	bart_dim_t tdims[N ?: 1];
 
 	TF_GraphGetTensorShape(graph->graph, arg, tdims, N, graph->status);
 
@@ -1115,8 +1115,8 @@ static const struct nlop_s* nlop_tf_shared_grad_create(const struct tf_shared_gr
 	data->cached_gradient = ARR_CLONE(complex float**[OO], cached_gradients);
 
 
-	long nl_odims[OO][ON];
-	long nl_idims[II][IN];
+	bart_dim_t nl_odims[OO][ON];
+	bart_dim_t nl_idims[II][IN];
 
 	for (int i = 0; i < OO; i++)
 		for (int j = 0; j < ON; j++)
@@ -1183,7 +1183,7 @@ static void tf_jac_del(const nlop_data_t* _data)
 };
 
 
-static void tf_zjac(const nlop_data_t* _data, int N, const long odims[N], complex float* dst, const long idims[N], const complex float* src, const long ddims[N], complex float* jac)
+static void tf_zjac(const nlop_data_t* _data, int N, const bart_dim_t odims[N], complex float* dst, const bart_dim_t idims[N], const complex float* src, const bart_dim_t ddims[N], complex float* jac)
 {
 	auto data = CAST_DOWN(tf_jac_s, _data);
 
@@ -1214,7 +1214,7 @@ static void tf_zjac(const nlop_data_t* _data, int N, const long odims[N], comple
 	TF_DeleteTensor(input_tensors[0]);
 }
 
-static void tf_rjac(const nlop_data_t* _data, int N, const long odims[N], float* dst, const long idims[N], const float* src, const long ddims[N], float* jac)
+static void tf_rjac(const nlop_data_t* _data, int N, const bart_dim_t odims[N], float* dst, const bart_dim_t idims[N], const float* src, const bart_dim_t ddims[N], float* jac)
 {
 	auto data = CAST_DOWN(tf_jac_s, _data);
 
@@ -1292,9 +1292,9 @@ static const struct nlop_s* nlop_tf_shared_jac_create(const struct tf_shared_gra
 	(*inputs_op)[0] = iarg.out;
 	data->inputs_op = *PTR_PASS(inputs_op);
 
-	long jdims[real ? N + 2 : N];
-	long odims[real ? N + 2 : N];
-	long idims[real ? N + 2 : N];
+	bart_dim_t jdims[real ? N + 2 : N];
+	bart_dim_t odims[real ? N + 2 : N];
+	bart_dim_t idims[real ? N + 2 : N];
 
 	if (real) {
 

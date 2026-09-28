@@ -1004,7 +1004,7 @@ static bool test_ode_epg_relation(void)
 	complex float states[3][M][T]; // 3 -> dims: Fn,F-n,Zn; M: k-states; T: repetition
 
 	flash_epg_der(T, M, signal, states, NULL, NULL, sim_data.pulse.sinc.super.flipangle,
-			sim_data.seq.tr, 1000000., 1000000., 1., sim_data.voxel.w, 0L);
+			sim_data.seq.tr, 1000000., 1000000., 1., sim_data.voxel.w, 0);
 
 	float tol = 1.E-4;
 

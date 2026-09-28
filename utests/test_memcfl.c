@@ -12,7 +12,7 @@
 
 static bool test_memcfl_load(void)
 {
-	long dims[2] = { 10, 5 };
+	bart_dim_t dims[2] = { 10, 5 };
 	complex float* x = memcfl_create("test.mem", 2, dims);
 
 	for (int i = 0; i < 50; i++)
@@ -22,7 +22,7 @@ static bool test_memcfl_load(void)
 
 	io_reserve_input("test.mem");
 
-	long dims2[2];
+	bart_dim_t dims2[2];
 	complex float* y = load_cfl("test.mem", 2, dims2);
 
 	if (!((dims[0] == dims2[0]) && dims[1] == dims2[1]))
@@ -47,7 +47,7 @@ UT_REGISTER_TEST(test_memcfl_load);
 
 static bool test_memcfl_register(void)
 {
-	long dims[2] = { 10, 5 };
+	bart_dim_t dims[2] = { 10, 5 };
 	complex float* x = xmalloc((size_t)io_calc_size(2, dims, sizeof(complex float)));
 
 	for (int i = 0; i < 50; i++)
@@ -59,7 +59,7 @@ static bool test_memcfl_register(void)
 
 	io_reserve_input("test.mem");
 
-	long dims2[2];
+	bart_dim_t dims2[2];
 	complex float* y = load_cfl("test.mem", 2, dims2);
 
 	if (!((dims[0] == dims2[0]) && dims[1] == dims2[1]))
@@ -87,7 +87,7 @@ static bool test_memcfl_write(void)
 {
 	io_reserve_output("test.mem");
 
-	long dims[2] = { 10, 5 };
+	bart_dim_t dims[2] = { 10, 5 };
 	complex float* x = create_cfl("test.mem", 2, dims);
 
 	for (int i = 0; i < 50; i++)
@@ -95,7 +95,7 @@ static bool test_memcfl_write(void)
 
 	unmap_cfl(2, dims, x);
 
-	long dims2[2];
+	bart_dim_t dims2[2];
 	complex float* y = memcfl_load("test.mem", 2, dims2);
 
 	if (!((dims[0] == dims2[0]) && dims[1] == dims2[1]))

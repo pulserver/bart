@@ -61,8 +61,11 @@
 
 #include "main.h"
 
-// also check in commands/ subdir at the bart exe location
+// also check in commands/ subdir at the bart exe location,
+// which is found through readlink, a POSIX call
+#ifndef _WIN32
 #define CHECK_EXE_COMMANDS
+#endif
 
 #ifndef DIMS
 #define DIMS 16
@@ -185,11 +188,11 @@ static int bart_exit(int err_no, const char* exit_msg)
 static void parse_bart_opts(int* argcp, char*** argvp, int order[DIMS], stream_t* ref_stream)
 {
 	int omp_threads = 1;
-	unsigned long flags = 0;
-	unsigned long pflags = 0;
-	long param_start[DIMS] = { [0 ... DIMS - 1] = -1 };
-	long param_end[DIMS] = { [0 ... DIMS - 1] = -1 };
-	long param_order[DIMS] = { [0 ... DIMS - 1] = -1 };
+	bart_flags_t flags = 0;
+	bart_flags_t pflags = 0;
+	bart_dim_t param_start[DIMS] = { [0 ... DIMS - 1] = -1 };
+	bart_dim_t param_end[DIMS] = { [0 ... DIMS - 1] = -1 };
+	bart_dim_t param_order[DIMS] = { [0 ... DIMS - 1] = -1 };
 	const char* ref_file = NULL;
 	bool use_mpi = false;
 	bool version = false;
@@ -229,8 +232,12 @@ static void parse_bart_opts(int* argcp, char*** argvp, int order[DIMS], stream_t
 
 	if (attach) {
 
+#ifdef SIGSTOP
 		fprintf(stderr, "PID: %d", getpid());
 		raise(SIGSTOP);
+#else
+		error("Attaching a debugger needs SIGSTOP, which this platform does not have.\n");
+#endif
 	}
 
 	if (0 != bart_mpi_split_flags) {
@@ -288,7 +295,7 @@ static void parse_bart_opts(int* argcp, char*** argvp, int order[DIMS], stream_t
 
 	if (NULL != ref_file) {
 
-		long ref_dims[DIMS];
+		bart_dim_t ref_dims[DIMS];
 		const void* tmp = load_async_cfl(ref_file, DIMS, ref_dims);
 		stream_t s = stream_lookup(tmp);
 
@@ -357,8 +364,8 @@ static void parse_bart_opts(int* argcp, char*** argvp, int order[DIMS], stream_t
 			order[i] = param_order[ip++];
 	}
 
-	long offs_size[DIMS] = { [0 ... DIMS - 1] = 0 };
-	long loop_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	bart_stride_t offs_size[DIMS] = { [0 ... DIMS - 1] = 0 };
+	bart_dim_t loop_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 
 	for (int i = 0, j = 0; i < DIMS; ++i) {
 
@@ -391,9 +398,9 @@ static void parse_bart_opts(int* argcp, char*** argvp, int order[DIMS], stream_t
 
 static double time = 0;
 static double time_sq = 0;
-static long count = 0;
+static bart_dim_t count = 0;
 
-static int batch_wrapper(main_fun_t* dispatch_func, int argc, char *argv[argc], long pos)
+static int batch_wrapper(main_fun_t* dispatch_func, int argc, char *argv[argc], bart_dim_t pos)
 {
 	char* thread_argv[argc + 1];
 	char* thread_argv_save[argc];
@@ -430,9 +437,9 @@ static int batch_wrapper(main_fun_t* dispatch_func, int argc, char *argv[argc], 
 	return ret;
 }
 
-static bool loop_step(long start, long total, long workers, long* idx, long *idx_p, int final_ret, const int order[DIMS], stream_t ref_stream)
+static bool loop_step(bart_dim_t start, bart_dim_t total, bart_dim_t workers, bart_dim_t* idx, bart_dim_t *idx_p, int final_ret, const int order[DIMS], stream_t ref_stream)
 {
-	debug_printf(DP_DEBUG3, "Enter BART loop_step: start=%ld idx=%ld, idx_p=%ld, final_ret=%d.\n", start, *idx, *idx_p, final_ret);
+	debug_printf(DP_DEBUG3, "Enter BART loop_step: start=%" PRId64 " idx=%" PRId64 ", idx_p=%" PRId64 ", final_ret=%d.\n", start, *idx, *idx_p, final_ret);
 
 	// initialization
 	if (-1 == *idx)
@@ -453,11 +460,11 @@ static bool loop_step(long start, long total, long workers, long* idx, long *idx
 		if (1 < mpi_get_num_procs())
 			error("Non-Sequential loops not implemented for MPI.\n");
 
-		long dims[DIMS];
-		long stream_dims[DIMS];
-		long pos[DIMS];
+		bart_dim_t dims[DIMS];
+		bart_dim_t stream_dims[DIMS];
+		bart_dim_t pos[DIMS];
 
-		unsigned long flags = cfl_loop_get_flags();
+		bart_flags_t flags = cfl_loop_get_flags();
 		assert (flags == stream_get_flags(ref_stream));
 
 		md_set_dims(DIMS, pos, 0);
@@ -474,9 +481,9 @@ static bool loop_step(long start, long total, long workers, long* idx, long *idx
 
 		*idx_p = md_ravel_index(DIMS, pos, flags, dims);
 
-		debug_printf(DP_DEBUG3, "BART loop_step stream idx received: idx=%ld;  Pos: \n [ ", *idx);
+		debug_printf(DP_DEBUG3, "BART loop_step stream idx received: idx=%" PRId64 ";  Pos: \n [ ", *idx);
 		for(int i = 0; i < DIMS; i++)
-			debug_printf(DP_DEBUG3, "%ld, ", pos[i]);
+			debug_printf(DP_DEBUG3, "%" PRId64 ", ", pos[i]);
 		debug_printf(DP_DEBUG3, "].\n");
 
 		return true;
@@ -487,11 +494,11 @@ static bool loop_step(long start, long total, long workers, long* idx, long *idx
 		debug_printf(DP_DEBUG3, "%d, ", order[i]);
 
 	// calculate permuted index
-	long dims[DIMS];
-	long pdims[DIMS];
-	long pos[DIMS];
-	long pstr[DIMS];
-	unsigned long flags = cfl_loop_get_flags();
+	bart_dim_t dims[DIMS];
+	bart_dim_t pdims[DIMS];
+	bart_dim_t pos[DIMS];
+	bart_stride_t pstr[DIMS];
+	bart_flags_t flags = cfl_loop_get_flags();
 	md_set_dims(DIMS, pos, 0);
 
 	cfl_loop_get_dims(DIMS, dims);
@@ -505,7 +512,7 @@ static bool loop_step(long start, long total, long workers, long* idx, long *idx
 	*idx_p = md_calc_offset(DIMS, pstr, pos);
 
 
-	debug_printf(DP_DEBUG3, "Leave BART loop_step: start=%ld idx=%ld, idx_p=%ld, final_ret=%d.\n\n", start, *idx, *idx_p, final_ret);
+	debug_printf(DP_DEBUG3, "Leave BART loop_step: start=%" PRId64 " idx=%" PRId64 ", idx_p=%" PRId64 ", final_ret=%d.\n\n", start, *idx, *idx_p, final_ret);
 
 
 	//FIXME : Loop Order breaks random number test.
@@ -577,11 +584,11 @@ int main_bart(int argc, char* argv[argc])
 
 #pragma omp parallel num_threads(cfl_loop_num_workers())
 			{
-				long start = cfl_loop_worker_id();
-				long total = cfl_loop_desc_total();
-				long workers = cfl_loop_num_workers();
-				long idx = -1;
-				long idx_p = -1;
+				bart_dim_t start = cfl_loop_worker_id();
+				bart_dim_t total = cfl_loop_desc_total();
+				bart_dim_t workers = cfl_loop_num_workers();
+				bart_dim_t idx = -1;
+				bart_dim_t idx_p = -1;
 
 				while (loop_step(start, total, workers, &idx, &idx_p, final_ret, order, ref_stream)) {
 
@@ -598,11 +605,11 @@ int main_bart(int argc, char* argv[argc])
 
 		} else {
 
-			long start = cfl_loop_worker_id();
-			long total = cfl_loop_desc_total();
-			long workers = cfl_loop_num_workers();
-			long idx = -1;
-			long idx_p = -1;
+			bart_dim_t start = cfl_loop_worker_id();
+			bart_dim_t total = cfl_loop_desc_total();
+			bart_dim_t workers = cfl_loop_num_workers();
+			bart_dim_t idx = -1;
+			bart_dim_t idx_p = -1;
 
 			mpi_signoff_proc(cfl_loop_desc_active() && (mpi_get_rank() >= total));
 

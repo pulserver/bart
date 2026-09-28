@@ -2,6 +2,7 @@
 #ifndef _SEQ_CONFIG_H
 #define _SEQ_CONFIG_H
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 #include "misc/mri.h"
@@ -67,7 +68,7 @@ struct seq_enc {
 
 	enum pe_mode pe_mode;
 	int tiny;
-	unsigned long aligned_flags;
+	bart_flags_t aligned_flags;
 	enum seq_order order;
 };
 
@@ -115,7 +116,7 @@ struct seq_config {
 	struct seq_sys sys; 
 
 	int order[DIMS];
-	long loop_dims[DIMS];
+	bart_dim_t loop_dims[DIMS];
 };
 
 extern const struct seq_config seq_config_defaults;

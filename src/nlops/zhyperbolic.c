@@ -32,7 +32,7 @@ static void zsinh_free(const nlop_data_t* _data)
 	xfree(_data);
 }
 
-static void zsinh_apply(const nlop_data_t* /*_data*/, int N, const long dims[N], complex float* dst, const complex float* src, complex float* der)
+static void zsinh_apply(const nlop_data_t* /*_data*/, int N, const bart_dim_t dims[N], complex float* dst, const complex float* src, complex float* der)
 {
 	if (NULL != der)
 		md_zcosh(N, dims, der, src);
@@ -40,7 +40,7 @@ static void zsinh_apply(const nlop_data_t* /*_data*/, int N, const long dims[N],
 	md_zsinh(N, dims, dst, src);
 }
 
-const struct nlop_s* nlop_zsinh_create(int N, const long dims[N])
+const struct nlop_s* nlop_zsinh_create(int N, const bart_dim_t dims[N])
 {
 	PTR_ALLOC(struct zsinh_s, data);
 	SET_TYPEID(zsinh_s, data);
@@ -65,7 +65,7 @@ static void zcosh_free(const nlop_data_t* _data)
 	xfree(_data);
 }
 
-static void zcosh_apply(const nlop_data_t* /*_data*/, int N, const long dims[N], complex float* dst, const complex float* src, complex float* der)
+static void zcosh_apply(const nlop_data_t* /*_data*/, int N, const bart_dim_t dims[N], complex float* dst, const complex float* src, complex float* der)
 {
 	if (NULL != der)
 		md_zsinh(N, dims, der, src);
@@ -73,7 +73,7 @@ static void zcosh_apply(const nlop_data_t* /*_data*/, int N, const long dims[N],
 	md_zcosh(N, dims, dst, src);
 }
 
-const struct nlop_s* nlop_zcosh_create(int N, const long dims[N])
+const struct nlop_s* nlop_zcosh_create(int N, const bart_dim_t dims[N])
 {
 	PTR_ALLOC(struct zcosh_s, data);
 	SET_TYPEID(zcosh_s, data);

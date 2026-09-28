@@ -20,19 +20,19 @@
 #define CFL_SIZE sizeof(complex float)
 #endif
 
-static void rounded_div(int D, const long dims[D], float bound, complex float* out, const complex float* in)
+static void rounded_div(int D, const bart_dim_t dims[D], float bound, complex float* out, const complex float* in)
 {
-	long size = md_calc_size(D, dims);
+	bart_dim_t size = md_calc_size(D, dims);
 
 #pragma omp parallel for
-	for (long i = 0; i < size; i++) {
+	for (bart_dim_t i = 0; i < size; i++) {
 
 		float d = crealf(in[i]) / bound;
 		out[i] = (d > 1.) ? - ceilf(d) : (d < -1.) ? - floorf(d) : 0.;
 	}
 }
 
-static void unwrap(int D, const long dims[D], int d, float bounds, 
+static void unwrap(int D, const bart_dim_t dims[D], int d, float bounds, 
 	complex float* optr, const complex float* iptr)
 {
 	md_zfdiff0(D, dims, d, optr, iptr);
@@ -70,8 +70,8 @@ int main_unwrap(int argc, char* argv[argc])
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
 
-	long in_dims[DIMS];
-	long out_dims[DIMS];
+	bart_dim_t in_dims[DIMS];
+	bart_dim_t out_dims[DIMS];
 
 	complex float* in_data = load_cfl(in_file, DIMS, in_dims);
 

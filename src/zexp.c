@@ -52,7 +52,7 @@ int main_zexp(int argc, char* argv[argc])
 	
 	num_init();
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	
 	complex float* in_data = load_cfl(in_file, DIMS, dims);
 	complex float* out_data = create_cfl(out_file, DIMS, dims);

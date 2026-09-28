@@ -38,11 +38,11 @@ struct stack_s {
 	int N;
 	int II;
 
-	long* odims;
-	long* ostrs;
-	long* idims;
-	long* istrs;
-	long* pos;
+	bart_dim_t* odims;
+	bart_stride_t* ostrs;
+	bart_dim_t* idims;
+	bart_stride_t* istrs;
+	bart_dim_t* pos;
 };
 
 DEF_TYPEID(stack_s);
@@ -55,9 +55,9 @@ static void stack_fun(const nlop_data_t* _data, int N, complex float* args[N])
 
 	assert(II + 1 == N);
 
-	long (*idims)[II][data->N] = (void*)data->idims;
-	long (*istrs)[II][data->N] = (void*)data->istrs;
-	long (*pos)[II][data->N] = (void*)data->pos;
+	bart_dim_t (*idims)[II][data->N] = (void*)data->idims;
+	bart_stride_t (*istrs)[II][data->N] = (void*)data->istrs;
+	bart_dim_t (*pos)[II][data->N] = (void*)data->pos;
 
 	for (int i = 0; i < II; i++)
 		md_copy2(data->N, (*idims)[i], data->ostrs, &(MD_ACCESS(data->N, data->ostrs, (*pos)[i], args[0])), (*istrs)[i], args[i + 1], CFL_SIZE);
@@ -72,9 +72,9 @@ static void stack_der(const nlop_data_t* _data, int o, int i, complex float* dst
 	assert(0 == o);
 	assert(i < II);
 
-	long (*idims)[II][data->N] = (void*)data->idims;
-	long (*istrs)[II][data->N] = (void*)data->istrs;
-	long (*pos)[II][data->N] = (void*)data->pos;
+	bart_dim_t (*idims)[II][data->N] = (void*)data->idims;
+	bart_stride_t (*istrs)[II][data->N] = (void*)data->istrs;
+	bart_dim_t (*pos)[II][data->N] = (void*)data->pos;
 
 	md_clear(data->N, data->odims, dst, CFL_SIZE);
 	md_copy2(data->N, (*idims)[i], data->ostrs, &(MD_ACCESS(data->N, data->ostrs, (*pos)[i], dst)), (*istrs)[i], src, CFL_SIZE);
@@ -88,9 +88,9 @@ static void stack_adj(const nlop_data_t* _data, int o, int i, complex float* dst
 	assert(0 == o);
 	assert(i < II);
 
-	long (*idims)[II][data->N] = (void*)data->idims;
-	long (*istrs)[II][data->N] = (void*)data->istrs;
-	long (*pos)[II][data->N] = (void*)data->pos;
+	bart_dim_t (*idims)[II][data->N] = (void*)data->idims;
+	bart_stride_t (*istrs)[II][data->N] = (void*)data->istrs;
+	bart_dim_t (*pos)[II][data->N] = (void*)data->pos;
 
 	md_copy2(data->N, (*idims)[i], (*istrs)[i], dst, data->ostrs, &(MD_ACCESS(data->N, data->ostrs, (*pos)[i], src)), CFL_SIZE);
 }
@@ -112,7 +112,7 @@ static void stack_del(const nlop_data_t* _data)
 }
 
 
-struct nlop_s* nlop_stack_generic_create(int II, int N, const long odims[N], const long idims[II][N], int stack_dim)
+struct nlop_s* nlop_stack_generic_create(int II, int N, const bart_dim_t odims[N], const bart_dim_t idims[II][N], int stack_dim)
 {
 	assert(stack_dim < N);
 	assert(0 <=stack_dim);
@@ -123,20 +123,20 @@ struct nlop_s* nlop_stack_generic_create(int II, int N, const long odims[N], con
 	data->N = N;
 	data->II = II;
 
-	data->odims = *TYPE_ALLOC(long[N]);
-	data->ostrs = *TYPE_ALLOC(long[N]);
-	data->idims = *TYPE_ALLOC(long[N * II]);
-	data->istrs = *TYPE_ALLOC(long[N * II]);
-	data->pos = *TYPE_ALLOC(long[N * II]);
+	data->odims = *TYPE_ALLOC(bart_dim_t[N]);
+	data->ostrs = *TYPE_ALLOC(bart_dim_t[N]);
+	data->idims = *TYPE_ALLOC(bart_dim_t[N * II]);
+	data->istrs = *TYPE_ALLOC(bart_dim_t[N * II]);
+	data->pos = *TYPE_ALLOC(bart_dim_t[N * II]);
 
-	long (*tidims)[II][data->N] = (void*)data->idims;
-	long (*tistrs)[II][data->N] = (void*)data->istrs;
-	long (*tpos)[II][data->N] = (void*)data->pos;
+	bart_dim_t (*tidims)[II][data->N] = (void*)data->idims;
+	bart_stride_t (*tistrs)[II][data->N] = (void*)data->istrs;
+	bart_dim_t (*tpos)[II][data->N] = (void*)data->pos;
 
 	md_copy_dims(N, data->odims, odims);
 	md_calc_strides(N, data->ostrs, odims, CFL_SIZE);
 
-	long stack_size = 0;
+	bart_dim_t stack_size = 0;
 
 	nlop_der_fun_t der [II][1];
 	nlop_der_fun_t adj [II][1];
@@ -159,16 +159,16 @@ struct nlop_s* nlop_stack_generic_create(int II, int N, const long odims[N], con
 
 	assert(stack_size == odims[stack_dim]);
 
-	long nl_odims[1][N];
+	bart_dim_t nl_odims[1][N];
 	md_copy_dims(N, nl_odims[0], data->odims);
 
 	return nlop_generic_create(1, N, nl_odims, II, N, idims, CAST_UP(PTR_PASS(data)), stack_fun, der, adj, NULL, NULL, stack_del);
 }
 
 
-struct nlop_s* nlop_stack_create(int N, const long odims[N], const long idims1[N], const long idims2[N], int stack_dim)
+struct nlop_s* nlop_stack_create(int N, const bart_dim_t odims[N], const bart_dim_t idims1[N], const bart_dim_t idims2[N], int stack_dim)
 {
-	long idims[2][N];
+	bart_dim_t idims[2][N];
 	md_copy_dims(N, idims[0], idims1);
 	md_copy_dims(N, idims[1], idims2);
 
@@ -177,12 +177,12 @@ struct nlop_s* nlop_stack_create(int N, const long odims[N], const long idims1[N
 
 
 
-struct nlop_s* nlop_destack_generic_create(int OO, int N, const long odims[OO][N], const long idims[N], int stack_dim)
+struct nlop_s* nlop_destack_generic_create(int OO, int N, const bart_dim_t odims[OO][N], const bart_dim_t idims[N], int stack_dim)
 {
 	assert(stack_dim < N);
 	assert(0 <=stack_dim);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_singleton_strides(N, pos);
 
 	auto result = nlop_del_out_create(N, idims);
@@ -208,9 +208,9 @@ struct nlop_s* nlop_destack_generic_create(int OO, int N, const long odims[OO][N
 }
 
 
-struct nlop_s* nlop_destack_create(int N, const long odims1[N], const long odims2[N], const long idims[N], int stack_dim)
+struct nlop_s* nlop_destack_create(int N, const bart_dim_t odims1[N], const bart_dim_t odims2[N], const bart_dim_t idims[N], int stack_dim)
 {
-	long odims[2][N];
+	bart_dim_t odims[2][N];
 	md_copy_dims(N, odims[0], odims1);
 	md_copy_dims(N, odims[1], odims2);
 
@@ -231,10 +231,10 @@ struct stack_container_s {
 	int* istack_dims;
 
 	int* D;
-	long** strs;
+	bart_stride_t** strs;
 
 	bool* dup;
-	long** offsets;
+	bart_stride_t** offsets;
 
 	const struct nlop_s** nlops;
 	const struct nlop_s** nlops_original;
@@ -335,7 +335,7 @@ static void stack_container_fun(const nlop_data_t* _data, int N, complex float* 
 
 				auto iov = nlop_generic_codomain(d->nlops[i], o);
 
-				mpi_bcast2(iov->N, iov->dims, iov->strs, (void*)(args[o]) + (d->offsets)[i][o], (long)iov->size, i % mpi_get_num_procs());
+				mpi_bcast2(iov->N, iov->dims, iov->strs, (void*)(args[o]) + (d->offsets)[i][o], (bart_dim_t)iov->size, i % mpi_get_num_procs());
 			}
 		}
 	}
@@ -374,7 +374,7 @@ static void stack_container_der(const nlop_data_t* _data, int o, int i, complex 
 			complex float* dst = (void*)_dst + d->offsets[j][o];
 
 			auto iov = nlop_generic_codomain(d->nlops[j], o);
-			mpi_bcast2(iov->N, iov->dims, iov->strs, dst, (long)iov->size, j % mpi_get_num_procs());
+			mpi_bcast2(iov->N, iov->dims, iov->strs, dst, (bart_dim_t)iov->size, j % mpi_get_num_procs());
 		}
 	}
 }
@@ -450,7 +450,7 @@ static void stack_container_adj(const nlop_data_t* _data, int o, int i, complex 
 
 			complex float* dst = (void*)_dst + d->offsets[j][i + d->OO];
 
-			mpi_bcast2(iov->N, iov->dims, iov->strs, dst, (long)iov->size, j % mpi_get_num_procs());
+			mpi_bcast2(iov->N, iov->dims, iov->strs, dst, (bart_dim_t)iov->size, j % mpi_get_num_procs());
 		}
 
 		auto iov = nlop_generic_domain(d->nlops[0], i);
@@ -529,7 +529,7 @@ static void stack_container_nrm(const nlop_data_t* _data, int o, int i, complex 
 			auto iov = nlop_generic_domain(d->nlops[j], i);
 
 			complex float* dst = (void*)_dst + d->offsets[j][i + d->OO];
-			mpi_bcast2(iov->N, iov->dims, iov->strs, dst, (long)iov->size, j % mpi_get_num_procs());
+			mpi_bcast2(iov->N, iov->dims, iov->strs, dst, (bart_dim_t)iov->size, j % mpi_get_num_procs());
 		}
 
 		auto iov = nlop_generic_domain(d->nlops[0], i);
@@ -614,10 +614,10 @@ static const struct nlop_s* nlop_stack_container_internal_create(int N, const st
 	d->nlops = *TYPE_ALLOC(const struct nlop_s*[N]);
 	d->nlops_original = *TYPE_ALLOC(const struct nlop_s*[N]);
 
-	d->offsets = *TYPE_ALLOC(long*[N]);
+	d->offsets = *TYPE_ALLOC(bart_dim_t*[N]);
 
 	for (int i = 0; i < N; i++)
-		d->offsets[i] = *TYPE_ALLOC(long[II + OO]);
+		d->offsets[i] = *TYPE_ALLOC(bart_dim_t[II + OO]);
 
 
 	d->II = II;
@@ -632,13 +632,13 @@ static const struct nlop_s* nlop_stack_container_internal_create(int N, const st
 
 
 	d->D = *TYPE_ALLOC(int[II + OO]);
-	d->strs = *TYPE_ALLOC(long*[II + OO]);
+	d->strs = *TYPE_ALLOC(bart_dim_t*[II + OO]);
 
 	d->istack_dims = ARR_CLONE(int[II], in_stack_dim);
 	d->ostack_dims = ARR_CLONE(int[OO], out_stack_dim);
 
-	long nl_odims[OO][max_DO];
-	long nl_idims[II][max_DI];
+	bart_dim_t nl_odims[OO][max_DO];
+	bart_dim_t nl_idims[II][max_DI];
 
 
 	for (int i = 0; i < OO; i++) {
@@ -689,10 +689,10 @@ static const struct nlop_s* nlop_stack_container_internal_create(int N, const st
 	for (int i = 0; i < OO; i++) {
 
 		d->D[i] = DO[i];
-		d->strs[i] = *TYPE_ALLOC(long[DO[i]]);
+		d->strs[i] = *TYPE_ALLOC(bart_dim_t[DO[i]]);
 		md_calc_strides(DO[i], d->strs[i], nl_odims[i], CFL_SIZE);
 
-		long pos[DO[i]];
+		bart_dim_t pos[DO[i]];
 		md_singleton_strides(DO[i], pos);
 
 		int sd = out_stack_dim[i];
@@ -712,10 +712,10 @@ static const struct nlop_s* nlop_stack_container_internal_create(int N, const st
 	for (int i = 0; i < II; i++) {
 
 		d->D[i + OO] = DI[i];
-		d->strs[i + OO] = *TYPE_ALLOC(long[DI[i]]);
+		d->strs[i + OO] = *TYPE_ALLOC(bart_dim_t[DI[i]]);
 		md_calc_strides(DI[i], d->strs[i + OO], nl_idims[i], CFL_SIZE);
 
-		long pos[DI[i]];
+		bart_dim_t pos[DI[i]];
 		md_singleton_strides(DI[i], pos);
 
 		int sd = in_stack_dim[i];
@@ -746,7 +746,7 @@ static const struct nlop_s* nlop_stack_container_internal_create(int N, const st
 		else
 			tmp = nlop_clone(nlops[i]);
 
-		d->nlops[i] = nlop_copy_wrapper(OO, (const long**)d->strs, II, (const long**)d->strs + OO, tmp);
+		d->nlops[i] = nlop_copy_wrapper(OO, (const bart_dim_t**)d->strs, II, (const bart_dim_t**)d->strs + OO, tmp);
 
 		nlop_free(tmp);
 	}
@@ -827,18 +827,18 @@ struct stack_flatten_trafo_s {
 
 	linop_data_t super;
 
-	long isize;
-	long osize;
+	bart_dim_t isize;
+	bart_dim_t osize;
 
 	int N;
 
-	long* ioff;
-	long* ooff;
+	bart_dim_t* ioff;
+	bart_dim_t* ooff;
 
 	int* D;
-	long** dims;
-	long** ostrs;
-	long** istrs;
+	bart_dim_t** dims;
+	bart_stride_t** ostrs;
+	bart_stride_t** istrs;
 
 	bool dup;
 };
@@ -902,20 +902,20 @@ static struct nlop_s* nlop_flatten_stacked_transform_input_create(int N, const s
 	d->N = N * II;
 
 	d->D = *TYPE_ALLOC(int[d->N]);
-	d->dims = *TYPE_ALLOC(long*[d->N]);
-	d->ostrs = *TYPE_ALLOC(long*[d->N]);
-	d->istrs = *TYPE_ALLOC(long*[d->N]);
-	d->ooff = *TYPE_ALLOC(long[d->N]);
-	d->ioff = *TYPE_ALLOC(long[d->N]);
+	d->dims = *TYPE_ALLOC(bart_dim_t*[d->N]);
+	d->ostrs = *TYPE_ALLOC(bart_dim_t*[d->N]);
+	d->istrs = *TYPE_ALLOC(bart_dim_t*[d->N]);
+	d->ooff = *TYPE_ALLOC(bart_dim_t[d->N]);
+	d->ioff = *TYPE_ALLOC(bart_dim_t[d->N]);
 
 	int (*D)[II][N] = (void*)d->D;
-	long* (*dims)[II][N] = (void*)d->dims;
-	long* (*ostrs)[II][N] = (void*)d->ostrs;
-	long* (*istrs)[II][N] = (void*)d->istrs;
-	long (*ooff)[II][N] = (void*)d->ooff;
-	long (*ioff)[II][N] = (void*)d->ioff;
+	bart_dim_t* (*dims)[II][N] = (void*)d->dims;
+	bart_stride_t* (*ostrs)[II][N] = (void*)d->ostrs;
+	bart_stride_t* (*istrs)[II][N] = (void*)d->istrs;
+	bart_dim_t (*ooff)[II][N] = (void*)d->ooff;
+	bart_dim_t (*ioff)[II][N] = (void*)d->ioff;
 
-	long* st_dims[II];
+	bart_dim_t* st_dims[II];
 
 	for (int i = 0; i < II; i++) {
 
@@ -924,18 +924,18 @@ static struct nlop_s* nlop_flatten_stacked_transform_input_create(int N, const s
 			auto iov = nlop_generic_domain(nlops[j], i);
 
 			(*D)[i][j] = iov->N;
-			(*dims)[i][j] = ARR_CLONE(long[iov->N], iov->dims);
-			(*ostrs)[i][j] = ARR_CLONE(long[iov->N], iov->strs);
+			(*dims)[i][j] = ARR_CLONE(bart_dim_t[iov->N], iov->dims);
+			(*ostrs)[i][j] = ARR_CLONE(bart_dim_t[iov->N], iov->strs);
 
 			if (0 == j) {
 
-				st_dims[i] = ARR_CLONE(long[iov->N], iov->dims);
+				st_dims[i] = ARR_CLONE(bart_dim_t[iov->N], iov->dims);
 
 			} else {
 
 				if (-1 == in_stack_dim[i]) {
 
-					assert(md_check_equal_dims(iov->N, st_dims[i], iov->dims, ~0UL));
+					assert(md_check_equal_dims(iov->N, st_dims[i], iov->dims, ~UINT64_C(0)));
 
 				} else {
 
@@ -949,14 +949,14 @@ static struct nlop_s* nlop_flatten_stacked_transform_input_create(int N, const s
 
 	for (int i = 0; i < II; i++) {
 
-		long pos = 0;
-		long strs[(*D)[i][0]];
+		bart_dim_t pos = 0;
+		bart_stride_t strs[(*D)[i][0]];
 		md_calc_strides((*D)[i][0], strs, st_dims[i], CFL_SIZE);
 
 		for (int j = 0; j < N; j++) {
 
-			(*istrs)[i][j] = ARR_CLONE(long[(*D)[i][j]], strs);
-			(*ioff)[i][j] = (-1 == in_stack_dim[i]) ? 0 : pos * strs[in_stack_dim[i]] / (long)CFL_SIZE;
+			(*istrs)[i][j] = ARR_CLONE(bart_dim_t[(*D)[i][j]], strs);
+			(*ioff)[i][j] = (-1 == in_stack_dim[i]) ? 0 : pos * strs[in_stack_dim[i]] / (bart_stride_t)CFL_SIZE;
 
 			pos += (-1 == in_stack_dim[i]) ? 0 : (*dims)[i][j][in_stack_dim[i]];
 		}
@@ -988,8 +988,8 @@ static struct nlop_s* nlop_flatten_stacked_transform_input_create(int N, const s
 	for (int i = 0; i < II; i++)
 		d->dup = d->dup || (-1 == in_stack_dim[i]);
 
-	long odims[1] = { d->osize };
-	long idims[1] = { d->isize };
+	bart_dim_t odims[1] = { d->osize };
+	bart_dim_t idims[1] = { d->isize };
 
 	return nlop_from_linop_F(linop_create(1, odims, 1, idims, CAST_UP(PTR_PASS(d)), stack_flatten_trafo_apply, stack_flatten_trafo_adjoint, NULL, NULL, stack_flatten_trafo_free));
 }
@@ -1004,20 +1004,20 @@ static struct nlop_s* nlop_flatten_stacked_transform_output_create(int N, const 
 	d->N = N * OO;
 
 	d->D = *TYPE_ALLOC(int[d->N]);
-	d->dims = *TYPE_ALLOC(long*[d->N]);
-	d->ostrs = *TYPE_ALLOC(long*[d->N]);
-	d->istrs = *TYPE_ALLOC(long*[d->N]);
-	d->ooff = *TYPE_ALLOC(long[d->N]);
-	d->ioff = *TYPE_ALLOC(long[d->N]);
+	d->dims = *TYPE_ALLOC(bart_dim_t*[d->N]);
+	d->ostrs = *TYPE_ALLOC(bart_dim_t*[d->N]);
+	d->istrs = *TYPE_ALLOC(bart_dim_t*[d->N]);
+	d->ooff = *TYPE_ALLOC(bart_dim_t[d->N]);
+	d->ioff = *TYPE_ALLOC(bart_dim_t[d->N]);
 
 	int (*D)[OO][N] = (void*)d->D;
-	long* (*dims)[OO][N] = (void*)d->dims;
-	long* (*ostrs)[OO][N] = (void*)d->ostrs;
-	long* (*istrs)[OO][N] = (void*)d->istrs;
-	long (*ooff)[OO][N] = (void*)d->ooff;
-	long (*ioff)[OO][N] = (void*)d->ioff;
+	bart_dim_t* (*dims)[OO][N] = (void*)d->dims;
+	bart_stride_t* (*ostrs)[OO][N] = (void*)d->ostrs;
+	bart_stride_t* (*istrs)[OO][N] = (void*)d->istrs;
+	bart_dim_t (*ooff)[OO][N] = (void*)d->ooff;
+	bart_dim_t (*ioff)[OO][N] = (void*)d->ioff;
 
-	long* st_dims[OO];
+	bart_dim_t* st_dims[OO];
 	memset(st_dims, 0, sizeof st_dims);	// -fanalyzer uninitialized
 
 	for (int i = 0; i < OO; i++) {
@@ -1027,11 +1027,11 @@ static struct nlop_s* nlop_flatten_stacked_transform_output_create(int N, const 
 			auto iov = nlop_generic_codomain(nlops[j], i);
 
 			(*D)[i][j] = iov->N;
-			(*dims)[i][j] = ARR_CLONE(long[iov->N], iov->dims);
-			(*istrs)[i][j] = ARR_CLONE(long[iov->N], iov->strs);
+			(*dims)[i][j] = ARR_CLONE(bart_dim_t[iov->N], iov->dims);
+			(*istrs)[i][j] = ARR_CLONE(bart_dim_t[iov->N], iov->strs);
 
 			if (0 == j) {
-				st_dims[i] = ARR_CLONE(long[iov->N], iov->dims);
+				st_dims[i] = ARR_CLONE(bart_dim_t[iov->N], iov->dims);
 
 			} else {
 
@@ -1045,14 +1045,14 @@ static struct nlop_s* nlop_flatten_stacked_transform_output_create(int N, const 
 
 	for (int i = 0; i < OO; i++) {
 
-		long pos = 0;
-		long strs[(*D)[i][0]];
+		bart_dim_t pos = 0;
+		bart_stride_t strs[(*D)[i][0]];
 		md_calc_strides((*D)[i][0], strs, st_dims[i], CFL_SIZE);
 
 		for (int j = 0; j < N; j++) {
 
-			(*ostrs)[i][j] = ARR_CLONE(long[(*D)[i][j]], strs);
-			(*ooff)[i][j] = pos * strs[out_stack_dim[i]] / (long)CFL_SIZE;
+			(*ostrs)[i][j] = ARR_CLONE(bart_dim_t[(*D)[i][j]], strs);
+			(*ooff)[i][j] = pos * strs[out_stack_dim[i]] / (bart_stride_t)CFL_SIZE;
 			pos += (*dims)[i][j][out_stack_dim[i]];
 		}
 	}
@@ -1080,8 +1080,8 @@ static struct nlop_s* nlop_flatten_stacked_transform_output_create(int N, const 
 
 	d->dup = false;
 
-	long odims[1] = { d->osize };
-	long idims[1] = { d->isize };
+	bart_dim_t odims[1] = { d->osize };
+	bart_dim_t idims[1] = { d->isize };
 
 	return nlop_from_linop_F(linop_create(1, odims, 1, idims, CAST_UP(PTR_PASS(d)), stack_flatten_trafo_apply, stack_flatten_trafo_adjoint, NULL, NULL, stack_flatten_trafo_free));
 }

@@ -1,4 +1,5 @@
  
+#include "misc/dimtypes.h"
 #include <complex.h>
 
 #include "misc/mri.h"
@@ -9,7 +10,7 @@ extern void noir_back_coils(const struct linop_s* op, complex float* dst, const 
 
 struct noir_model_conf_s {
 
-	unsigned int fft_flags;
+	bart_flags_t fft_flags;
 	unsigned int cnstcoil_flags;
 	unsigned int ptrn_flags;
 	_Bool rvc;
@@ -29,7 +30,7 @@ struct noir_s {
 	struct noir_op_s* noir_op;
 };
 
-extern struct noir_s noir_create(const long dims[DIMS], const complex float* mask, const complex float* psf, const struct noir_model_conf_s* conf);
+extern struct noir_s noir_create(const bart_dim_t dims[DIMS], const complex float* mask, const complex float* psf, const struct noir_model_conf_s* conf);
 
 
 struct nlop_data_s;

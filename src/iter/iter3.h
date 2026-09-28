@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include "misc/types.h"
 
 typedef struct iter3_conf_s { TYPEID* TYPEID; } iter3_conf;
@@ -44,8 +45,8 @@ struct iter3_levenberg_marquardt_conf {
 	int iter;
 	int cgiter;
 	float redu;
-	long Bi;
-	long Bo;
+	bart_dim_t Bi;
+	bart_dim_t Bo;
 	float l2lambda;
 };
 

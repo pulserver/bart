@@ -42,7 +42,7 @@
 #include "cc.h"
 
 
-void scc(const long out_dims[DIMS], complex float* out_data, const long caldims[DIMS], const complex float* cal_data)
+void scc(const bart_dim_t out_dims[DIMS], complex float* out_data, const bart_dim_t caldims[DIMS], const complex float* cal_data)
 {
 	int channels = (int)caldims[COIL_DIM];
 
@@ -101,25 +101,25 @@ static void align1(int M, int N, complex float out[M][N], const complex float in
 
 
 
-static void align_ro2(const long dims[DIMS], int start, int end, complex float* odata, const complex float* idata)
+static void align_ro2(const bart_dim_t dims[DIMS], int start, int end, complex float* odata, const complex float* idata)
 {
 	int dir = (start < end) ? 1 : -1;
 
-	long tmp_dims[DIMS];
+	bart_dim_t tmp_dims[DIMS];
 	md_select_dims(DIMS, ~READ_FLAG, tmp_dims, dims);
 
 	complex float* tmp1 = md_alloc(DIMS, tmp_dims, CFL_SIZE);
 	complex float* tmp2 = md_alloc(DIMS, tmp_dims, CFL_SIZE);
 	complex float* tmp3 = md_alloc(DIMS, tmp_dims, CFL_SIZE);
 
-	md_copy_block(DIMS, (long[DIMS]){ [READ_DIM] = start }, tmp_dims, tmp1, dims, idata, CFL_SIZE);
+	md_copy_block(DIMS, (bart_dim_t[DIMS]){ [READ_DIM] = start }, tmp_dims, tmp1, dims, idata, CFL_SIZE);
 
 	if (dir)
-		md_copy_block(DIMS, (long[DIMS]){ [READ_DIM] = start }, dims, odata, tmp_dims, tmp1, CFL_SIZE);
+		md_copy_block(DIMS, (bart_dim_t[DIMS]){ [READ_DIM] = start }, dims, odata, tmp_dims, tmp1, CFL_SIZE);
 
 	for (int i = start; i != end - dir; i += dir) {
 
-		md_copy_block(DIMS, (long[DIMS]){ [READ_DIM] = i + dir }, tmp_dims, tmp2, dims, idata, CFL_SIZE);
+		md_copy_block(DIMS, (bart_dim_t[DIMS]){ [READ_DIM] = i + dir }, tmp_dims, tmp2, dims, idata, CFL_SIZE);
 
 		align1((int)tmp_dims[MAPS_DIM], (int)tmp_dims[COIL_DIM],
 				MD_CAST_ARRAY2(      complex float, DIMS, tmp_dims, tmp3, COIL_DIM, MAPS_DIM),
@@ -128,7 +128,7 @@ static void align_ro2(const long dims[DIMS], int start, int end, complex float* 
 
 		md_copy(DIMS, tmp_dims, tmp1, tmp3, CFL_SIZE);
 
-		md_copy_block(DIMS, (long[DIMS]){ [READ_DIM] = i + dir }, dims, odata, tmp_dims, tmp3, CFL_SIZE);
+		md_copy_block(DIMS, (bart_dim_t[DIMS]){ [READ_DIM] = i + dir }, dims, odata, tmp_dims, tmp3, CFL_SIZE);
 	}
 
 	md_free(tmp1);
@@ -136,7 +136,7 @@ static void align_ro2(const long dims[DIMS], int start, int end, complex float* 
 	md_free(tmp3);
 }
 
-void align_ro(const long dims[DIMS], complex float* odata, const complex float* idata)
+void align_ro(const bart_dim_t dims[DIMS], complex float* odata, const complex float* idata)
 {
 	int ro = (int)dims[READ_DIM];
 	assert(ro > 1);
@@ -153,7 +153,7 @@ void align_ro(const long dims[DIMS], complex float* odata, const complex float* 
 #endif
 }
 
-void cc_align_mat(const long dims[DIMS], complex float* aligned, const complex float* in, const complex float* reference)
+void cc_align_mat(const bart_dim_t dims[DIMS], complex float* aligned, const complex float* in, const complex float* reference)
 {
 	align1(dims[MAPS_DIM], dims[COIL_DIM],
 			MD_CAST_ARRAY2(complex float, DIMS, dims, aligned, COIL_DIM, MAPS_DIM),
@@ -161,13 +161,13 @@ void cc_align_mat(const long dims[DIMS], complex float* aligned, const complex f
 			MD_CAST_ARRAY2(const complex float, DIMS, dims, in, COIL_DIM, MAPS_DIM));
 }
 
-void gcc(const long out_dims[DIMS], complex float* out_data, const long caldims[DIMS], const complex float* cal_data)
+void gcc(const bart_dim_t out_dims[DIMS], complex float* out_data, const bart_dim_t caldims[DIMS], const complex float* cal_data)
 {
 	int ro = (int)out_dims[READ_DIM];
 
 	// zero pad calibration region along readout and FFT
 
-	long tmp_dims[DIMS];
+	bart_dim_t tmp_dims[DIMS];
 	md_copy_dims(DIMS, tmp_dims, caldims);
 	tmp_dims[READ_DIM] = ro;
 	complex float* tmp = md_alloc(DIMS, tmp_dims, CFL_SIZE);
@@ -177,10 +177,10 @@ void gcc(const long out_dims[DIMS], complex float* out_data, const long caldims[
 
 	// apply scc at each readout location
 
-	long tmp2_dims[DIMS];
+	bart_dim_t tmp2_dims[DIMS];
 	md_select_dims(DIMS, ~READ_FLAG, tmp2_dims, tmp_dims);
 
-	long out2_dims[DIMS];
+	bart_dim_t out2_dims[DIMS];
 	md_select_dims(DIMS, ~READ_FLAG, out2_dims, out_dims);
 
 
@@ -190,7 +190,7 @@ void gcc(const long out_dims[DIMS], complex float* out_data, const long caldims[
 		complex float* tmp2 = md_alloc(DIMS, tmp2_dims, CFL_SIZE);
 		complex float* out2 = md_alloc(DIMS, out2_dims, CFL_SIZE);
 
-		long pos[DIMS] = { [READ_DIM] = i };
+		bart_dim_t pos[DIMS] = { [READ_DIM] = i };
 		md_copy_block(DIMS, pos, tmp2_dims, tmp2, tmp_dims, tmp, CFL_SIZE);
 
 		scc(out2_dims, out2, tmp2_dims, tmp2);
@@ -206,7 +206,7 @@ void gcc(const long out_dims[DIMS], complex float* out_data, const long caldims[
 
 
 
-void ecc(const long out_dims[DIMS], complex float* out_data, const long caldims[DIMS], const complex float* cal_data)
+void ecc(const bart_dim_t out_dims[DIMS], complex float* out_data, const bart_dim_t caldims[DIMS], const complex float* cal_data)
 {
 	int channels = (int)caldims[COIL_DIM];
 
@@ -227,7 +227,7 @@ void ecc(const long out_dims[DIMS], complex float* out_data, const long caldims[
 	conf.orthiter = false;
 	conf.perturb = 0.;
 
-	long map_dims[DIMS];
+	bart_dim_t map_dims[DIMS];
 	md_select_dims(DIMS, ~MAPS_FLAG, map_dims, out_dims);
         complex float* emaps = md_alloc(DIMS, map_dims, CFL_SIZE);
 

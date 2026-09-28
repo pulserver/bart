@@ -129,7 +129,7 @@ int main_poisson(int argc, char* argv[argc])
 	}
 
 
-	long dims[DIMS] = { 1, yy, zz, T, 1, [5 ... DIMS - 1] = 1 };
+	bart_dim_t dims[DIMS] = { 1, yy, zz, T, 1, [5 ... DIMS - 1] = 1 };
 	complex float (*mask)[T][zz][yy] = NULL;
 
 	if (msk) {
@@ -222,7 +222,7 @@ int main_poisson(int argc, char* argv[argc])
 			} else {
 
 #if 1
-				long sdims[DIMS] = { 3, P, [2 ... DIMS -1] = 1 };
+				bart_dim_t sdims[DIMS] = { 3, P, [2 ... DIMS -1] = 1 };
 				//complex float (*samples)[P][3] = (void*)create_cfl(argv[1], 2, sdims);
 				complex float (*samples)[P][3] =
 					MD_CAST_ARRAY2_PTR(complex float, 2, sdims, create_cfl(out_file, DIMS, sdims), 0, 1);
@@ -281,8 +281,8 @@ int main_poisson(int argc, char* argv[argc])
 	if (NULL != mask) {
 
 		float f = cutcorners ? (M_PI / 4.) : 1.;
-		printf(", grid size: %ldx%ld%s = %ld (R = %f)", dims[1], dims[2], cutcorners ? "x(pi/4)" : "",
-				(long)(f * dims[1] * dims[2]), f * T * dims[1] * dims[2] / (float)P);
+		printf(", grid size: %" PRId64 "x%" PRId64 "%s = %" PRId64 " (R = %f)", dims[1], dims[2], cutcorners ? "x(pi/4)" : "",
+				(bart_dim_t)(f * dims[1] * dims[2]), f * T * dims[1] * dims[2] / (float)P);
 
 		unmap_cfl(DIMS, dims, &(*mask)[0][0][0]);
 	}

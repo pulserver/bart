@@ -41,29 +41,29 @@
 #endif
 
 
-static void grog_calib2(int calib_spokes, int D, const long lnG_dims[D], complex float* lnG, const long tdims[D], const complex float* traj, const long ddims[D], const complex float* data)
+static void grog_calib2(int calib_spokes, int D, const bart_dim_t lnG_dims[D], complex float* lnG, const bart_dim_t tdims[D], const complex float* traj, const bart_dim_t ddims[D], const complex float* data)
 {
-	unsigned long tflags = md_nontriv_dims(DIMS, tdims);
-	unsigned long dflags = md_nontriv_dims(DIMS, ddims);
+	bart_flags_t tflags = md_nontriv_dims(DIMS, tdims);
+	bart_flags_t dflags = md_nontriv_dims(DIMS, ddims);
 
 	// if we have multiple data for some position, we only use the first
 
-	long ddims1[D];
+	bart_dim_t ddims1[D];
 	md_select_dims(D, ~(dflags & ~tflags) | COIL_FLAG, ddims1, ddims);
 
 	complex float *data1 = md_alloc(D, ddims1, CFL_SIZE);
 
-	long pos[D];
+	bart_dim_t pos[D];
 	for (int i = 0; i < D; i++)
 		pos[i] = 0;
 
 	md_copy_block(D, pos, ddims1, data1, ddims, data, CFL_SIZE);
 
-	long tdims2[5];
+	bart_dim_t tdims2[5];
 	md_copy_dims(5, tdims2, tdims);
 	tdims2[PHS2_DIM] *= md_calc_size(D - 5, tdims + 5);
 
-	long ddims2[D];
+	bart_dim_t ddims2[D];
 	md_singleton_dims(D - 5, ddims2 + 5);
 	md_copy_dims(5, ddims2, ddims1);
 	ddims2[PHS2_DIM] *= md_calc_size(D - 5, ddims1 + 5);
@@ -72,7 +72,7 @@ static void grog_calib2(int calib_spokes, int D, const long lnG_dims[D], complex
 
 	md_reshape(D, ~(READ_FLAG|COIL_FLAG), ddims2, data2, ddims1, data1, CFL_SIZE);
 
-	long ddims3[5];
+	bart_dim_t ddims3[5];
 	md_copy_dims(5, ddims3, ddims2);
 
 	// truncate number of spokes
@@ -94,20 +94,20 @@ static void grog_calib2(int calib_spokes, int D, const long lnG_dims[D], complex
 }
 
 
-static void grog_grid2(int D, const long tdims[D], const complex float* traj_shift, const long ddims[D], complex float* data_grid, const complex float* data, const long lnG_dims[D], complex float* lnG)
+static void grog_grid2(int D, const bart_dim_t tdims[D], const complex float* traj_shift, const bart_dim_t ddims[D], complex float* data_grid, const complex float* data, const bart_dim_t lnG_dims[D], complex float* lnG)
 {
-	unsigned long tflags = md_nontriv_dims(D, tdims);
-	unsigned long dflags = md_nontriv_dims(D, ddims);
+	bart_flags_t tflags = md_nontriv_dims(D, tdims);
+	bart_flags_t dflags = md_nontriv_dims(D, ddims);
 
 	// loop over dimensions
 
-	unsigned long loop_flags = tflags & dflags & ~(PHS1_FLAG|PHS2_FLAG);
+	bart_flags_t loop_flags = tflags & dflags & ~(PHS1_FLAG|PHS2_FLAG);
 
-	if (0UL == loop_flags)
+	if (0 == loop_flags)
 		return grog_grid(D, tdims, traj_shift, ddims, data_grid, data, lnG_dims, lnG);
 
-	long tdims1[D];
-	long ddims1[D];
+	bart_dim_t tdims1[D];
+	bart_dim_t ddims1[D];
 	md_select_dims(D, ~loop_flags, tdims1, tdims);
 	md_select_dims(D, ~loop_flags, ddims1, ddims);
 
@@ -115,7 +115,7 @@ static void grog_grid2(int D, const long tdims[D], const complex float* traj_shi
 	complex float* data1 = md_alloc(D, ddims1, CFL_SIZE);
 	complex float* data_grid1 = md_alloc(D, ddims1, CFL_SIZE);
 
-	long pos[D];
+	bart_dim_t pos[D];
 	for (int i = 0; i < D; i++)
 		pos[i] = 0;
 
@@ -164,10 +164,10 @@ int main_grog(int argc, char* argv[argc])
 
 	num_init();
 
-	long tdims[DIMS];
+	bart_dim_t tdims[DIMS];
 	const complex float* traj = load_cfl(traj_file, DIMS, tdims);
 
-	long ddims[DIMS];
+	bart_dim_t ddims[DIMS];
 	const complex float* data = load_cfl(data_file, DIMS, ddims);
 
 	debug_printf(DP_DEBUG2, "tdims:\t");
@@ -176,19 +176,19 @@ int main_grog(int argc, char* argv[argc])
 	debug_printf(DP_DEBUG2, "ddims:\t");
 	debug_print_dims(DP_DEBUG2, DIMS, ddims);
 
-	unsigned long tflags = md_nontriv_dims(DIMS, tdims);
-	unsigned long dflags = md_nontriv_dims(DIMS, ddims);
+	bart_flags_t tflags = md_nontriv_dims(DIMS, tdims);
+	bart_flags_t dflags = md_nontriv_dims(DIMS, ddims);
 
-	if (!md_check_compat(DIMS - 1, ~0UL, tdims + 1, ddims + 1))
+	if (!md_check_compat(DIMS - 1, ~UINT64_C(0), tdims + 1, ddims + 1))
 		error("Incompatible dimensions\n");
 
-	if (1UL != (tflags & ~dflags))
+	if (1 != (tflags & ~dflags))
 		error("Incompatible dimensions\n");
 
 
 	// Calibration of GROG kernels
 
-	long lnG_dims[DIMS];
+	bart_dim_t lnG_dims[DIMS];
 	md_select_dims(DIMS, COIL_FLAG, lnG_dims, ddims);
 	lnG_dims[READ_DIM] = tdims[READ_DIM]; // Number of dimensions
 	lnG_dims[MAPS_DIM] = ddims[COIL_DIM];
@@ -205,10 +205,10 @@ int main_grog(int argc, char* argv[argc])
 
 	// Shifting of Data
 
-	long tdims2[DIMS];
+	bart_dim_t tdims2[DIMS];
 	const complex float* traj_grid = load_cfl(grid_traj_file, DIMS, tdims2);
 
-	if (!md_check_compat(DIMS, 0UL, tdims, tdims2))
+	if (!md_check_compat(DIMS, 0, tdims, tdims2))
 		error("Incompatible trajectory.\n");
 
 	complex float* data_grid = create_cfl(grid_data_file, DIMS, ddims);

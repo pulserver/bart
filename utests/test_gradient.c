@@ -26,7 +26,7 @@ static struct grad_limits sys = {
 
 static bool test_softest_gradient1(void)
 {
-	long available_time = 3000;
+	bart_dim_t available_time = 3000;
 	float moment = 2000;
 
 	struct grad_trapezoid grad;
@@ -45,7 +45,7 @@ static bool test_softest_gradient1(void)
 
 static bool test_softest_gradient2(void)
 {
-	long available_time = 6000;
+	bart_dim_t available_time = 6000;
 	float moment = 2000;
 
 	struct grad_trapezoid grad;

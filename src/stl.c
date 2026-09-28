@@ -71,7 +71,7 @@ int main_stl(int argc, char* argv[argc])
         if (NULL == in_file && STL_NONE == stl_choice)
                 stl_choice = STL_TETRAHEDRON;
 
-        long dims[DIMS];
+        bart_dim_t dims[DIMS];
         // for build analyzer
         double* model = NULL;
 

@@ -124,13 +124,13 @@ int main_pics(int argc, char* argv[argc])
 	struct opt_reg_s ropts;
 	opt_reg_init(&ropts);
 
-	unsigned long loop_flags = 0UL;
+	bart_flags_t loop_flags = 0;
 
-	unsigned long mpi_flags = 0UL;
+	bart_flags_t mpi_flags = 0;
 
 	struct pics_config pics_conf;
-	pics_conf.shared_img_flags = 0UL;
-	pics_conf.motion_flags = 0UL;
+	pics_conf.shared_img_flags = 0;
+	pics_conf.motion_flags = 0;
 	pics_conf.gpu_gridding = false;
 
 
@@ -236,7 +236,7 @@ int main_pics(int argc, char* argv[argc])
 
 	// load kspace and maps and get dimensions
 
-	long ksp_dims[DIMS];
+	bart_dim_t ksp_dims[DIMS];
 
 	complex float* kspace = load_cfl(ksp_file, DIMS, ksp_dims);
 
@@ -257,7 +257,7 @@ int main_pics(int argc, char* argv[argc])
 
 		pics_conf.nuconf->cfft |= SLICE_FLAG;
 
-		debug_printf(DP_INFO, "SMS reconstruction: MB = %ld\n", ksp_dims[SLICE_DIM]);
+		debug_printf(DP_INFO, "SMS reconstruction: MB = %" PRId64 "\n", ksp_dims[SLICE_DIM]);
 	}
 
 	if (ropts.asl && ropts.teasl)
@@ -269,14 +269,14 @@ int main_pics(int argc, char* argv[argc])
 
 	// load coil sensitivities
 
-	long map_dims[DIMS];
+	bart_dim_t map_dims[DIMS];
 
 	complex float* maps = load_cfl_sameplace(sens_file, DIMS, map_dims, kspace);
 
 
 	// load motion field
 
-	long motion_dims[DIMS] = { };
+	bart_dim_t motion_dims[DIMS] = { };
 	complex float* motion = NULL;
 
 	if (NULL != motion_file) {
@@ -291,7 +291,7 @@ int main_pics(int argc, char* argv[argc])
 
 	// load basis file
 
-	long basis_dims[DIMS] = { }; // analyzer false positive
+	bart_dim_t basis_dims[DIMS] = { }; // analyzer false positive
 	complex float* basis = NULL;
 
 	if (NULL != basis_file) {
@@ -302,14 +302,14 @@ int main_pics(int argc, char* argv[argc])
 		assert(0 == ((FFT_FLAGS | MAPS_FLAG | COIL_FLAG) & md_nontriv_dims(DIMS, basis_dims)));
 
 		// allow for different basis in "batch dimensions"
-		unsigned long allowed_flags = pics_conf.motion_flags | ~pics_conf.shared_img_flags;
+		bart_flags_t allowed_flags = pics_conf.motion_flags | ~pics_conf.shared_img_flags;
 		assert(0 == (~allowed_flags & md_nontriv_dims(DIMS, basis_dims)));
 	}
 
 
 	// load k-space trajectory
 
-	long traj_dims[DIMS] = { }; // gcc analyzer
+	bart_dim_t traj_dims[DIMS] = { }; // gcc analyzer
 
 	complex float* traj = NULL;
 
@@ -319,7 +319,7 @@ int main_pics(int argc, char* argv[argc])
 
 	// finalize dimensions
 
-	long max_dims[DIMS];
+	bart_dim_t max_dims[DIMS];
 	md_copy_dims(DIMS, max_dims, ksp_dims);
 	md_copy_dims(5, max_dims, map_dims);
 
@@ -332,13 +332,13 @@ int main_pics(int argc, char* argv[argc])
 		max_dims[TE_DIM] = 1;
 	}
 
-	long img_dims[DIMS];
+	bart_dim_t img_dims[DIMS];
 	md_select_dims(DIMS, ~(COIL_FLAG | pics_conf.shared_img_flags), img_dims, max_dims);
 
 	if (!md_check_compat(DIMS, ~(MD_BIT(MAPS_DIM) | FFT_FLAGS), img_dims, map_dims))
 		error("Dimensions of image and sensitivities do not match!\n");
 
-	if ((NULL != traj_file) && !md_check_compat(DIMS, ~0UL, ksp_dims, traj_dims))
+	if ((NULL != traj_file) && !md_check_compat(DIMS, ~UINT64_C(0), ksp_dims, traj_dims))
 		error("Dimensions of data and trajectory do not match!\n");
 
 	if ((NULL == traj_file) && (NULL != psf_ofile))
@@ -363,7 +363,7 @@ int main_pics(int argc, char* argv[argc])
 		debug_printf(DP_INFO, "GPU reconstruction\n");
 
 	if (map_dims[MAPS_DIM] > 1)
-		debug_printf(DP_INFO, "%ld maps.\nESPIRiT reconstruction.\n", map_dims[MAPS_DIM]);
+		debug_printf(DP_INFO, "%" PRId64 " maps.\nESPIRiT reconstruction.\n", map_dims[MAPS_DIM]);
 
 	if (conf.bpsense)
 		debug_printf(DP_INFO, "Basis Pursuit formulation\n");
@@ -397,7 +397,7 @@ int main_pics(int argc, char* argv[argc])
 
 	// initialize sampling pattern
 
-	long pat_dims[DIMS];
+	bart_dim_t pat_dims[DIMS];
 
 	complex float* pattern = NULL;
 
@@ -417,8 +417,8 @@ int main_pics(int argc, char* argv[argc])
 	}
 
 
-	long ksp_strs[DIMS];
-	long pat_strs[DIMS];
+	bart_stride_t ksp_strs[DIMS];
+	bart_stride_t pat_strs[DIMS];
 
 	md_calc_strides(DIMS, ksp_strs, ksp_dims, CFL_SIZE);
 	md_calc_strides(DIMS, pat_strs, pat_dims, CFL_SIZE);
@@ -430,10 +430,10 @@ int main_pics(int argc, char* argv[argc])
 
 		// print some statistics
 
-		long T = md_calc_size(DIMS, pat_dims);
-		long samples = (long)pow(md_znorm(DIMS, pat_dims, pattern), 2.);
+		bart_dim_t T = md_calc_size(DIMS, pat_dims);
+		bart_dim_t samples = (bart_dim_t)pow(md_znorm(DIMS, pat_dims, pattern), 2.);
 
-		debug_printf(DP_INFO, "Size: %ld Samples: %ld Acc: %.2f\n", T, samples, (float)T / (float)samples);
+		debug_printf(DP_INFO, "Size: %" PRId64 " Samples: %" PRId64 " Acc: %.2f\n", T, samples, (float)T / (float)samples);
 
 		ifftmod(DIMS, ksp_dims, FFT_FLAGS, kspace, kspace);
 	}
@@ -472,7 +472,7 @@ int main_pics(int argc, char* argv[argc])
 
 		int D = nufft_get_psf_dims(nufft_op, 0, NULL);
 
-		long psf_dims[D];
+		bart_dim_t psf_dims[D];
 
 		nufft_get_psf_dims(nufft_op, D, psf_dims);
 
@@ -485,7 +485,7 @@ int main_pics(int argc, char* argv[argc])
 
 	if (NULL != psf_ifile) {
 
-		long psf_dims[DIMS + 1];
+		bart_dim_t psf_dims[DIMS + 1];
 
 		complex float* psf_in = load_cfl_sameplace(psf_ifile, DIMS + 1, psf_dims, kspace);
 
@@ -544,7 +544,7 @@ int main_pics(int argc, char* argv[argc])
 
 	// load truth image
 
-	long img_truth_dims[DIMS];
+	bart_dim_t img_truth_dims[DIMS];
 	complex float* image_truth = NULL;
 
 	if (NULL != image_truth_file) {
@@ -577,7 +577,7 @@ int main_pics(int argc, char* argv[argc])
 
 	// load warmstart image
 
-	long img_start_dims[DIMS];
+	bart_dim_t img_start_dims[DIMS];
 	complex float* image_start = NULL;
 
 	if (NULL != image_start_file) {
@@ -599,7 +599,7 @@ int main_pics(int argc, char* argv[argc])
 
 	const struct operator_p_s* thresh_ops[NUM_REGS] = { NULL };
 	const struct linop_s* trafos[NUM_REGS] = { NULL };
-	const long (*sdims[NUM_REGS])[DIMS + 1] = { NULL };
+	const bart_dim_t (*sdims[NUM_REGS])[DIMS + 1] = { NULL };
 
 
 	opt_reg_configure(DIMS, img_dims, &ropts, thresh_ops, trafos, sdims, llr_blk, shift_mode, wtype_str, conf.gpu, ITER_DIM);
@@ -612,7 +612,7 @@ int main_pics(int argc, char* argv[argc])
 
 	int nr_penalties = ropts.r + ropts.sr;
 
-	debug_printf(DP_INFO, "Regularization terms: %d, Supporting variables: %ld\n", nr_penalties, ropts.svars);
+	debug_printf(DP_INFO, "Regularization terms: %d, Supporting variables: %" PRId64 "\n", nr_penalties, ropts.svars);
 
 	// choose algorithm
 
@@ -636,13 +636,13 @@ int main_pics(int argc, char* argv[argc])
 		// FIXME: max reduction currently not supported for MPI
 		if (-1 == step && !eigen && !is_vptr(maps)) {
 
-			long tdims[DIMS];
+			bart_dim_t tdims[DIMS];
 			md_select_dims(DIMS, ~COIL_FLAG, tdims, map_dims);
 			complex float* tmp = md_alloc_sameplace(DIMS, tdims, CFL_SIZE, maps);
 			md_zrss(DIMS, map_dims, COIL_FLAG, tmp, maps);
 
 			complex float* scalar = md_alloc_sameplace(DIMS, MD_SINGLETON_DIMS(DIMS), CFL_SIZE, maps);
-			md_reduce_zmax(DIMS, tdims, ~0UL, scalar, tmp);
+			md_reduce_zmax(DIMS, tdims, ~UINT64_C(0), scalar, tmp);
 
 			float maxval;
 			md_copy(1, MD_DIMS(1), &maxval, scalar, FL_SIZE);
@@ -683,7 +683,7 @@ int main_pics(int argc, char* argv[argc])
 		assert(NULL == image_truth);
 		assert(!conf.rvc);
 
-		long total = md_calc_size(DIMS, img_dims);
+		bart_dim_t total = md_calc_size(DIMS, img_dims);
 
 		const struct linop_s* extract = linop_extract_create(1, MD_DIMS(0), MD_DIMS(total), MD_DIMS(total + ropts.svars));
 
@@ -716,7 +716,7 @@ int main_pics(int argc, char* argv[argc])
 
 	if (0 < ropts.svars) {
 
-		long total = md_calc_size(DIMS, img_dims);
+		bart_dim_t total = md_calc_size(DIMS, img_dims);
 
 		const struct linop_s* extract = linop_extract_create(1, MD_DIMS(0), MD_DIMS(total), MD_DIMS(total + ropts.svars));
 		extract = linop_reshape_out_F(extract, DIMS, img_dims);

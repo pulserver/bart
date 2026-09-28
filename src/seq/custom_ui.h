@@ -7,6 +7,7 @@
 
 // DO NOT CHANGE THIS HEADER !
 
+#include "misc/dimtypes.h"
 #include "misc/dllspec.h"
 #include "misc/cppwrap.h"
 
@@ -40,7 +41,7 @@ struct seq_ui_long { //also checkbox
 	const char* tag;
 	int id;
 	const char* label;
-	long limit[4]; // { min, max, inc, default }
+	bart_dim_t limit[4]; // { min, max, inc, default }
 	const char* tooltip;
 	const char* unit;
 };

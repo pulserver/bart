@@ -24,22 +24,22 @@
 
 
 static void rot45z2(int D, int M,
-	const long dim[D], const long ostr[D], complex float* optr,
-	const long istr[D], const complex float* iptr)
+	const bart_dim_t dim[D], const bart_stride_t ostr[D], complex float* optr,
+	const bart_stride_t istr[D], const complex float* iptr)
 {
 	assert(M < D);
 	assert(2 == dim[M]);
 	assert(optr != iptr);
 
-	long dims2[D];
+	bart_dim_t dims2[D];
 	md_copy_dims(D, dims2, dim);
 	dims2[M] = 1;
 
-	long ostr2[D];
+	bart_stride_t ostr2[D];
 	md_copy_strides(D, ostr2, ostr);
 	ostr2[M] *= 2;
 
-	long istr2[D];
+	bart_stride_t istr2[D];
 	md_copy_strides(D, istr2, istr);
 	istr2[M] *= 2;
 
@@ -49,9 +49,9 @@ static void rot45z2(int D, int M,
 
 
 
-static int find_bit(unsigned long N)
+static int find_bit(bart_flags_t N)
 {
-	return ffsl((long)N) - 1;
+	return md_min_idx(N);
 }
 
 static int next_powerof2(int x)
@@ -85,10 +85,10 @@ static void compute_chirp(int L, bool dir, int M, complex float krn[M])
 	}
 }
 
-static void bluestein(int N, const long dims[N],
-	unsigned long flags, unsigned long dirs,
-	const long ostrs[N], complex float* dst,
-	const long istrs[N], const complex float* in)
+static void bluestein(int N, const bart_dim_t dims[N],
+	bart_flags_t flags, bart_flags_t dirs,
+	const bart_stride_t ostrs[N], complex float* dst,
+	const bart_stride_t istrs[N], const complex float* in)
 {
 	int D = find_bit(flags);
 	int M = next_powerof2(2 * dims[D] - 1);
@@ -105,11 +105,11 @@ static void bluestein(int N, const long dims[N],
 	 * ... and use fft of different size to implement it.
 	 */
 
-	long kdims[N];
+	bart_dim_t kdims[N];
 	md_singleton_dims(N, kdims);
 	kdims[D] = M;
 
-	long kstrs[N];
+	bart_stride_t kstrs[N];
 	md_calc_strides(N, kstrs, kdims, CFL_SIZE);
 
 	complex float* xkrn = md_alloc(N, kdims, CFL_SIZE);
@@ -122,11 +122,11 @@ static void bluestein(int N, const long dims[N],
 	complex float* fkrn = md_alloc_sameplace(N, kdims, CFL_SIZE, dst);
 	md_fft(N, kdims, MD_BIT(D), MD_FFT_FORWARD, fkrn, krn);
 
-	long bdims[N];
+	bart_dim_t bdims[N];
 	md_copy_dims(N, bdims, dims);
 	bdims[D] = M;
 
-	long bstrs[N];
+	bart_stride_t bstrs[N];
 	md_calc_strides(N, bstrs, bdims, CFL_SIZE);
 
 	complex float* btmp = md_alloc_sameplace(N, bdims, CFL_SIZE, dst);
@@ -159,11 +159,11 @@ static void compute_twiddle(int n, int m, complex float t[n][m])
 			t[i][j] = cexpf(-2.i * M_PI * (float)(i * j) / (float)(n * m));
 }
 
-static void cooley_tukey(int N, const long dims[N],
+static void cooley_tukey(int N, const bart_dim_t dims[N],
 		int D, int a, int b,
-		unsigned long flags, unsigned long dirs,
-		const long ostr[N], complex float* dst,
-		const long istr[N], const complex float* in)
+		bart_flags_t flags, bart_flags_t dirs,
+		const bart_stride_t ostr[N], complex float* dst,
+		const bart_stride_t istr[N], const complex float* in)
 {
 	/* Cooley-Tukey
 	 *
@@ -175,30 +175,30 @@ static void cooley_tukey(int N, const long dims[N],
 	 * = \ksi_A^{i * l} \ksi_N^{j * l} \ksi_B^{j * k}
 	 */
 
-	long xdims[N + 1];
+	bart_dim_t xdims[N + 1];
 	md_copy_dims(N, xdims, dims);
 	xdims[D] = a;
 	xdims[N] = b;
 
-	long astr[N + 1];
+	bart_stride_t astr[N + 1];
 	md_copy_strides(N, astr, istr);
 	astr[D] = istr[D] * 1;
 	astr[N] = istr[D] * a;
 
-	long bstr[N + 1];
+	bart_stride_t bstr[N + 1];
 	md_copy_strides(N, bstr, ostr);
 	bstr[D] = ostr[D] * b;
 	bstr[N] = ostr[D] * 1;
 
-	unsigned long flags1 = 0;
-	unsigned long flags2 = MD_CLEAR(flags, D);
+	bart_flags_t flags1 = 0;
+	bart_flags_t flags2 = MD_CLEAR(flags, D);
 
-	long tdims[N + 1];
-	long tstrs[N + 1];
+	bart_dim_t tdims[N + 1];
+	bart_stride_t tstrs[N + 1];
 	md_select_dims(N + 1, MD_BIT(D) | MD_BIT(N), tdims, xdims);
 	md_calc_strides(N + 1, tstrs, tdims, CFL_SIZE);
 
-	complex float (*xtw)[b][a] = xmalloc((size_t)(a * b * (long)CFL_SIZE));
+	complex float (*xtw)[b][a] = xmalloc((size_t)(a * b * (bart_stride_t)CFL_SIZE));
 	compute_twiddle(b, a, *xtw);
 
 	complex float* tw = md_alloc_sameplace(N + 1, tdims, CFL_SIZE, dst);
@@ -213,7 +213,7 @@ static void cooley_tukey(int N, const long dims[N],
 }
 
 
-static bool check_strides(int N, const long ostr[N], const long istr[N])
+static bool check_strides(int N, const bart_stride_t ostr[N], const bart_stride_t istr[N])
 {
 	bool ret = true;
 
@@ -231,10 +231,10 @@ static int find_factor(int N)
 	return N;
 }
 
-void md_fft2(int N, const long dims[N],
-		unsigned long flags, unsigned long dirs,
-		const long ostr[N], complex float* dst,
-		const long istr[N], const complex float* in)
+void md_fft2(int N, const bart_dim_t dims[N],
+		bart_flags_t flags, bart_flags_t dirs,
+		const bart_stride_t ostr[N], complex float* dst,
+		const bart_stride_t istr[N], const complex float* in)
 {
 	if (0 == flags) {
 
@@ -244,7 +244,7 @@ void md_fft2(int N, const long dims[N],
 
 				// detect and use inplace transpose?
 
-				long strs[N];
+				bart_stride_t strs[N];
 				md_calc_strides(N, strs, dims, CFL_SIZE);
 
 				complex float* tmp = md_alloc_sameplace(N, dims, CFL_SIZE, dst);
@@ -272,7 +272,7 @@ void md_fft2(int N, const long dims[N],
 
 		if (dst == in) {
 
-			long strs[N];
+			bart_stride_t strs[N];
 			md_calc_strides(N, strs, dims, CFL_SIZE);
 
 			complex float* tmp = md_alloc_sameplace(N, dims, CFL_SIZE, dst);
@@ -308,11 +308,11 @@ void md_fft2(int N, const long dims[N],
 
 
 
-void md_fft(int N, const long dims[N],
-		unsigned long flags, unsigned long dirs,
+void md_fft(int N, const bart_dim_t dims[N],
+		bart_flags_t flags, bart_flags_t dirs,
 		complex float* dst, const complex float* in)
 {
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 	md_fft2(N, dims, flags, dirs, strs, dst, strs, in);
 }

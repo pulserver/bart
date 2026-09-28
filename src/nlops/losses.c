@@ -41,8 +41,8 @@ struct znorm_s {
 	nlop_data_t super;
 
 	int N;
-	const long* ridims;
-	const long* rodims;
+	const bart_dim_t* ridims;
+	const bart_dim_t* rodims;
 
 	float scale;
 	float* tmp;
@@ -104,13 +104,13 @@ static void znorm_del(const nlop_data_t* _data)
 	xfree(data);
 }
 
-const struct nlop_s* nlop_znorm_create(int N, const long dims[N], unsigned long mean_dims)
+const struct nlop_s* nlop_znorm_create(int N, const bart_dim_t dims[N], bart_flags_t mean_dims)
 {
 	PTR_ALLOC(struct znorm_s, data);
 	SET_TYPEID(znorm_s, data);
 
-	PTR_ALLOC(long[N + 1], rodims);
-	PTR_ALLOC(long[N + 1], ridims);
+	PTR_ALLOC(bart_dim_t[N + 1], rodims);
+	PTR_ALLOC(bart_dim_t[N + 1], ridims);
 	(*ridims)[0] = 2;
 
 	md_copy_dims(N, *ridims + 1, dims);
@@ -121,23 +121,23 @@ const struct nlop_s* nlop_znorm_create(int N, const long dims[N], unsigned long 
 	data->ridims = *PTR_PASS(ridims);
 	data->tmp = NULL;
 
-	long tdims[N];
+	bart_dim_t tdims[N];
 	md_select_dims(N, mean_dims, tdims, dims);
 	data->scale = (float)md_calc_size(N, tdims);
 
 	return nlop_create(1, MD_DIMS(1), N, dims, CAST_UP(PTR_PASS(data)), znorm_fun, znorm_der, znorm_adj, NULL, NULL, znorm_del);
 }
 
-const struct nlop_s* nlop_mse_create(int N, const long dims[N], unsigned long mean_dims)
+const struct nlop_s* nlop_mse_create(int N, const bart_dim_t dims[N], bart_flags_t mean_dims)
 {
 	return nlop_chain2_FF(nlop_zaxpbz_create(N, dims, 1, -1), 0, nlop_znorm_create(N, dims, mean_dims), 0);
 }
 
 
 // out: min_l 1/N ||l * x - y||^2 ; in : x, y
-const struct nlop_s* nlop_mse_scaled_create(int N, const long dims[N], unsigned long mean_dims)
+const struct nlop_s* nlop_mse_scaled_create(int N, const bart_dim_t dims[N], bart_flags_t mean_dims)
 {
-	long scl_dims[N];
+	bart_dim_t scl_dims[N];
 	md_select_dims(N, mean_dims, scl_dims, dims);
 
 	auto scl1 = nlop_tenmul_create(N, scl_dims, dims, dims);
@@ -167,9 +167,9 @@ const struct nlop_s* nlop_mse_scaled_create(int N, const long dims[N], unsigned 
 
 
 
-const struct nlop_s* nlop_nmse_create(int N, const long dims[N], unsigned long batch_flags)
+const struct nlop_s* nlop_nmse_create(int N, const bart_dim_t dims[N], bart_flags_t batch_flags)
 {
-	long bat_dims[N];
+	bart_dim_t bat_dims[N];
 	md_select_dims(N, batch_flags, bat_dims, dims);
 
 	auto result = nlop_zaxpbz_create(N, dims, 1., -1.);
@@ -185,9 +185,9 @@ const struct nlop_s* nlop_nmse_create(int N, const long dims[N], unsigned long b
 }
 
 
-const struct nlop_s* nlop_nrmse_create(int N, const long dims[N], unsigned long batch_flags)
+const struct nlop_s* nlop_nrmse_create(int N, const bart_dim_t dims[N], bart_flags_t batch_flags)
 {
-	long bat_dims[N];
+	bart_dim_t bat_dims[N];
 	md_select_dims(N, batch_flags, bat_dims, dims);
 
 	auto result = nlop_zaxpbz_create(N, dims, 1., -1.);
@@ -209,7 +209,7 @@ struct zasum_s {
 	nlop_data_t super;
 
 	int N;
-	const long* rdims;
+	const bart_dim_t* rdims;
 	float scaling;
 
 	float* der;
@@ -235,7 +235,7 @@ static void zasum_fun(const nlop_data_t* _data, complex float* dst, const comple
 
 	md_smul(data->N, data->rdims, data->der, data->der, 1. / data->scaling);
 
-	md_copy(1, MAKE_ARRAY(1l), dst, &result, CFL_SIZE);
+	md_copy(1, MD_DIMS(1), dst, &result, CFL_SIZE);
 }
 
 
@@ -265,12 +265,12 @@ static void zasum_del(const nlop_data_t* _data)
 	xfree(data);
 }
 
-const struct nlop_s* nlop_zasum_create(int N, const long dims[N], unsigned long mean_dims)
+const struct nlop_s* nlop_zasum_create(int N, const bart_dim_t dims[N], bart_flags_t mean_dims)
 {
 	PTR_ALLOC(struct zasum_s, data);
 	SET_TYPEID(zasum_s, data);
 
-	PTR_ALLOC(long[N + 1], rdims);
+	PTR_ALLOC(bart_dim_t[N + 1], rdims);
 	(*rdims)[0] = 2;
 	md_copy_dims(N, *rdims + 1, dims);
 
@@ -278,19 +278,19 @@ const struct nlop_s* nlop_zasum_create(int N, const long dims[N], unsigned long 
 	data->rdims = *PTR_PASS(rdims);
 	data->der = NULL;
 
-	long tdims[N];
+	bart_dim_t tdims[N];
 	md_select_dims(N, mean_dims, tdims, dims);
 	data->scaling = (float)md_calc_size(N, tdims);
 
 	return nlop_create(1, MD_SINGLETON_DIMS(1), N, dims, CAST_UP(PTR_PASS(data)), zasum_fun, zasum_der, zasum_adj, NULL, NULL, zasum_del);
 }
 
-const struct nlop_s* nlop_z1norm_create(int N, const long dims[N], unsigned long mean_dims)
+const struct nlop_s* nlop_z1norm_create(int N, const bart_dim_t dims[N], bart_flags_t mean_dims)
 {
 	return nlop_chain_FF(nlop_smo_abs_create(N, dims, 0), nlop_zasum_create(N, dims, mean_dims));
 }
 
-const struct nlop_s* nlop_mad_create(int N, const long dims[N], unsigned long mean_dims)
+const struct nlop_s* nlop_mad_create(int N, const bart_dim_t dims[N], bart_flags_t mean_dims)
 {
 	return nlop_chain2_FF(nlop_zaxpbz_create(N, dims, 1, -1), 0, nlop_zasum_create(N, dims, mean_dims), 0);
 }

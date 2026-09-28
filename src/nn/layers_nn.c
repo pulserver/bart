@@ -32,8 +32,8 @@
  */
 nn_t nn_append_convcorr_layer_generic(
 				nn_t network, int o, const char* oname, const char* ker_name,
-				unsigned long conv_flag, unsigned long channel_flag, unsigned long group_flag,
-				int N, long const kernel_dims[N], const long strides[N], const long dilations[N],
+				bart_flags_t conv_flag, bart_flags_t channel_flag, bart_flags_t group_flag,
+				int N, bart_dim_t const kernel_dims[N], const bart_stride_t strides[N], const bart_dim_t dilations[N],
 				bool conv, enum PADDING conv_pad, const struct initializer_s* init)
 {
 	o = nn_get_out_arg_index(network, o, oname);
@@ -45,7 +45,7 @@ nn_t nn_append_convcorr_layer_generic(
 
 	result = nn_set_in_type_F(result, -1, NULL, IN_OPTIMIZE);
 
-	unsigned long in_flag = in_flag_conv_generic(N, conv_flag, channel_flag, group_flag);
+	bart_flags_t in_flag = in_flag_conv_generic(N, conv_flag, channel_flag, group_flag);
 
 	result = nn_set_initializer_F(result, -1, NULL, (NULL != init) ? init : init_kaiming_create(in_flag, true, false, 0));
 
@@ -77,8 +77,8 @@ nn_t nn_append_convcorr_layer_generic(
  */
 nn_t nn_append_transposed_convcorr_layer_generic(
 				nn_t network, int o, const char* oname, const char* ker_name,
-				unsigned long conv_flag, unsigned long channel_flag, unsigned long group_flag,
-				int N, long const kernel_dims[N], const long strides[N], const long dilations[N],
+				bart_flags_t conv_flag, bart_flags_t channel_flag, bart_flags_t group_flag,
+				int N, bart_dim_t const kernel_dims[N], const bart_stride_t strides[N], const bart_dim_t dilations[N],
 				bool conv, enum PADDING conv_pad, bool adjoint, const struct initializer_s* init)
 {
 	o = nn_get_out_arg_index(network, o, oname);
@@ -88,7 +88,7 @@ nn_t nn_append_transposed_convcorr_layer_generic(
 
 	result = nn_set_in_type_F(result, -1, NULL, IN_OPTIMIZE);
 
-	unsigned long in_flag = out_flag_conv_generic(N, conv_flag, channel_flag, group_flag); //input of conv is output of transposed conv
+	bart_flags_t in_flag = out_flag_conv_generic(N, conv_flag, channel_flag, group_flag); //input of conv is output of transposed conv
 
 	result = nn_set_initializer_F(result, -1, NULL, (NULL != init) ? init : init_kaiming_create(in_flag, true, false, 0));
 
@@ -110,7 +110,7 @@ nn_t nn_append_transposed_convcorr_layer_generic(
  * @param pool_size size of pooling
  * @param conv_pad must be PAD_VALID/PAD_SAME if image size is not a multiple of padding size, the image is shrunk/expanded to a multiple
  */
-nn_t nn_append_maxpool_layer_generic(nn_t network, int o, const char* oname, int N, const long pool_size[N], enum PADDING conv_pad)
+nn_t nn_append_maxpool_layer_generic(nn_t network, int o, const char* oname, int N, const bart_dim_t pool_size[N], enum PADDING conv_pad)
 {
 	o = nn_get_out_arg_index(network, o, oname);
 
@@ -136,7 +136,7 @@ nn_t nn_append_maxpool_layer_generic(nn_t network, int o, const char* oname, int
  * @param dilations (not supported, must be NULL)
  * @param initializer (NULL falls back to default)
  */
-nn_t nn_append_convcorr_layer(nn_t network, int o, const char* oname, const char* ker_name, int filters, long const kernel_size[3], bool conv, enum PADDING conv_pad, bool channel_first, const long strides[3], const long dilations[3], const struct initializer_s* init)
+nn_t nn_append_convcorr_layer(nn_t network, int o, const char* oname, const char* ker_name, int filters, bart_dim_t const kernel_size[3], bool conv, enum PADDING conv_pad, bool channel_first, const bart_stride_t strides[3], const bart_dim_t dilations[3], const struct initializer_s* init)
 {
 	o = nn_get_out_arg_index(network, o, oname);
 
@@ -172,7 +172,7 @@ nn_t nn_append_convcorr_layer(nn_t network, int o, const char* oname, const char
  * @param dilations (not supported, must be NULL)
  * @param initializer (NULL falls back to default)
  */
-nn_t nn_append_transposed_convcorr_layer(nn_t network, int o, const char* oname, const char* ker_name, int channels, long const kernel_size[3], bool conv, bool adjoint, enum PADDING conv_pad, bool channel_first, const long strides[3], const long dilations[3], const struct initializer_s* init)
+nn_t nn_append_transposed_convcorr_layer(nn_t network, int o, const char* oname, const char* ker_name, int channels, bart_dim_t const kernel_size[3], bool conv, bool adjoint, enum PADDING conv_pad, bool channel_first, const bart_stride_t strides[3], const bart_dim_t dilations[3], const struct initializer_s* init)
 {
 	o = nn_get_out_arg_index(network, o, oname);
 	auto nlop = append_transposed_convcorr_layer(nlop_clone(nn_get_nlop(network)), o, channels, kernel_size, conv, adjoint, conv_pad, channel_first, strides, dilations);
@@ -228,7 +228,7 @@ nn_t nn_append_dense_layer(nn_t network, int o, const char* oname, const char* w
  * @param norm_flags select dimension over which we normalize
  * @param initializer (NULL falls back to default)
  */
-nn_t nn_append_batchnorm_layer(nn_t network, int o, const char* oname, const char* stat_name, unsigned long norm_flags, enum NETWORK_STATUS status, const struct initializer_s* init)
+nn_t nn_append_batchnorm_layer(nn_t network, int o, const char* oname, const char* stat_name, bart_flags_t norm_flags, enum NETWORK_STATUS status, const struct initializer_s* init)
 {
 	o = nn_get_out_arg_index(network, o, oname);
 
@@ -263,7 +263,7 @@ nn_t nn_append_batchnorm_layer(nn_t network, int o, const char* oname, const cha
  * @param initializer (NULL falls back to default)
  * @param epsilon small factor for numerical stability
  */
-nn_t nn_append_normalize_layer(nn_t network, int o, unsigned long norm_flags, float epsilon)
+nn_t nn_append_normalize_layer(nn_t network, int o, bart_flags_t norm_flags, float epsilon)
 {
 	auto nlop = append_normalize_layer(nlop_clone(nn_get_nlop(network)), o, norm_flags, epsilon);
 	auto result = nn_from_nlop_F(nlop);
@@ -285,7 +285,7 @@ nn_t nn_append_normalize_layer(nn_t network, int o, unsigned long norm_flags, fl
  * @param conv_pad must be PAD_VALID/PAD_SAME if image size is not a multiple of padding size, the image is shrunk/expanded to a multiple
  * @param channel_first data layout is {c, x, y, z} if true, {x, y, z, c} else
  */
-nn_t nn_append_maxpool_layer(nn_t network, int o, const char* oname, const long pool_size[3], enum PADDING conv_pad, bool channel_first)
+nn_t nn_append_maxpool_layer(nn_t network, int o, const char* oname, const bart_dim_t pool_size[3], enum PADDING conv_pad, bool channel_first)
 {
 	o = nn_get_out_arg_index(network, o, oname);
 
@@ -348,7 +348,7 @@ nn_t nn_append_flatten_layer(nn_t network, int o, const char* oname)
  * @param pad_after
  * @param pad_type
  */
-nn_t nn_append_padding_layer(nn_t network, int o, const char* oname, long N, long pad_for[N], long pad_after[N], enum PADDING pad_type)
+nn_t nn_append_padding_layer(nn_t network, int o, const char* oname, bart_dim_t N, bart_dim_t pad_for[N], bart_dim_t pad_after[N], enum PADDING pad_type)
 {
 	o = nn_get_out_arg_index(network, o, oname);
 

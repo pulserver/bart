@@ -39,7 +39,7 @@ struct stats_s {
 
 	nlop_data_t super;
 
-	unsigned long flags;
+	bart_flags_t flags;
 	const struct iovec_s* dom;
 	const struct iovec_s* codom;
 
@@ -176,7 +176,7 @@ static void stats_del(const struct nlop_data_s* _data)
  *
  * Note the difference of the definition compared to md_zvar which has factor 1/(N-1)
  **/
-const struct nlop_s* nlop_stats_create(int N, const long dims[N], unsigned long flags)
+const struct nlop_s* nlop_stats_create(int N, const bart_dim_t dims[N], bart_flags_t flags)
 {
 	PTR_ALLOC(struct stats_s, data);
 	SET_TYPEID(stats_s, data);
@@ -184,7 +184,7 @@ const struct nlop_s* nlop_stats_create(int N, const long dims[N], unsigned long 
 	// will be initialized later, to transparently support GPU
 	data->x = NULL;
 
-	long codims[N];
+	bart_dim_t codims[N];
 	md_select_dims(N, ~flags, codims, dims);
 
 	data->dom = iovec_create(N, dims, CFL_SIZE);
@@ -193,11 +193,11 @@ const struct nlop_s* nlop_stats_create(int N, const long dims[N], unsigned long 
 
 	data->n = (float)md_calc_size(N, dims) / md_calc_size(N, codims);
 
-	long nl_odims[2][N];
+	bart_dim_t nl_odims[2][N];
 	md_copy_dims(N, nl_odims[0], codims);
 	md_copy_dims(N, nl_odims[1], codims);
 
-	long nl_idims[1][N];
+	bart_dim_t nl_idims[1][N];
 	md_copy_dims(N, nl_idims[0], dims);
 
 
@@ -213,7 +213,7 @@ struct normalize_s {
 	const struct iovec_s* dom;
 	const struct iovec_s* statdom;
 
-	unsigned long flags;
+	bart_flags_t flags;
 
 	complex float* tmp; // (src - mu)
 	complex float* scale; // sqrt(var + epsilon)
@@ -378,12 +378,12 @@ static void normalize_del(const struct nlop_data_s* _data)
  * Out 0:	Normalized input (x - mu) / sqrt(sigma^2 + epsilon)
  *
  **/
-const struct nlop_s* nlop_normalize_stats_create(int N, const long dims[N], unsigned long flags, float epsilon)
+const struct nlop_s* nlop_normalize_stats_create(int N, const bart_dim_t dims[N], bart_flags_t flags, float epsilon)
 {
 	PTR_ALLOC(struct normalize_s, data);
 	SET_TYPEID(normalize_s, data);
 
-	long statdims[N];
+	bart_dim_t statdims[N];
 	md_select_dims(N, ~flags, statdims, dims);
 
 	data->dom = iovec_create(N, dims, CFL_SIZE);
@@ -393,10 +393,10 @@ const struct nlop_s* nlop_normalize_stats_create(int N, const long dims[N], unsi
 	data->tmp = NULL;
 	data->flags = flags;
 
-	long nl_odims[1][N];
+	bart_dim_t nl_odims[1][N];
 	md_copy_dims(N, nl_odims[0], dims);
 
-	long nl_idims[3][N];
+	bart_dim_t nl_idims[3][N];
 	md_copy_dims(N, nl_idims[0], dims);
 	md_copy_dims(N, nl_idims[1], statdims);
 	md_copy_dims(N, nl_idims[2], statdims);
@@ -412,7 +412,7 @@ struct bn_s {
 
 	nlop_data_t super;
 
-	unsigned long flags;
+	bart_flags_t flags;
 	const struct iovec_s* dom;
 	const struct iovec_s* stat_dom;
 
@@ -469,8 +469,8 @@ static void bn_fun(const nlop_data_t* _data, int D, complex float* args[D])
 
 	int N = data->dom->N;
 
-	long nstat_dims[N]; //dims that not stay
-	long nstat_strs[N];
+	bart_dim_t nstat_dims[N]; //dims that not stay
+	bart_stride_t nstat_strs[N];
 	md_select_dims(N, data->flags, nstat_dims, data->dom->dims);
 	md_calc_strides(N, nstat_strs, nstat_dims, CFL_SIZE);
 
@@ -532,8 +532,8 @@ static void bn_deradj_in(const nlop_data_t* _data, int /*o*/, int /*i*/, complex
 
 	int N = data->dom->N;
 
-	long nstat_dims[N]; //dims that not stay
-	long nstat_strs[N];
+	bart_dim_t nstat_dims[N]; //dims that not stay
+	bart_stride_t nstat_strs[N];
 	md_select_dims(N, data->flags, nstat_dims, data->dom->dims);
 	md_calc_strides(N, nstat_strs, nstat_dims, CFL_SIZE);
 
@@ -596,7 +596,7 @@ static void bn_del(const struct nlop_data_s* _data)
  *
  * Note the difference of the definition compared to md_zvar which has factor 1/(N-1)
  **/
-static const struct nlop_s* nlop_bn_create(int N, const long dims[N], unsigned long flags, float epsilon)
+static const struct nlop_s* nlop_bn_create(int N, const bart_dim_t dims[N], bart_flags_t flags, float epsilon)
 {
 	PTR_ALLOC(struct bn_s, data);
 	SET_TYPEID(bn_s, data);
@@ -604,7 +604,7 @@ static const struct nlop_s* nlop_bn_create(int N, const long dims[N], unsigned l
 	// will be initialized later, to transparently support GPU
 	data->flags = flags;
 	data->dom = iovec_create(N, dims, CFL_SIZE);
-	long stat_dims[N];
+	bart_dim_t stat_dims[N];
 	md_select_dims(N, ~flags, stat_dims, dims);
 	data->stat_dom = iovec_create(N, stat_dims, CFL_SIZE);
 
@@ -614,12 +614,12 @@ static const struct nlop_s* nlop_bn_create(int N, const long dims[N], unsigned l
 	data->der_out = NULL;
 	data->der_scale = NULL;
 
-	long nl_odims[3][N];
+	bart_dim_t nl_odims[3][N];
 	md_copy_dims(N, nl_odims[0], dims);
 	md_copy_dims(N, nl_odims[1], stat_dims);
 	md_copy_dims(N, nl_odims[2], stat_dims);
 
-	long nl_idims[1][N];
+	bart_dim_t nl_idims[1][N];
 	md_copy_dims(N, nl_idims[0], dims);
 
 	return nlop_generic_managed_create(3, N, nl_odims, 1, N, nl_idims, CAST_UP(PTR_PASS(data)), bn_fun,
@@ -642,9 +642,9 @@ static const struct nlop_s* nlop_bn_create(int N, const long dims[N], unsigned l
  * Out 0:	Normalized Input	dims: {n1, n2, ..., nN}
  * Out 1:	Mean/Var		dims: {n1, 1,  ..., nN | 2 (mean/var)}
  **/
-const struct nlop_s* nlop_batchnorm_create(int N, const long dims[N], unsigned long flags, float epsilon, enum NETWORK_STATUS status)
+const struct nlop_s* nlop_batchnorm_create(int N, const bart_dim_t dims[N], bart_flags_t flags, float epsilon, enum NETWORK_STATUS status)
 {
-	long stat_dims[N];
+	bart_dim_t stat_dims[N];
 	md_select_dims(N, ~flags, stat_dims, dims);
 
 	const struct nlop_s* result = NULL;
@@ -692,7 +692,7 @@ const struct nlop_s* nlop_batchnorm_create(int N, const long dims[N], unsigned l
  *
  * Out 0:	Normalized Input	dims: {n1, n2, ..., nN}
  **/
-const struct nlop_s* nlop_normalize_create(int N, const long dims[N], unsigned long flags, float epsilon)
+const struct nlop_s* nlop_normalize_create(int N, const bart_dim_t dims[N], bart_flags_t flags, float epsilon)
 {
 	const struct nlop_s* result = NULL;
 
@@ -709,7 +709,7 @@ struct norm_std_s {
 
 	INTERFACE(nlop_data_t);
 
-	unsigned long flags;
+	bart_flags_t flags;
 	const struct iovec_s* idom;
 	const struct iovec_s* sdom;
 
@@ -877,7 +877,7 @@ static void norm_std_del(const struct nlop_data_s* _data)
  *
  * Note the difference of the definition compared to md_zvar which has factor 1/(N-1)
  **/
-const struct nlop_s* nlop_norm_std_create(int N, const long dims[N], unsigned long flags, float epsilon)
+const struct nlop_s* nlop_norm_std_create(int N, const bart_dim_t dims[N], bart_flags_t flags, float epsilon)
 {
 	PTR_ALLOC(struct norm_std_s, data);
 	SET_TYPEID(norm_std_s, data);
@@ -885,7 +885,7 @@ const struct nlop_s* nlop_norm_std_create(int N, const long dims[N], unsigned lo
 	// will be initialized later, to transparently support GPU
 	data->flags = flags;
 	data->idom = iovec_create(N, dims, CFL_SIZE);
-	long stat_dims[N];
+	bart_dim_t stat_dims[N];
 	md_select_dims(N, ~flags, stat_dims, dims);
 	data->sdom = iovec_create(N, stat_dims, CFL_SIZE);
 
@@ -895,11 +895,11 @@ const struct nlop_s* nlop_norm_std_create(int N, const long dims[N], unsigned lo
 	data->der_inp = NULL;
 	data->der_scale = NULL;
 
-	long nl_odims[3][N];
+	bart_dim_t nl_odims[3][N];
 	md_copy_dims(N, nl_odims[0], dims);
 	md_copy_dims(N, nl_odims[1], stat_dims);
 
-	long nl_idims[1][N];
+	bart_dim_t nl_idims[1][N];
 	md_copy_dims(N, nl_idims[0], dims);
 
 	return nlop_generic_managed_create(2, N, nl_odims, 1, N, nl_idims, CAST_UP(PTR_PASS(data)), norm_std_fun,
@@ -920,10 +920,10 @@ const struct nlop_s* nlop_norm_std_create(int N, const long dims[N], unsigned lo
  * Out 0:	Normalized out
  * Out 2: 	Average
  **/
-const struct nlop_s* nlop_norm_avg_create(int N, const long dims[N], unsigned long flags)
+const struct nlop_s* nlop_norm_avg_create(int N, const bart_dim_t dims[N], bart_flags_t flags)
 {
 	const struct nlop_s* ret = nlop_from_linop_F(linop_avg_create(N, dims, flags));
-	ret = nlop_chain2_keep_FF(ret, 0, nlop_zaxpbz2_create(N, dims, ~0UL, 1., ~flags, -1.), 1);
+	ret = nlop_chain2_keep_FF(ret, 0, nlop_zaxpbz2_create(N, dims, ~UINT64_C(0), 1., ~flags, -1.), 1);
 	ret = nlop_dup_F(ret, 0, 1);
 
 	return ret;

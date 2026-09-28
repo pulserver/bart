@@ -37,22 +37,22 @@
 #include "model_moba.h"
 
 
-struct mobamod moba_create(const long dims[DIMS], const complex float* mask, const complex float* TI, const complex float* TE, const complex float* b1,
+struct mobamod moba_create(const bart_dim_t dims[DIMS], const complex float* mask, const complex float* TI, const complex float* TE, const complex float* b1,
 		const complex float* b0, const float* scale_fB0, const complex float* psf, const struct noir_model_conf_s* conf, struct moba_conf_s* data)
 {
-	long data_dims[DIMS];
+	bart_dim_t data_dims[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, data_dims, dims);
 
 	struct noir_s nlinv = noir_create(data_dims, mask, psf, conf);
 	struct mobamod ret;
 
 	// FIXME: unify them more
-	long der_dims[DIMS];
-	long map_dims[DIMS];
-	long out_dims[DIMS];
-	long in_dims[DIMS];
-        long TI_dims[DIMS];
-	long TE_dims[DIMS];
+	bart_dim_t der_dims[DIMS];
+	bart_dim_t map_dims[DIMS];
+	bart_dim_t out_dims[DIMS];
+	bart_dim_t in_dims[DIMS];
+        bart_dim_t TI_dims[DIMS];
+	bart_dim_t TE_dims[DIMS];
 
 	md_select_dims(DIMS, conf->fft_flags|TE_FLAG|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, der_dims, dims);
 	md_select_dims(DIMS, conf->fft_flags|TIME_FLAG|TIME2_FLAG, map_dims, dims);
@@ -135,14 +135,14 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* mask, con
 	return ret;
 }
 
-const struct nlop_s* moba_get_nlop(struct mobafit_model_config* config, const long out_dims[DIMS], const long param_dims[DIMS], const long enc_dims[DIMS], complex float* enc)
+const struct nlop_s* moba_get_nlop(struct mobafit_model_config* config, const bart_dim_t out_dims[DIMS], const bart_dim_t param_dims[DIMS], const bart_dim_t enc_dims[DIMS], complex float* enc)
 {
 	const struct nlop_s* nlop = NULL;
 	int n_params = param_dims[COEFF_DIM];
 
-	assert(md_check_compat(DIMS, ~0UL, param_dims, out_dims));
+	assert(md_check_compat(DIMS, ~UINT64_C(0), param_dims, out_dims));
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	md_copy_dims(DIMS, dims, out_dims);
 	dims[COEFF_DIM] = enc_dims[COEFF_DIM];
 
@@ -164,7 +164,7 @@ const struct nlop_s* moba_get_nlop(struct mobafit_model_config* config, const lo
 		if (n_params  != 3)
 			error("Number of parameters (%d) does not match IR-LL model (Mss, M0, R1s)\n", n_params);
 
-		long map_dims[DIMS];
+		bart_dim_t map_dims[DIMS];
 		md_select_dims(DIMS, ~(TE_FLAG | COEFF_FLAG), map_dims, param_dims);
 
 		nlop = nlop_T1_create(DIMS, map_dims, out_dims, param_dims, enc_dims, enc, 1, 1);

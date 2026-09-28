@@ -29,7 +29,7 @@ static void zsin_free(const nlop_data_t* _data)
 	xfree(_data);
 }
 
-static void zsin_apply(const nlop_data_t* /*data*/, int N, const long dims[N], complex float* dst, const complex float* src, complex float* der)
+static void zsin_apply(const nlop_data_t* /*data*/, int N, const bart_dim_t dims[N], complex float* dst, const complex float* src, complex float* der)
 {
 
 	if (NULL != der)
@@ -38,7 +38,7 @@ static void zsin_apply(const nlop_data_t* /*data*/, int N, const long dims[N], c
 	md_zsin(N, dims, dst, src);
 }
 
-const struct nlop_s* nlop_zsin_create(int N, const long dims[N])
+const struct nlop_s* nlop_zsin_create(int N, const bart_dim_t dims[N])
 {
 	PTR_ALLOC(struct zsin_s, data);
 	SET_TYPEID(zsin_s, data);
@@ -63,7 +63,7 @@ static void zcos_free(const nlop_data_t* _data)
 	xfree(_data);
 }
 
-static void zcos_apply(const nlop_data_t* /*_data*/, int N, const long dims[N], complex float* dst, const complex float* src, complex float* der)
+static void zcos_apply(const nlop_data_t* /*_data*/, int N, const bart_dim_t dims[N], complex float* dst, const complex float* src, complex float* der)
 {
 
 	if (NULL != der) {
@@ -75,7 +75,7 @@ static void zcos_apply(const nlop_data_t* /*_data*/, int N, const long dims[N], 
 	md_zcos(N, dims, dst, src);
 }
 
-const struct nlop_s* nlop_zcos_create(int N, const long dims[N])
+const struct nlop_s* nlop_zcos_create(int N, const bart_dim_t dims[N])
 {
 	PTR_ALLOC(struct zcos_s, data);
 	SET_TYPEID(zcos_s, data);

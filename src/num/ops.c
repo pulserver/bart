@@ -92,7 +92,7 @@ static void operator_del(const struct shared_obj_s* sptr)
  * Create an operator (with strides)
  */
 const struct operator_s* operator_generic_create2(int N, const bool io_flags[N],
-			const int D[N], const long* dims[N], const long* strs[N],
+			const int D[N], const bart_dim_t* dims[N], const bart_stride_t* strs[N],
 			operator_data_t* data, operator_fun_t apply, operator_del_t del, operator_get_graph_t get_graph)
 {
 	PTR_ALLOC(struct operator_s, op);
@@ -120,10 +120,10 @@ const struct operator_s* operator_generic_create2(int N, const bool io_flags[N],
  * Create an operator (without strides)
  */
 const struct operator_s* operator_generic_create(int N, const bool io_flags[N],
-			const int D[N], const long* dims[N],
+			const int D[N], const bart_dim_t* dims[N],
 			operator_data_t* data, operator_fun_t apply, operator_del_t del, operator_get_graph_t get_graph)
 {
-	const long* strs[N];
+	const bart_stride_t* strs[N];
 
 	for (int i = 0; i < N; i++)
 		strs[i] = MD_STRIDES(D[i], dims[i], CFL_SIZE);
@@ -136,12 +136,12 @@ const struct operator_s* operator_generic_create(int N, const bool io_flags[N],
 /**
  * Create an operator (with strides)
  */
-const struct operator_s* operator_create2(int ON, const long out_dims[ON], const long out_strs[ON],
-			int IN, const long in_dims[IN], const long in_strs[IN],
+const struct operator_s* operator_create2(int ON, const bart_dim_t out_dims[ON], const bart_stride_t out_strs[ON],
+			int IN, const bart_dim_t in_dims[IN], const bart_stride_t in_strs[IN],
 			operator_data_t* data, operator_fun_t apply, operator_del_t del)
 {
 	return operator_generic_create2(2, (bool[2]){ true, false }, (int[2]){ ON, IN },
-				(const long* [2]){ out_dims, in_dims }, (const long* [2]){ out_strs, in_strs },
+				(const bart_dim_t* [2]){ out_dims, in_dims }, (const bart_dim_t* [2]){ out_strs, in_strs },
 				data, apply, del, NULL);
 }
 
@@ -157,8 +157,8 @@ const struct operator_s* operator_create2(int ON, const long out_dims[ON], const
  * @param apply function that applies the operation
  * @param del function that frees the data
  */
-const struct operator_s* operator_create(int ON, const long out_dims[ON],
-		int IN, const long in_dims[IN],
+const struct operator_s* operator_create(int ON, const bart_dim_t out_dims[ON],
+		int IN, const bart_dim_t in_dims[IN],
 		operator_data_t* data, operator_fun_t apply, operator_del_t del)
 {
 	return operator_create2(ON, out_dims, MD_STRIDES(ON, out_dims, CFL_SIZE),
@@ -404,8 +404,8 @@ static void identity_free(const operator_data_t* _data)
 }
 
 
-const struct operator_s* operator_identity_create2(int N, const long dims[N],
-					const long ostrs[N], const long istrs[N])
+const struct operator_s* operator_identity_create2(int N, const bart_dim_t dims[N],
+					const bart_stride_t ostrs[N], const bart_stride_t istrs[N])
 {
 	PTR_ALLOC(struct identity_s, data);
 	SET_TYPEID(identity_s, data);
@@ -421,9 +421,9 @@ const struct operator_s* operator_identity_create2(int N, const long dims[N],
  * @param N number of dimensions
  * @param dims dimensions of input (domain)
  */
-const struct operator_s* operator_identity_create(int N, const long dims[N])
+const struct operator_s* operator_identity_create(int N, const bart_dim_t dims[N])
 {
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 	return operator_identity_create2(N, dims, strs, strs);
 }
@@ -435,7 +435,7 @@ const struct operator_s* operator_identity_create(int N, const long dims[N])
  * @param B number of in dimensions
  * @param in_dims dimensions of input (domain)
  */
-const struct operator_s* operator_reshape_create(int A, const long out_dims[A], int B, const long in_dims[B])
+const struct operator_s* operator_reshape_create(int A, const bart_dim_t out_dims[A], int B, const bart_dim_t in_dims[B])
 {
 	auto id = operator_identity_create(A, out_dims);
 	auto result = operator_reshape(id, 1, B, in_dims);
@@ -483,7 +483,7 @@ static const struct graph_s* operator_reshape_get_graph(const struct operator_s*
 	return result;
 }
 
-const struct operator_s* operator_reshape(const struct operator_s* op, int i, long N, const long dims[N])
+const struct operator_s* operator_reshape(const struct operator_s* op, int i, bart_dim_t N, const bart_dim_t dims[N])
 {
 	PTR_ALLOC(struct op_reshape_s, data);
 	SET_TYPEID(op_reshape_s, data);
@@ -496,13 +496,13 @@ const struct operator_s* operator_reshape(const struct operator_s* op, int i, lo
 	else
 		data->x = operator_ref(op);
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, operator_arg_domain(op, i)->size);
 
 	int A = operator_nr_args(op);
 	int D[A];
-	const long* op_dims[A];
-	const long* op_strs[A];
+	const bart_dim_t* op_dims[A];
+	const bart_stride_t* op_strs[A];
 
 	for (int j = 0; j < A; j++) {
 
@@ -564,7 +564,7 @@ static void zero_free(const operator_data_t* _data)
 	xfree(d);
 }
 
-const struct operator_s* operator_zero_create2(int N, const long dims[N], const long strs[N])
+const struct operator_s* operator_zero_create2(int N, const bart_dim_t dims[N], const bart_stride_t strs[N])
 {
 	PTR_ALLOC(struct zero_s, data);
 	SET_TYPEID(zero_s, data);
@@ -572,11 +572,11 @@ const struct operator_s* operator_zero_create2(int N, const long dims[N], const 
 	data->codomain = iovec_create2(N, dims, strs, CFL_SIZE);
 
 	return operator_generic_create2(1, (bool[1]){ true }, (int[1]){ N },
-			(const long*[1]){ dims },
-			(const long*[2]){ strs }, CAST_UP(PTR_PASS(data)), zero_apply, zero_free, NULL);
+			(const bart_dim_t*[1]){ dims },
+			(const bart_dim_t*[2]){ strs }, CAST_UP(PTR_PASS(data)), zero_apply, zero_free, NULL);
 }
 
-const struct operator_s* operator_zero_create(int N, const long dims[N])
+const struct operator_s* operator_zero_create(int N, const bart_dim_t dims[N])
 {
 	return operator_zero_create2(N, dims, MD_STRIDES(N, dims, CFL_SIZE));
 }
@@ -600,17 +600,17 @@ static void null_free(const operator_data_t* _data)
 	xfree(CAST_DOWN(null_s, _data));
 }
 
-const struct operator_s* operator_null_create2(int N, const long dims[N], const long strs[N])
+const struct operator_s* operator_null_create2(int N, const bart_dim_t dims[N], const bart_stride_t strs[N])
 {
 	PTR_ALLOC(struct null_s, data);
 	SET_TYPEID(null_s, data);
 
 	return operator_generic_create2(1, (bool[1]){ false }, (int[1]){ N },
-			(const long*[1]){ dims },
-			(const long*[2]){ strs }, CAST_UP(PTR_PASS(data)), null_apply, null_free, NULL);
+			(const bart_dim_t*[1]){ dims },
+			(const bart_dim_t*[2]){ strs }, CAST_UP(PTR_PASS(data)), null_apply, null_free, NULL);
 }
 
-const struct operator_s* operator_null_create(int N, const long dims[N])
+const struct operator_s* operator_null_create(int N, const bart_dim_t dims[N])
 {
 	return operator_null_create2(N, dims, MD_STRIDES(N, dims, CFL_SIZE));
 }
@@ -674,7 +674,7 @@ void operator_apply_parallel_unchecked(int D, const struct operator_s* op[D], co
 	operator_generic_apply_parallel_unchecked(D, op, 2, args, num_threads);
 }
 
-void operator_apply2(const struct operator_s* op, int ON, const long odims[ON], const long ostrs[ON], complex float* dst, const long IN, const long idims[IN], const long istrs[IN], const complex float* src)
+void operator_apply2(const struct operator_s* op, int ON, const bart_dim_t odims[ON], const bart_stride_t ostrs[ON], complex float* dst, const bart_dim_t IN, const bart_dim_t idims[IN], const bart_stride_t istrs[IN], const complex float* src)
 {
 	assert(2 == op->N);
 	assert(iovec_check(op->domain[1], IN, idims, istrs));
@@ -683,7 +683,7 @@ void operator_apply2(const struct operator_s* op, int ON, const long odims[ON], 
 	operator_apply_unchecked(op, dst, src);
 }
 
-void operator_apply(const struct operator_s* op, int ON, const long odims[ON], complex float* dst, const long IN, const long idims[IN], const complex float* src)
+void operator_apply(const struct operator_s* op, int ON, const bart_dim_t odims[ON], complex float* dst, const bart_dim_t IN, const bart_dim_t idims[IN], const complex float* src)
 {
 	operator_apply2(op, ON, odims, MD_STRIDES(ON, odims, CFL_SIZE), dst,
 			    IN, idims, MD_STRIDES(IN, idims, CFL_SIZE), src);
@@ -727,8 +727,8 @@ const struct operator_s* operator_attach(const struct operator_s* op, void* ptr,
 	int N = operator_nr_args(op);
 
 	int D[N];
-	const long* dims[N];
-	const long* strs[N];
+	const bart_dim_t* dims[N];
+	const bart_stride_t* strs[N];
 
 	for (int i = 0; i < N; i++) {
 
@@ -798,7 +798,7 @@ static void op_bind_del(const operator_data_t* _data)
  * Create a new operator that binds argument 'arg'.
  */
 const struct operator_s* operator_bind2(const struct operator_s* op, int arg,
-			int N, const long dims[N], const long strs[N], void* ptr)
+			int N, const bart_dim_t dims[N], const bart_stride_t strs[N], void* ptr)
 {
 	int D = operator_nr_args(op);
 	assert(arg < D);
@@ -806,8 +806,8 @@ const struct operator_s* operator_bind2(const struct operator_s* op, int arg,
 	assert(iovec_check(operator_arg_domain(op, arg), N, dims, strs));
 
 	int nn[D - 1];
-	const long* ndims[D - 1];
-	const long* nstrs[D - 1];
+	const bart_dim_t* ndims[D - 1];
+	const bart_stride_t* nstrs[D - 1];
 
 	bool n_flags[D + 1];
 
@@ -852,12 +852,12 @@ struct op_loop_s {
 
 	int N;
 	int D;
-	const long** strs;
-	const long** dims;
-	const long* dims0;
+	const bart_stride_t** strs;
+	const bart_dim_t** dims;
+	const bart_dim_t* dims0;
 	const struct operator_s* op;
 
-	unsigned long parallel;
+	bart_flags_t parallel;
 };
 
 static DEF_TYPEID(op_loop_s);
@@ -897,7 +897,7 @@ static void op_loop_fun(const operator_data_t* _data, int N, void* args[N])
 	num_auto_parallelize = ap_save;
 }
 
-static void merge_dims(int D, long odims[D], const long idims1[D], const long idims2[D])
+static void merge_dims(int D, bart_dim_t odims[D], const bart_dim_t idims1[D], const bart_dim_t idims2[D])
 {
 	md_copy_dims(D, odims, idims1);
 
@@ -911,19 +911,19 @@ static void merge_dims(int D, long odims[D], const long idims1[D], const long id
 }
 
 const struct operator_s* operator_loop_parallel2(int N, int D,
-				const long dims[D], const long (*strs)[D],
+				const bart_dim_t dims[D], const bart_stride_t (*strs)[D],
 				const struct operator_s* op,
-				unsigned long flags)
+				bart_flags_t flags)
 
 {
 	assert(N == operator_nr_args(op));
 
 	int D2[N];
-	PTR_ALLOC(long[D], dims0);
+	PTR_ALLOC(bart_dim_t[D], dims0);
 	md_copy_dims(D, *dims0, dims);
 
-	PTR_ALLOC(const long*[N], dims2);
-	PTR_ALLOC(const long*[N], strs2);
+	PTR_ALLOC(const bart_dim_t*[N], dims2);
+	PTR_ALLOC(const bart_dim_t*[N], strs2);
 
 
 	// TODO: we should have a flag and ignore args with flag
@@ -942,10 +942,10 @@ const struct operator_s* operator_loop_parallel2(int N, int D,
 
 		D2[i] = D;
 
-		PTR_ALLOC(long[D], tdims);
+		PTR_ALLOC(bart_dim_t[D], tdims);
 		merge_dims(D, *tdims, dims, io->dims);
 
-		PTR_ALLOC(long[D], tstrs);
+		PTR_ALLOC(bart_dim_t[D], tstrs);
 		md_copy_strides(D, *tstrs, strs[i]);
 
 		(*dims2)[i] = *PTR_PASS(tdims);
@@ -973,20 +973,20 @@ const struct operator_s* operator_loop_parallel2(int N, int D,
 }
 
 const struct operator_s* (operator_loop2)(int N, const int D,
-				const long dims[D], const long (*strs)[D],
+				const bart_dim_t dims[D], const bart_stride_t (*strs)[D],
 				const struct operator_s* op)
 {
 	return operator_loop_parallel2(N, D, dims, strs, op, 0u);
 }
 
-const struct operator_s* operator_loop_parallel(int D, const long dims[D], const struct operator_s* op, unsigned long parallel)
+const struct operator_s* operator_loop_parallel(int D, const bart_dim_t dims[D], const struct operator_s* op, bart_flags_t parallel)
 {
 	int N = operator_nr_args(op);
-	long strs[N][D];
+	bart_stride_t strs[N][D];
 
 	for (int i = 0; i < N; i++) {
 
-		long tdims[D];
+		bart_dim_t tdims[D];
 		merge_dims(D, tdims, dims, operator_arg_domain(op, i)->dims);
 
 		md_calc_strides(D, strs[i], tdims, operator_arg_domain(op, i)->size);
@@ -995,7 +995,7 @@ const struct operator_s* operator_loop_parallel(int D, const long dims[D], const
 	return operator_loop_parallel2(N, D, dims, strs, op, parallel);
 }
 
-const struct operator_s* operator_loop(int D, const long dims[D], const struct operator_s* op)
+const struct operator_s* operator_loop(int D, const bart_dim_t dims[D], const struct operator_s* op)
 {
 	return operator_loop_parallel(D, dims, op, 0u);
 }
@@ -1009,7 +1009,7 @@ struct copy_data_s {
 	const struct operator_s* op;
 
 	int N;
-	const long** strs;
+	const bart_stride_t** strs;
 
 	enum COPY_LOCATION* loc;
 
@@ -1134,7 +1134,7 @@ static const struct graph_s* copy_wrapper_graph_create(const struct operator_s* 
 	return result;
 }
 
-static const struct operator_s* operator_copy_wrapper_generic(int N, const long* strs[N], enum COPY_LOCATION loc[N], const struct operator_s* op, int device, bool copy_output)
+static const struct operator_s* operator_copy_wrapper_generic(int N, const bart_stride_t* strs[N], enum COPY_LOCATION loc[N], const struct operator_s* op, int device, bool copy_output)
 {
 	assert(N == operator_nr_args(op));
 
@@ -1158,8 +1158,8 @@ static const struct operator_s* operator_copy_wrapper_generic(int N, const long*
 	SET_TYPEID(copy_data_s, data);
 
 	int D[N];
-	const long* dims[N];
-	const long* (*strs2)[N] = TYPE_ALLOC(const long*[N]);
+	const bart_dim_t* dims[N];
+	const bart_stride_t* (*strs2)[N] = TYPE_ALLOC(const bart_dim_t*[N]);
 
 	data->op = operator_ref(op);
 
@@ -1175,13 +1175,13 @@ static const struct operator_s* operator_copy_wrapper_generic(int N, const long*
 		D[i] = io->N;
 		dims[i] = io->dims;
 
-		long (*strsx)[io->N] = TYPE_ALLOC(long[io->N]);
+		bart_dim_t (*strsx)[io->N] = TYPE_ALLOC(bart_dim_t[io->N]);
 		md_copy_strides(io->N, *strsx, (NULL == strs[i]) ? io->strs : strs[i]);
 		(*strs2)[i] = *strsx;
 
 		// check for trivial strides
 
-		long tstrs[io->N];
+		bart_stride_t tstrs[io->N];
 		md_calc_strides(io->N, tstrs, io->dims, CFL_SIZE);
 
 		for (int i = 0; i < io->N; i++)
@@ -1199,12 +1199,12 @@ const struct operator_s* operator_cpu_wrapper(const struct operator_s* op)
 	int ref = 1;
 	int N = operator_nr_args(op);
 
-	const long* strs[N];
+	const bart_stride_t* strs[N];
 
 	for (int i = 0; i < N; i++) {
 
 		auto dom = operator_arg_domain(op, i);
-		assert(md_check_equal_dims(dom->N, MD_STRIDES(dom->N, dom->dims, dom->size), dom->strs, ~0UL));
+		assert(md_check_equal_dims(dom->N, MD_STRIDES(dom->N, dom->dims, dom->size), dom->strs, ~UINT64_C(0)));
 		strs[i] = dom->strs;
 	}
 
@@ -1215,12 +1215,12 @@ const struct operator_s* operator_nograph_wrapper(const struct operator_s* op)
 {
 	int N = operator_nr_args(op);
 
-	const long* strs[N];
+	const bart_stride_t* strs[N];
 
 	for (int i = 0; i < N; i++) {
 
 		auto dom = operator_arg_domain(op, i);
-		assert(md_check_equal_dims(dom->N, MD_STRIDES(dom->N, dom->dims, dom->size), dom->strs, ~0UL));
+		assert(md_check_equal_dims(dom->N, MD_STRIDES(dom->N, dom->dims, dom->size), dom->strs, ~UINT64_C(0)));
 		strs[i] = dom->strs;
 	}
 
@@ -1228,7 +1228,7 @@ const struct operator_s* operator_nograph_wrapper(const struct operator_s* op)
 }
 
 
-const struct operator_s* operator_copy_wrapper_sameplace(int N, const long* strs[N], const struct operator_s* op, const void* ref)
+const struct operator_s* operator_copy_wrapper_sameplace(int N, const bart_stride_t* strs[N], const struct operator_s* op, const void* ref)
 {
 	enum COPY_LOCATION loc[N];
 
@@ -1251,18 +1251,18 @@ const struct operator_s* operator_copy_wrapper_sameplace(int N, const long* strs
 }
 
 
-const struct operator_s* operator_copy_wrapper(int N, const long* strs[N], const struct operator_s* op)
+const struct operator_s* operator_copy_wrapper(int N, const bart_stride_t* strs[N], const struct operator_s* op)
 {
 	return operator_copy_wrapper_sameplace(N, strs, op, NULL);
 }
 
-const struct operator_s* operator_gpu_wrapper2(const struct operator_s* op, unsigned long move_flags)
+const struct operator_s* operator_gpu_wrapper2(const struct operator_s* op, bart_flags_t move_flags)
 {
 	int N = operator_nr_args(op);
 	assert(N <= 8 * (int)sizeof(move_flags));
 
 	enum COPY_LOCATION loc[N];
-	const long* strs[N];
+	const bart_stride_t* strs[N];
 
 	for (int i = 0; i < N; i++) {
 
@@ -1276,7 +1276,7 @@ const struct operator_s* operator_gpu_wrapper2(const struct operator_s* op, unsi
 
 const struct operator_s* operator_gpu_wrapper(const struct operator_s* op)
 {
-	return operator_gpu_wrapper2(op, ~0UL);
+	return operator_gpu_wrapper2(op, ~UINT64_C(0));
 }
 
 
@@ -1379,8 +1379,8 @@ const struct operator_s* operator_vptr_wrapper(const struct operator_s* op, stru
 	data->hint = vptr_hint_ref(hint);
 
 	int D[A];
-	const long* op_dims[A];
-	const long* op_strs[A];
+	const bart_dim_t* op_dims[A];
+	const bart_stride_t* op_strs[A];
 
 	for (int j = 0; j < A; j++) {
 
@@ -1477,8 +1477,8 @@ const struct operator_s* operator_combi_create(int N, const struct operator_s* x
 
 	bool io_flags[A];
 	int D[A];
-	const long* dims[A];
-	const long* strs[A];
+	const bart_dim_t* dims[A];
+	const bart_stride_t* strs[A];
 
 	int a = 0;
 
@@ -1580,8 +1580,8 @@ const struct operator_s* operator_dup_create(const struct operator_s* op, int a,
 
 	bool io_flags[N - 1];
 	int D[N - 1];
-	const long* dims[N - 1];
-	const long* strs[N - 1];
+	const bart_dim_t* dims[N - 1];
+	const bart_stride_t* strs[N - 1];
 
 	debug_printf(DP_DEBUG4, "Duplicating args %d-%d of %d.\n", a, b, N);
 
@@ -1730,8 +1730,8 @@ const struct operator_s* operator_link_create(const struct operator_s* op, int o
 
 	bool io_flags[N - 2];
 	int D[N - 2];
-	const long* dims[N - 2];
-	const long* strs[N - 2];
+	const bart_dim_t* dims[N - 2];
+	const bart_stride_t* strs[N - 2];
 
 	debug_printf(DP_DEBUG4, "Linking args %d-%d of %d.\n", i, o, N);
 
@@ -1832,8 +1832,8 @@ const struct operator_s* operator_permute(const struct operator_s* op, int N, co
 
 	bool io_flags[N];
 	int D[N];
-	const long* dims[N];
-	const long* strs[N];
+	const bart_dim_t* dims[N];
+	const bart_stride_t* strs[N];
 
 	for (int i = 0; i < N; i++) {
 
@@ -1898,10 +1898,10 @@ struct extract_data_s {
 	operator_data_t super;
 
 	int a;
-	off_t off;
+	bart_stride_t off;
 	const struct operator_s* op;
 
-	long* strs;
+	bart_stride_t* strs;
 };
 
 static DEF_TYPEID(extract_data_s);
@@ -1961,15 +1961,15 @@ static void extract_del(const operator_data_t* _data)
 	xfree(data);
 }
 
-const struct operator_s* operator_extract_create2(const struct operator_s* op, int a, int Da, const long dimsa[Da], const long strsa[Da], const long pos[Da])
+const struct operator_s* operator_extract_create2(const struct operator_s* op, int a, int Da, const bart_dim_t dimsa[Da], const bart_dim_t strsa[Da], const bart_dim_t pos[Da])
 {
 	int N = operator_nr_args(op);
 
 	assert(a < N);
 
 	int D[N];
-	const long* dims[N];
-	const long* strs[N];
+	const bart_dim_t* dims[N];
+	const bart_stride_t* strs[N];
 
 	for (int i = 0; i < N; i++) {
 
@@ -2007,7 +2007,7 @@ const struct operator_s* operator_extract_create2(const struct operator_s* op, i
 	data->a = a;
 	data->off = md_calc_offset(Da, strsa, pos);
 
-	PTR_ALLOC(long[Da], nstrs);
+	PTR_ALLOC(bart_dim_t[Da], nstrs);
 	md_copy_strides(Da, *nstrs, strsa);
 	data->strs = *PTR_PASS(nstrs);
 
@@ -2015,7 +2015,7 @@ const struct operator_s* operator_extract_create2(const struct operator_s* op, i
 }
 
 
-const struct operator_s* operator_extract_create(const struct operator_s* op, int a, int Da, const long dimsa[Da], const long pos[Da])
+const struct operator_s* operator_extract_create(const struct operator_s* op, int a, int Da, const bart_dim_t dimsa[Da], const bart_dim_t pos[Da])
 {
 	return operator_extract_create2(op, a, Da, dimsa, MD_STRIDES(Da, dimsa, operator_arg_domain(op, a)->size), pos);
 }
@@ -2039,10 +2039,10 @@ static bool stack_compatible(int D, const struct iovec_s* a, const struct iovec_
 		if (a->strs[D] != b->strs[D])
 			return false;
 
-	long dims[N];
+	bart_dim_t dims[N];
 	md_select_dims(N, ~MD_BIT(D), dims, a->dims);
 
-	long S = md_calc_size(N, dims) * (long)a->size;
+	bart_dim_t S = md_calc_size(N, dims) * (bart_dim_t)a->size;
 
 	if ((1 != a->dims[D]) && (S != a->strs[D]))
 		return false;
@@ -2070,19 +2070,19 @@ static bool stack_compatible_copy(int D, const struct iovec_s* a, const struct i
 	return true;
 }
 
-static void stack_dims(int N, long dims[N], long strs[N], int D, const struct iovec_s* a, const struct iovec_s* b)
+static void stack_dims(int N, bart_dim_t dims[N], bart_stride_t strs[N], int D, const struct iovec_s* a, const struct iovec_s* b)
 {
 	md_copy_dims(N, dims, a->dims);
 	md_copy_strides(N, strs, a->strs);
 
-	long dimsa[N];
+	bart_dim_t dimsa[N];
 	md_select_dims(N, ~MD_BIT(D), dimsa, a->dims);
 
-	strs[D] = md_calc_size(N, dimsa) * (long)a->size;
+	strs[D] = md_calc_size(N, dimsa) * (bart_dim_t)a->size;
 	dims[D] = a->dims[D] + b->dims[D];
 }
 
-static void stack_dims_trivial(int N, long dims[N], long strs[N], int D, const struct iovec_s* a, const struct iovec_s* b)
+static void stack_dims_trivial(int N, bart_dim_t dims[N], bart_stride_t strs[N], int D, const struct iovec_s* a, const struct iovec_s* b)
 {
 	md_copy_dims(N, dims, a->dims);
 	dims[D] = a->dims[D] + b->dims[D];
@@ -2115,15 +2115,15 @@ const struct operator_s* operator_stack2(int M, const int arg_list[M], const int
 
 		int D = ia->N;
 
-		long dims[D];
-		long strs[D];
+		bart_dim_t dims[D];
+		bart_stride_t strs[D];
 
 		if (stack_compatible(dim, ia, ib))
 			stack_dims(D, dims, strs, dim, ia, ib);
 		else
 			stack_dims_trivial(D, dims, strs, dim, ia, ib);
 
-		long pos[D];
+		bart_dim_t pos[D];
 
 		for (int i = 0; i < D; i++)
 			pos[i] = 0;
@@ -2241,7 +2241,7 @@ static void sum_free(const operator_data_t* _data)
 	xfree(data);
 }
 
-const struct operator_s* operator_zadd_create(int II, int N, const long dims[N])
+const struct operator_s* operator_zadd_create(int II, int N, const bart_dim_t dims[N])
 {
 	PTR_ALLOC(struct operator_sum_s, c);
 	SET_TYPEID(operator_sum_s, c);
@@ -2252,8 +2252,8 @@ const struct operator_s* operator_zadd_create(int II, int N, const long dims[N])
 
 	bool io_flags[1 + II];
 	int D [1 + II];
-	const long* dims_op[1 + II];
-	const long* strs_op[1 + II];
+	const bart_dim_t* dims_op[1 + II];
+	const bart_stride_t* strs_op[1 + II];
 
 	io_flags[0] = true;
 	D[0] = N;
@@ -2374,8 +2374,8 @@ const struct operator_s* operator_plus_create(const struct operator_s* a, const 
 
 	bool io_flags[2] = { true, false };
 	int D[] = { codoma->N, doma->N };
-	const long* dims[] = { codoma->dims, doma->dims };
-	const long* strs[] = { codoma->strs, doma->strs };
+	const bart_dim_t* dims[] = { codoma->dims, doma->dims };
+	const bart_stride_t* strs[] = { codoma->strs, doma->strs };
 
 	return operator_generic_create2(2, io_flags, D, dims, strs, CAST_UP(PTR_PASS(c)), plus_apply, plus_free, operator_plus_get_graph);
 }
@@ -2487,8 +2487,8 @@ const struct operator_s* operator_chainN(int N, const struct operator_s* x[N])
 	c->N = N;
 
 	return operator_generic_create2(2, (bool[2]){ true, false }, (int[2]){ operator_codomain(x[N - 1])->N, operator_domain(x[0])->N },
-						(const long*[2]){ operator_codomain(x[N - 1])->dims, operator_domain(x[0])->dims },
-						(const long*[2]){ operator_codomain(x[N - 1])->strs, operator_domain(x[0])->strs },
+						(const bart_dim_t*[2]){ operator_codomain(x[N - 1])->dims, operator_domain(x[0])->dims },
+						(const bart_dim_t*[2]){ operator_codomain(x[N - 1])->strs, operator_domain(x[0])->strs },
 						CAST_UP(PTR_PASS(c)), chain_apply, chain_free, operator_chain_get_graph);
 }
 
@@ -2809,8 +2809,8 @@ const struct operator_s* operator_vptr_set_dims_wrapper(const struct operator_s*
 	data->hint = vptr_hint_ref(hint);
 
 	int D[N];
-	const long* dims[N];
-	const long* strs[N];
+	const bart_dim_t* dims[N];
+	const bart_stride_t* strs[N];
 
 	for (int i = 0; i < N; i++) {
 

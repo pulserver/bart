@@ -45,7 +45,7 @@ static bool test_nlop_cast_pos(void)
 {
 	bool ok = true;
 	enum { N = 3 };
-	long dims[N] = { 10, 7, 3 };
+	bart_dim_t dims[N] = { 10, 7, 3 };
 
 	struct linop_s* l = linop_identity_create(N, dims);
 	struct nlop_s* d = nlop_from_linop(l);
@@ -71,7 +71,7 @@ static bool test_nlop_cast_neg(void)
 {
 	bool ok = true;
 	enum { N = 3 };
-	long dims[N] = { 10, 7, 3 };
+	bart_dim_t dims[N] = { 10, 7, 3 };
 
 	const struct nlop_s* d = nlop_zexp_create(N, dims);
 
@@ -97,7 +97,7 @@ UT_REGISTER_TEST(test_nlop_cast_neg);
 static bool test_nlop_chain(void)
 {
 	enum { N = 3 };
-	long dims[N] = { 10, 7, 3 };
+	bart_dim_t dims[N] = { 10, 7, 3 };
 
 	complex float val = 2.;
 
@@ -126,9 +126,9 @@ UT_REGISTER_TEST(test_nlop_chain);
 static bool test_nlop_tenmul2(bool permute)
 {
 	enum { N = 3 };
-	long odims[N] = { 10, 1, 3 };
-	long idims1[N] = { 1, 7, 3 };
-	long idims2[N] = { 10, 7, 1 };
+	bart_dim_t odims[N] = { 10, 1, 3 };
+	bart_dim_t idims1[N] = { 1, 7, 3 };
+	bart_dim_t idims2[N] = { 10, 7, 1 };
 
 	complex float* dst1 = md_alloc(N, odims, CFL_SIZE);
 	complex float* dst2 = md_alloc(N, odims, CFL_SIZE);
@@ -192,9 +192,9 @@ UT_REGISTER_TEST(test_nlop_permute);
 static bool test_nlop_tenmul_der(void)
 {
 	enum { N = 3 };
-	long odims[N] = { 10, 1, 3 };
-	long idims1[N] = { 1, 7, 3 };
-	long idims2[N] = { 10, 7, 1 };
+	bart_dim_t odims[N] = { 10, 1, 3 };
+	bart_dim_t idims1[N] = { 1, 7, 3 };
+	bart_dim_t idims2[N] = { 10, 7, 1 };
 
 	complex float* dst1 = md_alloc(N, odims, CFL_SIZE);
 	complex float* dst2 = md_alloc(N, odims, CFL_SIZE);
@@ -238,7 +238,7 @@ UT_REGISTER_TEST(test_nlop_tenmul_der);
 static bool test_nlop_zexp(void)
 {
 	enum { N = 3 };
-	long dims[N] = { 10, 7, 3 };
+	bart_dim_t dims[N] = { 10, 7, 3 };
 
 	complex float* dst1 = md_alloc(N, dims, CFL_SIZE);
 	complex float* dst2 = md_alloc(N, dims, CFL_SIZE);
@@ -272,9 +272,9 @@ UT_REGISTER_TEST(test_nlop_zexp);
 static bool test_nlop_tenmul_der2(void)
 {
 	enum { N = 3 };
-	long odims[N] = { 10, 1, 3 };
-	long idims1[N] = { 1, 7, 3 };
-	long idims2[N] = { 10, 7, 1 };
+	bart_dim_t odims[N] = { 10, 1, 3 };
+	bart_dim_t idims1[N] = { 1, 7, 3 };
+	bart_dim_t idims2[N] = { 10, 7, 1 };
 
 	struct nlop_s* tenmul = nlop_tenmul_create(N, odims, idims1, idims2);
 	struct nlop_s* flat = nlop_flatten(tenmul);
@@ -311,9 +311,9 @@ static void random_application(const struct nlop_s* nlop)
 static bool test_nlop_tenmul_der_adj(void)
 {
 	enum { N = 3 };
-	long odims[N] = { 10, 1, 3 };
-	long idims1[N] = { 1, 7, 3 };
-	long idims2[N] = { 10, 7, 1 };
+	bart_dim_t odims[N] = { 10, 1, 3 };
+	bart_dim_t idims1[N] = { 1, 7, 3 };
+	bart_dim_t idims2[N] = { 10, 7, 1 };
 
 	struct nlop_s* tenmul = nlop_tenmul_create(N, odims, idims1, idims2);
 
@@ -339,7 +339,7 @@ UT_REGISTER_TEST(test_nlop_tenmul_der_adj);
 static bool test_nlop_zexp_derivative(void)
 {
 	enum { N = 3 };
-	long dims[N] = { 10, 7, 3 };
+	bart_dim_t dims[N] = { 10, 7, 3 };
 
 	const struct nlop_s* zexp = nlop_zexp_create(N, dims);
 
@@ -360,7 +360,7 @@ UT_REGISTER_TEST(test_nlop_zexp_derivative);
 static bool test_nlop_zexp_der_adj(void)
 {
 	enum { N = 3 };
-	long dims[N] = { 10, 7, 3 };
+	bart_dim_t dims[N] = { 10, 7, 3 };
 
 	const struct nlop_s* zexp = nlop_zexp_create(N, dims);
 
@@ -391,7 +391,7 @@ UT_REGISTER_TEST(test_nlop_zexp_der_adj);
 static bool test_nlop_combine(void)
 {
 	enum { N = 3 };
-	long dims[N] = { 10, 7, 3 };
+	bart_dim_t dims[N] = { 10, 7, 3 };
 
 	const struct nlop_s* zexp = nlop_zexp_create(N, dims);
 	struct linop_s* lid = linop_identity_create(N, dims);
@@ -442,7 +442,7 @@ UT_REGISTER_TEST(test_nlop_combine);
 static bool test_nlop_combine_der1(void)
 {
 	enum { N = 3 };
-	long dims[N] = { 10, 7, 3 };	// FIXME: this test is broken
+	bart_dim_t dims[N] = { 10, 7, 3 };	// FIXME: this test is broken
 
 	const struct nlop_s* zexp = nlop_zexp_create(N, dims);
 	struct linop_s* lid = linop_identity_create(N, dims);
@@ -504,7 +504,7 @@ UT_REGISTER_TEST(test_nlop_combine_der1);
 static bool test_nlop_comb_flat_der(void)
 {
 	enum { N = 3 };
-	long dims[N] = { 10, 7, 3 };
+	bart_dim_t dims[N] = { 10, 7, 3 };
 
 	const struct nlop_s* zexp1 = nlop_zexp_create(N, dims);
 	const struct nlop_s* zexp2 = nlop_zexp_create(N, dims);
@@ -551,7 +551,7 @@ UT_REGISTER_TEST(test_nlop_comb_flat_der);
 static bool test_nlop_combine_derivative(void)
 {
 	enum { N = 3 };
-	long dims[N] = { 10, 7, 3 };	// FIXME: this test is broken
+	bart_dim_t dims[N] = { 10, 7, 3 };	// FIXME: this test is broken
 
 	const struct nlop_s* zexp1 = nlop_zexp_create(N, dims);
 	const struct nlop_s* zexp2 = nlop_zexp_create(N, dims);
@@ -578,7 +578,7 @@ UT_REGISTER_TEST(test_nlop_combine_derivative);
 static bool test_nlop_link(void)
 {
 	enum { N = 3 };
-	long dims[N] = { 10, 7, 3 };
+	bart_dim_t dims[N] = { 10, 7, 3 };
 
 	complex float val = 2.;
 
@@ -623,9 +623,9 @@ UT_REGISTER_TEST(test_nlop_link);
 static bool test_nlop_reshape(void)
 {
 	enum { N = 3 };
-	long odims[N] = { 10, 1, 3 };
-	long idims1[N] = { 1, 7, 3 };
-	long idims2[N] = { 10, 7, 1 };
+	bart_dim_t odims[N] = { 10, 1, 3 };
+	bart_dim_t idims1[N] = { 1, 7, 3 };
+	bart_dim_t idims2[N] = { 10, 7, 1 };
 
 	complex float* dst1 = md_alloc(N, odims, CFL_SIZE);
 	complex float* dst2 = md_alloc(N, odims, CFL_SIZE);
@@ -637,9 +637,9 @@ static bool test_nlop_reshape(void)
 
 	auto op = nlop_tenmul_create(N, odims, idims1, idims2);
 
-	long nodims[1] = { md_calc_size(N, odims) };
-	long nidims1[3] = { 1, 1, md_calc_size(N, idims1) };
-	long nidims2[2] = { md_calc_size(N, idims2), 1 };
+	bart_dim_t nodims[1] = { md_calc_size(N, odims) };
+	bart_dim_t nidims1[3] = { 1, 1, md_calc_size(N, idims1) };
+	bart_dim_t nidims2[2] = { md_calc_size(N, idims2), 1 };
 
 	auto op_reshape = nlop_reshape_out(op, 0, 1, nodims);
 	op_reshape = nlop_reshape_in_F(op_reshape, 0, 3, nidims1);
@@ -695,7 +695,7 @@ static void count_forward(const linop_data_t* _data, complex float* dst, const c
 
 	(*data->counter)++;
 
-	long dim[2] = { 1 };
+	bart_dim_t dim[2] = { 1 };
 	md_copy(1, dim, dst, src, CFL_SIZE);
 }
 
@@ -712,14 +712,14 @@ static struct linop_s* linop_counter_create(int* counter)
 
 	data->counter = counter;
 
-	long dim[1] = { 1 };
+	bart_dim_t dim[1] = { 1 };
 
 	return linop_create(1, dim, 1, dim, CAST_UP(PTR_PASS(data)), count_forward, count_forward, count_forward, NULL, count_free);
 }
 
 static bool test_nlop_parallel_derivatives(void)
 {
-	long dim[1] = { 1 };
+	bart_dim_t dim[1] = { 1 };
 	int counter = 0;
 
 	complex float in[1] = { 1. };
@@ -791,9 +791,9 @@ UT_REGISTER_TEST(test_nlop_parallel_derivatives);
 static bool test_stack(void)
 {
 	enum { N = 3 };
-	long dims1[N] = { 3, 2, 7 };
-	long dims2[N] = { 3, 5, 7 };
-	long dims[N] = { 3, 7, 7 };
+	bart_dim_t dims1[N] = { 3, 2, 7 };
+	bart_dim_t dims2[N] = { 3, 5, 7 };
+	bart_dim_t dims[N] = { 3, 7, 7 };
 
 	complex float* in = md_alloc(N, dims, CFL_SIZE);
 	complex float* out = md_alloc(N, dims, CFL_SIZE);
@@ -833,13 +833,13 @@ UT_REGISTER_TEST(test_stack);
 static bool test_stack_multiple(void)
 {
 	enum { N = 3 };
-	long idims1_1[N] = { 3, 5, 3 };
-	long idims2_1[N] = { 1, 5, 1 };
-	long odims_1[N] = { 3, 5, 3 };
+	bart_dim_t idims1_1[N] = { 3, 5, 3 };
+	bart_dim_t idims2_1[N] = { 1, 5, 1 };
+	bart_dim_t odims_1[N] = { 3, 5, 3 };
 
-	long idims1_2[N] = { 3, 5, 1 };
-	long idims2_2[N] = { 1, 5, 1 };
-	long odims_2[N] = { 3, 5, 1 };
+	bart_dim_t idims1_2[N] = { 3, 5, 1 };
+	bart_dim_t idims2_2[N] = { 1, 5, 1 };
+	bart_dim_t odims_2[N] = { 3, 5, 1 };
 
 	const struct nlop_s* nlops[3];
 
@@ -862,13 +862,13 @@ UT_REGISTER_TEST(test_stack_multiple);
 static bool test_stack_multiple2(void)
 {
 	enum { N = 3 };
-	long idims1_1[N] = { 3, 5, 3 };
-	long idims2_1[N] = { 1, 1, 3 };
-	long odims_1[N] = { 3, 5, 3 };
+	bart_dim_t idims1_1[N] = { 3, 5, 3 };
+	bart_dim_t idims2_1[N] = { 1, 1, 3 };
+	bart_dim_t odims_1[N] = { 3, 5, 3 };
 
-	long idims1_2[N] = { 3, 1, 3 };
-	long idims2_2[N] = { 1, 1, 3 };
-	long odims_2[N] = { 3, 1, 3 };
+	bart_dim_t idims1_2[N] = { 3, 1, 3 };
+	bart_dim_t idims2_2[N] = { 1, 1, 3 };
+	bart_dim_t odims_2[N] = { 3, 1, 3 };
 
 	const struct nlop_s* nlops[5];
 
@@ -891,13 +891,13 @@ UT_REGISTER_TEST(test_stack_multiple2);
 static bool test_stack_multiple_container(void)
 {
 	enum { N = 3 };
-	long idims1_1[N] = { 3, 5, 3 };
-	long idims2_1[N] = { 1, 5, 1 };
-	long odims_1[N] = { 3, 5, 3 };
+	bart_dim_t idims1_1[N] = { 3, 5, 3 };
+	bart_dim_t idims2_1[N] = { 1, 5, 1 };
+	bart_dim_t odims_1[N] = { 3, 5, 3 };
 
-	long idims1_2[N] = { 3, 5, 1 };
-	long idims2_2[N] = { 1, 5, 1 };
-	long odims_2[N] = { 3, 5, 1 };
+	bart_dim_t idims1_2[N] = { 3, 5, 1 };
+	bart_dim_t idims2_2[N] = { 1, 5, 1 };
+	bart_dim_t odims_2[N] = { 3, 5, 1 };
 
 	const struct nlop_s* nlops[3];
 
@@ -920,13 +920,13 @@ UT_REGISTER_TEST(test_stack_multiple_container);
 static bool test_stack_multiple_container2(void)
 {
 	enum { N = 3 };
-	long idims1_1[N] = { 3, 5, 3 };
-	long idims2_1[N] = { 1, 1, 3 };
-	long odims_1[N] = { 3, 5, 3 };
+	bart_dim_t idims1_1[N] = { 3, 5, 3 };
+	bart_dim_t idims2_1[N] = { 1, 1, 3 };
+	bart_dim_t odims_1[N] = { 3, 5, 3 };
 
-	long idims1_2[N] = { 3, 1, 3 };
-	long idims2_2[N] = { 1, 1, 3 };
-	long odims_2[N] = { 3, 1, 3 };
+	bart_dim_t idims1_2[N] = { 3, 1, 3 };
+	bart_dim_t idims2_2[N] = { 1, 1, 3 };
+	bart_dim_t odims_2[N] = { 3, 1, 3 };
 
 	const struct nlop_s* nlops[5];
 
@@ -950,13 +950,13 @@ UT_REGISTER_TEST(test_stack_multiple_container2);
 static bool test_stack_multiple_container_flatten(void)
 {
 	enum { N = 3 };
-	long idims1_1[N] = { 3, 5, 3 };
-	long idims2_1[N] = { 1, 5, 1 };
-	long odims_1[N] = { 3, 5, 3 };
+	bart_dim_t idims1_1[N] = { 3, 5, 3 };
+	bart_dim_t idims2_1[N] = { 1, 5, 1 };
+	bart_dim_t odims_1[N] = { 3, 5, 3 };
 
-	long idims1_2[N] = { 3, 5, 1 };
-	long idims2_2[N] = { 1, 5, 1 };
-	long odims_2[N] = { 3, 5, 1 };
+	bart_dim_t idims1_2[N] = { 3, 5, 1 };
+	bart_dim_t idims2_2[N] = { 1, 5, 1 };
+	bart_dim_t odims_2[N] = { 3, 5, 1 };
 
 	const struct nlop_s* nlops[3];
 
@@ -982,13 +982,13 @@ UT_REGISTER_TEST(test_stack_multiple_container_flatten);
 static bool test_stack_multiple_container_flatten2(void)
 {
 	enum { N = 3 };
-	long idims1_1[N] = { 3, 5, 3 };
-	long idims2_1[N] = { 1, 1, 3 };
-	long odims_1[N] = { 3, 5, 3 };
+	bart_dim_t idims1_1[N] = { 3, 5, 3 };
+	bart_dim_t idims2_1[N] = { 1, 1, 3 };
+	bart_dim_t odims_1[N] = { 3, 5, 3 };
 
-	long idims1_2[N] = { 3, 1, 3 };
-	long idims2_2[N] = { 1, 1, 3 };
-	long odims_2[N] = { 3, 1, 3 };
+	bart_dim_t idims1_2[N] = { 3, 1, 3 };
+	bart_dim_t idims2_2[N] = { 1, 1, 3 };
+	bart_dim_t odims_2[N] = { 3, 1, 3 };
 
 	const struct nlop_s* nlops[5];
 
@@ -1014,7 +1014,7 @@ UT_REGISTER_TEST(test_stack_multiple_container_flatten2);
 
 static bool test_nlop_select_derivatives(void)
 {
-	long dim[1] = { 1 };
+	bart_dim_t dim[1] = { 1 };
 
 	auto tenmul1 = nlop_tenmul_create(1, dim, dim, dim);
 
@@ -1032,12 +1032,12 @@ static bool test_nlop_select_derivatives(void)
 	UT_RETURN_ON_FAILURE(nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(nlop_tenmul_der_available(tenmul1, 1));
 
-	nlop_generic_apply_select_derivative_unchecked(tenmul1, 3, args, 1l, 3l);
+	nlop_generic_apply_select_derivative_unchecked(tenmul1, 3, args, 1, 3);
 
 	UT_RETURN_ON_FAILURE(nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(nlop_tenmul_der_available(tenmul1, 1));
 
-	nlop_generic_apply_select_derivative_unchecked(tenmul1, 3, args, 0l, 0l);
+	nlop_generic_apply_select_derivative_unchecked(tenmul1, 3, args, 0, 0);
 
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 1));
@@ -1052,7 +1052,7 @@ UT_REGISTER_TEST(test_nlop_select_derivatives);
 
 static bool test_nlop_select_derivatives_dup(void)
 {
-	long dim[1] = { 1 };
+	bart_dim_t dim[1] = { 1 };
 
 	auto tenmul1 = nlop_tenmul_create(1, dim, dim, dim);
 
@@ -1066,12 +1066,12 @@ static bool test_nlop_select_derivatives_dup(void)
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 1));
 
-	nlop_generic_apply_select_derivative_unchecked(op, 2, args, 1l, 1l);
+	nlop_generic_apply_select_derivative_unchecked(op, 2, args, 1, 1);
 
 	UT_RETURN_ON_FAILURE(nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(nlop_tenmul_der_available(tenmul1, 1));
 
-	nlop_generic_apply_select_derivative_unchecked(op, 2, args, 0l, 0l);
+	nlop_generic_apply_select_derivative_unchecked(op, 2, args, 0, 0);
 
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 1));
@@ -1087,7 +1087,7 @@ UT_REGISTER_TEST(test_nlop_select_derivatives_dup);
 
 static bool test_nlop_select_derivatives_combine(void)
 {
-	long dim[1] = { 1 };
+	bart_dim_t dim[1] = { 1 };
 
 	auto tenmul1 = nlop_tenmul_create(1, dim, dim, dim);
 	auto tenmul2 = nlop_tenmul_create(1, dim, dim, dim);
@@ -1108,14 +1108,14 @@ static bool test_nlop_select_derivatives_combine(void)
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul2, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul2, 1));
 
-	nlop_generic_apply_select_derivative_unchecked(op, 6, args, 0l, 0l);
+	nlop_generic_apply_select_derivative_unchecked(op, 6, args, 0, 0);
 
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 1));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul2, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul2, 1));
 
-	nlop_generic_apply_select_derivative_unchecked(op, 6, args, 3l, 6l);
+	nlop_generic_apply_select_derivative_unchecked(op, 6, args, 3, 6);
 
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(nlop_tenmul_der_available(tenmul1, 1));
@@ -1134,7 +1134,7 @@ UT_REGISTER_TEST(test_nlop_select_derivatives_combine);
 
 static bool test_nlop_select_derivatives_link(void)
 {
-	long dim[1] = { 1 };
+	bart_dim_t dim[1] = { 1 };
 
 	auto tenmul1 = nlop_tenmul_create(1, dim, dim, dim);
 	auto tenmul2 = nlop_tenmul_create(1, dim, dim, dim);
@@ -1153,21 +1153,21 @@ static bool test_nlop_select_derivatives_link(void)
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul2, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul2, 1));
 
-	nlop_generic_apply_select_derivative_unchecked(op, 4, args, 0l, 0l);
+	nlop_generic_apply_select_derivative_unchecked(op, 4, args, 0, 0);
 
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 1));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul2, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul2, 1));
 
-	nlop_generic_apply_select_derivative_unchecked(op, 4, args, 1l, 4l);
+	nlop_generic_apply_select_derivative_unchecked(op, 4, args, 1, 4);
 
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(nlop_tenmul_der_available(tenmul1, 1));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul2, 0));
 	UT_RETURN_ON_FAILURE(nlop_tenmul_der_available(tenmul2, 1));
 
-	nlop_generic_apply_select_derivative_unchecked(op, 4, args, 1l, 1l);
+	nlop_generic_apply_select_derivative_unchecked(op, 4, args, 1, 1);
 
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 1));
@@ -1187,7 +1187,7 @@ UT_REGISTER_TEST(test_nlop_select_derivatives_link);
 static bool test_nlop_zinv(void)
 {
 	enum { N = 3 };
-	long dims[N] = { 5, 1, 3 };
+	bart_dim_t dims[N] = { 5, 1, 3 };
 
 	auto nlop = nlop_zinv_create(N, dims);
 
@@ -1208,8 +1208,8 @@ static bool test_zmax(void)
 {
 	int N = 3;
 
-	long indims[] = { 2, 2, 1 };
-	long outdims[] = { 2, 2, 4 };
+	bart_dim_t indims[] = { 2, 2, 1 };
+	bart_dim_t outdims[] = { 2, 2, 4 };
 
 	complex float stacked[] = {	1., 2., 3., 3.,
 					2., 2., 4., 2.,
@@ -1233,7 +1233,7 @@ static bool test_zmax(void)
 UT_REGISTER_TEST(test_zmax);
 
 
-static const struct nlop_s* get_test_nlop(int N, const long dims[N])
+static const struct nlop_s* get_test_nlop(int N, const bart_dim_t dims[N])
 {
 	auto tenmul1 = nlop_tenmul_create(N, dims, dims, dims);
 	auto tenmul2 = nlop_tenmul_create(N, dims, dims, dims);
@@ -1250,7 +1250,7 @@ static const struct nlop_s* get_test_nlop(int N, const long dims[N])
 static bool test_nlop_checkpointing(void)
 {
 	enum { N = 3 };
-	long dims[N] = { 3, 1, 3 };
+	bart_dim_t dims[N] = { 3, 1, 3 };
 
 	auto nlop = get_test_nlop(N, dims);
 	auto nlop_cp = nlop_checkpoint_create_F(get_test_nlop(N, dims), true, true);
@@ -1276,8 +1276,8 @@ static bool test_nlop_checkpointing(void)
 		args_cp[i] = args[i];
 	}
 
-	unsigned long out_der_flag = MD_BIT(1) | MD_BIT(2);
-	unsigned long in_der_flag = MD_BIT(2) | MD_BIT(3) | MD_BIT(4);
+	bart_flags_t out_der_flag = MD_BIT(1) | MD_BIT(2);
+	bart_flags_t in_der_flag = MD_BIT(2) | MD_BIT(3) | MD_BIT(4);
 
 	nlop_generic_apply_select_derivative_unchecked(nlop, OO + II, args, out_der_flag, in_der_flag);
 	nlop_generic_apply_select_derivative_unchecked(nlop_cp, OO + II, args_cp, out_der_flag, in_der_flag);
@@ -1383,8 +1383,8 @@ static bool test_mriop_normalinv(void)
 	// => The normal operator is the identity
 	// => out = in / (1+lambda)
 	enum { N = 16 };
-	long dims[N] = { 8, 8, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long idims[N] = { 8, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[N] = { 8, 8, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t idims[N] = { 8, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
 	struct config_nlop_mri_s* mri_conf = sense_model_config_cart_create(N, dims, idims, dims, idims);
 

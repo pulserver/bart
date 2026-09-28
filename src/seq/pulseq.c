@@ -39,24 +39,24 @@ do {												\
 	auto _o = (o);										\
 	typedef typeof((*_p)->data[0]) eltype_t;						\
 	int n2 = VEC_LEN(*_p) + 1;								\
-	*_p = xrealloc(*_p, (size_t)((long)sizeof(**_p) + n2 * (long)sizeof(eltype_t)));	\
+	*_p = xrealloc(*_p, (size_t)((bart_stride_t)sizeof(**_p) + n2 * (bart_stride_t)sizeof(eltype_t)));	\
 	(*_p)->len = n2;									\
 	(*_p)->data[n2 - 1] = _o;								\
 } while (0)
 
 
 #define SECTIONS(X) X(VERSION) X(DEFINITIONS) X(BLOCKS) X(GRADIENTS) X(TRAP) X(RF) X(ADC) X(EXTENSIONS) X(SHAPES) X(SIGNATURE)
-#define BLOCKS_FORMAT "%4d %lu %d %d %d %d %d %d"
+#define BLOCKS_FORMAT "%4d %" PRIu64 " %d %d %d %d %d %d"
 #define BLOCKS_ACCESS(X) X(num) X(dur) X(rf) X(g[0]) X(g[1]) X(g[2]) X(adc) X(ext)
-#define GRADIENTS_FORMAT "%d %lf %d %d %lu"
+#define GRADIENTS_FORMAT "%d %lf %d %d %" PRIu64
 #define GRADIENTS_ACCESS(X) X(id) X(amp) X(shape_id) X(time_id) X(delay)
-#define TRAP_FORMAT "%d %lf %lu %lu %lu %lu"
+#define TRAP_FORMAT "%d %lf %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64
 #define TRAP_ACCESS(X) X(id) X(amp) X(rise) X(flat) X(fall) X(delay)
-#define ADC_FORMAT "%d %lu %lu %lu %lf %lf"
+#define ADC_FORMAT "%d %" PRIu64 " %" PRIu64 " %" PRIu64 " %lf %lf"
 #define ADC_ACCESS(X) X(id) X(num) X(dwell) X(delay) X(freq) X(phase)
 #define EXTENSIONS_FORMAT "%d %d %d %d"
 #define EXTENSIONS_ACCESS(X) X(id) X(type) X(ref) X(next)
-#define RF_FORMAT "%d %lf %d %d %d %lu %lf %lf"
+#define RF_FORMAT "%d %lf %d %d %d %" PRIu64 " %lf %lf"
 #define RF_ACCESS(X) X(id) X(mag) X(mag_id) X(ph_id) X(time_id) X(delay) X(freq) X(phase)
 
 
@@ -133,7 +133,7 @@ static struct shape make_compressed_shape(int id, int len, const double val[len]
 
 static double fovz(const struct seq_config* seq)
 {
-	long slices = get_slices(seq);
+	bart_dim_t slices = get_slices(seq);
 
 	double min_pos = seq->geom.shift[0][2];
 	double max_pos = seq->geom.shift[0][2];
@@ -198,7 +198,7 @@ void pulse_shapes_to_pulseq(struct pulseq *ps, int N, const struct rf_shape rf_s
 
 	for (int i = 0; i < N; i++) {
 
-		long samples = rf_shapes[i].samples;
+		bart_dim_t samples = rf_shapes[i].samples;
 
 		double mag[samples];
 		double pha[samples];
@@ -275,8 +275,8 @@ static int check_existing_gradient_shape(const struct pulseq* ps, const struct s
 	return -1;
 }
 
-static void grad_to_pulseq(int grad_id[3], struct pulseq *ps, struct seq_sys sys, long grad_start,
-			  long grad_len, double g[SEQ_MAX_GRAD_POINTS][3])
+static void grad_to_pulseq(int grad_id[3], struct pulseq *ps, struct seq_sys sys, bart_dim_t grad_start,
+			  bart_dim_t grad_len, double g[SEQ_MAX_GRAD_POINTS][3])
 {
 	double g_axis[grad_len];
 
@@ -328,7 +328,7 @@ static double phase_pulseq(const struct seq_event* ev)
 	return (ret < 0.) ? (ret + 2. * M_PI) : ret;
 }
 
-static int adc_to_pulseq(struct pulseq *ps, int i_adc, long block_start, int N, const struct seq_event ev[N])
+static int adc_to_pulseq(struct pulseq *ps, int i_adc, bart_dim_t block_start, int N, const struct seq_event ev[N])
 {
 	int adc_idx = events_idx(i_adc, SEQ_EVENT_ADC, N, ev);
 
@@ -339,19 +339,19 @@ static int adc_to_pulseq(struct pulseq *ps, int i_adc, long block_start, int N, 
 
 	int adc_id = VEC_LEN(ps->adcs) + 1;
 
-	long samples = lround(ev[adc_idx].adc.columns * ev[adc_idx].adc.os);
+	bart_dim_t samples = llround(ev[adc_idx].adc.columns * ev[adc_idx].adc.os);
 
 	if (samples % 2) {
 
 		samples++;
-		debug_printf(DP_WARN, "requested samples %ld increased to %ld\n", samples - 1, samples);
+		debug_printf(DP_WARN, "requested samples %" PRId64 " increased to %" PRId64 "\n", samples - 1, samples);
 	}
 
 	struct adc a = {
 
 		.id = adc_id,
 		.num = (uint64_t)samples,
-		.dwell = (uint64_t)lround(ev[adc_idx].adc.dwell_ns / ev[adc_idx].adc.os),
+		.dwell = (uint64_t)llround(ev[adc_idx].adc.dwell_ns / ev[adc_idx].adc.os),
 		.delay = round(1.E6 * (ev[adc_idx].start - block_start)),
 		.freq = ev[adc_idx].adc.freq,
 		.phase = phase_pulseq(&ev[adc_idx])
@@ -518,19 +518,19 @@ void events_to_pulseq(struct pulseq *ps, enum seq_block mode, double tr, struct 
 	if (1 < events_counter(SEQ_EVENT_PULSE, N, ev))
 		error("Multiple RFs per block not supported\n");
 
-	long dur = lround(seq_block_end(N, ev, mode, tr, ps->block_raster_time) / ps->block_raster_time);
+	bart_dim_t dur = llround(seq_block_end(N, ev, mode, tr, ps->block_raster_time) / ps->block_raster_time);
 	ps->total_duration += dur * ps->block_raster_time;
 
 	double grad_shapes[SEQ_MAX_GRAD_POINTS][3];
 	seq_compute_gradients(SEQ_MAX_GRAD_POINTS, grad_shapes, ps->gradient_raster_time, N, ev);
 
-	long grad_len = lround((seq_block_end_flat(N, ev, ps->block_raster_time) + seq_block_rdt(N, ev, ps->block_raster_time)) / ps->block_raster_time);
+	bart_dim_t grad_len = llround((seq_block_end_flat(N, ev, ps->block_raster_time) + seq_block_rdt(N, ev, ps->block_raster_time)) / ps->block_raster_time);
 
 	if (grad_len > dur)
-		error("Gradient length %ld exceeds block duration %ld\n", grad_len, dur);
+		error("Gradient length %" PRId64 " exceeds block duration %" PRId64 "\n", grad_len, dur);
 
-	long dur_split = dur;
-	long grad_start = 0;
+	bart_dim_t dur_split = dur;
+	bart_dim_t grad_start = 0;
 
 	for (int i = 0; i < n_blocks; i++) {
 
@@ -558,7 +558,7 @@ void events_to_pulseq(struct pulseq *ps, enum seq_block mode, double tr, struct 
 		struct ps_block b = {
 
 			.num = VEC_LEN(ps->ps_blocks) + 1,
-			.dur = (unsigned long)dur_split,
+			.dur = (bart_flags_t)dur_split,
 			.rf = rf_id,
 			.g = { g_id[0], g_id[1], g_id[2] },
 			.adc = adc_id,

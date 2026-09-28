@@ -77,7 +77,7 @@ void cudnn_init(void)
 
 	if (NULL != (cudnn_str = getenv("BART_CUDNN_USE_TENSORCORE"))) {
 
-		long val = strtol(cudnn_str, NULL, 10);
+		bart_dim_t val = strtoll(cudnn_str, NULL, 10);
 
 		if ((1 != val) && (0 != val))
 			error("BART_CUDNN_USE_TENSORCORE environment variable must be 0 or 1!\n");
@@ -109,32 +109,32 @@ struct conv_desc_s {
 
 	int N;
 
-	long odims[MAX_DIMS];
-	long idims[MAX_DIMS];
-	long kdims[MAX_DIMS];
+	bart_dim_t odims[MAX_DIMS];
+	bart_dim_t idims[MAX_DIMS];
+	bart_dim_t kdims[MAX_DIMS];
 
-	long ostrs[MAX_DIMS];
-	long istrs[MAX_DIMS];
-	long kstrs[MAX_DIMS];
+	bart_stride_t ostrs[MAX_DIMS];
+	bart_stride_t istrs[MAX_DIMS];
+	bart_stride_t kstrs[MAX_DIMS];
 
-	long strides[MAX_DIMS];
-	long dilations[MAX_DIMS];
+	bart_stride_t strides[MAX_DIMS];
+	bart_dim_t dilations[MAX_DIMS];
 
 	bool conv;
 
-	unsigned long conv_flags;
-	unsigned long batch_flags;
-	unsigned long channel_in_flags;
-	unsigned long channel_out_flags;
-	unsigned long group_flags;
+	bart_flags_t conv_flags;
+	bart_flags_t batch_flags;
+	bart_flags_t channel_in_flags;
+	bart_flags_t channel_out_flags;
+	bart_flags_t group_flags;
 };
 
-static int flag_to_index(unsigned long flag)
+static int flag_to_index(bart_flags_t flag)
 {
 	if (1 != bitcount(flag))
 		return -1;
 
-	for (int i = 0; i < 8 * (long)sizeof(flag); i++)
+	for (int i = 0; i < 8 * (bart_stride_t)sizeof(flag); i++)
 		if (MD_IS_SET(flag, i))
 			return i;
 	return -1;
@@ -159,18 +159,18 @@ static bool check_cudnn_convcorr(struct conv_desc_s bart_conv_desc)
 }
 
 static struct conv_desc_s create_conv_desc(	int N,
-						const long odims[N], const long ostrs[N],
-						const long idims[N], const long istrs[N],
-						const long kdims[N], const long kstrs[N],
-						const long dilations[N],
-						const long strides[N],
-						unsigned long conv_flags,
+						const bart_dim_t odims[N], const bart_stride_t ostrs[N],
+						const bart_dim_t idims[N], const bart_stride_t istrs[N],
+						const bart_dim_t kdims[N], const bart_stride_t kstrs[N],
+						const bart_dim_t dilations[N],
+						const bart_stride_t strides[N],
+						bart_flags_t conv_flags,
 						bool conv
 						)
 {
 	struct conv_desc_s result;
 
-	unsigned long non_singleton_flags = md_nontriv_dims(N, odims) | md_nontriv_dims(N, idims) | md_nontriv_dims(N, kdims);
+	bart_flags_t non_singleton_flags = md_nontriv_dims(N, odims) | md_nontriv_dims(N, idims) | md_nontriv_dims(N, kdims);
 
 	assert(MAX_DIMS >= N);
 
@@ -260,9 +260,9 @@ static struct conv_desc_s create_conv_desc(	int N,
 
 	// cudnn does not ignore strides of singleton dims
 	// using packed strides improve detection of optimized kernels
-	result.ostrs[0] = (1 == result.odims[0]) ? (long)FL_SIZE : result.ostrs[0];
-	result.istrs[0] = (1 == result.idims[0]) ? (long)FL_SIZE : result.istrs[0];
-	result.kstrs[0] = (1 == result.kdims[0]) ? (long)FL_SIZE : result.kstrs[0];
+	result.ostrs[0] = (1 == result.odims[0]) ? (bart_stride_t)FL_SIZE : result.ostrs[0];
+	result.istrs[0] = (1 == result.idims[0]) ? (bart_stride_t)FL_SIZE : result.istrs[0];
+	result.kstrs[0] = (1 == result.kdims[0]) ? (bart_stride_t)FL_SIZE : result.kstrs[0];
 
 	for (int i = 1; i < N; i++) {
 
@@ -314,10 +314,10 @@ static struct cudnn_filter_s get_filter_descriptor(struct conv_desc_s conv_desc,
 	int filterStrA[MAX(4, nbDims)];
 
 	filterDimA[0] = (-1 == out_channel_index) ? 1 : conv_desc.kdims[out_channel_index];
-	filterStrA[0] = (-1 == out_channel_index) ? 1 : conv_desc.kstrs[out_channel_index] / (long)FL_SIZE;
+	filterStrA[0] = (-1 == out_channel_index) ? 1 : conv_desc.kstrs[out_channel_index] / (bart_stride_t)FL_SIZE;
 
 	filterDimA[1] = (-1 == in_channel_index) ? 1 : conv_desc.kdims[in_channel_index];
-	filterStrA[1] = (-1 == in_channel_index) ? 1 : conv_desc.kstrs[in_channel_index] / (long)FL_SIZE;
+	filterStrA[1] = (-1 == in_channel_index) ? 1 : conv_desc.kstrs[in_channel_index] / (bart_stride_t)FL_SIZE;
 
 	for (int i = 0, ir = nbDims - 1; ir >= 2; i++) {
 
@@ -325,7 +325,7 @@ static struct cudnn_filter_s get_filter_descriptor(struct conv_desc_s conv_desc,
 			continue;
 
 		filterDimA[ir] = conv_desc.kdims[i];
-		filterStrA[ir] = conv_desc.kstrs[i] / (long)FL_SIZE;
+		filterStrA[ir] = conv_desc.kstrs[i] / (bart_stride_t)FL_SIZE;
 
 		ir--;
 	}
@@ -396,9 +396,9 @@ static struct cudnn_tensor_s get_tensor_descriptor(struct conv_desc_s conv_desc,
 	struct cudnn_tensor_s result;
 	result.format = format;
 
-	unsigned long channel_flags = output ? conv_desc.channel_out_flags : conv_desc.channel_in_flags;
-	long* dims = output ? conv_desc.odims : conv_desc.idims;
-	long* strs = output ? conv_desc.ostrs : conv_desc.istrs;
+	bart_flags_t channel_flags = output ? conv_desc.channel_out_flags : conv_desc.channel_in_flags;
+	bart_dim_t* dims = output ? conv_desc.odims : conv_desc.idims;
+	bart_stride_t* strs = output ? conv_desc.ostrs : conv_desc.istrs;
 
 	result.size_transformed = (size_t)md_calc_size(conv_desc.N, dims) * FL_SIZE;
 
@@ -423,10 +423,10 @@ static struct cudnn_tensor_s get_tensor_descriptor(struct conv_desc_s conv_desc,
 	int strA[MAX(4, nbDims)];
 
 	dimA[0] = (-1 == batch_index) ? 1 : dims[batch_index];
-	strA[0] = (-1 == batch_index) ? 1 : strs[batch_index] / (long)FL_SIZE;
+	strA[0] = (-1 == batch_index) ? 1 : strs[batch_index] / (bart_stride_t)FL_SIZE;
 
 	dimA[1] = (-1 == channel_index) ? 1 : dims[channel_index];
-	strA[1] = (-1 == channel_index) ? 1 : strs[channel_index] / (long)FL_SIZE;
+	strA[1] = (-1 == channel_index) ? 1 : strs[channel_index] / (bart_stride_t)FL_SIZE;
 
 	for (int i = 0, ir = nbDims - 1; ir >= 2; i++) {
 
@@ -434,7 +434,7 @@ static struct cudnn_tensor_s get_tensor_descriptor(struct conv_desc_s conv_desc,
 			continue;
 
 		dimA[ir] = dims[i];
-		strA[ir] = strs[i] / (long)FL_SIZE;
+		strA[ir] = strs[i] / (bart_stride_t)FL_SIZE;
 
 		ir--;
 	}
@@ -707,20 +707,20 @@ static void cudnn_tensor_transform_split_complex(float alpha, float beta, cudnnT
 
 	bool decomp_bart = true;
 
-	long dims[nbDims];
-	long strs[nbDims];
+	bart_dim_t dims[nbDims];
+	bart_stride_t strs[nbDims];
 
 	for (int i = 0; i < nbDims; i++) {
 
 		dims[i] = dimA_comp[i];
-		strs[i] = strA_comp[i] * (long)FL_SIZE;
+		strs[i] = strA_comp[i] * (bart_stride_t)FL_SIZE;
 
 		decomp_bart = decomp_bart && ((1 == dimA_comp[i]) || (0 == strA_comp[i] % 2));
 
 		strA_comp[i] = (1 == dimA_comp[i]) ? 1 : strA_comp[i] / 2;
 	}
 
-	long (*tstrs[1])[nbDims] = {(long (*)[nbDims])strs};
+	bart_stride_t (*tstrs[1])[nbDims] = {(bart_stride_t (*)[nbDims])strs};
 	decomp_bart = decomp_bart && (1 == optimize_dims_gpu(1, nbDims, dims, tstrs));
 
 	if (decomp_bart) {
@@ -760,20 +760,20 @@ static void cudnn_tensor_transform_combine_complex(float alpha, float beta, cudn
 
 	bool decomp_bart = true;
 
-	long dims[nbDims];
-	long strs[nbDims];
+	bart_dim_t dims[nbDims];
+	bart_stride_t strs[nbDims];
 
 	for (int i = 0; i < nbDims; i++) {
 
 		dims[i] = dimA_comp[i];
-		strs[i] = strA_comp[i] * (long)FL_SIZE;
+		strs[i] = strA_comp[i] * (bart_stride_t)FL_SIZE;
 
 		decomp_bart = decomp_bart && ((1 == dimA_comp[i]) || (0 == strA_comp[i] % 2));
 
 		strA_comp[i] = (1 == dimA_comp[i]) ? 1 : strA_comp[i] / 2;
 	}
 
-	long (*tstrs[1])[nbDims] = {(long (*)[nbDims])strs};
+	bart_stride_t (*tstrs[1])[nbDims] = {(bart_stride_t (*)[nbDims])strs};
 	decomp_bart = decomp_bart && (1 == optimize_dims_gpu(1, nbDims, dims, tstrs));
 
 	if (decomp_bart) {
@@ -1212,7 +1212,7 @@ static bool cudnn_zconvcorr_fwd_kernel(
 	if ((CFL_SIZE != bcd.ostrs[idx_ochannel]) && (1 != bcd.odims[idx_ochannel]))
 		return false;
 
-	long rkstrs[bcd.N];
+	bart_stride_t rkstrs[bcd.N];
 	md_calc_strides(bcd.N, rkstrs, bcd.kdims, FL_SIZE);
 
 	float* krn_real = md_alloc_gpu(bcd.N, bcd.kdims, FL_SIZE);
@@ -1237,14 +1237,14 @@ static bool cudnn_zconvcorr_fwd_kernel(
 	md_calc_strides(rbcd.N, rbcd.kstrs, rbcd.kdims, FL_SIZE);
 
 
-	long nkstrs_cp[bcd.N];
+	bart_dim_t nkstrs_cp[bcd.N];
 	md_copy_strides(bcd.N, nkstrs_cp, rbcd.kstrs);
 	nkstrs_cp[flag_to_index(bcd.channel_in_flags)] *= 2;
 	nkstrs_cp[flag_to_index(bcd.channel_out_flags)] *= 2;
 
 	float* nkrn = md_alloc_gpu(bcd.N, rbcd.kdims, FL_SIZE);
 
-	long pos[bcd.N];
+	bart_dim_t pos[bcd.N];
 	md_singleton_strides(bcd.N, pos);
 
 	pos[flag_to_index(bcd.channel_out_flags)] = 0;
@@ -1307,7 +1307,7 @@ static bool cudnn_zconvcorr_bwd_in_kernel(
 	if ((CFL_SIZE != bcd.ostrs[flag_to_index(bcd.channel_out_flags)]) && (1 != bcd.odims[flag_to_index(bcd.channel_out_flags)]))
 		return false;
 
-	long rkstrs[bcd.N];
+	bart_stride_t rkstrs[bcd.N];
 	md_calc_strides(bcd.N, rkstrs, bcd.kdims, FL_SIZE);
 
 	float* krn_real = md_alloc_gpu(bcd.N, bcd.kdims, FL_SIZE);
@@ -1332,14 +1332,14 @@ static bool cudnn_zconvcorr_bwd_in_kernel(
 	md_calc_strides(rbcd.N, rbcd.kstrs, rbcd.kdims, FL_SIZE);
 
 
-	long nkstrs_cp[bcd.N];
+	bart_dim_t nkstrs_cp[bcd.N];
 	md_copy_strides(bcd.N, nkstrs_cp, rbcd.kstrs);
 	nkstrs_cp[flag_to_index(bcd.channel_in_flags)] *= 2;
 	nkstrs_cp[flag_to_index(bcd.channel_out_flags)] *= 2;
 
 	float* nkrn = md_alloc_gpu(bcd.N, rbcd.kdims, FL_SIZE);
 
-	long pos[bcd.N];
+	bart_dim_t pos[bcd.N];
 	md_singleton_strides(bcd.N, pos);
 
 	pos[flag_to_index(bcd.channel_out_flags)] = 0;
@@ -1402,7 +1402,7 @@ static bool cudnn_zconvcorr_bwd_krn_kernel(
 	if ((CFL_SIZE != bcd.ostrs[flag_to_index(bcd.channel_out_flags)]) && (1 != bcd.odims[flag_to_index(bcd.channel_out_flags)]))
 		return false;
 
-	long rkstrs[bcd.N];
+	bart_stride_t rkstrs[bcd.N];
 	md_calc_strides(bcd.N, rkstrs, bcd.kdims, FL_SIZE);
 
 	float* krn_real = md_alloc_gpu(bcd.N, bcd.kdims, FL_SIZE);
@@ -1427,7 +1427,7 @@ static bool cudnn_zconvcorr_bwd_krn_kernel(
 	md_calc_strides(rbcd.N, rbcd.kstrs, rbcd.kdims, FL_SIZE);
 
 
-	long nkstrs_cp[bcd.N];
+	bart_dim_t nkstrs_cp[bcd.N];
 	md_copy_strides(bcd.N, nkstrs_cp, rbcd.kstrs);
 	nkstrs_cp[flag_to_index(bcd.channel_in_flags)] *= 2;
 	nkstrs_cp[flag_to_index(bcd.channel_out_flags)] *= 2;
@@ -1439,7 +1439,7 @@ static bool cudnn_zconvcorr_bwd_krn_kernel(
 
 	float* krn_tmp = md_alloc_gpu(bcd.N, bcd.kdims, FL_SIZE);
 
-	long pos[bcd.N];
+	bart_dim_t pos[bcd.N];
 	md_singleton_strides(bcd.N, pos);
 
 	pos[flag_to_index(bcd.channel_out_flags)] = 0;
@@ -1475,10 +1475,10 @@ static bool cudnn_zconvcorr_bwd_krn_kernel(
 
 
 bool zconvcorr_fwd_cudnn(	int N,
-				long odims[N], long ostrs[N], complex float* out,
-				long idims[N], long istrs[N], const complex float* in,
-				long kdims[N], long kstrs[N], const complex float* krn,
-				unsigned long flags, const long dilation[N], const long strides[N], bool conv)
+				bart_dim_t odims[N], bart_stride_t ostrs[N], complex float* out,
+				bart_dim_t idims[N], bart_stride_t istrs[N], const complex float* in,
+				bart_dim_t kdims[N], bart_stride_t kstrs[N], const complex float* krn,
+				bart_flags_t flags, const bart_dim_t dilation[N], const bart_stride_t strides[N], bool conv)
 {
 	if (MAX_DIMS < N)
 		return false;
@@ -1509,10 +1509,10 @@ bool zconvcorr_fwd_cudnn(	int N,
 }
 
 bool zconvcorr_bwd_in_cudnn(	int N,
-				long odims[N], long ostrs[N], const complex float* out,
-				long idims[N], long istrs[N], complex float* in,
-				long kdims[N], long kstrs[N], const complex float* krn,
-				unsigned long flags, const long dilation[N], const long strides[N], bool conv)
+				bart_dim_t odims[N], bart_stride_t ostrs[N], const complex float* out,
+				bart_dim_t idims[N], bart_stride_t istrs[N], complex float* in,
+				bart_dim_t kdims[N], bart_stride_t kstrs[N], const complex float* krn,
+				bart_flags_t flags, const bart_dim_t dilation[N], const bart_stride_t strides[N], bool conv)
 {
 	if (MAX_DIMS < N)
 		return false;
@@ -1543,10 +1543,10 @@ bool zconvcorr_bwd_in_cudnn(	int N,
 }
 
 bool zconvcorr_bwd_krn_cudnn(	int N,
-				long odims[N], long ostrs[N], const complex float* out,
-				long idims[N], long istrs[N], const complex float* in,
-				long kdims[N], long kstrs[N], complex float* krn,
-				unsigned long flags, const long dilation[N], const long strides[N], bool conv)
+				bart_dim_t odims[N], bart_stride_t ostrs[N], const complex float* out,
+				bart_dim_t idims[N], bart_stride_t istrs[N], const complex float* in,
+				bart_dim_t kdims[N], bart_stride_t kstrs[N], complex float* krn,
+				bart_flags_t flags, const bart_dim_t dilation[N], const bart_stride_t strides[N], bool conv)
 {
 	if (MAX_DIMS < N)
 		return false;

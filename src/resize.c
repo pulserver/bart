@@ -64,16 +64,16 @@ int main_resize(int argc, char* argv[argc])
 
 	int N = DIMS;
 
-	long in_dims[N];
-	long out_dims[N];
+	bart_dim_t in_dims[N];
+	bart_dim_t out_dims[N];
 
 	complex float* in_data = load_cfl(in_file, N, in_dims);
 	md_copy_dims(N, out_dims, in_dims);
 	
 	for (int i = 0; i < count; i++) {
 
-		long dim = dims[i];
-		long size = sizes[i];
+		bart_dim_t dim = dims[i];
+		bart_dim_t size = sizes[i];
 
 		assert(dim < N);
 		assert(size >= 1);

@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include "misc/types.h"
 
 struct operator_p_s;
@@ -9,8 +10,8 @@ struct nlop_s;
 
 typedef void iter4_fun_f(const struct iter3_conf_s* _conf,
 		const struct nlop_s* nlop,
-		long N, float* dst, const float* ref,
-		long M, const float* src,
+		bart_dim_t N, float* dst, const float* ref,
+		bart_dim_t M, const float* src,
 		const struct operator_p_s* solve,
 		const struct iter_op_s cb);
 

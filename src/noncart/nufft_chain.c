@@ -30,8 +30,8 @@ struct kb_rolloff_s {
 	linop_data_t super;
 
 	int N;
-	const long* dims;
-	const long* odims;
+	const bart_dim_t* dims;
+	const bart_dim_t* odims;
 
 	struct grid_conf_s conf;
 };
@@ -43,15 +43,15 @@ static void rolloff_apply(const linop_data_t* _d, complex float* dst, const comp
 {
 	auto d = CAST_DOWN(kb_rolloff_s, _d);
 
-	long ostrs[d->N];
-	long istrs[d->N];
+	bart_stride_t ostrs[d->N];
+	bart_stride_t istrs[d->N];
 
 	md_calc_strides(d->N, ostrs, d->odims, CFL_SIZE);
 	md_calc_strides(d->N, istrs, d->dims, CFL_SIZE);
  
-	long pos[d->N];
+	bart_dim_t pos[d->N];
 	for (int i = 0; i < d->N; i++)
-		pos[i] = (i < 3) ? labs((d->odims[i] / 2) - (d->dims[i] / 2)) : 0;
+		pos[i] = (i < 3) ? llabs((d->odims[i] / 2) - (d->dims[i] / 2)) : 0;
 
 	md_clear(d->N, d->odims, dst, CFL_SIZE);
 	apply_rolloff_correction2(d->conf.os, d->conf.width, d->conf.beta, d->N, d->dims,
@@ -63,15 +63,15 @@ static void rolloff_adjoint(const linop_data_t* _d, complex float* dst, const co
 {
 	auto d = CAST_DOWN(kb_rolloff_s, _d);
 
-	long ostrs[d->N];
-	long istrs[d->N];
+	bart_stride_t ostrs[d->N];
+	bart_stride_t istrs[d->N];
 
 	md_calc_strides(d->N, ostrs, d->odims, CFL_SIZE);
 	md_calc_strides(d->N, istrs, d->dims, CFL_SIZE);
  
-	long pos[d->N];
+	bart_dim_t pos[d->N];
 	for (int i = 0; i < d->N; i++)
-		pos[i] = (i < 3) ? labs((d->odims[i] / 2) - (d->dims[i] / 2)) : 0;
+		pos[i] = (i < 3) ? llabs((d->odims[i] / 2) - (d->dims[i] / 2)) : 0;
 
 	apply_rolloff_correction2(d->conf.os, d->conf.width, d->conf.beta, d->N, d->dims,
 				  istrs, dst,
@@ -96,22 +96,22 @@ static void rolloff_free(const linop_data_t* _d)
 	xfree(d);
 }
 
-struct linop_s* linop_kb_rolloff_create(int N, const long dims[N], unsigned long flags, struct grid_conf_s* conf)
+struct linop_s* linop_kb_rolloff_create(int N, const bart_dim_t dims[N], bart_flags_t flags, struct grid_conf_s* conf)
 {
 	PTR_ALLOC(struct kb_rolloff_s, d);
 	SET_TYPEID(kb_rolloff_s, d);
 
 	d->N = N;
-	d->dims = ARR_CLONE(long[N], dims);
+	d->dims = ARR_CLONE(bart_dim_t[N], dims);
 
 	flags &= md_nontriv_dims(N, dims);
 	assert(0 == (flags & ~FFT_FLAGS));
 	
-	long odims[N];
+	bart_dim_t odims[N];
 	for (int i = 0; i < N; i++)
-		odims[i] = (MD_IS_SET(flags, i)) ? lround(conf->os * dims[i]) : dims[i];
+		odims[i] = (MD_IS_SET(flags, i)) ? llround(conf->os * dims[i]) : dims[i];
 
-	d->odims = ARR_CLONE(long[N], odims);
+	d->odims = ARR_CLONE(bart_dim_t[N], odims);
 	d->conf = *conf;
 
 	return linop_create(N, odims, N, dims, CAST_UP(PTR_PASS(d)), rolloff_apply, rolloff_adjoint, rolloff_normal, NULL, rolloff_free);
@@ -126,9 +126,9 @@ struct kb_iterpolate_s {
 	linop_data_t super;
 
 	int N;
-	const long* tdims;
-	const long* kdims;
-	const long* gdims;
+	const bart_dim_t* tdims;
+	const bart_dim_t* kdims;
+	const bart_dim_t* gdims;
 
 	struct multiplace_array_s* traj;
 
@@ -168,15 +168,15 @@ static void interpolate_free(const linop_data_t* _d)
 	xfree(d);
 }
 
-struct linop_s* linop_interpolate_kb_create(int N, unsigned long flags, const long ksp_dims[N], const long grd_dims[N], const long trj_dims[N], const complex float* traj, struct grid_conf_s* conf)
+struct linop_s* linop_interpolate_kb_create(int N, bart_flags_t flags, const bart_dim_t ksp_dims[N], const bart_dim_t grd_dims[N], const bart_dim_t trj_dims[N], const complex float* traj, struct grid_conf_s* conf)
 {
 	PTR_ALLOC(struct kb_iterpolate_s, data);
 	SET_TYPEID(kb_iterpolate_s, data);
 
 	data->N = N;
-	data->kdims = ARR_CLONE(long[N], ksp_dims);
-	data->gdims = ARR_CLONE(long[N], grd_dims);
-	data->tdims = ARR_CLONE(long[N], trj_dims);
+	data->kdims = ARR_CLONE(bart_dim_t[N], ksp_dims);
+	data->gdims = ARR_CLONE(bart_dim_t[N], grd_dims);
+	data->tdims = ARR_CLONE(bart_dim_t[N], trj_dims);
 
 	assert(0 == (flags & ~FFT_FLAGS));
 
@@ -190,31 +190,31 @@ struct linop_s* linop_interpolate_kb_create(int N, unsigned long flags, const lo
 
 
 extern struct linop_s* nufft_create_chain(int N,
-			     const long ksp_dims[N],
-			     const long cim_dims[N],
-			     const long traj_dims[N],
+			     const bart_dim_t ksp_dims[N],
+			     const bart_dim_t cim_dims[N],
+			     const bart_dim_t traj_dims[N],
 			     const complex float* traj,
-			     const long wgh_dims[N],
+			     const bart_dim_t wgh_dims[N],
 			     const complex float* weights,
-			     const long bas_dims[N],
+			     const bart_dim_t bas_dims[N],
 			     const complex float* basis,
 			     struct grid_conf_s* conf)
 {
-	unsigned long flags = FFT_FLAGS & md_nontriv_dims(N, cim_dims);
+	bart_flags_t flags = FFT_FLAGS & md_nontriv_dims(N, cim_dims);
 
 	auto ret = linop_kb_rolloff_create(N, cim_dims, flags, conf);
 
-	long os_cim_dims[N];
+	bart_dim_t os_cim_dims[N];
 	for (int i = 0; i < N; i++)
-		os_cim_dims[i] = (MD_IS_SET(flags, i)) ? lround(conf->os * cim_dims[i]) : cim_dims[i];
+		os_cim_dims[i] = (MD_IS_SET(flags, i)) ? llround(conf->os * cim_dims[i]) : cim_dims[i];
 	
 	ret = linop_chain_FF(ret, linop_fftc_create(N, os_cim_dims, flags));
 
 	if (NULL != basis) {
 
-		long ksp_max_dims[N];
-		md_max_dims(N, ~0UL, ksp_max_dims, ksp_dims, bas_dims);
-		assert(md_check_compat(N, ~0UL, ksp_dims, bas_dims));
+		bart_dim_t ksp_max_dims[N];
+		md_max_dims(N, ~UINT64_C(0), ksp_max_dims, ksp_dims, bas_dims);
+		assert(md_check_compat(N, ~UINT64_C(0), ksp_dims, bas_dims));
 
 		ret = linop_chain_FF(ret, linop_interpolate_kb_create(N, flags, ksp_max_dims, os_cim_dims, traj_dims, traj, conf));
 		ret = linop_chain_FF(ret, linop_fmac_create(N, ksp_max_dims, ~md_nontriv_dims(N, ksp_dims), 0, ~md_nontriv_dims(N, bas_dims), basis));
@@ -226,7 +226,7 @@ extern struct linop_s* nufft_create_chain(int N,
 
 	if (NULL != weights) {
 
-		assert(md_check_compat(N, ~0UL, ksp_dims, wgh_dims));
+		assert(md_check_compat(N, ~UINT64_C(0), ksp_dims, wgh_dims));
 
 		complex float* tmp = md_alloc_sameplace(N, wgh_dims, CFL_SIZE, weights);
 

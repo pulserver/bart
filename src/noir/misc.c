@@ -17,16 +17,16 @@
 
 struct ds_s {
 
-	long dims_full[DIMS];
-	long dims_singleFrame[DIMS];
-	long dims_output[DIMS];
-	long dims_output_singleFrame[DIMS];
+	bart_dim_t dims_full[DIMS];
+	bart_dim_t dims_singleFrame[DIMS];
+	bart_dim_t dims_output[DIMS];
+	bart_dim_t dims_output_singleFrame[DIMS];
 
 
-	long strs_full[DIMS];
-	long strs_singleFrame[DIMS];
-	long strs_output[DIMS];
-	long strs_output_singleFrame[DIMS];
+	bart_stride_t strs_full[DIMS];
+	bart_stride_t strs_singleFrame[DIMS];
+	bart_stride_t strs_output[DIMS];
+	bart_stride_t strs_output_singleFrame[DIMS];
 };
 
 
@@ -47,7 +47,7 @@ static void ds_init(struct ds_s* in, size_t size)
 
 
 // Normalization of PSF and scaling of k-space
-void scale_psf_k(const long pat_dims[DIMS], complex float* pattern, const long ksp_dims[DIMS], complex float* kspace_data, const long trj_dims[DIMS], complex float* traj)
+void scale_psf_k(const bart_dim_t pat_dims[DIMS], complex float* pattern, const bart_dim_t ksp_dims[DIMS], complex float* kspace_data, const bart_dim_t trj_dims[DIMS], complex float* traj)
 {
 	/* PSF
 	* Since for each frame we can have a different number of spokes,
@@ -60,7 +60,7 @@ void scale_psf_k(const long pat_dims[DIMS], complex float* pattern, const long k
 	* If the result is zero the spoke-line was empty
 	*/
 
-	long traj_dims2[DIMS]; // Squashed trajectory array
+	bart_dim_t traj_dims2[DIMS]; // Squashed trajectory array
 	md_copy_dims(DIMS, traj_dims2, trj_dims);
 	traj_dims2[READ_DIM] = 1;
 	traj_dims2[PHS1_DIM] = 1;
@@ -88,7 +88,7 @@ void scale_psf_k(const long pat_dims[DIMS], complex float* pattern, const long k
 	md_zdiv(DIMS, no_spf_s->dims_full, inv_no_spf, inv_no_spf, no_spf);
 
 
-	long pat_strs[DIMS];
+	bart_stride_t pat_strs[DIMS];
 	md_calc_strides(DIMS, pat_strs, pat_dims, CFL_SIZE);
 
 	// Multiply PSF
@@ -100,13 +100,13 @@ void scale_psf_k(const long pat_dims[DIMS], complex float* pattern, const long k
 	 * Normalization is not performed here)
 	 */
 
-	long no_spf_s_dims_singlePart[DIMS];
-	long no_spf_s_dims_singleFramePart[DIMS];
+	bart_dim_t no_spf_s_dims_singlePart[DIMS];
+	bart_dim_t no_spf_s_dims_singleFramePart[DIMS];
 	md_select_dims(DIMS, ~SLICE_FLAG, no_spf_s_dims_singlePart, no_spf_s->dims_full);
 	md_select_dims(DIMS, ~(TIME_FLAG|SLICE_FLAG), no_spf_s_dims_singleFramePart, no_spf_s->dims_full);
 
-	long no_spf_s_strs_singlePart[DIMS];
-	long no_spf_s_strs_singleFramePart[DIMS];
+	bart_stride_t no_spf_s_strs_singlePart[DIMS];
+	bart_stride_t no_spf_s_strs_singleFramePart[DIMS];
 	md_calc_strides(DIMS, no_spf_s_strs_singlePart, no_spf_s_dims_singlePart, CFL_SIZE);
 	md_calc_strides(DIMS, no_spf_s_strs_singleFramePart, no_spf_s_dims_singleFramePart, CFL_SIZE);
 
@@ -117,7 +117,7 @@ void scale_psf_k(const long pat_dims[DIMS], complex float* pattern, const long k
 
 	// Extract first frame
 	complex float* no_sp_1stFrame_tot = md_alloc(DIMS, no_spf_s_dims_singleFramePart, CFL_SIZE);
-	long posF[DIMS] = { };
+	bart_dim_t posF[DIMS] = { };
 	md_copy_block(DIMS, posF, no_spf_s_dims_singleFramePart, no_sp_1stFrame_tot, no_spf_s_dims_singlePart, no_spf_tot, CFL_SIZE);
 
 	complex float* ksp_scaleFactor = md_alloc(DIMS, no_spf_s->dims_full, CFL_SIZE);
@@ -128,7 +128,7 @@ void scale_psf_k(const long pat_dims[DIMS], complex float* pattern, const long k
 	md_zdiv(DIMS, no_spf_s_dims_singlePart, inv_no_spf_tot, inv_no_spf_tot, no_spf_tot);
 	md_zmul2(DIMS, no_spf_s->dims_full, no_spf_s->strs_full, ksp_scaleFactor, no_spf_s_strs_singlePart, inv_no_spf_tot, no_spf_s_strs_singleFramePart, no_sp_1stFrame_tot);
 
-	long ksp_strs[DIMS];
+	bart_stride_t ksp_strs[DIMS];
 	md_calc_strides(DIMS, ksp_strs, ksp_dims, CFL_SIZE);
 	md_zmul2(DIMS, ksp_dims, ksp_strs, kspace_data, ksp_strs, kspace_data, no_spf_s->strs_full, ksp_scaleFactor);
 
@@ -146,18 +146,18 @@ void scale_psf_k(const long pat_dims[DIMS], complex float* pattern, const long k
 
 
 
-void postprocess(const long dims[DIMS], bool normalize,
-			const long sens_strs[DIMS], const complex float* sens,
-			const long img_strs[DIMS], const complex float* img,
-			const long img_output_dims[DIMS], const long img_output_strs[DIMS], complex float* img_output)
+void postprocess(const bart_dim_t dims[DIMS], bool normalize,
+			const bart_stride_t sens_strs[DIMS], const complex float* sens,
+			const bart_stride_t img_strs[DIMS], const complex float* img,
+			const bart_dim_t img_output_dims[DIMS], const bart_stride_t img_output_strs[DIMS], complex float* img_output)
 {
 	if (md_calc_size(3, img_output_dims) != md_calc_size(3, dims)) {
 
-		long img_output2_dims[DIMS];
+		bart_dim_t img_output2_dims[DIMS];
 		md_copy_dims(DIMS, img_output2_dims, img_output_dims);
 		md_copy_dims(3, img_output2_dims, dims);
 
-		long img_output2_strs[DIMS];
+		bart_stride_t img_output2_strs[DIMS];
 		md_calc_strides(DIMS, img_output2_strs, img_output2_dims, CFL_SIZE);
 
 		complex float* tmp = md_alloc_sameplace(DIMS, img_output2_dims, CFL_SIZE, img);
@@ -170,16 +170,16 @@ void postprocess(const long dims[DIMS], bool normalize,
 		return;
 	}
 
-	long img_dims[DIMS];
+	bart_dim_t img_dims[DIMS];
 	md_select_dims(DIMS, ~COIL_FLAG, img_dims, dims);
 
-	long ksp_dims[DIMS];
+	bart_dim_t ksp_dims[DIMS];
 	md_select_dims(DIMS, ~MAPS_FLAG, ksp_dims, dims);
 
-	long strs[DIMS];
+	bart_stride_t strs[DIMS];
 	md_calc_strides(DIMS, strs, dims, CFL_SIZE);
 
-	long ksp_strs[DIMS];
+	bart_stride_t ksp_strs[DIMS];
 	md_calc_strides(DIMS, ksp_strs, ksp_dims, CFL_SIZE);
 
 
@@ -232,16 +232,16 @@ void postprocess(const long dims[DIMS], bool normalize,
 
 
 void postprocess2(bool normalize,
-		  const long sens_dims[DIMS], const complex float* sens,
-		  const long img_dims[DIMS], const complex float* img,
-		  const long img_output_dims[DIMS], complex float* img_output)
+		  const bart_dim_t sens_dims[DIMS], const complex float* sens,
+		  const bart_dim_t img_dims[DIMS], const complex float* img,
+		  const bart_dim_t img_output_dims[DIMS], complex float* img_output)
 {
 	int N = DIMS;
 
 	assert(MAPS_DIM < N);
 
-	long n_sens_dims[N];
-	long n_img_dims[N];
+	bart_dim_t n_sens_dims[N];
+	bart_dim_t n_img_dims[N];
 
 	md_copy_dims(N, n_sens_dims, sens_dims);
 	md_copy_dims(N, n_img_dims, img_dims);
@@ -257,8 +257,8 @@ void postprocess2(bool normalize,
 	md_resize_center(N, n_sens_dims, n_sens, sens_dims, sens, CFL_SIZE);
 	md_resize_center(N, n_img_dims, n_img, img_dims, img, CFL_SIZE);
 
-	long dims[N];
-	md_max_dims(N, ~0UL, dims, n_sens_dims, n_img_dims);
+	bart_dim_t dims[N];
+	md_max_dims(N, ~UINT64_C(0), dims, n_sens_dims, n_img_dims);
 
 	postprocess(dims, normalize,
 		    MD_STRIDES(N, n_sens_dims, CFL_SIZE), n_sens,

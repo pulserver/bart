@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include "noncart/grid.h"
 
 struct multiplace_array_s;
@@ -16,7 +17,7 @@ struct nufft_data {
 	struct grid_conf_s grid_conf;
 
 	int N;				///< Number of dimension
-	unsigned long flags;
+	bart_flags_t flags;
 
 	struct multiplace_array_s* linphase;	///< Linear phase for pruned FFT
 	struct multiplace_array_s* traj;	///< Trajectory
@@ -32,35 +33,35 @@ struct nufft_data {
 
 	const struct linop_s* fft_op;	///< FFT operator
 
-	long* ksp_dims;			///< Kspace dimension
-	long* cim_dims;			///< Coil image dimension
-	long* cml_dims;			///< Coil + linear phase dimension
-	long* img_dims;			///< Image dimension
-	long* trj_dims;			///< Trajectory dimension
-	long* lph_dims;			///< Linear phase dimension
-	long* psf_dims;			///< Point spread function dimension
-	long* wgh_dims;			///< Weights dimension
-	long* bas_dims;
-	long* out_dims;
-	long* ciT_dims;			///< Coil image dimension
-	long* cmT_dims;			///< Coil + linear phase dimension
-	long* com_dims;			///< Compression index dimensions
+	bart_dim_t* ksp_dims;			///< Kspace dimension
+	bart_dim_t* cim_dims;			///< Coil image dimension
+	bart_dim_t* cml_dims;			///< Coil + linear phase dimension
+	bart_dim_t* img_dims;			///< Image dimension
+	bart_dim_t* trj_dims;			///< Trajectory dimension
+	bart_dim_t* lph_dims;			///< Linear phase dimension
+	bart_dim_t* psf_dims;			///< Point spread function dimension
+	bart_dim_t* wgh_dims;			///< Weights dimension
+	bart_dim_t* bas_dims;
+	bart_dim_t* out_dims;
+	bart_dim_t* ciT_dims;			///< Coil image dimension
+	bart_dim_t* cmT_dims;			///< Coil + linear phase dimension
+	bart_dim_t* com_dims;			///< Compression index dimensions
 
 	//!
-	long* cm2_dims;			///< 2x oversampled coil image dimension
-	long* factors;
+	bart_dim_t* cm2_dims;			///< 2x oversampled coil image dimension
+	bart_dim_t* factors;
 
-	long* ksp_strs;
-	long* cim_strs;
-	long* cml_strs;
-	long* img_strs;
-	long* trj_strs;
-	long* lph_strs;
-	long* psf_strs;
-	long* wgh_strs;
-	long* bas_strs;
-	long* out_strs;
-	long* com_strs;			///< Compression index dimensions
+	bart_stride_t* ksp_strs;
+	bart_stride_t* cim_strs;
+	bart_stride_t* cml_strs;
+	bart_stride_t* img_strs;
+	bart_stride_t* trj_strs;
+	bart_stride_t* lph_strs;
+	bart_stride_t* psf_strs;
+	bart_stride_t* wgh_strs;
+	bart_stride_t* bas_strs;
+	bart_stride_t* out_strs;
+	bart_stride_t* com_strs;			///< Compression index dimensions
 
 	const struct linop_s* cfft_op;   ///< Pcycle FFT operator
 	int cycle;

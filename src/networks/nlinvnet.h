@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include "linops/someops.h"
 #include <iso646.h>
 
@@ -12,13 +13,13 @@ struct nlinvnet_s {
 	struct loss_config_s* train_loss;
 	struct loss_config_s* valid_loss;
 	float l2loss_reg;
-	long time_mask[2];
-	long avg_coils_loss;
+	bart_dim_t time_mask[2];
+	bart_dim_t avg_coils_loss;
 
 	// Self-Supervised k-Space
 	_Bool ksp_training;
 	float ksp_split;
-	unsigned long ksp_shared_dims;
+	bart_flags_t ksp_shared_dims;
 	float ksp_leaky;
 	const char* use_reco_file; 
 
@@ -28,7 +29,7 @@ struct nlinvnet_s {
 	_Bool share_weights;
 	float lambda;
 	float lambda_sens;
-	unsigned long filter_flags;
+	bart_flags_t filter_flags;
 	const _Complex float* filter;
 	
 	int conv_time;
@@ -42,7 +43,7 @@ struct nlinvnet_s {
 	float cgtol;
 	int iter_net;		//# of iterations with network
 	float oversampling_coils;
-	long senssize;
+	bart_dim_t senssize;
 
 	_Bool fix_coils;
 	_Bool ref_init_img;
@@ -66,13 +67,13 @@ extern void nlinvnet_init_varnet_test_default(struct nlinvnet_s* nlinvnet);
 extern void nlinvnet_init_resnet_default(struct nlinvnet_s* nlinvnet);
 
 void nlinvnet_init(struct nlinvnet_s* nlinvnet, int N,
-	const long trj_dims[__VLA2(N)],
-	const long pat_dims[__VLA(N)],
-	const long bas_dims[__VLA2(N)], const _Complex float* basis,
-	const long ksp_dims[__VLA(N)],
-	const long cim_dims[__VLA(N)],
-	const long img_dims[__VLA(N)],
-	const long col_dims[__VLA(N)]);
+	const bart_dim_t trj_dims[__VLA2(N)],
+	const bart_dim_t pat_dims[__VLA(N)],
+	const bart_dim_t bas_dims[__VLA2(N)], const _Complex float* basis,
+	const bart_dim_t ksp_dims[__VLA(N)],
+	const bart_dim_t cim_dims[__VLA(N)],
+	const bart_dim_t img_dims[__VLA(N)],
+	const bart_dim_t col_dims[__VLA(N)]);
 
 
 enum nlinvnet_out { NLINVNET_OUT_CIM, NLINVNET_OUT_KSP, NLINVNET_OUT_IMG_COL };
@@ -81,8 +82,8 @@ struct named_data_list_s;
 void train_nlinvnet(struct nlinvnet_s* nlinvnet, int Nb, struct named_data_list_s* train_data, struct named_data_list_s* valid_data);
 
 void apply_nlinvnet(struct nlinvnet_s* nlinvnet, int N,
-	const long img_dims[N], _Complex float* img,
-	const long col_dims[N], _Complex float* col,
-	const long ksp_dims[N], const _Complex float* ksp,
-	const long pat_dims[N], const _Complex float* pat,
-	const long trj_dims[N], const _Complex float* trj);
+	const bart_dim_t img_dims[N], _Complex float* img,
+	const bart_dim_t col_dims[N], _Complex float* col,
+	const bart_dim_t ksp_dims[N], const _Complex float* ksp,
+	const bart_dim_t pat_dims[N], const _Complex float* pat,
+	const bart_dim_t trj_dims[N], const _Complex float* trj);

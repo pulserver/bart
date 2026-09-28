@@ -2,14 +2,16 @@
 #ifndef _DEBUG_H
 #define _DEBUG_H 1
 
+#include "misc/dimtypes.h"
+#include "misc/format.h"
 #include <stdarg.h>
 #include <stddef.h>
 
 #include "misc/dllspec.h"
 #include "misc/cppwrap.h"
 
-extern void dump_cfl(const char* name, int D, const long dimensions[__VLA(D)], const _Complex float* x);
-extern void dump_multi_cfl(const char* name, int N, int D[__VLA(N)], const long* dimensions[__VLA(N)], const _Complex float* x[__VLA(N)]);
+extern void dump_cfl(const char* name, int D, const bart_dim_t dimensions[__VLA(D)], const _Complex float* x);
+extern void dump_multi_cfl(const char* name, int N, int D[__VLA(N)], const bart_dim_t* dimensions[__VLA(N)], const _Complex float* x[__VLA(N)]);
 extern double timestamp(void);
 
 extern int debug_level;
@@ -19,7 +21,7 @@ extern _Bool debug_logging;
 enum debug_levels { DP_ERROR, DP_WARN, DP_INFO, DP_DEBUG1, DP_DEBUG2, DP_DEBUG3, DP_DEBUG4, DP_TRACE, DP_ALL };
 
 
-BARTLIB_API extern void BARTLIB_CALL debug_printf(int level, const char* fmt, ...) __attribute__((format(printf,2,3)));
+BARTLIB_API extern void BARTLIB_CALL debug_printf(int level, const char* fmt, ...) __attribute__((format(BART_PRINTF,2,3)));
 extern void debug_vprintf(int level, const char* fmt, va_list ap);
 
 #ifdef REDEFINE_PRINTF_FOR_TRACE
@@ -32,7 +34,7 @@ extern void debug_vprintf(int level, const char* fmt, va_list ap);
 extern void debug_printf_trace(const char* func_name,
 			       const char* file,
 			       int line,
-			       int level, const char* fmt, ...) __attribute__((format(printf,5,6)));
+			       int level, const char* fmt, ...) __attribute__((format(BART_PRINTF,5,6)));
 extern void debug_vprintf_trace(const char* func_name,
 				const char* file,
 				int line,
@@ -46,7 +48,7 @@ extern void debug_good_backtrace(int skip);
 const char* debug_good_backtrace_string(int skip);
 #endif // USE_DWARF
 
-extern void debug_trace(const char* fmt, ...);
+extern void debug_trace(const char* fmt, ...) __attribute__((format(BART_PRINTF,1,2)));
 
 #define TRACE()	debug_trace("%s:%d %s\n", __FILE__, __LINE__, __func__)
 

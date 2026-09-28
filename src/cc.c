@@ -43,9 +43,9 @@ int main_cc(int argc, char* argv[argc])
 		ARG_OUTFILE(true, &out_file, "coeff|proj_kspace"),
 	};
 
-	long calsize[3] = { 24, 24, 24 };
+	bart_dim_t calsize[3] = { 24, 24, 24 };
 	bool proj = true;
-	long P = -1;
+	bart_dim_t P = -1;
 	bool all = false;
 	enum cc_type { SCC, GCC, ECC } cc_type = SCC;
 
@@ -71,19 +71,19 @@ int main_cc(int argc, char* argv[argc])
 		proj = false;
 	}
 
-	long in_dims[DIMS];
+	bart_dim_t in_dims[DIMS];
 
 	complex float* in_data = load_cfl(in_file, DIMS, in_dims);
 
 	if (1 != in_dims[MAPS_DIM])
 		error("MAPS dimension must be one");
 
-	long channels = in_dims[COIL_DIM];
+	bart_dim_t channels = in_dims[COIL_DIM];
 
 	if (0 == P)
 		P = channels;
 
-	long out_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t out_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 	out_dims[COIL_DIM] = channels;
 	out_dims[MAPS_DIM] = channels;
 	out_dims[READ_DIM] = (SCC == cc_type) ? 1 : in_dims[READ_DIM];
@@ -91,7 +91,7 @@ int main_cc(int argc, char* argv[argc])
 	complex float* out_data = (proj ? anon_cfl : create_cfl)(out_file, DIMS, out_dims);
 
 
-	long caldims[DIMS];
+	bart_dim_t caldims[DIMS];
 	complex float* cal_data = NULL;
 
 	if (all) {
@@ -124,19 +124,19 @@ int main_cc(int argc, char* argv[argc])
 
 	if (proj) {
 
-		debug_printf(DP_DEBUG1, "Compressing to %ld virtual coils...\n", P);
+		debug_printf(DP_DEBUG1, "Compressing to %" PRId64 " virtual coils...\n", P);
 
-		long trans_dims[DIMS];
+		bart_dim_t trans_dims[DIMS];
 		md_copy_dims(DIMS, trans_dims, in_dims);
 		trans_dims[COIL_DIM] = P;
 
 		complex float* trans_data = create_cfl(out_file, DIMS, trans_dims);
 
-		long fake_trans_dims[DIMS];
+		bart_dim_t fake_trans_dims[DIMS];
 		md_select_dims(DIMS, ~COIL_FLAG, fake_trans_dims, in_dims);
 		fake_trans_dims[MAPS_DIM] = P;
 
-		long out2_dims[DIMS];
+		bart_dim_t out2_dims[DIMS];
 		md_copy_dims(DIMS, out2_dims, out_dims);
 		out2_dims[MAPS_DIM] = P;
 

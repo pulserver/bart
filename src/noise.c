@@ -70,7 +70,7 @@ int main_noise(int argc, char* argv[argc])
 
 
 	int N = DIMS;
-	long dims[N];
+	bart_dim_t dims[N];
 
 	complex float* y = load_cfl(in_file, N, dims);
 
@@ -84,9 +84,9 @@ int main_noise(int argc, char* argv[argc])
 
 	if (use_compat_to_version("v0.9.00")) {
 
-		long T = md_calc_size(N, dims);
+		bart_dim_t T = md_calc_size(N, dims);
 
-		for (long i = 0; i < T; i++) {
+		for (bart_dim_t i = 0; i < T; i++) {
 
 			x[i] = y[i];
 

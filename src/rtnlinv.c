@@ -104,7 +104,7 @@ int main_rtnlinv(int argc, char* argv[argc])
 	bool alt_scaling = false;
 
 
-	long my_img_dims[3] = { 0, 0, 0 };
+	bart_dim_t my_img_dims[3] = { 0, 0, 0 };
 
 
 
@@ -145,31 +145,31 @@ int main_rtnlinv(int argc, char* argv[argc])
 		error("Pass either trajectory (-t) or PSF (-p)!\n");
 
 
-	long ksp_dims[DIMS];
+	bart_dim_t ksp_dims[DIMS];
 	complex float* kspace = load_cfl(ksp_file, DIMS, ksp_dims);
 
-	long frames = ksp_dims[TIME_DIM];
+	bart_dim_t frames = ksp_dims[TIME_DIM];
 
-	long ksp1_dims[DIMS];
+	bart_dim_t ksp1_dims[DIMS];
 	md_select_dims(DIMS, ~TIME_FLAG, ksp1_dims, ksp_dims);
 
 
 	// SMS
 	if (conf.sms) {
 
-		debug_printf(DP_INFO, "SMS-NLINV reconstruction. Multiband factor: %ld\n", ksp_dims[SLICE_DIM]);
+		debug_printf(DP_INFO, "SMS-NLINV reconstruction. Multiband factor: %" PRId64 "\n", ksp_dims[SLICE_DIM]);
 		fftmod(DIMS, ksp_dims, SLICE_FLAG, kspace, kspace); // fftmod to get correct slice order in output
 	}
 
-	long pat_dims[DIMS];
+	bart_dim_t pat_dims[DIMS];
 	complex float* pattern = NULL;
 
-	long trj_dims[DIMS];
-	long trj1_dims[DIMS];
+	bart_dim_t trj_dims[DIMS];
+	bart_dim_t trj1_dims[DIMS];
 	complex float* traj = NULL;
 	int turns = 1;
 
-	long sens_dims[DIMS];
+	bart_dim_t sens_dims[DIMS];
 	md_copy_dims(DIMS, sens_dims, ksp_dims);
 
 	sens_dims[MAPS_DIM] = nmaps;
@@ -215,7 +215,7 @@ int main_rtnlinv(int argc, char* argv[argc])
 	}
 
 
-	long sens1_dims[DIMS];
+	bart_dim_t sens1_dims[DIMS];
 	md_select_dims(DIMS, ~TIME_FLAG, sens1_dims, sens_dims);
 
 
@@ -228,13 +228,13 @@ int main_rtnlinv(int argc, char* argv[argc])
 	// we allow multiple images and sensitivities during the reconsctruction (ENLIVE)
 	assert(1 == ksp_dims[MAPS_DIM]);
 
-	long img_dims[DIMS];
+	bart_dim_t img_dims[DIMS];
 	md_select_dims(DIMS, ~COIL_FLAG, img_dims, sens_dims);
 
-	long img1_dims[DIMS];
+	bart_dim_t img1_dims[DIMS];
 	md_select_dims(DIMS, ~TIME_FLAG, img1_dims, img_dims);
 
-	long img_output_dims[DIMS];
+	bart_dim_t img_output_dims[DIMS];
 	md_copy_dims(DIMS, img_output_dims, img_dims);
 
 	if (conf.noncart && !alt_scaling) {
@@ -244,7 +244,7 @@ int main_rtnlinv(int argc, char* argv[argc])
 				img_output_dims[i] /= 2;
 	}
 
-	long img_output1_dims[DIMS];
+	bart_dim_t img_output1_dims[DIMS];
 	md_select_dims(DIMS, ~TIME_FLAG, img_output1_dims, img_output_dims);
 
 	if (combine) {
@@ -261,7 +261,7 @@ int main_rtnlinv(int argc, char* argv[argc])
 	complex float* img1 = md_alloc(DIMS, img1_dims, CFL_SIZE);
 
 
-	long msk_dims[DIMS];
+	bart_dim_t msk_dims[DIMS];
 	md_select_dims(DIMS, FFT_FLAGS, msk_dims, img1_dims);
 
 	complex float* mask = NULL;
@@ -276,13 +276,13 @@ int main_rtnlinv(int argc, char* argv[argc])
 	complex float* ksens1 = md_alloc(DIMS, sens1_dims, CFL_SIZE);
 	md_clear(DIMS, sens1_dims, ksens1, CFL_SIZE);
 
-	long skip = md_calc_size(DIMS, img1_dims);
-	long size = skip + md_calc_size(DIMS, sens1_dims);
+	bart_dim_t skip = md_calc_size(DIMS, img1_dims);
+	bart_dim_t size = skip + md_calc_size(DIMS, sens1_dims);
 
 	// initialization
 	if (NULL != init_file) {
 
-		long init_dims[DIMS];
+		bart_dim_t init_dims[DIMS];
 		complex float* init = load_cfl(init_file, DIMS, init_dims);
 
 		if (!md_check_bounds(DIMS, 0, img1_dims, init_dims))
@@ -295,7 +295,7 @@ int main_rtnlinv(int argc, char* argv[argc])
 
 	} else if (NULL != init_file_im) {
 		
-		long init_dims[DIMS];
+		bart_dim_t init_dims[DIMS];
 		complex float* init = load_cfl(init_file_im, DIMS, init_dims);
 
 		if (!md_check_bounds(DIMS, 0, img1_dims, init_dims))
@@ -325,7 +325,7 @@ int main_rtnlinv(int argc, char* argv[argc])
 		pat_dims[TIME_DIM] = turns;
 
 
-		long wgh_dims[DIMS];
+		bart_dim_t wgh_dims[DIMS];
 		md_select_dims(DIMS, ~COIL_FLAG, wgh_dims, ksp_dims);
 		complex float* wgh = md_alloc(DIMS, wgh_dims, CFL_SIZE);
 
@@ -366,10 +366,10 @@ int main_rtnlinv(int argc, char* argv[argc])
 	}
 
 
-	long kgrid_dims[DIMS];
+	bart_dim_t kgrid_dims[DIMS];
 	md_select_dims(DIMS, ~MAPS_FLAG, kgrid_dims, sens_dims);
 
-	long kgrid1_dims[DIMS];
+	bart_dim_t kgrid1_dims[DIMS];
 	md_select_dims(DIMS, ~TIME_FLAG, kgrid1_dims, kgrid_dims);
 
 
@@ -387,7 +387,7 @@ int main_rtnlinv(int argc, char* argv[argc])
 		mask = compute_mask(DIMS, msk_dims, restrict_dims);
 	}
 
-	long ref_dim[1] = { size };
+	bart_dim_t ref_dim[1] = { size };
 	complex float* ref = md_calloc(1, ref_dim, CFL_SIZE);
 
 	if (NULL != init_file_im) { // Prepare reference from init file
@@ -415,7 +415,7 @@ int main_rtnlinv(int argc, char* argv[argc])
 		for (int i = 0; i < turns; ++i) {
 
 			// pick trajectory for current frame
-			long pos[DIMS] = { };
+			bart_dim_t pos[DIMS] = { };
 			pos[TIME_DIM] = i;
 			md_slice(DIMS, TIME_FLAG, pos, trj_dims, traj1, traj, CFL_SIZE);
 
@@ -439,7 +439,7 @@ int main_rtnlinv(int argc, char* argv[argc])
 	complex float* sens_output1 = md_alloc(DIMS, sens1_dims, CFL_SIZE);
 	complex float* kspace1 = md_alloc(DIMS, ksp1_dims, CFL_SIZE);
 
-	long pat1_dims[DIMS];
+	bart_dim_t pat1_dims[DIMS];
 	md_select_dims(DIMS, ~TIME_FLAG, pat1_dims, pat_dims);
 
 	complex float* pattern1 = md_alloc(DIMS, pat1_dims, CFL_SIZE);
@@ -449,7 +449,7 @@ int main_rtnlinv(int argc, char* argv[argc])
 		debug_printf(DP_DEBUG1, "Reconstructing frame %d\n", frame);
 
 		// pick k-space and pattern for current frame
-		long pos[DIMS] = { };
+		bart_dim_t pos[DIMS] = { };
 		pos[TIME_DIM] = frame;
 
 		md_slice(DIMS, TIME_FLAG, pos, ksp_dims, kspace1, kspace, CFL_SIZE);
@@ -507,13 +507,13 @@ int main_rtnlinv(int argc, char* argv[argc])
 		md_zsmul(DIMS, img1_dims, ref, img1, temp_damp);
 		md_zsmul(DIMS, sens1_dims, ref + skip, ksens1, temp_damp);
 
-		long img_output1_strs[DIMS];
+		bart_stride_t img_output1_strs[DIMS];
 		md_calc_strides(DIMS, img_output1_strs, img_output1_dims, CFL_SIZE);
 
-		long img1_strs[DIMS];
+		bart_stride_t img1_strs[DIMS];
 		md_calc_strides(DIMS, img1_strs, img1_dims, CFL_SIZE);
 
-		long sens1_strs[DIMS];
+		bart_stride_t sens1_strs[DIMS];
 		md_calc_strides(DIMS, sens1_strs, sens1_dims, CFL_SIZE);
 
 
@@ -526,7 +526,7 @@ int main_rtnlinv(int argc, char* argv[argc])
 			md_zsmul(DIMS, img_output1_dims, img_output1, img_output1, 1. / scaling);
 
 		// Copy frame to correct position in output array
-		long pos2[DIMS] = { };
+		bart_dim_t pos2[DIMS] = { };
 		pos2[TIME_DIM] = frame;
 
 		md_copy_block(DIMS, pos2, img_output_dims, img_output, img_output1_dims, img_output1, CFL_SIZE);
