@@ -17,11 +17,11 @@
 
 
 
-complex float* compute_mask(int N, const long msk_dims[N], const float restrict_fov[N])
+complex float* compute_mask(int N, const bart_dim_t msk_dims[N], const float restrict_fov[N])
 {
 	complex float* mask = md_alloc(N, msk_dims, CFL_SIZE);
 
-	long small_dims[N];
+	bart_dim_t small_dims[N];
 
 	for (int i = 0; i < N; i++)
 		small_dims[i] = (1 == msk_dims[i]) ? 1 : (msk_dims[i] * restrict_fov[i]);
@@ -37,40 +37,40 @@ complex float* compute_mask(int N, const long msk_dims[N], const float restrict_
 }
 
 
-void apply_mask(int N, const long dims[N], complex float* x, const float restrict_fov[N])
+void apply_mask(int N, const bart_dim_t dims[N], complex float* x, const float restrict_fov[N])
 {
-	unsigned long flags = 0;
+	bart_flags_t flags = 0;
 
 	for (int i = 0; i < N; i++)
 		if (1. != restrict_fov[i])
 			flags = MD_SET(flags, i);
 
-	long msk_dims[N];
+	bart_dim_t msk_dims[N];
 	md_select_dims(N, flags, msk_dims, dims);
 
-	long msk_strs[N];
+	bart_stride_t msk_strs[N];
 	md_calc_strides(N, msk_strs, msk_dims, CFL_SIZE);
 
 	complex float* mask = compute_mask(N, msk_dims, restrict_fov);
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 	md_zmul2(N, dims, strs, x, strs, x, msk_strs, mask);
 	md_free(mask);
 }
 
 
-void normalize(int N, unsigned long flags, const long dims[N], complex float* maps)
+void normalize(int N, bart_flags_t flags, const bart_dim_t dims[N], complex float* maps)
 {
-	long dims_img[N];
+	bart_dim_t dims_img[N];
 	md_select_dims(N, ~flags, dims_img, dims);
 
 	complex float* maps_norm = md_alloc(N, dims_img, CFL_SIZE);
 
 	md_zrss(N, dims, flags, maps_norm, maps);
 
-	long str[N];
-	long str_img[N];
+	bart_stride_t str[N];
+	bart_stride_t str_img[N];
 
 	md_calc_strides(N, str, dims, CFL_SIZE);
 	md_calc_strides(N, str_img, dims_img, CFL_SIZE);
@@ -80,9 +80,9 @@ void normalize(int N, unsigned long flags, const long dims[N], complex float* ma
 }
 
 
-void normalizel1(int N, unsigned long flags, const long dims[N], complex float* maps)
+void normalizel1(int N, bart_flags_t flags, const bart_dim_t dims[N], complex float* maps)
 {
-	long dims_img[N];
+	bart_dim_t dims_img[N];
 	md_select_dims(N, ~flags, dims_img, dims);
 
 	complex float* maps_norm = md_alloc(N, dims_img, CFL_SIZE);
@@ -90,8 +90,8 @@ void normalizel1(int N, unsigned long flags, const long dims[N], complex float* 
 
 	md_zabs(N, dims, maps_abs, maps);
 
-	long strs[N];
-	long strs_img[N];
+	bart_stride_t strs[N];
+	bart_stride_t strs_img[N];
 	md_calc_strides(N, strs_img, dims_img, CFL_SIZE);
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
@@ -100,8 +100,8 @@ void normalizel1(int N, unsigned long flags, const long dims[N], complex float* 
 
 	md_free(maps_abs);
 
-	long str[N];
-	long str_img[N];
+	bart_stride_t str[N];
+	bart_stride_t str_img[N];
 
 	md_calc_strides(N, str, dims, CFL_SIZE);
 	md_calc_strides(N, str_img, dims_img, CFL_SIZE);
@@ -117,16 +117,16 @@ void normalizel1(int N, unsigned long flags, const long dims[N], complex float* 
  * rotate phase jointly along dim so that the 0-th slice along dim has phase = 0
  *
  */
-void fixphase(int N, const long dims[N], int dim, complex float* out, const complex float* in)
+void fixphase(int N, const bart_dim_t dims[N], int dim, complex float* out, const complex float* in)
 {
 	assert(dim < N);
 
-	long dims2[N];
+	bart_dim_t dims2[N];
 	md_select_dims(N, ~MD_BIT(dim), dims2, dims);
 
 	complex float* tmp = md_alloc_sameplace(N, dims2, CFL_SIZE, in);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	for (int i = 0; i < N; i++)
 		pos[i] = 0;
 
@@ -134,8 +134,8 @@ void fixphase(int N, const long dims[N], int dim, complex float* out, const comp
 
 	md_zphsr(N, dims2, tmp, tmp);
 
-	long strs[N];
-	long strs2[N];
+	bart_stride_t strs[N];
+	bart_stride_t strs2[N];
 
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 	md_calc_strides(N, strs2, dims2, CFL_SIZE);
@@ -145,22 +145,22 @@ void fixphase(int N, const long dims[N], int dim, complex float* out, const comp
 	md_free(tmp);
 }
 
-void fixphase2(int N, const long dims[N], int dim, const complex float rot[dims[dim]], complex float* out, const complex float* in)
+void fixphase2(int N, const bart_dim_t dims[N], int dim, const complex float rot[dims[dim]], complex float* out, const complex float* in)
 {
 	assert(dim < N);
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
-	long dims2[N];
-	long strs2[N];
+	bart_dim_t dims2[N];
+	bart_stride_t strs2[N];
 	md_select_dims(N, ~MD_BIT(dim), dims2, dims);
 	md_calc_strides(N, strs2, dims2, CFL_SIZE);
 
 	complex float* tmp = md_alloc_sameplace(N, dims2, CFL_SIZE, in);
 
-	long tdims[N];
-	long tstrs[N];
+	bart_dim_t tdims[N];
+	bart_stride_t tstrs[N];
 	md_select_dims(N, MD_BIT(dim), tdims, dims);
 	md_calc_strides(N, tstrs, tdims, CFL_SIZE);
 

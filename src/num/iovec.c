@@ -30,23 +30,23 @@ void debug_print_iovec(int level, const struct iovec_s* vec)
 #endif
 
 
-void iovec_init2(struct iovec_s* n, int N, const long dims[N], const long strs[N], size_t size)
+void iovec_init2(struct iovec_s* n, int N, const bart_dim_t dims[N], const bart_stride_t strs[N], size_t size)
 {
 	n->N = N;
 
-	PTR_ALLOC(long[N], ndims);
-	memcpy(*ndims, dims, sizeof(long[N]));
+	PTR_ALLOC(bart_dim_t[N], ndims);
+	memcpy(*ndims, dims, sizeof(bart_dim_t[N]));
 	n->dims = *PTR_PASS(ndims);
 
-	PTR_ALLOC(long[N], nstrs);
-	memcpy(*nstrs, strs, sizeof(long[N]));
+	PTR_ALLOC(bart_dim_t[N], nstrs);
+	memcpy(*nstrs, strs, sizeof(bart_dim_t[N]));
 	n->strs = *PTR_PASS(nstrs);
 
 	n->size = size;
 }
 
 
-const struct iovec_s* iovec_create2(int N, const long dims[N], const long strs[N], size_t size)
+const struct iovec_s* iovec_create2(int N, const bart_dim_t dims[N], const bart_stride_t strs[N], size_t size)
 {
 	PTR_ALLOC(struct iovec_s, n);
 
@@ -56,9 +56,9 @@ const struct iovec_s* iovec_create2(int N, const long dims[N], const long strs[N
 }
 
 
-const struct iovec_s* iovec_create(int N, const long dims[N], size_t size)
+const struct iovec_s* iovec_create(int N, const bart_dim_t dims[N], size_t size)
 {
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, size);
 
 	return iovec_create2(N, dims, strs, size);
@@ -77,7 +77,7 @@ void iovec_free(const struct iovec_s* x)
 	xfree(x);
 }
 
-bool iovec_check(const struct iovec_s* iov, int N, const long dims[N], const long strs[N])
+bool iovec_check(const struct iovec_s* iov, int N, const bart_dim_t dims[N], const bart_stride_t strs[N])
 {
 	bool ok = true;
 	

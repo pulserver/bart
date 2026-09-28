@@ -146,8 +146,8 @@ static void operator_del(const struct shared_obj_s* sptr)
 /**
  * Create an operator with one parameter (without strides)
  */
-const struct operator_p_s* operator_p_create2(int ON, const long out_dims[ON], const long out_strs[ON],
-		int IN, const long in_dims[IN], const long in_strs[IN],
+const struct operator_p_s* operator_p_create2(int ON, const bart_dim_t out_dims[ON], const bart_stride_t out_strs[ON],
+		int IN, const bart_dim_t in_dims[IN], const bart_stride_t in_strs[IN],
 		operator_data_t* data, operator_p_fun_t apply, operator_del_t del)
 {
 	PTR_ALLOC(struct operator_s, o);
@@ -194,8 +194,8 @@ const struct operator_p_s* operator_p_create2(int ON, const long out_dims[ON], c
  * @param apply function that applies the operation
  * @param del function that frees the data
  */
-const struct operator_p_s* operator_p_create(int ON, const long out_dims[ON],
-		int IN, const long in_dims[IN],
+const struct operator_p_s* operator_p_create(int ON, const bart_dim_t out_dims[ON],
+		int IN, const bart_dim_t in_dims[IN],
 		operator_data_t* data, operator_p_fun_t apply, operator_del_t del)
 {
 	return operator_p_create2(ON, out_dims, MD_STRIDES(ON, out_dims, CFL_SIZE),
@@ -273,7 +273,7 @@ const struct operator_p_s* operator_p_pst_chain_FF(const struct operator_p_s* _a
 	return result;
 }
 
-void operator_p_apply2(const struct operator_p_s* _op, float mu, int ON, const long odims[ON], const long ostrs[ON], complex float* dst, const long IN, const long idims[IN], const long istrs[IN], const complex float* src)
+void operator_p_apply2(const struct operator_p_s* _op, float mu, int ON, const bart_dim_t odims[ON], const bart_stride_t ostrs[ON], complex float* dst, const bart_dim_t IN, const bart_dim_t idims[IN], const bart_stride_t istrs[IN], const complex float* src)
 {
 	auto op = operator_p_upcast(_op);
 
@@ -285,7 +285,7 @@ void operator_p_apply2(const struct operator_p_s* _op, float mu, int ON, const l
 }
 
 
-void operator_p_apply(const struct operator_p_s* op, float mu, int ON, const long odims[ON], complex float* dst, const long IN, const long idims[IN], const complex float* src)
+void operator_p_apply(const struct operator_p_s* op, float mu, int ON, const bart_dim_t odims[ON], complex float* dst, const bart_dim_t IN, const bart_dim_t idims[IN], const complex float* src)
 {
 	operator_p_apply2(op, mu,
 			ON, odims, MD_STRIDES(ON, odims, CFL_SIZE), dst,
@@ -307,7 +307,7 @@ const struct operator_s* operator_p_bind(const struct operator_p_s* op, float al
 	float* nalpha = xmalloc(sizeof(float));
 	*nalpha = alpha;
 
-	const struct operator_s* bind = operator_bind2(operator_p_upcast(op), 0, 1, (long[]){ 1 }, (long[]){ 0 }, nalpha);
+	const struct operator_s* bind = operator_bind2(operator_p_upcast(op), 0, 1, (bart_dim_t[]){ 1 }, (bart_dim_t[]){ 0 }, nalpha);
 	const struct operator_s* result = operator_attach(bind, nalpha, xfree);
 	operator_free(bind);
 	return result;
@@ -368,24 +368,24 @@ const struct operator_p_s* operator_p_stack_FF(int A, int B, const struct operat
 	return result;
 }
 
-const struct operator_p_s* operator_p_reshape_in(const struct operator_p_s* op, int N, const long dims[N])
+const struct operator_p_s* operator_p_reshape_in(const struct operator_p_s* op, int N, const bart_dim_t dims[N])
 {
 	return operator_p_downcast(operator_reshape(operator_p_upcast(op), 2, N, dims));
 }
 
-const struct operator_p_s* operator_p_reshape_out(const struct operator_p_s* op, int N, const long dims[N])
+const struct operator_p_s* operator_p_reshape_out(const struct operator_p_s* op, int N, const bart_dim_t dims[N])
 {
 	return operator_p_downcast(operator_reshape(operator_p_upcast(op), 1, N, dims));
 }
 
-const struct operator_p_s* operator_p_reshape_in_F(const struct operator_p_s* op, int N, const long dims[N])
+const struct operator_p_s* operator_p_reshape_in_F(const struct operator_p_s* op, int N, const bart_dim_t dims[N])
 {
 	auto result = operator_p_reshape_in(op, N, dims);
 	operator_p_free(op);
 	return result;
 }
 
-const struct operator_p_s* operator_p_reshape_out_F(const struct operator_p_s* op, int N, const long dims[N])
+const struct operator_p_s* operator_p_reshape_out_F(const struct operator_p_s* op, int N, const bart_dim_t dims[N])
 {
 	auto result = operator_p_reshape_out(op, N, dims);
 	operator_p_free(op);
@@ -398,7 +398,7 @@ const struct operator_p_s* operator_p_flatten_F(const struct operator_p_s* op)
 	auto cod = operator_p_codomain(op);
 
 	assert(iovec_check(dom, cod->N, cod->dims, cod->strs));
-	long size = md_calc_size(dom->N, dom->dims);
+	bart_dim_t size = md_calc_size(dom->N, dom->dims);
 
 	return operator_p_reshape_out_F(operator_p_reshape_in_F(op, 1, MD_DIMS(size)), 1, MD_DIMS(size));
 }
@@ -408,7 +408,7 @@ struct scale_s {
 
 	operator_data_t super;
 
-	long size;
+	bart_dim_t size;
 };
 
 DEF_TYPEID(scale_s);
@@ -425,7 +425,7 @@ static void op_p_scale_del(const operator_data_t* _data)
 	xfree(CAST_DOWN(scale_s, _data));
 }
 
-const struct operator_p_s* operator_p_scale(int N, const long dims[N])
+const struct operator_p_s* operator_p_scale(int N, const bart_dim_t dims[N])
 {
 	PTR_ALLOC(struct scale_s, data);
 	SET_TYPEID(scale_s, data);

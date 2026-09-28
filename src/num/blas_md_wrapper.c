@@ -24,7 +24,7 @@
 // In this file we use units of elementsize for strides as in BLAS conventions
 // x > 0 is an positive integer
 
-static bool check_blas_strides(int N, const long str[N], long size)
+static bool check_blas_strides(int N, const bart_stride_t str[N], bart_dim_t size)
 {
 	for (int i = 0; i < N; i++) {
 
@@ -52,9 +52,9 @@ static bool check_blas_strides(int N, const long str[N], long size)
  * @param istr1 must be of the form {0, 1, dim[1] + x} or {0, dim[2] + x, 1}
  * @param iptr1
  **/
-void blas_zfmac_cgemm(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
+void blas_zfmac_cgemm(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
 {
-	long size = 8;
+	bart_dim_t size = 8;
 
 	assert(3 == N);
 	assert(check_blas_strides(N, ostr, size));
@@ -73,9 +73,9 @@ void blas_zfmac_cgemm(int N, const long dims[N], const long ostr[N], complex flo
 	char transa = (size == istr1[0]) ? 'N' : 'T';
 	char transb = (size == istr2[1]) ? 'N' : 'T';
 
-	long lda = (size == istr1[0]) ? istr1[1] / size : istr1[0] / size;
-	long ldb = (size == istr2[1]) ? istr2[2] / size : istr2[1] / size;
-	long ldc = ostr[2] / size;
+	bart_dim_t lda = (size == istr1[0]) ? istr1[1] / size : istr1[0] / size;
+	bart_dim_t ldb = (size == istr2[1]) ? istr2[2] / size : istr2[1] / size;
+	bart_dim_t ldc = ostr[2] / size;
 
 	lda = MAX(1, lda);
 	ldb = MAX(1, ldb);
@@ -96,9 +96,9 @@ void blas_zfmac_cgemm(int N, const long dims[N], const long ostr[N], complex flo
  * @param istr1 must be of the form {0, 1+x}
  * @param iptr1
  **/
-void blas_zfmac_cgemv(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
+void blas_zfmac_cgemv(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
 {
-	long size = 8;
+	bart_dim_t size = 8;
 
 	assert(2 == N);
 	assert(check_blas_strides(N, ostr, size));
@@ -112,12 +112,12 @@ void blas_zfmac_cgemv(int N, const long dims[N], const long ostr[N], complex flo
 
 	char trans = (size == istr1[0]) ? 'N' : 'T';
 
-	long lda = (size == istr1[0]) ? istr1[1] / size : istr1[0] / size;
-	long incx = istr2[1] / size;
-	long incy = ostr[0] / size;
+	bart_dim_t lda = (size == istr1[0]) ? istr1[1] / size : istr1[0] / size;
+	bart_dim_t incx = istr2[1] / size;
+	bart_dim_t incy = ostr[0] / size;
 
-	long m = (size == istr1[0]) ? dims[0] : dims[1];
-	long n = (size == istr1[0]) ? dims[1] : dims[0];
+	bart_dim_t m = (size == istr1[0]) ? dims[0] : dims[1];
+	bart_dim_t n = (size == istr1[0]) ? dims[1] : dims[0];
 
 	lda = MAX(1, lda);
 
@@ -136,9 +136,9 @@ void blas_zfmac_cgemv(int N, const long dims[N], const long ostr[N], complex flo
  * @param istr1 must be of the form {0, 1+x}
  * @param iptr1
  **/
-void blas_zfmac_cgeru(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
+void blas_zfmac_cgeru(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
 {
-	long size = 8;
+	bart_dim_t size = 8;
 
 	assert(2 == N);
 	assert(check_blas_strides(N, ostr, size));
@@ -149,9 +149,9 @@ void blas_zfmac_cgeru(int N, const long dims[N], const long ostr[N], complex flo
 	assert((0 == istr1[1]) && (0 < istr1[0]));
 	assert((0 == istr2[0]) && (0 < istr2[1]));
 
-	long lda = ostr[1] / size;
-	long incx = istr1[0] / size;
-	long incy = istr2[1] / size;
+	bart_dim_t lda = ostr[1] / size;
+	bart_dim_t incx = istr1[0] / size;
+	bart_dim_t incy = istr2[1] / size;
 
 	lda = MAX(1, lda);
 
@@ -170,9 +170,9 @@ void blas_zfmac_cgeru(int N, const long dims[N], const long ostr[N], complex flo
  * @param istr2 must be of the form {0}
  * @param iptr2
  **/
-void blas_zfmac_caxpy(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
+void blas_zfmac_caxpy(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
 {
-	long size = 8;
+	bart_dim_t size = 8;
 
 	assert(1 == N);
 	assert(check_blas_strides(N, ostr, size));
@@ -183,8 +183,8 @@ void blas_zfmac_caxpy(int N, const long dims[N], const long ostr[N], complex flo
 	assert(0 < istr1[0]);
 	assert(0 == istr2[0]);
 
-	long incx = istr1[0] / size;
-	long incy = ostr[0] / size;
+	bart_dim_t incx = istr1[0] / size;
+	bart_dim_t incy = ostr[0] / size;
 
 #ifdef USE_CUDA
 	if (cuda_ondevice(optr)) {
@@ -199,11 +199,11 @@ void blas_zfmac_caxpy(int N, const long dims[N], const long ostr[N], complex flo
 
 	if ((1 == incx) && (1 == incy)) {
 
-		for (long i = 0; i < dims[0]; i++)
+		for (bart_dim_t i = 0; i < dims[0]; i++)
 			optr[i] += iptr1[i] * val;
 	} else {
 
-		for (long i = 0; i < dims[0]; i++)
+		for (bart_dim_t i = 0; i < dims[0]; i++)
 			optr[i * incy] += iptr1[i * incx] * val;
 	}
 }
@@ -220,7 +220,7 @@ void blas_zfmac_caxpy(int N, const long dims[N], const long ostr[N], complex flo
  * @param istr2 must be of the form {1+x}
  * @param iptr2
  **/
-void blas_zfmac_cdotu(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
+void blas_zfmac_cdotu(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
 {
 	assert(1 == N);
 	assert(check_blas_strides(N, ostr, sizeof(complex float)));
@@ -231,13 +231,13 @@ void blas_zfmac_cdotu(int N, const long dims[N], const long ostr[N], complex flo
 	assert(0 < istr1[0]);
 	assert(0 < istr2[0]);
 
-	long incx = istr1[0] / (long)sizeof(complex float);
-	long incy = istr2[0] / (long)sizeof(complex float);
+	bart_dim_t incx = istr1[0] / (bart_stride_t)sizeof(complex float);
+	bart_dim_t incy = istr2[0] / (bart_stride_t)sizeof(complex float);
 
 
-	complex float* tmp = md_alloc_sameplace(1, MAKE_ARRAY(1l), sizeof(complex float), optr);
+	complex float* tmp = md_alloc_sameplace(1, MAKE_ARRAY(INT64_C(1)), sizeof(complex float), optr);
 
-	long S = dims[0];
+	bart_dim_t S = dims[0];
 	
 	while (S > 0) {
 
@@ -271,9 +271,9 @@ void blas_zfmac_cdotu(int N, const long dims[N], const long ostr[N], complex flo
  * @param istr1 must be of the form {0, 1, dim[1]} or {0, dim[2], 1}
  * @param iptr1
  **/
-void blas_fmac_sgemm(int N, const long dims[N], const long ostr[N], float* optr, const long istr1[N], const float* iptr1, const long istr2[N], const float* iptr2)
+void blas_fmac_sgemm(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], float* optr, const bart_stride_t istr1[N], const float* iptr1, const bart_stride_t istr2[N], const float* iptr2)
 {
-	long size = 4;
+	bart_dim_t size = 4;
 
 	assert(3 == N);
 	assert(check_blas_strides(N, ostr, size));
@@ -291,9 +291,9 @@ void blas_fmac_sgemm(int N, const long dims[N], const long ostr[N], float* optr,
 	char transa = (size == istr1[0]) ? 'N' : 'T';
 	char transb = (size == istr2[1]) ? 'N' : 'T';
 
-	long lda = (size == istr1[0]) ? istr1[1] / size : istr1[0] / size;
-	long ldb = (size == istr2[1]) ? istr2[2] / size : istr2[1] / size;
-	long ldc = ostr[2] / size;
+	bart_dim_t lda = (size == istr1[0]) ? istr1[1] / size : istr1[0] / size;
+	bart_dim_t ldb = (size == istr2[1]) ? istr2[2] / size : istr2[1] / size;
+	bart_dim_t ldc = ostr[2] / size;
 
 	lda = MAX(1, lda);
 	ldb = MAX(1, ldb);
@@ -314,9 +314,9 @@ void blas_fmac_sgemm(int N, const long dims[N], const long ostr[N], float* optr,
  * @param istr1 must be of the form {0, 1+x}
  * @param iptr1
  **/
-void blas_fmac_sgemv(int N, const long dims[N], const long ostr[N], float* optr, const long istr1[N], const float* iptr1, const long istr2[N], const float* iptr2)
+void blas_fmac_sgemv(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], float* optr, const bart_stride_t istr1[N], const float* iptr1, const bart_stride_t istr2[N], const float* iptr2)
 {
-	long size = 4;
+	bart_dim_t size = 4;
 
 	assert(2 == N);
 	assert(check_blas_strides(N, ostr, size));
@@ -330,14 +330,14 @@ void blas_fmac_sgemv(int N, const long dims[N], const long ostr[N], float* optr,
 
 	char trans = (size == istr1[0]) ? 'N' : 'T';
 
-	long lda = (size == istr1[0]) ? istr1[1] / size : istr1[0] / size;
-	long incx = istr2[1] / size;
-	long incy = ostr[0] / size;
+	bart_dim_t lda = (size == istr1[0]) ? istr1[1] / size : istr1[0] / size;
+	bart_dim_t incx = istr2[1] / size;
+	bart_dim_t incy = ostr[0] / size;
 
 	lda = MAX(1, lda);
 
-	long m = (size == istr1[0]) ? dims[0] : dims[1];
-	long n = (size == istr1[0]) ? dims[1] : dims[0];
+	bart_dim_t m = (size == istr1[0]) ? dims[0] : dims[1];
+	bart_dim_t n = (size == istr1[0]) ? dims[1] : dims[0];
 
 	blas_sgemv(trans, m, n, 1., lda, iptr1, incx, iptr2, 1., incy, optr);
 }
@@ -354,9 +354,9 @@ void blas_fmac_sgemv(int N, const long dims[N], const long ostr[N], float* optr,
  * @param istr1 must be of the form {0, 1+x}
  * @param iptr1
  **/
-void blas_fmac_sger(int N, const long dims[N], const long ostr[N], float* optr, const long istr1[N], const float* iptr1, const long istr2[N], const float* iptr2)
+void blas_fmac_sger(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], float* optr, const bart_stride_t istr1[N], const float* iptr1, const bart_stride_t istr2[N], const float* iptr2)
 {
-	long size = 4;
+	bart_dim_t size = 4;
 
 	assert(2 == N);
 	assert(check_blas_strides(N, ostr, size));
@@ -368,9 +368,9 @@ void blas_fmac_sger(int N, const long dims[N], const long ostr[N], float* optr, 
 	assert((0 == istr2[0]) && (0 < istr2[1]));
 
 
-	long lda = ostr[1] / size;
-	long incx = istr1[0] / size;
-	long incy = istr2[1] / size;
+	bart_dim_t lda = ostr[1] / size;
+	bart_dim_t incx = istr1[0] / size;
+	bart_dim_t incy = istr2[1] / size;
 
 	lda = MAX(1, lda);
 
@@ -389,9 +389,9 @@ void blas_fmac_sger(int N, const long dims[N], const long ostr[N], float* optr, 
  * @param istr2 must be of the form {0}
  * @param iptr2
  **/
-void blas_fmac_saxpy(int N, const long dims[N], const long ostr[N], float* optr, const long istr1[N], const float* iptr1, const long istr2[N], const float* iptr2)
+void blas_fmac_saxpy(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], float* optr, const bart_stride_t istr1[N], const float* iptr1, const bart_stride_t istr2[N], const float* iptr2)
 {
-	long size = 4;
+	bart_dim_t size = 4;
 
 	assert(1 == N);
 	assert(check_blas_strides(N, ostr, size));
@@ -402,8 +402,8 @@ void blas_fmac_saxpy(int N, const long dims[N], const long ostr[N], float* optr,
 	assert(0 < istr1[0]);
 	assert(0 == istr2[0]);
 
-	long incx = istr1[0] / size;
-	long incy = ostr[0] / size;
+	bart_dim_t incx = istr1[0] / size;
+	bart_dim_t incy = ostr[0] / size;
 
 #ifdef USE_CUDA
 	if (cuda_ondevice(optr)) {
@@ -418,11 +418,11 @@ void blas_fmac_saxpy(int N, const long dims[N], const long ostr[N], float* optr,
 
 	if ((1 == incx) && (1 == incy)) {
 
-		for (long i = 0; i < dims[0]; i++)
+		for (bart_dim_t i = 0; i < dims[0]; i++)
 			optr[i] += iptr1[i] * val;
 	} else {
 
-		for (long i = 0; i < dims[0]; i++)
+		for (bart_dim_t i = 0; i < dims[0]; i++)
 			optr[i * incy] += iptr1[i * incx] * val;
 	}
 }
@@ -439,9 +439,9 @@ void blas_fmac_saxpy(int N, const long dims[N], const long ostr[N], float* optr,
  * @param istr2 must be of the form {1+x}
  * @param iptr2
  **/
-void blas_fmac_sdot(int N, const long dims[N], const long ostr[N], float* optr, const long istr1[N], const float* iptr1, const long istr2[N], const float* iptr2)
+void blas_fmac_sdot(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], float* optr, const bart_stride_t istr1[N], const float* iptr1, const bart_stride_t istr2[N], const float* iptr2)
 {
-	long size = 4;
+	bart_dim_t size = 4;
 
 	assert(1 == N);
 	assert(check_blas_strides(N, ostr, size));
@@ -452,13 +452,13 @@ void blas_fmac_sdot(int N, const long dims[N], const long ostr[N], float* optr, 
 	assert(0 < istr1[0]);
 	assert(0 < istr2[0]);
 
-	long incx = istr1[0] / size;
-	long incy = istr2[0] / size;
+	bart_dim_t incx = istr1[0] / size;
+	bart_dim_t incy = istr2[0] / size;
 
 
-	float* tmp = md_alloc_sameplace(1, MAKE_ARRAY(1l), (size_t)size, optr);
+	float* tmp = md_alloc_sameplace(1, MAKE_ARRAY(INT64_C(1)), (size_t)size, optr);
 
-	long S = dims[0];
+	bart_dim_t S = dims[0];
 
 	while (S > 0) {
 
@@ -491,9 +491,9 @@ void blas_fmac_sdot(int N, const long dims[N], const long ostr[N], float* optr, 
  * @param istr1 must be of the form {0, 0}
  * @param iptr1
  **/
-void blas_zmul_cmatcopy(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
+void blas_zmul_cmatcopy(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
 {
-	long size = 8;
+	bart_dim_t size = 8;
 
 	assert(2 == N);
 	assert(check_blas_strides(N, ostr, size));
@@ -507,8 +507,8 @@ void blas_zmul_cmatcopy(int N, const long dims[N], const long ostr[N], complex f
 
 	char trans = (size == istr1[0]) ? 'N' : 'T';
 
-	long lda = (size == istr1[0]) ? istr1[1] / size : istr1[0] / size;
-	long ldb = ostr[1] / size;
+	bart_dim_t lda = (size == istr1[0]) ? istr1[1] / size : istr1[0] / size;
+	bart_dim_t ldb = ostr[1] / size;
 
 	lda = MAX(1, lda);
 	ldb = MAX(1, ldb);
@@ -526,9 +526,9 @@ void blas_zmul_cmatcopy(int N, const long dims[N], const long ostr[N], complex f
  * @param iptr
  * @param val
  **/
-void blas_zsmul_cmatcopy(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr[N], const complex float* iptr, complex float val)
+void blas_zsmul_cmatcopy(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr[N], const complex float* iptr, complex float val)
 {
-	long size = 8;
+	bart_dim_t size = 8;
 
 	assert(2 == N);
 	assert(check_blas_strides(N, ostr, size));
@@ -540,8 +540,8 @@ void blas_zsmul_cmatcopy(int N, const long dims[N], const long ostr[N], complex 
 
 	char trans = (size == istr[0]) ? 'N' : 'T';
 
-	long lda = (size == istr[0]) ? istr[1] / size : istr[0] / size;
-	long ldb = ostr[1] / size;
+	bart_dim_t lda = (size == istr[0]) ? istr[1] / size : istr[0] / size;
+	bart_dim_t ldb = ostr[1] / size;
 
 	lda = MAX(1, lda);
 	ldb = MAX(1, ldb);
@@ -560,9 +560,9 @@ void blas_zsmul_cmatcopy(int N, const long dims[N], const long ostr[N], complex 
  * @param istr1 must be of the form {1+x, 0} or {0, 1+x}
  * @param iptr1
  **/
-void blas_zmul_cdgmm(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
+void blas_zmul_cdgmm(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
 {
-	long size = 8;
+	bart_dim_t size = 8;
 
 	assert(2 == N);
 	assert(check_blas_strides(N, ostr, size));
@@ -574,9 +574,9 @@ void blas_zmul_cdgmm(int N, const long dims[N], const long ostr[N], complex floa
 	assert((0 == istr2[0] * istr2[1]));
 	assert((0 < istr2[0]) || (0 < istr2[1]));
 
-	long lda = istr1[1] / size;
-	long ldc = ostr[1] / size;
-	long incx = (0 == istr2[1]) ? istr2[0] / size : istr2[1] / size;
+	bart_dim_t lda = istr1[1] / size;
+	bart_dim_t ldc = ostr[1] / size;
+	bart_dim_t incx = (0 == istr2[1]) ? istr2[0] / size : istr2[1] / size;
 
 	lda = MAX(1, lda);
 	ldc = MAX(1, ldc);
@@ -596,7 +596,7 @@ void blas_zmul_cdgmm(int N, const long dims[N], const long ostr[N], complex floa
  * @param istr1 must be of the form {0, 1+x}
  * @param iptr1
  **/
-void blas_zmul_cgeru(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
+void blas_zmul_cgeru(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
 {
 	md_clear2(N, dims, ostr, optr, sizeof(complex float));
 
@@ -614,9 +614,9 @@ void blas_zmul_cgeru(int N, const long dims[N], const long ostr[N], complex floa
  * @param istr1 must be of the form {0}
  * @param iptr1
  **/
-void blas_zmul_cscal(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
+void blas_zmul_cscal(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
 {
-	long size = 8;
+	bart_dim_t size = 8;
 
 	assert(((optr != iptr1) || (ostr[0] == istr1[0])) && (0 == ostr[0] % size) && (0 == istr1[0] % size) && (0 == istr2[0]));
 	assert(1 == N);
@@ -637,15 +637,15 @@ void blas_zmul_cscal(int N, const long dims[N], const long ostr[N], complex floa
 
 	if ((size == ostr[0]) && (size == istr1[0])) {
 
-		for (long i = 0; i < dims[0]; i++)
+		for (bart_dim_t i = 0; i < dims[0]; i++)
 			optr[i] = iptr1[i] * val;
 
 	} else {
 
-		long ostride = ostr[0] / size;
-		long istride = istr1[0] / size;
+		bart_stride_t ostride = ostr[0] / size;
+		bart_stride_t istride = istr1[0] / size;
 
-		for (long i = 0; i < dims[0]; i++)
+		for (bart_dim_t i = 0; i < dims[0]; i++)
 			optr[i * ostride] = iptr1[i * istride] * val;
 	}
 }
@@ -669,9 +669,9 @@ void blas_zmul_cscal(int N, const long dims[N], const long ostr[N], complex floa
  * @param istr1 must be of the form {0, 0}
  * @param iptr1
  **/
-void blas_mul_smatcopy(int N, const long dims[N], const long ostr[N], float* optr, const long istr1[N], const float* iptr1, const long istr2[N], const float* iptr2)
+void blas_mul_smatcopy(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], float* optr, const bart_stride_t istr1[N], const float* iptr1, const bart_stride_t istr2[N], const float* iptr2)
 {
-	long size = 4;
+	bart_dim_t size = 4;
 
 	assert(2 == N);
 	assert(check_blas_strides(N, ostr, size));
@@ -685,8 +685,8 @@ void blas_mul_smatcopy(int N, const long dims[N], const long ostr[N], float* opt
 
 	char trans = (size == istr1[0]) ? 'N' : 'T';
 
-	long lda = (size == istr1[0]) ? istr1[1] / size : istr1[0] / size;
-	long ldb = ostr[1] / size;
+	bart_dim_t lda = (size == istr1[0]) ? istr1[1] / size : istr1[0] / size;
+	bart_dim_t ldb = ostr[1] / size;
 
 	lda = MAX(1, lda);
 	ldb = MAX(1, ldb);
@@ -704,9 +704,9 @@ void blas_mul_smatcopy(int N, const long dims[N], const long ostr[N], float* opt
  * @param iptr
  * @param val
  **/
-void blas_smul_smatcopy(int N, const long dims[N], const long ostr[N], float* optr, const long istr[N], const float* iptr, float val)
+void blas_smul_smatcopy(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], float* optr, const bart_stride_t istr[N], const float* iptr, float val)
 {
-	long size = 4;
+	bart_dim_t size = 4;
 
 	assert(2 == N);
 	assert(check_blas_strides(N, ostr, size));
@@ -718,8 +718,8 @@ void blas_smul_smatcopy(int N, const long dims[N], const long ostr[N], float* op
 
 	char trans = (size == istr[0]) ? 'N' : 'T';
 
-	long lda = (size == istr[0]) ? istr[1] / size : istr[0] / size;
-	long ldb = ostr[1] / size;
+	bart_dim_t lda = (size == istr[0]) ? istr[1] / size : istr[0] / size;
+	bart_dim_t ldb = ostr[1] / size;
 
 	lda = MAX(1, lda);
 	ldb = MAX(1, ldb);
@@ -738,9 +738,9 @@ void blas_smul_smatcopy(int N, const long dims[N], const long ostr[N], float* op
  * @param istr1 must be of the form {1+x, 0} or {0, 1+x}
  * @param iptr1
  **/
-void blas_mul_sdgmm(int N, const long dims[N], const long ostr[N], float* optr, const long istr1[N], const float* iptr1, const long istr2[N], const float* iptr2)
+void blas_mul_sdgmm(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], float* optr, const bart_stride_t istr1[N], const float* iptr1, const bart_stride_t istr2[N], const float* iptr2)
 {
-	long size = 4;
+	bart_dim_t size = 4;
 
 	assert(2 == N);
 	assert(check_blas_strides(N, ostr, size));
@@ -752,9 +752,9 @@ void blas_mul_sdgmm(int N, const long dims[N], const long ostr[N], float* optr, 
 	assert((0 == istr2[0] * istr2[1]));
 	assert((0 < istr2[0]) || (0 < istr2[1]));
 
-	long lda = istr1[1] / size;
-	long ldc = ostr[1] / size;
-	long incx = (0 == istr2[1]) ? istr2[0] / size : istr2[1] / size;
+	bart_dim_t lda = istr1[1] / size;
+	bart_dim_t ldc = ostr[1] / size;
+	bart_dim_t incx = (0 == istr2[1]) ? istr2[0] / size : istr2[1] / size;
 	lda = MAX(1, lda);
 	ldc = MAX(1, ldc);
 
@@ -773,7 +773,7 @@ void blas_mul_sdgmm(int N, const long dims[N], const long ostr[N], float* optr, 
  * @param istr1 must be of the form {0, 1+x}
  * @param iptr1
  **/
-void blas_mul_sger(int N, const long dims[N], const long ostr[N], float* optr, const long istr1[N], const float* iptr1, const long istr2[N], const float* iptr2)
+void blas_mul_sger(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], float* optr, const bart_stride_t istr1[N], const float* iptr1, const bart_stride_t istr2[N], const float* iptr2)
 {
 	md_clear2(N, dims, ostr, optr, sizeof(float));
 
@@ -791,9 +791,9 @@ void blas_mul_sger(int N, const long dims[N], const long ostr[N], float* optr, c
  * @param istr1 must be of the form {0}
  * @param iptr1
  **/
-void blas_mul_sscal(int N, const long dims[N], const long ostr[N], float* optr, const long istr1[N], const float* iptr1, const long istr2[N], const float* iptr2)
+void blas_mul_sscal(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], float* optr, const bart_stride_t istr1[N], const float* iptr1, const bart_stride_t istr2[N], const float* iptr2)
 {
-	long size = 4;
+	bart_dim_t size = 4;
 
 	assert(((optr != iptr1) || (ostr[0] == istr1[0])) && (0 == ostr[0] % size) && (0 == istr1[0] % size) && (0 == istr2[0]));
 	assert(1 == N);
@@ -814,15 +814,15 @@ void blas_mul_sscal(int N, const long dims[N], const long ostr[N], float* optr, 
 
 	if ((size == ostr[0]) && (size == istr1[0])) {
 
-		for (long i = 0; i < dims[0]; i++)
+		for (bart_dim_t i = 0; i < dims[0]; i++)
 			optr[i] = iptr1[i] * val;
 
 	} else {
 
-		long ostride = ostr[0] / size;
-		long istride = istr1[0] / size;
+		bart_stride_t ostride = ostr[0] / size;
+		bart_stride_t istride = istr1[0] / size;
 
-		for (long i = 0; i < dims[0]; i++)
+		for (bart_dim_t i = 0; i < dims[0]; i++)
 			optr[i * ostride] = iptr1[i * istride] * val;
 	}
 }

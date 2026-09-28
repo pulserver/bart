@@ -8,8 +8,8 @@
 #include "misc/dllspec.h"
 #include "misc/cppwrap.h"
 
-extern void dump_cfl(const char* name, int D, const long dimensions[__VLA(D)], const _Complex float* x);
-extern void dump_multi_cfl(const char* name, int N, int D[__VLA(N)], const long* dimensions[__VLA(N)], const _Complex float* x[__VLA(N)]);
+extern void dump_cfl(const char* name, int D, const bart_dim_t dimensions[__VLA(D)], const _Complex float* x);
+extern void dump_multi_cfl(const char* name, int N, int D[__VLA(N)], const bart_dim_t* dimensions[__VLA(N)], const _Complex float* x[__VLA(N)]);
 extern double timestamp(void);
 
 extern int debug_level;

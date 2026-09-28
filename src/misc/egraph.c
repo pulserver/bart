@@ -26,10 +26,10 @@ struct enode_s {
 	list_t oedges;
 
 	_Bool active;
-	unsigned long flags;
+	bart_flags_t flags;
 
 	// for path finding
-	long count;
+	bart_dim_t count;
 	enode_t prev;
 
 	const char* name;
@@ -69,7 +69,7 @@ enode_t enode_create(const char* name, const void* data)
 	x->iedges = list_create();
 	x->oedges = list_create();
 	x->active = true;
-	x->flags = 0UL;
+	x->flags = UINT64_C(0);
 	x->count = 0;
 	x->prev = NULL;
 
@@ -86,7 +86,7 @@ void* enode_get_data(enode_t node)
 	return (NULL != node) ? (void*)node->data : NULL;
 }
 
-long enode_get_count(enode_t node)
+bart_dim_t enode_get_count(enode_t node)
 {
 	assert(NULL != node);
 	return node->count;
@@ -181,7 +181,7 @@ void egraph_dijkstra(egraph_t graph, enode_t src, bool reverse)
 			}
 		}
 
-		long count = LONG_MAX;
+		bart_dim_t count = LONG_MAX;
 		current = NULL;
 
 		for (int i = 0; i < list_count(graph); i++) {
@@ -266,7 +266,7 @@ list_t egraph_shortest_path(egraph_t graph, enode_t dst, enode_t src)
 	return ret;
 }
 
-long egraph_longest_distance(enode_t* dst, enode_t* src, egraph_t graph, list_t nodes)
+bart_dim_t egraph_longest_distance(enode_t* dst, enode_t* src, egraph_t graph, list_t nodes)
 {
 	assert((NULL == dst) == (NULL == src));
 
@@ -276,7 +276,7 @@ long egraph_longest_distance(enode_t* dst, enode_t* src, egraph_t graph, list_t 
 		*src = NULL;
 	}
 
-	long dist = -1;
+	bart_dim_t dist = -1;
 
 	for (int i = 0; i < list_count(nodes); i++) {
 
@@ -302,16 +302,16 @@ long egraph_longest_distance(enode_t* dst, enode_t* src, egraph_t graph, list_t 
 	return dist;
 }
 
-long egraph_diameter(egraph_t graph)
+bart_dim_t egraph_diameter(egraph_t graph)
 {
 	return egraph_longest_distance(NULL, NULL, graph, graph);
 }
 
-long egraph_depth_first_search(egraph_t graph, enode_t src, long count, bool reverse)
+bart_dim_t egraph_depth_first_search(egraph_t graph, enode_t src, bart_dim_t count, bool reverse)
 {
 	if (NULL != graph) {
 
-		for (long i = 0; i < list_count(graph); i++) {
+		for (bart_dim_t i = 0; i < list_count(graph); i++) {
 
 			enode_t node = list_get_item(graph, i);
 			node->active = false;
@@ -325,7 +325,7 @@ long egraph_depth_first_search(egraph_t graph, enode_t src, long count, bool rev
 	src->active = true;
 	list_t edges = reverse ? src->iedges : src->oedges;
 
-	for (long i = 0; i < list_count(edges); i++) {
+	for (bart_dim_t i = 0; i < list_count(edges); i++) {
 
 		enode_t node = list_get_item(edges, i);
 		count = egraph_depth_first_search(NULL, node, count, reverse);
@@ -345,7 +345,7 @@ list_t egraph_split_connected_components(egraph_t graph)
 
 		egraph_t component = egraph_create();
 
-		for (long i = 0; i < list_count(graph); i++) {
+		for (bart_dim_t i = 0; i < list_count(graph); i++) {
 
 			enode_t tmp = list_get_item(graph, i);
 
@@ -367,7 +367,7 @@ extern enode_t egraph_find_most_distant(egraph_t graph, enode_t src)
 
 	enode_t most_distant = src;
 
-	for (long i = 1; i < list_count(graph); i++)
+	for (bart_dim_t i = 1; i < list_count(graph); i++)
 		if (most_distant->count < ((enode_t)list_get_item(graph, i))->count)
 			most_distant = list_get_item(graph, i);
 

@@ -31,10 +31,10 @@ struct stream_msg {
 
 	union {
 
-		long index;
-		long extsize;
-		long flags;
-		long data_long;
+		bart_dim_t index;
+		bart_dim_t extsize;
+		bart_dim_t flags;
+		bart_dim_t data_long;
 	} data;
 
 	_Bool ext;

@@ -379,12 +379,12 @@ void cuda_free(void* ptr)
 	mem_device_free(ptr, cuda_free_wrapper);
 }
 
-void* cuda_malloc(long size)
+void* cuda_malloc(bart_dim_t size)
 {
 	return mem_device_malloc((size_t)size, cuda_malloc_wrapper, false);
 }
 
-void* cuda_malloc_host(long size)
+void* cuda_malloc_host(bart_dim_t size)
 {
 	return mem_device_malloc((size_t)size, cuda_malloc_host_wrapper, true);
 }
@@ -448,36 +448,36 @@ bool cuda_ondevice(const void* ptr)
 }
 
 
-void cuda_clear(long size, void* dst)
+void cuda_clear(bart_dim_t size, void* dst)
 {
 	CUDA_ERROR_PTR(dst);
 	CUDA_ERROR(cudaMemsetAsync(dst, 0, (size_t)size, cuda_get_stream()));
 }
 
-static void cuda_float_clear(long size, float* dst)
+static void cuda_float_clear(bart_dim_t size, float* dst)
 {
-	cuda_clear(size * (long)sizeof(float), (void*)dst);
+	cuda_clear(size * (bart_stride_t)sizeof(float), (void*)dst);
 }
 
-void cuda_memcpy(long size, void* dst, const void* src)
+void cuda_memcpy(bart_dim_t size, void* dst, const void* src)
 {
 	CUDA_ERROR(cudaMemcpyAsync(dst, src, (size_t)size, cudaMemcpyDefault, cuda_get_stream()));
 }
 
-void cuda_memcpy_strided(const long dims[2], long ostr, void* dst, long istr, const void* src)
+void cuda_memcpy_strided(const bart_dim_t dims[2], bart_stride_t ostr, void* dst, bart_stride_t istr, const void* src)
 {
 	CUDA_ERROR(cudaMemcpy2DAsync(dst, (size_t)ostr, src, (size_t)istr, (size_t)dims[0], (size_t)dims[1], cudaMemcpyDefault, cuda_get_stream()));
 }
 
-static void cuda_float_copy(long size, float* dst, const float* src)
+static void cuda_float_copy(bart_dim_t size, float* dst, const float* src)
 {
-	cuda_memcpy(size * (long)sizeof(float), (void*)dst, (const void*)src);
+	cuda_memcpy(size * (bart_stride_t)sizeof(float), (void*)dst, (const void*)src);
 }
 
 
-static float* cuda_float_malloc(long size)
+static float* cuda_float_malloc(bart_dim_t size)
 {
-	return (float*)cuda_malloc(size * (long)sizeof(float));
+	return (float*)cuda_malloc(size * (bart_stride_t)sizeof(float));
 }
 
 static void cuda_float_free(float* x)
@@ -582,48 +582,48 @@ const struct vec_ops gpu_ops = {
 // defined in iter/vec.h
 struct vec_iter_s {
 
-	float* (*allocate)(long N);
+	float* (*allocate)(bart_dim_t N);
 	void (*del)(float* x);
-	void (*clear)(long N, float* x);
-	void (*copy)(long N, float* a, const float* x);
-	void (*swap)(long N, float* a, float* x);
+	void (*clear)(bart_dim_t N, float* x);
+	void (*copy)(bart_dim_t N, float* a, const float* x);
+	void (*swap)(bart_dim_t N, float* a, float* x);
 
-	double (*norm)(long N, const float* x);
-	double (*dot)(long N, const float* x, const float* y);
+	double (*norm)(bart_dim_t N, const float* x);
+	double (*dot)(bart_dim_t N, const float* x, const float* y);
 
-	void (*sub)(long N, float* a, const float* x, const float* y);
-	void (*add)(long N, float* a, const float* x, const float* y);
+	void (*sub)(bart_dim_t N, float* a, const float* x, const float* y);
+	void (*add)(bart_dim_t N, float* a, const float* x, const float* y);
 
-	void (*smul)(long N, float alpha, float* a, const float* x);
-	void (*xpay)(long N, float alpha, float* a, const float* x);
-	void (*axpy)(long N, float* a, float alpha, const float* x);
-	void (*axpbz)(long N, float* out, const float a, const float* x, const float b, const float* z);
-	void (*fmac)(long N, float* a, const float* x, const float* y);
+	void (*smul)(bart_dim_t N, float alpha, float* a, const float* x);
+	void (*xpay)(bart_dim_t N, float alpha, float* a, const float* x);
+	void (*axpy)(bart_dim_t N, float* a, float alpha, const float* x);
+	void (*axpbz)(bart_dim_t N, float* out, const float a, const float* x, const float b, const float* z);
+	void (*fmac)(bart_dim_t N, float* a, const float* x, const float* y);
 
-	void (*mul)(long N, float* a, const float* x, const float* y);
-	void (*div)(long N, float* a, const float* x, const float* y);
-	void (*sqrt)(long N, float* a, const float* x);
+	void (*mul)(bart_dim_t N, float* a, const float* x, const float* y);
+	void (*div)(bart_dim_t N, float* a, const float* x, const float* y);
+	void (*sqrt)(bart_dim_t N, float* a, const float* x);
 
-	void (*smax)(long N, float alpha, float* a, const float* x);
-	void (*smin)(long N, float alpha, float* a, const float* x);
-	void (*sadd)(long N, float* x, float y);
-	void (*sdiv)(long N, float* a, float x, const float* y);
-	void (*le)(long N, float* a, const float* x, const float* y);
+	void (*smax)(bart_dim_t N, float alpha, float* a, const float* x);
+	void (*smin)(bart_dim_t N, float alpha, float* a, const float* x);
+	void (*sadd)(bart_dim_t N, float* x, float y);
+	void (*sdiv)(bart_dim_t N, float* a, float x, const float* y);
+	void (*le)(bart_dim_t N, float* a, const float* x, const float* y);
 
-	void (*zmul)(long N, complex float* dst, const complex float* src1, const complex float* src2);
-	void (*zsmax)(long N, float val, complex float* dst, const complex float* src1);
+	void (*zmul)(bart_dim_t N, complex float* dst, const complex float* src1, const complex float* src2);
+	void (*zsmax)(bart_dim_t N, float val, complex float* dst, const complex float* src1);
 
-	void (*rand)(long N, float* dst);
-	void (*uniform)(long N, float* dst);
+	void (*rand)(bart_dim_t N, float* dst);
+	void (*uniform)(bart_dim_t N, float* dst);
 
-	void (*xpay_bat)(long Bi, long N, long Bo, const float* beta, float* a, const float* x);
-	void (*dot_bat)(long Bi, long N, long Bo, float* dst, const float* src1, const float* src2);
-	void (*axpy_bat)(long Bi, long N, long Bo, float* a, const float* alpha, const float* x);
+	void (*xpay_bat)(bart_dim_t Bi, bart_dim_t N, bart_dim_t Bo, const float* beta, float* a, const float* x);
+	void (*dot_bat)(bart_dim_t Bi, bart_dim_t N, bart_dim_t Bo, float* dst, const float* src1, const float* src2);
+	void (*axpy_bat)(bart_dim_t Bi, bart_dim_t N, bart_dim_t Bo, float* a, const float* alpha, const float* x);
 
 };
 
 
-static void cuda_sadd_inpl(long N, float* dst, float val)
+static void cuda_sadd_inpl(bart_dim_t N, float* dst, float val)
 {
 	cuda_sadd(N, val, dst, dst);
 }

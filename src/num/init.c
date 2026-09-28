@@ -35,13 +35,13 @@
 
 #include "init.h"
 
-extern long num_chunk_size;	// num/optimize.c
+extern bart_dim_t num_chunk_size;	// num/optimize.c
 
 static bool bart_gpu_support = false;
 bool bart_use_gpu = false;
-unsigned long bart_mpi_split_flags = 0;
-unsigned long bart_delayed_loop_flags = 0;
-long bart_delayed_loop_dims[16] = { [0 ... 15] = -1 };
+bart_flags_t bart_mpi_split_flags = 0;
+bart_flags_t bart_delayed_loop_flags = 0;
+bart_dim_t bart_delayed_loop_dims[16] = { [0 ... 15] = -1 };
 bool bart_delayed_computations = false;
 
 static void num_init_internal(void)
@@ -50,7 +50,7 @@ static void num_init_internal(void)
 
 	if (NULL != (wisdom_str = getenv("BART_USE_FFTW_WISDOM"))) {
 
-		long wisdom = strtol(wisdom_str, NULL, 10);
+		bart_dim_t wisdom = strtol(wisdom_str, NULL, 10);
 
 		if ((1 != wisdom) && (0 != wisdom))
 			error("BART_USE_FFTW_WISDOM environment variable must be 0 or 1!\n");
@@ -63,7 +63,7 @@ static void num_init_internal(void)
 
 	if (NULL != (chunk_str = getenv("BART_PARALLEL_CHUNK_SIZE"))) {
 
-		long chunk_size = strtol(chunk_str, NULL, 10);
+		bart_dim_t chunk_size = strtol(chunk_str, NULL, 10);
 
 		if (0 < chunk_size) {
 
@@ -98,7 +98,7 @@ static void num_init_internal(void)
 
 	if (NULL != (mem_str = getenv("BART_GPU_GLOBAL_MEMORY"))) {
 
-		long mem = strtol(mem_str, NULL, 10);
+		bart_dim_t mem = strtol(mem_str, NULL, 10);
 
 		if ((1 != mem) && (0 != mem))
 			error("BART_GPU_GLOBAL_MEMORY environment variable must be 0 or 1!\n");
@@ -178,7 +178,7 @@ void num_set_num_threads(int n)
 }
 
 
-#define MD_BIT(x) (1ul << (x))
+#define MD_BIT(x) (UINT64_C(1) << (x))
 #define MD_IS_SET(x, y)	((x) & MD_BIT(y))
 
 void num_init_delayed(void)
@@ -193,7 +193,7 @@ void num_init_delayed(void)
 		int dim = bart_delayed_loop_dims[i];
 		bart_delayed_loop_dims[i] = -1;
 
-		assert(dim < 8 * (long)sizeof(unsigned long));
+		assert(dim < 8 * (bart_stride_t)sizeof(bart_flags_t));
 
 		if (!MD_IS_SET(bart_delayed_loop_flags, dim)) {
 

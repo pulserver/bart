@@ -80,7 +80,7 @@ extern void warn_nonnull_ptr(void*);
 
 extern int parse_cfl(_Complex float res[1], const char* str);
 extern int parse_double(double res[1], const char* str);
-extern int parse_long(long res[1], const char* str);
+extern int parse_long(bart_dim_t res[1], const char* str);
 extern int parse_longlong(long long res[1], const char* str);
 extern int parse_ulonglong(unsigned long long res[1], const char* str);
 extern int parse_int(int res[1], const char* str);
@@ -108,10 +108,10 @@ extern int error_catcher(int fun(int argc, char* argv[__VLA(argc)]), int argc, c
 
 extern int bart_printf(const char* fmt, ...) __attribute__((format(printf,1,2)));
 
-extern void debug_print_bits(int dblevel, int D, unsigned long bitmask);
+extern void debug_print_bits(int dblevel, int D, bart_flags_t bitmask);
 
-extern void print_dims(int D, const long dims[__VLA(D)]);
-extern void debug_print_dims(int dblevel, int D, const long dims[__VLA(D)]);
+extern void print_dims(int D, const bart_dim_t dims[__VLA(D)]);
+extern void debug_print_dims(int dblevel, int D, const bart_dim_t dims[__VLA(D)]);
 
 #ifdef REDEFINE_PRINTF_FOR_TRACE
 #define debug_print_dims(...) \
@@ -123,7 +123,7 @@ extern void debug_print_dims_trace(const char* func_name,
 				   int line,
 				   int dblevel,
 				   int D,
-				   const long dims[__VLA(D)]);
+				   const bart_dim_t dims[__VLA(D)]);
 
 typedef int CLOSURE_TYPE(quicksort_cmp_t)(int a, int b);
 
@@ -132,12 +132,12 @@ extern void quicksort(int N, int ord[__VLA(N)], quicksort_cmp_t cmp);
 extern float quickselect(float *arr, int n, int k);
 extern float quickselect_complex(_Complex float *arr, int n, int k);
 
-extern void print_long(int D, const long arr[__VLA(D)]);
+extern void print_long(int D, const bart_dim_t arr[__VLA(D)]);
 extern void print_float(int D, const float arr[__VLA(D)]);
 extern void print_int(int D, const int arr[__VLA(D)]);
 extern void print_complex(int D, const _Complex float arr[__VLA(D)]);
 
-extern int bitcount(unsigned long flags);
+extern int bitcount(bart_flags_t flags);
 
 extern const char* command_line;
 extern char* stdin_command_line;
@@ -147,14 +147,14 @@ extern void save_command_line(int argc, char* argv[__VLA(argc)]);
 extern _Bool safe_isnanf(float x);
 extern _Bool safe_isfinite(float x);
 
-extern long io_calc_size(int D, const long dims[__VLA(D?:1)], size_t size);
+extern bart_dim_t io_calc_size(int D, const bart_dim_t dims[__VLA(D?:1)], size_t size);
 
 extern char* ptr_printf(const char* fmt, ...) __attribute__((format(printf,1,2)));
 extern void ptr_append_printf(const char** prefix, const char* fmt, ...);
 extern char* ptr_vprintf(const char* fmt, va_list ap);
-extern char* ptr_print_dims(int D, const long dims[__VLA(D)]);
+extern char* ptr_print_dims(int D, const bart_dim_t dims[__VLA(D)]);
 
-extern char* construct_filename(int D, const long loopdims[__VLA(D)], const long pos[__VLA(D)], const char* prefix, const char* ext);
+extern char* construct_filename(int D, const bart_dim_t loopdims[__VLA(D)], const bart_dim_t pos[__VLA(D)], const char* prefix, const char* ext);
 
 
 #define DEG2RAD(d) ((d) * M_PI / 180.)

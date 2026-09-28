@@ -37,13 +37,13 @@ struct fft_plan_s {
 	fftwf_plan fftw;
 
 	int D;
-	unsigned long flags;
+	bart_flags_t flags;
 	bool backwards;
 	bool inplace;
 	bool measure;
-	const long* dims;
-	const long* istrs;
-	const long* ostrs;
+	const bart_dim_t* dims;
+	const bart_stride_t* istrs;
+	const bart_stride_t* ostrs;
 
 #ifdef  USE_CUDA
 	struct fft_cuda_plan_s* cuplan;
@@ -103,7 +103,7 @@ void fft_cache_free(void)
 	fft_cache = NULL;
 }
 
-static struct operator_s* search(int D, const long dimensions[D], unsigned long flags, const long ostrides[D], const long istrides[D], bool backwards, bool inplace, bool measure)
+static struct operator_s* search(int D, const bart_dim_t dimensions[D], bart_flags_t flags, const bart_stride_t ostrides[D], const bart_stride_t istrides[D], bool backwards, bool inplace, bool measure)
 {
 	if (NULL == fft_cache)
 		return NULL;
@@ -130,7 +130,7 @@ static struct operator_s* search(int D, const long dimensions[D], unsigned long 
 
 bool use_fftw_wisdom = false;
 
-static char* fftw_wisdom_name(int N, bool backwards, unsigned long flags, const long dims[N])
+static char* fftw_wisdom_name(int N, bool backwards, bart_flags_t flags, const bart_dim_t dims[N])
 {
 	if (!use_fftw_wisdom)
 		return NULL;
@@ -185,7 +185,7 @@ static char* fftw_wisdom_name(int N, bool backwards, unsigned long flags, const 
 
 
 #ifndef NO_FFTW
-static fftwf_plan fft_fftwf_plan(int D, const long dimensions[D], unsigned long flags, const long ostrides[D], complex float* dst, const long istrides[D], const complex float* src, bool backwards, bool measure)
+static fftwf_plan fft_fftwf_plan(int D, const bart_dim_t dimensions[D], bart_flags_t flags, const bart_stride_t ostrides[D], complex float* dst, const bart_stride_t istrides[D], const complex float* src, bool backwards, bool measure)
 {
 	fftwf_plan fftwf;
 
@@ -211,15 +211,15 @@ static fftwf_plan fft_fftwf_plan(int D, const long dimensions[D], unsigned long 
 			if (MD_IS_SET(flags, i)) {
 
 				dims[k].n = dimensions[i];
-				dims[k].is = istrides[i] / (long)CFL_SIZE;
-				dims[k].os = ostrides[i] / (long)CFL_SIZE;
+				dims[k].is = istrides[i] / (bart_stride_t)CFL_SIZE;
+				dims[k].os = ostrides[i] / (bart_stride_t)CFL_SIZE;
 				k++;
 
 			} else  {
 
 				hmdims[l].n = dimensions[i];
-				hmdims[l].is = istrides[i] / (long)CFL_SIZE;
-				hmdims[l].os = ostrides[i] / (long)CFL_SIZE;
+				hmdims[l].is = istrides[i] / (bart_stride_t)CFL_SIZE;
+				hmdims[l].os = ostrides[i] / (bart_stride_t)CFL_SIZE;
 				l++;
 			}
 		}
@@ -302,15 +302,15 @@ static void fft_free_plan(const operator_data_t* _data)
 }
 
 
-const struct operator_s* fft_create2(int D, const long dimensions[D], unsigned long flags, const long ostrides[D], const complex float* dst, const long istrides[D], const complex float* src, bool backwards)
+const struct operator_s* fft_create2(int D, const bart_dim_t dimensions[D], bart_flags_t flags, const bart_stride_t ostrides[D], const complex float* dst, const bart_stride_t istrides[D], const complex float* src, bool backwards)
 {
 	flags &= md_nontriv_dims(D, dimensions);
 
-	long ooffset = 0;
-	long ioffset = 0;
+	bart_stride_t ooffset = 0;
+	bart_stride_t ioffset = 0;
 
-	long osize = CFL_SIZE;
-	long isize = CFL_SIZE;
+	bart_dim_t osize = CFL_SIZE;
+	bart_dim_t isize = CFL_SIZE;
 
 	for (int i = 0; i < D; i++) {
 
@@ -321,11 +321,11 @@ const struct operator_s* fft_create2(int D, const long dimensions[D], unsigned l
 		ioffset += (dimensions[i] - 1) * MAX(-istrides[i], 0);
 	}
 
-	const complex float* srcs = src - ioffset / (long)CFL_SIZE;
-	const complex float* srce = srcs + isize / (long)CFL_SIZE;
+	const complex float* srcs = src - ioffset / (bart_stride_t)CFL_SIZE;
+	const complex float* srce = srcs + isize / (bart_stride_t)CFL_SIZE;
 
-	const complex float* dsts = dst - ioffset / (long)CFL_SIZE;
-	const complex float* dste = dsts + isize / (long)CFL_SIZE;
+	const complex float* dsts = dst - ioffset / (bart_stride_t)CFL_SIZE;
+	const complex float* dste = dsts + isize / (bart_stride_t)CFL_SIZE;
 
 	bool inplace;
 
@@ -339,7 +339,7 @@ const struct operator_s* fft_create2(int D, const long dimensions[D], unsigned l
 		inplace = true;
 	}
 
-	long tsize = inplace ? MAX(dste, srce) - MIN(dsts, srcs) : 0;
+	bart_dim_t tsize = inplace ? MAX(dste, srce) - MIN(dsts, srcs) : 0;
 
 	bool trivial =    (D == md_calc_blockdim(D, dimensions, ostrides, CFL_SIZE))
 		       && (D == md_calc_blockdim(D, dimensions, istrides, CFL_SIZE));
@@ -357,7 +357,7 @@ const struct operator_s* fft_create2(int D, const long dimensions[D], unsigned l
 			op = operator_ref(op);
 		} else {
 
-			long size = MAX(tsize, MAX(isize, osize));
+			bart_dim_t size = MAX(tsize, MAX(isize, osize));
 
 			complex float* tsrc = md_alloc(1, MD_DIMS(size), 1);
 			complex float* tdst = inplace ? tsrc : md_alloc(1, MD_DIMS(size), 1);
@@ -386,15 +386,15 @@ const struct operator_s* fft_create2(int D, const long dimensions[D], unsigned l
 			plan->inplace = inplace;
 			plan->measure = measure;
 
-			PTR_ALLOC(long[D], dims);
+			PTR_ALLOC(bart_dim_t[D], dims);
 			md_copy_dims(D, *dims, dimensions);
 			plan->dims = *PTR_PASS(dims);
 
-			PTR_ALLOC(long[D], istrs);
+			PTR_ALLOC(bart_dim_t[D], istrs);
 			md_copy_strides(D, *istrs, istrides);
 			plan->istrs = *PTR_PASS(istrs);
 
-			PTR_ALLOC(long[D], ostrs);
+			PTR_ALLOC(bart_dim_t[D], ostrs);
 			md_copy_strides(D, *ostrs, ostrides);
 			plan->ostrs = *PTR_PASS(ostrs);
 

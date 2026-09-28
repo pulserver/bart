@@ -40,8 +40,8 @@ void memcache_off(void)
 
 static bool mem_init = false;
 
-static long unused_memory[CUDA_MAX_STREAMS + 1] = { };
-static long used_memory[CUDA_MAX_STREAMS + 1] = { };
+static bart_dim_t unused_memory[CUDA_MAX_STREAMS + 1] = { };
+static bart_dim_t used_memory[CUDA_MAX_STREAMS + 1] = { };
 
 static tree_t mem_allocs[CUDA_MAX_STREAMS + 1] = { NULL };
 static tree_t mem_cache[CUDA_MAX_STREAMS + 1] = { NULL };
@@ -137,7 +137,7 @@ static void print_mem_tree(int dl, tree_t tree)
 	struct mem_s* m[N];
 	tree_to_array(tree, N, (void**)m);
 
-	long total = 0;
+	bart_dim_t total = 0;
 
 	for (int j = 0; j < N; j++) {
 
@@ -199,7 +199,7 @@ static struct mem_s* search(const void* ptr, bool remove, int i)
 static int find_free_p(const void* _rptr, const void* _cmp)
 {
 	const struct mem_s* rptr = _rptr;
-	const long* cmp = _cmp;
+	const bart_dim_t* cmp = _cmp;
 
 	ssize_t min = cmp[0];
 	ssize_t max = cmp[1];
@@ -229,7 +229,7 @@ void memcache_clear(void (*device_free)(const void* x, bool host))
 
 	struct mem_s* nptr = find_free(0, cuda_get_stream_id());
 
-	long freed = 0;
+	bart_dim_t freed = 0;
 
 	while (NULL != nptr) {
 
@@ -323,7 +323,7 @@ void mem_device_free(void* ptr, void (*device_free)(const void* ptr, bool host))
 void* mem_device_malloc(size_t size2, void* (*device_alloc)(size_t), bool host)
 {
 	int stream = cuda_get_stream_id();
-	long size = (long)size2;
+	bart_dim_t size = (bart_stride_t)size2;
 
 	struct mem_s* nptr = host ? NULL : find_free(size, stream);
 

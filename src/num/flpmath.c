@@ -64,40 +64,40 @@
 #endif
 
 
-typedef void (*md_2op_t)(int D, const long dims[D], const long ostrs[D], float* optr, const long istrs1[D], const float* iptr1);
-typedef void (*md_z2op_t)(int D, const long dims[D], const long ostrs[D], complex float* optr, const long istrs1[D], const complex float* iptr1);
-typedef void (*md_2opf_t)(int D, const long dims[D], const long ostrs[D], float* optr, const long istrs1[D], const double* iptr1);
-typedef void (*md_2opd_t)(int D, const long dims[D], const long ostrs[D], double* optr, const long istrs1[D], const float* iptr1);
-typedef void (*md_z2opf_t)(int D, const long dims[D], const long ostrs[D], complex float* optr, const long istrs1[D], const complex double* iptr1);
-typedef void (*md_z2opd_t)(int D, const long dims[D], const long ostrs[D], complex double* optr, const long istrs1[D], const complex float* iptr1);
+typedef void (*md_2op_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], float* optr, const bart_stride_t istrs1[D], const float* iptr1);
+typedef void (*md_z2op_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs1[D], const complex float* iptr1);
+typedef void (*md_2opf_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], float* optr, const bart_stride_t istrs1[D], const double* iptr1);
+typedef void (*md_2opd_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], double* optr, const bart_stride_t istrs1[D], const float* iptr1);
+typedef void (*md_z2opf_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs1[D], const complex double* iptr1);
+typedef void (*md_z2opd_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex double* optr, const bart_stride_t istrs1[D], const complex float* iptr1);
 
 
-typedef void (*md_3op_t)(int D, const long dims[D], const long ostrs[D], float* optr, const long istrs1[D], const float* iptr1, const long istrs2[D], const float* iptr2);
-typedef void (*md_z3op_t)(int D, const long dims[D], const long ostrs[D], complex float* optr, const long istrs1[D], const complex float* iptr1, const long istrs2[D], const complex float* iptr2);
-typedef void (*md_3opd_t)(int D, const long dims[D], const long ostrs[D], double* optr, const long istrs1[D], const float* iptr1, const long istrs2[D], const float* iptr2);
-typedef void (*md_z3opd_t)(int D, const long dims[D], const long ostrs[D], complex double* optr, const long istrs1[D], const complex float* iptr1, const long istrs2[D], const complex float* iptr2);
+typedef void (*md_3op_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], float* optr, const bart_stride_t istrs1[D], const float* iptr1, const bart_stride_t istrs2[D], const float* iptr2);
+typedef void (*md_z3op_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs1[D], const complex float* iptr1, const bart_stride_t istrs2[D], const complex float* iptr2);
+typedef void (*md_3opd_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], double* optr, const bart_stride_t istrs1[D], const float* iptr1, const bart_stride_t istrs2[D], const float* iptr2);
+typedef void (*md_z3opd_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex double* optr, const bart_stride_t istrs1[D], const complex float* iptr1, const bart_stride_t istrs2[D], const complex float* iptr2);
 
 
 #if 0
-static void optimized_twoop(int D, const long dim[D], const long ostr[D], void* optr, const long istr1[D], void* iptr1, size_t sizes[2], md_nary_fun_t too, void* data_ptr) __attribute__((always_inline));
+static void optimized_twoop(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], void* optr, const bart_stride_t istr1[D], void* iptr1, size_t sizes[2], md_nary_fun_t too, void* data_ptr) __attribute__((always_inline));
 
-static void optimized_twoop_oi(int D, const long dim[D], const long ostr[D], void* optr, const long istr1[D], const void* iptr1, size_t sizes[2], md_nary_fun_t too, void* data_ptr) __attribute__((always_inline));
+static void optimized_twoop_oi(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], void* optr, const bart_stride_t istr1[D], const void* iptr1, size_t sizes[2], md_nary_fun_t too, void* data_ptr) __attribute__((always_inline));
 
-static void optimized_threeop(int D, const long dim[D], const long ostr[D], void* optr, const long istr1[D], void* iptr1, const long istr2[D], void* iptr2, size_t sizes[3], md_nary_fun_t too, void* data_ptr) __attribute__((always_inline));
+static void optimized_threeop(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], void* optr, const bart_stride_t istr1[D], void* iptr1, const bart_stride_t istr2[D], void* iptr2, size_t sizes[3], md_nary_fun_t too, void* data_ptr) __attribute__((always_inline));
 
-static void optimized_threeop_oii(int D, const long dim[D], const long ostr[D], void* optr, const long istr1[D], const void* iptr1, const long istr2[D], const void* iptr2, size_t sizes[3], md_nary_fun_t too, void* data_ptr) __attribute__((always_inline));
+static void optimized_threeop_oii(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], void* optr, const bart_stride_t istr1[D], const void* iptr1, const bart_stride_t istr2[D], const void* iptr2, size_t sizes[3], md_nary_fun_t too, void* data_ptr) __attribute__((always_inline));
 
-static void make_z3op_simple(md_z3op_t fun, int D, const long dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2) __attribute__((always_inline));
+static void make_z3op_simple(md_z3op_t fun, int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2) __attribute__((always_inline));
 
-static void make_3op_simple(md_3op_t fun, int D, const long dims[D], float* optr, const float* iptr1, const float* iptr2) __attribute__((always_inline));
+static void make_3op_simple(md_3op_t fun, int D, const bart_dim_t dims[D], float* optr, const float* iptr1, const float* iptr2) __attribute__((always_inline));
 
-static void make_z3op(size_t offset, int D, const long dim[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2) __attribute__((always_inline));
+static void make_z3op(size_t offset, int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2) __attribute__((always_inline));
 
-static void make_3opd_simple(md_3opd_t fun, int D, const long dims[D], double* optr, const float* iptr1, const float* iptr2) __attribute__((always_inline));
+static void make_3opd_simple(md_3opd_t fun, int D, const bart_dim_t dims[D], double* optr, const float* iptr1, const float* iptr2) __attribute__((always_inline));
 
-static void make_z2op_simple(md_z2op_t fun, int D, const long dims[D], complex float* optr, const complex float* iptr1) __attribute__((always_inline));
+static void make_z2op_simple(md_z2op_t fun, int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr1) __attribute__((always_inline));
 
-static void make_2op_simple(md_2op_t fun, int D, const long dims[D], float* optr, const float* iptr1) __attribute__((always_inline));
+static void make_2op_simple(md_2op_t fun, int D, const bart_dim_t dims[D], float* optr, const float* iptr1) __attribute__((always_inline));
 #endif
 
 
@@ -116,12 +116,12 @@ static void make_2op_simple(md_2op_t fun, int D, const long dims[D], float* optr
  * @param size size of data structures, e.g. complex float
  * @param too two-op multiply function
  */
-static void optimized_twoop_oi(int D, const long dim[D], const long ostr[D], void* optr, const long istr1[D], const void* iptr1, size_t sizes[2], md_nary_opt_fun_t too)
+static void optimized_twoop_oi(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], void* optr, const bart_stride_t istr1[D], const void* iptr1, size_t sizes[2], md_nary_opt_fun_t too)
 {
-	const long (*nstr[2])[D?D:1] = { (const long (*)[D?D:1])ostr, (const long (*)[D?D:1])istr1 };
+	const bart_stride_t (*nstr[2])[D?D:1] = { (const bart_stride_t (*)[D?D:1])ostr, (const bart_stride_t (*)[D?D:1])istr1 };
 	void *nptr[2] = { optr, (void*)iptr1 };
 
-	unsigned long io = 1 + ((iptr1 == optr) ? 2 : 0);
+	bart_flags_t io = 1 + ((iptr1 == optr) ? 2 : 0);
 
 	optimized_nop(2, io, D, dim, nstr, nptr, sizes, too);
 }
@@ -145,12 +145,12 @@ static void optimized_twoop_oi(int D, const long dim[D], const long ostr[D], voi
  * @param size size of data structures, e.g. complex float
  * @param too three-op multiply function
  */
-static void optimized_threeop_oii(int D, const long dim[D], const long ostr[D], void* optr, const long istr1[D], const void* iptr1, const long istr2[D], const void* iptr2, size_t sizes[3], md_nary_opt_fun_t too)
+static void optimized_threeop_oii(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], void* optr, const bart_stride_t istr1[D], const void* iptr1, const bart_stride_t istr2[D], const void* iptr2, size_t sizes[3], md_nary_opt_fun_t too)
 {
-	const long (*nstr[3])[D?D:1] = { (const long (*)[D?D:1])ostr, (const long (*)[D?D:1])istr1, (const long (*)[D?D:1])istr2 };
+	const bart_stride_t (*nstr[3])[D?D:1] = { (const bart_stride_t (*)[D?D:1])ostr, (const bart_stride_t (*)[D?D:1])istr1, (const bart_stride_t (*)[D?D:1])istr2 };
 	void *nptr[3] = { optr, (void*)iptr1, (void*)iptr2 };
 
-	unsigned long io = 1UL + ((iptr1 == optr) ? 2 : 0) + ((iptr2 == optr) ? 4 : 0);
+	bart_flags_t io = UINT64_C(1) + ((iptr1 == optr) ? 2 : 0) + ((iptr2 == optr) ? 4 : 0);
 
 	optimized_nop(3, io, D, dim, nstr, nptr, sizes, too);
 }
@@ -164,40 +164,40 @@ static void optimized_threeop_oii(int D, const long dim[D], const long ostr[D], 
  */
 
 
-typedef void (*r2op_t)(long N, float* dst, const float* src1);
-typedef void (*z2op_t)(long N, complex float* dst, const complex float* src1);
-typedef void (*r3op_t)(long N, float* dst, const float* src1, const float* src2);
-typedef void (*z3op_t)(long N, complex float* dst, const complex float* src1, const complex float* src2);
-typedef void (*r2opd_t)(long N, double* dst, const float* src1);
-typedef void (*z2opd_t)(long N, complex double* dst, const complex float* src1);
-typedef void (*r3opd_t)(long N, double* dst, const float* src1, const float* src2);
-typedef void (*z3opd_t)(long N, complex double* dst, const complex float* src1, const complex float* src2);
-typedef void (*r2opf_t)(long N, float* dst, const double* src1);
-typedef void (*z2opf_t)(long N, complex float* dst, const complex double* src1);
+typedef void (*r2op_t)(bart_dim_t N, float* dst, const float* src1);
+typedef void (*z2op_t)(bart_dim_t N, complex float* dst, const complex float* src1);
+typedef void (*r3op_t)(bart_dim_t N, float* dst, const float* src1, const float* src2);
+typedef void (*z3op_t)(bart_dim_t N, complex float* dst, const complex float* src1, const complex float* src2);
+typedef void (*r2opd_t)(bart_dim_t N, double* dst, const float* src1);
+typedef void (*z2opd_t)(bart_dim_t N, complex double* dst, const complex float* src1);
+typedef void (*r3opd_t)(bart_dim_t N, double* dst, const float* src1, const float* src2);
+typedef void (*z3opd_t)(bart_dim_t N, complex double* dst, const complex float* src1, const complex float* src2);
+typedef void (*r2opf_t)(bart_dim_t N, float* dst, const double* src1);
+typedef void (*z2opf_t)(bart_dim_t N, complex float* dst, const complex double* src1);
 
 
 
 
-static void make_z3op_simple(md_z3op_t fun, int D, const long dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
+static void make_z3op_simple(md_z3op_t fun, int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
 	fun(D, dims, strs, optr, strs, iptr1, strs, iptr2);
 }
 
-static void make_3op_simple(md_3op_t fun, int D, const long dims[D], float* optr, const float* iptr1, const float* iptr2)
+static void make_3op_simple(md_3op_t fun, int D, const bart_dim_t dims[D], float* optr, const float* iptr1, const float* iptr2)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, FL_SIZE);
 
 	fun(D, dims, strs, optr, strs, iptr1, strs, iptr2);
 }
 
-static void make_z3opd_simple(md_z3opd_t fun, int D, const long dims[D], complex double* optr, const complex float* iptr1, const complex float* iptr2)
+static void make_z3opd_simple(md_z3opd_t fun, int D, const bart_dim_t dims[D], complex double* optr, const complex float* iptr1, const complex float* iptr2)
 {
-	long strs_single[D];
-	long strs_double[D];
+	bart_stride_t strs_single[D];
+	bart_stride_t strs_double[D];
 
 	md_calc_strides(D, strs_single, dims, CFL_SIZE);
 	md_calc_strides(D, strs_double, dims, CDL_SIZE);
@@ -205,10 +205,10 @@ static void make_z3opd_simple(md_z3opd_t fun, int D, const long dims[D], complex
 	fun(D, dims, strs_double, optr, strs_single, iptr1, strs_single, iptr2);
 }
 
-static void make_3opd_simple(md_3opd_t fun, int D, const long dims[D], double* optr, const float* iptr1, const float* iptr2)
+static void make_3opd_simple(md_3opd_t fun, int D, const bart_dim_t dims[D], double* optr, const float* iptr1, const float* iptr2)
 {
-	long strs_single[D];
-	long strs_double[D];
+	bart_stride_t strs_single[D];
+	bart_stride_t strs_double[D];
 
 	md_calc_strides(D, strs_single, dims, FL_SIZE);
 	md_calc_strides(D, strs_double, dims, DL_SIZE);
@@ -216,26 +216,26 @@ static void make_3opd_simple(md_3opd_t fun, int D, const long dims[D], double* o
 	fun(D, dims, strs_double, optr, strs_single, iptr1, strs_single, iptr2);
 }
 
-static void make_z2op_simple(md_z2op_t fun, int D, const long dims[D], complex float* optr, const complex float* iptr1)
+static void make_z2op_simple(md_z2op_t fun, int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr1)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
 	fun(D, dims, strs, optr, strs, iptr1);
 }
 
-static void make_2op_simple(md_2op_t fun, int D, const long dims[D], float* optr, const float* iptr1)
+static void make_2op_simple(md_2op_t fun, int D, const bart_dim_t dims[D], float* optr, const float* iptr1)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, FL_SIZE);
 
 	fun(D, dims, strs, optr, strs, iptr1);
 }
 
-static void make_z2opd_simple(md_z2opd_t fun, int D, const long dims[D], complex double* optr, const complex float* iptr1)
+static void make_z2opd_simple(md_z2opd_t fun, int D, const bart_dim_t dims[D], complex double* optr, const complex float* iptr1)
 {
-	long strs_single[D];
-	long strs_double[D];
+	bart_stride_t strs_single[D];
+	bart_stride_t strs_double[D];
 
 	md_calc_strides(D, strs_single, dims, CFL_SIZE);
 	md_calc_strides(D, strs_double, dims, CDL_SIZE);
@@ -243,10 +243,10 @@ static void make_z2opd_simple(md_z2opd_t fun, int D, const long dims[D], complex
 	fun(D, dims, strs_double, optr, strs_single, iptr1);
 }
 
-static void make_2opd_simple(md_2opd_t fun, int D, const long dims[D], double* optr, const float* iptr1)
+static void make_2opd_simple(md_2opd_t fun, int D, const bart_dim_t dims[D], double* optr, const float* iptr1)
 {
-	long strs_single[D];
-	long strs_double[D];
+	bart_stride_t strs_single[D];
+	bart_stride_t strs_double[D];
 
 	md_calc_strides(D, strs_single, dims, FL_SIZE);
 	md_calc_strides(D, strs_double, dims, DL_SIZE);
@@ -254,7 +254,7 @@ static void make_2opd_simple(md_2opd_t fun, int D, const long dims[D], double* o
 	fun(D, dims, strs_double, optr, strs_single, iptr1);
 }
 
-static bool make_op_map_dims(int C, int D, const long dim[D], const long* str[C], void* ptr[C], const size_t size[C], md_nary_resolve_fun_t fun)
+static bool make_op_map_dims(int C, int D, const bart_dim_t dim[D], const bart_stride_t* str[C], void* ptr[C], const size_t size[C], md_nary_resolve_fun_t fun)
 {
 	struct vptr_mapped_dims_s* mdims = vptr_map_dims(D, dim, C, str, size, ptr);
 
@@ -263,8 +263,8 @@ static bool make_op_map_dims(int C, int D, const long dim[D], const long* str[C]
 
 	while (NULL != mdims) {
 
-		const long (*mstrs)[mdims->D][mdims->N] = (void*)mdims->strs;
-		const long* nstr[C];
+		const bart_stride_t (*mstrs)[mdims->D][mdims->N] = (void*)mdims->strs;
+		const bart_stride_t* nstr[C];
 		for (int i = 0; i < C; i++)
 			nstr[i] = (*mstrs)[i];
 
@@ -278,15 +278,15 @@ static bool make_op_map_dims(int C, int D, const long dim[D], const long* str[C]
 }
 
 
-void make_z3op(size_t offset, int D, const long dim[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
+void make_z3op(size_t offset, int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
 {
-	const long* strs[] = { ostr, istr1, istr2 };
+	const bart_stride_t* strs[] = { ostr, istr1, istr2 };
 	const size_t size[] = { sizeof(optr[0]), sizeof(iptr1[0]), sizeof(iptr2[0]) };
 	void* ptr[] = { optr, (void*)iptr1, (void*)iptr2 };
 
 	if (is_vptr(optr) || is_vptr(iptr1) || is_vptr(iptr2)) {
 
-		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const long dims[D], const long* strs[C]))
+		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const bart_dim_t dims[D], const bart_stride_t* strs[C]))
 		{
 			make_z3op(offset, D, dims, strs[0], ptr[0], strs[1], ptr[1], strs[2], ptr[2]);
 		};
@@ -294,7 +294,7 @@ void make_z3op(size_t offset, int D, const long dim[D], const long ostr[D], comp
 		if (make_op_map_dims(ARRAY_SIZE(ptr), D, dim, strs, ptr, size, nary_loop))
 			return;
 
-		if (delayed_queue_make_op(delayed_op_type_z3op, offset, D, dim, 3, (const long*[3]) { ostr, istr1, istr2 }, (const void*[3]) { optr, iptr1, iptr2 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]), sizeof(iptr2[0]) }))
+		if (delayed_queue_make_op(delayed_op_type_z3op, offset, D, dim, 3, (const bart_dim_t*[3]) { ostr, istr1, istr2 }, (const void*[3]) { optr, iptr1, iptr2 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]), sizeof(iptr2[0]) }))
 			return;
 
 		md_nary_resolve(3, D, dim, strs, ptr, nary_loop);
@@ -327,15 +327,15 @@ void make_z3op(size_t offset, int D, const long dim[D], const long ostr[D], comp
 }
 
 
-void make_3op(size_t offset, int D, const long dim[D], const long ostr[D], float* optr, const long istr1[D], const float* iptr1, const long istr2[D], const float* iptr2)
+void make_3op(size_t offset, int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr1[D], const float* iptr1, const bart_stride_t istr2[D], const float* iptr2)
 {
-	const long* strs[] = {  ostr, istr1, istr2 };
+	const bart_stride_t* strs[] = {  ostr, istr1, istr2 };
 	const size_t size[] = { sizeof(optr[0]), sizeof(iptr1[0]), sizeof(iptr2[0]) };
 	void* ptr[] = { optr, (void*)iptr1, (void*)iptr2 };
 
 	if (is_vptr(optr) || is_vptr(iptr1) || is_vptr(iptr2)) {
 
-		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const long dims[D], const long* strs[C]))
+		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const bart_dim_t dims[D], const bart_stride_t* strs[C]))
 		{
 			make_3op(offset, D, dims, strs[0], ptr[0], strs[1], ptr[1], strs[2], ptr[2]);
 		};
@@ -343,7 +343,7 @@ void make_3op(size_t offset, int D, const long dim[D], const long ostr[D], float
 		if (make_op_map_dims(ARRAY_SIZE(ptr), D, dim, strs, ptr, size, nary_loop))
 			return;
 
-		if (delayed_queue_make_op(delayed_op_type_3op, offset, D, dim, 3, (const long*[3]) { ostr, istr1, istr2 }, (const void*[3]) { optr, iptr1, iptr2 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]), sizeof(iptr2[0]) }))
+		if (delayed_queue_make_op(delayed_op_type_3op, offset, D, dim, 3, (const bart_dim_t*[3]) { ostr, istr1, istr2 }, (const void*[3]) { optr, iptr1, iptr2 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]), sizeof(iptr2[0]) }))
 			return;
 
 		md_nary_resolve(3, D, dim, strs, ptr, nary_loop);
@@ -369,15 +369,15 @@ void make_3op(size_t offset, int D, const long dim[D], const long ostr[D], float
 				(size_t[3]){ [0 ... 2] = FL_SIZE }, nary_3op);
 }
 
-void make_z3opd(size_t offset, int D, const long dim[D], const long ostr[D], complex double* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
+void make_z3opd(size_t offset, int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], complex double* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
 {
-	const long* strs[] = {  ostr, istr1, istr2 };
+	const bart_stride_t* strs[] = {  ostr, istr1, istr2 };
 	const size_t size[] = { sizeof(optr[0]), sizeof(iptr1[0]), sizeof(iptr2[0]) };
 	void* ptr[] = { optr, (void*)iptr1, (void*)iptr2 };
 
 	if (is_vptr(optr) || is_vptr(iptr1) || is_vptr(iptr2)) {
 
-		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const long dims[D], const long* strs[C]))
+		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const bart_dim_t dims[D], const bart_stride_t* strs[C]))
 		{
 			make_z3opd(offset, D, dims, strs[0], ptr[0], strs[1], ptr[1], strs[2], ptr[2]);
 		};
@@ -385,7 +385,7 @@ void make_z3opd(size_t offset, int D, const long dim[D], const long ostr[D], com
 		if (make_op_map_dims(ARRAY_SIZE(ptr), D, dim, strs, ptr, size, nary_loop))
 			return;
 
-		if (delayed_queue_make_op(delayed_op_type_z3opd, offset, D, dim, 3, (const long*[3]) { ostr, istr1, istr2 }, (const void*[3]) { optr, iptr1, iptr2 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]), sizeof(iptr2[0]) }))
+		if (delayed_queue_make_op(delayed_op_type_z3opd, offset, D, dim, 3, (const bart_dim_t*[3]) { ostr, istr1, istr2 }, (const void*[3]) { optr, iptr1, iptr2 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]), sizeof(iptr2[0]) }))
 			return;
 
 		md_nary_resolve(3, D, dim, strs, ptr, nary_loop);
@@ -404,15 +404,15 @@ void make_z3opd(size_t offset, int D, const long dim[D], const long ostr[D], com
 			(size_t[3]){ CDL_SIZE, CFL_SIZE, CFL_SIZE }, nary_z3opd);
 }
 
-void make_3opd(size_t offset, int D, const long dim[D], const long ostr[D], double* optr, const long istr1[D], const float* iptr1, const long istr2[D], const float* iptr2)
+void make_3opd(size_t offset, int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], double* optr, const bart_stride_t istr1[D], const float* iptr1, const bart_stride_t istr2[D], const float* iptr2)
 {
-	const long* strs[] = {  ostr, istr1, istr2 };
+	const bart_stride_t* strs[] = {  ostr, istr1, istr2 };
 	const size_t size[] = { sizeof(optr[0]), sizeof(iptr1[0]), sizeof(iptr2[0]) };
 	void* ptr[] = { optr, (void*)iptr1, (void*)iptr2 };
 
 	if (is_vptr(optr) || is_vptr(iptr1) || is_vptr(iptr2)) {
 
-		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const long dims[D], const long* strs[C]))
+		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const bart_dim_t dims[D], const bart_stride_t* strs[C]))
 		{
 			make_3opd(offset, D, dims, strs[0], ptr[0], strs[1], ptr[1], strs[2], ptr[2]);
 		};
@@ -420,7 +420,7 @@ void make_3opd(size_t offset, int D, const long dim[D], const long ostr[D], doub
 		if (make_op_map_dims(ARRAY_SIZE(ptr), D, dim, strs, ptr, size, nary_loop))
 			return;
 
-		if (delayed_queue_make_op(delayed_op_type_3opd, offset, D, dim, 3, (const long*[3]) { ostr, istr1, istr2 }, (const void*[3]) { optr, iptr1, iptr2 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]), sizeof(iptr2[0]) }))
+		if (delayed_queue_make_op(delayed_op_type_3opd, offset, D, dim, 3, (const bart_dim_t*[3]) { ostr, istr1, istr2 }, (const void*[3]) { optr, iptr1, iptr2 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]), sizeof(iptr2[0]) }))
 			return;
 
 		md_nary_resolve(3, D, dim, strs, ptr, nary_loop);
@@ -439,15 +439,15 @@ void make_3opd(size_t offset, int D, const long dim[D], const long ostr[D], doub
 			(size_t[3]){ DL_SIZE, FL_SIZE, FL_SIZE }, nary_3opd);
 }
 
-void make_z2op(size_t offset, int D, const long dim[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1)
+void make_z2op(size_t offset, int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1)
 {
-	const long* strs[] = { ostr, istr1 };
+	const bart_stride_t* strs[] = { ostr, istr1 };
 	const size_t size[] = { sizeof(optr[0]), sizeof(iptr1[0]) };
 	void* ptr[] = { optr, (void*)iptr1 };
 
 	if (is_vptr(optr) || is_vptr(iptr1)) {
 
-		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const long dims[D], const long* strs[C]))
+		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const bart_dim_t dims[D], const bart_stride_t* strs[C]))
 		{
 			make_z2op(offset, D, dims, strs[0], ptr[0], strs[1], ptr[1]);
 		};
@@ -455,7 +455,7 @@ void make_z2op(size_t offset, int D, const long dim[D], const long ostr[D], comp
 		if (make_op_map_dims(ARRAY_SIZE(ptr), D, dim, strs, ptr, size, nary_loop))
 			return;
 
-		if (delayed_queue_make_op(delayed_op_type_z2op, offset, D, dim, 2, (const long*[2]) { ostr, istr1 }, (const void*[3]) { optr, iptr1 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]) }))
+		if (delayed_queue_make_op(delayed_op_type_z2op, offset, D, dim, 2, (const bart_dim_t*[2]) { ostr, istr1 }, (const void*[3]) { optr, iptr1 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]) }))
 			return;
 
 		md_nary_resolve(ARRAY_SIZE(ptr), D, dim, strs, ptr, nary_loop);
@@ -470,15 +470,15 @@ void make_z2op(size_t offset, int D, const long dim[D], const long ostr[D], comp
 	optimized_twoop_oi(D, dim, ostr, optr, istr1, iptr1, (size_t[2]){ CFL_SIZE, CFL_SIZE }, nary_z2op);
 }
 
-void make_2op(size_t offset, int D, const long dim[D], const long ostr[D], float* optr, const long istr1[D], const float* iptr1)
+void make_2op(size_t offset, int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr1[D], const float* iptr1)
 {
-	const long* strs[] = {  ostr, istr1 };
+	const bart_stride_t* strs[] = {  ostr, istr1 };
 	const size_t size[] = { sizeof(optr[0]), sizeof(iptr1[0]) };
 	void* ptr[] = { optr, (void*)iptr1 };
 
 	if (is_vptr(optr) || is_vptr(iptr1)) {
 
-		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const long dims[D], const long* strs[C]))
+		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const bart_dim_t dims[D], const bart_stride_t* strs[C]))
 		{
 			make_2op(offset, D, dims, strs[0], ptr[0], strs[1], ptr[1]);
 		};
@@ -486,7 +486,7 @@ void make_2op(size_t offset, int D, const long dim[D], const long ostr[D], float
 		if (make_op_map_dims(ARRAY_SIZE(ptr), D, dim, strs, ptr, size, nary_loop))
 			return;
 
-		if (delayed_queue_make_op(delayed_op_type_2op, offset, D, dim, 2, (const long*[2]) { ostr, istr1 }, (const void*[3]) { optr, iptr1 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]) }))
+		if (delayed_queue_make_op(delayed_op_type_2op, offset, D, dim, 2, (const bart_dim_t*[2]) { ostr, istr1 }, (const void*[3]) { optr, iptr1 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]) }))
 			return;
 
 		md_nary_resolve(ARRAY_SIZE(ptr), D, dim, strs, ptr, nary_loop);
@@ -501,15 +501,15 @@ void make_2op(size_t offset, int D, const long dim[D], const long ostr[D], float
 	optimized_twoop_oi(D, dim, ostr, optr, istr1, iptr1, (size_t[2]){ FL_SIZE, FL_SIZE }, nary_2op);
 }
 
-void make_z2opd(size_t offset, int D, const long dim[D], const long ostr[D], complex double* optr, const long istr1[D], const complex float* iptr1)
+void make_z2opd(size_t offset, int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], complex double* optr, const bart_stride_t istr1[D], const complex float* iptr1)
 {
-	const long* strs[] = { ostr, istr1 };
+	const bart_stride_t* strs[] = { ostr, istr1 };
 	const size_t size[] = { sizeof(optr[0]), sizeof(iptr1[0]) };
 	void* ptr[] = { optr, (void*)iptr1 };
 
 	if (is_vptr(optr) || is_vptr(iptr1)) {
 
-		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const long dims[D], const long* strs[C]))
+		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const bart_dim_t dims[D], const bart_stride_t* strs[C]))
 		{
 			make_z2opd(offset, D, dims, strs[0], ptr[0], strs[1], ptr[1]);
 		};
@@ -517,7 +517,7 @@ void make_z2opd(size_t offset, int D, const long dim[D], const long ostr[D], com
 		if (make_op_map_dims(ARRAY_SIZE(ptr), D, dim, strs, ptr, size, nary_loop))
 			return;
 
-		if (delayed_queue_make_op(delayed_op_type_z2opd, offset, D, dim, 2, (const long*[2]) { ostr, istr1 }, (const void*[3]) { optr, iptr1 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]) }))
+		if (delayed_queue_make_op(delayed_op_type_z2opd, offset, D, dim, 2, (const bart_dim_t*[2]) { ostr, istr1 }, (const void*[3]) { optr, iptr1 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]) }))
 			return;
 
 		md_nary_resolve(ARRAY_SIZE(ptr), D, dim, strs, ptr, nary_loop);
@@ -535,15 +535,15 @@ void make_z2opd(size_t offset, int D, const long dim[D], const long ostr[D], com
 }
 
 
-void make_2opd(size_t offset, int D, const long dim[D], const long ostr[D], double* optr, const long istr1[D], const float* iptr1)
+void make_2opd(size_t offset, int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], double* optr, const bart_stride_t istr1[D], const float* iptr1)
 {
-	const long* strs[] = { ostr, istr1 };
+	const bart_stride_t* strs[] = { ostr, istr1 };
 	const size_t size[] = { sizeof(optr[0]), sizeof(iptr1[0]) };
 	void* ptr[] = { optr, (void*)iptr1 };
 
 	if (is_vptr(optr) || is_vptr(iptr1)) {
 
-		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const long dims[D], const long* strs[C]))
+		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const bart_dim_t dims[D], const bart_stride_t* strs[C]))
 		{
 			make_2opd(offset, D, dims, strs[0], ptr[0], strs[1], ptr[1]);
 		};
@@ -551,7 +551,7 @@ void make_2opd(size_t offset, int D, const long dim[D], const long ostr[D], doub
 		if (make_op_map_dims(ARRAY_SIZE(ptr), D, dim, strs, ptr, size, nary_loop))
 			return;
 
-		if (delayed_queue_make_op(delayed_op_type_2opd, offset, D, dim, 2, (const long*[2]) { ostr, istr1 }, (const void*[3]) { optr, iptr1 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]) }))
+		if (delayed_queue_make_op(delayed_op_type_2opd, offset, D, dim, 2, (const bart_dim_t*[2]) { ostr, istr1 }, (const void*[3]) { optr, iptr1 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]) }))
 			return;
 
 		md_nary_resolve(ARRAY_SIZE(ptr), D, dim, strs, ptr, nary_loop);
@@ -566,15 +566,15 @@ void make_2opd(size_t offset, int D, const long dim[D], const long ostr[D], doub
 	optimized_twoop_oi(D, dim, ostr, optr, istr1, iptr1, (size_t[2]){ DL_SIZE, FL_SIZE }, nary_2opd);
 }
 
-void make_z2opf(size_t offset, int D, const long dim[D], const long ostr[D], complex float* optr, const long istr1[D], const complex double* iptr1)
+void make_z2opf(size_t offset, int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex double* iptr1)
 {
-	const long* strs[] = { ostr, istr1 };
+	const bart_stride_t* strs[] = { ostr, istr1 };
 	const size_t size[] = { sizeof(optr[0]), sizeof(iptr1[0]) };
 	void* ptr[] = { optr, (void*)iptr1 };
 
 	if (is_vptr(optr) || is_vptr(iptr1)) {
 
-		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const long dims[D], const long* strs[C]))
+		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const bart_dim_t dims[D], const bart_stride_t* strs[C]))
 		{
 			make_z2opf(offset, D, dims, strs[0], ptr[0], strs[1], ptr[1]);
 		};
@@ -582,7 +582,7 @@ void make_z2opf(size_t offset, int D, const long dim[D], const long ostr[D], com
 		if (make_op_map_dims(ARRAY_SIZE(ptr), D, dim, strs, ptr, size, nary_loop))
 			return;
 
-		if (delayed_queue_make_op(delayed_op_type_z2opf, offset, D, dim, 2, (const long*[2]) { ostr, istr1 }, (const void*[3]) { optr, iptr1 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]) }))
+		if (delayed_queue_make_op(delayed_op_type_z2opf, offset, D, dim, 2, (const bart_dim_t*[2]) { ostr, istr1 }, (const void*[3]) { optr, iptr1 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]) }))
 			return;
 
 		md_nary_resolve(ARRAY_SIZE(ptr), D, dim, strs, ptr, nary_loop);
@@ -599,15 +599,15 @@ void make_z2opf(size_t offset, int D, const long dim[D], const long ostr[D], com
 	optimized_twoop_oi(D, dim, ostr, optr, istr1, iptr1, sizes, nary_z2opf);
 }
 
-void make_2opf(size_t offset, int D, const long dim[D], const long ostr[D], float* optr, const long istr1[D], const double* iptr1)
+void make_2opf(size_t offset, int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr1[D], const double* iptr1)
 {
-	const long* strs[] = { ostr, istr1 };
+	const bart_stride_t* strs[] = { ostr, istr1 };
 	const size_t size[] = { sizeof(optr[0]), sizeof(iptr1[0]) };
 	void* ptr[] = { optr, (void*)iptr1 };
 
 	if (is_vptr(optr) || is_vptr(iptr1)) {
 
-		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const long dims[D], const long* strs[C]))
+		NESTED(void, nary_loop, (int C, void* ptr[C], int D, const bart_dim_t dims[D], const bart_stride_t* strs[C]))
 		{
 			make_2opf(offset, D, dims, strs[0], ptr[0], strs[1], ptr[1]);
 		};
@@ -615,7 +615,7 @@ void make_2opf(size_t offset, int D, const long dim[D], const long ostr[D], floa
 		if (make_op_map_dims(ARRAY_SIZE(ptr), D, dim, strs, ptr, size, nary_loop))
 			return;
 
-		if (delayed_queue_make_op(delayed_op_type_2opf, offset, D, dim, 2, (const long*[2]) { ostr, istr1 }, (const void*[3]) { optr, iptr1 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]) }))
+		if (delayed_queue_make_op(delayed_op_type_2opf, offset, D, dim, 2, (const bart_dim_t*[2]) { ostr, istr1 }, (const void*[3]) { optr, iptr1 }, (const size_t[3]){ sizeof(optr[0]), sizeof(iptr1[0]) }))
 			return;
 
 		md_nary_resolve(ARRAY_SIZE(ptr), D, dim, strs, ptr, nary_loop);
@@ -630,10 +630,10 @@ void make_2opf(size_t offset, int D, const long dim[D], const long ostr[D], floa
 	optimized_twoop_oi(D, dim, ostr, optr, istr1, iptr1, (size_t[2]){ FL_SIZE, DL_SIZE }, nary_2opf);
 }
 
-static void make_z2opf_simple(md_z2opf_t fun, int D, const long dims[D], complex float* optr, const complex double* iptr1)
+static void make_z2opf_simple(md_z2opf_t fun, int D, const bart_dim_t dims[D], complex float* optr, const complex double* iptr1)
 {
-	long strs_single[D];
-	long strs_double[D];
+	bart_stride_t strs_single[D];
+	bart_stride_t strs_double[D];
 
 	md_calc_strides(D, strs_single, dims, CFL_SIZE);
 	md_calc_strides(D, strs_double, dims, CDL_SIZE);
@@ -641,10 +641,10 @@ static void make_z2opf_simple(md_z2opf_t fun, int D, const long dims[D], complex
 	fun(D, dims, strs_single, optr, strs_double, iptr1);
 }
 
-static void make_2opf_simple(md_2opf_t fun, int D, const long dims[D], float* optr, const double* iptr1)
+static void make_2opf_simple(md_2opf_t fun, int D, const bart_dim_t dims[D], float* optr, const double* iptr1)
 {
-	long strs_single[D];
-	long strs_double[D];
+	bart_stride_t strs_single[D];
+	bart_stride_t strs_double[D];
 
 	md_calc_strides(D, strs_single, dims, FL_SIZE);
 	md_calc_strides(D, strs_double, dims, DL_SIZE);
@@ -655,16 +655,16 @@ static void make_2opf_simple(md_2opf_t fun, int D, const long dims[D], float* op
 #ifdef USE_CUDA
 static void* gpu_constant(const void* vp, size_t size)
 {
-	return md_gpu_move(1, (long[1]){ 1 }, vp, size);
+	return md_gpu_move(1, (bart_dim_t[1]){ 1 }, vp, size);
 }
 #endif
 
-static void make_z3op_scalar(md_z3op_t fun, int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr, complex float val)
+static void make_z3op_scalar(md_z3op_t fun, int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr, complex float val)
 {
 	complex float* valp = md_alloc_sameplace(D, MD_SINGLETON_DIMS(D), CFL_SIZE, optr);
 	md_copy(D, MD_SINGLETON_DIMS(D), valp, &val, CFL_SIZE);
 
-	long strs1[D];
+	bart_stride_t strs1[D];
 	md_singleton_strides(D, strs1);
 
 	fun(D, dims, ostr, optr, istr, iptr, strs1, valp);
@@ -673,12 +673,12 @@ static void make_z3op_scalar(md_z3op_t fun, int D, const long dims[D], const lon
 }
 
 
-static void make_3op_scalar(md_3op_t fun, int D, const long dims[D], const long ostr[D], float* optr, const long istr[D], const float* iptr, float val)
+static void make_3op_scalar(md_3op_t fun, int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr[D], const float* iptr, float val)
 {
 	float* valp = md_alloc_sameplace(D, MD_SINGLETON_DIMS(D), FL_SIZE, optr);
 	md_copy(D, MD_SINGLETON_DIMS(D), valp, &val, FL_SIZE);
 
-	long strs1[D];
+	bart_stride_t strs1[D];
 	md_singleton_strides(D, strs1);
 
 	fun(D, dims, ostr, optr, istr, iptr, strs1, valp);
@@ -687,30 +687,30 @@ static void make_3op_scalar(md_3op_t fun, int D, const long dims[D], const long 
 }
 
 
-static void real_from_complex_dims(int D, long odims[D + 1], const long idims[D])
+static void real_from_complex_dims(int D, bart_dim_t odims[D + 1], const bart_dim_t idims[D])
 {
 	odims[0] = 2;
 	md_copy_dims(D, odims + 1, idims);
 }
 
-static void real_from_complex_strides(int D, long ostrs[D + 1], const long istrs[D])
+static void real_from_complex_strides(int D, bart_stride_t ostrs[D + 1], const bart_stride_t istrs[D])
 {
 	ostrs[0] = FL_SIZE;
 	md_copy_dims(D, ostrs + 1, istrs);	// works for strides too
 }
 
-static void real_from_complex_stridesD(int D, long ostrs[D + 1], const long istrs[D])
+static void real_from_complex_stridesD(int D, bart_stride_t ostrs[D + 1], const bart_stride_t istrs[D])
 {
 	ostrs[0] = DL_SIZE;
 	md_copy_dims(D, ostrs + 1, istrs);	// works for strides too
 }
 
-static void make_z3op_from_real(size_t offset, int D, const long dims[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
+static void make_z3op_from_real(size_t offset, int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
 {
-	long rdims[D + 1];
-	long rostr[D + 1];
-	long ristr1[D + 1];
-	long ristr2[D + 1];
+	bart_dim_t rdims[D + 1];
+	bart_stride_t rostr[D + 1];
+	bart_stride_t ristr1[D + 1];
+	bart_stride_t ristr2[D + 1];
 
 	real_from_complex_dims(D, rdims, dims);
 	real_from_complex_strides(D, rostr, ostr);
@@ -720,11 +720,11 @@ static void make_z3op_from_real(size_t offset, int D, const long dims[D], const 
 	make_3op(offset, D + 1, rdims, rostr, (float*)optr, ristr1, (const float*)iptr1, ristr2, (const float*)iptr2);
 }
 
-static void make_z2op_from_real(size_t offset, int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+static void make_z2op_from_real(size_t offset, int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
-	long rdims[D + 1];
-	long rostr[D + 1];
-	long ristr[D + 1];
+	bart_dim_t rdims[D + 1];
+	bart_stride_t rostr[D + 1];
+	bart_stride_t ristr[D + 1];
 
 	real_from_complex_dims(D, rdims, dims);
 	real_from_complex_strides(D, rostr, ostr);
@@ -733,11 +733,11 @@ static void make_z2op_from_real(size_t offset, int D, const long dims[D], const 
 	make_2op(offset, D + 1, rdims, rostr, (float*)optr, ristr, (const float*)iptr);
 }
 
-static void make_z2opd_from_real(size_t offset, int D, const long dims[D], const long ostr[D], complex double* optr, const long istr1[D], const complex float* iptr1)
+static void make_z2opd_from_real(size_t offset, int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex double* optr, const bart_stride_t istr1[D], const complex float* iptr1)
 {
-	long rdims[D + 1];
-	long rostr[D + 1];
-	long ristr1[D + 1];
+	bart_dim_t rdims[D + 1];
+	bart_stride_t rostr[D + 1];
+	bart_stride_t ristr1[D + 1];
 
 	real_from_complex_dims(D, rdims, dims);
 	real_from_complex_stridesD(D, rostr, ostr);
@@ -746,11 +746,11 @@ static void make_z2opd_from_real(size_t offset, int D, const long dims[D], const
 	make_2opd(offset, D + 1, rdims, rostr, (double*)optr, ristr1, (const float*)iptr1);
 }
 
-static void make_z2opf_from_real(size_t offset, int D, const long dims[D], const long ostr[D], complex float* optr, const long istr1[D], const complex double* iptr1)
+static void make_z2opf_from_real(size_t offset, int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex double* iptr1)
 {
-	long rdims[D + 1];
-	long rostr[D + 1];
-	long ristr1[D + 1];
+	bart_dim_t rdims[D + 1];
+	bart_stride_t rostr[D + 1];
+	bart_stride_t ristr1[D + 1];
 
 	real_from_complex_dims(D, rdims, dims);
 	real_from_complex_strides(D, rostr, ostr);
@@ -797,7 +797,7 @@ static void make_z2opf_from_real(size_t offset, int D, const long dims[D], const
  *
  * optr = iptr1 * iptr2
  */
-void md_zmul2(int D, const long dim[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
+void md_zmul2(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
 {
 	MAKE_Z3OP(zmul, D, dim, ostr, optr, istr1, iptr1, istr2, iptr2);
 }
@@ -809,7 +809,7 @@ void md_zmul2(int D, const long dim[D], const long ostr[D], complex float* optr,
  *
  * optr = iptr1 * iptr2
  */
-void md_zmul(int D, const long dim[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
+void md_zmul(int D, const bart_dim_t dim[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
 {
 	make_z3op_simple(md_zmul2, D, dim, optr, iptr1, iptr2);
 }
@@ -821,7 +821,7 @@ void md_zmul(int D, const long dim[D], complex float* optr, const complex float*
  *
  * optr = iptr1 * iptr2
  */
-void md_mul2(int D, const long dim[D], const long ostr[D], float* optr, const long istr1[D], const float* iptr1, const long istr2[D], const float* iptr2)
+void md_mul2(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr1[D], const float* iptr1, const bart_stride_t istr2[D], const float* iptr2)
 {
 	MAKE_3OP(mul, D, dim, ostr, optr, istr1, iptr1, istr2, iptr2);
 }
@@ -833,7 +833,7 @@ void md_mul2(int D, const long dim[D], const long ostr[D], float* optr, const lo
  *
  * optr = iptr1 * iptr2
  */
-void md_mul(int D, const long dims[D], float* optr, const float* iptr1, const float* iptr2)
+void md_mul(int D, const bart_dim_t dims[D], float* optr, const float* iptr1, const float* iptr2)
 {
 	make_3op_simple(md_mul2, D, dims, optr, iptr1, iptr2);
 }
@@ -847,7 +847,7 @@ void md_mul(int D, const long dims[D], float* optr, const float* iptr1, const fl
  *
  * imag(optr) = imag(iptr1) * imag(iptr2)
  */
-void md_zrmul2(int D, const long dim[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
+void md_zrmul2(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
 {
 	MAKE_Z3OP_FROM_REAL(mul, D, dim, ostr, optr, istr1, iptr1, istr2, iptr2);
 }
@@ -861,7 +861,7 @@ void md_zrmul2(int D, const long dim[D], const long ostr[D], complex float* optr
  *
  * imag(optr) = imag(iptr1) * imag(iptr2)
  */
-void md_zrmul(int D, const long dim[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
+void md_zrmul(int D, const bart_dim_t dim[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
 {
 	make_z3op_simple(md_zrmul2, D, dim, optr, iptr1, iptr2);
 }
@@ -873,13 +873,13 @@ void md_zrmul(int D, const long dim[D], complex float* optr, const complex float
  *
  * optr = iptr * val
  */
-void md_zsmul2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr, complex float val)
+void md_zsmul2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr, complex float val)
 {
 	if (0. == cimagf(val)) { // strength reduction: complex to real multiplication
 
-		long dimsR[D + 1];
-		long ostrR[D + 1];
-		long istrR[D + 1];
+		bart_dim_t dimsR[D + 1];
+		bart_dim_t ostrR[D + 1];
+		bart_dim_t istrR[D + 1];
 
 		real_from_complex_dims(D, dimsR, dims);
 		real_from_complex_strides(D, ostrR, ostr);
@@ -899,9 +899,9 @@ void md_zsmul2(int D, const long dims[D], const long ostr[D], complex float* opt
  *
  * optr = iptr * val
  */
-void md_zsmul(int D, const long dims[D], complex float* optr, const complex float* iptr, complex float var)
+void md_zsmul(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr, complex float var)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
 	md_zsmul2(D, dims, strs, optr, strs, iptr, var);
@@ -914,7 +914,7 @@ void md_zsmul(int D, const long dims[D], complex float* optr, const complex floa
  *
  * optr = iptr * var
  */
-void md_smul2(int D, const long dims[D], const long ostr[D], float* optr, const long istr[D], const float* iptr, float var)
+void md_smul2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr[D], const float* iptr, float var)
 {
 	make_3op_scalar(md_mul2, D, dims, ostr, optr, istr, iptr, var);
 }
@@ -926,9 +926,9 @@ void md_smul2(int D, const long dims[D], const long ostr[D], float* optr, const 
  *
  * optr = iptr * var
  */
-void md_smul(int D, const long dims[D], float* optr, const float* iptr, float var)
+void md_smul(int D, const bart_dim_t dims[D], float* optr, const float* iptr, float var)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, FL_SIZE);
 
 	md_smul2(D, dims, strs, optr, strs, iptr, var);
@@ -941,7 +941,7 @@ void md_smul(int D, const long dims[D], float* optr, const float* iptr, float va
  *
  * optr = iptr1 * conj(iptr2)
  */
-void md_zmulc2(int D, const long dim[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
+void md_zmulc2(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
 {
 	MAKE_Z3OP(zmulc, D, dim, ostr, optr, istr1, iptr1, istr2, iptr2);
 }
@@ -953,7 +953,7 @@ void md_zmulc2(int D, const long dim[D], const long ostr[D], complex float* optr
  *
  * optr = iptr1 * conj(iptr2)
  */
-void md_zmulc(int D, const long dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
+void md_zmulc(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
 {
 	make_z3op_simple(md_zmulc2, D, dims, optr, iptr1, iptr2);
 }
@@ -965,7 +965,7 @@ void md_zmulc(int D, const long dims[D], complex float* optr, const complex floa
  *
  * optr = iptr1 / iptr2
  */
-void md_zdiv2(int D, const long dim[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
+void md_zdiv2(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
 {
 	MAKE_Z3OP(zdiv, D, dim, ostr, optr, istr1, iptr1, istr2, iptr2);
 }
@@ -977,7 +977,7 @@ void md_zdiv2(int D, const long dim[D], const long ostr[D], complex float* optr,
  *
  * optr = iptr1 / iptr2
  */
-void md_zdiv(int D, const long dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
+void md_zdiv(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
 {
 	make_z3op_simple(md_zdiv2, D, dims, optr, iptr1, iptr2);
 }
@@ -988,7 +988,7 @@ void md_zdiv(int D, const long dims[D], complex float* optr, const complex float
  *
  * optr = iptr1 / (iptr2 + epsilon)
  */
-void md_zdiv_reg2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2, complex float lambda)
+void md_zdiv_reg2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2, complex float lambda)
 {
 	NESTED(void, nary_zdiv_reg, (struct nary_opt_data_s* data, void* ptr[]))
 	{
@@ -1005,9 +1005,9 @@ void md_zdiv_reg2(int D, const long dims[D], const long ostr[D], complex float* 
  *
  * optr = iptr1 / (iptr2 + epsilon)
  */
-void md_zdiv_reg(int D, const long dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2, complex float lambda)
+void md_zdiv_reg(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2, complex float lambda)
 {
-	long str[D];
+	bart_stride_t str[D];
 	md_calc_strides(D, str, dims, CFL_SIZE);
 
 	md_zdiv_reg2(D, dims, str, optr, str, iptr1, str, iptr2, lambda);
@@ -1019,7 +1019,7 @@ void md_zdiv_reg(int D, const long dims[D], complex float* optr, const complex f
  *
  * optr = iptr1 / iptr2
  */
-void md_div2(int D, const long dims[D], const long ostr[D], float* optr, const long istr1[D], const float* iptr1, const long istr2[D], const float* iptr2)
+void md_div2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr1[D], const float* iptr1, const bart_stride_t istr2[D], const float* iptr2)
 {
 	MAKE_3OP(div, D, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 }
@@ -1031,7 +1031,7 @@ void md_div2(int D, const long dims[D], const long ostr[D], float* optr, const l
  *
  * optr = iptr1 / iptr2
  */
-void md_div(int D, const long dims[D], float* optr, const float* iptr1, const float* iptr2)
+void md_div(int D, const bart_dim_t dims[D], float* optr, const float* iptr1, const float* iptr2)
 {
 	make_3op_simple(md_div2, D, dims, optr, iptr1, iptr2);
 }
@@ -1043,7 +1043,7 @@ void md_div(int D, const long dims[D], float* optr, const float* iptr1, const fl
  *
  * optr = iptr1 ^ iptr2
  */
-void md_zpow2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
+void md_zpow2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
 {
 #ifdef USE_CUDA
 	// FIXME: something is broken with the cuda implementation of zpow -> comparison test on cpu and gpu does not fail
@@ -1059,7 +1059,7 @@ void md_zpow2(int D, const long dims[D], const long ostr[D], complex float* optr
  *
  * optr = iptr1 ^ iptr2
  */
-void md_zpow(int D, const long dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
+void md_zpow(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
 {
 	make_z3op_simple(md_zpow2, D, dims, optr, iptr1, iptr2);
 }
@@ -1071,7 +1071,7 @@ void md_zpow(int D, const long dims[D], complex float* optr, const complex float
  *
  * optr = iptr1 ^ iptr2
  */
-void md_pow2(int D, const long dims[D], const long ostr[D],  float* optr, const long istr1[D], const  float* iptr1, const long istr2[D], const  float* iptr2)
+void md_pow2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D],  float* optr, const bart_stride_t istr1[D], const  float* iptr1, const bart_stride_t istr2[D], const  float* iptr2)
 {
 	MAKE_3OP(pow, D, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 }
@@ -1083,7 +1083,7 @@ void md_pow2(int D, const long dims[D], const long ostr[D],  float* optr, const 
  *
  * optr = iptr1 ^ iptr2
  */
-void md_pow(int D, const long dims[D],  float* optr, const  float* iptr1, const float* iptr2)
+void md_pow(int D, const bart_dim_t dims[D],  float* optr, const  float* iptr1, const float* iptr2)
 {
 	make_3op_simple(md_pow2, D, dims, optr, iptr1, iptr2);
 }
@@ -1095,7 +1095,7 @@ void md_pow(int D, const long dims[D],  float* optr, const  float* iptr1, const 
  *
  * optr = sqrt(iptr)
  */
-void md_sqrt2(int D, const long dims[D], const long ostr[D], float* optr, const long istr[D], const float* iptr)
+void md_sqrt2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr[D], const float* iptr)
 {
 	MAKE_2OP(sqrt, D, dims, ostr, optr, istr, iptr);
 }
@@ -1107,7 +1107,7 @@ void md_sqrt2(int D, const long dims[D], const long ostr[D], float* optr, const 
  *
  * optr = roundf(iptr)
  */
-void md_round2(int D, const long dims[D], const long ostr[D], float* optr, const long istr[D], const float* iptr)
+void md_round2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr[D], const float* iptr)
 {
 	MAKE_2OP(round, D, dims, ostr, optr, istr, iptr);
 }
@@ -1118,7 +1118,7 @@ void md_round2(int D, const long dims[D], const long ostr[D], float* optr, const
  *
  * optr = roundf(iptr)
  */
-void md_round(int D, const long dims[D], float* optr, const float* iptr)
+void md_round(int D, const bart_dim_t dims[D], float* optr, const float* iptr)
 {
 	make_2op_simple(md_round2, D, dims, optr, iptr);
 }
@@ -1130,7 +1130,7 @@ void md_round(int D, const long dims[D], float* optr, const float* iptr)
  * crealf(optr) = roundf(crealf(iptr))
  * cimagf(optr) = roundf(cimagf(iptr))
  */
-void md_zround2(int D, const long dims[D], const long ostrs[D], complex float* dst, const long istrs[D], const complex float* src)
+void md_zround2(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex float* dst, const bart_stride_t istrs[D], const complex float* src)
 {
 	MAKE_Z2OP_FROM_REAL(round, D, dims, ostrs, dst, istrs, src);
 }
@@ -1142,7 +1142,7 @@ void md_zround2(int D, const long dims[D], const long ostrs[D], complex float* d
  * crealf(optr) = roundf(crealf(iptr))
  * cimagf(optr) = roundf(cimagf(iptr))
  */
-void md_zround(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zround(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 	make_z2op_simple(md_zround2, D, dims, optr, iptr);
 }
@@ -1155,7 +1155,7 @@ void md_zround(int D, const long dims[D], complex float* optr, const complex flo
  *
  * optr = sqrt(iptr)
  */
-void md_sqrt(int D, const long dims[D], float* optr, const float* iptr)
+void md_sqrt(int D, const bart_dim_t dims[D], float* optr, const float* iptr)
 {
 	make_2op_simple(md_sqrt2, D, dims, optr, iptr);
 }
@@ -1167,7 +1167,7 @@ void md_sqrt(int D, const long dims[D], float* optr, const float* iptr)
  *
  * optr = sqrt(iptr)
  */
-void md_zsqrt2(int D, const long dims[D], const long ostrs[D], complex float* optr, const long istrs[D], const complex float* iptr)
+void md_zsqrt2(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs[D], const complex float* iptr)
 {
 	md_zspow2(D, dims, ostrs, optr, istrs, iptr, 0.5);
 }
@@ -1179,7 +1179,7 @@ void md_zsqrt2(int D, const long dims[D], const long ostrs[D], complex float* op
  *
  * optr = sqrt(iptr)
  */
-void md_zsqrt(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zsqrt(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 	make_z2op_simple(md_zsqrt2, D, dims, optr, iptr);
 }
@@ -1191,9 +1191,9 @@ void md_zsqrt(int D, const long dims[D], complex float* optr, const complex floa
  *
  * optr = pow(iptr, scalar)
  */
-void md_zspow(int D, const long dims[D], complex float* optr, const complex float* iptr, complex float val)
+void md_zspow(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr, complex float val)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
 	md_zspow2(D, dims, strs, optr, strs, iptr, val);
@@ -1206,7 +1206,7 @@ void md_zspow(int D, const long dims[D], complex float* optr, const complex floa
  *
  * optr = pow(iptr, scalar)
  */
-void md_zspow2(int D, const long dims[D], const long ostrs[D], complex float* optr, const long istrs[D], const complex float* iptr, complex float val)
+void md_zspow2(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs[D], const complex float* iptr, complex float val)
 {
 	make_z3op_scalar(md_zpow2, D, dims, ostrs, optr, istrs, iptr, val);
 }
@@ -1219,7 +1219,7 @@ void md_zspow2(int D, const long dims[D], const long ostrs[D], complex float* op
  *
  * dst = (double)src
  */
-void md_float2double2(int D, const long dims[D], const long ostr[D], double* dst, const long istr[D], const float* src)
+void md_float2double2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], double* dst, const bart_stride_t istr[D], const float* src)
 {
 	MAKE_2OPD(float2double, D, dims, ostr, dst, istr, src);
 }
@@ -1231,7 +1231,7 @@ void md_float2double2(int D, const long dims[D], const long ostr[D], double* dst
  *
  * dst = (double)src
  */
-void md_float2double(int D, const long dims[D], double* dst, const float* src)
+void md_float2double(int D, const bart_dim_t dims[D], double* dst, const float* src)
 {
 	make_2opd_simple(md_float2double2, D, dims, dst, src);
 }
@@ -1243,7 +1243,7 @@ void md_float2double(int D, const long dims[D], double* dst, const float* src)
  *
  * dst = (double)src
  */
-void md_double2float2(int D, const long dims[D], const long ostr[D], float* dst, const long istr[D], const double* src)
+void md_double2float2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* dst, const bart_stride_t istr[D], const double* src)
 {
 	MAKE_2OPF(double2float, D, dims, ostr, dst, istr, src);
 }
@@ -1255,7 +1255,7 @@ void md_double2float2(int D, const long dims[D], const long ostr[D], float* dst,
  *
  * dst = (float)src
  */
-void md_double2float(int D, const long dims[D],  float* dst, const double* src)
+void md_double2float(int D, const bart_dim_t dims[D],  float* dst, const double* src)
 {
 	make_2opf_simple(md_double2float2, D, dims, dst, src);
 }
@@ -1267,7 +1267,7 @@ void md_double2float(int D, const long dims[D],  float* dst, const double* src)
  *
  * dst = (complex double)src
  */
-void md_zdouble2float2(int D, const long dims[D], const long ostr[D], complex float* dst, const long istr[D], const complex double* src)
+void md_zdouble2float2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* dst, const bart_stride_t istr[D], const complex double* src)
 {
 	MAKE_Z2OPF_FROM_REAL(double2float, D, dims, ostr, dst, istr, src);
 }
@@ -1279,7 +1279,7 @@ void md_zdouble2float2(int D, const long dims[D], const long ostr[D], complex fl
  *
  * dst = (complex double)src
  */
-void md_zdouble2float(int D, const long dims[D], complex float* dst, const complex double* src)
+void md_zdouble2float(int D, const bart_dim_t dims[D], complex float* dst, const complex double* src)
 {
 	make_z2opf_simple(md_zdouble2float2, D, dims, dst, src);
 }
@@ -1291,7 +1291,7 @@ void md_zdouble2float(int D, const long dims[D], complex float* dst, const compl
  *
  * dst = (complex float)src
  */
-void md_zfloat2double2(int D, const long dims[D], const long ostr[D], complex double* dst, const long istr[D], const complex float* src)
+void md_zfloat2double2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex double* dst, const bart_stride_t istr[D], const complex float* src)
 {
 	MAKE_Z2OPD_FROM_REAL(float2double, D, dims, ostr, dst, istr, src);
 }
@@ -1303,7 +1303,7 @@ void md_zfloat2double2(int D, const long dims[D], const long ostr[D], complex do
  *
  * dst = (complex float)src
  */
-void md_zfloat2double(int D, const long dims[D], complex double* dst, const complex float* src)
+void md_zfloat2double(int D, const bart_dim_t dims[D], complex double* dst, const complex float* src)
 {
 	make_z2opd_simple(md_zfloat2double2, D, dims, dst, src);
 }
@@ -1319,14 +1319,14 @@ void md_zfloat2double(int D, const long dims[D], complex double* dst, const comp
  * 1 1 A !
  * 1 1 1 ok
  */
-void md_tenmul_dims(int D, long max_dims[D], const long out_dims[D], const long in1_dims[D], const long in2_dims[D])
+void md_tenmul_dims(int D, bart_dim_t max_dims[D], const bart_dim_t out_dims[D], const bart_dim_t in1_dims[D], const bart_dim_t in2_dims[D])
 {
-	md_max_dims(D, ~0lu, max_dims, in1_dims, out_dims);
+	md_max_dims(D, ~UINT64_C(0), max_dims, in1_dims, out_dims);
 
-	long max2_dims[D];
-	md_max_dims(D, ~0lu, max2_dims, in2_dims, out_dims);
+	bart_dim_t max2_dims[D];
+	md_max_dims(D, ~UINT64_C(0), max2_dims, in2_dims, out_dims);
 
-	assert(md_check_compat(D, 0lu, max_dims, max2_dims));
+	assert(md_check_compat(D, UINT64_C(0), max_dims, max2_dims));
 }
 
 
@@ -1335,9 +1335,9 @@ void md_tenmul_dims(int D, long max_dims[D], const long out_dims[D], const long 
  * tenmul (tensor multiplication) family of functions are revised
  * versions of the matmul functions.
  */
-void md_ztenmul2(int D, const long max_dims[D], const long out_strs[D], complex float* out, const long in1_strs[D], const complex float* in1, const long in2_strs[D], const complex float* in2)
+void md_ztenmul2(int D, const bart_dim_t max_dims[D], const bart_stride_t out_strs[D], complex float* out, const bart_stride_t in1_strs[D], const complex float* in1, const bart_stride_t in2_strs[D], const complex float* in2)
 {
-	const long (*nstr[3])[D?D:1] = { (const long (*)[D?D:1])out_strs, (const long (*)[D?D:1])in1_strs, (const long (*)[D?D:1])in2_strs};
+	const bart_stride_t (*nstr[3])[D?D:1] = { (const bart_stride_t (*)[D?D:1])out_strs, (const bart_stride_t (*)[D?D:1])in1_strs, (const bart_stride_t (*)[D?D:1])in2_strs};
 
 	if (0 == (md_nontriv_dims(D, max_dims) & (~parallelizable(3, 1, D, max_dims, nstr, (size_t[3]){ CFL_SIZE, CFL_SIZE, CFL_SIZE })))) {
 
@@ -1350,9 +1350,9 @@ void md_ztenmul2(int D, const long max_dims[D], const long out_strs[D], complex 
 }
 
 
-void md_ztenmulc2(int D, const long max_dims[D], const long out_strs[D], complex float* out, const long in1_strs[D], const complex float* in1, const long in2_strs[D], const complex float* in2)
+void md_ztenmulc2(int D, const bart_dim_t max_dims[D], const bart_stride_t out_strs[D], complex float* out, const bart_stride_t in1_strs[D], const complex float* in1, const bart_stride_t in2_strs[D], const complex float* in2)
 {
-	const long (*nstr[3])[D?D:1] = { (const long (*)[D?D:1])out_strs, (const long (*)[D?D:1])in1_strs, (const long (*)[D?D:1])in2_strs};
+	const bart_stride_t (*nstr[3])[D?D:1] = { (const bart_stride_t (*)[D?D:1])out_strs, (const bart_stride_t (*)[D?D:1])in1_strs, (const bart_stride_t (*)[D?D:1])in2_strs};
 
 	if (0 == (md_nontriv_dims(D, max_dims) & (~parallelizable(3, 1, D, max_dims, nstr, (size_t[3]){ CFL_SIZE, CFL_SIZE, CFL_SIZE })))) {
 
@@ -1365,9 +1365,9 @@ void md_ztenmulc2(int D, const long max_dims[D], const long out_strs[D], complex
 }
 
 
-void md_ztenmul(int D, const long out_dims[D], complex float* out, const long in1_dims[D], const complex float* in1, const long in2_dims[D], const complex float* in2)
+void md_ztenmul(int D, const bart_dim_t out_dims[D], complex float* out, const bart_dim_t in1_dims[D], const complex float* in1, const bart_dim_t in2_dims[D], const complex float* in2)
 {
-	long max_dims[D];
+	bart_dim_t max_dims[D];
 	md_tenmul_dims(D, max_dims, out_dims, in1_dims, in2_dims);
 
 	md_ztenmul2(D, max_dims, MD_STRIDES(D, out_dims, CFL_SIZE), out,
@@ -1376,9 +1376,9 @@ void md_ztenmul(int D, const long out_dims[D], complex float* out, const long in
 }
 
 
-void md_ztenmulc(int D, const long out_dims[D], complex float* out, const long in1_dims[D], const complex float* in1, const long in2_dims[D], const complex float* in2)
+void md_ztenmulc(int D, const bart_dim_t out_dims[D], complex float* out, const bart_dim_t in1_dims[D], const complex float* in1, const bart_dim_t in2_dims[D], const complex float* in2)
 {
-	long max_dims[D];
+	bart_dim_t max_dims[D];
 	md_tenmul_dims(D, max_dims, out_dims, in1_dims, in2_dims);
 
 	md_ztenmulc2(D, max_dims, MD_STRIDES(D, out_dims, CFL_SIZE), out,
@@ -1387,7 +1387,7 @@ void md_ztenmulc(int D, const long out_dims[D], complex float* out, const long i
 }
 
 
-void md_tenmul2(int D, const long max_dims[D], const long out_strs[D], float* out, const long in1_strs[D], const float* in1, const long in2_strs[D], const float* in2)
+void md_tenmul2(int D, const bart_dim_t max_dims[D], const bart_stride_t out_strs[D], float* out, const bart_stride_t in1_strs[D], const float* in1, const bart_stride_t in2_strs[D], const float* in2)
 {
 	if (D == md_calc_blockdim(D, max_dims, out_strs, FL_SIZE)) {
 
@@ -1400,9 +1400,9 @@ void md_tenmul2(int D, const long max_dims[D], const long out_strs[D], float* ou
 }
 
 
-void md_tenmul(int D, const long out_dims[D], float* out, const long in1_dims[D], const float* in1, const long in2_dims[D], const float* in2)
+void md_tenmul(int D, const bart_dim_t out_dims[D], float* out, const bart_dim_t in1_dims[D], const float* in1, const bart_dim_t in2_dims[D], const float* in2)
 {
-	long max_dims[D];
+	bart_dim_t max_dims[D];
 	md_tenmul_dims(D, max_dims, out_dims, in1_dims, in2_dims);
 
 	md_tenmul2(D, max_dims, MD_STRIDES(D, out_dims, FL_SIZE), out,
@@ -1418,10 +1418,10 @@ void md_tenmul(int D, const long out_dims[D], float* out, const long in1_dims[D]
  * The flag conv decides if conv or corr
  * The flag test_mode turns of all assertions for detecting strides
  **/
-int calc_convcorr_geom_strs_dil(int N, unsigned long flags,
-				       long mdims[2 * N], long ostrs2[2 * N], long kstrs2[2 * N], long istrs2[2 * N],
-				       const long odims[N], const long ostrs[N], const long kdims[N], const long kstrs[N], const long idims[N], const long istrs[N],
-				       const long dilation[N], const long strides[N], bool conv, bool test_mode)
+int calc_convcorr_geom_strs_dil(int N, bart_flags_t flags,
+				       bart_dim_t mdims[2 * N], bart_stride_t ostrs2[2 * N], bart_stride_t kstrs2[2 * N], bart_stride_t istrs2[2 * N],
+				       const bart_dim_t odims[N], const bart_stride_t ostrs[N], const bart_dim_t kdims[N], const bart_stride_t kstrs[N], const bart_dim_t idims[N], const bart_stride_t istrs[N],
+				       const bart_dim_t dilation[N], const bart_stride_t strides[N], bool conv, bool test_mode)
  {
  	int shift = 0;
 
@@ -1479,58 +1479,58 @@ int calc_convcorr_geom_strs_dil(int N, unsigned long flags,
 	return shift;
 }
 
-int calc_convcorr_geom(int N, unsigned long flags,
-		       long mdims[2 * N], long ostrs2[2 * N], long kstrs2[2 * N], long istrs2[2 * N],
-		       const long odims[N], const long ostrs[N], const long kdims[N], const long kstrs[N], const long idims[N], const long istrs[N], bool conv)
+int calc_convcorr_geom(int N, bart_flags_t flags,
+		       bart_dim_t mdims[2 * N], bart_stride_t ostrs2[2 * N], bart_stride_t kstrs2[2 * N], bart_stride_t istrs2[2 * N],
+		       const bart_dim_t odims[N], const bart_stride_t ostrs[N], const bart_dim_t kdims[N], const bart_stride_t kstrs[N], const bart_dim_t idims[N], const bart_stride_t istrs[N], bool conv)
 {
 	return calc_convcorr_geom_strs_dil(N, flags, mdims, ostrs2, kstrs2, istrs2, odims, ostrs, kdims, kstrs, idims, istrs, MD_SINGLETON_DIMS(N), MD_SINGLETON_DIMS(N), conv, false);
 }
 
 
-void md_zconv2(int N, unsigned long flags,
-	       const long odims[N], const long ostrs[N], complex float* out,
-	       const long kdims[N], const long kstrs[N], const complex float* krn,
-	       const long idims[N], const long istrs[N], const complex float* in)
+void md_zconv2(int N, bart_flags_t flags,
+	       const bart_dim_t odims[N], const bart_stride_t ostrs[N], complex float* out,
+	       const bart_dim_t kdims[N], const bart_stride_t kstrs[N], const complex float* krn,
+	       const bart_dim_t idims[N], const bart_stride_t istrs[N], const complex float* in)
 {
-	long mdims[2 * N];
-	long ostrs2[2 * N];
-	long kstrs2[2 * N];
-	long istrs2[2 * N];
+	bart_dim_t mdims[2 * N];
+	bart_stride_t ostrs2[2 * N];
+	bart_stride_t kstrs2[2 * N];
+	bart_stride_t istrs2[2 * N];
 
 	krn += calc_convcorr_geom(N, flags, mdims, ostrs2, kstrs2, istrs2,
-				  odims, ostrs, kdims, kstrs, idims, istrs, true) / (long)CFL_SIZE;
+				  odims, ostrs, kdims, kstrs, idims, istrs, true) / (bart_stride_t)CFL_SIZE;
 
 	md_ztenmul2(2 * N, mdims, ostrs2, out, kstrs2, krn, istrs2, in);
 }
 
-void md_zconv(int N, unsigned long flags,
-	      const long odims[N], complex float* out,
-	      const long kdims[N], const complex float* krn,
-	      const long idims[N], const complex float* in)
+void md_zconv(int N, bart_flags_t flags,
+	      const bart_dim_t odims[N], complex float* out,
+	      const bart_dim_t kdims[N], const complex float* krn,
+	      const bart_dim_t idims[N], const complex float* in)
 {
 	md_zconv2(N, flags, odims, MD_STRIDES(N, odims, CFL_SIZE), out, kdims, MD_STRIDES(N, kdims, CFL_SIZE), krn, idims, MD_STRIDES(N, idims, CFL_SIZE), in);
 }
 
-void md_zcorr2(int N, unsigned long flags,
-	       const long odims[N], const long ostrs[N], complex float* out,
-	       const long kdims[N], const long kstrs[N], const complex float* krn,
-	       const long idims[N], const long istrs[N], const complex float* in)
+void md_zcorr2(int N, bart_flags_t flags,
+	       const bart_dim_t odims[N], const bart_stride_t ostrs[N], complex float* out,
+	       const bart_dim_t kdims[N], const bart_stride_t kstrs[N], const complex float* krn,
+	       const bart_dim_t idims[N], const bart_stride_t istrs[N], const complex float* in)
 {
-	long mdims[2 * N];
-	long ostrs2[2 * N];
-	long kstrs2[2 * N];
-	long istrs2[2 * N];
+	bart_dim_t mdims[2 * N];
+	bart_stride_t ostrs2[2 * N];
+	bart_stride_t kstrs2[2 * N];
+	bart_stride_t istrs2[2 * N];
 
 	krn += calc_convcorr_geom(N, flags, mdims, ostrs2, kstrs2, istrs2,
-				  odims, ostrs, kdims, kstrs, idims, istrs, false) / (long)CFL_SIZE;
+				  odims, ostrs, kdims, kstrs, idims, istrs, false) / (bart_stride_t)CFL_SIZE;
 
 	md_ztenmul2(2 * N, mdims, ostrs2, out, kstrs2, krn, istrs2, in);
 }
 
-void md_zcorr(int N, unsigned long flags,
-	      const long odims[N], complex float* out,
-	      const long kdims[N], const complex float* krn,
-	      const long idims[N], const complex float* in)
+void md_zcorr(int N, bart_flags_t flags,
+	      const bart_dim_t odims[N], complex float* out,
+	      const bart_dim_t kdims[N], const complex float* krn,
+	      const bart_dim_t idims[N], const complex float* in)
 {
 	md_zcorr2(N, flags, odims, MD_STRIDES(N, odims, CFL_SIZE), out, kdims, MD_STRIDES(N, kdims, CFL_SIZE), krn, idims, MD_STRIDES(N, idims, CFL_SIZE), in);
 }
@@ -1539,9 +1539,9 @@ void md_zcorr(int N, unsigned long flags,
 /*
  * matmul family of functions is deprecated - use tenmul instead
  */
-static void md_zmatmul2_priv(int D, const long out_dims[D], const long out_strs[D], complex float* dst, const long mat_dims[D], const long mat_strs[D], const complex float* mat, const long in_dims[D], const long in_strs[D], const complex float* src, bool conj)
+static void md_zmatmul2_priv(int D, const bart_dim_t out_dims[D], const bart_stride_t out_strs[D], complex float* dst, const bart_dim_t mat_dims[D], const bart_stride_t mat_strs[D], const complex float* mat, const bart_dim_t in_dims[D], const bart_stride_t in_strs[D], const complex float* src, bool conj)
 {
-	long max_dims[D];
+	bart_dim_t max_dims[D];
 	md_tenmul_dims(D, max_dims, out_dims, mat_dims, in_dims);
 
 	md_clear2(D, out_dims, out_strs, dst, CFL_SIZE);
@@ -1552,7 +1552,7 @@ static void md_zmatmul2_priv(int D, const long out_dims[D], const long out_strs[
  * Matrix conjugate multiplication (with strides)
  * FIXME simplify interface? use macros?
  */
-void md_zmatmulc2(int D, const long out_dims[D], const long out_strs[D], complex float* dst, const long mat_dims[D], const long mat_strs[D], const complex float* mat, const long in_dims[D], const long in_strs[D], const complex float* src)
+void md_zmatmulc2(int D, const bart_dim_t out_dims[D], const bart_stride_t out_strs[D], complex float* dst, const bart_dim_t mat_dims[D], const bart_stride_t mat_strs[D], const complex float* mat, const bart_dim_t in_dims[D], const bart_stride_t in_strs[D], const complex float* src)
 {
 	md_zmatmul2_priv(D, out_dims, out_strs, dst, mat_dims, mat_strs, mat, in_dims, in_strs, src, true);
 }
@@ -1562,7 +1562,7 @@ void md_zmatmulc2(int D, const long out_dims[D], const long out_strs[D], complex
 /**
  * Matrix conjugate multiplication (without strides)
  */
-void md_zmatmulc(int D, const long out_dims[D], complex float* dst, const long mat_dims[D], const complex float* mat, const long in_dims[D], const complex float* src)
+void md_zmatmulc(int D, const bart_dim_t out_dims[D], complex float* dst, const bart_dim_t mat_dims[D], const complex float* mat, const bart_dim_t in_dims[D], const complex float* src)
 {
 	md_zmatmulc2(D, out_dims, MD_STRIDES(D, out_dims, CFL_SIZE), dst,
 			mat_dims, MD_STRIDES(D, mat_dims, CFL_SIZE), mat,
@@ -1576,7 +1576,7 @@ void md_zmatmulc(int D, const long out_dims[D], complex float* dst, const long m
  * FIXME simplify interface?
  * FIXME: implementation assumes strides == 0 for dims == 1
  */
-void md_zmatmul2(int D, const long out_dims[D], const long out_strs[D], complex float* dst, const long mat_dims[D], const long mat_strs[D], const complex float* mat, const long in_dims[D], const long in_strs[D], const complex float* src)
+void md_zmatmul2(int D, const bart_dim_t out_dims[D], const bart_stride_t out_strs[D], complex float* dst, const bart_dim_t mat_dims[D], const bart_stride_t mat_strs[D], const complex float* mat, const bart_dim_t in_dims[D], const bart_stride_t in_strs[D], const complex float* src)
 {
 	md_zmatmul2_priv(D, out_dims, out_strs, dst, mat_dims, mat_strs, mat, in_dims, in_strs, src, false);
 }
@@ -1586,7 +1586,7 @@ void md_zmatmul2(int D, const long out_dims[D], const long out_strs[D], complex 
 /**
  * Matrix multiplication (without strides)
  */
-void md_zmatmul(int D, const long out_dims[D], complex float* dst, const long mat_dims[D], const complex float* mat, const long in_dims[D], const complex float* src)
+void md_zmatmul(int D, const bart_dim_t out_dims[D], complex float* dst, const bart_dim_t mat_dims[D], const complex float* mat, const bart_dim_t in_dims[D], const complex float* src)
 {
 	md_zmatmul2(D,	out_dims, MD_STRIDES(D, out_dims, CFL_SIZE), dst,
 			mat_dims, MD_STRIDES(D, mat_dims, CFL_SIZE), mat,
@@ -1600,7 +1600,7 @@ void md_zmatmul(int D, const long out_dims[D], complex float* dst, const long ma
  *
  * optr = optr + iptr1 * iptr2
  */
-void md_zfmac2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
+void md_zfmac2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
 {
 	bool mpi = mpi_is_reduction(D, dims, ostr, optr, CFL_SIZE, istr1, iptr1, CFL_SIZE)
 		|| mpi_is_reduction(D, dims, ostr, optr, CFL_SIZE, istr2, iptr2, CFL_SIZE);
@@ -1619,7 +1619,7 @@ void md_zfmac2(int D, const long dims[D], const long ostr[D], complex float* opt
  *
  * optr = optr + iptr1 * iptr2
  */
-void md_zfmac(int D, const long dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
+void md_zfmac(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
 {
 	make_z3op_simple(md_zfmac2, D, dims, optr, iptr1, iptr2);
 }
@@ -1631,7 +1631,7 @@ void md_zfmac(int D, const long dims[D], complex float* optr, const complex floa
  *
  * optr = optr + iptr1 * iptr2
  */
-void md_zfmacD2(int D, const long dims[D], const long ostr[D], complex double* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
+void md_zfmacD2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex double* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
 {
 	bool mpi = mpi_is_reduction(D, dims, ostr, optr, CDL_SIZE, istr1, iptr1, CFL_SIZE)
 		|| mpi_is_reduction(D, dims, ostr, optr, CDL_SIZE, istr2, iptr2, CFL_SIZE);
@@ -1650,7 +1650,7 @@ void md_zfmacD2(int D, const long dims[D], const long ostr[D], complex double* o
  *
  * optr = optr + iptr1 * iptr2
  */
-void md_zfmacD(int D, const long dims[D], complex double* optr, const complex float* iptr1, const complex float* iptr2)
+void md_zfmacD(int D, const bart_dim_t dims[D], complex double* optr, const complex float* iptr1, const complex float* iptr2)
 {
 	make_z3opd_simple(md_zfmacD2, D, dims, optr, iptr1, iptr2);
 }
@@ -1662,7 +1662,7 @@ void md_zfmacD(int D, const long dims[D], complex double* optr, const complex fl
  *
  * optr = optr + iptr1 * iptr2
  */
-void md_fmac2(int D, const long dims[D], const long ostr[D], float* optr, const long istr1[D], const float* iptr1, const long istr2[D], const float* iptr2)
+void md_fmac2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr1[D], const float* iptr1, const bart_stride_t istr2[D], const float* iptr2)
 {
 	bool mpi = mpi_is_reduction(D, dims, ostr, optr, FL_SIZE, istr1, iptr1, FL_SIZE)
 		|| mpi_is_reduction(D, dims, ostr, optr, FL_SIZE, istr2, iptr2, FL_SIZE);
@@ -1681,7 +1681,7 @@ void md_fmac2(int D, const long dims[D], const long ostr[D], float* optr, const 
  *
  * optr = optr + iptr1 * iptr2
  */
-void md_fmac(int D, const long dims[D], float* optr, const float* iptr1, const float* iptr2)
+void md_fmac(int D, const bart_dim_t dims[D], float* optr, const float* iptr1, const float* iptr2)
 {
 	make_3op_simple(md_fmac2, D, dims, optr, iptr1, iptr2);
 }
@@ -1693,7 +1693,7 @@ void md_fmac(int D, const long dims[D], float* optr, const float* iptr1, const f
  *
  * optr = optr + iptr1 * iptr2
  */
-void md_fmacD2(int D, const long dims[D], const long ostr[D], double* optr, const long istr1[D], const float* iptr1, const long istr2[D], const float* iptr2)
+void md_fmacD2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], double* optr, const bart_stride_t istr1[D], const float* iptr1, const bart_stride_t istr2[D], const float* iptr2)
 {
 	bool mpi = mpi_is_reduction(D, dims, ostr, optr, DL_SIZE, istr1, iptr1, FL_SIZE)
 		|| mpi_is_reduction(D, dims, ostr, optr, DL_SIZE, istr2, iptr2, FL_SIZE);
@@ -1712,7 +1712,7 @@ void md_fmacD2(int D, const long dims[D], const long ostr[D], double* optr, cons
  *
  * optr = optr + iptr1 * iptr2
  */
-void md_fmacD(int D, const long dims[D], double* optr, const float* iptr1, const float* iptr2)
+void md_fmacD(int D, const bart_dim_t dims[D], double* optr, const float* iptr1, const float* iptr2)
 {
 	make_3opd_simple(md_fmacD2, D, dims, optr, iptr1, iptr2);
 }
@@ -1724,7 +1724,7 @@ void md_fmacD(int D, const long dims[D], double* optr, const float* iptr1, const
  *
  * optr = optr + iptr1 * conj(iptr2)
  */
-void md_zfmacc2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
+void md_zfmacc2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
 {
 	bool mpi = mpi_is_reduction(D, dims, ostr, optr, CFL_SIZE, istr1, iptr1, CFL_SIZE)
 		|| mpi_is_reduction(D, dims, ostr, optr, CFL_SIZE, istr2, iptr2, CFL_SIZE);
@@ -1743,7 +1743,7 @@ void md_zfmacc2(int D, const long dims[D], const long ostr[D], complex float* op
  *
  * optr = optr + iptr1 * conj(iptr2)
  */
-void md_zfmacc(int D, const long dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
+void md_zfmacc(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
 {
 	make_z3op_simple(md_zfmacc2, D, dims, optr, iptr1, iptr2);
 }
@@ -1756,7 +1756,7 @@ void md_zfmacc(int D, const long dims[D], complex float* optr, const complex flo
  *
  * optr = optr + iptr1 * conj(iptr2)
  */
-void md_zfmaccD2(int D, const long dims[D], const long ostr[D], complex double* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
+void md_zfmaccD2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex double* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
 {
 	bool mpi = mpi_is_reduction(D, dims, ostr, optr, CDL_SIZE, istr1, iptr1, CFL_SIZE)
 		|| mpi_is_reduction(D, dims, ostr, optr, CDL_SIZE, istr2, iptr2, CFL_SIZE);
@@ -1775,7 +1775,7 @@ void md_zfmaccD2(int D, const long dims[D], const long ostr[D], complex double* 
  *
  * optr = optr + iptr1 * conj(iptr2)
  */
-void md_zfmaccD(int D, const long dims[D], complex double* optr, const complex float* iptr1, const complex float* iptr2)
+void md_zfmaccD(int D, const bart_dim_t dims[D], complex double* optr, const complex float* iptr1, const complex float* iptr2)
 {
 	make_z3opd_simple(md_zfmaccD2, D, dims, optr, iptr1, iptr2);
 }
@@ -1787,13 +1787,13 @@ void md_zfmaccD(int D, const long dims[D], complex double* optr, const complex f
  *
  * optr = optr + iptr * val
  */
-void md_zaxpy2(int D, const long dims[D], const long ostr[D], complex float* optr, complex float val, const long istr[D], const complex float* iptr)
+void md_zaxpy2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, complex float val, const bart_stride_t istr[D], const complex float* iptr)
 {
 	if (0. == cimagf(val)) { // strength reduction: complex to real multiplication
 
-		long dimsR[D + 1];
-		long ostrR[D + 1];
-		long istrR[D + 1];
+		bart_dim_t dimsR[D + 1];
+		bart_dim_t ostrR[D + 1];
+		bart_dim_t istrR[D + 1];
 
 		real_from_complex_dims(D, dimsR, dims);
 		real_from_complex_strides(D, ostrR, ostr);
@@ -1813,9 +1813,9 @@ void md_zaxpy2(int D, const long dims[D], const long ostr[D], complex float* opt
  *
  * optr = max(iptr1, iptr2)
  */
-void md_max(int D, const long dims[D], float* optr, const float* iptr1, const float* iptr2)
+void md_max(int D, const bart_dim_t dims[D], float* optr, const float* iptr1, const float* iptr2)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, FL_SIZE);
 
 	md_max2(D, dims, strs, optr, strs, iptr1, strs, iptr2);
@@ -1827,7 +1827,7 @@ void md_max(int D, const long dims[D], float* optr, const float* iptr1, const fl
  *
  * optr = max(iptr1, iptr2)
  */
-void md_max2(int D, const long dims[D], const long ostr[D], float* optr, const long istr1[D], const float* iptr1, const long istr2[D], const float* iptr2)
+void md_max2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr1[D], const float* iptr1, const bart_stride_t istr2[D], const float* iptr2)
 {
 	MAKE_3OP(max, D, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 }
@@ -1839,9 +1839,9 @@ void md_max2(int D, const long dims[D], const long ostr[D], float* optr, const l
  *
  * optr = min(iptr1, iptr2)
  */
-void md_min(int D, const long dims[D], float* optr, const float* iptr1, const float* iptr2)
+void md_min(int D, const bart_dim_t dims[D], float* optr, const float* iptr1, const float* iptr2)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, FL_SIZE);
 
 	md_min2(D, dims, strs, optr, strs, iptr1, strs, iptr2);
@@ -1854,7 +1854,7 @@ void md_min(int D, const long dims[D], float* optr, const float* iptr1, const fl
  *
  * optr = min(iptr1, iptr2)
  */
-void md_min2(int D, const long dims[D], const long ostr[D], float* optr, const long istr1[D], const float* iptr1, const long istr2[D], const float* iptr2)
+void md_min2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr1[D], const float* iptr1, const bart_stride_t istr2[D], const float* iptr2)
 {
 	MAKE_3OP(min, D, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 }
@@ -1865,9 +1865,9 @@ void md_min2(int D, const long dims[D], const long ostr[D], float* optr, const l
  *
  * optr = max(iptr1, iptr2) + 0i
  */
-void md_zmax(int D, const long dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
+void md_zmax(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
 	md_zmax2(D, dims, strs, optr, strs, iptr1, strs, iptr2);
@@ -1879,7 +1879,7 @@ void md_zmax(int D, const long dims[D], complex float* optr, const complex float
  *
  * optr = max(iptr1, iptr2) + 0i
  */
-void md_zmax2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
+void md_zmax2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
 {
 	MAKE_Z3OP(zmax, D, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 }
@@ -1891,12 +1891,12 @@ void md_zmax2(int D, const long dims[D], const long ostr[D], complex float* optr
  *
  * dst = max(src) along dimensions specified by rflags
  */
-void md_reduce_zmax(int D, const long dims[D], unsigned long rflags, complex float* dst, const complex float* src)
+void md_reduce_zmax(int D, const bart_dim_t dims[D], bart_flags_t rflags, complex float* dst, const complex float* src)
 {
-	long odims[D];
+	bart_dim_t odims[D];
 	md_select_dims(D, ~rflags, odims, dims);
 
-	long pos[D];
+	bart_dim_t pos[D];
 	md_set_dims(D, pos, 0);
 
 	md_slice(D, rflags, pos, dims, dst, src, CFL_SIZE);
@@ -1911,9 +1911,9 @@ void md_reduce_zmax(int D, const long dims[D], unsigned long rflags, complex flo
  *
  * optr = optr + iptr * val
  */
-void md_zaxpy(int D, const long dims[D], complex float* optr, complex float val, const complex float* iptr)
+void md_zaxpy(int D, const bart_dim_t dims[D], complex float* optr, complex float val, const complex float* iptr)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
 	md_zaxpy2(D, dims, strs, optr, val, strs, iptr);
@@ -1926,7 +1926,7 @@ void md_zaxpy(int D, const long dims[D], complex float* optr, complex float val,
  *
  * optr = optr + iptr * val
  */
-void md_axpy2(int D, const long dims[D], const long ostr[D], float* optr, float val, const long istr[D], const float* iptr)
+void md_axpy2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr, float val, const bart_stride_t istr[D], const float* iptr)
 {
 	if (0. == val)
 		return;
@@ -1948,9 +1948,9 @@ void md_axpy2(int D, const long dims[D], const long ostr[D], float* optr, float 
  *
  * optr = optr + iptr * val
  */
-void md_axpy(int D, const long dims[D], float* optr, float val, const float* iptr)
+void md_axpy(int D, const bart_dim_t dims[D], float* optr, float val, const float* iptr)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, FL_SIZE);
 
 	md_axpy2(D, dims, strs, optr, val, strs, iptr);
@@ -1963,7 +1963,7 @@ void md_axpy(int D, const long dims[D], float* optr, float val, const float* ipt
  *
  * optr = iptr1 + iptr2
  */
-void md_zadd2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
+void md_zadd2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
 {
 	bool mpi = mpi_is_reduction(D, dims, ostr, optr, CFL_SIZE, istr1, iptr1, CFL_SIZE)
 		|| mpi_is_reduction(D, dims, ostr, optr, CFL_SIZE, istr2, iptr2, CFL_SIZE);
@@ -1982,7 +1982,7 @@ void md_zadd2(int D, const long dims[D], const long ostr[D], complex float* optr
  *
  * optr = iptr1 + iptr2
  */
-void md_zadd(int D, const long dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
+void md_zadd(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
 {
 	make_z3op_simple(md_zadd2, D, dims, optr, iptr1, iptr2);
 }
@@ -1994,7 +1994,7 @@ void md_zadd(int D, const long dims[D], complex float* optr, const complex float
  *
  * optr = iptr + val
  */
-void md_zsadd2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr, complex float val)
+void md_zsadd2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr, complex float val)
 {
 	if (is_vptr(optr) || is_vptr(iptr)) {
 
@@ -2018,9 +2018,9 @@ void md_zsadd2(int D, const long dims[D], const long ostr[D], complex float* opt
  *
  * optr = iptr + val
  */
-void md_zsadd(int D, const long dims[D], complex float* optr, const complex float* iptr, complex float val)
+void md_zsadd(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr, complex float val)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
 	md_zsadd2(D, dims, strs, optr, strs, iptr, val);
@@ -2033,7 +2033,7 @@ void md_zsadd(int D, const long dims[D], complex float* optr, const complex floa
  *
  * optr = iptr1 - iptr2
  */
-void md_zsub2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
+void md_zsub2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
 {
 	MAKE_Z3OP_FROM_REAL(sub, D, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 }
@@ -2045,7 +2045,7 @@ void md_zsub2(int D, const long dims[D], const long ostr[D], complex float* optr
  *
  * optr = iptr1 - iptr2
  */
-void md_zsub(int D, const long dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
+void md_zsub(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
 {
 	make_z3op_simple(md_zsub2, D, dims, optr, iptr1, iptr2);
 }
@@ -2057,7 +2057,7 @@ void md_zsub(int D, const long dims[D], complex float* optr, const complex float
  *
  * optr = iptr1 + iptr2
  */
-void md_add2(int D, const long dims[D], const long ostr[D], float* optr, const long istr1[D], const float* iptr1, const long istr2[D], const float* iptr2)
+void md_add2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr1[D], const float* iptr1, const bart_stride_t istr2[D], const float* iptr2)
 {
 	MAKE_3OP(add, D, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 }
@@ -2069,7 +2069,7 @@ void md_add2(int D, const long dims[D], const long ostr[D], float* optr, const l
  *
  * optr = iptr1 + iptr2
  */
-void md_add(int D, const long dims[D], float* optr, const float* iptr1, const float* iptr2)
+void md_add(int D, const bart_dim_t dims[D], float* optr, const float* iptr1, const float* iptr2)
 {
 	make_3op_simple(md_add2, D, dims, optr, iptr1, iptr2);
 }
@@ -2081,7 +2081,7 @@ void md_add(int D, const long dims[D], float* optr, const float* iptr1, const fl
  *
  * optr = iptr + val
  */
-void md_sadd2(int D, const long dims[D], const long ostr[D], float* optr, const long istr[D], const float* iptr, float val)
+void md_sadd2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr[D], const float* iptr, float val)
 {
 	if (is_vptr(optr) || is_vptr(iptr)) {
 
@@ -2105,9 +2105,9 @@ void md_sadd2(int D, const long dims[D], const long ostr[D], float* optr, const 
  *
  * optr = iptr + val
  */
-void md_sadd(int D, const long dims[D], float* optr, const float* iptr, float val)
+void md_sadd(int D, const bart_dim_t dims[D], float* optr, const float* iptr, float val)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, FL_SIZE);
 
 	md_sadd2(D, dims, strs, optr, strs, iptr, val);
@@ -2120,7 +2120,7 @@ void md_sadd(int D, const long dims[D], float* optr, const float* iptr, float va
  *
  * optr = iptr1 - iptr2
  */
-void md_sub2(int D, const long dims[D], const long ostr[D], float* optr, const long istr1[D], const float* iptr1, const long istr2[D], const float* iptr2)
+void md_sub2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr1[D], const float* iptr1, const bart_stride_t istr2[D], const float* iptr2)
 {
 	MAKE_3OP(sub, D, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 }
@@ -2132,7 +2132,7 @@ void md_sub2(int D, const long dims[D], const long ostr[D], float* optr, const l
  *
  * optr = iptr1 - iptr2
  */
-void md_sub(int D, const long dims[D], float* optr, const float* iptr1, const float* iptr2)
+void md_sub(int D, const bart_dim_t dims[D], float* optr, const float* iptr1, const float* iptr2)
 {
 	make_3op_simple(md_sub2, D, dims, optr, iptr1, iptr2);
 }
@@ -2144,7 +2144,7 @@ void md_sub(int D, const long dims[D], float* optr, const float* iptr1, const fl
  *
  * optr = conj(iptr)
  */
-void md_zconj2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_zconj2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
 	MAKE_Z2OP(zconj, D, dims, ostr, optr, istr, iptr);
 }
@@ -2156,7 +2156,7 @@ void md_zconj2(int D, const long dims[D], const long ostr[D], complex float* opt
  *
  * optr = conj(iptr)
  */
-void md_zconj(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zconj(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 	make_z2op_simple(md_zconj2, D, dims, optr, iptr);
 }
@@ -2168,7 +2168,7 @@ void md_zconj(int D, const long dims[D], complex float* optr, const complex floa
  *
  * optr = real(iptr)
  */
-void md_zreal2(int D, const long dim[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_zreal2(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
 	make_z3op_scalar(md_zrmul2, D, dim, ostr, optr, istr, iptr, 1.);
 }
@@ -2180,7 +2180,7 @@ void md_zreal2(int D, const long dim[D], const long ostr[D], complex float* optr
  *
  * optr = real(iptr)
  */
-void md_zreal(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zreal(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 #ifdef USE_CUDA
 	if (cuda_ondevice(iptr) && !is_vptr(iptr)) {
@@ -2201,7 +2201,7 @@ void md_zreal(int D, const long dims[D], complex float* optr, const complex floa
  *
  * optr = imag(iptr)
  */
-void md_zimag2(int D, const long dim[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_zimag2(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
 	make_z3op_scalar(md_zrmul2, D, dim, ostr, optr, istr, iptr, 1.i);
 }
@@ -2213,7 +2213,7 @@ void md_zimag2(int D, const long dim[D], const long ostr[D], complex float* optr
  *
  * optr = imag(iptr)
  */
-void md_zimag(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zimag(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 	make_z2op_simple(md_zimag2, D, dims, optr, iptr);
 }
@@ -2225,7 +2225,7 @@ void md_zimag(int D, const long dims[D], complex float* optr, const complex floa
  *
  * optr = iptr1 == iptr2
  */
-void md_zcmp2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
+void md_zcmp2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
 {
 	MAKE_Z3OP(zcmp, D, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 }
@@ -2237,7 +2237,7 @@ void md_zcmp2(int D, const long dims[D], const long ostr[D], complex float* optr
  *
  * optr = iptr1 == iptr2
  */
-void md_zcmp(int D, const long dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
+void md_zcmp(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
 {
 	make_z3op_simple(md_zcmp2, D, dims, optr, iptr1, iptr2);
 }
@@ -2247,7 +2247,7 @@ void md_zcmp(int D, const long dims[D], complex float* optr, const complex float
  *
  * optr = (iptr1 <= iptr2)
  */
-void md_zlessequal2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
+void md_zlessequal2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
 {
 	MAKE_Z3OP(zle, D, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 }
@@ -2259,7 +2259,7 @@ void md_zlessequal2(int D, const long dims[D], const long ostr[D], complex float
  *
  * optr = (iptr1 <= iptr2)
  */
-void md_zlessequal(int D, const long dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
+void md_zlessequal(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
 {
 	make_z3op_simple(md_zlessequal2, D, dims, optr, iptr1, iptr2);
 }
@@ -2271,7 +2271,7 @@ void md_zlessequal(int D, const long dims[D], complex float* optr, const complex
  *
  * optr = (iptr <= val)
  */
-void md_zslessequal2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr, float val)
+void md_zslessequal2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr, float val)
 {
 	make_z3op_scalar(md_zlessequal2, D, dims, ostr, optr, istr, iptr, val);
 }
@@ -2283,9 +2283,9 @@ void md_zslessequal2(int D, const long dims[D], const long ostr[D], complex floa
  *
  * optr = (iptr <= val)
  */
-void md_zslessequal(int D, const long dims[D], complex float* optr, const complex float* iptr, float val)
+void md_zslessequal(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr, float val)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
 	md_zslessequal2(D, dims, strs, optr, strs, iptr, val);
@@ -2298,7 +2298,7 @@ void md_zslessequal(int D, const long dims[D], complex float* optr, const comple
  *
  * optr = (iptr1 <= iptr2)
  */
-void md_lessequal2(int D, const long dims[D], const long ostr[D], float* optr, const long istr1[D], const float* iptr1, const long istr2[D], const float* iptr2)
+void md_lessequal2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr1[D], const float* iptr1, const bart_stride_t istr2[D], const float* iptr2)
 {
 	MAKE_3OP(le, D, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 }
@@ -2310,7 +2310,7 @@ void md_lessequal2(int D, const long dims[D], const long ostr[D], float* optr, c
  *
  * optr = (iptr1 <= iptr2)
  */
-void md_lessequal(int D, const long dims[D], float* optr, const float* iptr1, const float* iptr2)
+void md_lessequal(int D, const bart_dim_t dims[D], float* optr, const float* iptr1, const float* iptr2)
 {
 	make_3op_simple(md_lessequal2, D, dims, optr, iptr1, iptr2);
 }
@@ -2322,7 +2322,7 @@ void md_lessequal(int D, const long dims[D], float* optr, const float* iptr1, co
  *
  * optr = (iptr <= val)
  */
-void md_slessequal2(int D, const long dims[D], const long ostr[D], float* optr, const long istr[D], const float* iptr, float val)
+void md_slessequal2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr[D], const float* iptr, float val)
 {
 	make_3op_scalar(md_lessequal2, D, dims, ostr, optr, istr, iptr, val);
 }
@@ -2334,9 +2334,9 @@ void md_slessequal2(int D, const long dims[D], const long ostr[D], float* optr, 
  *
  * optr = (iptr <= val)
  */
-void md_slessequal(int D, const long dims[D], float* optr, const float* iptr, float val)
+void md_slessequal(int D, const bart_dim_t dims[D], float* optr, const float* iptr, float val)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, FL_SIZE);
 
 	md_slessequal2(D, dims, strs, optr, strs, iptr, val);
@@ -2348,7 +2348,7 @@ void md_slessequal(int D, const long dims[D], float* optr, const float* iptr, fl
  *
  * optr = (iptr1 => iptr2)
  */
-void md_zgreatequal2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
+void md_zgreatequal2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
 {
 	md_zlessequal2(D, dims, ostr, optr, istr2, iptr2, istr1, iptr1);
 }
@@ -2360,7 +2360,7 @@ void md_zgreatequal2(int D, const long dims[D], const long ostr[D], complex floa
  *
  * optr = (iptr1 >= iptr2)
  */
-void md_zgreatequal(int D, const long dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
+void md_zgreatequal(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
 {
 	make_z3op_simple(md_zgreatequal2, D, dims, optr, iptr1, iptr2);
 }
@@ -2372,7 +2372,7 @@ void md_zgreatequal(int D, const long dims[D], complex float* optr, const comple
  *
  * optr = (iptr1 => iptr2)
  */
-void md_greatequal2(int D, const long dims[D], const long ostr[D], float* optr, const long istr1[D], const float* iptr1, const long istr2[D], const float* iptr2)
+void md_greatequal2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr1[D], const float* iptr1, const bart_stride_t istr2[D], const float* iptr2)
 {
 	md_lessequal2(D, dims, ostr, optr, istr2, iptr2, istr1, iptr1);
 }
@@ -2384,7 +2384,7 @@ void md_greatequal2(int D, const long dims[D], const long ostr[D], float* optr, 
  *
  * optr = (iptr1 >= iptr2)
  */
-void md_greatequal(int D, const long dims[D], float* optr, const float* iptr1, const float* iptr2)
+void md_greatequal(int D, const bart_dim_t dims[D], float* optr, const float* iptr1, const float* iptr2)
 {
 	make_3op_simple(md_greatequal2, D, dims, optr, iptr1, iptr2);
 }
@@ -2396,7 +2396,7 @@ void md_greatequal(int D, const long dims[D], float* optr, const float* iptr1, c
  *
  * optr = (iptr >= val)
  */
-void md_sgreatequal2(int D, const long dims[D], const long ostr[D], float* optr, const long istr[D], const float* iptr, float val)
+void md_sgreatequal2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr[D], const float* iptr, float val)
 {
 	make_3op_scalar(md_greatequal2, D, dims, ostr, optr, istr, iptr, val);
 }
@@ -2408,9 +2408,9 @@ void md_sgreatequal2(int D, const long dims[D], const long ostr[D], float* optr,
  *
  * optr = (iptr >= val)
  */
-void md_sgreatequal(int D, const long dims[D], float* optr, const float* iptr, float val)
+void md_sgreatequal(int D, const bart_dim_t dims[D], float* optr, const float* iptr, float val)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, FL_SIZE);
 
 	md_sgreatequal2(D, dims, strs, optr, strs, iptr, val);
@@ -2423,7 +2423,7 @@ void md_sgreatequal(int D, const long dims[D], float* optr, const float* iptr, f
  *
  * optr = (iptr >= val)
  */
-void md_zsgreatequal2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr, float val)
+void md_zsgreatequal2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr, float val)
 {
 	make_z3op_scalar(md_zgreatequal2, D, dims, ostr, optr, istr, iptr, val);
 }
@@ -2435,9 +2435,9 @@ void md_zsgreatequal2(int D, const long dims[D], const long ostr[D], complex flo
  *
  * optr = (iptr >= val)
  */
-void md_zsgreatequal(int D, const long dims[D], complex float* optr, const complex float* iptr, float val)
+void md_zsgreatequal(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr, float val)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
 	md_zsgreatequal2(D, dims, strs, optr, strs, iptr, val);
@@ -2450,7 +2450,7 @@ void md_zsgreatequal(int D, const long dims[D], complex float* optr, const compl
  *
  * optr = iptr / abs(iptr)
  */
-void md_zphsr2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_zphsr2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
 	MAKE_Z2OP(zphsr, D, dims, ostr, optr, istr, iptr);
 }
@@ -2462,7 +2462,7 @@ void md_zphsr2(int D, const long dims[D], const long ostr[D], complex float* opt
  *
  * optr = iptr / abs(iptr)
  */
-void md_zphsr(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zphsr(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 	make_z2op_simple(md_zphsr2, D, dims, optr, iptr);
 }
@@ -2473,7 +2473,7 @@ void md_zphsr(int D, const long dims[D], complex float* optr, const complex floa
  *
  * optr = zexp(j * iptr)
  */
-void md_zexpj2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_zexpj2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
 	MAKE_Z2OP(zexpj, D, dims, ostr, optr, istr, iptr);
 }
@@ -2485,7 +2485,7 @@ void md_zexpj2(int D, const long dims[D], const long ostr[D], complex float* opt
  *
  * optr = zexp(j * iptr)
  */
-void md_zexpj(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zexpj(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 	make_z2op_simple(md_zexpj2, D, dims, optr, iptr);
 }
@@ -2498,7 +2498,7 @@ void md_zexpj(int D, const long dims[D], complex float* optr, const complex floa
  *
  * optr = zexp(iptr)
  */
-void md_zexp2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_zexp2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
 	MAKE_Z2OP(zexp, D, dims, ostr, optr, istr, iptr);
 }
@@ -2510,7 +2510,7 @@ void md_zexp2(int D, const long dims[D], const long ostr[D], complex float* optr
  *
  * optr = zexp(iptr)
  */
-void md_zexp(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zexp(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 	make_z2op_simple(md_zexp2, D, dims, optr, iptr);
 }
@@ -2521,7 +2521,7 @@ void md_zexp(int D, const long dims[D], complex float* optr, const complex float
  *
  * optr = exp(iptr)
  */
-void md_exp2(int D, const long dims[D], const long ostr[D], float* optr, const long istr[D], const float* iptr)
+void md_exp2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr[D], const float* iptr)
 {
 	MAKE_2OP(exp, D, dims, ostr, optr, istr, iptr);
 }
@@ -2531,7 +2531,7 @@ void md_exp2(int D, const long dims[D], const long ostr[D], float* optr, const l
  *
  * optr = exp(iptr)
  */
-void md_exp(int D, const long dims[D], float* optr, const float* iptr)
+void md_exp(int D, const bart_dim_t dims[D], float* optr, const float* iptr)
 {
 	make_2op_simple(md_exp2, D, dims, optr, iptr);
 }
@@ -2541,7 +2541,7 @@ void md_exp(int D, const long dims[D], float* optr, const float* iptr)
  *
  * optr = log(iptr)
  */
-void md_log2(int D, const long dims[D], const long ostr[D], float* optr, const long istr[D], const float* iptr)
+void md_log2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr[D], const float* iptr)
 {
 	MAKE_2OP(log, D, dims, ostr, optr, istr, iptr);
 }
@@ -2551,7 +2551,7 @@ void md_log2(int D, const long dims[D], const long ostr[D], float* optr, const l
  *
  * optr = log(iptr)
  */
-void md_log(int D, const long dims[D], float* optr, const float* iptr)
+void md_log(int D, const bart_dim_t dims[D], float* optr, const float* iptr)
 {
 	make_2op_simple(md_log2, D, dims, optr, iptr);
 }
@@ -2561,7 +2561,7 @@ void md_log(int D, const long dims[D], float* optr, const float* iptr)
  *
  * optr = zlog(iptr)
  */
-void md_zlog2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_zlog2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
 	MAKE_Z2OP(zlog, D, dims, ostr, optr, istr, iptr);
 }
@@ -2571,7 +2571,7 @@ void md_zlog2(int D, const long dims[D], const long ostr[D], complex float* optr
  *
  * optr = zlog(iptr)
  */
-void md_zlog(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zlog(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 	make_z2op_simple(md_zlog2, D, dims, optr, iptr);
 }
@@ -2583,7 +2583,7 @@ void md_zlog(int D, const long dims[D], complex float* optr, const complex float
  *
  * optr = zarg(iptr)
  */
-void md_zarg2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_zarg2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
 	MAKE_Z2OP(zarg, D, dims, ostr, optr, istr, iptr);
 }
@@ -2595,7 +2595,7 @@ void md_zarg2(int D, const long dims[D], const long ostr[D], complex float* optr
  *
  * optr = zarg(iptr)
  */
-void md_zarg(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zarg(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 	make_z2op_simple(md_zarg2, D, dims, optr, iptr);
 }
@@ -2607,7 +2607,7 @@ void md_zarg(int D, const long dims[D], complex float* optr, const complex float
  *
  * optr = zsin(iptr)
  */
-void md_zsin2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_zsin2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
 	MAKE_Z2OP(zsin, D, dims, ostr, optr, istr, iptr);
 }
@@ -2618,7 +2618,7 @@ void md_zsin2(int D, const long dims[D], const long ostr[D], complex float* optr
  *
  * optr = zsin(iptr)
  */
-void md_zsin(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zsin(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 	make_z2op_simple(md_zsin2, D, dims, optr, iptr);
 }
@@ -2629,7 +2629,7 @@ void md_zsin(int D, const long dims[D], complex float* optr, const complex float
  *
  * optr = zexp(iptr)
  */
-void md_zcos2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_zcos2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
 	MAKE_Z2OP(zcos, D, dims, ostr, optr, istr, iptr);
 }
@@ -2640,7 +2640,7 @@ void md_zcos2(int D, const long dims[D], const long ostr[D], complex float* optr
  *
  * optr = zsin(iptr)
  */
-void md_zcos(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zcos(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 	make_z2op_simple(md_zcos2, D, dims, optr, iptr);
 }
@@ -2652,7 +2652,7 @@ void md_zcos(int D, const long dims[D], complex float* optr, const complex float
  *
  * optr = zsinh(iptr)
  */
-void md_zsinh2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_zsinh2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
 	MAKE_Z2OP(zsinh, D, dims, ostr, optr, istr, iptr);
 }
@@ -2663,7 +2663,7 @@ void md_zsinh2(int D, const long dims[D], const long ostr[D], complex float* opt
  *
  * optr = zsinh(iptr)
  */
-void md_zsinh(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zsinh(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 	make_z2op_simple(md_zsinh2, D, dims, optr, iptr);
 }
@@ -2674,7 +2674,7 @@ void md_zsinh(int D, const long dims[D], complex float* optr, const complex floa
  *
  * optr = zcosh(iptr)
  */
-void md_zcosh2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_zcosh2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
 	MAKE_Z2OP(zcosh, D, dims, ostr, optr, istr, iptr);
 }
@@ -2685,7 +2685,7 @@ void md_zcosh2(int D, const long dims[D], const long ostr[D], complex float* opt
  *
  * optr = zcosh(iptr)
  */
-void md_zcosh(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zcosh(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 	make_z2op_simple(md_zcosh2, D, dims, optr, iptr);
 }
@@ -2697,7 +2697,7 @@ void md_zcosh(int D, const long dims[D], complex float* optr, const complex floa
  *
  * return iptr1^T * iptr2
  */
-float md_scalar2(int D, const long dim[D], const long str1[D], const float* ptr1, const long str2[D], const float* ptr2)
+float md_scalar2(int D, const bart_dim_t dim[D], const bart_stride_t str1[D], const float* ptr1, const bart_stride_t str2[D], const float* ptr2)
 {
 	double* ret_ptr = md_alloc_sameplace(D, MD_SINGLETON_DIMS(D), DL_SIZE, ptr1);
 	md_clear(D, MD_SINGLETON_DIMS(D), ret_ptr, DL_SIZE);
@@ -2718,9 +2718,9 @@ float md_scalar2(int D, const long dim[D], const long str1[D], const float* ptr1
  *
  * return iptr1^T * iptr2
  */
-float md_scalar(int D, const long dim[D], const float* ptr1, const float* ptr2)
+float md_scalar(int D, const bart_dim_t dim[D], const float* ptr1, const float* ptr2)
 {
-	long str[D];
+	bart_stride_t str[D];
 	md_calc_strides(D, str, dim, FL_SIZE);
 
 	return md_scalar2(D, dim, str, ptr1, str, ptr2);
@@ -2733,7 +2733,7 @@ float md_scalar(int D, const long dim[D], const float* ptr1, const float* ptr2)
  *
  * return sqrt(iptr^T * iptr)
  */
-float md_norm2(int D, const long dim[D], const long str[D], const float* ptr)
+float md_norm2(int D, const bart_dim_t dim[D], const bart_stride_t str[D], const float* ptr)
 {
 	return sqrtf(md_scalar2(D, dim, str, ptr, str, ptr));
 }
@@ -2745,7 +2745,7 @@ float md_norm2(int D, const long dim[D], const long str[D], const float* ptr)
  *
  * return sqrt(iptr^T * iptr)
  */
-float md_norm(int D, const long dim[D], const float* ptr)
+float md_norm(int D, const bart_dim_t dim[D], const float* ptr)
 {
 	return sqrtf(md_scalar(D, dim, ptr, ptr));
 }
@@ -2757,7 +2757,7 @@ float md_norm(int D, const long dim[D], const float* ptr)
  *
  * return sqrt(in^H * in / length(in))
  */
-float md_zrms(int D, const long dim[D], const complex float* in)
+float md_zrms(int D, const bart_dim_t dim[D], const complex float* in)
 {
 	return md_znorm(D, dim, in) / sqrtl(md_calc_size(D, dim));
 }
@@ -2769,7 +2769,7 @@ float md_zrms(int D, const long dim[D], const complex float* in)
  *
  * return sqrt((in1 - in2)^2 / length(in))
  */
-float md_zrmse(int D, const long dim[D], const complex float* in1, const complex float* in2)
+float md_zrmse(int D, const bart_dim_t dim[D], const complex float* in1, const complex float* in2)
 {
 	complex float* err = md_alloc_sameplace(D, dim, CFL_SIZE, is_mpi(in2) ? in2 : in1);
 
@@ -2789,7 +2789,7 @@ float md_zrmse(int D, const long dim[D], const complex float* in1, const complex
  *
  * return RMSE(ref,in) / RMS(ref)
  */
-float md_znrmse(int D, const long dim[D], const complex float* ref, const complex float* in)
+float md_znrmse(int D, const bart_dim_t dim[D], const complex float* ref, const complex float* in)
 {
 	return md_zrmse(D, dim, ref, in) / md_zrms(D, dim, ref);
 }
@@ -2799,7 +2799,7 @@ float md_znrmse(int D, const long dim[D], const complex float* ref, const comple
  *
  * return sqrt(in * in / length(in))
  */
-float md_rms(int D, const long dim[D], const float* in)
+float md_rms(int D, const bart_dim_t dim[D], const float* in)
 {
 	return md_norm(D, dim, in) / sqrtl(md_calc_size(D, dim));
 }
@@ -2809,7 +2809,7 @@ float md_rms(int D, const long dim[D], const float* in)
  *
  * return sqrt((in1 - in2)^2 / length(in))
  */
-float md_rmse(int D, const long dim[D], const float* in1, const float* in2)
+float md_rmse(int D, const bart_dim_t dim[D], const float* in1, const float* in2)
 {
 	float* err = md_alloc_sameplace(D, dim, FL_SIZE, in1);
 
@@ -2829,7 +2829,7 @@ float md_rmse(int D, const long dim[D], const float* in1, const float* in2)
  *
  * return RMSE(ref,in) / RMS(ref)
  */
-float md_nrmse(int D, const long dim[D], const float* ref, const float* in)
+float md_nrmse(int D, const bart_dim_t dim[D], const float* ref, const float* in)
 {
 	return md_rmse(D, dim, ref, in) / md_rms(D, dim, ref);
 }
@@ -2841,7 +2841,7 @@ float md_nrmse(int D, const long dim[D], const float* ref, const float* in)
  *
  * return sqrt(sum(in1 - in2)^2)
  */
-float md_znorme(int D, const long dim[D], const complex float* in1, const complex float* in2)
+float md_znorme(int D, const bart_dim_t dim[D], const complex float* in1, const complex float* in2)
 {
 	complex float* err = md_alloc_sameplace(D, dim, CFL_SIZE, in1);
 
@@ -2861,7 +2861,7 @@ float md_znorme(int D, const long dim[D], const complex float* in1, const comple
  *
  * return norm(ref - in) / norm(ref)
  */
-float md_zrnorme(int D, const long dim[D], const complex float* ref, const complex float* in)
+float md_zrnorme(int D, const bart_dim_t dim[D], const complex float* ref, const complex float* in)
 {
 	return md_znorme(D, dim, ref, in) / md_znorm(D, dim, ref);
 }
@@ -2873,7 +2873,7 @@ float md_zrnorme(int D, const long dim[D], const complex float* ref, const compl
  *
  * return iptr1 * iptr2^H
  */
-complex float md_zscalar2(int D, const long dim[D], const long str1[D], const complex float* ptr1, const long str2[D], const complex float* ptr2)
+complex float md_zscalar2(int D, const bart_dim_t dim[D], const bart_stride_t str1[D], const complex float* ptr1, const bart_stride_t str2[D], const complex float* ptr2)
 {
 	complex double* ret_ptr = md_alloc_sameplace(D, MD_SINGLETON_DIMS(D), CDL_SIZE, ptr1);
 	md_clear(D, MD_SINGLETON_DIMS(D), ret_ptr, CDL_SIZE);
@@ -2894,9 +2894,9 @@ complex float md_zscalar2(int D, const long dim[D], const long str1[D], const co
  *
  * return iptr1^H * iptr2
  */
-complex float md_zscalar(int D, const long dim[D], const complex float* ptr1, const complex float* ptr2)
+complex float md_zscalar(int D, const bart_dim_t dim[D], const complex float* ptr1, const complex float* ptr2)
 {
-	long str[D];
+	bart_stride_t str[D];
 	md_calc_strides(D, str, dim, CFL_SIZE);
 
 	return md_zscalar2(D, dim, str, ptr1, str, ptr2);
@@ -2909,10 +2909,10 @@ complex float md_zscalar(int D, const long dim[D], const complex float* ptr1, co
  *
  * return iptr1^H * iptr2
  */
-float md_zscalar_real2(int D, const long dims[D], const long strs1[D], const complex float* ptr1, const long strs2[D], const complex float* ptr2)
+float md_zscalar_real2(int D, const bart_dim_t dims[D], const bart_stride_t strs1[D], const complex float* ptr1, const bart_stride_t strs2[D], const complex float* ptr2)
 {
-	if (   (is_mpi(ptr1) && !md_check_equal_dims(D, strs1, MD_STRIDES(D, dims, CFL_SIZE), ~0UL))
-	    || (is_mpi(ptr2) && !md_check_equal_dims(D, strs2, MD_STRIDES(D, dims, CFL_SIZE), ~0UL))) {
+	if (   (is_mpi(ptr1) && !md_check_equal_dims(D, strs1, MD_STRIDES(D, dims, CFL_SIZE), ~UINT64_C(0)))
+	    || (is_mpi(ptr2) && !md_check_equal_dims(D, strs2, MD_STRIDES(D, dims, CFL_SIZE), ~UINT64_C(0)))) {
 
 		complex float* t1 = md_alloc_sameplace(D, dims, CFL_SIZE, ptr1);
 		complex float* t2 = md_alloc_sameplace(D, dims, CFL_SIZE, ptr2);
@@ -2929,9 +2929,9 @@ float md_zscalar_real2(int D, const long dims[D], const long strs1[D], const com
 	}
 
 
-	long dimsR[D + 1];
-	long strs1R[D + 1];
-	long strs2R[D + 1];
+	bart_dim_t dimsR[D + 1];
+	bart_dim_t strs1R[D + 1];
+	bart_dim_t strs2R[D + 1];
 
 	real_from_complex_dims(D, dimsR, dims);
 	real_from_complex_strides(D, strs1R, strs1);
@@ -2947,9 +2947,9 @@ float md_zscalar_real2(int D, const long dims[D], const long strs1[D], const com
  *
  * return iptr1^H * iptr2
  */
-float md_zscalar_real(int D, const long dims[D], const complex float* ptr1, const complex float* ptr2)
+float md_zscalar_real(int D, const bart_dim_t dims[D], const complex float* ptr1, const complex float* ptr2)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
 	return md_zscalar_real2(D, dims, strs, ptr1, strs, ptr2);
@@ -2962,7 +2962,7 @@ float md_zscalar_real(int D, const long dims[D], const complex float* ptr1, cons
  *
  * return sqrt(iptr^H * iptr)
  */
-float md_znorm2(int D, const long dim[D], const long str[D], const complex float* ptr)
+float md_znorm2(int D, const bart_dim_t dim[D], const bart_stride_t str[D], const complex float* ptr)
 {
 	return sqrtf(md_zscalar_real2(D, dim, str, ptr, str, ptr));
 //	return sqrtf(crealf(md_zscalar2(D, dim, str, ptr, str, ptr)));
@@ -2975,7 +2975,7 @@ float md_znorm2(int D, const long dim[D], const long str[D], const complex float
  *
  * return sqrt(iptr^H * iptr)
  */
-float md_znorm(int D, const long dim[D], const complex float* ptr)
+float md_znorm(int D, const bart_dim_t dim[D], const complex float* ptr)
 {
 	return sqrtf(md_zscalar_real(D, dim, ptr, ptr));
 //	return sqrtf(crealf(md_zscalar(D, dim, ptr, ptr)));
@@ -2987,8 +2987,8 @@ float md_znorm(int D, const long dim[D], const complex float* ptr)
  * Calculate absolute value.
  *
  */
-void md_abs2(int D, const long dims[D], const long ostr[D], float* optr,
-		const long istr[D], const float* iptr)
+void md_abs2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr,
+		const bart_stride_t istr[D], const float* iptr)
 {
 	assert(optr != iptr);
 
@@ -3003,7 +3003,7 @@ void md_abs2(int D, const long dims[D], const long ostr[D], float* optr,
  * Calculate absolute value.
  *
  */
-void md_abs(int D, const long dims[D], float* optr, const float* iptr)
+void md_abs(int D, const bart_dim_t dims[D], float* optr, const float* iptr)
 {
 	make_2op_simple(md_abs2, D, dims, optr, iptr);
 }
@@ -3014,8 +3014,8 @@ void md_abs(int D, const long dims[D], float* optr, const float* iptr)
  * Calculate absolute value.
  *
  */
-void md_zabs2(int D, const long dims[D], const long ostr[D], complex float* optr,
-		const long istr[D], const complex float* iptr)
+void md_zabs2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr,
+		const bart_stride_t istr[D], const complex float* iptr)
 {
 #if 1
 	MAKE_Z2OP(zabs, D, dims, ostr, optr, istr, iptr);
@@ -3027,8 +3027,8 @@ void md_zabs2(int D, const long dims[D], const long ostr[D], complex float* optr
 	md_clear2(D, dims, ostr, optr, CFL_SIZE);
 	md_zfmacc2(D, dims, ostr, optr, istr, iptr, istr, iptr);
 #if 1
-	long dimsR[D + 1];
-	long strsR[D + 1];
+	bart_dim_t dimsR[D + 1];
+	bart_dim_t strsR[D + 1];
 
 	real_from_complex_dims(D, dimsR, dims);
 	real_from_complex_strides(D, strsR, ostr);
@@ -3047,7 +3047,7 @@ void md_zabs2(int D, const long dims[D], const long ostr[D], complex float* optr
  * Calculate absolute value.
  *
  */
-void md_zabs(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zabs(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 	make_z2op_simple(md_zabs2, D, dims, optr, iptr);
 }
@@ -3058,8 +3058,8 @@ void md_zabs(int D, const long dims[D], complex float* optr, const complex float
  * Calculate arc tangent of real part.
  *
  */
-void md_zatanr2(int D, const long dims[D], const long ostr[D], complex float* optr,
-		const long istr[D], const complex float* iptr)
+void md_zatanr2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr,
+		const bart_stride_t istr[D], const complex float* iptr)
 {
 	MAKE_Z2OP(zatanr, D, dims, ostr, optr, istr, iptr);
 }
@@ -3069,7 +3069,7 @@ void md_zatanr2(int D, const long dims[D], const long ostr[D], complex float* op
  * Calculate arc tangent of real part.
  *
  */
-void md_zatanr(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zatanr(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 	make_z2op_simple(md_zatanr2, D, dims, optr, iptr);
 }
@@ -3079,7 +3079,7 @@ void md_zatanr(int D, const long dims[D], complex float* optr, const complex flo
  * Calculate arc tangent of real part of iptr1 / iptr2.
  *
  */
-void md_zatan2r2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
+void md_zatan2r2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
 {
 	MAKE_Z3OP(zatan2r, D, dims, ostr, optr, istr1, iptr1, istr2, iptr2);
 }
@@ -3089,7 +3089,7 @@ void md_zatan2r2(int D, const long dims[D], const long ostr[D], complex float* o
 * Calculate arc tangent of real part of iptr1 / iptr2.
 *
 */
-void md_zatan2r(int D, const long dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
+void md_zatan2r(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr1, const complex float* iptr2)
 {
 	make_z3op_simple(md_zatan2r2, D, dims, optr, iptr1, iptr2);
 }
@@ -3100,7 +3100,7 @@ void md_zatan2r(int D, const long dims[D], complex float* optr, const complex fl
  * Calculate sum of absolute values.
  *
  */
-float md_asum2(int D, const long dims[D], const long strs[D], const float* ptr)
+float md_asum2(int D, const bart_dim_t dims[D], const bart_stride_t strs[D], const float* ptr)
 {
 	float ret = 0.;
 
@@ -3133,7 +3133,7 @@ float md_asum2(int D, const long dims[D], const long strs[D], const float* ptr)
 
 	float* tmp = md_alloc_sameplace(D, dims, FL_SIZE, ptr);
 
-	long strs1[D];
+	bart_stride_t strs1[D];
 	md_calc_strides(D, strs1, dims, FL_SIZE);
 
 	md_abs2(D, dims, strs1, tmp, strs, ptr);
@@ -3144,7 +3144,7 @@ float md_asum2(int D, const long dims[D], const long strs[D], const float* ptr)
 	if (cuda_ondevice(ptr))
 		retp = gpu_constant(&ret, FL_SIZE);
 #endif
-	long dims0[D];
+	bart_dim_t dims0[D];
 	md_singleton_dims(D, dims0);
 
 	md_axpy2(D, dims, MD_STRIDES(D, dims0, FL_SIZE), retp, 1., strs1, tmp);
@@ -3167,8 +3167,8 @@ float md_asum2(int D, const long dims[D], const long strs[D], const float* ptr)
  * Calculate arccos of real part.
  *
  */
-void md_zacosr2(int D, const long dims[D], const long ostr[D], complex float* optr,
-		const long istr[D], const complex float* iptr)
+void md_zacosr2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr,
+		const bart_stride_t istr[D], const complex float* iptr)
 {
 	MAKE_Z2OP(zacosr, D, dims, ostr, optr, istr, iptr);
 }
@@ -3179,7 +3179,7 @@ void md_zacosr2(int D, const long dims[D], const long ostr[D], complex float* op
  * Calculate arccos of real part.
  *
  */
-void md_zacosr(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zacosr(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 	make_z2op_simple(md_zacosr2, D, dims, optr, iptr);
 }
@@ -3190,7 +3190,7 @@ void md_zacosr(int D, const long dims[D], complex float* optr, const complex flo
  * Calculate sum of absolute values.
  *
  */
-float md_asum(int D, const long dims[D], const float* ptr)
+float md_asum(int D, const bart_dim_t dims[D], const float* ptr)
 {
 	return md_asum2(D, dims, MD_STRIDES(D, dims, FL_SIZE), ptr);
 }
@@ -3203,12 +3203,12 @@ float md_asum(int D, const long dims[D], const float* ptr)
  * (similar to BLAS L1 function).
  *
  */
-float md_zasum2(int D, const long dims[D], const long strs[D], const complex float* ptr)
+float md_zasum2(int D, const bart_dim_t dims[D], const bart_stride_t strs[D], const complex float* ptr)
 {
-	long dimsR[D + 1];
+	bart_dim_t dimsR[D + 1];
 	real_from_complex_dims(D, dimsR, dims);
 
-	long strsR[D + 1];
+	bart_dim_t strsR[D + 1];
 	real_from_complex_strides(D, strsR, strs);
 
 	return md_asum2(D + 1, dimsR, strsR, (const float*)ptr);
@@ -3222,7 +3222,7 @@ float md_zasum2(int D, const long dims[D], const long strs[D], const complex flo
  * (similar to BLAS L1 function).
  *
  */
-float md_zasum(int D, const long dims[D], const complex float* ptr)
+float md_zasum(int D, const bart_dim_t dims[D], const complex float* ptr)
 {
 	return md_zasum2(D, dims, MD_STRIDES(D, dims, CFL_SIZE), ptr);
 }
@@ -3232,7 +3232,7 @@ float md_zasum(int D, const long dims[D], const complex float* ptr)
 /**
  * Calculate l1 norm of complex array (with strides)
  */
-float md_z1norm2(int D, const long dims[D], const long strs[D], const complex float* ptr)
+float md_z1norm2(int D, const bart_dim_t dims[D], const bart_stride_t strs[D], const complex float* ptr)
 {
 	complex float* tmp = md_alloc_sameplace(D, dims, CFL_SIZE, ptr);
 
@@ -3250,7 +3250,7 @@ float md_z1norm2(int D, const long dims[D], const long strs[D], const complex fl
 /**
  * Calculate l1 norm of complex array (without strides)
  */
-float md_z1norm(int D, const long dim[D], const complex float* ptr)
+float md_z1norm(int D, const bart_dim_t dim[D], const complex float* ptr)
 {
 	return md_z1norm2(D, dim, MD_STRIDES(D, dim, CFL_SIZE), ptr);
 }
@@ -3263,11 +3263,11 @@ float md_z1norm(int D, const long dim[D], const complex float* ptr)
  * @param dims -- full dimensions of src image
  * @param flags -- bitmask for applying the root of sum of squares, ie the dimensions that will not stay
  */
-void md_rss(int D, const long dims[D], unsigned long flags, float* dst, const float* src)
+void md_rss(int D, const bart_dim_t dims[D], bart_flags_t flags, float* dst, const float* src)
 {
-	long str1[D];
-	long str2[D];
-	long dims2[D];
+	bart_stride_t str1[D];
+	bart_stride_t str2[D];
+	bart_dim_t dims2[D];
 
 	md_select_dims(D, ~flags, dims2, dims);
 
@@ -3288,9 +3288,9 @@ void md_rss(int D, const long dims[D], unsigned long flags, float* dst, const fl
  * @param dims -- full dimensions of src image
  * @param flags -- bitmask for applying the root of sum of squares, i.e. the dimensions that will not stay
  */
-void md_zss2(int D, const long dims[D], unsigned long flags, const long str2[D], complex float* dst, const long str1[D], const complex float* src)
+void md_zss2(int D, const bart_dim_t dims[D], bart_flags_t flags, const bart_stride_t str2[D], complex float* dst, const bart_stride_t str1[D], const complex float* src)
 {
-	long dims2[D];
+	bart_dim_t dims2[D];
 	md_select_dims(D, ~flags, dims2, dims);
 
 	md_clear2(D, dims2, str2, dst, CFL_SIZE);
@@ -3307,9 +3307,9 @@ void md_zss2(int D, const long dims[D], unsigned long flags, const long str2[D],
  * @param dims -- full dimensions of src image
  * @param flags -- bitmask for applying the root of sum of squares, i.e. the dimensions that will not stay
  */
-void md_zss(int D, const long dims[D], unsigned long flags, complex float* dst, const complex float* src)
+void md_zss(int D, const bart_dim_t dims[D], bart_flags_t flags, complex float* dst, const complex float* src)
 {
-	long dims2[D];
+	bart_dim_t dims2[D];
 
 	md_select_dims(D, ~flags, dims2, dims);
 
@@ -3324,14 +3324,14 @@ void md_zss(int D, const long dims[D], unsigned long flags, complex float* dst, 
  * @param dims -- full dimensions of src image
  * @param flags -- bitmask for applying the root of sum of squares, i.e. the dimensions that will not stay
  */
-void md_zrss(int D, const long dims[D], unsigned long flags, complex float* dst, const complex float* src)
+void md_zrss(int D, const bart_dim_t dims[D], bart_flags_t flags, complex float* dst, const complex float* src)
 {
-	long dims2[D];
+	bart_dim_t dims2[D];
 	md_select_dims(D, ~flags, dims2, dims);
 
 	md_zss(D, dims, flags, dst, src);
 
-	long dims2R[D + 1];
+	bart_dim_t dims2R[D + 1];
 	real_from_complex_dims(D, dims2R, dims2);
 
 	md_sqrt(D + 1, dims2R, (float*)dst, (const float*)dst);
@@ -3346,15 +3346,15 @@ void md_zrss(int D, const long dims[D], unsigned long flags, complex float* dst,
  * @param dims -- full dimensions of src image
  * @param flags -- bitmask for calculating variance, i.e. the dimensions that will not stay
  */
-void md_zvar2(int D, const long dims[D], unsigned long flags, const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_zvar2(int D, const bart_dim_t dims[D], bart_flags_t flags, const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
-	long odims[D];
-	long fdims[D];
+	bart_dim_t odims[D];
+	bart_dim_t fdims[D];
 
 	md_select_dims(D, ~flags, odims, dims);
 	md_select_dims(D, flags, fdims, dims);
 
-	long tstrs[D];
+	bart_stride_t tstrs[D];
 	md_calc_strides(D, tstrs, dims, CFL_SIZE);
 
 	complex float* tmp = md_alloc_sameplace(D, dims, CFL_SIZE, optr);
@@ -3383,9 +3383,9 @@ void md_zvar2(int D, const long dims[D], unsigned long flags, const long ostr[D]
  * @param dims -- full dimensions of src image
  * @param flags -- bitmask for calculating variance, i.e. the dimensions that will not stay
  */
-void md_zvar(int D, const long dims[D], unsigned long flags, complex float* optr, const complex float* iptr)
+void md_zvar(int D, const bart_dim_t dims[D], bart_flags_t flags, complex float* optr, const complex float* iptr)
 {
-	long odims[D];
+	bart_dim_t odims[D];
 	md_select_dims(D, ~flags, odims, dims);
 
 	md_zvar2(D, dims, flags,
@@ -3402,11 +3402,11 @@ void md_zvar(int D, const long dims[D], unsigned long flags, complex float* optr
  * @param dims -- full dimensions of src image
  * @param flags -- bitmask for calculating standard deviation, i.e. the dimensions that will not stay
  */
-void md_zstd2(int D, const long dims[D], unsigned long flags, const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_zstd2(int D, const bart_dim_t dims[D], bart_flags_t flags, const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
 	md_zvar2(D, dims, flags, ostr, optr, istr, iptr);
 
-	long odims[D];
+	bart_dim_t odims[D];
 	md_select_dims(D, ~flags, odims, dims);
 
 	md_zsqrt2(D, odims, ostr, optr, ostr, optr);
@@ -3421,9 +3421,9 @@ void md_zstd2(int D, const long dims[D], unsigned long flags, const long ostr[D]
  * @param dims -- full dimensions of src image
  * @param flags -- bitmask for calculating standard deviation, i.e. the dimensions that will not stay
  */
-void md_zstd(int D, const long dims[D], unsigned long flags, complex float* optr, const complex float* iptr)
+void md_zstd(int D, const bart_dim_t dims[D], bart_flags_t flags, complex float* optr, const complex float* iptr)
 {
-	long odims[D];
+	bart_dim_t odims[D];
 	md_select_dims(D, ~flags, odims, dims);
 
 	md_zstd2(D, dims, flags,
@@ -3439,18 +3439,18 @@ void md_zstd(int D, const long dims[D], unsigned long flags, complex float* optr
  * @param dims -- full dimensions of src image
  * @param flags -- bitmask for calculating variance, i.e. the dimensions that will not stay
  */
-void md_zcovar2(int D, const long dims[D], unsigned long flags,
-		const long ostr[D], complex float* optr,
-		const long istr1[D], const complex float* iptr1,
-		const long istr2[D], const complex float* iptr2)
+void md_zcovar2(int D, const bart_dim_t dims[D], bart_flags_t flags,
+		const bart_stride_t ostr[D], complex float* optr,
+		const bart_stride_t istr1[D], const complex float* iptr1,
+		const bart_stride_t istr2[D], const complex float* iptr2)
 {
-	long odims[D];
-	long fdims[D];
+	bart_dim_t odims[D];
+	bart_dim_t fdims[D];
 
 	md_select_dims(D, ~flags, odims, dims);
 	md_select_dims(D, flags, fdims, dims);
 
-	long tstrs[D];
+	bart_stride_t tstrs[D];
 	md_calc_strides(D, tstrs, dims, CFL_SIZE);
 
 	complex float* tmp1 = md_alloc_sameplace(D, dims, CFL_SIZE, optr);
@@ -3481,10 +3481,10 @@ void md_zcovar2(int D, const long dims[D], unsigned long flags,
  * @param dims -- full dimensions of src image
  * @param flags -- bitmask for calculating variance, i.e. the dimensions that will not stay
  */
-void md_zcovar(int D, const long dims[D], unsigned long flags,
+void md_zcovar(int D, const bart_dim_t dims[D], bart_flags_t flags,
 		complex float* optr, const complex float* iptr1, const complex float* iptr2)
 {
-	long odims[D];
+	bart_dim_t odims[D];
 	md_select_dims(D, ~flags, odims, dims);
 
 	md_zcovar2(D, dims, flags,
@@ -3500,9 +3500,9 @@ void md_zcovar(int D, const long dims[D], unsigned long flags,
  * @param dims -- full dimensions of iptr
  * @param flags -- bitmask for applying the average, i.e. the dimensions that will not stay
  */
-void md_zavg(int D, const long dims[D], unsigned long flags, complex float* optr, const complex float* iptr)
+void md_zavg(int D, const bart_dim_t dims[D], bart_flags_t flags, complex float* optr, const complex float* iptr)
 {
-	long odims[D];
+	bart_dim_t odims[D];
 	md_select_dims(D, ~flags, odims, dims);
 
 	md_zavg2(D, dims, flags,
@@ -3518,10 +3518,10 @@ void md_zavg(int D, const long dims[D], unsigned long flags, complex float* optr
  * @param dims -- full dimensions of iptr
  * @param flags -- bitmask for applying the average, i.e. the dimensions that will not stay
  */
-void md_zavg2(int D, const long dims[D], unsigned long flags, const long ostr[D],  complex float* optr, const long istr[D], const complex float* iptr)
+void md_zavg2(int D, const bart_dim_t dims[D], bart_flags_t flags, const bart_stride_t ostr[D],  complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
-	long odims[D];
-	long sdims[D];
+	bart_dim_t odims[D];
+	bart_dim_t sdims[D];
 
 	md_select_dims(D, ~flags, odims, dims);
 	md_select_dims(D, flags, sdims, dims);
@@ -3529,7 +3529,7 @@ void md_zavg2(int D, const long dims[D], unsigned long flags, const long ostr[D]
 	md_clear2(D, odims, ostr, optr, CFL_SIZE);
 	md_zadd2(D, dims, ostr, optr, ostr, optr, istr, iptr);
 
-	long scale = md_calc_size(D, sdims);
+	bart_dim_t scale = md_calc_size(D, sdims);
 
 	if (scale != 0.)
 		md_zsmul2(D, odims, ostr, optr, ostr, optr, 1. / scale);
@@ -3543,9 +3543,9 @@ void md_zavg2(int D, const long dims[D], unsigned long flags, const long ostr[D]
  * @param dims -- full dimensions of iptr
  * @param flags -- bitmask for applying the weighted average, i.e. the dimensions that will not stay
  */
-void md_zwavg(int D, const long dims[D], unsigned long flags, complex float* optr, const complex float* iptr)
+void md_zwavg(int D, const bart_dim_t dims[D], bart_flags_t flags, complex float* optr, const complex float* iptr)
 {
-	long odims[D];
+	bart_dim_t odims[D];
 	md_select_dims(D, ~flags, odims, dims);
 
 	md_zwavg2(D, dims, flags,
@@ -3561,9 +3561,9 @@ void md_zwavg(int D, const long dims[D], unsigned long flags, complex float* opt
  * @param dims -- full dimensions of iptr
  * @param flags -- bitmask for applying the weighted average, i.e. the dimensions that will not stay
  */
-void md_zwavg2(int D, const long dims[D], unsigned long flags, const long ostr[D],  complex float* optr, const long istr[D], const complex float* iptr)
+void md_zwavg2(int D, const bart_dim_t dims[D], bart_flags_t flags, const bart_stride_t ostr[D],  complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
-	long odims[D];
+	bart_dim_t odims[D];
 	md_select_dims(D, ~flags, odims, dims);
 
 	complex float* weights = md_alloc_sameplace(D, odims, CFL_SIZE, iptr);
@@ -3582,14 +3582,14 @@ void md_zwavg2(int D, const long dims[D], unsigned long flags, const long ostr[D
  * @param iptr input array to be averaged
  * @param weights output weights
  */
-void md_zwavg2_core1(int D, const long dims[D], unsigned long flags, const long ostr[D],  complex float* weights, const long istr[D], const complex float* iptr)
+void md_zwavg2_core1(int D, const bart_dim_t dims[D], bart_flags_t flags, const bart_stride_t ostr[D],  complex float* weights, const bart_stride_t istr[D], const complex float* iptr)
 {
-	long odims[D];
+	bart_dim_t odims[D];
 	md_select_dims(D, ~flags, odims, dims);
 
 	complex float* pattern = md_alloc_sameplace(D, dims, CFL_SIZE, iptr);
 
-	long onestrs[D];
+	bart_stride_t onestrs[D];
 	md_singleton_strides(D, onestrs);
 
 	md_zcmp2(D, dims, istr, pattern, istr, iptr, onestrs, &(complex float){ 0. });
@@ -3609,9 +3609,9 @@ void md_zwavg2_core1(int D, const long dims[D], unsigned long flags, const long 
  * @param weights precomputed weights for averaging
  * @param optr output array after averaging
  */
-void md_zwavg2_core2(int D, const long dims[D], unsigned long flags, const long ostr[D],  complex float* optr, const complex float* weights, const long istr[D], const complex float* iptr)
+void md_zwavg2_core2(int D, const bart_dim_t dims[D], bart_flags_t flags, const bart_stride_t ostr[D],  complex float* optr, const complex float* weights, const bart_stride_t istr[D], const complex float* iptr)
 {
-	long odims[D];
+	bart_dim_t odims[D];
 	md_select_dims(D, ~flags, odims, dims);
 
 	md_clear2(D, odims, ostr, optr, CFL_SIZE);
@@ -3626,7 +3626,7 @@ void md_zwavg2_core2(int D, const long dims[D], unsigned long flags, const long 
  * Fill complex array with value (with strides).
  *
  */
-void md_zfill2(int D, const long dim[D], const long str[D], complex float* ptr, complex float val)
+void md_zfill2(int D, const bart_dim_t dim[D], const bart_stride_t str[D], complex float* ptr, complex float val)
 {
 	if (is_delayed(ptr)) {
 
@@ -3634,9 +3634,9 @@ void md_zfill2(int D, const long dim[D], const long str[D], complex float* ptr, 
 		return;
 	}
 #if 1
-	const long (*nstr[1])[D?D:1] = { (const long (*)[D ?: 1])str };
+	const bart_stride_t (*nstr[1])[D?D:1] = { (const bart_stride_t (*)[D ?: 1])str };
 	void *nptr[1] = { ptr };
-	unsigned long io = 1UL;
+	bart_flags_t io = UINT64_C(1);
 	size_t sizes[1] = { CFL_SIZE };
 	complex float val_copy = val;	//https://gcc.gnu.org/bugzilla/show_bug.cgi?id=121661
 
@@ -3657,9 +3657,9 @@ void md_zfill2(int D, const long dim[D], const long str[D], complex float* ptr, 
  * Fill complex array with value (without strides).
  *
  */
-extern void md_zfill(int D, const long dim[D], complex float* ptr, complex float val)
+extern void md_zfill(int D, const bart_dim_t dim[D], complex float* ptr, complex float val)
 {
-	long str[D];
+	bart_stride_t str[D];
 	md_calc_strides(D, str, dim, CFL_SIZE);
 
 	md_zfill2(D, dim, str, ptr, val);
@@ -3690,7 +3690,7 @@ static vptr_fun_data_t* vptr_param_float(float par)
 
 
 
-static void md_zsoftthresh_half2_int(vptr_fun_data_t* _data, int N, int D, const long* dims[N], const long* strs[N], void* args[N])
+static void md_zsoftthresh_half2_int(vptr_fun_data_t* _data, int N, int D, const bart_dim_t* dims[N], const bart_stride_t* strs[N], void* args[N])
 {
 	float lambda = CAST_DOWN(vptr_param_md_s, _data)->pars[0].par_float;
 
@@ -3714,13 +3714,13 @@ static void md_zsoftthresh_half2_int(vptr_fun_data_t* _data, int N, int D, const
  * @param istr input strides
  * @param iptr pointer to input, abs(x)
  */
-void md_zsoftthresh_half2(int D, const long dim[D], float lambda, const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_zsoftthresh_half2(int D, const bart_dim_t dim[D], float lambda, const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
-	exec_vptr_zfun(md_zsoftthresh_half2_int, vptr_param_float(lambda), 2, D, ~0UL, MD_BIT(0), MD_BIT(1), (const long*[2]) { dim, dim }, (const long*[2]) { ostr, istr }, (complex float*[2]) { optr, (void*) iptr});
+	exec_vptr_zfun(md_zsoftthresh_half2_int, vptr_param_float(lambda), 2, D, ~UINT64_C(0), MD_BIT(0), MD_BIT(1), (const bart_dim_t*[2]) { dim, dim }, (const bart_dim_t*[2]) { ostr, istr }, (complex float*[2]) { optr, (void*) iptr});
 }
 
 
-static void md_softthresh_half2_int(vptr_fun_data_t* _data, int N, int D, const long* dims[N], const long* strs[N], void* args[N])
+static void md_softthresh_half2_int(vptr_fun_data_t* _data, int N, int D, const bart_dim_t* dims[N], const bart_stride_t* strs[N], void* args[N])
 {
 	float lambda = CAST_DOWN(vptr_param_md_s, _data)->pars[0].par_float;
 
@@ -3744,9 +3744,9 @@ static void md_softthresh_half2_int(vptr_fun_data_t* _data, int N, int D, const 
  * @param istr input strides
  * @param iptr pointer to input, abs(x)
  */
-void md_softthresh_half2(int D, const long dim[D], float lambda, const long ostr[D], float* optr, const long istr[D], const float* iptr)
+void md_softthresh_half2(int D, const bart_dim_t dim[D], float lambda, const bart_stride_t ostr[D], float* optr, const bart_stride_t istr[D], const float* iptr)
 {
-	exec_vptr_fun(md_softthresh_half2_int, vptr_param_float(lambda), 2, D, ~0UL, MD_BIT(0), MD_BIT(1), (const long*[2]) { dim, dim }, (const long*[2]) { ostr, istr }, (float*[2]) { optr, (void*) iptr});
+	exec_vptr_fun(md_softthresh_half2_int, vptr_param_float(lambda), 2, D, ~UINT64_C(0), MD_BIT(0), MD_BIT(1), (const bart_dim_t*[2]) { dim, dim }, (const bart_dim_t*[2]) { ostr, istr }, (float*[2]) { optr, (void*) iptr});
 }
 
 
@@ -3761,9 +3761,9 @@ void md_softthresh_half2(int D, const long dim[D], float lambda, const long ostr
  * @param optr pointer to output, y
  * @param iptr pointer to input, x
  */
-void md_zsoftthresh_half(int D, const long dim[D], float lambda, complex float* optr, const complex float* iptr)
+void md_zsoftthresh_half(int D, const bart_dim_t dim[D], float lambda, complex float* optr, const complex float* iptr)
 {
-	long str[D];
+	bart_stride_t str[D];
 	md_calc_strides(D, str, dim, CFL_SIZE);
 
 	md_zsoftthresh_half2(D, dim, lambda, str, optr, str, iptr);
@@ -3771,10 +3771,10 @@ void md_zsoftthresh_half(int D, const long dim[D], float lambda, complex float* 
 
 
 
-void md_softthresh_core2(int D, const long dims[D], float lambda, unsigned long flags, float* tmp_norm, const long ostrs[D], float* optr, const long istrs[D], const float* iptr)
+void md_softthresh_core2(int D, const bart_dim_t dims[D], float lambda, bart_flags_t flags, float* tmp_norm, const bart_stride_t ostrs[D], float* optr, const bart_stride_t istrs[D], const float* iptr)
 {
-	long norm_dims[D];
-	long norm_strs[D];
+	bart_dim_t norm_dims[D];
+	bart_stride_t norm_strs[D];
 
 	md_select_dims(D, ~flags, norm_dims, dims);
 	md_calc_strides(D, norm_strs, norm_dims, FL_SIZE);
@@ -3791,7 +3791,7 @@ void md_softthresh_core2(int D, const long dims[D], float lambda, unsigned long 
  *
  * optr = ST(iptr, lambda)
  */
-void md_softthresh2(int D, const long dims[D], float lambda, unsigned long flags, const long ostrs[D], float* optr, const long istrs[D], const float* iptr)
+void md_softthresh2(int D, const bart_dim_t dims[D], float lambda, bart_flags_t flags, const bart_stride_t ostrs[D], float* optr, const bart_stride_t istrs[D], const float* iptr)
 {
 	NESTED(void, nary_softthresh, (struct nary_opt_data_s* data, void* ptr[]))
 	{
@@ -3804,7 +3804,7 @@ void md_softthresh2(int D, const long dims[D], float lambda, unsigned long flags
 		return;
 	}
 
-	long norm_dims[D];
+	bart_dim_t norm_dims[D];
 	md_select_dims(D, ~flags, norm_dims, dims);
 
 	float* tmp_norm = md_alloc_sameplace(D, norm_dims, FL_SIZE, iptr);
@@ -3821,9 +3821,9 @@ void md_softthresh2(int D, const long dims[D], float lambda, unsigned long flags
  *
  * optr = ST(iptr, lambda)
  */
-void md_softthresh(int D, const long dims[D], float lambda, unsigned long flags, float* optr, const float* iptr)
+void md_softthresh(int D, const bart_dim_t dims[D], float lambda, bart_flags_t flags, float* optr, const float* iptr)
 {
-	long str[D];
+	bart_stride_t str[D];
 	md_calc_strides(D, str, dims, FL_SIZE);
 
 	md_softthresh2(D, dims, lambda, flags, str, optr, str, iptr);
@@ -3831,10 +3831,10 @@ void md_softthresh(int D, const long dims[D], float lambda, unsigned long flags,
 
 
 
-void md_zsoftthresh_core2(int D, const long dims[D], float lambda, unsigned long flags, complex float* tmp_norm, const long ostrs[D], complex float* optr, const long istrs[D], const complex float* iptr)
+void md_zsoftthresh_core2(int D, const bart_dim_t dims[D], float lambda, bart_flags_t flags, complex float* tmp_norm, const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs[D], const complex float* iptr)
 {
-	long norm_dims[D];
-	long norm_strs[D];
+	bart_dim_t norm_dims[D];
+	bart_stride_t norm_strs[D];
 
 	md_select_dims(D, ~flags, norm_dims, dims);
 	md_calc_strides(D, norm_strs, norm_dims, CFL_SIZE);
@@ -3845,7 +3845,7 @@ void md_zsoftthresh_core2(int D, const long dims[D], float lambda, unsigned long
 }
 
 
-static void md_zsoftthresh_int(vptr_fun_data_t* _data, int N, int D, const long* dims[N], const long* strs[N], void* args[N])
+static void md_zsoftthresh_int(vptr_fun_data_t* _data, int N, int D, const bart_dim_t* dims[N], const bart_stride_t* strs[N], void* args[N])
 {
 	float lambda = CAST_DOWN(vptr_param_md_s, _data)->pars[0].par_float;
 
@@ -3874,15 +3874,15 @@ static void md_zsoftthresh_int(vptr_fun_data_t* _data, int N, int D, const long*
  * @param optr destination -- soft thresholded values
  * @param iptr source -- values to be soft thresholded
  */
-void md_zsoftthresh2(int D, const long dims[D], float lambda, unsigned long flags, const long ostrs[D], complex float* optr, const long istrs[D], const complex float* iptr)
+void md_zsoftthresh2(int D, const bart_dim_t dims[D], float lambda, bart_flags_t flags, const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs[D], const complex float* iptr)
 {
 	if (0 == flags) {
 
-		exec_vptr_zfun(md_zsoftthresh_int, vptr_param_float(lambda), 2, D, ~0UL, MD_BIT(0), MD_BIT(1), (const long*[2]) { dims, dims }, (const long*[2]) { ostrs, istrs }, (complex float*[2]) { optr, (void*) iptr});
+		exec_vptr_zfun(md_zsoftthresh_int, vptr_param_float(lambda), 2, D, ~UINT64_C(0), MD_BIT(0), MD_BIT(1), (const bart_dim_t*[2]) { dims, dims }, (const bart_dim_t*[2]) { ostrs, istrs }, (complex float*[2]) { optr, (void*) iptr});
 		return;
 	}
 
-	long norm_dims[D];
+	bart_dim_t norm_dims[D];
 	md_select_dims(D, ~flags, norm_dims, dims);
 
 	complex float* tmp_norm = md_alloc_sameplace(D, norm_dims, CFL_SIZE, iptr);
@@ -3907,9 +3907,9 @@ void md_zsoftthresh2(int D, const long dims[D], float lambda, unsigned long flag
  * @param optr destination -- soft thresholded values
  * @param iptr source -- values to be soft thresholded
  */
-void md_zsoftthresh(int D, const long dims[D], float lambda, unsigned long flags, complex float* optr, const complex float* iptr)
+void md_zsoftthresh(int D, const bart_dim_t dims[D], float lambda, bart_flags_t flags, complex float* optr, const complex float* iptr)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
 	md_zsoftthresh2(D, dims, lambda, flags, strs, optr, strs, iptr);
@@ -3933,7 +3933,7 @@ void md_zsoftthresh(int D, const long dims[D], float lambda, unsigned long flags
  * @param istr input strides
  * @param iptr pointer to input
  */
-void md_zhardthresh_mask2(int D, const long dim[D], int k, unsigned long flags, complex float* tmp_norm, const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_zhardthresh_mask2(int D, const bart_dim_t dim[D], int k, bart_flags_t flags, complex float* tmp_norm, const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
 	NESTED(void, nary_zhardthresh_mask, (struct nary_opt_data_s* data, void* ptr[]))
 	{
@@ -3946,8 +3946,8 @@ void md_zhardthresh_mask2(int D, const long dim[D], int k, unsigned long flags, 
 		return;
 	}
 
-	long norm_dims[D];
-	long norm_strs[D];
+	bart_dim_t norm_dims[D];
+	bart_stride_t norm_strs[D];
 
 	md_select_dims(D, ~flags, norm_dims, dim);
 	md_calc_strides(D, norm_strs, norm_dims, CFL_SIZE);
@@ -3969,12 +3969,12 @@ void md_zhardthresh_mask2(int D, const long dim[D], int k, unsigned long flags, 
  * @param optr pointer to output
  * @param iptr pointer to input
  */
-void md_zhardthresh_mask(int D, const long dim[D], int k, unsigned long flags, complex float* optr, const complex float* iptr)
+void md_zhardthresh_mask(int D, const bart_dim_t dim[D], int k, bart_flags_t flags, complex float* optr, const complex float* iptr)
 {
-	long str[D];
+	bart_stride_t str[D];
 	md_calc_strides(D, str, dim, CFL_SIZE);
 
-	long norm_dims[D];
+	bart_dim_t norm_dims[D];
 	md_select_dims(D, ~flags, norm_dims, dim);
 
 	complex float* tmp_norm = md_alloc_sameplace(D, norm_dims, CFL_SIZE, iptr);
@@ -4001,10 +4001,10 @@ void md_zhardthresh_mask(int D, const long dim[D], int k, unsigned long flags, c
  * @param istrs source strides
  * @param iptr source -- values to be thresholded
  */
-void md_zhardthresh_joint2(int D, const long dims[D], int k, unsigned long flags, complex float* tmp_norm, const long ostrs[D], complex float* optr, const long istrs[D], const complex float* iptr)
+void md_zhardthresh_joint2(int D, const bart_dim_t dims[D], int k, bart_flags_t flags, complex float* tmp_norm, const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs[D], const complex float* iptr)
 {
-	long norm_dims[D];
-	long norm_strs[D];
+	bart_dim_t norm_dims[D];
+	bart_stride_t norm_strs[D];
 
 	md_select_dims(D, ~flags, norm_dims, dims);
 	md_calc_strides(D, norm_strs, norm_dims, CFL_SIZE);
@@ -4040,7 +4040,7 @@ void md_zhardthresh_joint2(int D, const long dims[D], int k, unsigned long flags
  * @param istrs source strides
  * @param iptr source -- values to be thresholded
  */
-void md_zhardthresh2(int D, const long dims[D], int k, unsigned long flags, const long ostrs[D], complex float* optr, const long istrs[D], const complex float* iptr)
+void md_zhardthresh2(int D, const bart_dim_t dims[D], int k, bart_flags_t flags, const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs[D], const complex float* iptr)
 {
 	NESTED(void, nary_zhardthresh, (struct nary_opt_data_s* data, void* ptr[]))
 	{
@@ -4053,7 +4053,7 @@ void md_zhardthresh2(int D, const long dims[D], int k, unsigned long flags, cons
 		return;
 	}
 
-	long norm_dims[D];
+	bart_dim_t norm_dims[D];
 	md_select_dims(D, ~flags, norm_dims, dims);
 
 	complex float* tmp_norm = md_alloc_sameplace(D, norm_dims, CFL_SIZE, iptr);
@@ -4075,9 +4075,9 @@ void md_zhardthresh2(int D, const long dims[D], int k, unsigned long flags, cons
  * @param optr destination -- thresholded values
  * @param iptr source -- values to be thresholded
  */
-void md_zhardthresh(int D, const long dims[D], int k, unsigned long flags, complex float* optr, const complex float* iptr)
+void md_zhardthresh(int D, const bart_dim_t dims[D], int k, bart_flags_t flags, complex float* optr, const complex float* iptr)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
 	md_zhardthresh2(D, dims, k, flags, strs, optr, strs, iptr);
@@ -4089,7 +4089,7 @@ void md_zhardthresh(int D, const long dims[D], int k, unsigned long flags, compl
  *
  * optr = min(val, iptr)
  */
-void md_smin2(int D, const long dim[D], const long ostr[D], float* optr, const long istr[D], const float* iptr, float val)
+void md_smin2(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr[D], const float* iptr, float val)
 {
 	float* tmp = md_alloc_sameplace(D, dim, FL_SIZE, iptr);
 
@@ -4106,9 +4106,9 @@ void md_smin2(int D, const long dim[D], const long ostr[D], float* optr, const l
  *
  * optr = min(val, iptr)
  */
-void md_smin(int D, const long dim[D], float* optr, const float* iptr, float val)
+void md_smin(int D, const bart_dim_t dim[D], float* optr, const float* iptr, float val)
 {
-	long str[D];
+	bart_stride_t str[D];
  	md_calc_strides(D, str, dim, FL_SIZE);
 
 	md_smin2(D, dim, str, optr, str, iptr, val);
@@ -4121,7 +4121,7 @@ void md_smin(int D, const long dim[D], float* optr, const float* iptr, float val
  *
  * optr = max(val, iptr)
  */
-void md_smax2(int D, const long dim[D], const long ostr[D], float* optr, const long istr[D], const float* iptr, float val)
+void md_smax2(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr[D], const float* iptr, float val)
 {
 	if (is_delayed(optr)) {
 
@@ -4156,7 +4156,7 @@ void md_smax2(int D, const long dim[D], const long ostr[D], float* optr, const l
  *
  * optr = max(val, real(iptr))
  */
-void md_zsmax2(int D, const long dim[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr, float val)
+void md_zsmax2(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr, float val)
 {
 	if (is_delayed(optr)) {
 
@@ -4190,7 +4190,7 @@ void md_zsmax2(int D, const long dim[D], const long ostr[D], complex float* optr
  *
  * optr = min(val, real(iptr))
  */
-void md_zsmin2(int D, const long dim[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr, float val)
+void md_zsmin2(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr, float val)
 {
 	NESTED(void, nary_zsmin, (struct nary_opt_data_s* data, void* ptr[]))
 	{
@@ -4207,9 +4207,9 @@ void md_zsmin2(int D, const long dim[D], const long ostr[D], complex float* optr
  *
  * optr = max(val, real(iptr))
  */
-void md_zsmax(int D, const long dim[D], complex float* optr, const complex float* iptr, float val)
+void md_zsmax(int D, const bart_dim_t dim[D], complex float* optr, const complex float* iptr, float val)
 {
-	long str[D];
+	bart_stride_t str[D];
 	md_calc_strides(D, str, dim, CFL_SIZE);
 
 	md_zsmax2(D, dim, str, optr, str, iptr, val);
@@ -4220,9 +4220,9 @@ void md_zsmax(int D, const long dim[D], complex float* optr, const complex float
  *
  * optr = min(val, real(iptr))
  */
-void md_zsmin(int D, const long dim[D], complex float* optr, const complex float* iptr, float val)
+void md_zsmin(int D, const bart_dim_t dim[D], complex float* optr, const complex float* iptr, float val)
 {
-	long str[D];
+	bart_stride_t str[D];
 	md_calc_strides(D, str, dim, CFL_SIZE);
 
 	md_zsmin2(D, dim, str, optr, str, iptr, val);
@@ -4235,9 +4235,9 @@ void md_zsmin(int D, const long dim[D], complex float* optr, const complex float
  *
  * optr = max(val, iptr)
  */
-void md_smax(int D, const long dim[D], float* optr, const float* iptr, float val)
+void md_smax(int D, const bart_dim_t dim[D], float* optr, const float* iptr, float val)
 {
-	long str[D];
+	bart_stride_t str[D];
  	md_calc_strides(D, str, dim, FL_SIZE);
 
 	md_smax2(D, dim, str, optr, str, iptr, val);
@@ -4245,9 +4245,9 @@ void md_smax(int D, const long dim[D], float* optr, const float* iptr, float val
 
 
 
-static void md_fdiff_core2(int D, const long dims[D], int d, bool dir, const long ostr[D], float* out, const long istr[D], const float* in)
+static void md_fdiff_core2(int D, const bart_dim_t dims[D], int d, bool dir, const bart_stride_t ostr[D], float* out, const bart_stride_t istr[D], const float* in)
 {
-	long pos[D];
+	bart_dim_t pos[D];
 	md_set_dims(D, pos, 0);
 	pos[d] = dir ? 1 : -1;
 
@@ -4259,7 +4259,7 @@ static void md_fdiff_core2(int D, const long dims[D], int d, bool dir, const lon
  * Compute finite (forward) differences along selected dimensions.
  *
  */
-void md_fdiff2(int D, const long dims[D], int d, const long ostr[D], float* out, const long istr[D], const float* in)
+void md_fdiff2(int D, const bart_dim_t dims[D], int d, const bart_stride_t ostr[D], float* out, const bart_stride_t istr[D], const float* in)
 {
 	md_fdiff_core2(D, dims, d, true, ostr, out, istr, in);
 }
@@ -4270,9 +4270,9 @@ void md_fdiff2(int D, const long dims[D], int d, const long ostr[D], float* out,
  * Compute finite differences along selected dimensions.
  *
  */
-void md_fdiff(int D, const long dims[D], int d, float* out, const float* in)
+void md_fdiff(int D, const bart_dim_t dims[D], int d, float* out, const float* in)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, FL_SIZE);
 
 	md_fdiff2(D, dims, d, strs, out, strs, in);
@@ -4284,7 +4284,7 @@ void md_fdiff(int D, const long dims[D], int d, float* out, const float* in)
  * Compute finite (backward) differences along selected dimensions.
  *
  */
-void md_fdiff_backwards2(int D, const long dims[D], int d, const long ostr[D], float* out, const long istr[D], const float* in)
+void md_fdiff_backwards2(int D, const bart_dim_t dims[D], int d, const bart_stride_t ostr[D], float* out, const bart_stride_t istr[D], const float* in)
 {
 	md_fdiff_core2(D, dims, d, false, ostr, out, istr, in);
 }
@@ -4295,9 +4295,9 @@ void md_fdiff_backwards2(int D, const long dims[D], int d, const long ostr[D], f
  * Compute finite (backward) differences along selected dimensions.
  *
  */
-void md_fdiff_backwards(int D, const long dims[D], int d, float* out, const float* in)
+void md_fdiff_backwards(int D, const bart_dim_t dims[D], int d, float* out, const float* in)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	memset(strs, 0, sizeof strs); // warning
 	md_calc_strides(D, strs, dims, FL_SIZE);
 
@@ -4306,11 +4306,11 @@ void md_fdiff_backwards(int D, const long dims[D], int d, float* out, const floa
 
 
 
-static void md_zfdiff_core2(int D, const long dims[D], int d, bool dir, const long ostr[D], complex float* out, const long istr[D], const complex float* in)
+static void md_zfdiff_core2(int D, const bart_dim_t dims[D], int d, bool dir, const bart_stride_t ostr[D], complex float* out, const bart_stride_t istr[D], const complex float* in)
 {
 	// we could also implement in terms of md_fdiff2
 
-	long pos[D];
+	bart_dim_t pos[D];
 	md_set_dims(D, pos, 0);
 	pos[d] = dir ? 1 : -1;
 
@@ -4322,7 +4322,7 @@ static void md_zfdiff_core2(int D, const long dims[D], int d, bool dir, const lo
  * Compute finite (forward) differences along selected dimensions.
  *
  */
-void md_zfdiff2(int D, const long dims[D], int d, const long ostr[D], complex float* out, const long istr[D], const complex float* in)
+void md_zfdiff2(int D, const bart_dim_t dims[D], int d, const bart_stride_t ostr[D], complex float* out, const bart_stride_t istr[D], const complex float* in)
 {
 	md_zfdiff_core2(D, dims, d, true, ostr, out, istr, in);
 }
@@ -4333,7 +4333,7 @@ void md_zfdiff2(int D, const long dims[D], int d, const long ostr[D], complex fl
  * Compute finite (backward) differences along selected dimensions.
  *
  */
-void md_zfdiff_backwards2(int D, const long dims[D], int d, const long ostr[D], complex float* out, const long istr[D], const complex float* in)
+void md_zfdiff_backwards2(int D, const bart_dim_t dims[D], int d, const bart_stride_t ostr[D], complex float* out, const bart_stride_t istr[D], const complex float* in)
 {
 	md_zfdiff_core2(D, dims, d, false, ostr, out, istr, in);
 }
@@ -4344,9 +4344,9 @@ void md_zfdiff_backwards2(int D, const long dims[D], int d, const long ostr[D], 
  * Compute finite (forward) differences along selected dimensions.
  *
  */
-void md_zfdiff(int D, const long dims[D], int d, complex float* out, const complex float* in)
+void md_zfdiff(int D, const bart_dim_t dims[D], int d, complex float* out, const complex float* in)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	memset(strs, 0, sizeof strs); // warning
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
@@ -4358,11 +4358,11 @@ void md_zfdiff(int D, const long dims[D], int d, complex float* out, const compl
 * Compute finite (forward) differences along selected dimension and set first pos to zero.
 *
 */
-void md_zfdiff0(int D, const long dims[D], int d, complex float* out, const complex float* in)
+void md_zfdiff0(int D, const bart_dim_t dims[D], int d, complex float* out, const complex float* in)
 {
 	md_zfdiff(D, dims, d, out, in);
 
-	long zdims[D];
+	bart_dim_t zdims[D];
 	md_select_dims(D, ~MD_BIT(d), zdims, dims);
 
 	md_clear2(D, zdims, MD_STRIDES(D, dims, CFL_SIZE), out, CFL_SIZE);
@@ -4372,9 +4372,9 @@ void md_zfdiff0(int D, const long dims[D], int d, complex float* out, const comp
  * Compute finite (backward) differences along selected dimensions.
  *
  */
-void md_zfdiff_backwards(int D, const long dims[D], int d, complex float* out, const complex float* in)
+void md_zfdiff_backwards(int D, const bart_dim_t dims[D], int d, complex float* out, const complex float* in)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	memset(strs, 0, sizeof strs); // warning
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
@@ -4385,20 +4385,20 @@ void md_zfdiff_backwards(int D, const long dims[D], int d, complex float* out, c
 * Compute finite (backward) differences along selected dimension and set last pos to zero.
 *
 */
-void md_zfdiff_backwards0(int D, const long dims[D], int d, complex float* out, const complex float* in)
+void md_zfdiff_backwards0(int D, const bart_dim_t dims[D], int d, complex float* out, const complex float* in)
 {
 	md_zfdiff_backwards(D, dims, d, out, in);
 
-	long zdims[D];
+	bart_dim_t zdims[D];
 	md_select_dims(D, ~MD_BIT(d), zdims, dims);
 
-	long pos[D]; // = { };
+	bart_dim_t pos[D]; // = { };
 	for (int i = 0; i < D; i++)
 		pos[i] = 0;
 
 	pos[d] = dims[d] - 1;
 
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 	md_clear2(D, zdims, MD_STRIDES(D, dims, CFL_SIZE), &MD_ACCESS(D, strs, pos, out), CFL_SIZE);
 }
@@ -4409,15 +4409,15 @@ void md_zfdiff_backwards0(int D, const long dims[D], int d, complex float* out, 
  *
  * out = cumsum(in)
  */
-static void md_zcumsum_core2(int D, const long dims[D], unsigned long flags, complex float* tmp, complex float* tmp2, const long ostrs[D], complex float* out, const long istrs[D], const complex float* in)
+static void md_zcumsum_core2(int D, const bart_dim_t dims[D], bart_flags_t flags, complex float* tmp, complex float* tmp2, const bart_stride_t ostrs[D], complex float* out, const bart_stride_t istrs[D], const complex float* in)
 {
 	md_copy2(D, dims, ostrs, out, istrs, in, CFL_SIZE);
 	md_copy2(D, dims, istrs, tmp, istrs, in, CFL_SIZE);
 
-	long zdims[D];
-	md_select_dims(D, ~0UL, zdims, dims);
+	bart_dim_t zdims[D];
+	md_select_dims(D, ~UINT64_C(0), zdims, dims);
 
-	long center[D]; // = { };
+	bart_dim_t center[D]; // = { };
 	memset(center, 0, sizeof center);
 
 	for (int i = 0; i < D; i++) {
@@ -4448,9 +4448,9 @@ static void md_zcumsum_core2(int D, const long dims[D], unsigned long flags, com
  *
  * out = cumsum(in)
  */
-void md_zcumsum(int D, const long dims[D], unsigned long flags, complex float* out, const complex float* in)
+void md_zcumsum(int D, const bart_dim_t dims[D], bart_flags_t flags, complex float* out, const complex float* in)
 {
-	long str[D];
+	bart_stride_t str[D];
 	md_calc_strides(D, str, dims, CFL_SIZE);
 	md_zcumsum2(D, dims, flags, str, out, str, in);
 }
@@ -4461,7 +4461,7 @@ void md_zcumsum(int D, const long dims[D], unsigned long flags, complex float* o
  *
  * out = cumsum(in)
  */
-void md_zcumsum2(int D, const long dims[D], unsigned long flags, const long ostrs[D], complex float* out, const long istrs[D], const complex float* in)
+void md_zcumsum2(int D, const bart_dim_t dims[D], bart_flags_t flags, const bart_stride_t ostrs[D], complex float* out, const bart_stride_t istrs[D], const complex float* in)
 {
 	complex float* tmp = md_alloc_sameplace(D, dims, CFL_SIZE, out);
 	complex float* tmp2 = md_alloc_sameplace(D, dims, CFL_SIZE, out);
@@ -4475,7 +4475,7 @@ void md_zcumsum2(int D, const long dims[D], unsigned long flags, const long ostr
 
 
 // DO NOT USE DIRECTLY - this is used internally by fftmod from fft.[ch]
-void md_zfftmod2(int D, const long dims[D], const long ostrs[D], complex float* optr, const long istrs[D], const complex float* iptr, bool inv, double phase)
+void md_zfftmod2(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs[D], const complex float* iptr, bool inv, double phase)
 {
 	assert(D > 0);
 	assert((CFL_SIZE == ostrs[0]) && (CFL_SIZE == istrs[0]));
@@ -4488,12 +4488,12 @@ void md_zfftmod2(int D, const long dims[D], const long ostrs[D], complex float* 
 	};
 
 	optimized_twoop_oi(D - 1, dims + 1, ostrs + 1, optr, istrs + 1, iptr,
-		(size_t[2]){ (size_t)(N * (long)CFL_SIZE), (size_t)(N * (long)CFL_SIZE) }, nary_zfftmod);
+		(size_t[2]){ (size_t)(N * (bart_stride_t)CFL_SIZE), (size_t)(N * (bart_stride_t)CFL_SIZE) }, nary_zfftmod);
 }
 
-void md_zfftmod(int D, const long dims[D], complex float* optr, const complex float* iptr, bool inv, double phase)
+void md_zfftmod(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr, bool inv, double phase)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
 	md_zfftmod2(D, dims, strs, optr, strs, iptr, inv, phase);
@@ -4507,11 +4507,11 @@ void md_zfftmod(int D, const long dims[D], complex float* optr, const complex fl
  * @param dims -- full dimensions of src image
  * @param flags -- bitmask for applying the sum, i.e. the dimensions that will not stay
  */
-void md_zsum(int D, const long dims[D], unsigned long flags, complex float* dst, const complex float* src)
+void md_zsum(int D, const bart_dim_t dims[D], bart_flags_t flags, complex float* dst, const complex float* src)
 {
-	long str1[D];
-	long str2[D];
-	long dims2[D];
+	bart_stride_t str1[D];
+	bart_stride_t str2[D];
+	bart_dim_t dims2[D];
 
 	md_select_dims(D, ~flags, dims2, dims);
 
@@ -4524,7 +4524,7 @@ void md_zsum(int D, const long dims[D], unsigned long flags, complex float* dst,
 
 
 
-void md_real2(int D, const long dims[D], const long ostrs[D], float* dst, const long istrs[D], const complex float* src)
+void md_real2(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], float* dst, const bart_stride_t istrs[D], const complex float* src)
 {
 	if (is_delayed(dst)) {
 
@@ -4540,12 +4540,12 @@ void md_real2(int D, const long dims[D], const long ostrs[D], float* dst, const 
 	optimized_twoop_oi(D, dims, ostrs, dst, istrs, src, (size_t[2]){ FL_SIZE, CFL_SIZE }, nary_real);
 }
 
-void md_real(int D, const long dims[D], float* dst, const complex float* src)
+void md_real(int D, const bart_dim_t dims[D], float* dst, const complex float* src)
 {
 	md_real2(D, dims, MD_STRIDES(D, dims, FL_SIZE), dst, MD_STRIDES(D, dims, CFL_SIZE), src);
 }
 
-void md_imag2(int D, const long dims[D], const long ostrs[D], float* dst, const long istrs[D], const complex float* src)
+void md_imag2(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], float* dst, const bart_stride_t istrs[D], const complex float* src)
 {
 	if (is_delayed(dst)) {
 
@@ -4561,14 +4561,14 @@ void md_imag2(int D, const long dims[D], const long ostrs[D], float* dst, const 
 	optimized_twoop_oi(D, dims, ostrs, dst, istrs, src, (size_t[2]){ FL_SIZE, CFL_SIZE }, nary_imag);
 }
 
-void md_imag(int D, const long dims[D], float* dst, const complex float* src)
+void md_imag(int D, const bart_dim_t dims[D], float* dst, const complex float* src)
 {
 	md_imag2(D, dims, MD_STRIDES(D, dims, FL_SIZE), dst, MD_STRIDES(D, dims, CFL_SIZE), src);
 }
 
 
 
-void md_zcmpl_real2(int D, const long dims[D], const long ostrs[D], complex float* dst, const long istrs[D], const float* src)
+void md_zcmpl_real2(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex float* dst, const bart_stride_t istrs[D], const float* src)
 {
 	if (is_delayed(dst)) {
 
@@ -4585,12 +4585,12 @@ void md_zcmpl_real2(int D, const long dims[D], const long ostrs[D], complex floa
 	optimized_twoop_oi(D, dims, ostrs, dst, istrs, src, (size_t[2]){ CFL_SIZE, FL_SIZE }, nary_real);
 }
 
-void md_zcmpl_real(int D, const long dims[D], complex float* dst, const float* src)
+void md_zcmpl_real(int D, const bart_dim_t dims[D], complex float* dst, const float* src)
 {
 	md_zcmpl_real2(D, dims, MD_STRIDES(D, dims, CFL_SIZE), dst, MD_STRIDES(D, dims, FL_SIZE), src);
 }
 
-void md_zcmpl_imag2(int D, const long dims[D], const long ostrs[D], complex float* dst, const long istrs[D], const float* src)
+void md_zcmpl_imag2(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex float* dst, const bart_stride_t istrs[D], const float* src)
 {
 	if (is_delayed(dst)) {
 
@@ -4607,13 +4607,13 @@ void md_zcmpl_imag2(int D, const long dims[D], const long ostrs[D], complex floa
 	optimized_twoop_oi(D, dims, ostrs, dst, istrs, src, (size_t[2]){ CFL_SIZE, FL_SIZE }, nary_imag);
 }
 
-void md_zcmpl_imag(int D, const long dims[D], complex float* dst, const float* src)
+void md_zcmpl_imag(int D, const bart_dim_t dims[D], complex float* dst, const float* src)
 {
 	md_zcmpl_imag2(D, dims, MD_STRIDES(D, dims, CFL_SIZE), dst, MD_STRIDES(D, dims, FL_SIZE), src);
 }
 
 
-void md_zcmpl2(int D, const long dims[D], const long ostr[D], complex float* dst, const long istr1[D], const float* src_real, const long istr2[D], const float* src_imag)
+void md_zcmpl2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* dst, const bart_stride_t istr1[D], const float* src_real, const bart_stride_t istr2[D], const float* src_imag)
 {
 	if (is_delayed(dst)) {
 
@@ -4630,7 +4630,7 @@ void md_zcmpl2(int D, const long dims[D], const long ostr[D], complex float* dst
 	optimized_threeop_oii(D, dims, ostr, dst, istr1, src_real, istr2, src_imag, (size_t[3]){ CFL_SIZE, FL_SIZE , FL_SIZE }, nary_zcmpl);
 }
 
-extern void md_zcmpl(int D, const long dims[D], complex float* dst, const float* src_real, const float* src_imag)
+extern void md_zcmpl(int D, const bart_dim_t dims[D], complex float* dst, const float* src_real, const float* src_imag)
 {
 	md_zcmpl2(D, dims, MD_STRIDES(D, dims, CFL_SIZE), dst, MD_STRIDES(D, dims, FL_SIZE), src_real, MD_STRIDES(D, dims, FL_SIZE), src_imag);
 }
@@ -4642,7 +4642,7 @@ extern void md_zcmpl(int D, const long dims[D], complex float* dst, const float*
  *
  * optr = 1/sqrt(2pi) * sigma * exp(-(iptr-mu)^2/(2*sigma^2))
  */
-void md_pdf_gauss2(int D, const long dims[D], const long ostr[D], float* optr, const long istr[D], const float* iptr, float mu, float sigma)
+void md_pdf_gauss2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], float* optr, const bart_stride_t istr[D], const float* iptr, float mu, float sigma)
 {
 	NESTED(void, nary_pdf_gauss, (struct nary_opt_data_s* data, void* ptr[]))
 	{
@@ -4653,7 +4653,7 @@ void md_pdf_gauss2(int D, const long dims[D], const long ostr[D], float* optr, c
 		(size_t[2]){ FL_SIZE, FL_SIZE }, nary_pdf_gauss);
 }
 
-void md_pdf_gauss(int D, const long dims[D], float* optr, const float* iptr, float mu, float sigma)
+void md_pdf_gauss(int D, const bart_dim_t dims[D], float* optr, const float* iptr, float mu, float sigma)
 {
 	md_pdf_gauss2(D, dims, MD_STRIDES(D, dims, FL_SIZE), optr, MD_STRIDES(D, dims, FL_SIZE), iptr, mu, sigma);
 }
@@ -4662,15 +4662,15 @@ void md_pdf_gauss(int D, const long dims[D], float* optr, const float* iptr, flo
 /* Sample multivariate normal distribution
  * with covariance matrix = diag([S,..S])
  */
-void md_zgausspdf(int D, const long dim[D], complex float *optr, float S)
+void md_zgausspdf(int D, const bart_dim_t dim[D], complex float *optr, float S)
 {
 	assert(S > 0);
 
 	md_clear(D, dim, optr, CFL_SIZE);
 
-	const long *dimp = &dim[0];
+	const bart_dim_t *dimp = &dim[0];
 
-	NESTED(complex float, zgauss_core, (const long im_pos[]))
+	NESTED(complex float, zgauss_core, (const bart_dim_t im_pos[]))
 	{
 		complex float val = 0.;
 
@@ -4686,16 +4686,16 @@ void md_zgausspdf(int D, const long dim[D], complex float *optr, float S)
 }
 
 
-float md_zmaxnorm2(int D, const long dims[D], const long strs[D], const complex float* src)
+float md_zmaxnorm2(int D, const bart_dim_t dims[D], const bart_stride_t strs[D], const complex float* src)
 {
 	complex float* tmp = md_alloc(D, dims, CFL_SIZE);
 
-	long tstrs[D];
+	bart_stride_t tstrs[D];
 	md_calc_strides(D, tstrs, dims, CFL_SIZE);
 
 	md_copy2(D, dims, tstrs, tmp, strs, src, CFL_SIZE);
 
-	long N = md_calc_size(D, dims);
+	bart_dim_t N = md_calc_size(D, dims);
 	zsort(N, tmp);	// FIXME:  should use quick_select
 
 	float val = cabsf(tmp[N - 1]);
@@ -4706,7 +4706,7 @@ float md_zmaxnorm2(int D, const long dims[D], const long strs[D], const complex 
 }
 
 
-float md_zmaxnorm(int D, const long dims[D], const complex float* ptr)
+float md_zmaxnorm(int D, const bart_dim_t dims[D], const complex float* ptr)
 {
 	return md_zmaxnorm2(D, dims, MD_STRIDES(D, dims, CFL_SIZE), ptr);
 }
@@ -4715,13 +4715,13 @@ float md_zmaxnorm(int D, const long dims[D], const complex float* ptr)
  * Set NaN values to zero.
  *
  */
-void md_zsetnanzero(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zsetnanzero(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 	make_z2op_simple(md_zsetnanzero2, D, dims, optr, iptr);
 }
 
-void md_zsetnanzero2(int D, const long dims[D], const long ostr[D], complex float* optr,
-		const long istr[D], const complex float* iptr)
+void md_zsetnanzero2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr,
+		const bart_stride_t istr[D], const complex float* iptr)
 {
 	MAKE_Z2OP(zsetnanzero, D, dims, ostr, optr, istr, iptr);
 }
