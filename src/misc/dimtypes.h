@@ -6,7 +6,6 @@
 #ifndef _DIMTYPES_H
 #define _DIMTYPES_H
 
-#include "misc/dimtypes.h"
 #include <stdint.h>
 #include <inttypes.h>
 
