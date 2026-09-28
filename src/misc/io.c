@@ -47,7 +47,7 @@ static void toolgraph_add_input(const char* node, const char* file);
 static void toolgraph_save_iofiles(void);
 
 
-static int xdprintf(int fd, const char* fmt, ...) __attribute__((format(printf,2,3)));
+static int xdprintf(int fd, const char* fmt, ...) __attribute__((format(BART_PRINTF,2,3)));
 static int xdprintf(int fd, const char* fmt, ...)
 {
 	va_list ap;
