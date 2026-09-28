@@ -25,7 +25,7 @@ typedef void (*fun_t)(int D, const bart_dim_t dimensions[D], bart_flags_t flags,
 
 static bool test_mpi_fft_variants(fun_t test_fun, bart_flags_t fft_flags, bool inplace)
 {
-	const bart_flags_t flags = UINT64_C(8);
+	const bart_flags_t flags = 8;
 	const bart_dim_t dims[N] = { 32, 32, 1, 3, 1, 1, 1, 1, 1, 1};
 	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, 1);
@@ -76,20 +76,20 @@ static bool test_mpi_fft_variants(fun_t test_fun, bart_flags_t fft_flags, bool i
 	UT_RETURN_ASSERT(err < UT_TOL);
 }
 
-static bool test_fft(void)	{ return test_mpi_fft_variants(fft,	UINT64_C(7), false); }
-static bool test_ifft(void)	{ return test_mpi_fft_variants(ifft,	UINT64_C(7), false); }
-static bool test_fftc(void)	{ return test_mpi_fft_variants(fftc,	UINT64_C(7), false); }
-static bool test_ifftc(void)	{ return test_mpi_fft_variants(ifftc,	UINT64_C(7), false); }
-static bool test_fftu(void)	{ return test_mpi_fft_variants(fftu,	UINT64_C(7), false); }
-static bool test_ifftu(void)	{ return test_mpi_fft_variants(ifftu,	UINT64_C(7), false); }
+static bool test_fft(void)	{ return test_mpi_fft_variants(fft,	7, false); }
+static bool test_ifft(void)	{ return test_mpi_fft_variants(ifft,	7, false); }
+static bool test_fftc(void)	{ return test_mpi_fft_variants(fftc,	7, false); }
+static bool test_ifftc(void)	{ return test_mpi_fft_variants(ifftc,	7, false); }
+static bool test_fftu(void)	{ return test_mpi_fft_variants(fftu,	7, false); }
+static bool test_ifftu(void)	{ return test_mpi_fft_variants(ifftu,	7, false); }
 
 
-static bool test_fft_inplace(void)	{ return test_mpi_fft_variants(fft,	UINT64_C(7), true); }
-static bool test_ifft_inplace(void)	{ return test_mpi_fft_variants(ifft,	UINT64_C(7), true); }
-static bool test_fftc_inplace(void)	{ return test_mpi_fft_variants(fftc,	UINT64_C(7), true); }
-static bool test_ifftc_inplace(void)	{ return test_mpi_fft_variants(ifftc,	UINT64_C(7), true); }
-static bool test_fftu_inplace(void)	{ return test_mpi_fft_variants(fftu,	UINT64_C(7), true); }
-static bool test_ifftu_inplace(void)	{ return test_mpi_fft_variants(ifftu,	UINT64_C(7), true); }
+static bool test_fft_inplace(void)	{ return test_mpi_fft_variants(fft,	7, true); }
+static bool test_ifft_inplace(void)	{ return test_mpi_fft_variants(ifft,	7, true); }
+static bool test_fftc_inplace(void)	{ return test_mpi_fft_variants(fftc,	7, true); }
+static bool test_ifftc_inplace(void)	{ return test_mpi_fft_variants(ifftc,	7, true); }
+static bool test_fftu_inplace(void)	{ return test_mpi_fft_variants(fftu,	7, true); }
+static bool test_ifftu_inplace(void)	{ return test_mpi_fft_variants(ifftu,	7, true); }
 
 UT_REGISTER_TEST(test_fft);
 UT_REGISTER_TEST(test_ifft);

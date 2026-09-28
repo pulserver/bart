@@ -47,7 +47,7 @@ extern void debug_good_backtrace(int skip);
 const char* debug_good_backtrace_string(int skip);
 #endif // USE_DWARF
 
-extern void debug_trace(const char* fmt, ...);
+extern void debug_trace(const char* fmt, ...) __attribute__((format(printf,1,2)));
 
 #define TRACE()	debug_trace("%s:%d %s\n", __FILE__, __LINE__, __func__)
 

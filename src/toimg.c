@@ -103,7 +103,7 @@ static void toimg_stack(const char* name, bool dicom, bool dim_names, bool singl
 	bart_dim_t sq_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 
 	int l = 0;
-	bart_flags_t im_flags = UINT64_C(0);
+	bart_flags_t im_flags = 0;
 
 	for (int i = 0; i < DIMS; i++) {
 
@@ -131,7 +131,7 @@ static void toimg_stack(const char* name, bool dicom, bool dim_names, bool singl
 
 	assert(md_calc_size(DIMS, loop_dims) == num_imgs);
 
-	debug_printf(DP_INFO, "Writing %ld image(s)...", num_imgs);
+	debug_printf(DP_INFO, "Writing %" PRId64 " image(s)...", num_imgs);
 
 #pragma omp parallel for
 	for (bart_dim_t i = 0; i < num_imgs; i++) {
@@ -159,7 +159,7 @@ static void toimg_stack(const char* name, bool dicom, bool dim_names, bool singl
 			if (num_imgs == 1)
 				sprintf(name_i, "%s.%s", name, dicom ? "dcm" : "png");
 			else
-				sprintf(name_i, "%s-%04ld.%s", name, i, dicom ? "dcm" : "png");
+				sprintf(name_i, "%s-%04" PRId64 ".%s", name, i, dicom ? "dcm" : "png");
 
 		} else {
 

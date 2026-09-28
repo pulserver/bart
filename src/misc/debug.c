@@ -120,7 +120,7 @@ void debug_vprintf(int level, const char* fmt, va_list ap)
 		if (NULL != str) {
 
 			errno = 0;
-			bart_dim_t r = strtol(str, NULL, 10);
+			bart_dim_t r = strtoll(str, NULL, 10);
 
 			if ((errno == 0) && (0 <= r) && (r < 10))
 				debug_level = r;
@@ -151,7 +151,7 @@ void debug_vprintf(int level, const char* fmt, va_list ap)
 			if (NULL != str) {
 
 				errno = 0;
-				bart_dim_t r = strtol(str, NULL, 10);
+				bart_dim_t r = strtoll(str, NULL, 10);
 
 				if ((errno == 0) && (1 <= r))
 					cmd = ptr_printf(" (%s)", command_line ?: "bart wrapper");

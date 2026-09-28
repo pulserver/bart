@@ -248,7 +248,7 @@ static void dump_fun(const nlop_data_t* _data, complex float* dst, const complex
 	if (data->frw) {
 
 		char filename[strlen(data->filename) + 10];
-		sprintf(filename, "%s_%ld_frw", data->filename, data->counter);
+		sprintf(filename, "%s_%" PRId64 "_frw", data->filename, data->counter);
 		dump_cfl(filename, data->N, data->dims, src);
 		data->counter++;
 	}
@@ -263,7 +263,7 @@ static void dump_der(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 	if (data->der) {
 
 		char filename[strlen(data->filename) + 10];
-		sprintf(filename, "%s_%ld_der", data->filename, data->counter);
+		sprintf(filename, "%s_%" PRId64 "_der", data->filename, data->counter);
 		dump_cfl(filename, data->N, data->dims, src);
 		data->counter++;
 	}
@@ -278,7 +278,7 @@ static void dump_adj(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 	if (data->adj) {
 
 		char filename[strlen(data->filename) + 10];
-		sprintf(filename, "%s_%ld_adj", data->filename, data->counter);
+		sprintf(filename, "%s_%" PRId64 "_adj", data->filename, data->counter);
 		dump_cfl(filename, data->N, data->dims, src);
 		data->counter++;
 	}

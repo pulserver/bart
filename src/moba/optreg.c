@@ -240,7 +240,7 @@ bool opt_reg_moba(void* ptr, char c, const char* optarg)
 		if (strcmp(rt, "W") == 0) {
 
 			regs[r].xform = L1WAV;
-			int ret = sscanf(optarg, "%*[^:]:%lu:%lu:%f", &regs[r].xflags, &regs[r].jflags, &regs[r].lambda);
+			int ret = sscanf(optarg, "%*[^:]:%" SCNu64 ":%" SCNu64 ":%f", &regs[r].xflags, &regs[r].jflags, &regs[r].lambda);
 			assert(3 == ret);
 
 		} else
@@ -265,7 +265,7 @@ bool opt_reg_moba(void* ptr, char c, const char* optarg)
 		if (strcmp(rt, "T") == 0) {
 
 			regs[r].xform = TV;
-			int ret = sscanf(optarg, "%*[^:]:%lu:%lu:%f", &regs[r].xflags, &regs[r].jflags, &regs[r].lambda);
+			int ret = sscanf(optarg, "%*[^:]:%" SCNu64 ":%" SCNu64 ":%f", &regs[r].xflags, &regs[r].jflags, &regs[r].lambda);
 			assert(3 == ret);
 
 		} else
@@ -324,7 +324,7 @@ static void opt_reg_meco_configure(int N, const bart_dim_t dims[N], const struct
 
 		case L1WAV:
 
-			debug_printf(DP_INFO, "  > l1-wavelet regularization with parameters %lu:%lu:%.3f\n", regs[nr].xflags, regs[nr].jflags, regs[nr].lambda);
+			debug_printf(DP_INFO, "  > l1-wavelet regularization with parameters %" PRIu64 ":%" PRIu64 ":%.3f\n", regs[nr].xflags, regs[nr].jflags, regs[nr].lambda);
 
 			auto prox_maps = moba_joint_wavthresh_prox_create(N, maps_dims, COEFF_DIM, regs[nr].xflags, regs[nr].jflags, regs[nr].lambda, nr_joint_coeff);
 			auto prox_sens = moba_sens_prox_create(N, sens_dims);
@@ -357,7 +357,7 @@ static void opt_reg_meco_configure(int N, const bart_dim_t dims[N], const struct
 
 		case TV: // temporal dimension
 
-			debug_printf(DP_INFO, "  > TV regularization with parameters %lu:%lu:%.3f\n", regs[nr].xflags, regs[nr].jflags, regs[nr].lambda);
+			debug_printf(DP_INFO, "  > TV regularization with parameters %" PRIu64 ":%" PRIu64 ":%.3f\n", regs[nr].xflags, regs[nr].jflags, regs[nr].lambda);
 
 			auto lo_extract_maps = linop_extract_create(1, MD_DIMS(0), MD_DIMS(maps_size), MD_DIMS(x_size));
 			lo_extract_maps = linop_reshape_out_F(lo_extract_maps, N, maps_dims);
@@ -402,11 +402,11 @@ static void opt_reg_IRLL_configure(int N, const bart_dim_t dims[N], struct opt_r
 
 	bart_dim_t map_dims[DIMS];
 	md_copy_dims(DIMS, map_dims, img_dims);
-	map_dims[COEFF_DIM] = INT64_C(1);
+	map_dims[COEFF_DIM] = 1;
 
 	bart_dim_t map2_dims[DIMS];
 	md_copy_dims(DIMS, map2_dims, img_dims);
-	map2_dims[COEFF_DIM] = map2_dims[COEFF_DIM] - INT64_C(1);
+	map2_dims[COEFF_DIM] = map2_dims[COEFF_DIM] - 1;
 
 	debug_print_dims(DP_INFO, DIMS, img_dims);
 	debug_print_dims(DP_INFO, DIMS, coil_dims);

@@ -94,7 +94,7 @@ struct vptr_hint_s* hint_mpi_create(bart_flags_t mpi_flags, int N, const bart_di
 
 struct vptr_hint_s* hint_delayed_create(bart_flags_t delayed_flags)
 {
-	return vptr_hint_create(UINT64_C(0), 1, MD_DIMS(1), delayed_flags);
+	return vptr_hint_create(0, 1, MD_DIMS(1), delayed_flags);
 }
 
 struct vptr_hint_s* vptr_hint_create(bart_flags_t mpi_flags, int N, const bart_dim_t dims[N], bart_flags_t delayed_flags)
@@ -186,7 +186,7 @@ struct vptr_mem_s {
 	bart_flags_t flags;
 };
 
-struct vptr_mem_s vptr_mem_default = { NULL, 1, NULL, 0, UINT64_C(0) };
+struct vptr_mem_s vptr_mem_default = { NULL, 1, NULL, 0, 0 };
 
 bart_dim_t vptr_size[VPTR_LOC_MAX] = { 0 };
 bart_dim_t vptr_peak[VPTR_LOC_MAX] = { 0 };
@@ -619,7 +619,7 @@ static struct mem_s* vptr_reserve_int(size_t len)
 	x->shape.size = 0;
 
 	x->blocks.shape = &x->shape;
-	x->blocks.flags = UINT64_C(0);
+	x->blocks.flags = 0;
 	x->blocks.mem = NULL;
 
 	x->range.D = 0;
@@ -870,7 +870,7 @@ static void* vptr_resolve_int(const void* ptr, bool assert_rank)
 	if (!mpi_accessible(ptr)) {
 
 		if (assert_rank)
-			error("Trying to access %x from rank %d!\n", ptr, mpi_get_rank());
+			error("Trying to access %p from rank %d!\n", ptr, mpi_get_rank());
 
 		return NULL;
 	}
@@ -1259,7 +1259,7 @@ void loop_access_dims(int N, bart_flags_t flags[N], const bart_dim_t adims[N], c
 	    && (N < D || 1 == md_calc_size(N - D, adims + D))) {
 
 		for (int i = 0; i < N; i++)
-			flags[i] = 1 < adims[i] ? MD_BIT(i) : UINT64_C(0);
+			flags[i] = 1 < adims[i] ? MD_BIT(i) : 0;
 
 		return;
 	}
@@ -1270,7 +1270,7 @@ void loop_access_dims(int N, bart_flags_t flags[N], const bart_dim_t adims[N], c
 		md_set_dims(D, dstrs[i], 0);
 
 		if (0 != astrs[i])
-			md_unravel_index(D, dstrs[i], ~UINT64_C(0), mdims, labs(astrs[i]));
+			md_unravel_index(D, dstrs[i], ~UINT64_C(0), mdims, llabs(astrs[i]));
 
 		if (0 > astrs[i])
 			for (int j = 0; j < D; j++)
@@ -1322,7 +1322,7 @@ void loop_access_dims(int N, bart_flags_t flags[N], const bart_dim_t adims[N], c
 
 	for(int i = 0; i < N; i++) {
 
-		flags[i] = UINT64_C(0);
+		flags[i] = 0;
 
 		for(int j = 0; j < D; j++)
 			if (0 != dstrs[i][j])
@@ -1379,7 +1379,7 @@ bart_flags_t vptr_block_loop_flags(int N, const bart_dim_t dims[N], const bart_s
 	struct mem_s* mem = search(ptr, false);
 
 	if (NULL == mem)
-		return UINT64_C(0);
+		return 0;
 
 	check_valid_loop_access(mem, N, dims, strs, size, ptr, true);
 
@@ -1389,7 +1389,7 @@ bart_flags_t vptr_block_loop_flags(int N, const bart_dim_t dims[N], const bart_s
 		lflags |= mem->hint->mpi_flags;
 
 	if (0 == lflags)
-		return UINT64_C(0);
+		return 0;
 
 	bart_dim_t mdims[mem->shape.N + 1];
 	bart_dim_t tdims[N + 1];
@@ -1453,7 +1453,7 @@ void vptr_contiguous_strs(int N, const void* ptr, bart_flags_t lflags, bart_stri
 
 		bart_flags_t flags = ~(mem->blocks.flags << 1) & md_nontriv_dims(Nm, mdims);
 		nstrs[i] = md_reravel_index(Nm, flags, md_nontriv_dims(Nm, mdims), mdims,
-					labs(ostrs[i])) * ((ostrs[i] < 0) ? -1 : 1);
+					llabs(ostrs[i])) * ((ostrs[i] < 0) ? -1 : 1);
 	}
 }
 
@@ -1467,7 +1467,7 @@ bool is_mpi(const void* ptr)
 {
 	struct mem_s* mem = search(ptr, false);
 
-	return mem && mem->hint && (mem->hint->mpi_flags != UINT64_C(0));
+	return mem && mem->hint && (mem->hint->mpi_flags != 0);
 }
 
 
@@ -1601,10 +1601,10 @@ void vptr_assert_sameplace(int N, void* nptr[N])
 		struct mem_s* mem = search(nptr[i], false);
 
 		if ((NULL == mem_ref) && (NULL != mem))
-			error("Incompatible pointer: vptr(%x) at %d and normal pointer(%x) at 0!\n", nptr[i], i, nptr[0]);
+			error("Incompatible pointer: vptr(%p) at %d and normal pointer(%p) at 0!\n", nptr[i], i, nptr[0]);
 
 		if ((NULL != mem_ref) && (NULL == mem))
-			error("Incompatible pointer: vptr(%x) at 0 and normal pointer(%x) at %d!\n", nptr[0], nptr[i], i);
+			error("Incompatible pointer: vptr(%p) at 0 and normal pointer(%p) at %d!\n", nptr[0], nptr[i], i);
 
 		if (NULL == mem_ref)
 			continue;
@@ -1823,7 +1823,7 @@ static struct vptr_mapped_dims_s* vptr_mem_map_dims(int N, const bart_dim_t odim
 #endif
 	}
 
-	bart_flags_t set_flag = UINT64_C(0);
+	bart_flags_t set_flag = 0;
 	bool split = false;
 
 	bart_dim_t dims[Nred + Nmem + Nsize];

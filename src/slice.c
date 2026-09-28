@@ -60,7 +60,7 @@ int main_slice(int argc, char* argv[argc])
 	md_copy_dims(DIMS, out_dims, in_dims);
 
 	bart_dim_t pos2[DIMS] = { [0 ... DIMS - 1] = 0 };
-	bart_flags_t flags = INT64_C(0);
+	bart_flags_t flags = 0;
 
 	for (int i = 0; i < count; i++) {
 

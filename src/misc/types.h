@@ -10,9 +10,9 @@
 #include <stdnoreturn.h>
 
 #ifndef __cplusplus
-extern noreturn void error(const char* str, ...);
+extern noreturn void error(const char* str, ...) __attribute__((format(printf,1,2)));
 #else
-extern __attribute__((noreturn)) void error(const char* str, ...);
+extern __attribute__((noreturn, format(printf,1,2))) void error(const char* str, ...);
 #endif
 
 

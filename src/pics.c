@@ -125,9 +125,9 @@ int main_pics(int argc, char* argv[argc])
 	struct opt_reg_s ropts;
 	opt_reg_init(&ropts);
 
-	bart_flags_t loop_flags = UINT64_C(0);
+	bart_flags_t loop_flags = 0;
 
-	bart_flags_t mpi_flags = UINT64_C(0);
+	bart_flags_t mpi_flags = 0;
 
 	struct pics_config pics_conf = { };
 
@@ -257,7 +257,7 @@ int main_pics(int argc, char* argv[argc])
 
 		pics_conf.nuconf->cfft |= SLICE_FLAG;
 
-		debug_printf(DP_INFO, "SMS reconstruction: MB = %ld\n", ksp_dims[SLICE_DIM]);
+		debug_printf(DP_INFO, "SMS reconstruction: MB = %" PRId64 "\n", ksp_dims[SLICE_DIM]);
 	}
 
 	if (ropts.asl && ropts.teasl)
@@ -381,7 +381,7 @@ int main_pics(int argc, char* argv[argc])
 		debug_printf(DP_INFO, "GPU reconstruction\n");
 
 	if (map_dims[MAPS_DIM] > 1)
-		debug_printf(DP_INFO, "%ld maps.\nESPIRiT reconstruction.\n", map_dims[MAPS_DIM]);
+		debug_printf(DP_INFO, "%" PRId64 " maps.\nESPIRiT reconstruction.\n", map_dims[MAPS_DIM]);
 
 	if (conf.bpsense)
 		debug_printf(DP_INFO, "Basis Pursuit formulation\n");
@@ -452,7 +452,7 @@ int main_pics(int argc, char* argv[argc])
 		bart_dim_t T = md_calc_size(DIMS, pat_dims);
 		bart_dim_t samples = (bart_dim_t)pow(md_znorm(DIMS, pat_dims, pattern), 2.);
 
-		debug_printf(DP_INFO, "Size: %ld Samples: %ld Acc: %.2f\n", T, samples, (float)T / (float)samples);
+		debug_printf(DP_INFO, "Size: %" PRId64 " Samples: %" PRId64 " Acc: %.2f\n", T, samples, (float)T / (float)samples);
 
 		ifftmod(DIMS, ksp_dims, FFT_FLAGS, kspace, kspace);
 
@@ -647,7 +647,7 @@ int main_pics(int argc, char* argv[argc])
 
 	int nr_penalties = ropts.r + ropts.sr;
 
-	debug_printf(DP_INFO, "Regularization terms: %d, Supporting variables: %ld\n", nr_penalties, ropts.svars);
+	debug_printf(DP_INFO, "Regularization terms: %d, Supporting variables: %" PRId64 "\n", nr_penalties, ropts.svars);
 
 	// choose algorithm
 

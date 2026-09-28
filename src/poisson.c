@@ -280,7 +280,7 @@ int main_poisson(int argc, char* argv[argc])
 	if (NULL != mask) {
 
 		float f = cutcorners ? (M_PI / 4.) : 1.;
-		printf(", grid size: %ldx%ld%s = %ld (R = %f)", dims[1], dims[2], cutcorners ? "x(pi/4)" : "",
+		printf(", grid size: %" PRId64 "x%" PRId64 "%s = %" PRId64 " (R = %f)", dims[1], dims[2], cutcorners ? "x(pi/4)" : "",
 				(bart_dim_t)(f * dims[1] * dims[2]), f * T * dims[1] * dims[2] / (float)P);
 
 		unmap_cfl(DIMS, dims, &(*mask)[0][0][0]);

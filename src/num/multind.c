@@ -724,13 +724,13 @@ bool md_overlap(int D1, const bart_dim_t dims1[D1], const bart_stride_t strs1[D1
 
 	for (int i = 0; i < D1; i++) {
 
-		size1 += ((size_t)dims1[i] - 1) * (size_t)labs(strs1[i]);
+		size1 += ((size_t)dims1[i] - 1) * (size_t)llabs(strs1[i]);
 		offset1 += (dims1[i] - 1) * MAX(-strs1[i], 0);
 	}
 
 	for (int i = 0; i < D2; i++) {
 
-		size2 += ((size_t)dims2[i] - 1) * (size_t)labs(strs2[i]);
+		size2 += ((size_t)dims2[i] - 1) * (size_t)llabs(strs2[i]);
 		offset2 += (dims2[i] - 1) * MAX(-strs2[i], 0);
 	}
 
@@ -1103,7 +1103,7 @@ void md_copy2(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], void*
 
 		NESTED(void, nary_strided_copy, (void* ptr[]))
 		{
-			debug_printf(DP_DEBUG4, "CUDA 2D copy %ld %ld %ld %ld %p %p\n",
+			debug_printf(DP_DEBUG4, "CUDA 2D copy %" PRId64 " %" PRId64 " %" PRId64 " %" PRId64 " %p %p\n",
 				sizesp[0], sizesp[1], ostr2, istr2, nptrp[0], nptrp[1]);
 
 			cuda_memcpy_strided(sizesp, ostr2, ptr[0], istr2, ptr[1]);
@@ -1415,7 +1415,7 @@ void md_resize_center(int D, const bart_dim_t odim[D], void* optr, const bart_di
 
 	bart_dim_t pos[D];
 	for (int i = 0; i < D; i++)
-		pos[i] = labs((odim[i] / 2) - (idim[i] / 2));
+		pos[i] = llabs((odim[i] / 2) - (idim[i] / 2));
 
 	for (int i = 0; i < D; i++) {
 
@@ -1441,7 +1441,7 @@ void md_resize_front(int D, const bart_dim_t odim[D], void* optr, const bart_dim
 {
 	bart_dim_t pos[D];
 	for (int i = 0; i < D; i++)
-		pos[i] = labs(odim[i] - idim[i]);
+		pos[i] = llabs(odim[i] - idim[i]);
 
 	for (int i = 0; i < D; i++) {
 
@@ -1467,7 +1467,7 @@ void md_pad_center(int D, const void* val, const bart_dim_t odim[D], void* optr,
 	bart_dim_t pos[D];
 
 	for (int i = 0; i < D; i++)
-		pos[i] = labs((odim[i] / 2) - (idim[i] / 2));
+		pos[i] = llabs((odim[i] / 2) - (idim[i] / 2));
 
 	md_fill(D, odim, optr, val, size);
 	md_copy_block(D, pos, odim, optr, idim, iptr, size);
@@ -1502,7 +1502,7 @@ void md_reflectpad_center2(int D, const bart_dim_t odim[D], const bart_stride_t 
 
 			loop_idx[count++] = i;
 
-			bart_dim_t main_start = labs((odim[i] / 2) - (idim[i] / 2));
+			bart_dim_t main_start = llabs((odim[i] / 2) - (idim[i] / 2));
 			bart_dim_t main_end = main_start + idim[i];
 			bart_dim_t before = (main_start + idim[i] - 1) / idim[i];
 			bart_dim_t after = (odim[i] - main_end + idim[i] - 1) / idim[i];
@@ -1526,7 +1526,7 @@ void md_reflectpad_center2(int D, const bart_dim_t odim[D], const bart_stride_t 
 			opos[idx] = (block_pos[idx] >= 1) ? (block0_size[idx] + idim[idx] * (block_pos[idx] - 1)) : 0;
 			odim2[idx] = (block_pos[idx] == 0) ? block0_size[idx] : MIN(idim[idx], odim[idx] - opos[idx]);
 
-			if (1 == labs(center_block[idx] - block_pos[idx]) % 2) {
+			if (1 == llabs(center_block[idx] - block_pos[idx]) % 2) {
 
 				ristr[idx] = -istr[idx];
 				in_pos[idx] = (odim2[idx] < idim[idx]) ? ((block_pos[idx] > center_block[idx]) ? (idim[idx] - 1) : odim2[idx] - 1) : (idim[idx] - 1);
@@ -1540,7 +1540,7 @@ void md_reflectpad_center2(int D, const bart_dim_t odim[D], const bart_stride_t 
 
 		md_copy2(D, odim2, ostr, md_calc_offset(D, ostr, opos) + optr, ristr, md_calc_offset(D, istr, in_pos) + iptr, size);
 
-	} while (md_next(D, blockdim, ~0U, block_pos));
+	} while (md_next(D, blockdim, ~UINT64_C(0), block_pos));
 }
 
 void md_reflectpad_center(int D, const bart_dim_t odim[D], void* optr, const bart_dim_t idim[D], const void* iptr, size_t size)
@@ -2530,7 +2530,7 @@ void md_mask_compress(int D, const bart_dim_t dims[D], bart_dim_t M, uint32_t ds
 	SET_TYPEID(vptr_mask_compress_s, _d);
 	_d->super.del = NULL;
 
-	exec_vptr_fun_gen(md_mask_compress_int, CAST_UP(PTR_PASS(_d)), 2, 1, UINT64_C(0), MD_BIT(0), MD_BIT(1), (const bart_dim_t*[2]) { &M, &N }, (const bart_dim_t*[2]) { MD_DIMS(sizeof(uint32_t)), MD_DIMS(sizeof(uint32_t)) }, (void*[2]){ dst, (void*)src }, (size_t[2]) { sizeof(uint32_t), sizeof(float) }, true);
+	exec_vptr_fun_gen(md_mask_compress_int, CAST_UP(PTR_PASS(_d)), 2, 1, 0, MD_BIT(0), MD_BIT(1), (const bart_dim_t*[2]) { &M, &N }, (const bart_dim_t*[2]) { MD_DIMS(sizeof(uint32_t)), MD_DIMS(sizeof(uint32_t)) }, (void*[2]){ dst, (void*)src }, (size_t[2]) { sizeof(uint32_t), sizeof(float) }, true);
 }
 
 struct vptr_mask_decompress_s { vptr_fun_data_t super; };
@@ -2579,7 +2579,7 @@ void md_mask_decompress(int D, const bart_dim_t dims[D], float* dst, bart_dim_t 
 	SET_TYPEID(vptr_mask_decompress_s, _d);
 	_d->super.del = NULL;
 
-	exec_vptr_fun_gen(md_mask_decompress_int, CAST_UP(PTR_PASS(_d)), 2, 1, UINT64_C(0), MD_BIT(0), MD_BIT(1), (const bart_dim_t*[2]) { &N, &M }, (const bart_dim_t*[2]) { MD_DIMS(sizeof(uint32_t)), MD_DIMS(sizeof(uint32_t)) }, (void*[2]){ dst, (void*)src }, (size_t[2]) { sizeof(float), sizeof(uint32_t) }, true);
+	exec_vptr_fun_gen(md_mask_decompress_int, CAST_UP(PTR_PASS(_d)), 2, 1, 0, MD_BIT(0), MD_BIT(1), (const bart_dim_t*[2]) { &N, &M }, (const bart_dim_t*[2]) { MD_DIMS(sizeof(uint32_t)), MD_DIMS(sizeof(uint32_t)) }, (void*[2]){ dst, (void*)src }, (size_t[2]) { sizeof(float), sizeof(uint32_t) }, true);
 }
 
 
@@ -2813,7 +2813,7 @@ int md_max_idx(bart_flags_t flags)
 
 int md_min_idx(bart_flags_t flags)
 {
-	return ffsl((bart_dim_t)flags) - 1;
+	return (0 == flags) ? -1 : __builtin_ctzll(flags);
 }
 
 /**

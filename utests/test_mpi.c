@@ -28,7 +28,7 @@ static bool test_mpi_get_flags_C2R(void)
 
 	/* so far dims is ignored in mpi_get_flags */
 
-	const bart_flags_t flags = UINT64_C(8);
+	const bart_flags_t flags = 8;
 	const bart_dim_t cdims[N] = { 32, 32, 1, 8, 1, 1, 1, 1, 1, 1};
 
 	complex float* ptr = md_alloc_mpi(N, flags, cdims, CFL_SIZE);
@@ -47,9 +47,9 @@ static bool test_mpi_get_flags_C2R(void)
 	md_free(ptr);
 
 #ifdef USE_MPI
-	UT_RETURN_ASSERT((flags == complex_flags) && (complex_flags == (real_flags >> UINT64_C(1))));
+	UT_RETURN_ASSERT((flags == complex_flags) && (complex_flags == (real_flags >> 1)));
 #else
-	UT_RETURN_ASSERT(UINT64_C(0) == (complex_flags | real_flags));
+	UT_RETURN_ASSERT(0 == (complex_flags | real_flags));
 #endif
 }
 UT_REGISTER_TEST(test_mpi_get_flags_C2R);
@@ -61,7 +61,7 @@ static bool test_mpi_get_flags_slice(void)
 
 	/* so far dims is ignored in mpi_get_flags */
 
-	const bart_flags_t flags = UINT64_C(8);
+	const bart_flags_t flags = 8;
 	const bart_dim_t dims[N] = { 32, 32, 1, 8, 1, 1, 1, 1, 1, 1};
 
 	bart_stride_t strs[N];
@@ -76,7 +76,7 @@ static bool test_mpi_get_flags_slice(void)
 
 	md_free(ptr);
 
-	UT_RETURN_ASSERT(UINT64_C(0) == f);
+	UT_RETURN_ASSERT(0 == f);
 }
 
 UT_REGISTER_TEST(test_mpi_get_flags_slice);
@@ -86,7 +86,7 @@ static bool test_mpi_get_flags_reshape(void)
 {
 	const size_t CFL_SIZE = sizeof(complex float);
 
-	const bart_flags_t flags = UINT64_C(8);
+	const bart_flags_t flags = 8;
 	const bart_dim_t dims[N] = { 32, 32, 1, 8, 1, 1, 1, 1, 1, 1};
 
 	complex float* ptr = md_alloc_mpi(N, flags, dims, CFL_SIZE);
@@ -102,7 +102,7 @@ static bool test_mpi_get_flags_reshape(void)
 #ifdef USE_MPI
 	UT_RETURN_ASSERT(flags == f);
 #else
-	UT_RETURN_ASSERT(UINT64_C(0) == f);
+	UT_RETURN_ASSERT(0 == f);
 #endif
 }
 UT_REGISTER_TEST(test_mpi_get_flags_reshape);
@@ -112,7 +112,7 @@ static bool test_mpi_get_flags_roi(void)
 {
 	const size_t CFL_SIZE = sizeof(complex float);
 
-	const bart_flags_t flags = UINT64_C(8);
+	const bart_flags_t flags = 8;
 
 	bart_dim_t dims[N] = { 128, 128, 1, 8, 1, 1, 1, 1, 1, 1};
 	bart_stride_t strs[N];
@@ -129,7 +129,7 @@ static bool test_mpi_get_flags_roi(void)
 #ifdef USE_MPI
 	UT_RETURN_ASSERT(f1 == flags);
 #else
-	UT_RETURN_ASSERT(UINT64_C(0) == f1);
+	UT_RETURN_ASSERT(0 == f1);
 #endif
 }
 

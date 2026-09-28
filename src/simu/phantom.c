@@ -383,7 +383,7 @@ void calc_ellipsoid(int D, bart_dim_t dims[D], complex float* optr, bool d3, boo
 	else
 		md_copy_dims(D, imdims, dims);
 
-	debug_printf(DP_DEBUG2, "Est. ellipsoid image size: %ldx%ldx%ld, from kspace: %s\n", imdims[0], imdims[1], imdims[2], kspace ? "true" : "false");
+	debug_printf(DP_DEBUG2, "Est. ellipsoid image size: %" PRId64 "x%" PRId64 "x%" PRId64 ", from kspace: %s\n", imdims[0], imdims[1], imdims[2], kspace ? "true" : "false");
 
 	for (int i = 0; i < 3; i++) {
 

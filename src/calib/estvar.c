@@ -59,7 +59,7 @@ static char* file_name(const char* toolbox, const bart_dim_t kernel_dims[3], con
 {
 	ssize_t size = 0;
 
-	size = snprintf(NULL, (size_t)size, "%s/save/nsv/KERNEL_%ldx%ldx%ld_CAL_REG%ldx%ldx%ldx%ld.dat",
+	size = snprintf(NULL, (size_t)size, "%s/save/nsv/KERNEL_%" PRId64 "x%" PRId64 "x%" PRId64 "_CAL_REG%" PRId64 "x%" PRId64 "x%" PRId64 "x%" PRId64 ".dat",
 		toolbox, kernel_dims[0], kernel_dims[1], kernel_dims[2],
 		calreg_dims[0], calreg_dims[1], calreg_dims[2], calreg_dims[3]) + 1;
 
@@ -70,7 +70,7 @@ static char* file_name(const char* toolbox, const bart_dim_t kernel_dims[3], con
 	if (NULL == name)
 		error("Memory out\n");
 
-	size = snprintf(name, (size_t)size, "%s/save/nsv/KERNEL_%ldx%ldx%ld_CAL_REG%ldx%ldx%ldx%ld.dat",
+	size = snprintf(name, (size_t)size, "%s/save/nsv/KERNEL_%" PRId64 "x%" PRId64 "x%" PRId64 "_CAL_REG%" PRId64 "x%" PRId64 "x%" PRId64 "x%" PRId64 ".dat",
 		toolbox, kernel_dims[0], kernel_dims[1], kernel_dims[2],
 		calreg_dims[0], calreg_dims[1], calreg_dims[2], calreg_dims[3]);
 

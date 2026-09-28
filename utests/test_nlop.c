@@ -1033,12 +1033,12 @@ static bool test_nlop_select_derivatives(void)
 	UT_RETURN_ON_FAILURE(nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(nlop_tenmul_der_available(tenmul1, 1));
 
-	nlop_generic_apply_select_derivative_unchecked(tenmul1, 3, args, INT64_C(1), INT64_C(3));
+	nlop_generic_apply_select_derivative_unchecked(tenmul1, 3, args, 1, 3);
 
 	UT_RETURN_ON_FAILURE(nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(nlop_tenmul_der_available(tenmul1, 1));
 
-	nlop_generic_apply_select_derivative_unchecked(tenmul1, 3, args, INT64_C(0), INT64_C(0));
+	nlop_generic_apply_select_derivative_unchecked(tenmul1, 3, args, 0, 0);
 
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 1));
@@ -1067,12 +1067,12 @@ static bool test_nlop_select_derivatives_dup(void)
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 1));
 
-	nlop_generic_apply_select_derivative_unchecked(op, 2, args, INT64_C(1), INT64_C(1));
+	nlop_generic_apply_select_derivative_unchecked(op, 2, args, 1, 1);
 
 	UT_RETURN_ON_FAILURE(nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(nlop_tenmul_der_available(tenmul1, 1));
 
-	nlop_generic_apply_select_derivative_unchecked(op, 2, args, INT64_C(0), INT64_C(0));
+	nlop_generic_apply_select_derivative_unchecked(op, 2, args, 0, 0);
 
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 1));
@@ -1109,14 +1109,14 @@ static bool test_nlop_select_derivatives_combine(void)
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul2, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul2, 1));
 
-	nlop_generic_apply_select_derivative_unchecked(op, 6, args, INT64_C(0), INT64_C(0));
+	nlop_generic_apply_select_derivative_unchecked(op, 6, args, 0, 0);
 
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 1));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul2, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul2, 1));
 
-	nlop_generic_apply_select_derivative_unchecked(op, 6, args, INT64_C(3), INT64_C(6));
+	nlop_generic_apply_select_derivative_unchecked(op, 6, args, 3, 6);
 
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(nlop_tenmul_der_available(tenmul1, 1));
@@ -1154,21 +1154,21 @@ static bool test_nlop_select_derivatives_link(void)
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul2, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul2, 1));
 
-	nlop_generic_apply_select_derivative_unchecked(op, 4, args, INT64_C(0), INT64_C(0));
+	nlop_generic_apply_select_derivative_unchecked(op, 4, args, 0, 0);
 
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 1));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul2, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul2, 1));
 
-	nlop_generic_apply_select_derivative_unchecked(op, 4, args, INT64_C(1), INT64_C(4));
+	nlop_generic_apply_select_derivative_unchecked(op, 4, args, 1, 4);
 
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(nlop_tenmul_der_available(tenmul1, 1));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul2, 0));
 	UT_RETURN_ON_FAILURE(nlop_tenmul_der_available(tenmul2, 1));
 
-	nlop_generic_apply_select_derivative_unchecked(op, 4, args, INT64_C(1), INT64_C(1));
+	nlop_generic_apply_select_derivative_unchecked(op, 4, args, 1, 1);
 
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 0));
 	UT_RETURN_ON_FAILURE(!nlop_tenmul_der_available(tenmul1, 1));

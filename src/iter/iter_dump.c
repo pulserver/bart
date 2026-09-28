@@ -59,7 +59,7 @@ static void iter_dump_default_fun(const struct iter_dump_s* _data, bart_dim_t ep
 		if (data->save_flag[i])
 			args[ip++] = (const complex float*)x[i];
 
-	const char* file = ptr_printf("%s_%ld", data->super.base_filename, epoch);
+	const char* file = ptr_printf("%s_%" PRId64, data->super.base_filename, epoch);
 
 	dump_multi_cfl(file, data->N, data->D, data->dims, args);
 

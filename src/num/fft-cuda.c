@@ -363,7 +363,7 @@ static void fft_cuda_exec_int(struct fft_cuda_plan_s* cuplan, complex float* dst
 	size_t workspace_size = cuplan->workspace_size;
 	cufftHandle cufft = cuplan->cufft;
 
-	void* workspace = md_alloc_gpu(1, MAKE_ARRAY(INT64_C(1)), workspace_size);
+	void* workspace = md_alloc_gpu(1, MD_DIMS(1), workspace_size);
 
 	CUDA_ERROR_PTR(dst, src, workspace);
 

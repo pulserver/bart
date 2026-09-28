@@ -44,7 +44,7 @@ int main_copy(int argc, char* argv[argc])
 	int count = 0;
 	bart_dim_t* dims = NULL;
 	bart_dim_t* poss = NULL;
-	bart_flags_t stream_flags = UINT64_C(0);
+	bart_flags_t stream_flags = 0;
 
 	const char* in_file = NULL;
 	const char* out_file = NULL;

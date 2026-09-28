@@ -27,7 +27,7 @@ static const char help_str[] = "Kronecker delta.";
 int main_delta(int argc, char* argv[argc])
 {
 	int N = 0;
-	bart_flags_t flags = UINT64_C(0);
+	bart_flags_t flags = 0;
 	int len = 0;
 	const char* out_file = NULL;
 

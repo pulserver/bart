@@ -236,7 +236,7 @@ void blas_zfmac_cdotu(int N, const bart_dim_t dims[N], const bart_stride_t ostr[
 	bart_dim_t incy = istr2[0] / (bart_stride_t)sizeof(complex float);
 
 
-	complex float* tmp = md_alloc_sameplace(1, MAKE_ARRAY(INT64_C(1)), sizeof(complex float), optr);
+	complex float* tmp = md_alloc_sameplace(1, MD_DIMS(1), sizeof(complex float), optr);
 
 	bart_dim_t S = dims[0];
 	
@@ -457,7 +457,7 @@ void blas_fmac_sdot(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N]
 	bart_dim_t incy = istr2[0] / size;
 
 
-	float* tmp = md_alloc_sameplace(1, MAKE_ARRAY(INT64_C(1)), (size_t)size, optr);
+	float* tmp = md_alloc_sameplace(1, MD_DIMS(1), (size_t)size, optr);
 
 	bart_dim_t S = dims[0];
 

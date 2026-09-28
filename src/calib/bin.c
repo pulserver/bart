@@ -196,7 +196,7 @@ static void moving_average(const bart_dim_t state_dims[DIMS], complex float* sta
 	bart_dim_t pos[DIMS] = { };
 	md_copy_block(DIMS, pos, singleton_dims, singleton, state_dims, state, CFL_SIZE); // Get first value of array
 
-	bart_dim_t start = labs((pad_dims[TIME_DIM] / 2) - (state_dims[TIME_DIM] / 2));
+	bart_dim_t start = llabs((pad_dims[TIME_DIM] / 2) - (state_dims[TIME_DIM] / 2));
 
 	for (int i = 0; i < start; i++) { // Fill beginning of pad array
 

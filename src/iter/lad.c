@@ -32,7 +32,7 @@
 
 
 
-const struct lad_conf lad_defaults = { 5, 0.1, ~0u, &lsqr_defaults };
+const struct lad_conf lad_defaults = { 5, 0.1, ~UINT64_C(0), &lsqr_defaults };
 
 
 

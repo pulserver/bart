@@ -530,7 +530,7 @@ static const struct nlop_s* nlop_image_transform_affine_create(int ord, bart_dim
 	nlop = nlop_affine_compute_pos(3, 4, sdims, mdims, nlop);
 
 
-	auto intp = nlop_interpolate_create(3, UINT64_C(7), ord, (1 == ord), 4, sdims, cdims, mdims);
+	auto intp = nlop_interpolate_create(3, 7, ord, (1 == ord), 4, sdims, cdims, mdims);
 	intp = nlop_reshape_in_F(intp, 0, 3, mdims);
 	intp = nlop_reshape_out_F(intp, 0, 3, sdims);
 

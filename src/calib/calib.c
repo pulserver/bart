@@ -343,9 +343,9 @@ static float sure_crop(float var, const bart_dim_t evec_dims[DIMS], complex floa
 			mse += 2. * var * crealf(div_cpu);
 
 			if (ctr2 == 1)
-				debug_printf(DP_INFO, "| %4ld | %4ld | %0.4f | %0.12e |\n", ctr1, ctr2, c, mse);
+				debug_printf(DP_INFO, "| %4" PRId64 " | %4" PRId64 " | %0.4f | %0.12e |\n", ctr1, ctr2, c, mse);
 			else
-				debug_printf(DP_INFO, "|      | %4ld | %0.4f | %0.12e |\n", ctr2, c, mse);
+				debug_printf(DP_INFO, "|      | %4" PRId64 " | %0.4f | %0.12e |\n", ctr2, c, mse);
 
 			c = c + s;
 		}
@@ -860,7 +860,7 @@ static bart_dim_t number_of_kernels(const struct ecalib_conf* conf, bart_dim_t N
 	if (val[0] <= 0.)
 		error("No signal.\n");
 
-	debug_printf(DP_DEBUG1, "Using %ld/%ld kernels (%.2f%%, last SV: %f%s).\n", n, N, (float)n / (float)N * 100., (n > 0) ? (val[n - 1] / val[0]) : 1., conf->weighting ? ", weighted" : "");
+	debug_printf(DP_DEBUG1, "Using %" PRId64 "/%" PRId64 " kernels (%.2f%%, last SV: %f%s).\n", n, N, (float)n / (float)N * 100., (n > 0) ? (val[n - 1] / val[0]) : 1., conf->weighting ? ", weighted" : "");
 
 	float tr = 0.;
 
@@ -942,14 +942,14 @@ void compute_kernels(const struct ecalib_conf* conf, bart_dim_t nskerns_dims[5],
 			covariance_function_fft(conf->kdims, N, *vec, caldims, caldata);
 			time += timestamp();
 
-			debug_printf(DP_DEBUG1, " done (%.3fs)\nEigen decomposition... (size: %ld) ... ", time, N);
+			debug_printf(DP_DEBUG1, " done (%.3fs)\nEigen decomposition... (size: %" PRId64 ") ... ", time, N);
 
 			time = -timestamp();
 
 			lapack_eig(N, tmp_val, *vec);
 		} else {
 
-			debug_printf(DP_DEBUG1, " using Nyström (K=%ld) ... ", K);
+			debug_printf(DP_DEBUG1, " using Nyström (K=%" PRId64 ") ... ", K);
 			casorati_gram_eig_nystroem(K, conf->nystroem_os, N, tmp_val, *vec, 4, nskerns_dims, caldims, caldata);
 		}
 
@@ -988,7 +988,7 @@ void compute_kernels(const struct ecalib_conf* conf, bart_dim_t nskerns_dims[5],
 		if (nskerns_dims[4] < K)
 			break;
 
-		debug_printf(DP_DEBUG1, "Redo Nystöm kernel estimation as all (K=%ld) kernels are used.\n", K);
+		debug_printf(DP_DEBUG1, "Redo Nystöm kernel estimation as all (K=%" PRId64 ") kernels are used.\n", K);
 
 		K *= 2;
 		nskerns_dims[4] = N;

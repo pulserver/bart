@@ -87,9 +87,9 @@ extern int parse_longlong(long long res[1], const char* str);
 extern int parse_ulonglong(unsigned long long res[1], const char* str);
 extern int parse_int(int res[1], const char* str);
 #ifndef __cplusplus
-extern noreturn void error(const char* str, ...);
+extern noreturn void error(const char* str, ...) __attribute__((format(printf,1,2)));
 #else
-extern __attribute__((noreturn)) void error(const char* str, ...);
+extern __attribute__((noreturn, format(printf,1,2))) void error(const char* str, ...);
 #endif
 
 
@@ -161,7 +161,7 @@ extern bool safe_isfinite(float x);
 extern bart_dim_t io_calc_size(int D, const bart_dim_t dims[__VLA(D?:1)], size_t size);
 
 extern char* ptr_printf(const char* fmt, ...) __attribute__((format(printf,1,2)));
-extern void ptr_append_printf(const char** prefix, const char* fmt, ...);
+extern void ptr_append_printf(const char** prefix, const char* fmt, ...) __attribute__((format(printf,2,3)));
 extern char* ptr_vprintf(const char* fmt, va_list ap);
 extern char* ptr_print_dims(int D, const bart_dim_t dims[__VLA(D)]);
 

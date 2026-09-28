@@ -311,7 +311,7 @@ void grog_grid(int D, const bart_dim_t tdims[D], const complex float* traj_shift
 	assert(3 == lnG_dims[READ_DIM]);
 	assert(C == lnG_dims[COIL_DIM]);
 	assert(C == lnG_dims[MAPS_DIM]);
-	assert(INT64_C(3) * C * C == md_calc_size(D, lnG_dims));
+	assert(3 * C * C == md_calc_size(D, lnG_dims));
 
 	bart_stride_t tstrs[D];
 	md_calc_strides(D, tstrs, tdims, CFL_SIZE);

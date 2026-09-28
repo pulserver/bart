@@ -212,7 +212,7 @@ int main_roistat(int argc, char* argv[argc])
 			complex float mn = MD_ACCESS(DIMS, ostrs, pos, avg);
 			float std = crealf(MD_ACCESS(DIMS, ostrs, pos, var));
 
-			bart_printf("%+6.3f%+.3fi\t%.3f\t%6ld\n", crealf(mn), cimagf(mn), std, count);
+			bart_printf("%+6.3f%+.3fi\t%.3f\t%6" PRId64 "\n", crealf(mn), cimagf(mn), std, count);
 
 		} while (md_next(DIMS, odims, iflags, pos));
 

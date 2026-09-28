@@ -34,7 +34,7 @@ static bart_dim_t isqrt(bart_dim_t y)
 {
 	assert(0 <= y);
 
-	bart_dim_t ret = lround(sqrt(y));
+	bart_dim_t ret = llround(sqrt(y));
 	assert(y == ret * ret);
 
 	return ret;
@@ -139,7 +139,7 @@ complex float* uppertriag_to_hermite(int dim1, int dim2, int dimt, int N, bart_d
 
 		for (int j = 0; j < dim; j++) {
 
-			ipos[dimt] = labs(upper_triag_idx(i, j));
+			ipos[dimt] = llabs(upper_triag_idx(i, j));
 
 			if (dim1 == dim2) {
 
@@ -260,7 +260,7 @@ float* uppertriag_to_symmetric(int dim1, int dim2, int dimt, int N, bart_dim_t o
 
 		for (int j = 0; j < dim; j++) {
 
-			ipos[dimt] = labs(upper_triag_idx(i, j));
+			ipos[dimt] = llabs(upper_triag_idx(i, j));
 
 			if (dim1 == dim2) {
 
@@ -291,7 +291,7 @@ void md_ztenmul_upper_triag2(int dim1, int dim2, int N, const bart_dim_t dims[N]
 
 	do {
 
-		bart_stride_t offset = labs(upper_triag_idx(pos[dim1], pos[dim2])) * MAX(mstrs[dim1], mstrs[dim2]) / (bart_stride_t)CFL_SIZE;
+		bart_stride_t offset = llabs(upper_triag_idx(pos[dim1], pos[dim2])) * MAX(mstrs[dim1], mstrs[dim2]) / (bart_stride_t)CFL_SIZE;
 
 		(0 > upper_triag_idx(pos[dim1], pos[dim2]) ? md_zfmac2 : md_zfmacc2)(N, slc_dims, ostrs, &MD_ACCESS(N, ostrs, pos, dst), istrs, &MD_ACCESS(N, istrs, pos, src), mstrs, mat + offset);
 
@@ -385,7 +385,7 @@ static void vptr_md_fmac_upper_triag2(vptr_fun_data_t* _data, int N, int D, cons
 	md_set_dims(D, pos, 0);
 
 	do {
-		bart_stride_t offset = labs(upper_triag_idx(pos[dim1], pos[dim2])) * MAX(strs[2][dim1], strs[2][dim2]) / (bart_stride_t)FL_SIZE;
+		bart_stride_t offset = llabs(upper_triag_idx(pos[dim1], pos[dim2])) * MAX(strs[2][dim1], strs[2][dim2]) / (bart_stride_t)FL_SIZE;
 
 		md_fmac2(D, slc_dims, strs[0], &MD_ACCESS(D, strs[0], pos, (float*)args[0]), strs[1], &MD_ACCESS(D, strs[1], pos, (float*)args[1]), strs[2], (float*)args[2] + offset);
 

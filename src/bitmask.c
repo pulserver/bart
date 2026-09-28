@@ -49,7 +49,7 @@ int main_bitmask(int argc, char* argv[argc])
 			flags = MD_SET(flags, d);
 		}
 
-		bart_printf("%ld\n", flags);
+		bart_printf("%" PRIu64 "\n", flags);
 
 	} else {
 

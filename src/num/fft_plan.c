@@ -143,11 +143,11 @@ static char* fftw_wisdom_name(int N, bool backwards, bart_flags_t flags, const b
 	}
 
 	// Space for path and null terminator.
-	int space = snprintf(NULL, 0, "%s/save/fftw/N_%d_BACKWARD_%d_FLAGS_%lu_DIMS", tbpath, N, backwards, flags);
+	int space = snprintf(NULL, 0, "%s/save/fftw/N_%d_BACKWARD_%d_FLAGS_%" PRIu64 "_DIMS", tbpath, N, backwards, flags);
 
 	// Space for dimensions.
 	for (int idx = 0; idx < N; idx ++)
-		space += snprintf(NULL, 0, "_%lu", dims[idx]);
+		space += snprintf(NULL, 0, "_%" PRId64, dims[idx]);
 
 	// Space for extension.
 	space += snprintf(NULL, 0, ".fftw");
@@ -160,7 +160,7 @@ static char* fftw_wisdom_name(int N, bool backwards, bart_flags_t flags, const b
 	if (NULL == loc)
 		error("memory out\n");
 
-	int ret = snprintf(loc, (size_t)len, "%s/save/fftw/N_%d_BACKWARD_%d_FLAGS_%lu_DIMS", tbpath, N, backwards, flags);
+	int ret = snprintf(loc, (size_t)len, "%s/save/fftw/N_%d_BACKWARD_%d_FLAGS_%" PRIu64 "_DIMS", tbpath, N, backwards, flags);
 
 	assert(ret < len);
 	len -= ret;
@@ -168,7 +168,7 @@ static char* fftw_wisdom_name(int N, bool backwards, bart_flags_t flags, const b
 	for (int idx = 0; idx < N; idx++) {
 
 		char tmp[64];
-		ret = sprintf(tmp, "_%lu", dims[idx]);
+		ret = sprintf(tmp, "_%" PRId64, dims[idx]);
 		assert(ret < 64);
 		len -= ret;
 		strcat(loc, tmp);
@@ -313,8 +313,8 @@ const struct operator_s* fft_create2(int D, const bart_dim_t dimensions[D], bart
 
 	for (int i = 0; i < D; i++) {
 
-		osize += (dimensions[i] - 1) * labs(ostrides[i]);
-		isize += (dimensions[i] - 1) * labs(istrides[i]);
+		osize += (dimensions[i] - 1) * llabs(ostrides[i]);
+		isize += (dimensions[i] - 1) * llabs(istrides[i]);
 
 		ooffset += (dimensions[i] - 1) * MAX(-ostrides[i], 0);
 		ioffset += (dimensions[i] - 1) * MAX(-istrides[i], 0);

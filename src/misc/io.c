@@ -47,6 +47,7 @@ static void toolgraph_add_input(const char* node, const char* file);
 static void toolgraph_save_iofiles(void);
 
 
+static int xdprintf(int fd, const char* fmt, ...) __attribute__((format(printf,2,3)));
 static int xdprintf(int fd, const char* fmt, ...)
 {
 	va_list ap;
@@ -387,7 +388,7 @@ int write_cfl_header(int fd, const char* filename, int n, const bart_dim_t dimen
 	written += xdprintf(fd, "# Dimensions\n");
 
 	for (int i = 0; i < n; i++)
-		written += xdprintf(fd, "%ld ", dimensions[i]);
+		written += xdprintf(fd, "%" PRId64 " ", dimensions[i]);
 
 	written += xdprintf(fd, "\n");
 
@@ -579,7 +580,7 @@ int parse_cfl_header(bart_dim_t N, const char header[N + 1], char** file, char**
 			bart_dim_t val;
 			int i = 0;
 
-			while (1 == sscanf(header + pos, "%ld%n", &val, &delta)) {
+			while (1 == sscanf(header + pos, "%" SCNd64 "%n", &val, &delta)) {
 
 				pos += delta;
 
@@ -679,12 +680,12 @@ out:
  */
 int write_multi_cfl_header(int fd, const char* filename, bart_dim_t num_ele, int D, int n[D], const bart_dim_t* dimensions[D])
 {
-	xdprintf(fd, "# Dimensions\n%ld \n", num_ele);
+	xdprintf(fd, "# Dimensions\n%" PRId64 " \n", num_ele);
 
 	xdprintf(fd, "# SizesDimensions\n");
 
 	for (int i = 0; i < D; i++)
-		xdprintf(fd, "%ld ", n[i]);
+		xdprintf(fd, "%d ", n[i]);
 
 	xdprintf(fd, "\n");
 
@@ -693,7 +694,7 @@ int write_multi_cfl_header(int fd, const char* filename, bart_dim_t num_ele, int
 	for (int i = 0; i < D; i++) {
 
 		for (int j = 0; j < n[i]; j++)
-			xdprintf(fd, "%ld ", dimensions[i][j]);
+			xdprintf(fd, "%" PRId64 " ", dimensions[i][j]);
 
 		xdprintf(fd, "\n");
 	}
@@ -781,7 +782,7 @@ int read_multi_cfl_header(int fd, char** file, int D_max, int n_max, int n[D_max
 
 			bart_dim_t val;
 
-			while (1 == sscanf(header + pos, "%ld%n", &val, &delta)) {
+			while (1 == sscanf(header + pos, "%" SCNd64 "%n", &val, &delta)) {
 
 				pos += delta;
 
@@ -817,7 +818,7 @@ int read_multi_cfl_header(int fd, char** file, int D_max, int n_max, int n[D_max
 			int j = 0;
 			bart_dim_t size_tensor = 1;
 
-			while (1 == sscanf(header + pos, "%ld%n", &val, &delta)) {
+			while (1 == sscanf(header + pos, "%" SCNd64 "%n", &val, &delta)) {
 
 				pos += delta;
 
@@ -892,7 +893,7 @@ int write_coo(int fd, int n, const bart_dim_t dimensions[n])
 
 		bart_dim_t size = dimensions[i];
 
-		ret = snprintf(header + pos, (size_t)len, "[%ld\t%ld\t%ld\t%ld]\n", start, stride * size, size, stride);
+		ret = snprintf(header + pos, (size_t)len, "[%" PRId64 "\t%" PRId64 "\t%" PRId64 "\t%" PRId64 "]\n", start, stride * size, size, stride);
 
 		if ((ret < 0) || (ret >= len))
 			return -1;
@@ -945,7 +946,7 @@ int read_coo(int fd, int n, bart_dim_t dimensions[n])
 
 		bart_dim_t val;
 
-		if (1 != sscanf(header + pos, "[%*d %*d %ld %*d]\n%n", &val, &delta))
+		if (1 != sscanf(header + pos, "[%*d %*d %" SCNd64 " %*d]\n%n", &val, &delta))
 			return -1;
 
 		pos += delta;

@@ -478,7 +478,7 @@ void tf_shared_graph_list_operations(const struct tf_shared_graph_s*x)
 	size_t counter = 0;
 	
 	while (NULL != (oper = TF_GraphNextOperation(x->graph, &pos)))
-		debug_printf(DP_INFO, "%lu: %s\n", counter++, TF_OperationName(oper));
+		debug_printf(DP_INFO, "%zu: %s\n", counter++, TF_OperationName(oper));
 }
 
 const struct tf_shared_graph_s* tf_shared_graph_create(const char* path, const char* signature_key)

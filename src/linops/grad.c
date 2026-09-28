@@ -94,7 +94,7 @@ static void grad_op(md_zfdiff_core_t grad, int D, const bart_dim_t dims[D], int 
 
 	for (int i = 0; i < N; i++) {
 
-		int lsb = ffsl((bart_dim_t)flags2) - 1;
+		int lsb = md_min_idx(flags2);
 		flags2 = MD_CLEAR(flags2, lsb);
 
 		grad(D, dims1, lsb, false, strs, (void*)out + i * strs[d], strs1, in);
@@ -129,7 +129,7 @@ static void grad_adjoint(md_zfdiff_core_t grad, int D, const bart_dim_t dims[D],
 
 	for (int i = 0; i < N; i++) {
 
-		int lsb = ffsl((bart_dim_t)flags2) - 1;
+		int lsb = md_min_idx(flags2);
 		flags2 = MD_CLEAR(flags2, lsb);
 
 		grad(D, dims1, lsb, true, strs1, tmp, strs, (const void*)in + i * strs[d]);

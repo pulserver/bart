@@ -438,11 +438,11 @@ static void compute_enclosures(int N, bool matrix[N][N], const bart_dim_t dims[N
 	bart_dim_t ext[N];
 
 	for (int i = 0; i < N; i++)
-		ext[i] = dims[i] * labs(strides[i]);
+		ext[i] = dims[i] * llabs(strides[i]);
 
 	for (int i = 0; i < N; i++)
 		for (int j = 0; j < N; j++)
-			matrix[i][j] = (ext[i] <= labs(strides[j]));
+			matrix[i][j] = (ext[i] <= llabs(strides[j]));
 }
 
 
@@ -450,7 +450,7 @@ static void compute_enclosures(int N, bool matrix[N][N], const bart_dim_t dims[N
  * compute set of parallelizable dimensions
  *
  */
-bart_flags_t parallelizable(int D, unsigned int io, int N, const bart_dim_t dims[N], const bart_stride_t (*strs[D])[N], size_t size[D])
+bart_flags_t parallelizable(int D, bart_flags_t io, int N, const bart_dim_t dims[N], const bart_stride_t (*strs[D])[N], size_t size[D])
 {
 	// we assume no input / output overlap
 	// (i.e. inputs which are also outputs have to be marked as output)
@@ -492,7 +492,7 @@ bart_flags_t parallelizable(int D, unsigned int io, int N, const bart_dim_t dims
 
 	//			printf("%d %d %d\n", d, i, a);
 
-				if ((a != N - 1) || ((size_t)labs((*strs[d])[i]) < size[d]))
+				if ((a != N - 1) || ((size_t)llabs((*strs[d])[i]) < size[d]))
 					flags = MD_CLEAR(flags, i);
 			}
 		}
@@ -728,7 +728,7 @@ out:
 
 	if (cnst_ok) {
 
-		debug_printf(DP_DEBUG4, "MD constant buffer Io: %lu Cnst: %lu Size %ld.\n", io, cnst_flags, cnst_size);
+		debug_printf(DP_DEBUG4, "MD constant buffer Io: %" PRIu64 " Cnst: %" PRIu64 " Size %" PRId64 ".\n", io, cnst_flags, cnst_size);
 
 		for (int i = 0; i < N; i++) {
 
@@ -756,7 +756,7 @@ out:
 	int skip = min_blockdim(N, ND, tdims, nstr1, sizes);
 	bart_flags_t flags = 0;
 
-	debug_printf(DP_DEBUG4, "MD-Fun. Io: %lu Input: ", io);
+	debug_printf(DP_DEBUG4, "MD-Fun. Io: %" PRIu64 " Input: ", io);
 	debug_print_dims(DP_DEBUG4, D, dim);
 
 #ifdef USE_GPU
@@ -766,7 +766,7 @@ out:
 #endif
 		flags = dims_parallel(N, io, ND, tdims, nstr1, sizes);
 
-		while ((0 != flags) && (ffs(flags) <= skip))
+		while ((0 != flags) && (md_min_idx(flags) < skip))
 			skip--;
 
 		flags = flags >> skip;
@@ -785,7 +785,7 @@ out:
 	__block struct nary_opt_data_s data = { md_calc_size(skip, tdims), &cpu_ops };
 #endif
 
-	debug_printf(DP_DEBUG4, "Vec: %d (%ld) Opt.: ", skip, data.size);
+	debug_printf(DP_DEBUG4, "Vec: %d (%" PRId64 ") Opt.: ", skip, data.size);
 	debug_print_dims(DP_DEBUG4, ND, tdims);
 
 	NESTED(void, nary_opt, (void* ptr[]))

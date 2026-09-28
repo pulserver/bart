@@ -274,9 +274,9 @@ static bool test_md_next(void)
 	int i = 0;
 
 	do {
-		UT_RETURN_ON_FAILURE(md_check_equal_dims(2, good[i++], pos, UINT64_C(3)));
+		UT_RETURN_ON_FAILURE(md_check_equal_dims(2, good[i++], pos, 3));
 
-	} while (md_next(2, dims, UINT64_C(3), pos));
+	} while (md_next(2, dims, 3, pos));
 
 	return true;
 }
@@ -300,9 +300,9 @@ static bool test_md_next_permuted_1(void)
 	int i = 0;
 
 	do {
-		UT_RETURN_ON_FAILURE(md_check_equal_dims(3, good[i++], pos, UINT64_C(7)));
+		UT_RETURN_ON_FAILURE(md_check_equal_dims(3, good[i++], pos, 7));
 
-	} while (md_next_permuted(3, order, dims, UINT64_C(5), pos));
+	} while (md_next_permuted(3, order, dims, 5, pos));
 
 	return true;
 }
@@ -327,9 +327,9 @@ static bool test_md_next_permuted_2(void)
 	int i = 0;
 
 	do {
-		UT_RETURN_ON_FAILURE(md_check_equal_dims(3, good[i++], pos, UINT64_C(7)));
+		UT_RETURN_ON_FAILURE(md_check_equal_dims(3, good[i++], pos, 7));
 
-	} while (md_next_permuted(3, order, dims, UINT64_C(3), pos));
+	} while (md_next_permuted(3, order, dims, 3, pos));
 
 	return true;
 }
@@ -380,9 +380,9 @@ static bool test_md_unravel_index_permuted(void)
 
 	bart_dim_t idx = 8;
 
-	md_unravel_index_permuted(3, pos, UINT64_C(7), dims, idx, order);
+	md_unravel_index_permuted(3, pos, 7, dims, idx, order);
 	
-	UT_RETURN_ON_FAILURE(md_check_equal_dims(3, good, pos, UINT64_C(7)));
+	UT_RETURN_ON_FAILURE(md_check_equal_dims(3, good, pos, 7));
 
 	return true;
 }
@@ -398,7 +398,7 @@ static bool test_md_ravel_index_permuted(void)
 
 	const bart_dim_t pos[4]  = { 1, 2, 1, 4 };
 
-	if (43 != md_ravel_index_permuted(4, pos, UINT64_C(14), dims, order))
+	if (43 != md_ravel_index_permuted(4, pos, 14, dims, order))
 		return false;
 
 	return true;

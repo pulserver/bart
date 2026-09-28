@@ -40,7 +40,7 @@
 
 static void post_process(enum mdb_t mode, struct moba_conf_s* data, const bart_dim_t imgs_dims[DIMS], const struct linop_s* op[], complex float* img)
 {
-	bart_dim_t pos[DIMS] = { INT64_C(0) };
+	bart_dim_t pos[DIMS] = { 0 };
 
 	// Project B1 map back into image space
 
@@ -314,7 +314,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 
 	md_copy_dims(DIMS, map_dims, imgs_dims);
 	map_dims[COEFF_DIM] = 1;
-	bart_dim_t pos[DIMS] = { INT64_C(0) };
+	bart_dim_t pos[DIMS] = { 0 };
 
 	if (MDB_IR_MGRE == conf->mode && use_compat_to_version("v1.0.00")) {
 

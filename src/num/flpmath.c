@@ -122,7 +122,7 @@ static void optimized_twoop_oi(int D, const bart_dim_t dim[D], const bart_stride
 	const bart_stride_t (*nstr[2])[D?D:1] = { (const bart_stride_t (*)[D?D:1])ostr, (const bart_stride_t (*)[D?D:1])istr1 };
 	void *nptr[2] = { optr, (void*)iptr1 };
 
-	bart_flags_t io = 1 + ((iptr1 == optr) ? 2 : 0);
+	bart_flags_t io = UINT64_C(1) + ((iptr1 == optr) ? 2 : 0);
 
 	(optimized_nop)(2, io, D, dim, nstr, nptr, sizes, too);
 }
@@ -1331,7 +1331,7 @@ void md_tenmul_dims(int D, bart_dim_t max_dims[D], const bart_dim_t out_dims[D],
 	bart_dim_t max2_dims[D];
 	md_max_dims(D, ~UINT64_C(0), max2_dims, in2_dims, out_dims);
 
-	assert(md_check_compat(D, UINT64_C(0), max_dims, max2_dims));
+	assert(md_check_compat(D, 0, max_dims, max2_dims));
 }
 
 
@@ -3684,7 +3684,7 @@ void md_zfill2(int D, const bart_dim_t dim[D], const bart_stride_t str[D], compl
 #if 1
 	const bart_stride_t (*nstr[1])[D?D:1] = { (const bart_stride_t (*)[D ?: 1])str };
 	void *nptr[1] = { ptr };
-	bart_flags_t io = UINT64_C(1);
+	bart_flags_t io = 1;
 	size_t sizes[1] = { CFL_SIZE };
 	complex float val_copy = val;	//https://gcc.gnu.org/bugzilla/show_bug.cgi?id=121661
 

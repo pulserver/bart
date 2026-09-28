@@ -41,7 +41,7 @@ static float divergence(bart_dim_t N, const float S[N], const bart_dim_t calmat_
 	int idx, jdx;
 
 	float div = 0;
-	float abs_diff_bw_calmat_dims = (float)labs(calmat_dims[0] - calmat_dims[1]);
+	float abs_diff_bw_calmat_dims = (float)llabs(calmat_dims[0] - calmat_dims[1]);
 
 	float s, s1, s2, t;
 

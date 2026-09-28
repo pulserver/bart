@@ -62,7 +62,7 @@ int main_caldir(int argc, char* argv[argc])
 	bart_dim_t caldims[DIMS];
 	complex float* cal_data = extract_calib(caldims, calsize, dims, in_data, false);
 
-	debug_printf(DP_DEBUG1, "Calibration region %ldx%ldx%ld\n", caldims[0], caldims[1], caldims[2]);
+	debug_printf(DP_DEBUG1, "Calibration region %" PRId64 "x%" PRId64 "x%" PRId64 "\n", caldims[0], caldims[1], caldims[2]);
 
 	direct_calib(dims, out_data, caldims, cal_data);
 

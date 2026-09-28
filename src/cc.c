@@ -123,7 +123,7 @@ int main_cc(int argc, char* argv[argc])
 
 	if (proj) {
 
-		debug_printf(DP_DEBUG1, "Compressing to %ld virtual coils...\n", P);
+		debug_printf(DP_DEBUG1, "Compressing to %" PRId64 " virtual coils...\n", P);
 
 		bart_dim_t trans_dims[DIMS];
 		md_copy_dims(DIMS, trans_dims, in_dims);

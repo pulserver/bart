@@ -340,7 +340,7 @@ static void skip_to_next(const char* hdr, int fd, off_t offset)
 	struct mdh1 mdh1;
 	memcpy(&mdh1, hdr, sizeof(mdh1));
 
-	ssize_t dma_length = mdh1.flags_dmalength & INT64_C(0x01FFFFFF);
+	ssize_t dma_length = mdh1.flags_dmalength & 0x01FFFFFF;
 
 	if (dma_length < offset)
 		error("dma_length < offset.\n");
@@ -501,13 +501,13 @@ static enum adc_return siemens_adc_read(bool vd, int fd, bool noise, bool dummy,
 
 		if (dims[read_dim] != mdh.samples) {
 
-			debug_printf(DP_WARN, "Wrong number of samples: %ld != %d.\n", dims[read_dim], mdh.samples);
+			debug_printf(DP_WARN, "Wrong number of samples: %" PRId64 " != %d.\n", dims[read_dim], mdh.samples);
 			return ADC_ERROR;
 		}
 
 		if ((0 != mdh.channels) && (dims[COIL_DIM] != mdh.channels)) {
 
-			debug_printf(DP_WARN, "Wrong number of channels: %ld != %d.\n", dims[COIL_DIM], mdh.channels);
+			debug_printf(DP_WARN, "Wrong number of channels: %" PRId64 " != %d.\n", dims[COIL_DIM], mdh.channels);
 			return ADC_ERROR;
 		}
 
@@ -658,7 +658,7 @@ int main_twixread(int argc, char* argv[argc])
 		if (chrono)
 			max[PHS1_DIM]--;
 
-		debug_printf(DP_DEBUG2, "found %ld adcs\n", adcs);
+		debug_printf(DP_DEBUG2, "found %" PRId64 " adcs\n", adcs);
 
 		for (int i = 0; i < DIMS; i++) {
 
@@ -709,7 +709,7 @@ int main_twixread(int argc, char* argv[argc])
 	md_clear(DIMS, pdims, pat, CFL_SIZE);
 
 
-	debug_printf(DP_DEBUG1, "Reading measured data (%ld adcs).\n", adcs);
+	debug_printf(DP_DEBUG1, "Reading measured data (%" PRId64 " adcs).\n", adcs);
 
 
 	void* buf = md_alloc(DIMS, adc_dims, CFL_SIZE);
@@ -793,7 +793,7 @@ int main_twixread(int argc, char* argv[argc])
 	}
 
 	if ((0 != adcs) && check_read)
-		error("Incorrect number of ADCs read! ADC count difference: %d != 0!\n", adcs);
+		error("Incorrect number of ADCs read! ADC count difference: %" PRId64 " != 0!\n", adcs);
 
 	md_free(buf);
 

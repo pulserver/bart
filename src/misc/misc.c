@@ -179,7 +179,7 @@ void print_dims(int D, const bart_dim_t dims[D])
 	printf("[");
 
 	for (int i = 0; i < D; i++)
-		printf("%3ld ", dims[i]);
+		printf("%3" PRId64 " ", dims[i]);
 
 	printf("]\n");
 }
@@ -216,7 +216,7 @@ void debug_print_dims(int dblevel, int D, const bart_dim_t dims[D])
 	debug_printf(dblevel, "[");
 
 	for (int i = 0; i < D; i++)
-		debug_printf(dblevel, "%3ld ", dims[i]);
+		debug_printf(dblevel, "%3" PRId64 " ", dims[i]);
 
 	debug_printf(dblevel, "]\n");
 	debug_logging = dbl;
@@ -237,7 +237,7 @@ void debug_print_dims_trace(const char* func_name,
 	debug_printf_trace(func_name, file, line, dblevel, "[");
 
 	for (int i = 0; i < D; i++)
-		debug_printf_trace(func_name, file, line, dblevel, "%3ld ", dims[i]);
+		debug_printf_trace(func_name, file, line, dblevel, "%3" PRId64 " ", dims[i]);
 
 	debug_printf_trace(func_name, file, line, dblevel, "]\n");
 	debug_logging = dbl;
@@ -288,7 +288,7 @@ int parse_double(double res[1], const char* str)
 int parse_long(bart_dim_t res[1], const char* str)
 {
 	char* tail;
-	bart_dim_t l = strtol(str, &tail, 10);
+	bart_dim_t l = strtoll(str, &tail, 10);
 
 	if ('\0' != tail[0])
 		return -1;
@@ -326,7 +326,7 @@ int parse_int(int res[1], const char* str)
 		return -1;
 
 	if (val < INT_MIN || val > INT_MAX)
-		error("Value %ld too large for int!\n", val);
+		error("Value %" PRId64 " too large for int!\n", val);
 
 	res[0] = (int) val;
 	return 0;
@@ -621,7 +621,7 @@ void save_command_line(int argc, char* argv[static argc])
 void print_long(int D, const bart_dim_t arr[D])
 {
 	for (int i = 0; i < D; i++)
-		printf("arr[%i] = %ld\n", i, arr[i]);
+		printf("arr[%i] = %" PRId64 "\n", i, arr[i]);
 }
 
 void print_float(int D, const float arr[D])
@@ -759,7 +759,7 @@ char* ptr_print_dims(int D, const bart_dim_t dims[D])
 
 	for (int i = 0; i < D; i++) {
 
-		char* tmp = ptr_printf("%s%3ld ", result, dims[i]);
+		char* tmp = ptr_printf("%s%3" PRId64 " ", result, dims[i]);
 
 		xfree(result);
 
@@ -786,7 +786,7 @@ char* construct_filename(int D, const bart_dim_t loopdims[D], const bart_dim_t p
 
 	for (int i = 0; i < D; i++)
 		if (1 != loopdims[i])
-			len += snprintf(NULL, 0, "_%c%04ld", spec[i], pos[i]);
+			len += snprintf(NULL, 0, "_%c%04" PRId64, spec[i], pos[i]);
 
 	len += snprintf(NULL, 0, ".%s", ext);
 	len++;
@@ -798,7 +798,7 @@ char* construct_filename(int D, const bart_dim_t loopdims[D], const bart_dim_t p
 
 	for (int i = 0; i < D; i++)
 		if (1 != loopdims[i])
-			off += snprintf(name + off, (size_t)(len - off), "_%c%04ld", spec[i], pos[i]);
+			off += snprintf(name + off, (size_t)(len - off), "_%c%04" PRId64, spec[i], pos[i]);
 
 	off += snprintf(name + off, (size_t)(len - off), ".%s", ext);
 

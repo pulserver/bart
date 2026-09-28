@@ -344,7 +344,7 @@ void md_mixture_weights(int D, const bart_dim_t dims_gamma[D], complex float* ga
 {
 	assert(4 <= D);
 	bart_dim_t dims_zmax[D];
-	bart_flags_t flags = UINT64_C(0); // flags for batchsize and number of gaussians
+	bart_flags_t flags = 0; // flags for batchsize and number of gaussians
 
 	flags = md_nontriv_dims(D, dims_log_gauss) & ~md_nontriv_dims(D, dims_ws);
 
@@ -425,7 +425,7 @@ void md_gaussian_score(int D, const bart_dim_t dims_score[D], complex float* sco
 	assert(md_check_equal_dims(D, dims_score, dims_x, ~UINT64_C(0)));
 
 	bart_dim_t dims_log_gauss[D];
-	bart_flags_t flags = UINT64_C(0); // flags for batchsize and number of gaussians
+	bart_flags_t flags = 0; // flags for batchsize and number of gaussians
 	flags = md_nontriv_dims(D, dims_mu) & md_nontriv_dims(D, dims_x);
 	md_select_dims(D, ~flags, dims_log_gauss, grad_dims);
 

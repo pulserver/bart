@@ -388,7 +388,7 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 			seq->geom.baseres, seq->geom.mb_factor, seq->geom.sms_distance);
 	
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
-			"\nPE_Mode/Turns-GA/aligned flags/order\t%d (\"%s\")/%d/%ld/%d\nis3D/slab-os\t\t\t\t%d/%.2f",
+			"\nPE_Mode/Turns-GA/aligned flags/order\t%d (\"%s\")/%d/%" PRIu64 "/%d\nis3D/slab-os\t\t\t\t%d/%.2f",
 			seq->enc.pe_mode, get_pemode_str(seq->enc.pe_mode), seq->enc.tiny, seq->enc.aligned_flags, seq->enc.order,
 			seq->enc.is3D, seq->geom.slab_os);
 
@@ -406,7 +406,7 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
-			"\nloop_dims\t %ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t\n",
+			"\nloop_dims\t %" PRId64 "|%" PRId64 "|%" PRId64 "|%" PRId64 "\t\t%" PRId64 "|%" PRId64 "|%" PRId64 "|%" PRId64 "\t\t%" PRId64 "|%" PRId64 "|%" PRId64 "|%" PRId64 "\t\t%" PRId64 "|%" PRId64 "|%" PRId64 "|%" PRId64 "\t\t\n",
 			seq->loop_dims[READ_DIM], seq->loop_dims[PHS1_DIM], seq->loop_dims[PHS2_DIM], seq->loop_dims[COIL_DIM],
 			seq->loop_dims[MAPS_DIM], seq->loop_dims[TE_DIM], seq->loop_dims[COEFF_DIM], seq->loop_dims[COEFF2_DIM],
 			seq->loop_dims[ITER_DIM], seq->loop_dims[CSHIFT_DIM], seq->loop_dims[TIME_DIM], seq->loop_dims[TIME2_DIM],

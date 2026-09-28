@@ -130,7 +130,7 @@ static void convcorr_geom_der2(const nlop_data_t* _data, int /*o*/, int /*i*/, c
 	complex float* x1 = data->der1;
 
 	if (NULL == x1)
-		error("Convcorr %x derivative not available\n", data);
+		error("Convcorr %p derivative not available\n", data);
 
 	md_clear(data->N, data->odims, dst, CFL_SIZE);
 	md_zfmacc2(2 * data->N, data->mdims, data->ostrs, dst, data->istrs2, src + data->shift, data->istrs1, x1);
@@ -142,7 +142,7 @@ static void convcorr_geom_adj2(const nlop_data_t* _data, int /*o*/, int /*i*/, c
 	complex float* x1 = data->der1;
 
 	if (NULL == x1)
-		error("Convcorr %x derivative not available\n", data);
+		error("Convcorr %p derivative not available\n", data);
 
 	md_clear(data->N, data->idims2, dst, CFL_SIZE);
 	md_zfmac2(2 * data->N, data->mdims, data->istrs2, dst + data->shift, data->ostrs, src, data->istrs1, x1);
@@ -154,7 +154,7 @@ static void convcorr_geom_der1(const nlop_data_t* _data, int /*o*/, int /*i*/, c
 	complex float* x2 = data->der2;
 
 	if (NULL == x2)
-		error("Convcorr %x derivative not available\n", data);
+		error("Convcorr %p derivative not available\n", data);
 
 	md_clear(data->N, data->odims, dst, CFL_SIZE);
 	md_zfmacc2(2 * data->N, data->mdims, data->ostrs, dst, data->istrs1, src, data->istrs2, x2 + data->shift);
@@ -166,7 +166,7 @@ static void convcorr_geom_adj1(const nlop_data_t* _data, int /*o*/, int /*i*/, c
 	complex float* x2 = data->der2;
 
 	if (NULL == x2)
-		error("Convcorr %x derivative not available\n", data);
+		error("Convcorr %p derivative not available\n", data);
 
 	md_clear(data->N, data->idims1, dst, CFL_SIZE);
 	md_zfmac2(2 * data->N, data->mdims, data->istrs1, dst, data->ostrs, src, data->istrs2, x2 + data->shift);
@@ -306,7 +306,7 @@ struct nlop_s* nlop_convcorr_geom_create(int N, bart_flags_t flags, const bart_d
 				nidims[i] = idims[i];
 			}
 
-			bart_dim_t pos = labs((nidims[i] / 2) - (idims[i] / 2)); // center corresponds to resize_center/ceter of fft
+			bart_dim_t pos = llabs((nidims[i] / 2) - (idims[i] / 2)); // center corresponds to resize_center/ceter of fft
 
 			// from md_resize_center:
 			// if idim[d] > nidim[d], then optr[i] = iptr[pos + i] for 0 <= i < nidim[d]

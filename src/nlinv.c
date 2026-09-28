@@ -213,7 +213,7 @@ int main_nlinv(int argc, char* argv[argc])
 
 	if (1 != ksp_dims[SLICE_DIM]) {
 
-		debug_printf(DP_INFO, "SMS-NLINV reconstruction. Multiband factor: %ld\n", ksp_dims[SLICE_DIM]);
+		debug_printf(DP_INFO, "SMS-NLINV reconstruction. Multiband factor: %" PRId64 "\n", ksp_dims[SLICE_DIM]);
 
 		if (use_compat_to_version("v0.9.00") && (!conf.noncart || (NULL != trajectory))) {
 
@@ -247,7 +247,7 @@ int main_nlinv(int argc, char* argv[argc])
 		if (0 == md_calc_size(3, my_img_dims)) {
 
 			estimate_im_dims(DIMS, FFT_FLAGS, dims, trj_dims, traj);
-			debug_printf(DP_INFO, "Est. image size: %ld %ld %ld\n", dims[0], dims[1], dims[2]);
+			debug_printf(DP_INFO, "Est. image size: %" PRId64 " %" PRId64 " %" PRId64 "\n", dims[0], dims[1], dims[2]);
 
 		} else {
 
@@ -359,7 +359,7 @@ int main_nlinv(int argc, char* argv[argc])
 				error("Streaming does not support estimation of image dims!\n");
 
 			estimate_im_dims(DIMS, FFT_FLAGS, dims, trj_dims, traj);
-			debug_printf(DP_INFO, "Est. image size: %ld %ld %ld\n", dims[0], dims[1], dims[2]);
+			debug_printf(DP_INFO, "Est. image size: %" PRId64 " %" PRId64 " %" PRId64 "\n", dims[0], dims[1], dims[2]);
 		}
 
 		md_copy_dims(DIMS - 3, dims + 3, ksp_dims + 3);
@@ -406,7 +406,7 @@ int main_nlinv(int argc, char* argv[argc])
 
 	if (conf.ret_os_coils)
 		for (int i = 0; i < 3; i++)
-			sens_dims[i] = (1 == sens_dims[i]) ? sens_dims[i] : lround(conf.oversampling_coils * (float)sens_dims[i]);
+			sens_dims[i] = (1 == sens_dims[i]) ? sens_dims[i] : llround(conf.oversampling_coils * (float)sens_dims[i]);
 
 	bart_dim_t img_dims[DIMS];
 	md_select_dims(DIMS, ~COIL_FLAG, img_dims, dims);

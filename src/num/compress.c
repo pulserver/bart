@@ -38,13 +38,13 @@ void md_compress_dims(bart_dim_t N, bart_dim_t cdims[N], const bart_dim_t dcdims
 {
 	md_select_dims(N, ~md_nontriv_dims(N, mdims), cdims, dcdims);
 
-	int cdim = ffs(md_nontriv_dims(N, mdims)) - 1;
+	int cdim = md_min_idx(md_nontriv_dims(N, mdims));
 	cdims[cdim] = max;
 }
 
 void md_decompress_dims(bart_dim_t N, bart_dim_t dcdims[N], const bart_dim_t cdims[N], const bart_dim_t mdims[N])
 {
-	int cdim = ffs(md_nontriv_dims(N, mdims)) - 1;
+	int cdim = md_min_idx(md_nontriv_dims(N, mdims));
 
 	md_select_dims(N, ~MD_BIT(cdim), dcdims, cdims);
 	md_max_dims(N, ~UINT64_C(0), dcdims, dcdims, mdims);
@@ -97,7 +97,7 @@ static void md_decompress2_int(vptr_fun_data_t* _data, int N, int D, const bart_
 		if (1 != mdims[i] && 1 != idims[i])
 			flat_idx = i;
 
-	bart_dim_t midx = ffs(md_nontriv_dims(D, mdims)) - 1;
+	bart_dim_t midx = md_min_idx(md_nontriv_dims(D, mdims));
 	if (0 == (bitcount(md_nontriv_dims(D, mdims) & md_nontriv_dims(D, idims))))
 		flat_idx = midx;
 
@@ -179,7 +179,7 @@ static void md_compress2_int(vptr_fun_data_t* _data, int N, int D, const bart_di
 		if (1 != mdims[i] && 1 != odims[i])
 			flat_idx = i;
 
-	bart_dim_t midx = ffs(md_nontriv_dims(D, mdims)) - 1;
+	bart_dim_t midx = md_min_idx(md_nontriv_dims(D, mdims));
 	if (0 == (bitcount(md_nontriv_dims(D, mdims) & md_nontriv_dims(D, odims))))
 		flat_idx = midx;
 

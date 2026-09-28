@@ -136,7 +136,7 @@ int main_traj(int argc, char* argv[argc])
 		custom_angle_vals = load_cfl(custom_angle_file, DIMS, sdims);
 
 		if (Y != sdims[0])
-			debug_printf(DP_INFO, "According to the custom angle file : number of projection (y) = %ld\n", sdims[0]);
+			debug_printf(DP_INFO, "According to the custom angle file : number of projection (y) = %" PRId64 "\n", sdims[0]);
 
 		Y = sdims[0];
 	}
@@ -352,7 +352,7 @@ int main_traj(int argc, char* argv[argc])
 					base_angle[SLICE_DIM] = (m > 0) ? (fmod(angle_atom * m / golden_ratio, angle_atom) / m) : 0;
 				}
 
-				bart_dim_t ind[DIMS] = { INT64_C(0) };
+				bart_dim_t ind[DIMS] = { 0 };
 				indices_from_position(ind, pos, conf);
 
 				for (int d = 1; d < DIMS; d++)

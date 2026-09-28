@@ -88,7 +88,7 @@ static void dfthresh(int D, const bart_dim_t /*dims*/[D], float /*lambda*/, comp
 	md_singleton_dims(D, minsize);
 
 	bart_dim_t coarse_scale[3] = { 16, 16, 16 };
-	md_min_dims(3, ~0u, minsize, dims, coarse_scale);
+	md_min_dims(3, ~UINT64_C(0), minsize, dims, coarse_scale);
 
         complex float res[3];
         res[0] = 1.;

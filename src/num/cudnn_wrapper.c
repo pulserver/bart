@@ -76,7 +76,7 @@ void cudnn_init(void)
 
 	if (NULL != (cudnn_str = getenv("BART_CUDNN_USE_TENSORCORE"))) {
 
-		bart_dim_t val = strtol(cudnn_str, NULL, 10);
+		bart_dim_t val = strtoll(cudnn_str, NULL, 10);
 
 		if ((1 != val) && (0 != val))
 			error("BART_CUDNN_USE_TENSORCORE environment variable must be 0 or 1!\n");

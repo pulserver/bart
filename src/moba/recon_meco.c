@@ -262,7 +262,7 @@ void meco_recon(const struct moba_conf* moba_conf, struct moba_conf_s* data,
 	for (bart_dim_t f = 0; f < (moba_conf->stack_frames ? 1 : Y_dims[TIME_DIM]); f++) {
 
 		debug_printf(DP_INFO, moba_conf->stack_frames ? ">>> stack " : ">>> frame ");
-		debug_printf(DP_INFO, "%3ld\n", f);
+		debug_printf(DP_INFO, "%3" PRId64 "\n", f);
 
 		bool reset = (0 == f);
 

@@ -66,7 +66,7 @@ static bool check_selection(const bart_dim_t group, const int j)
 		return false; // group has only 32 bits
 
 	assert(0 <= j);
-	return (labs(group) & (1 << j));
+	return (llabs(group) & (1 << j));
 }
 
 
@@ -134,7 +134,7 @@ static void ssa_backprojection( const bart_dim_t N,
 	// Reorder & Anti-diagonal summation
 	bart_dim_t kern_dims[4];
 	md_set_dims(4, kern_dims, 1);
-	md_min_dims(4, ~0u, kern_dims, kernelCoil_dims, cal_dims);
+	md_min_dims(4, ~UINT64_C(0), kern_dims, kernelCoil_dims, cal_dims);
 
 	bart_stride_t cal_strs[DIMS];
 	md_calc_strides(DIMS, cal_strs, cal_dims, CFL_SIZE);
@@ -204,7 +204,7 @@ void ssa_fary(	const bart_dim_t kernel_dims[3],
 	bart_dim_t U_dims[2] = { N, N };
 	complex float* UH = md_alloc(2, U_dims, CFL_SIZE);
 
-	debug_printf(DP_DEBUG3, "SVD of %ldx%ld matrix...", AAH_dims[0], AAH_dims[1]);
+	debug_printf(DP_DEBUG3, "SVD of %" PRId64 "x%" PRId64 " matrix...", AAH_dims[0], AAH_dims[1]);
 
 	lapack_svd(N, N, (complex float (*)[N])U, (complex float (*)[N])UH, S_square, (complex float (*)[N])AAH); // NOTE: Lapack destroys AAH!
 
@@ -280,7 +280,7 @@ static void ssa_backprojection_econ( const bart_dim_t N,
 	// Reorder & Anti-diagonal summation
 	bart_dim_t kern_dims[4];
 	md_set_dims(4, kern_dims, 1);
-	md_min_dims(4, ~0u, kern_dims, kernelCoil_dims, cal_dims);
+	md_min_dims(4, ~UINT64_C(0), kern_dims, kernelCoil_dims, cal_dims);
 
 	bart_stride_t cal_strs[DIMS];
 	md_calc_strides(DIMS, cal_strs, cal_dims, CFL_SIZE);
@@ -334,7 +334,7 @@ void ssa_fary_econ(	const bart_dim_t kernel_dims[3],
 	bart_dim_t VH_dims[2] = { MIN(M, N), M };
 	complex float* VH = md_alloc(2, VH_dims, CFL_SIZE);
 
-	debug_printf(DP_DEBUG3, "SVD of %ldx%ld matrix...", N, M);
+	debug_printf(DP_DEBUG3, "SVD of %" PRId64 "x%" PRId64 " matrix...", N, M);
 
 	bart_dim_t S_dims[2] = { MIN(M, N), 1 };
 

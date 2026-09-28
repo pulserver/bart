@@ -58,7 +58,7 @@ static void get_circle_coords(struct pole_config_s* conf, bart_dim_t pos[3], int
 	vec3_saxpy(fpos, fpos, 0.5 * diameter * sinf(angle), e2[normal]);
 
 	for (int i = 0; i < 3; i++)
-		pos[i] = MAX(0, MIN(diameter, lroundf(fpos[i])));
+		pos[i] = MAX(0, MIN(diameter, llroundf(fpos[i])));
 
 	if (twoD)
 		pos[normal] = 0;
@@ -204,7 +204,7 @@ void compute_curl_weighting(struct pole_config_s conf, int N, const bart_dim_t c
 	complex float* wgh = md_alloc_sameplace(N, col_dims, CFL_SIZE, wgh_map);
 
 	md_clear(N, col_dims, wgh, CFL_SIZE);
-	md_zss(N, col_dims, UINT64_C(0), wgh, sens);
+	md_zss(N, col_dims, 0, wgh, sens);
 
 	bart_dim_t rdims[N];
 	md_select_dims(N, ~conf.avg_flag, rdims, col_dims);
@@ -284,7 +284,7 @@ static struct lseg_s extract_phase_poles_2d_sign(struct pole_config_s conf, int 
 
 	if (conf.closing != 0. && !conf.espirit) {
 
-		int dmin = lroundf(ceilf(((-1 == conf.closing) ? conf.diameter / 2. : conf.closing) * MAX(dims[(normal + 1) % 3], dims[(normal + 2) % 3])));
+		int dmin = llroundf(ceilf(((-1 == conf.closing) ? conf.diameter / 2. : conf.closing) * MAX(dims[(normal + 1) % 3], dims[(normal + 2) % 3])));
 		bart_dim_t mdims[3];
 		complex float* mask = md_structuring_element_cube(3, mdims, dmin, md_nontriv_dims(3, dims), curl_map);
 

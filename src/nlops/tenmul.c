@@ -112,7 +112,7 @@ static void tenmul_der2(const nlop_data_t* _data, int /*o*/, int /*i*/, complex 
 	complex float* x1 = data->der1;
 
 	if (NULL == x1)
-		error("Tenmul %x derivative not available\n", data);
+		error("Tenmul %p derivative not available\n", data);
 
 	md_ztenmul2(data->N, data->dims, data->ostr, dst, data->istr2, src, MD_STRIDES(data->N, data->dims1, CFL_SIZE), x1);
 }
@@ -123,7 +123,7 @@ static void tenmul_adj2(const nlop_data_t* _data, int /*o*/, int /*i*/, complex 
 	complex float* x1 = data->der1;
 
 	if (NULL == x1)
-		error("Tenmul %x derivative not available\n", data);
+		error("Tenmul %p derivative not available\n", data);
 
 
 	md_ztenmulc2(data->N, data->dims, data->istr2, dst, data->ostr, src, MD_STRIDES(data->N, data->dims1, CFL_SIZE), x1);
@@ -135,7 +135,7 @@ static void tenmul_der1(const nlop_data_t* _data, int /*o*/, int /*i*/, complex 
 	complex float* x2 = data->der2;
 
 	if (NULL == x2)
-		error("Tenmul %x derivative not available\n", data);
+		error("Tenmul %p derivative not available\n", data);
 
 	md_ztenmul2(data->N, data->dims, data->ostr, dst, data->istr1, src, MD_STRIDES(data->N, data->dims2, CFL_SIZE), x2);
 }
@@ -146,7 +146,7 @@ static void tenmul_adj1(const nlop_data_t* _data, int /*o*/, int /*i*/, complex 
 	complex float* x2 = data->der2;
 
 	if (NULL == x2)
-		error("Tenmul %x derivative not available\n", data);
+		error("Tenmul %p derivative not available\n", data);
 
 	md_ztenmulc2(data->N, data->dims, data->istr1, dst, data->ostr, src, MD_STRIDES(data->N, data->dims2, CFL_SIZE), x2);
 }

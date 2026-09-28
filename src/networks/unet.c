@@ -581,7 +581,7 @@ static nn_t unet_sample_conv_strided_create(struct network_unet_s* unet, int N, 
 	if (unet->reduce_factor != roundf(unet->reduce_factor))
 		error("Convolution can only be used for integer downsampling\n");
 
-	bart_stride_t stride = lroundf(unet->reduce_factor);
+	bart_stride_t stride = llroundf(unet->reduce_factor);
 
 	for (int i = 0; i < N; i++) {
 
@@ -648,7 +648,7 @@ static nn_t nnunet_sample_conv_strided_create(struct network_unet_s* unet, int N
 	if (unet->reduce_factor != roundf(unet->reduce_factor))
 		error("Convolution can only be used for integer downsampling\n");
 
-	bart_stride_t stride = lroundf(unet->reduce_factor);
+	bart_stride_t stride = llroundf(unet->reduce_factor);
 
 	for (int i = 0; i < N; i++) {
 
@@ -773,7 +773,7 @@ static void unet_get_kdims(const struct network_unet_s* config, int N, bart_dim_
 			continue;
 
 		for (int j = 0; j < level; j++)
-			kdims[i] = lroundf(kdims[i] * config->channel_factor > config->max_channels ? config->max_channels : kdims[i] * config->channel_factor);
+			kdims[i] = llroundf(kdims[i] * config->channel_factor > config->max_channels ? config->max_channels : kdims[i] * config->channel_factor);
 	}
 }
 

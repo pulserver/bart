@@ -82,7 +82,7 @@ int main_rmfreq(int argc, char* argv[argc])
 
 		mod = load_cfl(mod_file, DIMS, mod_dims);
 
-		assert(md_check_equal_dims(DIMS, k_dims, mod_dims, ~0u));
+		assert(md_check_equal_dims(DIMS, k_dims, mod_dims, ~UINT64_C(0)));
 	}
 
 

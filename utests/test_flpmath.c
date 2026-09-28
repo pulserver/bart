@@ -60,9 +60,9 @@ static bool test_md_zfmacc2(void)
 
 	bool ret = true;
 
-	for (bart_flags_t flags = UINT64_C(0); flags < UINT64_C(16); flags++) {
+	for (bart_flags_t flags = 0; flags < 16; flags++) {
 
-		debug_printf(DP_DEBUG1, "Testing md_zfmacc2_flags with flags=%lu\n", flags);
+		debug_printf(DP_DEBUG1, "Testing md_zfmacc2_flags with flags=%" PRIu64 "\n", flags);
 
 		ret &= test_md_zfmacc2_flags(4, idims, flags, test_md_in0, test_md_in1, test_md_zfmacc2_out[flags]);
 	}
@@ -100,9 +100,9 @@ static bool test_md_zwavg(void)
 	bool wavg = true;
 	bool ret = true;
 
-	for (bart_flags_t flags = UINT64_C(0); flags < UINT64_C(16); flags++) {
+	for (bart_flags_t flags = 0; flags < 16; flags++) {
 
-		debug_printf(DP_DEBUG1, "Testing md_zwavg_flags with flags=%lu\n", flags);
+		debug_printf(DP_DEBUG1, "Testing md_zwavg_flags with flags=%" PRIu64 "\n", flags);
 
 		ret &= test_md_zavg_flags(4, idims, flags, test_md_in0, test_md_zwavg_out[flags], wavg);
 	}
@@ -118,9 +118,9 @@ static bool test_md_zavg(void)
 	bool wavg = false;
 	bool ret = true;
 
-	for (bart_flags_t flags = UINT64_C(0); flags < UINT64_C(16); flags++) {
+	for (bart_flags_t flags = 0; flags < 16; flags++) {
 
-		debug_printf(DP_DEBUG1, "Testing md_zavg_flags with flags=%lu\n", flags);
+		debug_printf(DP_DEBUG1, "Testing md_zavg_flags with flags=%" PRIu64 "\n", flags);
 
 		ret &= test_md_zavg_flags(4, idims, flags, test_md_in0, test_md_zavg_out[flags], wavg);
 	}

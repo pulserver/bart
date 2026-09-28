@@ -48,7 +48,7 @@ int main_estdims(int argc, char* argv[argc])
 	
 	estimate_im_dims(N, FFT_FLAGS, im_dims, traj_dims, traj);
 
-	bart_printf("%ld %ld %ld\n", im_dims[0], im_dims[1], im_dims[2]);
+	bart_printf("%" PRId64 " %" PRId64 " %" PRId64 "\n", im_dims[0], im_dims[1], im_dims[2]);
 	
 	unmap_cfl(N, traj_dims, traj);
 

@@ -90,14 +90,14 @@ double get_rot_angle(const bart_dim_t pos[DIMS], const struct seq_config* seq)
 	double base_angle[DIMS] = { 0. };
 	calc_base_angles(base_angle, seq->loop_dims[PHS1_DIM], seq->loop_dims[TE_DIM], conf);
 
-	bart_dim_t pos2[DIMS] = { INT64_C(0) };
+	bart_dim_t pos2[DIMS] = { 0 };
 
 	pos2[PHS2_DIM] = pos[PHS1_DIM];
 	pos2[SLICE_DIM] = (seq->enc.is3D) ? pos[PHS2_DIM] : pos[SLICE_DIM];
 	pos2[TE_DIM] = pos[TE_DIM];
 	pos2[TIME_DIM] = pos[TIME_DIM];
 
-	bart_dim_t ind[DIMS] = { INT64_C(0) };
+	bart_dim_t ind[DIMS] = { 0 };
 	indices_from_position(ind, pos2, conf);
 
 	double angle = 0.;

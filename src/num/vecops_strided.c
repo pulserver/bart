@@ -742,7 +742,7 @@ static bart_dim_t get_block_size(int N, const bart_dim_t dims[N], const bart_str
 	bart_dim_t size = (bart_stride_t)size0;
 
 	for (int i = 0; i < N; i++)
-		size += (dims[i] - 1) * labs(strs[i]);
+		size += (dims[i] - 1) * llabs(strs[i]);
 
 	return size;
 }
