@@ -42,10 +42,10 @@
 static bool test_nlop_T1fun(void) 
 {
 	enum { N = 16 };
-	long map_dims[N] = { 16, 16, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long out_dims[N] = { 16, 16, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long in_dims[N] = { 16, 16, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long TI_dims[N] = { 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t map_dims[N] = { 16, 16, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t out_dims[N] = { 16, 16, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t in_dims[N] = { 16, 16, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t TI_dims[N] = { 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
 	complex float* dst = md_alloc(N, out_dims, CFL_SIZE);
 	complex float* src = md_alloc(N, in_dims, CFL_SIZE);
@@ -73,10 +73,10 @@ UT_REGISTER_TEST(test_nlop_T1fun);
 static bool test_nlop_T1fun_der(void) 
 {
 	enum { N = 16 };
-	long map_dims[N] = { 16, 16, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long out_dims[N] = { 16, 16, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long in_dims[N] = { 16, 16, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long TI_dims[N] = { 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t map_dims[N] = { 16, 16, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t out_dims[N] = { 16, 16, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t in_dims[N] = { 16, 16, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t TI_dims[N] = { 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
 	complex float TI[4] = { 0., 1., 2., 3. };
 
@@ -97,14 +97,14 @@ UT_REGISTER_TEST(test_nlop_T1fun_der);
 static bool test_op_p_stack_moba_nonneg(void)
 {
 	enum { N = 5 };
-	long dims[N] = { 2, 4, 7, 5, 6};
+	bart_dim_t dims[N] = { 2, 4, 7, 5, 6};
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
-	long s_dim = 2;
+	bart_dim_t s_dim = 2;
 
-	long p_pos = 3;
+	bart_dim_t p_pos = 3;
 	unsigned int s_flag = MD_BIT(p_pos);
 
 	const struct operator_p_s* p = moba_nonneg_prox_create(N, dims, s_dim, s_flag, 0.);
@@ -118,12 +118,12 @@ static bool test_op_p_stack_moba_nonneg(void)
 	operator_p_apply(p, 0., N, dims, out, N, dims, in);
 	operator_p_free(p);
 
-	long dims1[N];
+	bart_dim_t dims1[N];
 	md_select_dims(N, ~MD_BIT(s_dim), dims1, dims);
 
 	complex float* in1 = md_alloc(N, dims1, CFL_SIZE);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	for (int i = 0; i < N; i++)
 		pos[i] = 0;
 
@@ -148,10 +148,10 @@ UT_REGISTER_TEST(test_op_p_stack_moba_nonneg);
 static bool test_nlop_blochfun(void)
 {
 	enum { N = 16 };
-	long map_dims[N] = { 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long out_dims[N] = { 3, 3, 1, 1, 1, 500, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long in_dims[N] = { 3, 3, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long all_dims[N] = { 3, 3, 1, 1, 1, 500, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t map_dims[N] = { 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t out_dims[N] = { 3, 3, 1, 1, 1, 500, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t in_dims[N] = { 3, 3, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t all_dims[N] = { 3, 3, 1, 1, 1, 500, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
 	complex float* dst = md_alloc(N, out_dims, CFL_SIZE);
 	complex float* src = md_alloc(N, in_dims, CFL_SIZE);
@@ -193,10 +193,10 @@ UT_REGISTER_TEST(test_nlop_blochfun);
 static bool test_nlop_T1phyfun(void)
 {
 	enum { N = 16 };
-	long map_dims[N] = { 16, 16, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long out_dims[N] = { 16, 16, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long in_dims[N] = { 16, 16, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long TI_dims[N] = { 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t map_dims[N] = { 16, 16, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t out_dims[N] = { 16, 16, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t in_dims[N] = { 16, 16, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t TI_dims[N] = { 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
 	complex float* dst = md_alloc(N, out_dims, CFL_SIZE);
 	complex float* src = md_alloc(N, in_dims, CFL_SIZE);
@@ -235,11 +235,11 @@ UT_REGISTER_TEST(test_nlop_T1phyfun);
 static bool test_nlop_ir_meco(void)
 {
 	enum { N = 16 };
-	long map_dims[N] = { 16, 16, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long out_dims[N] = { 16, 16, 1, 1, 1, 4, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1 };
-	long in_dims[N] = { 16, 16, 1, 1, 1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long TI_dims[N] = { 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long TE_dims[N] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t map_dims[N] = { 16, 16, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t out_dims[N] = { 16, 16, 1, 1, 1, 4, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t in_dims[N] = { 16, 16, 1, 1, 1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t TI_dims[N] = { 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t TE_dims[N] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1 };
 
 	complex float* dst = md_alloc(N, out_dims, CFL_SIZE);
 	complex float* src = md_alloc(N, in_dims, CFL_SIZE);
@@ -274,11 +274,11 @@ UT_REGISTER_TEST(test_nlop_ir_meco);
 static bool test_nlop_ir_meco_der(void)
 {
 	enum { N = 16 };
-	long map_dims[N] = { 16, 16, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long out_dims[N] = { 16, 16, 1, 1, 1, 4, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1 };
-	long in_dims[N] = { 16, 16, 1, 1, 1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long TI_dims[N] = { 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long TE_dims[N] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t map_dims[N] = { 16, 16, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t out_dims[N] = { 16, 16, 1, 1, 1, 4, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t in_dims[N] = { 16, 16, 1, 1, 1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t TI_dims[N] = { 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t TE_dims[N] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1 };
 
 	complex float TI[4] = { 0., 1., 2., 3. };	// [s]
 
@@ -293,11 +293,11 @@ static bool test_nlop_ir_meco_der(void)
 
 	// create reasonable input, masked to the center and with larger last two coeffs:
 
-	long coeff_dims[N] =  { 1, 1, 1, 1, 1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	long coeff_strs[N];
+	bart_dim_t coeff_dims[N] =  { 1, 1, 1, 1, 1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_stride_t coeff_strs[N];
 	md_calc_strides(N, coeff_strs, coeff_dims, CFL_SIZE);
 
-	long in_strs[N];
+	bart_stride_t in_strs[N];
 	md_calc_strides(N, in_strs, in_dims, CFL_SIZE);
 
 	complex float coeffs[8] = {1., 1., 1., 1., 1., 1., 10., 10.};
@@ -308,7 +308,7 @@ static bool test_nlop_ir_meco_der(void)
 	restrict_dims[0] = 0.5;
 	restrict_dims[1] = 0.5;
 	complex float* mask = compute_mask(DIMS, map_dims, restrict_dims);
-	long map_strs[N];
+	bart_stride_t map_strs[N];
 	md_calc_strides(N, map_strs, map_dims, CFL_SIZE);
 
 	md_zmul2(N, in_dims, in_strs, in, in_strs, in, map_strs, mask);

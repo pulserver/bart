@@ -37,16 +37,16 @@ float svthresh_nomeanu(int M, int N, float lambda, complex float* dst, const com
 {
 	int MN = M * N;
 
-	complex float* basis = md_alloc(1, (long[1]){ M }, CFL_SIZE);
-	complex float* coeff = md_alloc(1, (long[1]){ N }, CFL_SIZE);
-	complex float* tmp = md_alloc(1, (long[1]){ MN }, CFL_SIZE);
+	complex float* basis = md_alloc(1, (bart_dim_t[1]){ M }, CFL_SIZE);
+	complex float* coeff = md_alloc(1, (bart_dim_t[1]){ N }, CFL_SIZE);
+	complex float* tmp = md_alloc(1, (bart_dim_t[1]){ MN }, CFL_SIZE);
 
 	for (int i = 0; i < M; i++)
 		basis[i] = 1. / sqrtf((float)M);
 
 
-	md_clear(1, (long[1]){ N }, coeff, CFL_SIZE);
-	md_clear(1, (long[1]){ MN }, tmp, CFL_SIZE);
+	md_clear(1, (bart_dim_t[1]){ N }, coeff, CFL_SIZE);
+	md_clear(1, (bart_dim_t[1]){ MN }, tmp, CFL_SIZE);
 
 	for (int j = 0; j < N; j++)
 		for (int i = 0; i < M; i++)
@@ -70,15 +70,15 @@ float svthresh_nomeanv(int M, int N, float lambda, complex float* dst, const com
 {
 	int MN = M * N;
 
-	complex float* basis = md_alloc(1, (long[1]){ N }, CFL_SIZE);
-	complex float* coeff = md_alloc(1, (long[1]){ M }, CFL_SIZE);
-	complex float* tmp = md_alloc(1, (long[1]){ MN }, CFL_SIZE);
+	complex float* basis = md_alloc(1, (bart_dim_t[1]){ N }, CFL_SIZE);
+	complex float* coeff = md_alloc(1, (bart_dim_t[1]){ M }, CFL_SIZE);
+	complex float* tmp = md_alloc(1, (bart_dim_t[1]){ MN }, CFL_SIZE);
 
 	for (int i = 0; i < N; i++)
 		basis[i] = 1. / sqrtf((float)N);
 
-	md_clear(1, (long[1]){ M }, coeff, CFL_SIZE);
-	md_clear(1, (long[1]){ MN }, tmp, CFL_SIZE);
+	md_clear(1, (bart_dim_t[1]){ M }, coeff, CFL_SIZE);
+	md_clear(1, (bart_dim_t[1]){ MN }, tmp, CFL_SIZE);
 
 	for (int j = 0; j < N; j++)
 		for (int i = 0; i < M; i++)
@@ -107,16 +107,16 @@ float svthresh_nomeanv(int M, int N, float lambda, complex float* dst, const com
  * @param lambda - regularization parameter
  * @param A - input/output matrix
  */
-float svthresh(long M, long N, float lambda, complex float* dst, complex float* src) //FIXME: destroys input
+float svthresh(bart_dim_t M, bart_dim_t N, float lambda, complex float* dst, complex float* src) //FIXME: destroys input
 {
-	long minMN = MIN(M, N);
-	long dimsU[3] = { M, minMN, 1};
-	long dimsVT[3] = { minMN, N, 1 };
-	long dimsS[3] = { minMN, 1, 1 };
+	bart_dim_t minMN = MIN(M, N);
+	bart_dim_t dimsU[3] = { M, minMN, 1};
+	bart_dim_t dimsVT[3] = { minMN, N, 1 };
+	bart_dim_t dimsS[3] = { minMN, 1, 1 };
 //	long dimsAA[3] = {minMN, minMN,1};
 
-	long strsVT[3];
-	long strsS[3];
+	bart_dim_t strsVT[3];
+	bart_dim_t strsS[3];
 	md_calc_strides(3, strsVT, dimsVT, CFL_SIZE);
 	md_calc_strides(3, strsS, dimsS, FL_SIZE);
 
@@ -153,13 +153,13 @@ float svthresh(long M, long N, float lambda, complex float* dst, complex float* 
 
 
 
-float nuclearnorm(long M, long N, /* const */ complex float* d)
+float nuclearnorm(bart_dim_t M, bart_dim_t N, /* const */ complex float* d)
 { // FIXME: destroys input
 
-	long minMN = MIN(M,N);
-	long dimsU[3]	= { M, minMN, 1 };
-	long dimsVT[3]	= { minMN, N, 1 };
-	long dimsS[3]	= { minMN, 1, 1 };
+	bart_dim_t minMN = MIN(M,N);
+	bart_dim_t dimsU[3]	= { M, minMN, 1 };
+	bart_dim_t dimsVT[3]	= { minMN, N, 1 };
+	bart_dim_t dimsS[3]	= { minMN, 1, 1 };
 
 	complex float* U = md_alloc_sameplace(3, dimsU, CFL_SIZE, d);
 	complex float* VT = md_alloc_sameplace(3, dimsVT, CFL_SIZE, d );
@@ -180,10 +180,10 @@ float nuclearnorm(long M, long N, /* const */ complex float* d)
 }
 
 
-float maxsingular(long M, long N, /*const*/ complex float* d)
+float maxsingular(bart_dim_t M, bart_dim_t N, /*const*/ complex float* d)
 {	// FIXME: destroys input
-	long dimsU[2] = { M, N };
-	long dimsV[2] = { N, N };
+	bart_dim_t dimsU[2] = { M, N };
+	bart_dim_t dimsV[2] = { N, N };
   
 	complex float* U = md_alloc(2, dimsU, sizeof(complex float));
 	complex float* VT = md_alloc(2, dimsV, sizeof(complex float));
@@ -211,12 +211,12 @@ float maxsingular(long M, long N, /*const*/ complex float* d)
  ************/
 
 struct svthresh_blockproc_data {
-	unsigned long mflags;
+	bart_flags_t mflags;
 	float lambda;
 	int remove_mean;
 };
 
-struct svthresh_blockproc_data* svthresh_blockproc_create(unsigned long mflags, float lambda, int remove_mean)
+struct svthresh_blockproc_data* svthresh_blockproc_create(bart_flags_t mflags, float lambda, int remove_mean)
 {
 	PTR_ALLOC(struct svthresh_blockproc_data, data);
 	data->mflags = mflags;
@@ -225,7 +225,7 @@ struct svthresh_blockproc_data* svthresh_blockproc_create(unsigned long mflags, 
 	return data;
 }
 
-float svthresh_blockproc(const void* _data, const long blkdims[DIMS], complex float* dst, const complex float* src0)
+float svthresh_blockproc(const void* _data, const bart_dim_t blkdims[DIMS], complex float* dst, const complex float* src0)
 {
 	const struct svthresh_blockproc_data* data = _data;
 
@@ -263,15 +263,15 @@ float svthresh_blockproc(const void* _data, const long blkdims[DIMS], complex fl
 
 
 
-float nucnorm_blockproc(const void* _data, const long blkdims[DIMS], complex float* dst, const complex float* src0)
+float nucnorm_blockproc(const void* _data, const bart_dim_t blkdims[DIMS], complex float* dst, const complex float* src0)
 {
 	const struct svthresh_blockproc_data* data = _data;
 
 	assert(dst == src0);
 	complex float* src = dst;
 
-	long M = 1;
-	long N = md_calc_size(DIMS, blkdims);
+	bart_dim_t M = 1;
+	bart_dim_t N = md_calc_size(DIMS, blkdims);
 
 	for (int i = 0; i < DIMS; i++) {
 

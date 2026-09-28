@@ -56,9 +56,9 @@ int main_fakeksp(int argc, char* argv[argc])
 
 
 	const int N = DIMS;
-	long ksp_dims[N];
-	long dims[N];
-	long img_dims[N];
+	bart_dim_t ksp_dims[N];
+	bart_dim_t dims[N];
+	bart_dim_t img_dims[N];
 
 	complex float* kspace_data = load_cfl(ksp_file, N, ksp_dims);
 	complex float* sens_maps = load_cfl(sens_file, N, dims);
@@ -76,11 +76,11 @@ int main_fakeksp(int argc, char* argv[argc])
 
 	num_init();
 
-	long dims1[N];
+	bart_dim_t dims1[N];
 
 	md_select_dims(N, ~(COIL_FLAG|MAPS_FLAG), dims1, dims);
 
-	long dims2[N];
+	bart_dim_t dims2[N];
 	md_copy_dims(DIMS, dims2, img_dims);
 	dims2[COIL_DIM] = dims[COIL_DIM];
 	dims2[MAPS_DIM] = dims[MAPS_DIM];

@@ -16,6 +16,7 @@
 #ifndef __x86_64__
 #error NOEXEC_STACK only supported on x86_64
 #endif
+#include "misc/dimtypes.h"
 #include <stdio.h>
 #if __GNUC__ >= 5
 #define NESTED_CALL(p, args) ({												\

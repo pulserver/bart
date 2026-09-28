@@ -49,12 +49,12 @@ struct thresh_s {
 
 	int D;
 
-	const long* dim;
-	const long* str;
+	const bart_dim_t* dim;
+	const bart_stride_t* str;
 
-	const long* norm_dim;
+	const bart_dim_t* norm_dim;
 
-	unsigned long flags;
+	bart_flags_t flags;
 
 	const struct linop_s* unitary_op;
 };
@@ -91,8 +91,8 @@ static void unisoftthresh_apply(const operator_data_t* _data, float mu, complex 
 
 	} else {
 
-		const long* transform_dims = linop_codomain(data->unitary_op)->dims;
-		const long* transform_strs = linop_codomain(data->unitary_op)->strs;
+		const bart_dim_t* transform_dims = linop_codomain(data->unitary_op)->dims;
+		const bart_stride_t* transform_strs = linop_codomain(data->unitary_op)->strs;
 
 		complex float* tmp = md_alloc_sameplace(data->D, transform_dims, CFL_SIZE, dst);
 
@@ -143,7 +143,7 @@ static void thresh_del(const operator_data_t* _data)
  * @param lambda threshold parameter
  * @param flags bitmask for joint soft-thresholding
  */
-const struct operator_p_s* prox_thresh_create(int D, const long dim[D], const float lambda, const unsigned long flags)
+const struct operator_p_s* prox_thresh_create(int D, const bart_dim_t dim[D], const float lambda, const bart_flags_t flags)
 {
 	PTR_ALLOC(struct thresh_s, data);
 	SET_TYPEID(thresh_s, data);
@@ -153,16 +153,16 @@ const struct operator_p_s* prox_thresh_create(int D, const long dim[D], const fl
 	data->flags = flags;
 	data->unitary_op = NULL;
 
-	PTR_ALLOC(long[D], ndim);
+	PTR_ALLOC(bart_dim_t[D], ndim);
 	md_copy_dims(D, *ndim, dim);
 	data->dim = *PTR_PASS(ndim);
 
 	// norm dimensions are the flagged input dimensions
-	PTR_ALLOC(long[D], norm_dim);
+	PTR_ALLOC(bart_dim_t[D], norm_dim);
 	md_select_dims(D, ~flags, *norm_dim, data->dim);
 	data->norm_dim = *PTR_PASS(norm_dim);
 
-	PTR_ALLOC(long[D], nstr);
+	PTR_ALLOC(bart_dim_t[D], nstr);
 	md_calc_strides(D, *nstr, data->dim, CFL_SIZE);
 	data->str = *PTR_PASS(nstr);
 
@@ -179,7 +179,7 @@ const struct operator_p_s* prox_thresh_create(int D, const long dim[D], const fl
  * @param unitary_op unitary linear operator
  * @param flags bitmask for joint soft-thresholding
  */
-extern const struct operator_p_s* prox_unithresh_create(int D, const struct linop_s* unitary_op, const float lambda, const unsigned long flags)
+extern const struct operator_p_s* prox_unithresh_create(int D, const struct linop_s* unitary_op, const float lambda, const bart_flags_t flags)
 {
 	PTR_ALLOC(struct thresh_s, data);
 	SET_TYPEID(thresh_s, data);
@@ -189,19 +189,19 @@ extern const struct operator_p_s* prox_unithresh_create(int D, const struct lino
 	data->flags = flags;
 	data->unitary_op = unitary_op;
 
-	const long* dims = linop_domain(unitary_op)->dims;
+	const bart_dim_t* dims = linop_domain(unitary_op)->dims;
 
-	PTR_ALLOC(long[D], ndim);
+	PTR_ALLOC(bart_dim_t[D], ndim);
 	md_copy_dims(D, *ndim, dims);
 	data->dim = *PTR_PASS(ndim);
 
-	PTR_ALLOC(long[D], nstr);
+	PTR_ALLOC(bart_dim_t[D], nstr);
 	md_calc_strides(D, *nstr, data->dim, CFL_SIZE);
 	data->str = *PTR_PASS(nstr);
 
 	// norm dimensions are the flagged transform dimensions
 	// FIXME should use linop_codomain(unitary_op)->N 
-	PTR_ALLOC(long[D], norm_dim);
+	PTR_ALLOC(bart_dim_t[D], norm_dim);
 	md_select_dims(D, ~flags, *norm_dim, linop_codomain(unitary_op)->dims);
 	data->norm_dim = *PTR_PASS(norm_dim);
 
@@ -217,7 +217,7 @@ extern const struct operator_p_s* prox_unithresh_create(int D, const struct lino
  * @param k threshold parameter (non-zero elements to keep)
  * @param flags bitmask for joint thresholding
  */
-const struct operator_p_s* prox_niht_thresh_create(int D, const long dim[D], const int k, const unsigned long flags)
+const struct operator_p_s* prox_niht_thresh_create(int D, const bart_dim_t dim[D], const int k, const bart_flags_t flags)
 {
 	PTR_ALLOC(struct thresh_s, data);
 	SET_TYPEID(thresh_s, data);
@@ -228,16 +228,16 @@ const struct operator_p_s* prox_niht_thresh_create(int D, const long dim[D], con
 	data->flags = flags;
 	data->unitary_op = NULL;
 
-	PTR_ALLOC(long[D], ndim);
+	PTR_ALLOC(bart_dim_t[D], ndim);
 	md_copy_dims(D, *ndim, dim);
 	data->dim = *PTR_PASS(ndim);
 
 	// norm dimensions are the flagged input dimensions
-	PTR_ALLOC(long[D], norm_dim);
+	PTR_ALLOC(bart_dim_t[D], norm_dim);
 	md_select_dims(D, ~flags, *norm_dim, data->dim);
 	data->norm_dim = *PTR_PASS(norm_dim);
 
-	PTR_ALLOC(long[D], nstr);
+	PTR_ALLOC(bart_dim_t[D], nstr);
 	md_calc_strides(D, *nstr, data->dim, CFL_SIZE);
 	data->str = *PTR_PASS(nstr);
 

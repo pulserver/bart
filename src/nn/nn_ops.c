@@ -42,10 +42,10 @@ static bool update_random_state = true;
 
 
 
-const struct nlop_s* nlop_maxpool_create(int N, const long dims[N], const long pool_size[N])
+const struct nlop_s* nlop_maxpool_create(int N, const bart_dim_t dims[N], const bart_dim_t pool_size[N])
 {
-	long ndims[2 * N];
-	long odims[2 * N];
+	bart_dim_t ndims[2 * N];
+	bart_dim_t odims[2 * N];
 
 	int perm[2 * N];
 
@@ -77,7 +77,7 @@ struct rand_mask_s {
 
 	int N;
 	float p;
-	long* dims;
+	bart_dim_t* dims;
 	complex float* state;
 };
 
@@ -105,18 +105,18 @@ static void rand_mask_del(const struct nlop_data_s* _data)
 }
 
 //nlop creating random mask with (1. - p) ones and p. zeros
-const struct nlop_s* nlop_rand_mask_create(int N, const long dims[N], float p)
+const struct nlop_s* nlop_rand_mask_create(int N, const bart_dim_t dims[N], float p)
 {
 	PTR_ALLOC(struct rand_mask_s, data);
 	SET_TYPEID(rand_mask_s, data);
 
 	data->N = N;
 	data->p = p;
-	data->dims = *TYPE_ALLOC(long[N]);
+	data->dims = *TYPE_ALLOC(bart_dim_t[N]);
 	md_copy_dims(N, data->dims, dims);
 	data->state = md_alloc(N, dims, CFL_SIZE);
 
-	long odims[1][N];
+	bart_dim_t odims[1][N];
 	md_copy_dims(N, odims[0], dims);
 
 	return nlop_generic_create(1, N, odims, 0, 0, NULL, CAST_UP(PTR_PASS(data)), rand_mask_fun, NULL, NULL, NULL, NULL, rand_mask_del);
@@ -124,9 +124,9 @@ const struct nlop_s* nlop_rand_mask_create(int N, const long dims[N], float p)
 
 //input is multiplied with p ones to create first output
 //input is multiplied with 1.-p ones to create second output
-const struct nlop_s* nlop_rand_split_create(int N, const long dims[N], unsigned long shared_dims_flag, float p)
+const struct nlop_s* nlop_rand_split_create(int N, const bart_dim_t dims[N], bart_flags_t shared_dims_flag, float p)
 {
-	long dims2[N];
+	bart_dim_t dims2[N];
 	md_select_dims(N, ~shared_dims_flag, dims2, dims);
 
 	complex float one = 1.;
@@ -149,8 +149,8 @@ struct rand_mask_fixed_s {
 	nlop_data_t super;
 
 	int N;
-	long* dims;
-	unsigned long bat_flags;
+	bart_dim_t* dims;
+	bart_flags_t bat_flags;
 	float p;
 
 	complex float* state;
@@ -176,20 +176,20 @@ static void rand_mask_fixed_fun(const nlop_data_t* _data, int D, complex float* 
 
 	md_clear(data->N, data->dims, data->state, CFL_SIZE);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
-	long tdims[N];
+	bart_dim_t tdims[N];
 	md_select_dims(N, ~data->bat_flags, tdims, data->dims);
-	long NV = md_calc_size(N, tdims);
+	bart_dim_t NV = md_calc_size(N, tdims);
 
 	assert( 1 >= fabsf(data->p));
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, data->dims, CFL_SIZE);
 
 	do {
-		long ones = data->p * NV;
+		bart_dim_t ones = data->p * NV;
 
 		if (0 > ones) {
 
@@ -201,7 +201,7 @@ static void rand_mask_fixed_fun(const nlop_data_t* _data, int D, complex float* 
 
 			md_unravel_index(N, pos, ~data->bat_flags, data->dims, 0);
 
-			long idx = rand_range_state(data->rand_state, (NV - i));
+			bart_dim_t idx = rand_range_state(data->rand_state, (NV - i));
 
 			while ((0 < idx) || (1. == MD_ACCESS(N, strs, pos, data->state))) {
 
@@ -232,14 +232,14 @@ static void rand_mask_fixed_del(const struct nlop_data_s* _data)
 }
 
 //nlop creating random mask with (1. - p) ones and p. zeros
-const struct nlop_s* nlop_rand_mask_fixed_create(int N, const long dims[N], float p, unsigned long bat_flags)
+const struct nlop_s* nlop_rand_mask_fixed_create(int N, const bart_dim_t dims[N], float p, bart_flags_t bat_flags)
 {
 	PTR_ALLOC(struct rand_mask_fixed_s, data);
 	SET_TYPEID(rand_mask_fixed_s, data);
 
 	data->N = N;
 	data->p = p;
-	data->dims = *TYPE_ALLOC(long[N]);
+	data->dims = *TYPE_ALLOC(bart_dim_t[N]);
 	md_copy_dims(N, data->dims, dims);
 
 	data->state = md_calloc(data->N, data->dims, CFL_SIZE);
@@ -247,7 +247,7 @@ const struct nlop_s* nlop_rand_mask_fixed_create(int N, const long dims[N], floa
 	data->rand_state = rand_state_create(123);
 	data->bat_flags = bat_flags;
 
-	long odims[1][N];
+	bart_dim_t odims[1][N];
 	md_copy_dims(N, odims[0], dims);
 
 	return nlop_generic_create(1, N, odims, 0, 0, NULL, CAST_UP(PTR_PASS(data)), rand_mask_fixed_fun, NULL, NULL, NULL, NULL, rand_mask_fixed_del);
@@ -256,9 +256,9 @@ const struct nlop_s* nlop_rand_mask_fixed_create(int N, const long dims[N], floa
 //input is multiplied with p ones to create first output
 //input is multiplied with 1.-p ones and p times "leaky" to create second output
 //if fix_first==1, output one is multiplied with 1 and output two is multiplied with zero
-const struct nlop_s* nlop_rand_split_fixed_create(int N, const long dims[N], unsigned long shared_dims_flag, unsigned long bat_dims_flag, float p, unsigned long fix_flags, const complex float* _fix_first, float leaky_val)
+const struct nlop_s* nlop_rand_split_fixed_create(int N, const bart_dim_t dims[N], bart_flags_t shared_dims_flag, bart_flags_t bat_dims_flag, float p, bart_flags_t fix_flags, const complex float* _fix_first, float leaky_val)
 {
-	long fix_dims[N];
+	bart_dim_t fix_dims[N];
 	md_select_dims(N, fix_flags, fix_dims, dims);
 
 	complex float* fix_first = md_alloc(N, fix_dims, CFL_SIZE);		// 0 if must be in first output
@@ -268,7 +268,7 @@ const struct nlop_s* nlop_rand_split_fixed_create(int N, const long dims[N], uns
 	if (NULL != _fix_first)
 		md_zsub(N, fix_dims, fix_first, fix_first, _fix_first);
 	
-	long dims2[N];
+	bart_dim_t dims2[N];
 	md_select_dims(N, (~shared_dims_flag) | fix_flags, dims2, dims);
 
 	complex float one = 1.;
@@ -298,9 +298,9 @@ const struct nlop_s* nlop_rand_split_fixed_create(int N, const long dims[N], uns
 
 
 
-const struct nlop_s* nlop_dropout_create(int N, const long dims[N], float p, unsigned long shared_dims_flag)
+const struct nlop_s* nlop_dropout_create(int N, const bart_dim_t dims[N], float p, bart_flags_t shared_dims_flag)
 {
-	long dims2[N];
+	bart_dim_t dims2[N];
 	md_select_dims(N, ~shared_dims_flag, dims2, dims);
 
 	return nlop_chain2_FF(nlop_rand_mask_create(N, dims2, p), 0, nlop_tenmul_create(N, dims, dims, dims2), 1);
@@ -312,11 +312,11 @@ struct noise_s {
 
 	int N;
 
-	const long* noi_dims;
-	const long* out_dims;
+	const bart_dim_t* noi_dims;
+	const bart_dim_t* out_dims;
 
 	float var;	//negative value means var is drawn from gaussian distribution with abs(var) (take magnitude)
-	unsigned long shared_var_flag;
+	bart_flags_t shared_var_flag;
 };
 
 DEF_TYPEID(noise_s);
@@ -331,10 +331,10 @@ static void noise_fun(const nlop_data_t* _data, int Nargs, complex float* args[N
 
 	complex float* tmp = md_alloc_sameplace(data->N, data->noi_dims, CFL_SIZE, dst);
 
-	long noi_dims[data->N];
+	bart_dim_t noi_dims[data->N];
 	md_select_dims(data->N, (data->shared_var_flag), noi_dims, data->noi_dims);
 
-	long pos[data->N];
+	bart_dim_t pos[data->N];
 	md_singleton_strides(data->N, pos);
 
 	do {
@@ -372,15 +372,15 @@ static void noise_del(const struct nlop_data_s* _data)
 }
 
 
-const struct nlop_s* nlop_noise_create(int N, const long dims[N], float var, unsigned long shared_dims_flag, unsigned long shared_var_flag)
+const struct nlop_s* nlop_noise_create(int N, const bart_dim_t dims[N], float var, bart_flags_t shared_dims_flag, bart_flags_t shared_var_flag)
 {
 	PTR_ALLOC(struct noise_s, data);
 	SET_TYPEID(noise_s, data);
 
 	data->N = N;
 
-	long* out_dims = *TYPE_ALLOC(long[N]);
-	long* noi_dims = *TYPE_ALLOC(long[N]);
+	bart_dim_t* out_dims = *TYPE_ALLOC(bart_dim_t[N]);
+	bart_dim_t* noi_dims = *TYPE_ALLOC(bart_dim_t[N]);
 
 	md_copy_dims(N, out_dims, dims);
 	md_select_dims(N, ~shared_dims_flag, noi_dims, dims);
@@ -390,13 +390,13 @@ const struct nlop_s* nlop_noise_create(int N, const long dims[N], float var, uns
 	data->var = var;
 	data->shared_var_flag = shared_var_flag;
 
-	long odims[1][N];
+	bart_dim_t odims[1][N];
 	md_copy_dims(N, odims[0], dims);
 
 	return nlop_generic_create(1, N, odims, 0, 0, NULL, CAST_UP(PTR_PASS(data)), noise_fun, NULL, NULL, NULL, NULL, noise_del);
 }
 
-const struct nlop_s* nlop_add_noise_create(int N, const long dims[N], float var, unsigned long shared_dims_flag, unsigned long shared_var_flag)
+const struct nlop_s* nlop_add_noise_create(int N, const bart_dim_t dims[N], float var, bart_flags_t shared_dims_flag, bart_flags_t shared_var_flag)
 {
 	auto result = nlop_zaxpbz_create(N, dims, 1, 1);
 	result = nlop_chain2_FF(nlop_noise_create(N, dims, var, shared_dims_flag, shared_var_flag), 0, result, 1);
@@ -408,8 +408,8 @@ struct norm_max_abs_s {
 	nlop_data_t super;
 
 	int N;
-	const long* dims;
-	const long* sdims;
+	const bart_dim_t* dims;
+	const bart_dim_t* sdims;
 
 	complex float* inv_scale;
 };
@@ -426,8 +426,8 @@ static void norm_max_abs_fun(const nlop_data_t* _data, int D, complex float* arg
 	const auto data = CAST_DOWN(norm_max_abs_s, _data);
 
 	int N = data->N;
-	const long* dims = data->dims;
-	const long* sdims = data->sdims;
+	const bart_dim_t* dims = data->dims;
+	const bart_dim_t* sdims = data->sdims;
 
 	if (NULL == data->inv_scale)
 		data->inv_scale = md_alloc_sameplace(N, sdims, CFL_SIZE, dst);
@@ -462,8 +462,8 @@ static void norm_max_abs_deradj(const nlop_data_t* _data, int /*o*/, int /*i*/, 
 	const auto data = CAST_DOWN(norm_max_abs_s, _data);
 
 	int N = data->N;
-	const long* dims = data->dims;
-	const long* sdims = data->sdims;
+	const bart_dim_t* dims = data->dims;
+	const bart_dim_t* sdims = data->sdims;
 
 	md_zmul2(N, dims,
 		MD_STRIDES(N, dims, CFL_SIZE), dst,
@@ -483,15 +483,15 @@ static void norm_max_abs_del(const struct nlop_data_s* _data)
 	xfree(data);
 }
 
-const struct nlop_s* nlop_norm_max_abs_create(int N, const long dims[N], unsigned long batch_flag)
+const struct nlop_s* nlop_norm_max_abs_create(int N, const bart_dim_t dims[N], bart_flags_t batch_flag)
 {
 	PTR_ALLOC(struct norm_max_abs_s, data);
 	SET_TYPEID(norm_max_abs_s, data);
 
-	PTR_ALLOC(long[N], ndims);
+	PTR_ALLOC(bart_dim_t[N], ndims);
 	md_copy_dims(N, *ndims, dims);
 
-	PTR_ALLOC(long[N], sdims);
+	PTR_ALLOC(bart_dim_t[N], sdims);
 	md_select_dims(N, batch_flag, *sdims, dims);
 
 	data->N = N;
@@ -500,11 +500,11 @@ const struct nlop_s* nlop_norm_max_abs_create(int N, const long dims[N], unsigne
 
 	data->inv_scale = NULL;
 
-	long nl_odims[2][N];
+	bart_dim_t nl_odims[2][N];
 	md_copy_dims(N, nl_odims[0], dims);
 	md_copy_dims(N, nl_odims[1], data->sdims);
 
-	long nl_idims[1][N];
+	bart_dim_t nl_idims[1][N];
 	md_copy_dims(N, nl_idims[0], dims);
 
 	return nlop_generic_create(2, N, nl_odims, 1, N, nl_idims, CAST_UP(PTR_PASS(data)), norm_max_abs_fun, (nlop_der_fun_t[1][2]){ { norm_max_abs_deradj, NULL } }, (nlop_der_fun_t[1][2]){ { norm_max_abs_deradj, NULL } }, NULL, NULL, norm_max_abs_del);
@@ -515,8 +515,8 @@ struct norm_znorm_s {
 	nlop_data_t super;
 
 	int N;
-	const long* dims;
-	const long* sdims;
+	const bart_dim_t* dims;
+	const bart_dim_t* sdims;
 
 	complex float* inv_scale;
 };
@@ -533,8 +533,8 @@ static void norm_znorm_fun(const nlop_data_t* _data, int D, complex float* args[
 	const auto data = CAST_DOWN(norm_znorm_s, _data);
 
 	int N = data->N;
-	const long* dims = data->dims;
-	const long* sdims = data->sdims;
+	const bart_dim_t* dims = data->dims;
+	const bart_dim_t* sdims = data->sdims;
 
 	if (NULL == data->inv_scale)
 		data->inv_scale = md_alloc_sameplace(N, sdims, CFL_SIZE, dst);
@@ -558,8 +558,8 @@ static void norm_znorm_deradj(const nlop_data_t* _data, int /*o*/, int /*i*/, co
 	const auto data = CAST_DOWN(norm_znorm_s, _data);
 
 	int N = data->N;
-	const long* dims = data->dims;
-	const long* sdims = data->sdims;
+	const bart_dim_t* dims = data->dims;
+	const bart_dim_t* sdims = data->sdims;
 
 	md_zmul2(N, dims,
 		MD_STRIDES(N, dims, CFL_SIZE), dst,
@@ -579,15 +579,15 @@ static void norm_znorm_del(const struct nlop_data_s* _data)
 	xfree(data);
 }
 
-const struct nlop_s* nlop_norm_znorm_create(int N, const long dims[N], unsigned long batch_flag)
+const struct nlop_s* nlop_norm_znorm_create(int N, const bart_dim_t dims[N], bart_flags_t batch_flag)
 {
 	PTR_ALLOC(struct norm_znorm_s, data);
 	SET_TYPEID(norm_znorm_s, data);
 
-	PTR_ALLOC(long[N], ndims);
+	PTR_ALLOC(bart_dim_t[N], ndims);
 	md_copy_dims(N, *ndims, dims);
 
-	PTR_ALLOC(long[N], sdims);
+	PTR_ALLOC(bart_dim_t[N], sdims);
 	md_select_dims(N, batch_flag, *sdims, dims);
 
 	data->N = N;
@@ -596,11 +596,11 @@ const struct nlop_s* nlop_norm_znorm_create(int N, const long dims[N], unsigned 
 
 	data->inv_scale = NULL;
 
-	long nl_odims[2][N];
+	bart_dim_t nl_odims[2][N];
 	md_copy_dims(N, nl_odims[0], dims);
 	md_copy_dims(N, nl_odims[1], data->sdims);
 
-	long nl_idims[1][N];
+	bart_dim_t nl_idims[1][N];
 	md_copy_dims(N, nl_idims[0], dims);
 
 	return nlop_generic_create(2, N, nl_odims, 1, N, nl_idims, CAST_UP(PTR_PASS(data)), norm_znorm_fun, (nlop_der_fun_t[1][2]){ { norm_znorm_deradj, NULL } }, (nlop_der_fun_t[1][2]){ { norm_znorm_deradj, NULL } }, NULL, NULL, norm_znorm_del);
@@ -608,7 +608,7 @@ const struct nlop_s* nlop_norm_znorm_create(int N, const long dims[N], unsigned 
 }
 
 
-const struct nlop_s* nlop_norm_create(int N, const long dims[N], unsigned long batch_flag, enum norm norm, bool stop_grad)
+const struct nlop_s* nlop_norm_create(int N, const bart_dim_t dims[N], bart_flags_t batch_flag, enum norm norm, bool stop_grad)
 {
 	const struct nlop_s* result = NULL;
 

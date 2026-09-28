@@ -28,9 +28,9 @@ static const char help_str[] = "Reshape selected dimensions.";
 
 int main_reshape(int argc, char* argv[argc])
 {
-	unsigned long flags = 0;
+	bart_flags_t flags = 0;
 	int count = 0;
-	long* dims = NULL;
+	bart_dim_t* dims = NULL;
 	const char* in_file = NULL;
 	const char* out_file = NULL;
 
@@ -42,7 +42,7 @@ int main_reshape(int argc, char* argv[argc])
 		ARG_OUTFILE(true, &out_file, "output"),
 	};
 
-	unsigned long stream_flags = 0 ;
+	bart_flags_t stream_flags = 0 ;
 
 	const struct opt_s opts[] = { 
 
@@ -57,8 +57,8 @@ int main_reshape(int argc, char* argv[argc])
 
 	assert(n == count);
 
-	long in_dims[DIMS];
-	long out_dims[DIMS];
+	bart_dim_t in_dims[DIMS];
+	bart_dim_t out_dims[DIMS];
 
 	complex float* in_data = (0 != stream_flags ? load_async_cfl : load_cfl)(in_file, DIMS, in_dims);
 
@@ -66,8 +66,8 @@ int main_reshape(int argc, char* argv[argc])
 	
 	int j = 0;
 
-	long otot = 1;
-	long itot = 1;
+	bart_dim_t otot = 1;
+	bart_dim_t itot = 1;
 
 	for (int i = 0; i < DIMS; i++) {
 
@@ -103,8 +103,8 @@ int main_reshape(int argc, char* argv[argc])
 		stream_t strm_in = stream_lookup(in_data);
 		stream_t strm_out = stream_lookup(out_data);
 
-		unsigned long iflags = 0;
-		unsigned long oflags = 0;
+		bart_flags_t iflags = 0;
+		bart_flags_t oflags = 0;
 
 		if (NULL != strm_in)
 			iflags = stream_get_flags(strm_in);
@@ -114,28 +114,28 @@ int main_reshape(int argc, char* argv[argc])
 		if (0 != (~flags & (iflags | oflags)))
 			error("All streamd dimensions must be reshaped!");
 
-		long slc_dims[DIMS];
+		bart_dim_t slc_dims[DIMS];
 		md_select_dims(DIMS, ~flags, slc_dims, in_dims);
 
 		void* buf = md_alloc(DIMS, slc_dims, CFL_SIZE);
 
-		long ipos[DIMS] = { };
-		long opos[DIMS] = { };
+		bart_dim_t ipos[DIMS] = { };
+		bart_dim_t opos[DIMS] = { };
 
 		bool stream_loop = (strm_in && !cfl_loop_desc_active());
-		long idx_count = 0;
+		bart_dim_t idx_count = 0;
 
 		do {
 			if (stream_loop && !stream_receive_serial(strm_in, DIMS, ipos, idx_count++))
 				break;
 
 			do {
-				long index = md_ravel_index(DIMS, ipos, flags, in_dims);
+				bart_dim_t index = md_ravel_index(DIMS, ipos, flags, in_dims);
 				md_unravel_index(DIMS, opos, flags, out_dims, index);
 
 				md_slice(DIMS, flags, ipos, in_dims, buf, in_data, CFL_SIZE);
 
-				long zpos[DIMS] = { };
+				bart_dim_t zpos[DIMS] = { };
 				md_move_block(DIMS, slc_dims, opos, out_dims, out_data, zpos, slc_dims, buf, CFL_SIZE);
 
 				bool cont = false;
@@ -152,7 +152,7 @@ int main_reshape(int argc, char* argv[argc])
 				if (cont)
 					continue;
 
-				long opos2[DIMS];
+				bart_dim_t opos2[DIMS];
 				md_select_strides(DIMS, oflags, opos2, opos);
 				stream_sync_slice(strm_out, DIMS, out_dims, oflags, opos2);
 

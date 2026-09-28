@@ -20,7 +20,7 @@
 
 static bool test_mpi_znorm(void)
 {
-	long dims[3] = { 4, 4, 4 };
+	bart_dim_t dims[3] = { 4, 4, 4 };
 
 	complex float* dat_cpu = md_alloc(3, dims, CFL_SIZE);
 	md_gaussian_rand(3, dims, dat_cpu);
@@ -43,7 +43,7 @@ UT_UNUSED_TEST(test_mpi_znorm);
 
 static bool test_mpi_znorm_flat(void)
 {
-	long dims[3] = { 4, 4, 4 };
+	bart_dim_t dims[3] = { 4, 4, 4 };
 
 	complex float* dat_cpu = md_alloc(3, dims, CFL_SIZE);
 	md_gaussian_rand(3, dims, dat_cpu);
@@ -64,7 +64,7 @@ UT_UNUSED_TEST(test_mpi_znorm_flat);
 
 static bool test_mpi_scalar_flat(void)
 {
-	long dims[3] = { 4, 4, 4 };
+	bart_dim_t dims[3] = { 4, 4, 4 };
 
 	complex float* dat_cpu = md_alloc(3, dims, CFL_SIZE);
 	md_gaussian_rand(3, dims, dat_cpu);
@@ -86,7 +86,7 @@ UT_UNUSED_TEST(test_mpi_scalar_flat);
 
 static bool test_mpi_znorm_slice(void)
 {
-	long dims[3] = { 4, 4, 4 };
+	bart_dim_t dims[3] = { 4, 4, 4 };
 
 	complex float* dat_cpu = md_alloc(3, dims, CFL_SIZE);
 	md_gaussian_rand(3, dims, dat_cpu);
@@ -94,7 +94,7 @@ static bool test_mpi_znorm_slice(void)
 	complex float* dat_mpi = md_alloc_mpi(3, MD_BIT(1), dims, CFL_SIZE);
 	md_copy(3, dims, dat_mpi, dat_cpu, CFL_SIZE);
 
-	long strs[3];
+	bart_stride_t strs[3];
 	md_calc_strides(3, strs, dims, CFL_SIZE);
 	md_select_dims(3, ~MD_BIT(1), dims, dims);
 
@@ -112,7 +112,7 @@ UT_UNUSED_TEST(test_mpi_znorm_slice);
 
 static bool test_mpi_znorm_slice2(void)
 {
-	long dims[3] = { 4, 4, 4 };
+	bart_dim_t dims[3] = { 4, 4, 4 };
 
 	complex float* dat_cpu = md_alloc(3, dims, CFL_SIZE);
 	md_gaussian_rand(3, dims, dat_cpu);
@@ -120,7 +120,7 @@ static bool test_mpi_znorm_slice2(void)
 	complex float* dat_mpi = md_alloc_mpi(3, MD_BIT(1), dims, CFL_SIZE);
 	md_copy(3, dims, dat_mpi, dat_cpu, CFL_SIZE);
 
-	long sdims[3];
+	bart_dim_t sdims[3];
 	md_select_dims(3, ~MD_BIT(1), sdims, dims);
 
 	complex float* dat_cpu2 = md_alloc_sameplace(3, sdims, CFL_SIZE, dat_cpu);
@@ -144,15 +144,15 @@ UT_UNUSED_TEST(test_mpi_znorm_slice2);
 
 static bool test_mpi_znorm_slice3(void)
 {
-	long dims[3] = { 4, 2, 2 };
+	bart_dim_t dims[3] = { 4, 2, 2 };
 
 	complex float* dat_cpu = md_alloc(3, dims, CFL_SIZE);
 	md_gaussian_rand(3, dims, dat_cpu);
 
-	complex float* dat_mpi = md_alloc_mpi(3, 6UL, dims, CFL_SIZE);
+	complex float* dat_mpi = md_alloc_mpi(3, UINT64_C(6), dims, CFL_SIZE);
 	md_copy(3, dims, dat_mpi, dat_cpu, CFL_SIZE);
 
-	long sdims[3];
+	bart_dim_t sdims[3];
 	md_select_dims(3, ~MD_BIT(1), sdims, dims);
 
 	complex float* dat_cpu2 = md_alloc_sameplace(3, sdims, CFL_SIZE, dat_cpu);

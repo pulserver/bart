@@ -1,6 +1,7 @@
 #ifndef _RAND_H
 #define _RAND_H
 
+#include "misc/dimtypes.h"
 #include "misc/dllspec.h"
 #include "misc/cppwrap.h"
 

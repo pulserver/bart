@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include <stdbool.h>
 
 #include "simu/signals.h"
@@ -49,8 +50,8 @@ struct moba_conf {
 	bool noncartesian;
         bool sms;
 	int not_wav_maps;
-	long constrained_maps;	// FIXME, this is special, a flag but -1 means uninitialized
-	unsigned long l2para;
+	bart_dim_t constrained_maps;	// FIXME, this is special, a flag but -1 means uninitialized
+	bart_flags_t l2para;
 	int pusteps;
 	float ratio;
 	float l1val;

@@ -50,13 +50,13 @@ int main_mobasig(int argc, char* argv[argc])
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
 
-	long param_dims[DIMS];
+	bart_dim_t param_dims[DIMS];
 	complex float* coeff_data = load_cfl(param_file, DIMS, param_dims);
 
-	long enc_dims[DIMS];
+	bart_dim_t enc_dims[DIMS];
 	complex float* enc = load_cfl(enc_file, DIMS, enc_dims);
 
-	long out_dims[DIMS];
+	bart_dim_t out_dims[DIMS];
 	md_select_dims(DIMS, ~(TE_FLAG | COEFF_FLAG), out_dims, param_dims);
 	out_dims[TE_DIM] = enc_dims[TE_DIM];
 	complex float* sig_data = create_cfl(signal_file, DIMS, out_dims);

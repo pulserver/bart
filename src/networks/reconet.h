@@ -1,3 +1,5 @@
+#include "misc/dimtypes.h"
+
 
 
 struct nn_weights_s;
@@ -8,7 +10,7 @@ enum BOOL_SELECT {BOOL_DEFAULT, BOOL_TRUE, BOOL_FALSE};
 struct reconet_s {
 
 	struct network_s* network;
-	long Nt;
+	bart_dim_t Nt;
 
 	enum BOOL_SELECT share_weights_select;
 	enum BOOL_SELECT share_lambda_select;
@@ -72,8 +74,8 @@ extern void apply_reconet(	struct reconet_s* config,
 				struct named_data_list_s* data);
 
 extern void train_reconet(	struct reconet_s* config,
-				long Nb_train, struct named_data_list_s* train_data,
-				long Nb_valid, struct named_data_list_s* valid_data);
+				bart_dim_t Nb_train, struct named_data_list_s* train_data,
+				bart_dim_t Nb_valid, struct named_data_list_s* valid_data);
 
 extern void eval_reconet(	struct reconet_s* config,
 				struct named_data_list_s* data);

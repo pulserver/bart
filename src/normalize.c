@@ -32,7 +32,7 @@ static const char help_str[] = "Normalize along selected dimensions.";
 
 int main_normalize(int argc, char* argv[argc])
 {
-	unsigned long flags = 0;
+	bart_flags_t flags = 0;
 	const char* in_file = NULL;
 	const char* out_file = NULL;
 
@@ -55,7 +55,7 @@ int main_normalize(int argc, char* argv[argc])
 	num_init();
 
 	int N = DIMS;
-	long dims[N];
+	bart_dim_t dims[N];
 	complex float* data = load_cfl(in_file, N, dims);
 
 	complex float* out = create_cfl(out_file, N, dims);

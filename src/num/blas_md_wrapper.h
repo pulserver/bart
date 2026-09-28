@@ -1,3 +1,5 @@
+#include "misc/dimtypes.h"
+
 void blas_zfmac_cgemm(int N, const bart_dim_t dims[__VLA(N)], const bart_stride_t ostr[__VLA(N)], _Complex float* optr, const bart_stride_t istr1[__VLA(N)], const _Complex float* iptr1, const bart_stride_t istr2[__VLA(N)], const _Complex float* iptr2);
 void blas_zfmac_cgemv(int N, const bart_dim_t dims[__VLA(N)], const bart_stride_t ostr[__VLA(N)], _Complex float* optr, const bart_stride_t istr1[__VLA(N)], const _Complex float* iptr1, const bart_stride_t istr2[__VLA(N)], const _Complex float* iptr2);
 void blas_zfmac_caxpy(int N, const bart_dim_t dims[__VLA(N)], const bart_stride_t ostr[__VLA(N)], _Complex float* optr, const bart_stride_t istr1[__VLA(N)], const _Complex float* iptr1, const bart_stride_t istr2[__VLA(N)], const _Complex float* iptr2);

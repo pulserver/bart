@@ -47,15 +47,15 @@ void seq_minimum_te(const struct seq_config* seq, double* min_te, double* fill_t
 
 
 
-static long kernels_per_measurement(const long loop_dims[DIMS])
+static bart_dim_t kernels_per_measurement(const bart_dim_t loop_dims[DIMS])
 {
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	md_select_dims(DIMS, PHS1_FLAG|TIME2_FLAG|AVG_FLAG|SLICE_FLAG|PHS2_FLAG, dims, loop_dims);
 
 	return md_calc_size(DIMS, dims);
 }
 
-long seq_relevant_readouts_meas_time(const struct seq_config* seq)
+bart_dim_t seq_relevant_readouts_meas_time(const struct seq_config* seq)
 {
 	return kernels_per_measurement(seq->loop_dims) / seq->loop_dims[PHS1_DIM];
 }
@@ -71,10 +71,10 @@ double seq_total_measure_time(const struct seq_config* seq)
 	prep_pulse_duration += seq->magn.inv_delay_time;
 	// prep_pulse_duration *= inv_calls(seq);
 
-	long dims[DIMS] = { };
+	bart_dim_t dims[DIMS] = { };
 	md_select_dims(DIMS, SEQ_FLAGS & ~(COEFF_FLAG|COEFF2_FLAG), dims, seq->loop_dims);
 
-	long img_calls = md_calc_size(DIMS, dims);
+	bart_dim_t img_calls = md_calc_size(DIMS, dims);
 	double imaging_duration = seq->phys.tr * img_calls;
 
 	if ((SEQ_TRIGGER_OFF != seq->trigger.type) && (1 < seq->trigger.pulses)) {
@@ -87,7 +87,7 @@ double seq_total_measure_time(const struct seq_config* seq)
 
 
 
-static void custom_params_to_config(struct seq_config* seq, int nl, const long custom_long[__VLA(nl)], int nd, const double custom_double[__VLA(nd)])
+static void custom_params_to_config(struct seq_config* seq, int nl, const bart_dim_t custom_long[__VLA(nl)], int nd, const double custom_double[__VLA(nd)])
 {
 	seq->enc.pe_mode = (enum pe_mode)custom_long[SEQ_UI_IDX_LONG_PE_MODE];
 	seq->phys.contrast = (enum flash_contrast)custom_long[SEQ_UI_IDX_LONG_CONTRAST];
@@ -104,13 +104,13 @@ static void custom_params_to_config(struct seq_config* seq, int nl, const long c
 	seq->magn.init_delay = custom_long[SEQ_UI_IDX_LONG_INIT_DELAY];
 	seq->loop_dims[BATCH_DIM] = custom_long[SEQ_UI_IDX_LONG_INVERSIONS];
 	seq->magn.inv_delay_time = custom_long[SEQ_UI_IDX_LONG_INV_DELAY];
-	seq->enc.aligned_flags = (unsigned long)custom_long[SEQ_UI_IDX_LONG_RAGA_ALIGNED_FLAGS];
+	seq->enc.aligned_flags = (bart_flags_t)custom_long[SEQ_UI_IDX_LONG_RAGA_ALIGNED_FLAGS];
 
 	seq->phys.bwtp = custom_double[SEQ_UI_IDX_DOUBLE_BWTP];
 }
 
 
-static void config_to_custom_params(int nl, long custom_long[__VLA(nl)], int nd, double custom_double[__VLA(nd)], const struct seq_config* seq)
+static void config_to_custom_params(int nl, bart_dim_t custom_long[__VLA(nl)], int nd, double custom_double[__VLA(nd)], const struct seq_config* seq)
 {
 	custom_long[SEQ_UI_IDX_LONG_PE_MODE] = seq->enc.pe_mode;;
 	custom_long[SEQ_UI_IDX_LONG_CONTRAST] = seq->phys.contrast;
@@ -126,12 +126,12 @@ static void config_to_custom_params(int nl, long custom_long[__VLA(nl)], int nd,
 	custom_long[SEQ_UI_IDX_LONG_INIT_DELAY] = seq->magn.init_delay;
 	custom_long[SEQ_UI_IDX_LONG_INVERSIONS] = seq->loop_dims[BATCH_DIM];
 	custom_long[SEQ_UI_IDX_LONG_INV_DELAY] = seq->magn.inv_delay_time;
-	custom_long[SEQ_UI_IDX_LONG_RAGA_ALIGNED_FLAGS] = (long)seq->enc.aligned_flags;
+	custom_long[SEQ_UI_IDX_LONG_RAGA_ALIGNED_FLAGS] = (bart_dim_t)seq->enc.aligned_flags;
 	custom_double[SEQ_UI_IDX_DOUBLE_BWTP] = seq->phys.bwtp;
 }
 
 
-void seq_ui_interface_custom_params(int reverse, struct seq_config* seq, int nl, long params_long[__VLA(nl)], int nd, double params_double[__VLA(nd)])
+void seq_ui_interface_custom_params(int reverse, struct seq_config* seq, int nl, bart_dim_t params_long[__VLA(nl)], int nd, double params_double[__VLA(nd)])
 {
 	if (reverse)
 		config_to_custom_params(nl, params_long, nd, params_double, seq);
@@ -236,7 +236,7 @@ void seq_ui_interface_standard_conf(int reverse, struct seq_config* conf, struct
 }
 
 
-static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in_dims[D])
+static void loop_dims_to_conf(struct seq_config* seq, const int D, const bart_dim_t in_dims[D])
 {
 	switch (seq->enc.order) {
 
@@ -257,7 +257,7 @@ static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in
 		break;
 	}
 
-	long total_slices = in_dims[SLICE_DIM];
+	bart_dim_t total_slices = in_dims[SLICE_DIM];
 
 	if (1 < seq->geom.mb_factor) {
 
@@ -273,14 +273,14 @@ static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in
 	if ((seq->loop_dims[PHS2_DIM] * seq->loop_dims[SLICE_DIM]) != total_slices)
 		seq->loop_dims[PHS2_DIM] = -1; //mb groups
 
-	long frames = in_dims[TIME_DIM];
+	bart_dim_t frames = in_dims[TIME_DIM];
 	seq->loop_dims[TIME_DIM] = frames;
 
-	long radial_views = in_dims[PHS1_DIM];
+	bart_dim_t radial_views = in_dims[PHS1_DIM];
 
 	if (SEQ_PEMODE_RAGA == seq->enc.pe_mode) {
 
-		seq->loop_dims[TIME_DIM] = (long)ceil(1. * frames / radial_views);
+		seq->loop_dims[TIME_DIM] = (bart_dim_t)ceil(1. * frames / radial_views);
 		seq->loop_dims[ITER_DIM] = frames % radial_views;
 
 		if (0 == seq->loop_dims[ITER_DIM])
@@ -300,7 +300,7 @@ static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in
 	seq->loop_dims[COEFF_DIM] = 3; // pre-/post- and actual kernel calls
 }
 
-static void conf_to_loop_dims(const int D, long dims[D], struct seq_config* seq)
+static void conf_to_loop_dims(const int D, bart_dim_t dims[D], struct seq_config* seq)
 {
 	dims[SLICE_DIM] = seq->loop_dims[SLICE_DIM];
 	dims[PHS2_DIM] = (seq->geom.mb_factor > 1) ? seq->loop_dims[SLICE_DIM] / seq->geom.mb_factor : 1;
@@ -314,7 +314,7 @@ static void conf_to_loop_dims(const int D, long dims[D], struct seq_config* seq)
 	dims[AVG_DIM] = seq->loop_dims[AVG_DIM];
 }
 
-void seq_ui_interface_loop_dims(int reverse, struct seq_config* seq, const int D, long dims[__VLA(D)])
+void seq_ui_interface_loop_dims(int reverse, struct seq_config* seq, const int D, bart_dim_t dims[__VLA(D)])
 {
 	if (reverse)
 		conf_to_loop_dims(D, dims, seq);
@@ -350,7 +350,7 @@ struct seq_interface_conf seq_get_interface_conf(struct seq_config* conf)
 
 void seq_set_fov_pos(int N, int M, const float* shifts, struct seq_config* seq)
 {
-	long total_slices = get_slices(seq);
+	bart_dim_t total_slices = get_slices(seq);
 	assert(total_slices <= N);
 
 	seq->geom.sms_distance = 0;

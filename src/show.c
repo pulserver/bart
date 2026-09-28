@@ -30,7 +30,7 @@
 static const char help_str[] = "Outputs values or meta data.";
 
 
-static void print_cfl(int N, const long dims[N], const complex float* data, const char* fmt, const char* sep,
+static void print_cfl(int N, const bart_dim_t dims[N], const complex float* data, const char* fmt, const char* sep,
 		bool real, bool index)
 {
 	// find first non-trivial dimension
@@ -39,7 +39,7 @@ static void print_cfl(int N, const long dims[N], const complex float* data, cons
 	while ((l < N - 1) && (1 == dims[l]))
 		l++;
 
-	long T = md_calc_size(N, dims);
+	bart_dim_t T = md_calc_size(N, dims);
 
 	const char* allowed_fmts[2][8] = {
 	      { "%%+%*[0-9.]f%%+%*[0-9.]fi%n",
@@ -75,7 +75,7 @@ static void print_cfl(int N, const long dims[N], const complex float* data, cons
 	return;
 
 ok:
-	for (long i = 0; i < T; i++) {
+	for (bart_dim_t i = 0; i < T; i++) {
 
 		if (index)
 			printf("%04ld%s", i, sep);
@@ -127,7 +127,7 @@ int main_show(int argc, char* argv[argc])
 
 	int N = DIMS;
 
-	long dims[N];
+	bart_dim_t dims[N];
 	complex float* data = load_cfl(in_file, N, dims);
 
 	if (-1 != showdim) {

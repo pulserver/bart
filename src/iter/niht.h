@@ -2,6 +2,8 @@
 #ifndef _ITER_NIHT_H
 #define _ITER_NIHT_H
 
+#include "misc/dimtypes.h"
+
 /**
  * struct containing linear transform operator for NIHT (e.g. wavelets)
  *
@@ -13,7 +15,7 @@ struct niht_transop {
 
 	struct iter_op_s forward;
 	struct iter_op_s adjoint;
-	long N;
+	bart_dim_t N;
 };
 
 /**
@@ -30,7 +32,7 @@ struct niht_conf_s {
 
 	int maxiter;
 	float epsilon;
-	long N;
+	bart_dim_t N;
 	int trans;
 	_Bool do_warmstart;
 };

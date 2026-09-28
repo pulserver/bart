@@ -133,15 +133,15 @@ void epg_pulse_der(complex float T[3][3], int num_cols, complex float states[3][
 	if ((NULL != dT) && (NULL != dstates)) {
 
 		// derivatives	
-		long dims_dstates[3] = { num_cols, 3, 4 };
-		long dims_dT[3] = { 3, 3, 4 };
-		long pos[3] = { };
+		bart_dim_t dims_dstates[3] = { num_cols, 3, 4 };
+		bart_dim_t dims_dT[3] = { 3, 3, 4 };
+		bart_dim_t pos[3] = { };
 
 		complex float der[3][num_cols];
-		long dims_der[3] = { num_cols, 3, 1 };
+		bart_dim_t dims_der[3] = { num_cols, 3, 1 };
 
 		complex float derdT[3][3];
-		long dims_derdT[3] = { 3, 3, 1 };
+		bart_dim_t dims_derdT[3] = { 3, 3, 1 };
 
 		// loop over T1, T2, B1, offres
 		// and compute derivatives according to product rule
@@ -183,15 +183,15 @@ void epg_relax_der(complex float ee[3][3], int num_cols, complex float states[3]
 	if ((NULL != dee) && (NULL != dstates)) {
 
 		// derivatives
-		long dims_dstates[3] = { num_cols, 3, 4 };
-		long dims_dee[3] = { 3, 3, 4 };
-		long pos[3] = { };
+		bart_dim_t dims_dstates[3] = { num_cols, 3, 4 };
+		bart_dim_t dims_dee[3] = { 3, 3, 4 };
+		bart_dim_t pos[3] = { };
 
 		complex float der[3][num_cols];
-		long dims_der[3] = { num_cols, 3, 1 };
+		bart_dim_t dims_der[3] = { num_cols, 3, 1 };
 
 		complex float derdee[3][3];
-		long dims_derdee[3] = { 3, 3, 1 };
+		bart_dim_t dims_derdee[3] = { 3, 3, 1 };
 
 		// loop over T1, T2, B1, phi
 		// and compute derivatives according to product rule

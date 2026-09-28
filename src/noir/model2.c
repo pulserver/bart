@@ -67,15 +67,15 @@ struct noir2_model_conf_s noir2_model_conf_defaults = {
 
 
 static struct noir2_s noir2_init_create(int N,
-					const long pat_dims[N],
-					const long bas_dims[N],
-					const long msk_dims[N], const complex float* mask,
-					const long ksp_dims[N],
-					const long cim_dims[N],
-					const long img_dims[N],
-					const long kco_dims[N],
-					const long col_dims[N],
-					const long trj_dims[N],
+					const bart_dim_t pat_dims[N],
+					const bart_dim_t bas_dims[N],
+					const bart_dim_t msk_dims[N], const complex float* mask,
+					const bart_dim_t ksp_dims[N],
+					const bart_dim_t cim_dims[N],
+					const bart_dim_t img_dims[N],
+					const bart_dim_t kco_dims[N],
+					const bart_dim_t col_dims[N],
+					const bart_dim_t trj_dims[N],
 					const struct noir2_model_conf_s* conf)
 {
 	struct noir2_s ret = {
@@ -94,15 +94,15 @@ static struct noir2_s noir2_init_create(int N,
 		.lop_basis = NULL,
 
 		.N = N,
-		.pat_dims = *TYPE_ALLOC(long[N]),
-		.bas_dims = *TYPE_ALLOC(long[N]),
-		.msk_dims = *TYPE_ALLOC(long[N]),
-		.ksp_dims = *TYPE_ALLOC(long[N]),
-		.cim_dims = *TYPE_ALLOC(long[N]),
-		.img_dims = *TYPE_ALLOC(long[N]),
-		.col_dims = *TYPE_ALLOC(long[N]),
-		.col_ten_dims = *TYPE_ALLOC(long[N]),
-		.trj_dims = *TYPE_ALLOC(long[N]),
+		.pat_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.bas_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.msk_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.ksp_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.cim_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.img_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.col_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.col_ten_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.trj_dims = *TYPE_ALLOC(bart_dim_t[N]),
 
 		.basis = NULL,
 	};
@@ -119,7 +119,7 @@ static struct noir2_s noir2_init_create(int N,
 	md_copy_dims(N, ret.col_ten_dims, ret.col_dims);
 	md_copy_dims(3, ret.col_ten_dims, ret.cim_dims);
 
-	long wgh_dims[N];
+	bart_dim_t wgh_dims[N];
 
 	for (int i = 0; i < N; i++)
 		wgh_dims[i] = MD_IS_SET(conf->wght_flags & md_nontriv_dims(N, ret.col_dims), i)
@@ -197,15 +197,15 @@ static void noir2_join(struct noir2_s* ret, bool asym)
  * 	nrm = nufft^H(nufft(x))
  **/
 struct noir2_s noir2_noncart_create(int N,
-	const long trj_dims[N], const complex float* traj,
-	const long wgh_dims[N], const complex float* weights,	//for nufft
-	const long bas_dims[N], const complex float* basis,
-	const long msk_dims[N], const complex float* mask,
-	const long ksp_dims[N],
-	const long cim_dims[N],
-	const long img_dims[N],
-	const long kco_dims[N],
-	const long col_dims[N],
+	const bart_dim_t trj_dims[N], const complex float* traj,
+	const bart_dim_t wgh_dims[N], const complex float* weights,	//for nufft
+	const bart_dim_t bas_dims[N], const complex float* basis,
+	const bart_dim_t msk_dims[N], const complex float* mask,
+	const bart_dim_t ksp_dims[N],
+	const bart_dim_t cim_dims[N],
+	const bart_dim_t img_dims[N],
+	const bart_dim_t kco_dims[N],
+	const bart_dim_t col_dims[N],
 	const struct noir2_model_conf_s* conf)
 {
 	assert(conf->noncart);
@@ -217,7 +217,7 @@ struct noir2_s noir2_noncart_create(int N,
 	nufft_conf.flags = conf->fft_flags & FFT_FLAGS;
 	nufft_conf.cfft = conf->fft_flags & ~FFT_FLAGS;
 
-	long mod_wgh_dims[N];
+	bart_dim_t mod_wgh_dims[N];
 	if (NULL == weights)
 		md_singleton_dims(N, mod_wgh_dims);
 	else
@@ -275,21 +275,21 @@ struct noir2_s noir2_noncart_create(int N,
  * 	nrm = ifftuc(psf * fftuc(x))
  **/
 struct noir2_s noir2_cart_create(int N,
-	const long pat_dims[N], const complex float* pattern,
-	const long bas_dims[N], const complex float* basis,
-	const long msk_dims[N], const complex float* mask,
-	const long ksp_dims[N],
-	const long cim_dims[N],
-	const long img_dims[N],
-	const long kco_dims[N],
-	const long col_dims[N],
+	const bart_dim_t pat_dims[N], const complex float* pattern,
+	const bart_dim_t bas_dims[N], const complex float* basis,
+	const bart_dim_t msk_dims[N], const complex float* mask,
+	const bart_dim_t ksp_dims[N],
+	const bart_dim_t cim_dims[N],
+	const bart_dim_t img_dims[N],
+	const bart_dim_t kco_dims[N],
+	const bart_dim_t col_dims[N],
 	const struct noir2_model_conf_s* conf)
 {
 	struct noir2_s ret = noir2_init_create(N, pat_dims, bas_dims, msk_dims, mask,
 						ksp_dims, cim_dims, img_dims, kco_dims, col_dims, NULL, conf);
 
 	assert(NULL == basis);
-	assert(md_check_equal_dims(N, ret.cim_dims, ret.ksp_dims, ~0UL));
+	assert(md_check_equal_dims(N, ret.cim_dims, ret.ksp_dims, ~UINT64_C(0)));
 
 	if (!use_compat_to_version("v0.9.00")) {
 
@@ -306,8 +306,8 @@ struct noir2_s noir2_cart_create(int N,
 		//	  c.f. bbffa751ac32d80c5f85f86fe90070d2f03d1376
 		ret.lop_fft = linop_fft_create(N, ret.cim_dims, conf->fft_flags);
 
-		unsigned long fftm_flags = conf->fft_flags & FFT_FLAGS;
-		long fftm_dims[N];
+		bart_flags_t fftm_flags = conf->fft_flags & FFT_FLAGS;
+		bart_dim_t fftm_dims[N];
 		md_select_dims(N, fftm_flags, fftm_dims, ret.cim_dims);
 
 		complex float* fftmod_a = md_alloc(N, fftm_dims, CFL_SIZE);
@@ -326,8 +326,8 @@ struct noir2_s noir2_cart_create(int N,
 
 		assert(!conf->noncart);
 
-		long max_dims[N];
-		md_max_dims(N, ~0UL, max_dims, ret.cim_dims, ret.ksp_dims);
+		bart_dim_t max_dims[N];
+		md_max_dims(N, ~UINT64_C(0), max_dims, ret.cim_dims, ret.ksp_dims);
 
 		assert(md_check_equal_dims(N, max_dims, ret.cim_dims, md_nontriv_dims(N, ret.cim_dims)));
 		assert(md_check_equal_dims(N, max_dims, ret.ksp_dims, md_nontriv_dims(N, ret.ksp_dims)));
@@ -386,8 +386,8 @@ struct noir2_s noir2_cart_create(int N,
 
 
 __attribute__((optimize("-fno-finite-math-only")))
-static void proj_add(int D, const long dims[D], const long ostrs[D],
-			complex float* optr, const long v1_strs[D], complex float* v1, const long v2_strs[D], complex float* v2)
+static void proj_add(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D],
+			complex float* optr, const bart_stride_t v1_strs[D], complex float* v1, const bart_stride_t v2_strs[D], complex float* v2)
 {
 	float v22 = md_zscalar_real2(D, dims, v2_strs, v2, v2_strs, v2); // since it is real anyway
 
@@ -401,31 +401,31 @@ static void proj_add(int D, const long dims[D], const long ostrs[D],
 
 
 // FIXME: review dimensions
-void noir2_orthogonalize(int N, const long col_dims[N], complex float* coils)
+void noir2_orthogonalize(int N, const bart_dim_t col_dims[N], complex float* coils)
 {
-	long nmaps = col_dims[MAPS_DIM];
+	bart_dim_t nmaps = col_dims[MAPS_DIM];
 
-	if (1L == nmaps)
+	if (INT64_C(1) == nmaps)
 		return;
 
-	long single_map_dims[N];
+	bart_dim_t single_map_dims[N];
 	md_select_dims(N, ~MAPS_FLAG, single_map_dims, col_dims);
 
-	long single_map_strs[N];
+	bart_stride_t single_map_strs[N];
 	md_calc_strides(N, single_map_strs, single_map_dims, CFL_SIZE);
 
-	long col_strs[N];
+	bart_stride_t col_strs[N];
 	md_calc_strides(N, col_strs, col_dims, CFL_SIZE);
 
 	complex float* tmp = md_alloc_sameplace(N, single_map_dims, CFL_SIZE, coils);
 
-	for (long map = 0L; map < nmaps; ++map) {
+	for (bart_dim_t map = INT64_C(0); map < nmaps; ++map) {
 
 		complex float* map_ptr = (void*)coils + map * col_strs[MAPS_DIM];
 
 		md_clear(N, single_map_dims, tmp, CFL_SIZE);
 
-		for (long prev = 0L; prev < map; ++prev) {
+		for (bart_dim_t prev = INT64_C(0); prev < map; ++prev) {
 
 			complex float* prev_map_ptr = (void*)coils + prev * col_strs[MAPS_DIM];
 
@@ -474,21 +474,21 @@ struct noir2_opt_s {
 	nlop_data_t super;
 
 	int N;
-	const long* max_dims;
-	const long* cim_dims_os;
-	const long* col_dims_os;
-	const long* kco_dims;
-	const long* img_dims;
-	const long* out_dims; // not oversampled cim_dims
+	const bart_dim_t* max_dims;
+	const bart_dim_t* cim_dims_os;
+	const bart_dim_t* col_dims_os;
+	const bart_dim_t* kco_dims;
+	const bart_dim_t* img_dims;
+	const bart_dim_t* out_dims; // not oversampled cim_dims
 
-	const long* cim_strs;
-	const long* col_strs;
-	const long* kco_strs;
-	const long* img_strs;
-	const long* out_strs;
+	const bart_stride_t* cim_strs;
+	const bart_stride_t* col_strs;
+	const bart_stride_t* kco_strs;
+	const bart_stride_t* img_strs;
+	const bart_stride_t* out_strs;
 
-	const long* fftm_kco_strs;
-	const long* fftm_cim_strs;
+	const bart_stride_t* fftm_kco_strs;
+	const bart_stride_t* fftm_cim_strs;
 	struct multiplace_array_s* fftm_col;
 	struct multiplace_array_s* fftm_cim;
 
@@ -506,9 +506,9 @@ struct noir2_opt_s {
 	complex float* col_buf_zeropad;
 	complex float* cim_buf_zeropad;
 
-	long kco_offset;
-	long col_offset;
-	long cim_offset;
+	bart_stride_t kco_offset;
+	bart_stride_t col_offset;
+	bart_stride_t cim_offset;
 
 };
 
@@ -652,12 +652,12 @@ static void nlop_noir_opt_del(const nlop_data_t* _data)
 }
 
 static const struct nlop_s* nlop_noir_opt_create(int N,
-	const long max_dims[N],
-	const long cim_dims_os[N],
-	const long col_dims_os[N],
-	const long kco_dims[N],
-	const long img_dims[N],
-	const long out_dims[N],
+	const bart_dim_t max_dims[N],
+	const bart_dim_t cim_dims_os[N],
+	const bart_dim_t col_dims_os[N],
+	const bart_dim_t kco_dims[N],
+	const bart_dim_t img_dims[N],
+	const bart_dim_t out_dims[N],
 	float sobolev_a,
 	float sobolev_b)
 {
@@ -665,36 +665,36 @@ static const struct nlop_s* nlop_noir_opt_create(int N,
 	SET_TYPEID(noir2_opt_s, d);
 
 	d->N = N;
-	d->max_dims = ARR_CLONE(long[N], max_dims);
-	d->cim_dims_os = ARR_CLONE(long[N], cim_dims_os);
-	d->col_dims_os = ARR_CLONE(long[N], col_dims_os);
-	d->kco_dims = ARR_CLONE(long[N], kco_dims);
-	d->img_dims = ARR_CLONE(long[N], img_dims);
-	d->out_dims = ARR_CLONE(long[N], out_dims);
+	d->max_dims = ARR_CLONE(bart_dim_t[N], max_dims);
+	d->cim_dims_os = ARR_CLONE(bart_dim_t[N], cim_dims_os);
+	d->col_dims_os = ARR_CLONE(bart_dim_t[N], col_dims_os);
+	d->kco_dims = ARR_CLONE(bart_dim_t[N], kco_dims);
+	d->img_dims = ARR_CLONE(bart_dim_t[N], img_dims);
+	d->out_dims = ARR_CLONE(bart_dim_t[N], out_dims);
 
-	d->cim_strs = ARR_CLONE(long[N], MD_STRIDES(N, cim_dims_os, CFL_SIZE));
-	d->col_strs = ARR_CLONE(long[N], MD_STRIDES(N, col_dims_os, CFL_SIZE));
-	d->kco_strs = ARR_CLONE(long[N], MD_STRIDES(N, kco_dims, CFL_SIZE));
-	d->img_strs = ARR_CLONE(long[N], MD_STRIDES(N, img_dims, CFL_SIZE));
-	d->out_strs = ARR_CLONE(long[N], MD_STRIDES(N, out_dims, CFL_SIZE));
+	d->cim_strs = ARR_CLONE(bart_dim_t[N], MD_STRIDES(N, cim_dims_os, CFL_SIZE));
+	d->col_strs = ARR_CLONE(bart_dim_t[N], MD_STRIDES(N, col_dims_os, CFL_SIZE));
+	d->kco_strs = ARR_CLONE(bart_dim_t[N], MD_STRIDES(N, kco_dims, CFL_SIZE));
+	d->img_strs = ARR_CLONE(bart_dim_t[N], MD_STRIDES(N, img_dims, CFL_SIZE));
+	d->out_strs = ARR_CLONE(bart_dim_t[N], MD_STRIDES(N, out_dims, CFL_SIZE));
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_set_dims(N, strs, 0);
 
 	md_calc_strides(3, strs, kco_dims, CFL_SIZE);
-	d->fftm_kco_strs = ARR_CLONE(long[N], strs);
+	d->fftm_kco_strs = ARR_CLONE(bart_dim_t[N], strs);
 
 	md_calc_strides(3, strs, out_dims, CFL_SIZE);
-	d->fftm_cim_strs = ARR_CLONE(long[N], strs);
+	d->fftm_cim_strs = ARR_CLONE(bart_dim_t[N], strs);
 
-	long fftm_dims[N];
+	bart_dim_t fftm_dims[N];
 	md_select_dims(N, FFT_FLAGS, fftm_dims, cim_dims_os);
 
 	complex float* fftm = md_alloc(N, fftm_dims, CFL_SIZE);
 	md_zfill(N, fftm_dims, fftm, 1.);
 	fftmod(N, fftm_dims, FFT_FLAGS, fftm, fftm);
 
-	long pos[3];
+	bart_dim_t pos[3];
 	md_set_dims(3, pos, 0);
 
 	for (int i = 0; i < 3; i++)
@@ -771,15 +771,15 @@ static const struct nlop_s* nlop_noir_opt_create(int N,
  * 	nrm = nufft^H(nufft(x))
  **/
 struct noir2_s noir2_noncart_optimized_create(int N,
-	const long trj_dims[N], const complex float* traj,
-	const long wgh_dims[N], const complex float* weights,	//for nufft
-	const long /*bas_dims*/[N], const complex float* basis,
-	const long /*msk_dims*/[N], const complex float* mask,
-	const long ksp_dims[N],
-	const long cim_dims[N],
-	const long img_dims[N],
-	const long kco_dims[N],
-	const long col_dims[N],
+	const bart_dim_t trj_dims[N], const complex float* traj,
+	const bart_dim_t wgh_dims[N], const complex float* weights,	//for nufft
+	const bart_dim_t /*bas_dims*/[N], const complex float* basis,
+	const bart_dim_t /*msk_dims*/[N], const complex float* mask,
+	const bart_dim_t ksp_dims[N],
+	const bart_dim_t cim_dims[N],
+	const bart_dim_t img_dims[N],
+	const bart_dim_t kco_dims[N],
+	const bart_dim_t col_dims[N],
 	const struct noir2_model_conf_s* conf)
 {
 	assert(conf->noncart);
@@ -810,15 +810,15 @@ struct noir2_s noir2_noncart_optimized_create(int N,
 		.lop_basis = NULL,
 
 		.N = N,
-		.pat_dims = *TYPE_ALLOC(long[N]),
-		.bas_dims = *TYPE_ALLOC(long[N]),
-		.msk_dims = *TYPE_ALLOC(long[N]),
-		.ksp_dims = *TYPE_ALLOC(long[N]),
-		.cim_dims = *TYPE_ALLOC(long[N]),
-		.img_dims = *TYPE_ALLOC(long[N]),
-		.col_dims = *TYPE_ALLOC(long[N]),
-		.col_ten_dims = *TYPE_ALLOC(long[N]),
-		.trj_dims = *TYPE_ALLOC(long[N]),
+		.pat_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.bas_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.msk_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.ksp_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.cim_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.img_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.col_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.col_ten_dims = *TYPE_ALLOC(bart_dim_t[N]),
+		.trj_dims = *TYPE_ALLOC(bart_dim_t[N]),
 
 		.basis = NULL,
 	};
@@ -826,17 +826,17 @@ struct noir2_s noir2_noncart_optimized_create(int N,
 	ret.lop_asym = nufft_create2(N, ksp_dims, cim_dims, trj_dims, traj, wgh_dims, weights, MD_SINGLETON_DIMS(N), NULL, nufft_conf);
 	ret.lop_nufft = linop_clone(ret.lop_asym);
 
-	long swgh_dims[N];
+	bart_dim_t swgh_dims[N];
 	for (int i = 0; i < N; i++)
 		swgh_dims[i] = MD_IS_SET(conf->wght_flags & md_nontriv_dims(N, kco_dims), i) ? lround(col_dims[i] * (conf->ret_os_coils ? 1. : conf->oversampling_coils)) : 1;
 
 	ret.lop_coil2 = linop_noir_weights_create(N, col_dims, kco_dims, swgh_dims, conf->wght_flags, (conf->ret_os_coils ? 1. : conf->oversampling_coils), conf->a, conf->b, 1);
 
-	long max_dims[N];
-	long cim_dims_os[N];
-	long col_dims_os[N];
+	bart_dim_t max_dims[N];
+	bart_dim_t cim_dims_os[N];
+	bart_dim_t col_dims_os[N];
 
-	md_max_dims(N, ~0UL, max_dims, img_dims, col_dims);
+	md_max_dims(N, ~UINT64_C(0), max_dims, img_dims, col_dims);
 	md_copy_dims(N, cim_dims_os, cim_dims);
 	md_copy_dims(N, col_dims_os, col_dims);
 
@@ -860,9 +860,9 @@ struct noir2_s noir2_noncart_optimized_create(int N,
 
 
 void noir2_noncart_update(struct noir2_s* model, int N,
-	const long trj_dims[N], const complex float* traj,
-	const long wgh_dims[N], const complex float* weights,
-	const long bas_dims[N], const complex float* basis)
+	const bart_dim_t trj_dims[N], const complex float* traj,
+	const bart_dim_t wgh_dims[N], const complex float* weights,
+	const bart_dim_t bas_dims[N], const complex float* basis)
 {
 	assert(NULL != model->lop_nufft);
 
@@ -875,7 +875,7 @@ void noir2_noncart_update(struct noir2_s* model, int N,
 		complex float* ttraj = md_alloc_sameplace(N, trj_dims, CFL_SIZE, traj);
 		md_zsmul(N, trj_dims, ttraj, traj, 2.);
 
-		long psf_dims[N];
+		bart_dim_t psf_dims[N];
 		md_select_dims(N, FFT_FLAGS, psf_dims, d->cim_dims_os);
 
 		complex float* psf = compute_psf(N, psf_dims, trj_dims, ttraj, MD_SINGLETON_DIMS(N), NULL, wgh_dims, weights, true, false);
@@ -891,8 +891,8 @@ void noir2_noncart_update(struct noir2_s* model, int N,
 }
 
 void noir2_cart_update(struct noir2_s* model, int N,
-	const long pat_dims[N], const complex float* pattern,
-	const long bas_dims[N], const complex float* basis)
+	const bart_dim_t pat_dims[N], const complex float* pattern,
+	const bart_dim_t bas_dims[N], const complex float* basis)
 {
 	if (NULL != basis) {
 

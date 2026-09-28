@@ -28,10 +28,10 @@
 
 struct linphase_conf {
 
-	long dims[3];
-	long tot;
+	bart_dim_t dims[3];
+	bart_dim_t tot;
 	float shifts[3];
-	long N;
+	bart_dim_t N;
 	float cn;
 	float scale;
 	_Bool conj;
@@ -50,12 +50,12 @@ __global__ void kern_apply_linphases_3D(struct linphase_conf c, cuFloatComplex* 
 	int startZ = threadIdx.z + blockDim.z * blockIdx.z;
 	int strideZ = blockDim.z * gridDim.z;
 
-	for (long z = startZ; z < c.dims[2]; z += strideZ)
-		for (long y = startY; y < c.dims[1]; y += strideY)
-			for (long x = startX; x < c.dims[0]; x +=strideX) {
+	for (bart_dim_t z = startZ; z < c.dims[2]; z += strideZ)
+		for (bart_dim_t y = startY; y < c.dims[1]; y += strideY)
+			for (bart_dim_t x = startX; x < c.dims[0]; x +=strideX) {
 
-				long pos[3] = { x, y, z };
-				long idx = x + c.dims[0] * (y + c.dims[1] * z);
+				bart_dim_t pos[3] = { x, y, z };
+				bart_dim_t idx = x + c.dims[0] * (y + c.dims[1] * z);
 
 				float val = c.cn;
 
@@ -73,11 +73,11 @@ __global__ void kern_apply_linphases_3D(struct linphase_conf c, cuFloatComplex* 
 
 				if (fmac) {
 
-					for (long i = 0; i < c.N; i++)
+					for (bart_dim_t i = 0; i < c.N; i++)
 						dst[idx + i * c.tot] = cuCaddf(dst[idx + i * c.tot], cuCmulf(src[idx + i * c.tot], cval));
 				} else {
 
-					for (long i = 0; i < c.N; i++)
+					for (bart_dim_t i = 0; i < c.N; i++)
 						dst[idx + i * c.tot] = cuCmulf(src[idx + i * c.tot], cval);
 				}
 			}
@@ -85,7 +85,7 @@ __global__ void kern_apply_linphases_3D(struct linphase_conf c, cuFloatComplex* 
 
 
 
-extern "C" void cuda_apply_linphases_3D(int N, const long img_dims[], const float _shifts[3], _Complex float* dst, const _Complex float* src, _Bool conj, _Bool fmac, _Bool fftm, float scale)
+extern "C" void cuda_apply_linphases_3D(int N, const bart_dim_t img_dims[], const float _shifts[3], _Complex float* dst, const _Complex float* src, _Bool conj, _Bool fmac, _Bool fftm, float scale)
 {
 	struct linphase_conf c;
 
@@ -116,7 +116,7 @@ extern "C" void cuda_apply_linphases_3D(int N, const long img_dims[], const floa
 
 		if (fftm) {
 
-			long center = c.dims[n] / 2;
+			bart_dim_t center = c.dims[n] / 2;
 			double shift = (double)center / (double)c.dims[n];
 
 			c.shifts[n] += 2. * M_PI * shift;
@@ -171,9 +171,9 @@ static __device__ float posf(int d, int i, float os)
 
 struct rolloff_conf {
 
-	long dims[4];
-	long ostrs[4];
-	long istrs[4];
+	bart_dim_t dims[4];
+	bart_stride_t ostrs[4];
+	bart_stride_t istrs[4];
 	float os;
 	float width;
 	float beta;
@@ -191,18 +191,18 @@ __global__ void kern_apply_rolloff_correction(struct rolloff_conf c, cuFloatComp
 	int startZ = threadIdx.z + blockDim.z * blockIdx.z;
 	int strideZ = blockDim.z * gridDim.z;
 
-	for (long z = startZ; z < c.dims[2]; z += strideZ)
-		for (long y = startY; y < c.dims[1]; y += strideY)
-			for (long x = startX; x < c.dims[0]; x +=strideX) {
+	for (bart_dim_t z = startZ; z < c.dims[2]; z += strideZ)
+		for (bart_dim_t y = startY; y < c.dims[1]; y += strideY)
+			for (bart_dim_t x = startX; x < c.dims[0]; x +=strideX) {
 
-				long iidx = x * c.istrs[0] + y * c.istrs[1] + z * c.istrs[2];
-				long oidx = x * c.ostrs[0] + y * c.ostrs[1] + z * c.ostrs[2];
+				bart_dim_t iidx = x * c.istrs[0] + y * c.istrs[1] + z * c.istrs[2];
+				bart_dim_t oidx = x * c.ostrs[0] + y * c.ostrs[1] + z * c.ostrs[2];
 
 				float val = ((c.dims[0] > 1) ? rolloff(posf(c.dims[0], x, c.os), c.beta, c.width) * c.bessel_beta : 1)
 					  * ((c.dims[1] > 1) ? rolloff(posf(c.dims[1], y, c.os), c.beta, c.width) * c.bessel_beta : 1)
 					  * ((c.dims[2] > 1) ? rolloff(posf(c.dims[2], z, c.os), c.beta, c.width) * c.bessel_beta : 1);
 
-				for (long i = 0; i < c.dims[3]; i++) {
+				for (bart_dim_t i = 0; i < c.dims[3]; i++) {
 
 					dst[oidx + i * c.ostrs[3]].x = val * src[iidx + i * c.istrs[3]].x;
 					dst[oidx + i * c.ostrs[3]].y = val * src[iidx + i * c.istrs[3]].y;
@@ -212,7 +212,7 @@ __global__ void kern_apply_rolloff_correction(struct rolloff_conf c, cuFloatComp
 
 
 
-extern "C" void cuda_apply_rolloff_correction2(float os, float width, float beta, int N, const long dims[4], const long ostrs[4], _Complex float* dst, const long istrs[4], const _Complex float* src)
+extern "C" void cuda_apply_rolloff_correction2(float os, float width, float beta, int N, const bart_dim_t dims[4], const bart_stride_t ostrs[4], _Complex float* dst, const bart_stride_t istrs[4], const _Complex float* src)
 {
 	struct rolloff_conf c;
 
@@ -260,24 +260,24 @@ static void kb_precompute_gpu(double beta)
 
 struct access_bin_s {
 
-	long Nt;
-	long* sample_idx;
+	bart_dim_t Nt;
+	bart_dim_t* sample_idx;
 
 	// sorting into subgrids
 	int shared_size;
 	int local_size[3];
 	int width[3];
 
-	long grid_count;
-	long* bin_offset;
+	bart_dim_t grid_count;
+	bart_stride_t* bin_offset;
 	int* bin_prop;
 };
 
 struct access_stride_s {
 
-	long ksp_dims[2];
-	long ksp_strs[2];
-	long trj_strs[2];
+	bart_dim_t ksp_dims[2];
+	bart_stride_t ksp_strs[2];
+	bart_stride_t trj_strs[2];
 };
 
 struct grid_plan_s {
@@ -290,8 +290,8 @@ struct grid_plan_s {
 	int grd_dims[3];
 
 	int Nc;
-	long col_str_ksp;
-	long col_str_grd;
+	bart_stride_t col_str_ksp;
+	bart_stride_t col_str_grd;
 
 	bool sort;
 
@@ -391,17 +391,17 @@ __global__ static void kern_grid_sort(struct grid_sort_plan_s gd, long2* bin_idx
 	int starty = threadIdx.y + blockDim.y * blockIdx.y;
 	int stridey = blockDim.y * gridDim.y;
 
-	for (long y = starty; y < gd.stride.ksp_dims[1]; y += stridey) {
-		for (long x = startx; x < gd.stride.ksp_dims[0]; x += stridex) {
+	for (bart_dim_t y = starty; y < gd.stride.ksp_dims[1]; y += stridey) {
+		for (bart_dim_t x = startx; x < gd.stride.ksp_dims[0]; x += stridex) {
 
-			long toffset = x * gd.stride.trj_strs[0] + y * gd.stride.trj_strs[1];
+			bart_stride_t toffset = x * gd.stride.trj_strs[0] + y * gd.stride.trj_strs[1];
 
 			float trj[3] = { traj[0 + toffset].x, traj[1 + toffset].x, traj[2 + toffset].x };
 
-			long bin = get_bin_index(gd, trj);
+			bart_dim_t bin = get_bin_index(gd, trj);
 
-			long idx = x + y * gd.stride.ksp_dims[0];
-			long idx_in_bin = atomicAdd(&bin_count[bin], 1);
+			bart_dim_t idx = x + y * gd.stride.ksp_dims[0];
+			bart_dim_t idx_in_bin = atomicAdd(&bin_count[bin], 1);
 
 			bin_idx[idx].x = bin;
 			bin_idx[idx].y = idx_in_bin;
@@ -409,18 +409,18 @@ __global__ static void kern_grid_sort(struct grid_sort_plan_s gd, long2* bin_idx
 	}
 }
 
-__global__ static void kern_grid_sort_cont(struct grid_sort_plan_s gd, long N, long2* bin_idx, unsigned long long* bin_count, const cuFloatComplex* traj)
+__global__ static void kern_grid_sort_cont(struct grid_sort_plan_s gd, bart_dim_t N, long2* bin_idx, unsigned long long* bin_count, const cuFloatComplex* traj)
 {
 	int startx = threadIdx.x + blockDim.x * blockIdx.x;
 	int stridex = blockDim.x * gridDim.x;
 
-	for (long i = startx; i < N; i += stridex) {
+	for (bart_dim_t i = startx; i < N; i += stridex) {
 
 		float trj[3] = { traj[0 + 3 * i].x, traj[1 + 3 * i].x, traj[2 + 3 * i].x };
 
-		long bin = get_bin_index(gd, trj);
+		bart_dim_t bin = get_bin_index(gd, trj);
 
-		long idx_in_bin = atomicAdd(&bin_count[bin], 1);
+		bart_dim_t idx_in_bin = atomicAdd(&bin_count[bin], 1);
 
 		bin_idx[i].x = bin;
 		bin_idx[i].y = idx_in_bin;
@@ -431,12 +431,12 @@ static void cuda_grid_sort(struct grid_sort_plan_s gd, long2* bin_idx, unsigned 
 {
 	if (3 == gd.stride.trj_strs[0] && 3 * gd.stride.ksp_dims[0] == gd.stride.trj_strs[1]) {
 
-		long N = gd.stride.ksp_dims[0] * gd.stride.ksp_dims[1];
+		bart_dim_t N = gd.stride.ksp_dims[0] * gd.stride.ksp_dims[1];
 
 		kern_grid_sort_cont<<<getGridSize(N, 1024), getBlockSize(N, 1024), 0, cuda_get_stream()>>>(gd, N, bin_idx, bin_count, traj);
 
 	} else {
-		const long size[3] = { gd.stride.ksp_dims[0], gd.stride.ksp_dims[1], 1 };
+		const bart_dim_t size[3] = { gd.stride.ksp_dims[0], gd.stride.ksp_dims[1], 1 };
 
 		dim3 cu_block = getBlockSize3(size, (const void*)kern_grid_sort);
 		dim3 cu_grid = getGridSize3(size, (const void*)kern_grid_sort);
@@ -457,13 +457,13 @@ __global__ static void kern_grid_sort_invert(struct grid_sort_plan_s gd, long2* 
 	int starty = threadIdx.y + blockDim.y * blockIdx.y;
 	int stridey = blockDim.y * gridDim.y;
 
-	for (long y = starty; y < gd.stride.ksp_dims[1]; y += stridey) {
-		for (long x = startx; x < gd.stride.ksp_dims[0]; x += stridex) {
+	for (bart_dim_t y = starty; y < gd.stride.ksp_dims[1]; y += stridey) {
+		for (bart_dim_t x = startx; x < gd.stride.ksp_dims[0]; x += stridex) {
 
-			long sidx = x + y * gd.stride.ksp_dims[0];
+			bart_dim_t sidx = x + y * gd.stride.ksp_dims[0];
 
-			long bin = bin_idx[sidx].x;
-			long idx = bin_offset[bin] + bin_idx[sidx].y;
+			bart_dim_t bin = bin_idx[sidx].x;
+			bart_dim_t idx = bin_offset[bin] + bin_idx[sidx].y;
 
 			sample_idx[idx].x = x * gd.stride.trj_strs[0] + y * gd.stride.trj_strs[1];
 			sample_idx[idx].y = x * gd.stride.ksp_strs[0] + y * gd.stride.ksp_strs[1];
@@ -474,7 +474,7 @@ __global__ static void kern_grid_sort_invert(struct grid_sort_plan_s gd, long2* 
 
 static void cuda_grid_sort_invert(struct grid_sort_plan_s gd, long2* sample_idx, long2* bin_idx, unsigned long long* bin_offset)
 {
-	const long size[3] = { gd.stride.ksp_dims[0], gd.stride.ksp_dims[1], 1 };
+	const bart_dim_t size[3] = { gd.stride.ksp_dims[0], gd.stride.ksp_dims[1], 1 };
 
 	dim3 cu_block = getBlockSize3(size, (const void*)kern_grid_sort_invert);
 	dim3 cu_grid = getGridSize3(size, (const void*)kern_grid_sort_invert);
@@ -486,12 +486,12 @@ static void cuda_grid_sort_invert(struct grid_sort_plan_s gd, long2* sample_idx,
 
 
 
-__global__ static void kern_exclusive_scan(long pre_zeros, long dim_reduce, long dim_batch, unsigned long long* sum, unsigned long long* dat)
+__global__ static void kern_exclusive_scan(bart_dim_t pre_zeros, bart_dim_t dim_reduce, bart_dim_t dim_batch, unsigned long long* sum, unsigned long long* dat)
 {
 	int tid = threadIdx.x;
 	int bid = blockIdx.x;
 
-	for (long block = bid; block < dim_batch; block += gridDim.x) {
+	for (bart_dim_t block = bid; block < dim_batch; block += gridDim.x) {
 
 		unsigned long long* ldat = dat + block * (dim_reduce - pre_zeros);
 		ldat -= pre_zeros;
@@ -529,7 +529,7 @@ __global__ static void kern_exclusive_scan(long pre_zeros, long dim_reduce, long
 
 		for (; s / 2 < dim_reduce; s *= 2, l /= 2) {
 
-			for (long i = tid; i < s / 2; i += blockDim.x) {
+			for (bart_dim_t i = tid; i < s / 2; i += blockDim.x) {
 
 				int idxl = 1 * l - 1 + 2 * l * i;
 				int idxu = 2 * l - 1 + 2 * l * i;
@@ -547,9 +547,9 @@ __global__ static void kern_exclusive_scan(long pre_zeros, long dim_reduce, long
 	}
 }
 
-void cuda_exclusive_scan(long dim_reduce, long dim_batch, unsigned long long* sum, unsigned long long* dat)
+void cuda_exclusive_scan(bart_dim_t dim_reduce, bart_dim_t dim_batch, unsigned long long* sum, unsigned long long* dat)
 {
-	long ldim = 1;
+	bart_dim_t ldim = 1;
 	while (ldim < dim_reduce)
 		ldim *= 2;
 
@@ -561,7 +561,7 @@ void cuda_exclusive_scan(long dim_reduce, long dim_batch, unsigned long long* su
 
 #define CACHE_SIZE 48 * 1024
 
-static void grid_plan_compute_binning(int width[3], int bin_size[3], int bin_dims[3], struct grid_conf_s conf, const long grid_dims[3])
+static void grid_plan_compute_binning(int width[3], int bin_size[3], int bin_dims[3], struct grid_conf_s conf, const bart_dim_t grid_dims[3])
 {
 	for (int i = 0; i < 3; i++) {
 
@@ -571,7 +571,7 @@ static void grid_plan_compute_binning(int width[3], int bin_size[3], int bin_dim
 	}
 
 	int i = 0;
-	unsigned long ext_flag = md_nontriv_dims(3, grid_dims);
+	bart_flags_t ext_flag = md_nontriv_dims(3, grid_dims);
 
 	while (0 != ext_flag && (bin_size[0] < grid_dims[0] || bin_size[1] < grid_dims[1] || bin_size[2] < grid_dims[2])) {
 
@@ -588,7 +588,7 @@ static void grid_plan_compute_binning(int width[3], int bin_size[3], int bin_dim
 
 		tdims[i % 3] += bin_size[i % 3];
 
-		long size = tdims[0] * tdims[1] * tdims[2];
+		bart_dim_t size = tdims[0] * tdims[1] * tdims[2];
 
 		if (size * sizeof(_Complex float) < CACHE_SIZE - ((1 + kb_size) * sizeof(float))) {
 
@@ -611,7 +611,7 @@ static void grid_plan_compute_binning(int width[3], int bin_size[3], int bin_dim
 		bin_dims[i] = (grid_dims[i] + bin_size[i] - 1) / bin_size[i];
 }
 
-struct grid_plan_s grid_plan_create(struct grid_conf_s conf, bool sort, const long grid_dims[4], const long grid_strs[4], const long ksp_dims[4], const long ksp_strs[4], const long trj_strs[4], const _Complex float* traj)
+struct grid_plan_s grid_plan_create(struct grid_conf_s conf, bool sort, const bart_dim_t grid_dims[4], const bart_stride_t grid_strs[4], const bart_dim_t ksp_dims[4], const bart_stride_t ksp_strs[4], const bart_stride_t trj_strs[4], const _Complex float* traj)
 {
 
 	struct grid_plan_s ret = {
@@ -623,15 +623,15 @@ struct grid_plan_s grid_plan_create(struct grid_conf_s conf, bool sort, const lo
 
 		.grd_dims = { (int)grid_dims[0], (int)grid_dims[1], (int)grid_dims[2] },
 		.Nc = (int)grid_dims[3],
-		.col_str_ksp = ksp_strs[3] / (long)CFL_SIZE,
-		.col_str_grd = grid_strs[3] / (long)CFL_SIZE,
+		.col_str_ksp = ksp_strs[3] / (bart_stride_t)CFL_SIZE,
+		.col_str_grd = grid_strs[3] / (bart_stride_t)CFL_SIZE,
 	};
 
 	struct access_stride_s stride = {
 
 		.ksp_dims = { ksp_dims[1], ksp_dims[2] },
-		.ksp_strs = { ksp_strs[1] / (long)CFL_SIZE, ksp_strs[2] / (long)CFL_SIZE },
-		.trj_strs = { trj_strs[1] / (long)CFL_SIZE, trj_strs[2] / (long)CFL_SIZE },
+		.ksp_strs = { ksp_strs[1] / (bart_stride_t)CFL_SIZE, ksp_strs[2] / (bart_stride_t)CFL_SIZE },
+		.trj_strs = { trj_strs[1] / (bart_stride_t)CFL_SIZE, trj_strs[2] / (bart_stride_t)CFL_SIZE },
 	};
 
 	if (!sort) {
@@ -656,7 +656,7 @@ struct grid_plan_s grid_plan_create(struct grid_conf_s conf, bool sort, const lo
 
 	grid_plan_compute_binning(width, sort_plan.bin_size, sort_plan.bin_dims, conf, grid_dims);
 
-	long bd_tot = sort_plan.bin_dims[0] * sort_plan.bin_dims[1] * sort_plan.bin_dims[2];
+	bart_dim_t bd_tot = sort_plan.bin_dims[0] * sort_plan.bin_dims[1] * sort_plan.bin_dims[2];
 	size_t bin_count_size = sizeof(unsigned long long) * bd_tot;
 
 	unsigned long long* bin_count = (unsigned long long*)cuda_malloc(bin_count_size);
@@ -673,20 +673,20 @@ struct grid_plan_s grid_plan_create(struct grid_conf_s conf, bool sort, const lo
 	cuda_memcpy(bin_count_size, bin_count_host, bin_count);
 	cuda_free(bin_count);
 
-	long num_blocks = 0;
-	long max_binsize = 1024 * 4;
+	bart_dim_t num_blocks = 0;
+	bart_dim_t max_binsize = 1024 * 4;
 
-	long max_num_blocks = sort_plan.bin_dims[0] * sort_plan.bin_dims[1] * sort_plan.bin_dims[2];
+	bart_dim_t max_num_blocks = sort_plan.bin_dims[0] * sort_plan.bin_dims[1] * sort_plan.bin_dims[2];
 	max_num_blocks += (ksp_dims[1] * ksp_dims[2]) / max_binsize + 1;
 
-	long* offset = (long*)xmalloc(max_num_blocks * sizeof(long));
+	bart_stride_t* offset = (bart_dim_t*)xmalloc(max_num_blocks * sizeof(bart_dim_t));
 	int* bin_prop = (int*)xmalloc(4 * max_num_blocks * sizeof(int));
 
 	for (int z = 0; z < sort_plan.bin_dims[2]; z++)
 	for (int y = 0; y < sort_plan.bin_dims[1]; y++)
 	for (int x = 0; x < sort_plan.bin_dims[0]; x++) {
 
-		long bidx = x + y * sort_plan.bin_dims[0] + z * sort_plan.bin_dims[0] * sort_plan.bin_dims[1];
+		bart_dim_t bidx = x + y * sort_plan.bin_dims[0] + z * sort_plan.bin_dims[0] * sort_plan.bin_dims[1];
 
 		while (0 < bin_count_host[bidx]) {
 
@@ -710,7 +710,7 @@ struct grid_plan_s grid_plan_create(struct grid_conf_s conf, bool sort, const lo
 	struct access_bin_s bin = {
 
 		.Nt = ksp_dims[1] * ksp_dims[2],
-		.sample_idx = (long*)cuda_malloc(2 * ksp_dims[1] * ksp_dims[2] * sizeof(long)),
+		.sample_idx = (bart_dim_t*)cuda_malloc(2 * ksp_dims[1] * ksp_dims[2] * sizeof(bart_dim_t)),
 
 		// sorting into subgrids
 		.shared_size = 1,
@@ -718,7 +718,7 @@ struct grid_plan_s grid_plan_create(struct grid_conf_s conf, bool sort, const lo
 		.width = { 0, 0, 0 },
 
 		.grid_count = num_blocks,
-		.bin_offset = (long*)cuda_malloc(num_blocks * sizeof(long)),
+		.bin_offset = (bart_dim_t*)cuda_malloc(num_blocks * sizeof(bart_dim_t)),
 		.bin_prop = (int*)cuda_malloc(4 * num_blocks * sizeof(int)),
 	};
 
@@ -729,7 +729,7 @@ struct grid_plan_s grid_plan_create(struct grid_conf_s conf, bool sort, const lo
 		bin.shared_size *= bin.local_size[i];
 	}
 
-	cuda_memcpy(num_blocks * sizeof(long), bin.bin_offset, offset);
+	cuda_memcpy(num_blocks * sizeof(bart_dim_t), bin.bin_offset, offset);
 	xfree(offset);
 
 	cuda_memcpy(4 * num_blocks * sizeof(int), bin.bin_prop, bin_prop);
@@ -746,7 +746,7 @@ struct grid_plan_s grid_plan_create(struct grid_conf_s conf, bool sort, const lo
 }
 
 
-__device__ static inline long local_to_global_idx(const struct grid_plan_s* plan, int idx, int pos[3])
+__device__ static inline bart_dim_t local_to_global_idx(const struct grid_plan_s* plan, int idx, int pos[3])
 {
 
 	pos[0] += idx % plan->access.bin.local_size[0];
@@ -882,7 +882,7 @@ __device__ static void grid_point_r(const struct grid_plan_s* plan, cuFloatCompl
 	for (ind[1] = off[1]; ind[1] < off[1] + num[1]; ind[1]++)
 	for (ind[0] = off[0]; ind[0] < off[0] + num[0]; ind[0]++) {
 
-		long idx = 0;
+		bart_dim_t idx = 0;
 
 		if (smem) {
 			for (int i = 2; i >= 0; i--) {
@@ -925,14 +925,14 @@ __global__ static void kern_grid(struct grid_plan_s plan, const cuFloatComplex* 
 	stride[1] = blockDim.y * gridDim.y;
 	stride[2] = blockDim.z * gridDim.z;
 
-	long pos[3];
+	bart_dim_t pos[3];
 
 	for (pos[2] = start[2]; pos[2] < plan.Nc; pos[2] += stride[2])
 	for (pos[1] = start[1]; pos[1] < plan.access.stride.ksp_dims[1]; pos[1] += stride[1])
 	for (pos[0] = start[0]; pos[0] < plan.access.stride.ksp_dims[0]; pos[0] += stride[0]) {
 
-		long offset_trj = 0;
-		long offset_ksp = 0;
+		bart_stride_t offset_trj = 0;
+		bart_stride_t offset_ksp = 0;
 
 		for (int i = 0; i < 2; i++) {
 
@@ -943,7 +943,7 @@ __global__ static void kern_grid(struct grid_plan_s plan, const cuFloatComplex* 
 		offset_ksp += plan.col_str_ksp * pos[2];
 
 		//loop over coils
-		long offset_grd = pos[2] * plan.col_str_grd;
+		bart_stride_t offset_grd = pos[2] * plan.col_str_grd;
 
 		float trj[3] = { traj[0 + offset_trj].x, traj[1 + offset_trj].x, traj[2 + offset_trj].x };
 
@@ -959,7 +959,7 @@ __global__ static void kern_grid_sorted(struct grid_plan_s plan, const cuFloatCo
 {
 	extern __shared__ cuFloatComplex grd_local[];
 
-	for (long block = blockIdx.x; block < plan.access.bin.grid_count; block += gridDim.x) {
+	for (bart_dim_t block = blockIdx.x; block < plan.access.bin.grid_count; block += gridDim.x) {
 
 		int4 bin_prop = ((int4*)plan.access.bin.bin_prop)[block];
 
@@ -970,7 +970,7 @@ __global__ static void kern_grid_sorted(struct grid_plan_s plan, const cuFloatCo
 				if (adjoint) {
 
 					int pos[3] = { bin_prop.y, bin_prop.z, bin_prop.w };
-					long offset = local_to_global_idx(&plan, i, pos);
+					bart_stride_t offset = local_to_global_idx(&plan, i, pos);
 
 					if (-1 != offset)
 						grd_local[i] = src[offset + c * plan.col_str_grd];
@@ -986,12 +986,12 @@ __global__ static void kern_grid_sorted(struct grid_plan_s plan, const cuFloatCo
 
 			for (int i = threadIdx.x; i < bin_prop.x; i += blockDim.x) {
 
-				long sample = plan.access.bin.bin_offset[block] + i;
+				bart_dim_t sample = plan.access.bin.bin_offset[block] + i;
 
 				long2 sample_idx = ((long2*)plan.access.bin.sample_idx)[sample];
 
-				long offset_trj = sample_idx.x;
-				long offset_ksp = sample_idx.y + c * plan.col_str_ksp;
+				bart_stride_t offset_trj = sample_idx.x;
+				bart_stride_t offset_ksp = sample_idx.y + c * plan.col_str_ksp;
 
 				float trj[3] = { traj[0 + offset_trj].x, traj[1 + offset_trj].x, traj[2 + offset_trj].x };
 
@@ -1014,7 +1014,7 @@ __global__ static void kern_grid_sorted(struct grid_plan_s plan, const cuFloatCo
 					if (0 != grd_local[i].x || 0 != grd_local[i].y) {
 
 						int pos[3] = { bin_prop.y, bin_prop.z, bin_prop.w };
-						long offset = local_to_global_idx(&plan, i, pos);
+						bart_stride_t offset = local_to_global_idx(&plan, i, pos);
 
 						if (-1 != offset)
 							dev_atomic_zadd_scl(dst + offset + c * plan.col_str_grd, grd_local[i], 1.);
@@ -1029,7 +1029,7 @@ __global__ static void kern_grid_sorted(struct grid_plan_s plan, const cuFloatCo
 }
 
 
-void cuda_grid(const struct grid_conf_s* conf, const long ksp_dims[4], const long trj_strs[4], const _Complex float* traj, const long grid_dims[4], const long grid_strs[4], _Complex float* grid, const long ksp_strs[4], const _Complex float* src)
+void cuda_grid(const struct grid_conf_s* conf, const bart_dim_t ksp_dims[4], const bart_stride_t trj_strs[4], const _Complex float* traj, const bart_dim_t grid_dims[4], const bart_stride_t grid_strs[4], _Complex float* grid, const bart_stride_t ksp_strs[4], const _Complex float* src)
 {
 
 	kb_precompute_gpu(conf->beta);
@@ -1051,7 +1051,7 @@ void cuda_grid(const struct grid_conf_s* conf, const long ksp_dims[4], const lon
 
 	} else {
 
-		const long size[3] = { ksp_dims[1], ksp_dims[2], ksp_dims[3] };
+		const bart_dim_t size[3] = { ksp_dims[1], ksp_dims[2], ksp_dims[3] };
 		dim3 cu_block = getBlockSize3(size, (const void*)kern_grid<false>);
 		dim3 cu_grid = getGridSize3(size, (const void*)kern_grid<false>);
 
@@ -1065,7 +1065,7 @@ void cuda_grid(const struct grid_conf_s* conf, const long ksp_dims[4], const lon
 
 
 
-void cuda_gridH(const struct grid_conf_s* conf, const long ksp_dims[4], const long trj_strs[4], const _Complex float* traj, const long ksp_strs[4], _Complex float* dst, const long grid_dims[4], const long grid_strs[4], const _Complex float* grid)
+void cuda_gridH(const struct grid_conf_s* conf, const bart_dim_t ksp_dims[4], const bart_stride_t trj_strs[4], const _Complex float* traj, const bart_stride_t ksp_strs[4], _Complex float* dst, const bart_dim_t grid_dims[4], const bart_stride_t grid_strs[4], const _Complex float* grid)
 {
 
 	kb_precompute_gpu(conf->beta);
@@ -1087,7 +1087,7 @@ void cuda_gridH(const struct grid_conf_s* conf, const long ksp_dims[4], const lo
 
 	} else {
 
-		const long size[3] = { ksp_dims[1], ksp_dims[2], ksp_dims[3] };
+		const bart_dim_t size[3] = { ksp_dims[1], ksp_dims[2], ksp_dims[3] };
 		dim3 cu_block = getBlockSize3(size, (const void*)kern_grid<true>);
 		dim3 cu_grid = getGridSize3(size, (const void*)kern_grid<true>);
 

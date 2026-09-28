@@ -1,5 +1,6 @@
 
 #ifdef USE_CUDA
+#include "misc/dimtypes.h"
 #include <cuda_runtime_api.h>
 
 extern int cuda_get_max_threads(const void* func);

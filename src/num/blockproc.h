@@ -6,6 +6,7 @@
 #ifndef _BLOCKPROC_H
 #define _BLOCKPROC_H
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 extern float lineproc2(int D, const bart_dim_t dims[__VLA(D)], const bart_dim_t blkdims[__VLA(D)], const bart_dim_t line_dims[__VLA(D)], const void * data,

@@ -36,17 +36,17 @@
  * @param sens physical (unormalized) coil sensitivities
  * @param alpha the best estimator has alpha > 0.
  */
-void optimal_combine(const long dims[DIMS], float alpha, complex float* image, const complex float* sens, const complex float* data)
+void optimal_combine(const bart_dim_t dims[DIMS], float alpha, complex float* image, const complex float* sens, const complex float* data)
 {
-	long dims_one[DIMS];
-	long dims_img[DIMS];
-	long dims_cim[DIMS];
+	bart_dim_t dims_one[DIMS];
+	bart_dim_t dims_img[DIMS];
+	bart_dim_t dims_cim[DIMS];
 
 	md_select_dims(DIMS, ~(COIL_FLAG|MAPS_FLAG), dims_one, dims);
 	md_select_dims(DIMS, ~(COIL_FLAG), dims_img, dims);
 	md_select_dims(DIMS, ~(MAPS_FLAG), dims_cim, dims);
 
-	const struct linop_s* sense_data = sense_init(0UL, dims, FFT_FLAGS|COIL_FLAG|MAPS_FLAG, sens);
+	const struct linop_s* sense_data = sense_init(UINT64_C(0), dims, FFT_FLAGS|COIL_FLAG|MAPS_FLAG, sens);
 	linop_adjoint(sense_data, DIMS, dims_img, image, DIMS, dims_cim, data);
 	linop_free(sense_data);
 
@@ -58,7 +58,7 @@ void optimal_combine(const long dims[DIMS], float alpha, complex float* image, c
 }
 
 
-void rss_combine(const long dims[DIMS], complex float* image, const complex float* data)
+void rss_combine(const bart_dim_t dims[DIMS], complex float* image, const complex float* data)
 {
 	complex float* tmp = md_alloc_sameplace(DIMS, dims, CFL_SIZE, data);
 
@@ -75,8 +75,8 @@ float estimate_scaling_norm(float rescale, int imsize, complex float* tmpnorm, b
 {
 	if (is_vptr(tmpnorm)) {
 
-		complex float* tmp = md_alloc(1, (long[1]){ imsize }, CFL_SIZE);
-		md_copy(1, (long[1]){ imsize }, tmp, tmpnorm, CFL_SIZE);
+		complex float* tmp = md_alloc(1, (bart_dim_t[1]){ imsize }, CFL_SIZE);
+		md_copy(1, (bart_dim_t[1]){ imsize }, tmp, tmpnorm, CFL_SIZE);
 
 		float ret = estimate_scaling_norm(rescale, imsize, tmp, compat, p);
 
@@ -109,9 +109,9 @@ float estimate_scaling_norm(float rescale, int imsize, complex float* tmpnorm, b
 }
 
 
-extern float estimate_scaling_cal(const long dims[DIMS], const complex float* sens, const long cal_dims[DIMS], const complex float* cal_data, bool compat, float p)
+extern float estimate_scaling_cal(const bart_dim_t dims[DIMS], const complex float* sens, const bart_dim_t cal_dims[DIMS], const complex float* cal_data, bool compat, float p)
 {
-	long img_dims[DIMS];
+	bart_dim_t img_dims[DIMS];
 	md_select_dims(DIMS, ~COIL_FLAG, img_dims, cal_dims);
 
 	int imsize = (int)md_calc_size(DIMS, img_dims);
@@ -143,12 +143,12 @@ extern float estimate_scaling_cal(const long dims[DIMS], const complex float* se
 }
 
 
-static float estimate_scaling_internal(const long dims[DIMS], const complex float* sens, const long strs[DIMS], const complex float* data, bool compat, float p)
+static float estimate_scaling_internal(const bart_dim_t dims[DIMS], const complex float* sens, const bart_stride_t strs[DIMS], const complex float* data, bool compat, float p)
 {
 	assert(1 == dims[MAPS_DIM]);
 
-	long small_dims[DIMS];
-	long cal_size[3] = { 32, 32, 32 };
+	bart_dim_t small_dims[DIMS];
+	bart_dim_t cal_size[3] = { 32, 32, 32 };
 	// maybe we should just extract a fixed-sized block here?
 	complex float* tmp = extract_calib2(small_dims, cal_size, dims, strs, data, false);
 
@@ -162,20 +162,20 @@ static float estimate_scaling_internal(const long dims[DIMS], const complex floa
 
 
 
-float estimate_scaling2(const long dims[DIMS], const complex float* sens, const long strs[DIMS], const complex float* data2, float p)
+float estimate_scaling2(const bart_dim_t dims[DIMS], const complex float* sens, const bart_stride_t strs[DIMS], const complex float* data2, float p)
 {
 	return estimate_scaling_internal(dims, sens, strs, data2, false, p);
 }
 
-float estimate_scaling(const long dims[DIMS], const complex float* sens, const complex float* data2, float p)
+float estimate_scaling(const bart_dim_t dims[DIMS], const complex float* sens, const complex float* data2, float p)
 {
-	long strs[DIMS];
+	bart_stride_t strs[DIMS];
 	md_calc_strides(DIMS, strs, dims, CFL_SIZE);
 
 	return estimate_scaling2(dims, sens, strs, data2, p);
 }
 
-float estimate_scaling_old2(const long dims[DIMS], const complex float* sens, const long strs[DIMS], const complex float* data)
+float estimate_scaling_old2(const bart_dim_t dims[DIMS], const complex float* sens, const bart_stride_t strs[DIMS], const complex float* data)
 {
 	return estimate_scaling_internal(dims, sens, strs, data, true, -1);
 }
@@ -184,17 +184,17 @@ float estimate_scaling_old2(const long dims[DIMS], const complex float* sens, co
 
 
 
-void fake_kspace(const long dims[DIMS], complex float* kspace, const complex float* sens, const complex float* image)
+void fake_kspace(const bart_dim_t dims[DIMS], complex float* kspace, const complex float* sens, const complex float* image)
 {
-	long dims_one[DIMS];
-	long dims_img[DIMS];
-	long dims_ksp[DIMS];
+	bart_dim_t dims_one[DIMS];
+	bart_dim_t dims_img[DIMS];
+	bart_dim_t dims_ksp[DIMS];
 
 	md_select_dims(DIMS, ~(COIL_FLAG | MAPS_FLAG), dims_one, dims);
 	md_select_dims(DIMS, ~COIL_FLAG, dims_img, dims);
 	md_select_dims(DIMS, ~MAPS_FLAG, dims_ksp, dims);
 
-	const struct linop_s* sense_data = sense_init(0UL, dims, FFT_FLAGS|COIL_FLAG|MAPS_FLAG, sens);
+	const struct linop_s* sense_data = sense_init(UINT64_C(0), dims, FFT_FLAGS|COIL_FLAG|MAPS_FLAG, sens);
 	linop_forward(sense_data, DIMS, dims_ksp, kspace, DIMS, dims_img, image);
 	linop_free(sense_data);
 }
@@ -202,11 +202,11 @@ void fake_kspace(const long dims[DIMS], complex float* kspace, const complex flo
 
 
 
-void replace_kspace(const long dims[DIMS], complex float* out, const complex float* kspace, const complex float* sens, const complex float* image)
+void replace_kspace(const bart_dim_t dims[DIMS], complex float* out, const complex float* kspace, const complex float* sens, const complex float* image)
 {
-	long dims_one[DIMS];
-	long dims_img[DIMS];
-	long dims_ksp[DIMS];
+	bart_dim_t dims_one[DIMS];
+	bart_dim_t dims_img[DIMS];
+	bart_dim_t dims_ksp[DIMS];
 
 	md_select_dims(DIMS, ~(COIL_FLAG|MAPS_FLAG), dims_one, dims);
 	md_select_dims(DIMS, ~(COIL_FLAG), dims_img, dims);
@@ -228,9 +228,9 @@ void replace_kspace(const long dims[DIMS], complex float* out, const complex flo
 
 
 
-void replace_kspace2(const long dims[DIMS], complex float* out, const complex float* kspace, const complex float* sens, const complex float* image)
+void replace_kspace2(const bart_dim_t dims[DIMS], complex float* out, const complex float* kspace, const complex float* sens, const complex float* image)
 {
-	long dims_ksp[DIMS];
+	bart_dim_t dims_ksp[DIMS];
 	md_select_dims(DIMS, ~MAPS_FLAG, dims_ksp, dims);
 
 	complex float* data = md_alloc(DIMS, dims_ksp, CFL_SIZE);

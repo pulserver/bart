@@ -302,7 +302,7 @@ double seq_block_rdt(int N, const struct seq_event ev[N], double raster)
 	return round_up_raster(events_end_time(N, ev, 1, 0) - seq_block_end_flat(N, ev, raster), raster);
 }
 
-static long get_chrono_slice(const struct seq_state* seq_state, const struct seq_config* seq)
+static bart_dim_t get_chrono_slice(const struct seq_state* seq_state, const struct seq_config* seq)
 {
 	if (1 < seq->geom.mb_factor)
 		return seq_state->pos[PHS2_DIM] + seq_state->pos[SLICE_DIM] * seq->loop_dims[PHS2_DIM];
@@ -343,21 +343,21 @@ int seq_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 	    || (SEQ_BLOCK_KERNEL_CHECK == seq_state->mode))
 		return flash(N, ev, seq_state, seq);
 
-	long zeros[DIMS] = { };
-	long last_idx[DIMS];
+	bart_dim_t zeros[DIMS] = { };
+	bart_dim_t last_idx[DIMS];
 
 	for (int i = 0; i < DIMS; i++)
 		last_idx[i] = seq->loop_dims[i] - 1;
 
 	// changed beahvior for sequential multislice
-	unsigned long msm_flag = 0UL;
+	bart_flags_t msm_flag = UINT64_C(0);
 
 	if (md_check_equal_order(DIMS, seq->order, seq_loop_order_multislice, SEQ_FLAGS))
 	       msm_flag = SLICE_FLAG ;
 
 	if (0 == seq_state->pos[COEFF_DIM]) {
 
-		if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~0UL)) {
+		if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~UINT64_C(0))) {
 
 			seq_state->mode = SEQ_BLOCK_PRE;
 			return wait_time_to_event(ev, 0., seq->magn.init_delay);
@@ -365,7 +365,7 @@ int seq_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 
 		zeros[COEFF2_DIM] = 1;
 
-		if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~0UL)) {
+		if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~UINT64_C(0))) {
 
 			seq_state->mode = SEQ_BLOCK_KERNEL_NOISE;
 
@@ -396,7 +396,7 @@ int seq_block(int N, struct seq_event ev[N], struct seq_state* seq_state, const 
 		seq_state->mode = SEQ_BLOCK_KERNEL_IMAGE;
 		md_max_dims(DIMS, (COEFF2_FLAG), seq_state->pos, seq_state->pos, last_idx);
 
-		if (seq->trigger.trigger_out && md_check_equal_dims(DIMS, (long [DIMS]){ 0 }, seq_state->pos, PHS1_FLAG))
+		if (seq->trigger.trigger_out && md_check_equal_dims(DIMS, (bart_dim_t [DIMS]){ 0 }, seq_state->pos, PHS1_FLAG))
 			ev[i++] = (struct seq_event){ .start = 0., .mid = 0., .end = 1e-3, .type = SEQ_EVENT_OUTPUT, NULL };
 
 		return flash(N - i, ev + i, seq_state, seq) + i;

@@ -21,7 +21,7 @@ static bool test_cuda_compress(void)
 {
 	enum { N = 5 };
 
-	const long dims[N] = { 4, 1, 9, 2, 2 };
+	const bart_dim_t dims[N] = { 4, 1, 9, 2, 2 };
 
 	complex float* _ptr1 = md_alloc_gpu(N, dims, CFL_SIZE);
 	md_gaussian_rand(N, dims, _ptr1);
@@ -29,9 +29,9 @@ static bool test_cuda_compress(void)
 	float* ptr1 = (float*)_ptr1;
 	md_sgreatequal(N, dims, ptr1, ptr1, 0.);
 
-	long M = (md_calc_size(N, dims) + 31) / 32;
+	bart_dim_t M = (md_calc_size(N, dims) + 31) / 32;
 
-	uint32_t* compress = md_alloc_gpu(1, (long[1]){ M }, sizeof *compress);
+	uint32_t* compress = md_alloc_gpu(1, (bart_dim_t[1]){ M }, sizeof *compress);
 	md_mask_compress(N, dims, M, compress, ptr1);
 
 	float* ptr2 = md_alloc_gpu(N, dims, FL_SIZE);

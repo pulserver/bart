@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 #include "misc/mri.h"
@@ -23,7 +24,7 @@ struct noir_conf_s {
 extern const struct noir_conf_s noir_defaults;
 
 extern void noir_recon(const struct noir_conf_s* conf,
-		       const long dims[DIMS],
+		       const bart_dim_t dims[DIMS],
 		       _Complex float* img,
 		       _Complex float* sens,
 		       _Complex float* ksens,

@@ -33,9 +33,9 @@ static const char help_str[] = "Extracts a sub-array along dims from index start
 int main_extract(int argc, char* argv[argc])
 {
 	int count = 0;
-	long* dims = NULL;
-	long* starts = NULL;
-	long* ends = NULL;
+	bart_dim_t* dims = NULL;
+	bart_dim_t* starts = NULL;
+	bart_dim_t* ends = NULL;
 	const char* in_file = NULL;
 	const char* out_file = NULL;
 
@@ -55,20 +55,20 @@ int main_extract(int argc, char* argv[argc])
 
 	num_init();
 
-	long in_dims[DIMS];
-	long out_dims[DIMS];
+	bart_dim_t in_dims[DIMS];
+	bart_dim_t out_dims[DIMS];
 	
 	complex float* in_data = load_cfl(in_file, DIMS, in_dims);
 	md_copy_dims(DIMS, out_dims, in_dims);
 
 
-	long pos2[DIMS] = { };
+	bart_dim_t pos2[DIMS] = { };
 
 	for (int i = 0; i < count; i++) {
 
-		long dim = dims[i];
-		long start = starts[i];
-		long end = ends[i];
+		bart_dim_t dim = dims[i];
+		bart_dim_t start = starts[i];
+		bart_dim_t end = ends[i];
 
 		assert((0 <= dim) && (dim < DIMS));
 		assert(start >= 0);

@@ -37,7 +37,7 @@ int main_vec(int argc, char* argv[argc])
 
 	num_init();
 
-	long dims[1] = { count };
+	bart_dim_t dims[1] = { count };
 
 	complex float* x = create_cfl(out_file, 1, dims);
 

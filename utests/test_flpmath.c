@@ -26,15 +26,15 @@
 
 
 
-static bool test_md_zfmacc2_flags(int D, const long idims[D], unsigned long flags, const complex float* in1, const complex float* in2, const complex float* out_ref)
+static bool test_md_zfmacc2_flags(int D, const bart_dim_t idims[D], bart_flags_t flags, const complex float* in1, const complex float* in2, const complex float* out_ref)
 {
-	long odims[D];
+	bart_dim_t odims[D];
 	md_select_dims(D, ~flags, odims, idims);
 
 	complex float* out = md_calloc(D, odims, CFL_SIZE);
 
-	long istr[D];
-	long ostr[D];
+	bart_stride_t istr[D];
+	bart_stride_t ostr[D];
 
 	md_calc_strides(D, istr, idims, CFL_SIZE);
 	md_calc_strides(D, ostr, odims, CFL_SIZE);
@@ -56,11 +56,11 @@ static bool test_md_zfmacc2_flags(int D, const long idims[D], unsigned long flag
  */
 static bool test_md_zfmacc2(void)
 {
-	long idims[4] = { 3, 3, 3, 3 };
+	bart_dim_t idims[4] = { 3, 3, 3, 3 };
 
 	bool ret = true;
 
-	for (unsigned long flags = 0UL; flags < 16UL; flags++) {
+	for (bart_flags_t flags = UINT64_C(0); flags < UINT64_C(16); flags++) {
 
 		debug_printf(DP_DEBUG1, "Testing md_zfmacc2_flags with flags=%lu\n", flags);
 
@@ -71,9 +71,9 @@ static bool test_md_zfmacc2(void)
 }
 
 
-static bool test_md_zavg_flags(int D, const long idims[D], unsigned long flags, const complex float* in, const complex float* out_ref, bool wavg)
+static bool test_md_zavg_flags(int D, const bart_dim_t idims[D], bart_flags_t flags, const complex float* in, const complex float* out_ref, bool wavg)
 {
-	long odims[D];
+	bart_dim_t odims[D];
 	md_select_dims(D, ~flags, odims, idims);
 
 	complex float* out = md_alloc(D, odims, CFL_SIZE);
@@ -95,12 +95,12 @@ static bool test_md_zavg_flags(int D, const long idims[D], unsigned long flags, 
  */
 static bool test_md_zwavg(void)
 {
-	long idims[4] = { 3, 3, 3, 3 };
+	bart_dim_t idims[4] = { 3, 3, 3, 3 };
 
 	bool wavg = true;
 	bool ret = true;
 
-	for (unsigned long flags = 0UL; flags < 16UL; flags++) {
+	for (bart_flags_t flags = UINT64_C(0); flags < UINT64_C(16); flags++) {
 
 		debug_printf(DP_DEBUG1, "Testing md_zwavg_flags with flags=%lu\n", flags);
 
@@ -113,12 +113,12 @@ static bool test_md_zwavg(void)
 
 static bool test_md_zavg(void)
 {
-	long idims[4] = { 3, 3, 3, 3 };
+	bart_dim_t idims[4] = { 3, 3, 3, 3 };
 
 	bool wavg = false;
 	bool ret = true;
 
-	for (unsigned long flags = 0UL; flags < 16UL; flags++) {
+	for (bart_flags_t flags = UINT64_C(0); flags < UINT64_C(16); flags++) {
 
 		debug_printf(DP_DEBUG1, "Testing md_zavg_flags with flags=%lu\n", flags);
 
@@ -150,9 +150,9 @@ static bool test_md_zmatmul(void)
 	int B = 20;
 	int C = 30;
 
-	long odims[3] = { C, 1, A };
-	long idims1[3] = { 1, B, A };
-	long idims2[3] = { C, B, 1 };
+	bart_dim_t odims[3] = { C, 1, A };
+	bart_dim_t idims1[3] = { 1, B, A };
+	bart_dim_t idims2[3] = { C, B, 1 };
 
 	complex float* dst1 = md_alloc(3, odims, CFL_SIZE);
 	complex float* dst2 = md_alloc(3, odims, CFL_SIZE);
@@ -191,7 +191,7 @@ static bool test_md_zhardthresh(void)
 
 	int k = 5;
 
-	md_zhardthresh(1, (long[1]){ N }, k, 0, test_out, test_vec);
+	md_zhardthresh(1, (bart_dim_t[1]){ N }, k, 0, test_out, test_vec);
 
 	bool ok = true;
 
@@ -210,8 +210,8 @@ static bool test_md_zvar(void)
 	const complex float test_vec[] = { 1. -6.j, 2. - 5.j, 3. - 4.j, 4. - 3.j, 5. - 2.j, 6. - 1.j };
 	const complex float ref[] = { 8., 8. };
 
-	long idims[2] = { 2, 3 };
-	long odims[2] = { 2, 1 };
+	bart_dim_t idims[2] = { 2, 3 };
+	bart_dim_t odims[2] = { 2, 1 };
 
 	complex float* out = md_alloc(2, odims, CFL_SIZE);
 
@@ -231,8 +231,8 @@ static bool test_md_zcovar(void)
 	const complex float test_vec2[] = { 1. - 6.j, 2.j + 5., 3. - 4.j, 4.j + 3., 5. - 2.j, 6.j + 1. };
 	const complex float ref[] = { 8., -8.j };
 
-	long idims[2] = { 2, 3 };
-	long odims[2] = { 2, 1 };
+	bart_dim_t idims[2] = { 2, 3 };
+	bart_dim_t odims[2] = { 2, 1 };
 
 	complex float* out = md_alloc(2, odims, CFL_SIZE);
 
@@ -252,8 +252,8 @@ static bool test_md_zstd(void)
 	const complex float test_vec[] = { 1. - 6.j, 2. - 5.j, 3. - 4.j, 4. - 3.j, 5. - 2.j, 6. - 1.j };
 	const complex float ref[] = { 1., 1., 1. };
 
-	long idims[2] = { 2, 3 };
-	long odims[2] = { 1, 3 };
+	bart_dim_t idims[2] = { 2, 3 };
+	bart_dim_t odims[2] = { 1, 3 };
 
 	complex float* out = md_alloc(2, odims, CFL_SIZE);
 
@@ -270,9 +270,9 @@ static bool test_md_zstd(void)
 static bool test_md_zconv(void)
 {
 	enum { N = 1 };
-	long idims[N] = { 10 };
-	long kdims[N] = { 3 };
-	long odims[N] = { 8 };
+	bart_dim_t idims[N] = { 10 };
+	bart_dim_t kdims[N] = { 3 };
+	bart_dim_t odims[N] = { 8 };
 
 	complex float* x = md_calloc(N, idims, sizeof(complex float));
 	complex float* y = md_calloc(N, odims, sizeof(complex float));
@@ -300,7 +300,7 @@ static bool test_md_zconv(void)
 static bool test_md_complex_real_conversion(void)
 {
 	enum { N = 1 };
-	long dims[N] = { 10 };
+	bart_dim_t dims[N] = { 10 };
 
 	complex float* src_comp = md_alloc(N, dims, CFL_SIZE);
 	md_gaussian_rand(N, dims, src_comp);
@@ -355,7 +355,7 @@ for x in pdf.T:
 print("};")
 */
 
-	const long dim[] = { 11, 11 };
+	const bart_dim_t dim[] = { 11, 11 };
 	complex float x[] = {
 
 		0.0010995223491546443,	0.0018128058846614335,	0.002674506149641422,	0.0035308637313793117,	0.004171222635474596,	0.004409515177532113,

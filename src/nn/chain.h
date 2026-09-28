@@ -2,12 +2,13 @@
 #ifndef _NN_CHAIN_H
 #define _NN_CHAIN_H
 
+#include "misc/dimtypes.h"
 #include "nn/nn.h"
 
-extern nn_t nn_reshape_out(nn_t op, int o, const char* oname, int NO, const long odims[NO]);
-extern nn_t nn_reshape_in(nn_t op, int i, const char* iname, int NI, const long idims[NI]);
-extern nn_t nn_reshape_out_F(nn_t op, int o, const char* oname, int NO, const long odims[NO]);
-extern nn_t nn_reshape_in_F(nn_t op, int i, const char* iname, int NI, const long idims[NI]);
+extern nn_t nn_reshape_out(nn_t op, int o, const char* oname, int NO, const bart_dim_t odims[NO]);
+extern nn_t nn_reshape_in(nn_t op, int i, const char* iname, int NI, const bart_dim_t idims[NI]);
+extern nn_t nn_reshape_out_F(nn_t op, int o, const char* oname, int NO, const bart_dim_t odims[NO]);
+extern nn_t nn_reshape_in_F(nn_t op, int i, const char* iname, int NI, const bart_dim_t idims[NI]);
 extern nn_t nn_chain2(nn_t a, int o, const char* oname, nn_t b, int i, const char* iname);
 extern nn_t nn_chain2_FF(nn_t a, int o, const char* oname, nn_t b, int i, const char* iname);
 extern nn_t nn_chain2_swap_FF(nn_t a, int o, const char* oname, nn_t b, int i, const char* iname);

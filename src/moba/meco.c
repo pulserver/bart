@@ -41,21 +41,21 @@ struct meco_s {
 	nlop_data_t super;
 
 	int N;
-	long model;
+	bart_dim_t model;
 
 	bool real_pd;
 
-	const long* y_dims;
-	const long* x_dims;
-	const long* der_dims;
-	const long* map_dims;
-	const long* TE_dims;
+	const bart_dim_t* y_dims;
+	const bart_dim_t* x_dims;
+	const bart_dim_t* der_dims;
+	const bart_dim_t* map_dims;
+	const bart_dim_t* TE_dims;
 
-	const long* y_strs;
-	const long* x_strs;
-	const long* der_strs;
-	const long* map_strs;
-	const long* TE_strs;
+	const bart_stride_t* y_strs;
+	const bart_stride_t* x_strs;
+	const bart_stride_t* der_strs;
+	const bart_stride_t* map_strs;
+	const bart_stride_t* TE_strs;
 
 	// Parameter maps
 	complex float* der_x;
@@ -88,9 +88,9 @@ int get_num_of_coeff(enum meco_model sel_model)
 	return ncoeff;
 }
 
-unsigned long get_PD_flag(enum meco_model sel_model)
+bart_flags_t get_PD_flag(enum meco_model sel_model)
 {
-	unsigned long PD_flag = 0;
+	bart_flags_t PD_flag = 0;
 
 	switch (sel_model) {
 
@@ -133,9 +133,9 @@ unsigned long get_PD_flag(enum meco_model sel_model)
 	return PD_flag;
 }
 
-unsigned long get_R2S_flag(enum meco_model sel_model)
+bart_flags_t get_R2S_flag(enum meco_model sel_model)
 {
-	unsigned long R2S_flag = 0;
+	bart_flags_t R2S_flag = 0;
 
 	switch (sel_model) {
 
@@ -174,17 +174,17 @@ unsigned long get_R2S_flag(enum meco_model sel_model)
 	return R2S_flag;
 }
 
-unsigned long get_fB0_flag(enum meco_model sel_model)
+bart_flags_t get_fB0_flag(enum meco_model sel_model)
 {
 	// the last parameter is fB0
-	unsigned long fB0_flag = 0;
+	bart_flags_t fB0_flag = 0;
 
 	fB0_flag = MD_SET(fB0_flag, get_num_of_coeff(sel_model) - 1);
 
 	return fB0_flag;
 }
 
-void meco_calc_fat_modu(int N, const long dims[N], const complex float TE[dims[TE_DIM]], complex float dst[dims[TE_DIM]], enum fat_spec fat_spec)
+void meco_calc_fat_modu(int N, const bart_dim_t dims[N], const complex float TE[dims[TE_DIM]], complex float dst[dims[TE_DIM]], enum fat_spec fat_spec)
 {
 	md_clear(N, dims, dst, CFL_SIZE);
 
@@ -198,7 +198,7 @@ void meco_calc_fat_modu(int N, const long dims[N], const complex float TE[dims[T
 
 
 
-static void meco_calc_weights(const nlop_data_t* _data, const int N, const long dims[N], float wgh_fB0)
+static void meco_calc_weights(const nlop_data_t* _data, const int N, const bart_dim_t dims[N], float wgh_fB0)
 {
 	struct meco_s* data = CAST_DOWN(meco_s, _data);
 
@@ -284,7 +284,7 @@ static void meco_fun_wf(const nlop_data_t* _data, complex float* dst, const comp
 	if (NULL == data->der_x)
 		data->der_x = md_alloc_sameplace(data->N, data->der_dims, CFL_SIZE, dst);
 
-	long x_pos[data->N];
+	bart_dim_t x_pos[data->N];
 
 	for (int i = 0; i < data->N; i++)
 		x_pos[i] = 0;
@@ -381,7 +381,7 @@ static void meco_fun_wfr2s(const nlop_data_t* _data, complex float* dst, const c
 	if (NULL == data->der_x)
 		data->der_x = md_alloc_sameplace(data->N, data->der_dims, CFL_SIZE, dst);
 
-	long x_pos[data->N];
+	bart_dim_t x_pos[data->N];
 
 	for (int i = 0; i < data->N; i++)
 		x_pos[i] = 0;
@@ -499,7 +499,7 @@ static void meco_fun_wf2r2s(const nlop_data_t* _data, complex float* dst, const 
 	if (NULL == data->der_x)
 		data->der_x = md_alloc_sameplace(data->N, data->der_dims, CFL_SIZE, dst);
 
-	long x_pos[data->N];
+	bart_dim_t x_pos[data->N];
 
 	for (int i = 0; i < data->N; i++)
 		x_pos[i] = 0;
@@ -653,7 +653,7 @@ static void meco_fun_r2s(const nlop_data_t* _data, complex float* dst, const com
 	if (NULL == data->der_x)
 		data->der_x = md_alloc_sameplace(data->N, data->der_dims, CFL_SIZE, dst);
 
-	long x_pos[data->N];
+	bart_dim_t x_pos[data->N];
 
 	for (int i = 0; i < data->N; i++)
 		x_pos[i] = 0;
@@ -749,7 +749,7 @@ static void meco_fun_phasediff(const nlop_data_t* _data, complex float* dst, con
 	if (NULL == data->der_x)
 		data->der_x = md_alloc_sameplace(data->N, data->der_dims, CFL_SIZE, dst);
 
-	long x_pos[data->N];
+	bart_dim_t x_pos[data->N];
 
 	for (int i = 0; i < data->N; i++)
 		x_pos[i] = 0;
@@ -819,7 +819,7 @@ static void meco_der(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 {
 	struct meco_s* data = CAST_DOWN(meco_s, _data);
 
-	long x_pos[data->N];
+	bart_dim_t x_pos[data->N];
 
 	for (int i = 0; i < data->N; i++)
 		x_pos[i] = 0;
@@ -830,7 +830,7 @@ static void meco_der(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 
 	md_clear(data->N, data->y_dims, dst, CFL_SIZE);
 
-	for (long pind = 0; pind < data->x_dims[COEFF_DIM]; pind++) {
+	for (bart_dim_t pind = 0; pind < data->x_dims[COEFF_DIM]; pind++) {
 
 		x_pos[COEFF_DIM] = pind;
 
@@ -851,7 +851,7 @@ static void meco_adj(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 {
 	struct meco_s* data = CAST_DOWN(meco_s, _data);
 
-	long x_pos[data->N];
+	bart_dim_t x_pos[data->N];
 
 	for (int i = 0; i < data->N; i++)
 		x_pos[i] = 0;
@@ -862,7 +862,7 @@ static void meco_adj(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 
 	md_clear(data->N, data->x_dims, dst, CFL_SIZE);
 
-	for (long pind = 0; pind < data->x_dims[COEFF_DIM]; pind++) {
+	for (bart_dim_t pind = 0; pind < data->x_dims[COEFF_DIM]; pind++) {
 
 		x_pos[COEFF_DIM] = pind;
 
@@ -876,11 +876,11 @@ static void meco_adj(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 
 
 	// real constraint
-	unsigned long  PD_flag = get_PD_flag(data->model);
-	unsigned long R2S_flag = get_R2S_flag(data->model);
-	unsigned long fB0_flag = get_fB0_flag(data->model);
+	bart_flags_t  PD_flag = get_PD_flag(data->model);
+	bart_flags_t R2S_flag = get_R2S_flag(data->model);
+	bart_flags_t fB0_flag = get_fB0_flag(data->model);
 
-	for (long pind = 0; pind < data->x_dims[COEFF_DIM]; pind++) {
+	for (bart_dim_t pind = 0; pind < data->x_dims[COEFF_DIM]; pind++) {
 
 		if (  (MD_IS_SET(PD_flag, pind) && data->real_pd)
 		    || MD_IS_SET(R2S_flag, pind)
@@ -931,60 +931,60 @@ static void meco_del(const nlop_data_t* _data)
 }
 
 
-struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_dims[N], const complex float* TE, enum meco_model sel_model, bool real_pd, enum fat_spec fat_spec, const float* scale_fB0)
+struct nlop_s* nlop_meco_create(const int N, const bart_dim_t y_dims[N], const bart_dim_t x_dims[N], const complex float* TE, enum meco_model sel_model, bool real_pd, enum fat_spec fat_spec, const float* scale_fB0)
 {
 	PTR_ALLOC(struct meco_s, data);
 	SET_TYPEID(meco_s, data);
 
 
-	PTR_ALLOC(long[N], nydims);
+	PTR_ALLOC(bart_dim_t[N], nydims);
 	md_copy_dims(N, *nydims, y_dims);
 	data->y_dims = *PTR_PASS(nydims);
 
 	assert(x_dims[COEFF_DIM] == get_num_of_coeff(sel_model));
 	data->model = sel_model;
 
-	PTR_ALLOC(long[N], nxdims);
+	PTR_ALLOC(bart_dim_t[N], nxdims);
 	md_copy_dims(N, *nxdims, x_dims);
 	data->x_dims = *PTR_PASS(nxdims);
 
-	PTR_ALLOC(long[N], nderdims);
+	PTR_ALLOC(bart_dim_t[N], nderdims);
 	md_merge_dims(N, *nderdims, y_dims, x_dims);
 	data->der_dims = *PTR_PASS(nderdims);
 
-	long map_dims[N];
+	bart_dim_t map_dims[N];
 	md_select_dims(N, ~COEFF_FLAG, map_dims, x_dims);
-	PTR_ALLOC(long[N], n1dims);
+	PTR_ALLOC(bart_dim_t[N], n1dims);
 	md_copy_dims(N, *n1dims, map_dims);
 	data->map_dims = *PTR_PASS(n1dims);
 
-	long TE_dims[N];
+	bart_dim_t TE_dims[N];
 	md_select_dims(N, TE_FLAG, TE_dims, y_dims);
-	PTR_ALLOC(long[N], ntedims);
+	PTR_ALLOC(bart_dim_t[N], ntedims);
 	md_copy_dims(N, *ntedims, TE_dims);
 	data->TE_dims = *PTR_PASS(ntedims);
 
-	long scaling_dims[N];
+	bart_dim_t scaling_dims[N];
 	md_select_dims(N, COEFF_FLAG, scaling_dims, x_dims);
 
 
-	PTR_ALLOC(long[N], nystr);
+	PTR_ALLOC(bart_dim_t[N], nystr);
 	md_calc_strides(N, *nystr, y_dims, CFL_SIZE);
 	data->y_strs = *PTR_PASS(nystr);
 
-	PTR_ALLOC(long[N], nxstr);
+	PTR_ALLOC(bart_dim_t[N], nxstr);
 	md_calc_strides(N, *nxstr, x_dims, CFL_SIZE);
 	data->x_strs = *PTR_PASS(nxstr);
 
-	PTR_ALLOC(long[N], nderstr);
+	PTR_ALLOC(bart_dim_t[N], nderstr);
 	md_calc_strides(N, *nderstr, data->der_dims, CFL_SIZE);
 	data->der_strs = *PTR_PASS(nderstr);
 
-	PTR_ALLOC(long[N], n1str);
+	PTR_ALLOC(bart_dim_t[N], n1str);
 	md_calc_strides(N, *n1str, map_dims, CFL_SIZE);
 	data->map_strs = *PTR_PASS(n1str);
 
-	PTR_ALLOC(long[N], ntestr);
+	PTR_ALLOC(bart_dim_t[N], ntestr);
 	md_calc_strides(N, *ntestr, TE_dims, CFL_SIZE);
 	data->TE_strs = *PTR_PASS(ntestr);
 
@@ -1003,7 +1003,7 @@ struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_
 	data->cshift = multiplace_move_F(N, TE_dims, CFL_SIZE, cshift);
 
 	// weight on fB0
-	long w_dims[N];
+	bart_dim_t w_dims[N];
 	md_select_dims(N, FFT_FLAGS, w_dims, data->x_dims);
 
 	meco_calc_weights(CAST_UP(data), N, w_dims, scale_fB0[0]);
@@ -1014,7 +1014,7 @@ struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_
 	for (int pind = 0; pind < x_dims[COEFF_DIM]; pind++)
 		data->scaling[pind] = 1.0;
 
-	long fB0_ind = x_dims[COEFF_DIM] - 1;
+	bart_dim_t fB0_ind = x_dims[COEFF_DIM] - 1;
 	data->scaling[fB0_ind] = scale_fB0[1];
 
 	nlop_fun_t meco_funs[] = {

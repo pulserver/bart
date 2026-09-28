@@ -3,6 +3,7 @@
 extern "C" {
 #endif
 
+#include "misc/dimtypes.h"
 #include <stdint.h>
 
 extern double cuda_dot(bart_dim_t N, const float* src1, const float* src2);

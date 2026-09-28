@@ -90,10 +90,10 @@ int main_cunet(int argc, char* argv[argc])
 
 	num_init_gpu_support();
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	complex float* in = load_cfl(filename_images, DIMS, dims);
 
-	long bdims[DIMS];
+	bart_dim_t bdims[DIMS];
 	md_select_dims(DIMS, ~BATCH_FLAG, bdims, dims);
 	
 	int Nt = dims[BATCH_DIM];
@@ -116,8 +116,8 @@ int main_cunet(int argc, char* argv[argc])
 		move_gpu_nn_weights(weights);
 
 	const struct nlop_s* batch_generator = batch_gen_create(1, (int [1]){ 16 },
-								(const long*[1]){ bdims },
-								(const long*[1]){ dims },
+								(const bart_dim_t*[1]){ bdims },
+								(const bart_dim_t*[1]){ dims },
 								(const complex float*[1]){ in },
 								0, BATCH_GEN_SHUFFLE_DATA, 123);
 

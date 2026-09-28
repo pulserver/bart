@@ -21,7 +21,7 @@ static const char help_str[] = "Convert between a bitmask and set of dimensions.
 int main_bitmask(int argc, char* argv[argc])
 {
 	int count = 0;
-	unsigned long* dims = NULL;
+	bart_flags_t* dims = NULL;
 
 	struct arg_s args[] = {
 
@@ -40,7 +40,7 @@ int main_bitmask(int argc, char* argv[argc])
 	if ((1 != count) && inverse)
 		error("exactly one argument needed.\n");
 
-	unsigned long flags = 0;
+	bart_flags_t flags = 0;
 
 	if (!inverse) {
 

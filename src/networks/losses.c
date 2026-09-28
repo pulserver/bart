@@ -61,7 +61,7 @@ struct loss_config_s loss_option = {
 	.label_index = 0,
 	.image_flags = FFT_FLAGS,
 	.rss_flags = COIL_FLAG,
-	.mse_mean_flags = ~0ul,
+	.mse_mean_flags = ~UINT64_C(0),
 
 	.mask_flags = 0,
 };
@@ -91,7 +91,7 @@ struct loss_config_s val_loss_option = {
 	.label_index = 0,
 	.image_flags = FFT_FLAGS,
 	.rss_flags = COIL_FLAG,
-	.mse_mean_flags = ~0ul,
+	.mse_mean_flags = ~UINT64_C(0),
 
 	.mask_flags = 0,
 };
@@ -123,7 +123,7 @@ struct loss_config_s loss_image_valid = {
 	.label_index = 0,
 	.image_flags = FFT_FLAGS,
 	.rss_flags = COIL_FLAG,
-	.mse_mean_flags = ~0ul,
+	.mse_mean_flags = ~UINT64_C(0),
 
 	.mask_flags = 0,
 };
@@ -155,7 +155,7 @@ struct loss_config_s loss_classification_valid = {
 	.label_index = 0,
 	.image_flags = FFT_FLAGS,
 	.rss_flags = COIL_FLAG,
-	.mse_mean_flags = ~0ul,
+	.mse_mean_flags = ~UINT64_C(0),
 
 	.mask_flags = 0,
 };
@@ -233,7 +233,7 @@ static const struct nlop_s* nlop_affine_transform_out_F(const struct nlop_s* nlo
 	assert(1 == nlop_get_nr_out_args(nlop));
 
 	int N = nlop_generic_codomain(nlop, 0)->N;
-	const long* dims = nlop_generic_codomain(nlop, 0)->dims;
+	const bart_dim_t* dims = nlop_generic_codomain(nlop, 0)->dims;
 
 	if (0 == b)
 		return nlop_chain2_FF(nlop, 0, nlop_from_linop_F(linop_scale_create(N, dims, a)), 0);
@@ -263,12 +263,12 @@ static nn_t nlop_loss_to_nn_F(const struct nlop_s* nlop, const char* name, float
 	return tmp_loss;
 }
 
-static nn_t loss_measure_create(const struct loss_config_s* config, int N, const long dims[N], bool combine, bool measure)
+static nn_t loss_measure_create(const struct loss_config_s* config, int N, const bart_dim_t dims[N], bool combine, bool measure)
 {
-	long ldims[N];
+	bart_dim_t ldims[N];
 	md_select_dims(N, ~config->rss_flags, ldims, dims);
 
-	bool rss = !md_check_equal_dims(N, dims, ldims, ~0UL);
+	bool rss = !md_check_equal_dims(N, dims, ldims, ~UINT64_C(0));
 
 	nn_t result = NULL;
 
@@ -290,7 +290,7 @@ static nn_t loss_measure_create(const struct loss_config_s* config, int N, const
 
 		auto nlop = nlop_mpsnr_create(N, ldims, ~config->image_flags);
 
-		if (!md_check_equal_dims(N, dims, ldims, ~0UL)) {
+		if (!md_check_equal_dims(N, dims, ldims, ~UINT64_C(0))) {
 
 			nlop = nlop_chain2_FF(nlop_zrss_reg_create(N, dims, config->rss_flags, measure ? 0 : config->epsilon), 0, nlop, 0);
 			nlop = nlop_chain2_FF(nlop_zrss_reg_create(N, dims, config->rss_flags, measure ? 0 : config->epsilon), 0, nlop, 0);
@@ -306,7 +306,7 @@ static nn_t loss_measure_create(const struct loss_config_s* config, int N, const
 		assert(5 <= N); //FIXME: should be more general
 		assert(0 == (config->image_flags & ~(MD_BIT(4) - 1))); //dim 4 becomes batch / average dim
 
-		long ndims[5];
+		bart_dim_t ndims[5];
 		md_copy_dims(4, ndims, ldims);
 		ndims[4] = md_calc_size(N - 4, ldims + 4);
 
@@ -318,7 +318,7 @@ static nn_t loss_measure_create(const struct loss_config_s* config, int N, const
 		nlop = nlop_reshape_in_F(nlop, 0, N, ldims);
 		nlop = nlop_reshape_in_F(nlop, 1, N, ldims);
 
-		if (!md_check_equal_dims(N, dims, ldims, ~0UL)) {
+		if (!md_check_equal_dims(N, dims, ldims, ~UINT64_C(0))) {
 
 			nlop = nlop_chain2_FF(nlop_zrss_reg_create(N, dims, config->rss_flags, measure ? 0 : config->epsilon), 0, nlop, 0);
 			nlop = nlop_chain2_FF(nlop_zrss_reg_create(N, dims, config->rss_flags, measure ? 0 : config->epsilon), 0, nlop, 0);
@@ -402,7 +402,7 @@ static nn_t loss_measure_create(const struct loss_config_s* config, int N, const
 		if (0 > config->label_index)
 			error("Label index not set!\n");
 
-		long labels = dims[config->label_index];
+		bart_dim_t labels = dims[config->label_index];
 
 		auto dice = nlop_dice_generic_create(N, dims, MD_BIT(config->label_index), MD_BIT(config->label_index), 0., false);
 		dice = nlop_reshape_out_F(dice, 0, 1, MD_DIMS(md_calc_size(N, nlop_generic_codomain(dice, 0)->dims)));
@@ -471,7 +471,7 @@ static nn_t loss_measure_create(const struct loss_config_s* config, int N, const
 
 	if (0 != config->mask_flags) {
 
-		long mask_dims[N];
+		bart_dim_t mask_dims[N];
 		md_select_dims(N, config->mask_flags, mask_dims, dims);
 
 		auto nlop_tenmuls = nlop_combine_FF(nlop_tenmul_create(N, dims, dims, mask_dims), nlop_tenmul_create(N, dims, dims, mask_dims));
@@ -489,12 +489,12 @@ static nn_t loss_measure_create(const struct loss_config_s* config, int N, const
 	return result;
 }
 
-nn_t train_loss_create(const struct loss_config_s* config, int N, const long dims[N])
+nn_t train_loss_create(const struct loss_config_s* config, int N, const bart_dim_t dims[N])
 {
 	return loss_measure_create(config, N, dims, true, false);
 }
 
-nn_t val_measure_create(const struct loss_config_s* config, int N, const long dims[N])
+nn_t val_measure_create(const struct loss_config_s* config, int N, const bart_dim_t dims[N])
 {
 	return loss_measure_create(config, N, dims, false, true);
 }

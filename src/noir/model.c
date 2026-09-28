@@ -56,11 +56,11 @@ struct noir_op_s {
 
 	nlop_data_t super;
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 
-	long data_dims[DIMS];
-	long coil_dims[DIMS];
-	long imgs_dims[DIMS];
+	bart_dim_t data_dims[DIMS];
+	bart_dim_t coil_dims[DIMS];
+	bart_dim_t imgs_dims[DIMS];
 
 	const struct linop_s* weights;
 	const struct linop_s* frw;
@@ -74,7 +74,7 @@ struct noir_op_s {
 
 DEF_TYPEID(noir_op_s);
 
-static struct noir_op_s* noir_init(const long dims[DIMS], const complex float* mask, const complex float* psf, const struct noir_model_conf_s* conf)
+static struct noir_op_s* noir_init(const bart_dim_t dims[DIMS], const complex float* mask, const complex float* psf, const struct noir_model_conf_s* conf)
 {
 	PTR_ALLOC(struct noir_op_s, data);
 	SET_TYPEID(noir_op_s, data);
@@ -88,13 +88,13 @@ static struct noir_op_s* noir_init(const long dims[DIMS], const complex float* m
 	md_select_dims(DIMS, ~COIL_FLAG, data->imgs_dims, dims);
 	md_select_dims(DIMS, ~MAPS_FLAG, data->data_dims, dims);
 
-	long mask_dims[DIMS];
+	bart_dim_t mask_dims[DIMS];
 	md_select_dims(DIMS, FFT_FLAGS, mask_dims, dims);
 
-	long wght_dims[DIMS];
+	bart_dim_t wght_dims[DIMS];
 	md_select_dims(DIMS, FFT_FLAGS, wght_dims, dims);
 
-	long ptrn_dims[DIMS];
+	bart_dim_t ptrn_dims[DIMS];
 	md_select_dims(DIMS, conf->ptrn_flags, ptrn_dims, dims);
 
 
@@ -215,7 +215,7 @@ void noir_back_coils(const struct linop_s* op, complex float* dst, const complex
 
 
 
-struct noir_s noir_create(const long dims[DIMS], const complex float* mask, const complex float* psf, const struct noir_model_conf_s* conf)
+struct noir_s noir_create(const bart_dim_t dims[DIMS], const complex float* mask, const complex float* psf, const struct noir_model_conf_s* conf)
 {
 	struct noir_op_s* data = noir_init(dims, mask, psf, conf);
 	struct nlop_s* nlop = (struct nlop_s*)nlop_attach(data->nl2, data, noir_del);
@@ -225,8 +225,8 @@ struct noir_s noir_create(const long dims[DIMS], const complex float* mask, cons
 
 
 __attribute__((optimize("-fno-finite-math-only")))
-static void proj_add(int D, const long dims[D], const long ostrs[D],
-			complex float* optr, const long v1_strs[D], complex float* v1, const long v2_strs[D], complex float* v2)
+static void proj_add(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D],
+			complex float* optr, const bart_stride_t v1_strs[D], complex float* v1, const bart_stride_t v2_strs[D], complex float* v2)
 {
 	float v22 = md_zscalar_real2(D, dims, v2_strs, v2, v2_strs, v2); // since it is real anyway
 
@@ -248,29 +248,29 @@ void noir_orthogonalize(struct noir_s* op, complex float* coils)
 	struct noir_op_s* data = op->noir_op;
 
 	// orthogonalization of the coil profiles
-	long nmaps = data->imgs_dims[MAPS_DIM];
+	bart_dim_t nmaps = data->imgs_dims[MAPS_DIM];
 
-	if (1L == nmaps)
+	if (INT64_C(1) == nmaps)
 		return;
 
-	long single_map_dims[DIMS];
+	bart_dim_t single_map_dims[DIMS];
 	md_select_dims(DIMS, ~MAPS_FLAG, single_map_dims, data->coil_dims);
 
-	long single_map_strs[DIMS];
+	bart_stride_t single_map_strs[DIMS];
 	md_calc_strides(DIMS, single_map_strs, single_map_dims, CFL_SIZE);
 
-	long data_strs[DIMS];
+	bart_stride_t data_strs[DIMS];
 	md_calc_strides(DIMS, data_strs, data->coil_dims, CFL_SIZE);
 
 	complex float* tmp = md_alloc_sameplace(DIMS, single_map_dims, CFL_SIZE, coils);
 
-	for (long map = 0L; map < nmaps; ++map) {
+	for (bart_dim_t map = INT64_C(0); map < nmaps; ++map) {
 
 		complex float* map_ptr = (void*)coils + map * data_strs[MAPS_DIM];
 
 		md_clear(DIMS, single_map_dims, tmp, CFL_SIZE);
 
-		for (long prev = 0L; prev < map; ++prev) {
+		for (bart_dim_t prev = INT64_C(0); prev < map; ++prev) {
 
 			complex float* prev_map_ptr = (void*)coils + prev * data_strs[MAPS_DIM];
 

@@ -91,7 +91,7 @@ static bool test_diameter(void)
 	int val[8];
 	egraph_t graph = get_example_graph(val);
 
-	long diameter = egraph_diameter(graph);
+	bart_dim_t diameter = egraph_diameter(graph);
 	egraph_free(graph);
 
 	UT_RETURN_ASSERT(5 == diameter);

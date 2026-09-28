@@ -9,13 +9,14 @@
 #include <math.h>
 #include <assert.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "splines.h"
 
 
-static bart_dim_t binomial(int n, int k)
+static int64_t binomial(int n, int k)
 {
-	bart_dim_t result = 1;
+	int64_t result = 1;
 
 	for (int i = 1; i <= k; i++)
 		result *= (n + 1 - i);

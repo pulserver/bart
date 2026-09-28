@@ -61,8 +61,8 @@ int main_nrmse(int argc, char* argv[argc])
 
 	num_init();
 
-	long ref_dims[DIMS];
-	long in_dims[DIMS];
+	bart_dim_t ref_dims[DIMS];
+	bart_dim_t in_dims[DIMS];
 
 	complex float* ref = load_cfl(ref_file, DIMS, ref_dims);
 	complex float* in = load_cfl(in_file, DIMS, in_dims);

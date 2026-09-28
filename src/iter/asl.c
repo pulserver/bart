@@ -27,7 +27,7 @@
  * @param asl_dims Array of size N to store the separated dimensions.
  * @param in_dims  Array of size N specifying the size of each input dimension.
  */
-void get_asl_dims(int N, int asl_dim, long asl_dims[N], const long in_dims[N])
+void get_asl_dims(int N, int asl_dim, bart_dim_t asl_dims[N], const bart_dim_t in_dims[N])
 {
 	assert(in_dims[asl_dim] == 2);
 	md_copy_dims(N, asl_dims, in_dims);
@@ -45,14 +45,14 @@ void get_asl_dims(int N, int asl_dim, long asl_dims[N], const long in_dims[N])
  * @param asl_dim  Dimension along which to separate control and label images.
  * @return         Pointer to the created linear operator structure.
  */
-const struct linop_s* linop_asl_create(int N, const long img_dims[N], int asl_dim)
+const struct linop_s* linop_asl_create(int N, const bart_dim_t img_dims[N], int asl_dim)
 {
 	assert(img_dims[asl_dim] == 2);
 	
-	long asl_img_dims[N];
+	bart_dim_t asl_img_dims[N];
 	get_asl_dims(N, asl_dim, asl_img_dims, img_dims);
 
-	long tdims[N];
+	bart_dim_t tdims[N];
 	md_singleton_dims(N, tdims);
 	tdims[asl_dim] = 2;
 
@@ -71,7 +71,7 @@ const struct linop_s* linop_asl_create(int N, const long img_dims[N], int asl_di
  * @param teasl_label_dims Array of size N to store the dimensions of the label image.
  * @param in_dims          Array of size N specifying the size of each input dimension.
  */
-void get_teasl_label_dims(int N, int teasl_dim, long teasl_label_dims[N], const long in_dims[N])
+void get_teasl_label_dims(int N, int teasl_dim, bart_dim_t teasl_label_dims[N], const bart_dim_t in_dims[N])
 {
 	assert(1 < in_dims[teasl_dim]);
 
@@ -89,7 +89,7 @@ void get_teasl_label_dims(int N, int teasl_dim, long teasl_label_dims[N], const 
  * @param teasl_label_dims Array of size N to store the dimensions of the PWI.
  * @param in_dims          Array of size N specifying the size of each input dimension.
  */
-void get_teasl_pwi_dims(int N, int teasl_dim, long teasl_pwi_dims[N], const long in_dims[N])
+void get_teasl_pwi_dims(int N, int teasl_dim, bart_dim_t teasl_pwi_dims[N], const bart_dim_t in_dims[N])
 {
 	assert(1 < in_dims[teasl_dim]);
 
@@ -111,16 +111,16 @@ void get_teasl_pwi_dims(int N, int teasl_dim, long teasl_pwi_dims[N], const long
  * @param teasl_dim Dimension from which to extract the label image.
  * @return          Pointer to the created linear operator structure.
  */
-const struct linop_s* linop_teasl_extract_label(int N, const long img_dims[N], int teasl_dim)
+const struct linop_s* linop_teasl_extract_label(int N, const bart_dim_t img_dims[N], int teasl_dim)
 {
 	assert(1 < img_dims[teasl_dim]);
 	
-	long label_img_dims[N];
+	bart_dim_t label_img_dims[N];
 	get_teasl_label_dims(N, teasl_dim, label_img_dims, img_dims);
 
 	debug_print_dims(DP_DEBUG3, N, label_img_dims);
 
-	long pos0[N];
+	bart_dim_t pos0[N];
 	for (int i = 0; i < N; i++)
 		pos0[i] = 0;
 	pos0[teasl_dim] = 0;
@@ -142,16 +142,16 @@ const struct linop_s* linop_teasl_extract_label(int N, const long img_dims[N], i
  * @param teasl_dim Dimension from which to extract the label image.
  * @return          Pointer to the created linear operator structure.
  */
-const struct linop_s* linop_teasl_extract_pwi(int N, const long img_dims[N], int teasl_dim)
+const struct linop_s* linop_teasl_extract_pwi(int N, const bart_dim_t img_dims[N], int teasl_dim)
 {
 	assert(1 < img_dims[teasl_dim]);
 
-	long pwi_img_dims[N];
+	bart_dim_t pwi_img_dims[N];
 	get_teasl_pwi_dims(N, teasl_dim, pwi_img_dims, img_dims);
 
 	debug_print_dims(DP_DEBUG3, N, pwi_img_dims);
 
-	long pos1[N];
+	bart_dim_t pos1[N];
 	for (int i = 0; i < N; i++)
 		pos1[i] = 0;
 	pos1[teasl_dim] = 1;

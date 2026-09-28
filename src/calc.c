@@ -27,7 +27,7 @@
 static const char help_str[] = "Perform function evaluation on array.";
 
 
-typedef void (*function)(int D, const long dims[D], complex float* optr, const complex float* iptr);
+typedef void (*function)(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr);
 
 struct {
 
@@ -84,7 +84,7 @@ int main_calc(int argc, char* argv[argc])
 	num_init();
 
 	const int N = DIMS;
-	long dims[N];
+	bart_dim_t dims[N];
 
 	// Find function pointer before accessing memory
 

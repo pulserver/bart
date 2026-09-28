@@ -77,7 +77,7 @@ void normalize_crb(int P, float rCRB[P], int N, float TR, float T1, float T2, fl
 	}
 }
 
-void getidxunknowns(int P, int idx_unknowns[P - 1], unsigned long unknowns)
+void getidxunknowns(int P, int idx_unknowns[P - 1], bart_flags_t unknowns)
 {
 	int j = 0;
 

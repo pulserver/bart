@@ -1,3 +1,5 @@
+#include "misc/dimtypes.h"
+
 void cudnn_init(void);
 void cudnn_deinit(void);
 

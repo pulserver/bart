@@ -164,8 +164,8 @@ struct linop_s* linop_from_ops(
 /**
  * Create a linear operator (with strides)
  */
-struct linop_s* linop_with_graph_create2(int ON, const long odims[ON], const long ostrs[ON],
-				int IN, const long idims[IN], const long istrs[IN],
+struct linop_s* linop_with_graph_create2(int ON, const bart_dim_t odims[ON], const bart_stride_t ostrs[ON],
+				int IN, const bart_dim_t idims[IN], const bart_stride_t istrs[IN],
 				linop_data_t* data, lop_fun_t forward, lop_fun_t adjoint, lop_fun_t normal,
 				lop_p_fun_t norm_inv, del_fun_t del,
 				lop_graph_t get_graph)
@@ -207,17 +207,17 @@ struct linop_s* linop_with_graph_create2(int ON, const long odims[ON], const lon
 	assert((NULL != adjoint));
 
 	lo->forward = operator_generic_create2(	2, (bool[2]){ true, false },
-						(int[2]){ ON, IN }, (const long* [2]){ odims, idims }, (const long* [2]){ ostrs, istrs },
+						(int[2]){ ON, IN }, (const bart_dim_t* [2]){ odims, idims }, (const bart_dim_t* [2]){ ostrs, istrs },
 						CAST_UP(shared_data[0]), shared_apply, shared_del, operator_linop_get_graph);
 
 	lo->adjoint = operator_generic_create2(	2, (bool[2]){ true, false },
-						(int[2]){ IN, ON }, (const long* [2]){ idims, odims }, (const long* [2]){ istrs, ostrs },
+						(int[2]){ IN, ON }, (const bart_dim_t* [2]){ idims, odims }, (const bart_dim_t* [2]){ istrs, ostrs },
 						CAST_UP(shared_data[1]), shared_apply, shared_del, operator_linop_get_graph);
 
 	if (NULL != normal) {
 
 		lo->normal = operator_generic_create2(	2, (bool[2]){ true, false },
-							(int[2]){ IN, IN }, (const long* [2]){ idims, idims }, (const long* [2]){ istrs, istrs },
+							(int[2]){ IN, IN }, (const bart_dim_t* [2]){ idims, idims }, (const bart_dim_t* [2]){ istrs, istrs },
 							CAST_UP(shared_data[2]), shared_apply, shared_del, operator_linop_get_graph);
 
 	} else {
@@ -248,8 +248,8 @@ struct linop_s* linop_with_graph_create2(int ON, const long odims[ON], const lon
 /**
  * Create a linear operator (with strides)
  */
-struct linop_s* linop_create2(int ON, const long odims[ON], const long ostrs[ON],
-				int IN, const long idims[IN], const long istrs[IN],
+struct linop_s* linop_create2(int ON, const bart_dim_t odims[ON], const bart_stride_t ostrs[ON],
+				int IN, const bart_dim_t idims[IN], const bart_stride_t istrs[IN],
 				linop_data_t* data, lop_fun_t forward, lop_fun_t adjoint, lop_fun_t normal,
 				lop_p_fun_t norm_inv, del_fun_t del)
 {
@@ -272,12 +272,12 @@ struct linop_s* linop_create2(int ON, const long odims[ON], const long ostrs[ON]
  * @param
  * @param
  */
-struct linop_s* linop_with_graph_create(int ON, const long odims[ON], int IN, const long idims[IN], linop_data_t* data,
+struct linop_s* linop_with_graph_create(int ON, const bart_dim_t odims[ON], int IN, const bart_dim_t idims[IN], linop_data_t* data,
 					lop_fun_t forward, lop_fun_t adjoint, lop_fun_t normal, lop_p_fun_t norm_inv, del_fun_t del,
 					lop_graph_t get_graph)
 {
-	long ostrs[ON];
-	long istrs[IN];
+	bart_stride_t ostrs[ON];
+	bart_stride_t istrs[IN];
 	md_calc_strides(ON, ostrs, odims, CFL_SIZE);
 	md_calc_strides(IN, istrs, idims, CFL_SIZE);
 
@@ -297,11 +297,11 @@ struct linop_s* linop_with_graph_create(int ON, const long odims[ON], int IN, co
  * @param norm_inv function for applying the pseudo-inverse operation, (A^H A + mu I)^-1
  * @param del function for freeing the data
  */
-struct linop_s* linop_create(int ON, const long odims[ON], int IN, const long idims[IN], linop_data_t* data,
+struct linop_s* linop_create(int ON, const bart_dim_t odims[ON], int IN, const bart_dim_t idims[IN], linop_data_t* data,
 				lop_fun_t forward, lop_fun_t adjoint, lop_fun_t normal, lop_p_fun_t norm_inv, del_fun_t del)
 {
-	long ostrs[ON];
-	long istrs[IN];
+	bart_stride_t ostrs[ON];
+	bart_stride_t istrs[IN];
 	md_calc_strides(ON, ostrs, odims, CFL_SIZE);
 	md_calc_strides(IN, istrs, idims, CFL_SIZE);
 
@@ -403,8 +403,8 @@ extern const struct linop_s* linop_get_normal(const struct linop_s* x)
  * @param sdims dimensions of the input (domain)
  * @param src input data
  */
-void linop_forward(const struct linop_s* op, int DN, const long ddims[DN], complex float* dst,
-			int SN, const long sdims[SN], const complex float* src)
+void linop_forward(const struct linop_s* op, int DN, const bart_dim_t ddims[DN], complex float* dst,
+			int SN, const bart_dim_t sdims[SN], const complex float* src)
 {
 	assert(op->forward);
 	operator_apply(op->forward, DN, ddims, dst, SN, sdims, src);
@@ -423,8 +423,8 @@ void linop_forward(const struct linop_s* op, int DN, const long ddims[DN], compl
  * @param sdims dimensions of the input (codomain)
  * @param src input data
  */
-void linop_adjoint(const struct linop_s* op, int DN, const long ddims[DN], complex float* dst,
-			int SN, const long sdims[SN], const complex float* src)
+void linop_adjoint(const struct linop_s* op, int DN, const bart_dim_t ddims[DN], complex float* dst,
+			int SN, const bart_dim_t sdims[SN], const complex float* src)
 {
 	assert(op->adjoint);
 	operator_apply(op->adjoint, DN, ddims, dst, SN, sdims, src);
@@ -445,8 +445,8 @@ void linop_adjoint(const struct linop_s* op, int DN, const long ddims[DN], compl
  * @param src input data
  */
 void linop_pseudo_inv(const struct linop_s* op, float lambda,
-			int DN, const long ddims[DN], complex float* dst,
-			int SN, const long sdims[SN], const complex float* src)
+			int DN, const bart_dim_t ddims[DN], complex float* dst,
+			int SN, const bart_dim_t sdims[SN], const complex float* src)
 {
 	complex float* adj = md_alloc_sameplace(DN, ddims, CFL_SIZE, dst);
 
@@ -469,7 +469,7 @@ void linop_pseudo_inv(const struct linop_s* op, float lambda,
  * @param dst output data
  * @param src input data
  */
-void linop_normal(const struct linop_s* op, int N, const long dims[N], complex float* dst, const complex float* src)
+void linop_normal(const struct linop_s* op, int N, const bart_dim_t dims[N], complex float* dst, const complex float* src)
 {
 	assert(op->normal);
 	operator_apply(op->normal, N, dims, dst, N, dims, src);
@@ -561,7 +561,7 @@ const struct iovec_s* linop_codomain(const struct linop_s* op)
 
 
 
-struct linop_s* linop_null_create2(int NO, const long odims[NO], const long ostrs[NO], int NI, const long idims[NI], const long istrs[NI])
+struct linop_s* linop_null_create2(int NO, const bart_dim_t odims[NO], const bart_stride_t ostrs[NO], int NI, const bart_dim_t idims[NI], const bart_stride_t istrs[NI])
 {
 	PTR_ALLOC(struct linop_s, c);
 
@@ -590,7 +590,7 @@ bool linop_is_null(const struct linop_s* lop)
 
 
 
-struct linop_s* linop_null_create(int NO, const long odims[NO], int NI, const long idims[NI])
+struct linop_s* linop_null_create(int NO, const bart_dim_t odims[NO], int NI, const bart_dim_t idims[NI])
 {
 	return linop_null_create2(NO, odims, MD_STRIDES(NO, odims, CFL_SIZE),
 					NI, idims, MD_STRIDES(NI, idims, CFL_SIZE));
@@ -715,10 +715,10 @@ struct stack_op_s {
 
 	int N;
 	const struct linop_s** lops;
-	long* offset;
+	bart_stride_t* offset;
 
 	int D;
-	const long* dims;
+	const bart_dim_t* dims;
 };
 
 static DEF_TYPEID(stack_op_s);
@@ -800,13 +800,13 @@ struct linop_s* linop_stack_cod(int N, const struct linop_s* lops[N], int stack_
 	int NI = linop_domain(lops[0])->N;
 	int NO = linop_codomain(lops[0])->N;
 
-	long odims[NO];
-	long idims[NI];
+	bart_dim_t odims[NO];
+	bart_dim_t idims[NI];
 
 	md_copy_dims(NO, odims, linop_codomain(lops[0])->dims);
 	md_copy_dims(NI, idims, linop_domain(lops[0])->dims);
 
-	long offset[N];
+	bart_stride_t offset[N];
 	offset[0] = 0;
 
 
@@ -814,15 +814,15 @@ struct linop_s* linop_stack_cod(int N, const struct linop_s* lops[N], int stack_
 
 		assert(NI == linop_domain(lops[i])->N);
 		assert(NO == linop_codomain(lops[i])->N);
-		assert(md_check_equal_dims(NI, idims, linop_domain(lops[i])->dims, ~0UL));
+		assert(md_check_equal_dims(NI, idims, linop_domain(lops[i])->dims, ~UINT64_C(0)));
 		assert(md_check_equal_dims(NO, odims, linop_codomain(lops[i])->dims, ~MD_BIT(stack_dim)));
 
 		offset[i] = odims[stack_dim] * md_calc_size(stack_dim, odims);
 		odims[stack_dim] += linop_codomain(lops[i])->dims[stack_dim];
 	}
 
-	long istrs[NI];
-	long ostrs[NO];
+	bart_stride_t istrs[NI];
+	bart_stride_t ostrs[NO];
 
 	md_calc_strides(NI, istrs, idims, CFL_SIZE);
 	md_calc_strides(NO, ostrs, odims, CFL_SIZE);
@@ -832,8 +832,8 @@ struct linop_s* linop_stack_cod(int N, const struct linop_s* lops[N], int stack_
 	for (int i = 0; i < N; i++)
 		data->lops[i] = linop_copy_wrapper2(NI, istrs, NO, ostrs, lops[i]);
 
-	data->offset = ARR_CLONE(long[N], offset);
-	data->dims = ARR_CLONE(long[NI], idims);
+	data->offset = ARR_CLONE(bart_dim_t[N], offset);
+	data->dims = ARR_CLONE(bart_dim_t[NI], idims);
 
 	data->D = NI;
 	data->N = N;
@@ -855,7 +855,7 @@ struct linop_s* linop_stack_cod_F(int N, const struct linop_s* lops[N], int stac
 
 
 
-static void merge_dims(int D, long odims[D], const long idims1[D], const long idims2[D])
+static void merge_dims(int D, bart_dim_t odims[D], const bart_dim_t idims1[D], const bart_dim_t idims2[D])
 {
 	md_copy_dims(D, odims, idims1);
 
@@ -869,16 +869,16 @@ static void merge_dims(int D, long odims[D], const long idims1[D], const long id
 }
 
 
-struct linop_s* linop_loop(int D, const long dims[D], struct linop_s* op)
+struct linop_s* linop_loop(int D, const bart_dim_t dims[D], struct linop_s* op)
 {
 	assert(D == linop_codomain(op)->N);
 	assert(D == linop_domain(op)->N);
 
-	long odims[D];
-	long idims[D];
+	bart_dim_t odims[D];
+	bart_dim_t idims[D];
 
-	long ostrs[D];
-	long istrs[D];
+	bart_stride_t ostrs[D];
+	bart_stride_t istrs[D];
 
 	merge_dims(D, odims, dims, linop_codomain(op)->dims);
 	merge_dims(D, idims, dims, linop_domain(op)->dims);
@@ -906,7 +906,7 @@ struct linop_s* linop_loop(int D, const long dims[D], struct linop_s* op)
 	return PTR_PASS(op2);
 }
 
-struct linop_s* linop_loop_F(int D, const long dims[D], struct linop_s* op)
+struct linop_s* linop_loop_F(int D, const bart_dim_t dims[D], struct linop_s* op)
 {
 	auto result = linop_loop(D, dims, op);
 	
@@ -915,16 +915,16 @@ struct linop_s* linop_loop_F(int D, const long dims[D], struct linop_s* op)
 	return result;
 }
 
-struct linop_s* linop_copy_wrapper2(int DI, const long istrs[DI], int DO, const long ostrs[DO], const struct linop_s* op)
+struct linop_s* linop_copy_wrapper2(int DI, const bart_stride_t istrs[DI], int DO, const bart_stride_t ostrs[DO], const struct linop_s* op)
 {
 	PTR_ALLOC(struct linop_s, op2);
 
 	assert(linop_codomain(op)->N == DO);
 	assert(linop_domain(op)->N == DI);
 
-	const long* strsx[2] = { ostrs, istrs };
-	const long* strsy[2] = { istrs, ostrs };
-	const long* strsz[2] = { istrs, istrs };
+	const bart_dim_t* strsx[2] = { ostrs, istrs };
+	const bart_dim_t* strsy[2] = { istrs, ostrs };
+	const bart_dim_t* strsz[2] = { istrs, istrs };
 
 	op2->forward = operator_copy_wrapper(2, strsx, op->forward);
 	op2->adjoint = operator_copy_wrapper(2, strsy, op->adjoint);
@@ -934,7 +934,7 @@ struct linop_s* linop_copy_wrapper2(int DI, const long istrs[DI], int DO, const 
 	return PTR_PASS(op2);
 }
 
-struct linop_s* linop_copy_wrapper(int D, const long istrs[D], const long ostrs[D], const struct linop_s* op)
+struct linop_s* linop_copy_wrapper(int D, const bart_stride_t istrs[D], const bart_stride_t ostrs[D], const struct linop_s* op)
 {
 	return linop_copy_wrapper2(D, istrs, D, ostrs, op);
 }
@@ -1048,7 +1048,7 @@ struct linop_s* linop_plus_FF(const struct linop_s* a, const struct linop_s* b)
 }
 
 
-struct linop_s* linop_reshape_in(const struct linop_s* op, int NI, const long idims[NI])
+struct linop_s* linop_reshape_in(const struct linop_s* op, int NI, const bart_dim_t idims[NI])
 {
 	PTR_ALLOC(struct linop_s, c);
 
@@ -1072,7 +1072,7 @@ struct linop_s* linop_reshape_in(const struct linop_s* op, int NI, const long id
 	return PTR_PASS(c);
 }
 
-struct linop_s* linop_reshape_out(const struct linop_s* op, int NO, const long odims[NO])
+struct linop_s* linop_reshape_out(const struct linop_s* op, int NO, const bart_dim_t odims[NO])
 {
 	PTR_ALLOC(struct linop_s, c);
 
@@ -1084,7 +1084,7 @@ struct linop_s* linop_reshape_out(const struct linop_s* op, int NO, const long o
 	return PTR_PASS(c);
 }
 
-struct linop_s* linop_reshape_in_F(const struct linop_s* op, int NI, const long idims[NI])
+struct linop_s* linop_reshape_in_F(const struct linop_s* op, int NI, const bart_dim_t idims[NI])
 {
 	auto result = linop_reshape_in(op, NI, idims);
 
@@ -1093,7 +1093,7 @@ struct linop_s* linop_reshape_in_F(const struct linop_s* op, int NI, const long 
 	return result;
 }
 
-struct linop_s* linop_reshape_out_F(const struct linop_s* op, int NO, const long odims[NO])
+struct linop_s* linop_reshape_out_F(const struct linop_s* op, int NO, const bart_dim_t odims[NO])
 {
 	auto result = linop_reshape_out(op, NO, odims);
 

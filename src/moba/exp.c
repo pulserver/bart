@@ -20,18 +20,18 @@
 #include "exp.h"
 
 
-struct nlop_s* nlop_exp_create(int N, const long dims[N], const complex float* enc)
+struct nlop_s* nlop_exp_create(int N, const bart_dim_t dims[N], const complex float* enc)
 {
 	auto lo = linop_fmac_create(N, dims, COEFF_FLAG, TE_FLAG, FFT_FLAGS,  enc);
 
-	long out_dims[N];
+	bart_dim_t out_dims[N];
 	md_select_dims(N, FFT_FLAGS | TE_FLAG, out_dims, dims);
 
 	auto nl1 = nlop_from_linop_F(lo);
 	auto nl2 = nlop_zexp_create(N, out_dims);
 	auto nl3 = nlop_chain_FF(nl1, nl2);
 
-	long dims1[N];
+	bart_dim_t dims1[N];
 	md_select_dims(N, ~TE_FLAG, dims1, out_dims);
 
 	auto nl4 = nlop_tenmul_create(N, out_dims, dims1, out_dims);

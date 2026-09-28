@@ -38,7 +38,7 @@ int main_estscaling(int argc, char* argv[argc])
 	};
 
 	bool invert = false;
-	long img_vec[3] = { 0, 0, 0 };
+	bart_dim_t img_vec[3] = { 0, 0, 0 };
 	float p = -1.;
 
 	const struct opt_s opts[] = {
@@ -50,18 +50,18 @@ int main_estscaling(int argc, char* argv[argc])
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
 
-	long ksp_dims[DIMS];
+	bart_dim_t ksp_dims[DIMS];
 	complex float* ksp = load_cfl(kspace_file, DIMS, ksp_dims);
 
-	long scaling_dims[DIMS];
+	bart_dim_t scaling_dims[DIMS];
 	md_select_dims(DIMS, BATCH_FLAG, scaling_dims, ksp_dims);
 
 	complex float* scaling = create_cfl(scaling_file, DIMS, scaling_dims);
 
-	long slc_dims[DIMS];
+	bart_dim_t slc_dims[DIMS];
 	md_select_dims(DIMS, ~BATCH_FLAG, slc_dims, ksp_dims);
 
-	for (long i = 0; i < ksp_dims[BATCH_DIM]; i++)
+	for (bart_dim_t i = 0; i < ksp_dims[BATCH_DIM]; i++)
 		scaling[i] = estimate_scaling(slc_dims, NULL, ksp + i * md_calc_size(DIMS, slc_dims), p);
 
 	unmap_cfl(DIMS, ksp_dims, ksp);
@@ -70,13 +70,13 @@ int main_estscaling(int argc, char* argv[argc])
 
 		float rescale = sqrtf(md_calc_size(3, img_vec) / (float)md_calc_size(3, ksp_dims));
 
-		for (long i = 0; i < ksp_dims[BATCH_DIM]; i++)
+		for (bart_dim_t i = 0; i < ksp_dims[BATCH_DIM]; i++)
 			scaling[i] = scaling[i] / rescale;
 	}
 
 	if (invert) {
 
-		for (long i = 0; i < ksp_dims[BATCH_DIM]; i++)
+		for (bart_dim_t i = 0; i < ksp_dims[BATCH_DIM]; i++)
 			scaling[i] = 1. / scaling[i];
 	}
 

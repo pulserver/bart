@@ -1,3 +1,5 @@
+#include "misc/dimtypes.h"
+
 
 struct fft_cuda_plan_s;
 

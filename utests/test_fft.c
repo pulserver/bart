@@ -15,7 +15,7 @@
 
 #include "utest.h"
 
-static bool test_fftmod_optimize(int N, const long dims[N], unsigned long flags, bool inv)
+static bool test_fftmod_optimize(int N, const bart_dim_t dims[N], bart_flags_t flags, bool inv)
 {
 	
 	complex float* ptr1 = md_alloc(N, dims, CFL_SIZE);

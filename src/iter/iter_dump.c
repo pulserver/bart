@@ -26,7 +26,7 @@ void iter_dump_free(const struct iter_dump_s* data)
 	data->free(data);
 }
 
-void iter_dump(const struct iter_dump_s* data, long epoch, long NI, const float* x[NI])
+void iter_dump(const struct iter_dump_s* data, bart_dim_t epoch, bart_dim_t NI, const float* x[NI])
 {
 	if ((NULL != data) && (NULL != data->fun))
 		data->fun(data, epoch, NI, x);
@@ -40,14 +40,14 @@ struct iter_dump_default_s {
 
 	int N;
 	int* D;
-	const long** dims;
+	const bart_dim_t** dims;
 
-	long save_mod;
+	bart_dim_t save_mod;
 };
 
 static DEF_TYPEID(iter_dump_default_s);
 
-static void iter_dump_default_fun(const struct iter_dump_s* _data, long epoch, long NI, const float* x[NI])
+static void iter_dump_default_fun(const struct iter_dump_s* _data, bart_dim_t epoch, bart_dim_t NI, const float* x[NI])
 {
 	auto data = CAST_DOWN(iter_dump_default_s, _data);
 
@@ -81,7 +81,7 @@ static void iter_dump_default_free(const struct iter_dump_s* _data)
 	xfree(_data);
 }
 
-const struct iter_dump_s* iter_dump_default_create(const char* base_filename, long save_mod, long NI, bool save_flag[NI], int D[NI], const long* dims[NI])
+const struct iter_dump_s* iter_dump_default_create(const char* base_filename, bart_dim_t save_mod, bart_dim_t NI, bool save_flag[NI], int D[NI], const bart_dim_t* dims[NI])
 {
 	PTR_ALLOC(struct iter_dump_default_s, result);
 	SET_TYPEID(iter_dump_default_s, result);
@@ -99,7 +99,7 @@ const struct iter_dump_s* iter_dump_default_create(const char* base_filename, lo
 		result->N += save_flag[i] ? 1 : 0;
 
 	PTR_ALLOC(int[result->N], nD);
-	PTR_ALLOC(const long*[result->N], ndims);
+	PTR_ALLOC(const bart_dim_t*[result->N], ndims);
 
 	int ip = 0;
 	for(int i = 0; i < NI; i++) {
@@ -108,7 +108,7 @@ const struct iter_dump_s* iter_dump_default_create(const char* base_filename, lo
 
 			(*nD)[ip] = D[i];
 
-			PTR_ALLOC(long[D[i]], ndim);
+			PTR_ALLOC(bart_dim_t[D[i]], ndim);
 			md_copy_dims(D[i], *ndim, dims[i]);
 			(*ndims)[ip] = *PTR_PASS(ndim);
 

@@ -2,6 +2,7 @@
 #ifndef _OPS_H
 #define _OPS_H
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 #include "misc/types.h"
 

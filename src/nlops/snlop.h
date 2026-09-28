@@ -2,6 +2,7 @@
 #ifndef _SNLOP_H
 #define _SNLOP_H
 
+#include "misc/dimtypes.h"
 #include "misc/types.h"
 #include "misc/shrdptr.h"
 
@@ -9,7 +10,7 @@ struct nlop_s;
 struct snlop_s;
 struct nlop_arg_s;
 
-typedef struct nlop_arg_s* (*nlop_arg_reshape_f)(const struct nlop_arg_s* arg, long N, const long dims[N]);
+typedef struct nlop_arg_s* (*nlop_arg_reshape_f)(const struct nlop_arg_s* arg, bart_dim_t N, const bart_dim_t dims[N]);
 typedef struct nlop_arg_s* (*nlop_arg_dup_f)(const struct nlop_arg_s* a, const struct nlop_arg_s* b);
 typedef struct nlop_arg_s* (*nlop_arg_stack_f)(const struct nlop_arg_s* a, const struct nlop_arg_s* b, int stack_dim, _Bool out);
 typedef void (*nlop_arg_del_f)(const struct nlop_arg_s* a);
@@ -56,8 +57,8 @@ void snlop_replace_oarg(arg_t narg, arg_t oarg);
 
 extern snlop_t snlop_from_nlop_F(const struct nlop_s* nlop);
 
-extern arg_t snlop_input(int N, const long dims[N], const char* name);
-extern arg_t snlop_const(int N, const long dims[N], const _Complex float* data, const char* name);
+extern arg_t snlop_input(int N, const bart_dim_t dims[N], const char* name);
+extern arg_t snlop_const(int N, const bart_dim_t dims[N], const _Complex float* data, const char* name);
 extern arg_t snlop_scalar(_Complex float val);
 extern void add_to_targs(arg_t arg);
 
@@ -77,9 +78,9 @@ extern const struct nlop_s* nlop_from_snlop_F(snlop_t snlop, int OO, arg_t oargs
 
 extern snlop_t snlop_from_arg(arg_t arg);
 
-extern arg_t arg_reshape(arg_t arg, int N, const long dims[N]);
-extern arg_t arg_reshape_in(arg_t arg, int N, const long dims[N]);
-extern arg_t arg_reshape_out(arg_t arg, int N, const long dims[N]);
+extern arg_t arg_reshape(arg_t arg, int N, const bart_dim_t dims[N]);
+extern arg_t arg_reshape_in(arg_t arg, int N, const bart_dim_t dims[N]);
+extern arg_t arg_reshape_out(arg_t arg, int N, const bart_dim_t dims[N]);
 
 extern arg_t snlop_stack(arg_t a, arg_t b, int stack_dim);
 extern arg_t snlop_stack_F(arg_t a, arg_t b, int stack_dim);

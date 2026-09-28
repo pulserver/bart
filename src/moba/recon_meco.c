@@ -56,7 +56,7 @@
 #include "optreg.h"
 
 
-void init_meco_maps(const long maps_dims[DIMS], complex float* maps, enum meco_model sel_model)
+void init_meco_maps(const bart_dim_t maps_dims[DIMS], complex float* maps, enum meco_model sel_model)
 {
 	if (MECO_PI == sel_model) {
 
@@ -67,16 +67,16 @@ void init_meco_maps(const long maps_dims[DIMS], complex float* maps, enum meco_m
 
 		md_clear(DIMS, maps_dims, maps, CFL_SIZE);
 
-		long NCOEFF = maps_dims[COEFF_DIM];
-		long pos[DIMS] = { };
+		bart_dim_t NCOEFF = maps_dims[COEFF_DIM];
+		bart_dim_t pos[DIMS] = { };
 
-		long map1_dims[DIMS];
+		bart_dim_t map1_dims[DIMS];
 		md_select_dims(DIMS, ~COEFF_FLAG, map1_dims, maps_dims);
 
 		complex float* map1 = md_alloc(DIMS, map1_dims, CFL_SIZE);
 
 		// W & F
-		unsigned long pd_flag = get_PD_flag(sel_model);
+		bart_flags_t pd_flag = get_PD_flag(sel_model);
 		float val = 0.1;
 
 		for (int n = 0; n < NCOEFF; n++) {
@@ -93,7 +93,7 @@ void init_meco_maps(const long maps_dims[DIMS], complex float* maps, enum meco_m
 
 // rescale the reconstructed maps to the unit of Hz
 // note: input and output are both maps
-static void rescale_maps(int model, double scaling_Y, const struct linop_s* op, const complex float* scaling, const long maps_dims[DIMS], complex float* maps)
+static void rescale_maps(int model, double scaling_Y, const struct linop_s* op, const complex float* scaling, const bart_dim_t maps_dims[DIMS], complex float* maps)
 {
 	if (MECO_PI == model) {
 
@@ -103,19 +103,19 @@ static void rescale_maps(int model, double scaling_Y, const struct linop_s* op, 
 
 		md_zsmul(DIMS, maps_dims, maps, maps, 1000.); // kHz --> Hz
 
-		long nr_coeff = maps_dims[COEFF_DIM];
+		bart_dim_t nr_coeff = maps_dims[COEFF_DIM];
 
-		unsigned long fB0_flag = get_fB0_flag(model);
+		bart_flags_t fB0_flag = get_fB0_flag(model);
 
-		long map_dims[DIMS];
+		bart_dim_t map_dims[DIMS];
 		md_select_dims(DIMS, ~COEFF_FLAG, map_dims, maps_dims);
 
 		complex float* map = md_alloc_sameplace(DIMS, map_dims, CFL_SIZE, maps);
 
 
-		long pos[DIMS] = { [0 ... DIMS - 1] = 0 };
+		bart_dim_t pos[DIMS] = { [0 ... DIMS - 1] = 0 };
 
-		for (long n = 0; n < nr_coeff; n++) {
+		for (bart_dim_t n = 0; n < nr_coeff; n++) {
 
 			pos[COEFF_DIM] = n;
 			md_copy_block(DIMS, pos, map_dims, map, maps_dims, maps, CFL_SIZE);
@@ -138,34 +138,34 @@ static void rescale_maps(int model, double scaling_Y, const struct linop_s* op, 
 void meco_recon(const struct moba_conf* moba_conf,
 		enum meco_model sel_model, bool real_pd, enum fat_spec fat_spec,
 		const float* scale_fB0, bool warmstart, bool out_origin_maps,
-		const long maps_dims[DIMS], complex float* maps,
-		const long sens_dims[DIMS], complex float* sens,
-		const long init_dims[DIMS], const complex float* init,
+		const bart_dim_t maps_dims[DIMS], complex float* maps,
+		const bart_dim_t sens_dims[DIMS], complex float* sens,
+		const bart_dim_t init_dims[DIMS], const complex float* init,
 		const complex float* mask,
 		const complex float* TE,
-		const long P_dims[DIMS], const complex float* Pin,
-		const long Y_dims[DIMS], const complex float* Y)
+		const bart_dim_t P_dims[DIMS], const complex float* Pin,
+		const bart_dim_t Y_dims[DIMS], const complex float* Y)
 {
 	// setup pointer
 
-	long frame_pos[DIMS] = { };
-	long P_pos[DIMS] = { };
+	bart_dim_t frame_pos[DIMS] = { };
+	bart_dim_t P_pos[DIMS] = { };
 
 	complex float* maps_ptr = (void*)maps + md_calc_offset(DIMS, MD_STRIDES(DIMS, maps_dims, CFL_SIZE), frame_pos);
 	complex float* sens_ptr = (void*)sens + md_calc_offset(DIMS, MD_STRIDES(DIMS, sens_dims, CFL_SIZE), frame_pos);
 
-	unsigned long fft_flags = FFT_FLAGS;
+	bart_flags_t fft_flags = FFT_FLAGS;
 
 
 	// dimensions & size
 
-	long maps_1s_dims[DIMS];
+	bart_dim_t maps_1s_dims[DIMS];
 	md_copy_dims(DIMS, maps_1s_dims, maps_dims);
 
-	long sens_1s_dims[DIMS];
+	bart_dim_t sens_1s_dims[DIMS];
 	md_copy_dims(DIMS, sens_1s_dims, sens_dims);
 
-	long Y_1s_dims[DIMS];
+	bart_dim_t Y_1s_dims[DIMS];
 	md_copy_dims(DIMS, Y_1s_dims, Y_dims);
 
 	if (!moba_conf->stack_frames) {
@@ -176,13 +176,13 @@ void meco_recon(const struct moba_conf* moba_conf,
 		Y_1s_dims[TIME_DIM] = 1;
 	}
 
-	long maps_1s_size = md_calc_size(DIMS, maps_1s_dims);
-	long sens_1s_size = md_calc_size(DIMS, sens_1s_dims);
+	bart_dim_t maps_1s_size = md_calc_size(DIMS, maps_1s_dims);
+	bart_dim_t sens_1s_size = md_calc_size(DIMS, sens_1s_dims);
 
-	long x_1s_size = maps_1s_size + sens_1s_size;
-	long y_1s_size = md_calc_size(DIMS, Y_1s_dims);
+	bart_dim_t x_1s_size = maps_1s_size + sens_1s_size;
+	bart_dim_t y_1s_size = md_calc_size(DIMS, Y_1s_dims);
 
-	long meco_1s_dims[DIMS];
+	bart_dim_t meco_1s_dims[DIMS];
 	md_select_dims(DIMS, fft_flags|TE_FLAG|TIME_FLAG, meco_1s_dims, Y_1s_dims);
 
 	// init maps and sens
@@ -193,7 +193,7 @@ void meco_recon(const struct moba_conf* moba_conf,
 
 		md_copy(DIMS, maps_1s_dims, maps_ptr, init, CFL_SIZE); // maps
 
-		long init_size = md_calc_size(DIMS, init_dims);
+		bart_dim_t init_size = md_calc_size(DIMS, init_dims);
 
 		if (init_size > maps_1s_size) {
 
@@ -215,7 +215,7 @@ void meco_recon(const struct moba_conf* moba_conf,
 		md_clear(DIMS, sens_1s_dims, sens_ptr, CFL_SIZE);
 	}
 
-	long mask_dims[DIMS];
+	bart_dim_t mask_dims[DIMS];
 	md_select_dims(DIMS, FFT_FLAGS, mask_dims, maps_dims);
 
 	md_zmul2(DIMS, maps_1s_dims, MD_STRIDES(DIMS, maps_1s_dims, CFL_SIZE), maps_ptr,
@@ -248,7 +248,7 @@ void meco_recon(const struct moba_conf* moba_conf,
 	complex float* xref_akt = md_alloc_sameplace(1, MD_DIMS(x_1s_size), CFL_SIZE, Y);
 
 
-	for (long f = 0; f < (moba_conf->stack_frames ? 1 : Y_dims[TIME_DIM]); f++) {
+	for (bart_dim_t f = 0; f < (moba_conf->stack_frames ? 1 : Y_dims[TIME_DIM]); f++) {
 
 		debug_printf(DP_INFO, moba_conf->stack_frames ? ">>> stack " : ">>> frame ");
 		debug_printf(DP_INFO, "%3ld\n", f);
@@ -309,7 +309,7 @@ void meco_recon(const struct moba_conf* moba_conf,
 		irgnm_conf.cgtol = 0.01;
 		irgnm_conf.nlinv_legacy = false;
 
-		long x_dims[DIMS];
+		bart_dim_t x_dims[DIMS];
 		md_merge_dims(DIMS, x_dims, maps_1s_dims, sens_1s_dims); // mixed
 
 		// linearized reconstruction

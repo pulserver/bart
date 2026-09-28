@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include <stdbool.h>
 #include <complex.h>
 

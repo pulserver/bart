@@ -1,3 +1,4 @@
+#include "misc/dimtypes.h"
 #include "misc/graph.h"
 
 struct operator_s;

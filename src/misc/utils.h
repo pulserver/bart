@@ -1,5 +1,6 @@
 
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 extern void normalizel1(int N, bart_flags_t flags, const bart_dim_t dims[__VLA(N)], _Complex float* maps);

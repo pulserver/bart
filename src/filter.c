@@ -107,7 +107,7 @@ int main_filter(int argc, char* argv[argc])
 		filter_type = 'C';
 	}
 
-	long in_dims[DIMS];
+	bart_dim_t in_dims[DIMS];
 
 	complex float* in_data = load_cfl(in_file, DIMS, in_dims);
 
@@ -116,22 +116,22 @@ int main_filter(int argc, char* argv[argc])
 	assert(len > 0);
 	assert(len <= in_dims[dim]);
 
-	long tmp_dims[DIMS + 1];
+	bart_dim_t tmp_dims[DIMS + 1];
 	md_copy_dims(DIMS, tmp_dims, in_dims);
 	tmp_dims[DIMS] = 1;
 
-	long tmp_strs[DIMS + 1];
+	bart_stride_t tmp_strs[DIMS + 1];
 	md_calc_strides(DIMS, tmp_strs, tmp_dims, CFL_SIZE);
 
 	tmp_dims[dim] = in_dims[dim] - len + 1;
 
-	long tmp2_strs[DIMS + 1];
+	bart_stride_t tmp2_strs[DIMS + 1];
 	md_calc_strides(DIMS + 1, tmp2_strs, tmp_dims, CFL_SIZE);
 
 	tmp_dims[DIMS] = len;
 	tmp_strs[DIMS] = tmp_strs[dim];
 
-	long out_dims[DIMS];
+	bart_dim_t out_dims[DIMS];
 	md_copy_dims(DIMS, out_dims, ((diff >= 0) || (back >= 0)) ? in_dims : tmp_dims);
 
 	complex float* out_data = create_cfl(out_file, DIMS, out_dims);

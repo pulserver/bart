@@ -2,6 +2,7 @@
 #ifndef _STREAM_PROTOCOL_H
 #define _STREAM_PROTOCOL_H 1
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 #define MSG_HDR_SIZE 24

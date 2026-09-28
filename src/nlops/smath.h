@@ -1,3 +1,5 @@
+#include "misc/dimtypes.h"
+
 
 struct arg_s;
 struct nlop_s;
@@ -37,18 +39,18 @@ extern arg_t snlop_spow_F(arg_t arg, _Complex float pow);
 extern arg_t snlop_scale(arg_t arg, _Complex float scale);
 extern arg_t snlop_scale_F(arg_t arg, _Complex float scale);
 
-extern arg_t snlop_cdiag(arg_t arg, int N, const long dims[N], const _Complex float* diag);
-extern arg_t snlop_cdiag_F(arg_t arg, int N, const long dims[N], const _Complex float* diag);
-extern arg_t snlop_fmac(arg_t arg, int N, const long dims[N], const _Complex float* ten, unsigned long oflags);
-extern arg_t snlop_fmac_F(arg_t arg, int N, const long dims[N], const _Complex float* ten, unsigned long oflags);
+extern arg_t snlop_cdiag(arg_t arg, int N, const bart_dim_t dims[N], const _Complex float* diag);
+extern arg_t snlop_cdiag_F(arg_t arg, int N, const bart_dim_t dims[N], const _Complex float* diag);
+extern arg_t snlop_fmac(arg_t arg, int N, const bart_dim_t dims[N], const _Complex float* ten, bart_flags_t oflags);
+extern arg_t snlop_fmac_F(arg_t arg, int N, const bart_dim_t dims[N], const _Complex float* ten, bart_flags_t oflags);
 
 extern arg_t snlop_stack(arg_t a, arg_t b, int stack_dim);
 extern arg_t snlop_stack_F(arg_t a, arg_t b, int stack_dim);
 
-extern arg_t snlop_mul(arg_t a, arg_t b, unsigned long flags);
-extern arg_t snlop_mul_F(arg_t a, arg_t b, unsigned long flags);
-extern arg_t snlop_div(arg_t a, arg_t b, unsigned long flags);
-extern arg_t snlop_div_F(arg_t a, arg_t b, unsigned long flags);
+extern arg_t snlop_mul(arg_t a, arg_t b, bart_flags_t flags);
+extern arg_t snlop_mul_F(arg_t a, arg_t b, bart_flags_t flags);
+extern arg_t snlop_div(arg_t a, arg_t b, bart_flags_t flags);
+extern arg_t snlop_div_F(arg_t a, arg_t b, bart_flags_t flags);
 extern arg_t snlop_mul_simple(arg_t a, arg_t b);
 extern arg_t snlop_div_simple(arg_t a, arg_t b);
 

@@ -41,7 +41,7 @@ int main_transpose(int argc, char* argv[argc])
 	num_init();
 
 	int N = DIMS;
-	long idims[N];
+	bart_dim_t idims[N];
 
 	if ((0 > dim1) || (dim1 >= N))
 		error("dim1 must be between 0 and %d", N - 1);
@@ -51,7 +51,7 @@ int main_transpose(int argc, char* argv[argc])
 
 	complex float* idata = load_cfl(in_file, N, idims);
 
-	long odims[N];
+	bart_dim_t odims[N];
 	md_transpose_dims(N, dim1, dim2, odims, idims);
 
 	complex float* odata = create_cfl(out_file, N, odims);

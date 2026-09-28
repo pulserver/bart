@@ -110,7 +110,7 @@ int main_denoise(int argc, char* argv[argc])
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
 
-	long img_dims[DIMS];
+	bart_dim_t img_dims[DIMS];
 
 	// load image data and get dimensions
 

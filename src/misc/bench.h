@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include "misc/nested.h"
 #include <stdbool.h>
 

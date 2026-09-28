@@ -21,7 +21,7 @@
 static bool test_snlop_abs(void)
 {
 	enum { N = 4, M = 4 };
-	long dims[N] = { M, 1, 1, 1 };
+	bart_dim_t dims[N] = { M, 1, 1, 1 };
 
 	arg_t x = snlop_input(N, dims, "x");
 	arg_t abs_x = snlop_abs(x);
@@ -47,7 +47,7 @@ UT_REGISTER_TEST(test_snlop_abs);
 
 
 static bool test_snlop_unary2(float eps, complex float (*fun)(complex float), arg_t (*snlop)(arg_t),
-			int N, const long dims[N], int M, const complex float in[M])
+			int N, const bart_dim_t dims[N], int M, const complex float in[M])
 {
 	assert(M == md_calc_size(N, dims));
 
@@ -75,7 +75,7 @@ static bool test_snlop_unary2(float eps, complex float (*fun)(complex float), ar
 static bool test_snlop_unary(complex float (*fun)(complex float), arg_t (*snlop)(arg_t), const complex float in[4])
 {
 	enum { N = 4, M = 4 };
-	long dims[N] = { M, 1, 1, 1 };
+	bart_dim_t dims[N] = { M, 1, 1, 1 };
 
 	return test_snlop_unary2(0., fun, snlop, N, dims, M, in);
 }
@@ -90,7 +90,7 @@ UT_REGISTER_TEST(test_snlop_exp);
 
 static bool test_snlop_log(void)
 {
-	return test_snlop_unary(clogf, snlop_log, (complex float[4]){ 1l, 2.718282, -1., 1. + 1.i });
+	return test_snlop_unary(clogf, snlop_log, (complex float[4]){ INT64_C(1), 2.718282, -1., 1. + 1.i });
 }
 
 UT_REGISTER_TEST(test_snlop_log);
@@ -132,7 +132,7 @@ UT_REGISTER_TEST(test_snlop_conj);
 
 static bool test_snlop_sqrt(void)
 {
-	long dims[4] = { 4, 1, 1, 1 };
+	bart_dim_t dims[4] = { 4, 1, 1, 1 };
 	return test_snlop_unary2(1.e-7, csqrtf, snlop_sqrt, 4, dims, 4, (complex float[4]){ 1., 4., -1., 2. + 2.i });
 }
 
@@ -153,7 +153,7 @@ UT_REGISTER_TEST(test_snlop_inv);
 static bool test_snlop_pow(void)
 {
 	enum { N = 4, M = 4 };
-	long dims[N] = { M, 1, 1, 1 };
+	bart_dim_t dims[N] = { M, 1, 1, 1 };
 
 	arg_t x = snlop_input(N, dims, "x");
 	arg_t pow_x = snlop_spow(x, 2.);
@@ -180,7 +180,7 @@ UT_REGISTER_TEST(test_snlop_pow);
 static bool test_snlop_scale(void)
 {
 	enum { N = 4, M = 4 };
-	long dims[N] = { M, 1, 1, 1 };
+	bart_dim_t dims[N] = { M, 1, 1, 1 };
 
 	arg_t x = snlop_input(N, dims, "x");
 	arg_t scale_x = snlop_scale(x, 2.);
@@ -207,7 +207,7 @@ UT_REGISTER_TEST(test_snlop_scale);
 static bool test_snlop_cdiag(void)
 {
 	enum { N = 4 };
-	long dims[N] = { 4, 3, 1, 1 };
+	bart_dim_t dims[N] = { 4, 3, 1, 1 };
 
 	const complex float diag[] = {
 	    1., 2., 3., 4.,
@@ -240,7 +240,7 @@ UT_REGISTER_TEST(test_snlop_cdiag);
 static bool test_snlop_fmac(void)
 {
 	enum { N = 4 };
-	long dims[N] = { 2, 2, 1, 1 };
+	bart_dim_t dims[N] = { 2, 2, 1, 1 };
 
 	const complex float ten[] = { 1., 2., 3., 4. };
 
@@ -269,7 +269,7 @@ UT_REGISTER_TEST(test_snlop_fmac);
 static bool test_snlop_stack(void)
 {
 	enum { N = 4 };
-	long dims[N] = { 4, 1, 1, 1 };
+	bart_dim_t dims[N] = { 4, 1, 1, 1 };
 
 	arg_t x1 = snlop_input(N, dims, "x1");
 	arg_t x2 = snlop_input(N, dims, "x2");
@@ -299,7 +299,7 @@ static bool test_snlop_binary(arg_t (*snlop)(arg_t x1, arg_t x2),
 		const complex float in1[4], const complex float in2[4], const complex float ref[4])
 {
 	enum { N = 4 };
-	long dims[N] = { 2, 2, 1, 1 };
+	bart_dim_t dims[N] = { 2, 2, 1, 1 };
 
 	arg_t x1 = snlop_input(N, dims, "x1");
 	arg_t x2 = snlop_input(N, dims, "x2");
@@ -335,13 +335,13 @@ UT_REGISTER_TEST(test_snlop_mul_simple);
 static bool test_snlop_mul(void)
 {
 	enum { N = 4 };
-	long dims[N] = { 2, 3, 1, 1 };
+	bart_dim_t dims[N] = { 2, 3, 1, 1 };
 
-	long odims[N] = { 3, 1, 1, 1 };
+	bart_dim_t odims[N] = { 3, 1, 1, 1 };
 
 	arg_t x1 = snlop_input(N, dims, "x1");
 	arg_t x2 = snlop_input(N, dims, "x2");
-	arg_t mul_x = snlop_mul(x1, x2, 1UL);
+	arg_t mul_x = snlop_mul(x1, x2, UINT64_C(1));
 
 	arg_t iargs[2] = { x1, x2 };
 	arg_t oargs[1] = { mul_x };
@@ -379,13 +379,13 @@ UT_REGISTER_TEST(test_snlop_div_simple);
 static bool test_snlop_div(void)
 {
 	enum { N = 4 };
-	long dims[N] = { 2, 3, 1, 1 };
+	bart_dim_t dims[N] = { 2, 3, 1, 1 };
 
-	long odims[N] = { 3, 1, 1, 1 };
+	bart_dim_t odims[N] = { 3, 1, 1, 1 };
 
 	arg_t x1 = snlop_input(N, dims, "x1");
 	arg_t x2 = snlop_input(N, dims, "x2");
-	arg_t div = snlop_div(x1, x2, 1UL);
+	arg_t div = snlop_div(x1, x2, UINT64_C(1));
 
 	arg_t iargs[2] = { x1, x2 };
 	arg_t oargs[1] = { div };
@@ -435,7 +435,7 @@ UT_REGISTER_TEST(test_snlop_sub);
 static bool test_snlop_axpbz(void)
 {
 	enum { N = 4 };
-	long dims[N] = { 2, 3, 1, 1 };
+	bart_dim_t dims[N] = { 2, 3, 1, 1 };
 
 	arg_t a = snlop_input(N, dims, "a");
 	arg_t b = snlop_input(N, dims, "b");
@@ -477,7 +477,7 @@ UT_REGISTER_TEST(test_snlop_axpbz);
 static bool test_snlop_add_scalar(void)
 {
 	enum { N = 4 };
-	long dims[N] = { 4, 1, 1, 1 };
+	bart_dim_t dims[N] = { 4, 1, 1, 1 };
 
 	// 1 + x
 	arg_t x = snlop_input(N, dims, "x");
@@ -514,7 +514,7 @@ UT_REGISTER_TEST(test_snlop_add_scalar);
 static bool test_snlop_sub_scalar(void)
 {
 	enum { N = 4 };
-	long dims[N] = { 4, 1, 1, 1 };
+	bart_dim_t dims[N] = { 4, 1, 1, 1 };
 
 	// x - 1
 	arg_t x = snlop_input(N, dims, "x");
@@ -551,7 +551,7 @@ UT_REGISTER_TEST(test_snlop_sub_scalar);
 static bool test_snlop_fix_input(void)
 {
 	enum { N = 4 };
-	long dims[] = { 4, 1, 1, 1 };
+	bart_dim_t dims[] = { 4, 1, 1, 1 };
 
 	arg_t x = snlop_input(N, dims, "x");
 	arg_t zeros = snlop_scale(x, 0.);

@@ -25,19 +25,19 @@ struct casorati_s {
 
 	linop_data_t super;
 
-	unsigned long fflags;
+	bart_flags_t fflags;
 
 	int N;
-	const long* ddims;
+	const bart_dim_t* ddims;
 
-	const long* odims;
-	const long* idims;
+	const bart_dim_t* odims;
+	const bart_dim_t* idims;
 
-	const long* wodims;
-	const long* widims;
+	const bart_dim_t* wodims;
+	const bart_dim_t* widims;
 
-	const long* modims;
-	const long* midims;
+	const bart_dim_t* modims;
+	const bart_dim_t* midims;
 
 	struct multiplace_array_s* kern;
 	struct multiplace_array_s* omask;
@@ -46,16 +46,16 @@ struct casorati_s {
 
 static DEF_TYPEID(casorati_s);
 
-static struct casorati_s* casorati_data_create(int N, const long kdim[N], const long ddims[N], const complex float* data)
+static struct casorati_s* casorati_data_create(int N, const bart_dim_t kdim[N], const bart_dim_t ddims[N], const complex float* data)
 {
 	PTR_ALLOC(struct casorati_s, d);
 	SET_TYPEID(casorati_s, d);
 
-	long odim[N];
-	long idim[N];
+	bart_dim_t odim[N];
+	bart_dim_t idim[N];
 
 	// batch dimensions (not allowed by explicit casorati)
-	unsigned long bflags = ~md_nontriv_dims(N, ddims);
+	bart_flags_t bflags = ~md_nontriv_dims(N, ddims);
 
 	for (int i = 0; i < N; i++) {
 
@@ -65,11 +65,11 @@ static struct casorati_s* casorati_data_create(int N, const long kdim[N], const 
 		idim[i] = kdim[i];							// size of blocks
 	}
 
-	unsigned long tflags = ~md_nontriv_dims(N, idim) | ~md_nontriv_dims(N, odim);
-	unsigned long fflags = ~bflags & ~tflags;
+	bart_flags_t tflags = ~md_nontriv_dims(N, idim) | ~md_nontriv_dims(N, odim);
+	bart_flags_t fflags = ~bflags & ~tflags;
 
-	long widims[N];
-	long wodims[N];
+	bart_dim_t widims[N];
+	bart_dim_t wodims[N];
 	md_select_dims(N, md_nontriv_dims(N, idim), widims, ddims);
 	md_select_dims(N, md_nontriv_dims(N, odim), wodims, ddims);
 	md_max_dims(N, bflags, widims, widims, idim);
@@ -77,14 +77,14 @@ static struct casorati_s* casorati_data_create(int N, const long kdim[N], const 
 
 	complex float* kern = md_alloc_sameplace(N, ddims, CFL_SIZE, data);
 	ifft(N, ddims, fflags, kern, data);
-	long fft_dims[N];
+	bart_dim_t fft_dims[N];
 	md_select_dims(N, fflags, fft_dims, ddims);
 	md_zsmul(N, ddims, kern, kern, 1. / md_calc_size(N, fft_dims));
 	d->kern = multiplace_move_F(N, ddims, CFL_SIZE, kern);
 
-	long modims[N];
-	long midims[N];
-	long tdims[N];
+	bart_dim_t modims[N];
+	bart_dim_t midims[N];
+	bart_dim_t tdims[N];
 	md_select_dims(N, fflags, modims, wodims);
 	md_select_dims(N, fflags, midims, widims);
 
@@ -101,13 +101,13 @@ static struct casorati_s* casorati_data_create(int N, const long kdim[N], const 
 	d->imask = multiplace_move_F(N, midims, CFL_SIZE, imask);
 
 	d->N = N;
-	d->ddims = ARR_CLONE(long[N], ddims);
-	d->odims = ARR_CLONE(long[N], odim);
-	d->idims = ARR_CLONE(long[N], idim);
-	d->wodims = ARR_CLONE(long[N], wodims);
-	d->widims = ARR_CLONE(long[N], widims);
-	d->modims = ARR_CLONE(long[N], modims);
-	d->midims = ARR_CLONE(long[N], midims);
+	d->ddims = ARR_CLONE(bart_dim_t[N], ddims);
+	d->odims = ARR_CLONE(bart_dim_t[N], odim);
+	d->idims = ARR_CLONE(bart_dim_t[N], idim);
+	d->wodims = ARR_CLONE(bart_dim_t[N], wodims);
+	d->widims = ARR_CLONE(bart_dim_t[N], widims);
+	d->modims = ARR_CLONE(bart_dim_t[N], modims);
+	d->midims = ARR_CLONE(bart_dim_t[N], midims);
 
 	d->fflags = fflags;
 
@@ -248,7 +248,7 @@ static void casoratiH_normal(const linop_data_t* data, complex float* dst, const
  * @return linop
  * if ddims is singleton, kdim can be non-singleton which is interpreted as a batch dimension
 */
-const struct linop_s* linop_casorati_create(int N, const long kdim[N], const long ddims[N], const complex float* data)
+const struct linop_s* linop_casorati_create(int N, const bart_dim_t kdim[N], const bart_dim_t ddims[N], const complex float* data)
 {
 	auto d = casorati_data_create(N, kdim, ddims, data);
 
@@ -264,7 +264,7 @@ const struct linop_s* linop_casorati_create(int N, const long kdim[N], const lon
  * @return linop
  * if ddims is singleton, kdim can be non-singleton which is interpreted as a batch dimension
 */
-const struct linop_s* linop_casoratiH_create(int N, const long kdim[N], const long ddims[N], const complex float* data)
+const struct linop_s* linop_casoratiH_create(int N, const bart_dim_t kdim[N], const bart_dim_t ddims[N], const complex float* data)
 {
 	auto d = casorati_data_create(N, kdim, ddims, data);
 
@@ -272,12 +272,12 @@ const struct linop_s* linop_casoratiH_create(int N, const long kdim[N], const lo
 }
 
 
-void casorati_gram(int M, complex float out[M][M], int N, const long kdims[N], const long dims[N], const complex float* data)
+void casorati_gram(int M, complex float out[M][M], int N, const bart_dim_t kdims[N], const bart_dim_t dims[N], const complex float* data)
 {
 	assert(M == md_calc_size(N, kdims));
 
-	long kdimsB[N + 1];
-	long dimsB[N + 1];
+	bart_dim_t kdimsB[N + 1];
+	bart_dim_t dimsB[N + 1];
 
 	kdimsB[N] = M;
 	dimsB[N] = 1;
@@ -286,14 +286,14 @@ void casorati_gram(int M, complex float out[M][M], int N, const long kdims[N], c
 
 	const struct linop_s* lop_casorati = linop_casorati_create(N + 1, kdimsB, dimsB, data);
 
-	long odims[2] = { M, M };
+	bart_dim_t odims[2] = { M, M };
 
 	complex float* id = md_alloc_sameplace(2, odims, CFL_SIZE, &out[0][0]);
 	md_clear(2, odims, id, CFL_SIZE);
 
 	complex float* one = md_alloc_sameplace(1, MD_DIMS(1), CFL_SIZE, &out[0][0]);
 	md_zfill(1, MD_DIMS(1), one, 1.);
-	md_copy2(1, MD_DIMS(M), MD_DIMS((1 + M) * (long)CFL_SIZE), id, MD_DIMS(0), one, CFL_SIZE);
+	md_copy2(1, MD_DIMS(M), MD_DIMS((1 + M) * (bart_stride_t)CFL_SIZE), id, MD_DIMS(0), one, CFL_SIZE);
 	md_free(one);
 
 	linop_normal_unchecked(lop_casorati, &out[0][0], id);
@@ -307,12 +307,12 @@ void casorati_gram(int M, complex float out[M][M], int N, const long kdims[N], c
 }
 
 
-void casorati_gram_eig_nystroem(int K, int P, int M, float eig[K], complex float out[K][M], int N, const long kdims[N], const long dims[N], const complex float* data)
+void casorati_gram_eig_nystroem(int K, int P, int M, float eig[K], complex float out[K][M], int N, const bart_dim_t kdims[N], const bart_dim_t dims[N], const complex float* data)
 {
 	assert(M == md_calc_size(N, kdims));
 
-	long kdimsB[N + 1];
-	long dimsB[N + 1];
+	bart_dim_t kdimsB[N + 1];
+	bart_dim_t dimsB[N + 1];
 
 	kdimsB[N] = K + P;
 	dimsB[N] = 1;

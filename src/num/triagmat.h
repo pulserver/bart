@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 extern bart_dim_t upper_triag_idx(bart_dim_t i, bart_dim_t j);

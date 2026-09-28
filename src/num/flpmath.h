@@ -2,6 +2,7 @@
 #ifndef _FLPMATH_H
 #define _FLPMATH_H
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 #include <stdbool.h>

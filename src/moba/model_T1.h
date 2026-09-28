@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include <complex.h>
 
 #include "misc/mri.h"
@@ -19,7 +20,7 @@ struct mobamod {
 #endif
 
 
-extern struct mobamod T1_create(const long dims[DIMS], const complex float* mask, const complex float* TI, const complex float* psf,
+extern struct mobamod T1_create(const bart_dim_t dims[DIMS], const complex float* mask, const complex float* TI, const complex float* psf,
 				float scaling_M0, float scaling_R1s, const struct noir_model_conf_s* conf, float fov);
 
 

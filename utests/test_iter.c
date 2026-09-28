@@ -36,7 +36,7 @@
 static bool test_iter_irgnm0(bool v2, bool ref)
 {
 	enum { N = 3 };
-	long dims[N] = { 10, 7, 3 };
+	bart_dim_t dims[N] = { 10, 7, 3 };
 
 	complex float* dst1 = md_alloc(N, dims, CFL_SIZE);
 	complex float* src1 = md_alloc(N, dims, CFL_SIZE);
@@ -71,7 +71,7 @@ static bool test_iter_irgnm0(bool v2, bool ref)
 static bool test_iter_irgnm_lsqr0(bool ref)
 {
 	enum { N = 3 };
-	long dims[N] = { 10, 7, 3 };
+	bart_dim_t dims[N] = { 10, 7, 3 };
 
 	complex float* dst1 = md_alloc(N, dims, CFL_SIZE);
 	complex float* src1 = md_alloc(N, dims, CFL_SIZE);
@@ -133,9 +133,9 @@ static bool test_iter_irgnm_lsqr0(bool ref)
 static bool test_iter_irgnm_lsqr1(bool ref, bool regu)
 {
 	enum { N = 3 };
-	long dims[N]  = { 10, 7, 3 };
-	long dims1[N] = { 10, 7, 1 };
-	long dims2[N] = { 10, 7, 2 };
+	bart_dim_t dims[N]  = { 10, 7, 3 };
+	bart_dim_t dims1[N] = { 10, 7, 1 };
+	bart_dim_t dims2[N] = { 10, 7, 2 };
 
 	complex float* dst1 = md_alloc(N, dims, CFL_SIZE);
 	complex float* src1 = md_alloc(N, dims, CFL_SIZE);
@@ -239,9 +239,9 @@ UT_REGISTER_TEST(test_iter_irgnm_lsqr_l1);
 static bool test_iter_irgnm_l1(void)
 {
 	enum { N = 3 };
-	long dims[N] = { 4, 2, 3 };
-	long dims1[N] = { 4, 2, 1 };
-	long dims2[N] = { 4, 2, 2 };
+	bart_dim_t dims[N] = { 4, 2, 3 };
+	bart_dim_t dims1[N] = { 4, 2, 1 };
+	bart_dim_t dims2[N] = { 4, 2, 2 };
 
 	complex float* dst1 = md_alloc(N, dims, CFL_SIZE);
 	complex float* src1 = md_alloc(N, dims, CFL_SIZE);
@@ -317,7 +317,7 @@ UT_REGISTER_TEST(test_iter_irgnm_l1);
 static bool test_iter_lsqr_warmstart(void)
 {
 	enum { N = 3 };
-	long dims[N] = { 4, 2, 3 };
+	bart_dim_t dims[N] = { 4, 2, 3 };
 
 	complex float* src = md_alloc(N, dims, CFL_SIZE);
 	complex float* dst = md_alloc(N, dims, CFL_SIZE);
@@ -360,13 +360,13 @@ UT_REGISTER_TEST(test_iter_lsqr_warmstart);
 static bool test_iter_eulermaruyama(void)
 {
 	enum { N = 2 };
-	long dims[N] = { 300, 10 };
+	bart_dim_t dims[N] = { 300, 10 };
 
 	complex float* src = md_calloc(N, dims, CFL_SIZE);
 	complex float* dst = md_calloc(N, dims, CFL_SIZE);
 
 	complex float diag[] = { 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9 };
-	const struct linop_s* id = linop_cdiag_create(N, dims, 2UL, diag);
+	const struct linop_s* id = linop_cdiag_create(N, dims, UINT64_C(2), diag);
 
 	struct lsqr_conf conf = lsqr_defaults;
 	struct iter_eulermaruyama_conf em_conf = iter_eulermaruyama_defaults;
@@ -386,7 +386,7 @@ static bool test_iter_eulermaruyama(void)
 	operator_p_apply(lsqr, 1., N, dims, dst, N, dims, src);
 
 	complex float std[10];
-	md_zstd(N, dims, 1UL, std, dst);
+	md_zstd(N, dims, UINT64_C(1), std, dst);
 
 	for (int i = 0; i < 10; i++)
 		if (cabsf(diag[i] * std[i] - 1.f) > 0.1)
@@ -411,13 +411,13 @@ UT_REGISTER_TEST(test_iter_eulermaruyama);
 static bool test_iter_eulermaruyama_precond(void)
 {
 	enum { N = 2 };
-	long dims[N] = { 300, 10 };
+	bart_dim_t dims[N] = { 300, 10 };
 
 	complex float* src = md_calloc(N, dims, CFL_SIZE);
 	complex float* dst = md_calloc(N, dims, CFL_SIZE);
 
 	complex float diag[] = { 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9 };
-	const struct linop_s* id = linop_cdiag_create(N, dims, 2UL, diag);
+	const struct linop_s* id = linop_cdiag_create(N, dims, UINT64_C(2), diag);
 
 	struct lsqr_conf conf = lsqr_defaults;
 	struct iter_eulermaruyama_conf em_conf = iter_eulermaruyama_defaults;
@@ -441,7 +441,7 @@ static bool test_iter_eulermaruyama_precond(void)
 	operator_p_apply(lsqr, 1., N, dims, dst, N, dims, src);
 
 	complex float std[10];
-	md_zstd(N, dims, 1UL, std, dst);
+	md_zstd(N, dims, UINT64_C(1), std, dst);
 
 	for (int i = 0; i < 10; i++)
 		if (cabsf(diag[i] * std[i] - 1.f) > 0.1)

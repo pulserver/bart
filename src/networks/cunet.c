@@ -62,12 +62,12 @@ struct nn_cunet_conf_s cunet_defaults = {
 	.strides = { 2, 2, 2 },
 };
 
-static nn_t instance_norm_plus_create(const long dims[5], const char* prefix)
+static nn_t instance_norm_plus_create(const bart_dim_t dims[5], const char* prefix)
 {
-	unsigned long flags = MD_BIT(1) | MD_BIT(2) | MD_BIT(3);
+	bart_flags_t flags = MD_BIT(1) | MD_BIT(2) | MD_BIT(3);
 
-	long sdims[5];
-	long wdims[5];
+	bart_dim_t sdims[5];
+	bart_dim_t wdims[5];
 	md_select_dims(5, ~flags, sdims, dims);
 	md_select_dims(5, MD_BIT(0), wdims, dims);
 
@@ -80,7 +80,7 @@ static nn_t instance_norm_plus_create(const long dims[5], const char* prefix)
 	adjusted_mean = nlop_reshape_in_F(adjusted_mean, 1, 1, wdims);
 
 	ret = nlop_chain2_swap_FF(ret, 1, adjusted_mean, 0);
-	ret = nlop_chain2_FF(ret, 0, nlop_zaxpbz2_create(5, dims, ~0UL, 1., ~flags, 1.), 1);
+	ret = nlop_chain2_FF(ret, 0, nlop_zaxpbz2_create(5, dims, ~UINT64_C(0), 1., ~flags, 1.), 1);
 	ret = nlop_link_F(ret, 1, 0);
 
 	const char* aname = ptr_printf("%s_alpha", prefix);
@@ -96,7 +96,7 @@ static nn_t instance_norm_plus_create(const long dims[5], const char* prefix)
 }
 
 
-static nn_t cond_res_block_create(struct nn_cunet_conf_s* conf, const long dims[5], const long dilations[3], const char* prefix, int index)
+static nn_t cond_res_block_create(struct nn_cunet_conf_s* conf, const bart_dim_t dims[5], const bart_dim_t dilations[3], const char* prefix, int index)
 {
 	const char* bname1 = ptr_printf("%s_cres%d_bias1", prefix, index);
 	const char* bname2 = ptr_printf("%s_cres%d_bias2", prefix, index);
@@ -121,14 +121,14 @@ static nn_t cond_res_block_create(struct nn_cunet_conf_s* conf, const long dims[
 
 	if (0 < conf->cunits) {
 
-		long cdims[2] = { conf->cunits, dims[4] };
+		bart_dim_t cdims[2] = { conf->cunits, dims[4] };
 
 		auto cond = nn_from_linop_F(linop_identity_create(2, cdims));
 		cond = nn_append_dense_layer(cond, 0, NULL, ecname, dims[0], NULL);
 		cond = nn_set_input_name_F(cond, 0, einame);
 
 		cdims[0] = dims[0];
-		auto nlop_add = nlop_zaxpbz2_create(5, dims, ~0UL, 1., MD_BIT(0) | MD_BIT(4), 1.);
+		auto nlop_add = nlop_zaxpbz2_create(5, dims, ~UINT64_C(0), 1., MD_BIT(0) | MD_BIT(4), 1.);
 		nlop_add = nlop_reshape_in_F(nlop_add, 1, 2, cdims);
 
 		cond = nn_chain2_FF(cond, 0, NULL, nn_from_nlop_F(nlop_add), 1, NULL);
@@ -158,7 +158,7 @@ static nn_t cond_res_block_create(struct nn_cunet_conf_s* conf, const long dims[
 
 
 
-static nn_t cunet_level_create(struct nn_cunet_conf_s* conf, int level, const long dims[5])
+static nn_t cunet_level_create(struct nn_cunet_conf_s* conf, int level, const bart_dim_t dims[5])
 {
 	const char* prefix = ptr_printf("level_%d", level);
 
@@ -177,7 +177,7 @@ static nn_t cunet_level_create(struct nn_cunet_conf_s* conf, int level, const lo
 		network = nn_stack_dup_by_name_F(network);
 	} else {
 
-		long low_channel = MIN(256, 2 * dims[0]);
+		bart_dim_t low_channel = MIN(256, 2 * dims[0]);
 		const char* dname = ptr_printf("%s_down_conv", prefix);
 		const char* uname = ptr_printf("%s_up_conv", prefix);
 
@@ -213,9 +213,9 @@ static nn_t cunet_level_create(struct nn_cunet_conf_s* conf, int level, const lo
 	return network;
 }
 
-static nn_t cunet_emb_create(struct nn_cunet_conf_s* conf, long Nb)
+static nn_t cunet_emb_create(struct nn_cunet_conf_s* conf, bart_dim_t Nb)
 {
-	long edims[2] = { 1, Nb };
+	bart_dim_t edims[2] = { 1, Nb };
 
 	auto nn_emb = nn_from_linop_F(linop_zreal_create(2, edims));
 	nn_emb = nn_reshape_in_F(nn_emb, 0, NULL, 1, edims + 1);
@@ -235,7 +235,7 @@ static nn_t cunet_emb_create(struct nn_cunet_conf_s* conf, long Nb)
 }
 
 
-nn_t cunet_create(struct nn_cunet_conf_s* conf, int N, const long dims[N])
+nn_t cunet_create(struct nn_cunet_conf_s* conf, int N, const bart_dim_t dims[N])
 {
 	struct nn_cunet_conf_s tconf = *conf;
 
@@ -284,34 +284,34 @@ nn_t cunet_create(struct nn_cunet_conf_s* conf, int N, const long dims[N])
 	return network;
 }
 
-nn_t cunet_bart_create(struct nn_cunet_conf_s* conf, int N, const long bdims[N])
+nn_t cunet_bart_create(struct nn_cunet_conf_s* conf, int N, const bart_dim_t bdims[N])
 {
 	assert(16 == N);
 
-	long idims[N];
+	bart_dim_t idims[N];
 	md_copy_dims(N, idims, bdims);
 
-	long channel = 1;
-	unsigned long channel_flag = (~(FFT_FLAGS | BATCH_FLAG)) & (md_nontriv_dims(N, idims));
+	bart_dim_t channel = 1;
+	bart_flags_t channel_flag = (~(FFT_FLAGS | BATCH_FLAG)) & (md_nontriv_dims(N, idims));
 	assert(1 >= bitcount(channel_flag)); // only one channel allowed
 	int ch_dim = md_min_idx(channel_flag);
 
 	// compute size of channel dimension
-	long chn_dims[N];
+	bart_dim_t chn_dims[N];
 	md_select_dims(N, channel_flag, chn_dims, idims);
 	channel = md_calc_size(N, chn_dims);
 
-	long dims[5];
+	bart_dim_t dims[5];
 	dims[0] = channel;
 	md_copy_dims(3, dims + 1, idims);
 	dims[4] = idims[BATCH_DIM];
 	
 	const int iperm[16] = { ch_dim, 0, 1, 2, 15, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 3 };
-	long idim_tmp[16];
+	bart_dim_t idim_tmp[16];
 	md_permute_dims(16, iperm, idim_tmp, idims);
 	
 	const int operm[16] = { 1      , 2, 3, 5, 0, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 4 };
-	long odim_tmp[16];
+	bart_dim_t odim_tmp[16];
 	md_permute_dims(16, operm, odim_tmp, idim_tmp);
 
 	auto network = cunet_create(conf, 5, dims);

@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include "misc/mri.h"
 
 struct linop_s;
@@ -16,6 +17,6 @@ struct mobamod {
 #endif
 
 
-extern struct mobamod T2_create(const long dims[DIMS], const complex float* mask, const complex float* TI, const complex float* psf, const struct noir_model_conf_s* conf);
+extern struct mobamod T2_create(const bart_dim_t dims[DIMS], const complex float* mask, const complex float* TI, const complex float* psf, const struct noir_model_conf_s* conf);
 
 

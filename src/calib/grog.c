@@ -31,14 +31,14 @@
 
 // Calculate log(GROG operator along spokes) = vtheta
 // 	-> Compare Eq. 8 in Seiberlich et al. MRM, 2008.
-static void estimate_vtheta(int D, const long vtheta_dims[D], complex float* vtheta, const long ddims[D], const complex float* data)
+static void estimate_vtheta(int D, const bart_dim_t vtheta_dims[D], complex float* vtheta, const bart_dim_t ddims[D], const complex float* data)
 {
 	// Allocate the two datasets s(theta, r) and s(theta, r+1)
-	long ddims_shift[D];
+	bart_dim_t ddims_shift[D];
 	md_copy_dims(D, ddims_shift, ddims);
 	ddims_shift[PHS1_DIM] -= 1;
 
-	long pos_shift[D];
+	bart_dim_t pos_shift[D];
 	for (int i = 0; i < D; i++)
 		pos_shift[i] = 0;
 
@@ -57,17 +57,17 @@ static void estimate_vtheta(int D, const long vtheta_dims[D], complex float* vth
 #pragma omp parallel for
 	for (int spoke = 0; spoke < ddims[PHS2_DIM]; spoke++) {
 
-		long pos[D];
+		bart_dim_t pos[D];
 		for (int i = 0; i < D; i++)
 			pos[i] = 0;
 
 		pos[PHS2_DIM] = spoke;
 
-		long tmp_dims[D];
+		bart_dim_t tmp_dims[D];
 		md_select_dims(D, ~PHS2_FLAG, tmp_dims, ddims_shift);
 		complex float* tmp = md_alloc(D, tmp_dims, CFL_SIZE);
 
-		long pinv_dims[D];
+		bart_dim_t pinv_dims[D];
 		md_transpose_dims(D, PHS1_DIM, COIL_DIM, pinv_dims, tmp_dims);
 		complex float* pinv = md_alloc(D, pinv_dims, CFL_SIZE);
 
@@ -80,7 +80,7 @@ static void estimate_vtheta(int D, const long vtheta_dims[D], complex float* vth
 
 		md_copy_block(D, pos, tmp_dims, tmp, ddims_shift, shift2, CFL_SIZE);
 
-		long Gtheta_dims[D];
+		bart_dim_t Gtheta_dims[D];
 		md_select_dims(D, COIL_FLAG, Gtheta_dims, ddims);
 		Gtheta_dims[MAPS_DIM] = ddims[COIL_DIM];
 
@@ -112,15 +112,15 @@ static void estimate_vtheta(int D, const long vtheta_dims[D], complex float* vth
 
 
 // Estimate pseudo inverse of distance matrix
-static void get_pseudo_dist(int D, const long pinv_dims[D], complex float* pinv, const long tdims[D], const complex float* traj)
+static void get_pseudo_dist(int D, const bart_dim_t pinv_dims[D], complex float* pinv, const bart_dim_t tdims[D], const complex float* traj)
 {
 	// Estimate distance matrix nm
 	// Assumption: RADIAL trajectories <- only single sample in PHS1_DIM is chosen
 
-	long nmdims[D];
+	bart_dim_t nmdims[D];
 	md_select_dims(D, READ_FLAG|PHS2_FLAG, nmdims, tdims);
 
-	long pos_sample[D];
+	bart_dim_t pos_sample[D];
 	for (int i = 0; i < D; i++)
 		pos_sample[i] = 0;
 
@@ -148,10 +148,10 @@ static void get_pseudo_dist(int D, const long pinv_dims[D], complex float* pinv,
 
 
 // Calculate lnG = log(GROG operator along axis) following Eq. 8
-static void estimate_lnG(int D, const long lnG_dims[D], complex float* lnG, const long vtheta_dims[D], const complex float* vtheta, const long pinv_dims[D], const complex float* pinv)
+static void estimate_lnG(int D, const bart_dim_t lnG_dims[D], complex float* lnG, const bart_dim_t vtheta_dims[D], const complex float* vtheta, const bart_dim_t pinv_dims[D], const complex float* pinv)
 {
 	// transpose dims for tenmul operation
-	long pinv_dimsT[D];
+	bart_dim_t pinv_dimsT[D];
 	md_transpose_dims(D, READ_DIM, PHS2_DIM, pinv_dimsT, pinv_dims);
 
 	complex float* pinvT = md_alloc(D, pinv_dimsT, CFL_SIZE);
@@ -161,7 +161,7 @@ static void estimate_lnG(int D, const long lnG_dims[D], complex float* lnG, cons
 	for (int i = 0; i < lnG_dims[COIL_DIM]; i++) {
 		for (int j = 0; j < lnG_dims[MAPS_DIM]; j++) {
 
-			long pos[D];
+			bart_dim_t pos[D];
 			for (int i = 0; i < D; i++)
 				pos[i] = 0;
 
@@ -169,14 +169,14 @@ static void estimate_lnG(int D, const long lnG_dims[D], complex float* lnG, cons
 			pos[MAPS_DIM] = j;
 
 			// Slice coil of vtheta
-			long tmp_dims[D];
+			bart_dim_t tmp_dims[D];
 			md_select_dims(D, ~(COIL_FLAG|MAPS_FLAG), tmp_dims, vtheta_dims);
 
 			complex float* tmp = md_alloc(D, tmp_dims, CFL_SIZE);
 
 			md_copy_block(D, pos, tmp_dims, tmp, vtheta_dims, vtheta, CFL_SIZE);
 
-			long tmp2_dims[D];
+			bart_dim_t tmp2_dims[D];
 			md_select_dims(D, READ_FLAG, tmp2_dims, pinv_dimsT); //pinv_dimsT[READ_DIM] == tdim[READ_DIM]
 
 			complex float* tmp2 = md_alloc(D, tmp2_dims, CFL_SIZE);
@@ -199,7 +199,7 @@ static void estimate_lnG(int D, const long lnG_dims[D], complex float* lnG, cons
 // Idea: Shifting a sample along a spoke with GROG operator G_theta to its neighbour.
 // Due to radial trajectories this can be exploited to learn the
 // operators acting on the individual axes: G_x, G_y, and G_z
-void grog_calib(int D, const long lnG_dims[D], complex float* lnG, const long tdims[D], const complex float* traj, const long ddims[D], const complex float* data)
+void grog_calib(int D, const bart_dim_t lnG_dims[D], complex float* lnG, const bart_dim_t tdims[D], const complex float* traj, const bart_dim_t ddims[D], const complex float* data)
 {
 	debug_printf(DP_DEBUG2, "tdims:\t");
 	debug_print_dims(DP_DEBUG2, D, tdims);
@@ -209,7 +209,7 @@ void grog_calib(int D, const long lnG_dims[D], complex float* lnG, const long td
 
 	// STEP 1. Calculate log(GROG operator along spokes) = vtheta
 
-	long vtheta_dims[D];
+	bart_dim_t vtheta_dims[D];
 	md_select_dims(D, ~PHS1_FLAG, vtheta_dims, ddims);
 	vtheta_dims[MAPS_DIM] = ddims[COIL_DIM]; // Number of coils
 
@@ -221,10 +221,10 @@ void grog_calib(int D, const long lnG_dims[D], complex float* lnG, const long td
 	// Here, the distance matrix is reused for all samples along
 	// a spoke. This takes the assumption of a RADIAL readout.
 
-	long tmp_dims[D];
+	bart_dim_t tmp_dims[D];
 	md_select_dims(D, READ_FLAG|PHS2_FLAG, tmp_dims, tdims);
 
-	long pinv_dims[D];
+	bart_dim_t pinv_dims[D];
 	md_transpose_dims(D, READ_DIM, PHS2_DIM, pinv_dims, tmp_dims);
 
 	complex float* pinv = md_alloc(D, pinv_dims, CFL_SIZE);
@@ -242,7 +242,7 @@ void grog_calib(int D, const long lnG_dims[D], complex float* lnG, const long td
 }
 
 
-static void apply_Gshift(int D, const long dims[D], complex float* data,
+static void apply_Gshift(int D, const bart_dim_t dims[D], complex float* data,
 		complex float* lnG_axis, float shift[3])
 {
 	int C = dims[COIL_DIM];
@@ -250,13 +250,13 @@ static void apply_Gshift(int D, const long dims[D], complex float* data,
 	assert(1 == dims[READ_DIM]);
 	assert(1 == dims[MAPS_DIM]);
 
-	long single_lnG_dims[D];
+	bart_dim_t single_lnG_dims[D];
 	md_singleton_dims(D, single_lnG_dims);
 
 	single_lnG_dims[COIL_DIM] = C;
 	single_lnG_dims[MAPS_DIM] = C;
 
-	long dimsT[D];
+	bart_dim_t dimsT[D];
 	md_transpose_dims(D, COIL_DIM, MAPS_DIM, dimsT, dims);
 
 	complex float* tmp = md_alloc(D, dims, CFL_SIZE); //for tenmul operation
@@ -297,9 +297,9 @@ static void apply_Gshift(int D, const long dims[D], complex float* data,
 
 
 // Gridding, following Eq. 2
-void grog_grid(int D, const long tdims[D], const complex float* traj_shift,
-		const long ddims[D], complex float* data_grid, const complex float* data,
-		const long lnG_dims[D], complex float* lnG)
+void grog_grid(int D, const bart_dim_t tdims[D], const complex float* traj_shift,
+		const bart_dim_t ddims[D], complex float* data_grid, const complex float* data,
+		const bart_dim_t lnG_dims[D], complex float* lnG)
 {
 	assert(3 == tdims[READ_DIM]);
 	assert(!md_check_dimensions(D, tdims, READ_FLAG|PHS1_FLAG|PHS2_FLAG));
@@ -311,19 +311,19 @@ void grog_grid(int D, const long tdims[D], const complex float* traj_shift,
 	assert(3 == lnG_dims[READ_DIM]);
 	assert(C == lnG_dims[COIL_DIM]);
 	assert(C == lnG_dims[MAPS_DIM]);
-	assert(3L * C * C == md_calc_size(D, lnG_dims));
+	assert(INT64_C(3) * C * C == md_calc_size(D, lnG_dims));
 
-	long tstrs[D];
+	bart_stride_t tstrs[D];
 	md_calc_strides(D, tstrs, tdims, CFL_SIZE);
 
-	long tmp_data_dims[D];
+	bart_dim_t tmp_data_dims[D];
 	md_select_dims(D, ~(PHS1_FLAG|PHS2_FLAG), tmp_data_dims, ddims);
 
 #pragma omp parallel for collapse(2)
 	for (int s = 0; s < ddims[PHS2_DIM]; s++) {		// Spoke
 		for (int r = 0; r < ddims[PHS1_DIM]; r++) {	// Readout sample
 
-			long pos[D];
+			bart_dim_t pos[D];
 			for (int i = 0; i < D; i++)
 				pos[i] = 0;
 

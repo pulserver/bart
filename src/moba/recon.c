@@ -37,16 +37,16 @@
 #include "recon.h"
 
 
-static void post_process(enum mdb_t mode, const struct linop_s* op, struct moba_conf_s* data, const long dims[DIMS], complex float* img)
+static void post_process(enum mdb_t mode, const struct linop_s* op, struct moba_conf_s* data, const bart_dim_t dims[DIMS], complex float* img)
 {
-	long imgs_dims[DIMS];
+	bart_dim_t imgs_dims[DIMS];
 	md_select_dims(DIMS, FFT_FLAGS|MAPS_FLAG|CSHIFT_FLAG|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, imgs_dims, dims);
 
-	long pos[DIMS] = { 0L };
+	bart_dim_t pos[DIMS] = { INT64_C(0) };
 
 	// Project B1 map back into image space
 
-        long map_dims[DIMS];
+        bart_dim_t map_dims[DIMS];
         md_select_dims(DIMS, FFT_FLAGS|TIME_FLAG|TIME2_FLAG, map_dims, dims);
 
 	complex float* tmp = md_alloc_sameplace(DIMS, map_dims, CFL_SIZE, img);
@@ -77,7 +77,7 @@ static void post_process(enum mdb_t mode, const struct linop_s* op, struct moba_
 
 		pos[COEFF_DIM] = 2;
 
-                long map_size = md_calc_size(DIMS, map_dims);
+                bart_dim_t map_size = md_calc_size(DIMS, map_dims);
 
 		md_copy_block(DIMS, pos, map_dims, tmp, imgs_dims, img, CFL_SIZE);
 
@@ -147,7 +147,7 @@ static void post_process(enum mdb_t mode, const struct linop_s* op, struct moba_
 }
 
 
-static void set_bloch_conf(enum mdb_t mode, struct mdb_irgnm_l1_conf* conf2, const struct moba_conf* conf, struct moba_conf_s* data, const long img_dims[DIMS])
+static void set_bloch_conf(enum mdb_t mode, struct mdb_irgnm_l1_conf* conf2, const struct moba_conf* conf, struct moba_conf_s* data, const bart_dim_t img_dims[DIMS])
 {
 	// T2 estimation turned off for IR FLASH Simulation
 
@@ -227,9 +227,9 @@ static void set_bloch_conf(enum mdb_t mode, struct mdb_irgnm_l1_conf* conf2, con
 
 
 
-static struct mobamod exp_create(const long dims[DIMS], const complex float* mask, const complex float* TE, const complex float* psf, const struct noir_model_conf_s* conf)
+static struct mobamod exp_create(const bart_dim_t dims[DIMS], const complex float* mask, const complex float* TE, const complex float* psf, const struct noir_model_conf_s* conf)
 {
-	long data_dims[DIMS];
+	bart_dim_t data_dims[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, data_dims, dims);
 
 	struct noir_s nlinv = noir_create(data_dims, mask, psf, conf);
@@ -237,7 +237,7 @@ static struct mobamod exp_create(const long dims[DIMS], const complex float* mas
 
 	assert(2 == dims[COEFF_DIM]);
 
-	long edims[DIMS];
+	bart_dim_t edims[DIMS];
 	md_select_dims(DIMS, TE_FLAG, edims, dims);
 
 	complex float* TE2 = md_alloc(DIMS, edims, CFL_SIZE);
@@ -266,23 +266,23 @@ static struct mobamod exp_create(const long dims[DIMS], const complex float* mas
 
 
 static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
-                const long dims[DIMS],
-		const long imgs_dims[DIMS], complex float* img,
-		const long coil_dims[DIMS], complex float* sens,
+                const bart_dim_t dims[DIMS],
+		const bart_dim_t imgs_dims[DIMS], complex float* img,
+		const bart_dim_t coil_dims[DIMS], complex float* sens,
 		const complex float* pattern,
 		const complex float* mask,
 		const complex float* TI,
 		const complex float* TE_IR_MGRE,
 		const complex float* b1,
 		const complex float* b0,
-		const long data_dims[DIMS], const complex float* kspace_data)
+		const bart_dim_t data_dims[DIMS], const complex float* kspace_data)
 {
-	unsigned long fft_flags = FFT_FLAGS;
+	bart_flags_t fft_flags = FFT_FLAGS;
 
 	if (conf->sms)
 		fft_flags |= SLICE_FLAG;
 
-	long img1_dims[DIMS];
+	bart_dim_t img1_dims[DIMS];
 	md_select_dims(DIMS, fft_flags, img1_dims, dims);
 
 
@@ -326,11 +326,11 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 		break;
 	}
 
-	long map_dims[DIMS];
+	bart_dim_t map_dims[DIMS];
 
 	md_copy_dims(DIMS, map_dims, imgs_dims);
 	map_dims[COEFF_DIM] = 1;
-	long pos[DIMS] = { 0L };
+	bart_dim_t pos[DIMS] = { INT64_C(0) };
 
 	if (MDB_IR_MGRE == conf->mode) {
 
@@ -347,11 +347,11 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 		md_copy_block(DIMS, pos, imgs_dims, img, map_dims, tmp, CFL_SIZE);
 	}
 
-	long skip = md_calc_size(DIMS, imgs_dims);
-	long size = skip + md_calc_size(DIMS, coil_dims);
-	long data_size = md_calc_size(DIMS, data_dims);
+	bart_dim_t skip = md_calc_size(DIMS, imgs_dims);
+	bart_dim_t size = skip + md_calc_size(DIMS, coil_dims);
+	bart_dim_t data_size = md_calc_size(DIMS, data_dims);
 
-	long d1[1] = { size };
+	bart_dim_t d1[1] = { size };
 	// variable which is optimized by the IRGNM
 	complex float* x = md_alloc_sameplace(1, d1, CFL_SIZE, kspace_data);
 	complex float* x_ref = md_alloc_sameplace(1, d1, CFL_SIZE, kspace_data);
@@ -388,7 +388,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 		.opt_reg = conf->opt_reg,
 		.step = conf->step,
 		.lower_bound = conf->lower_bound,
-		.l2flags = (0 == conf->l2para) ? ((1 == conf->opt_reg) ? (0UL) : ~(0UL)) : conf->l2para,
+		.l2flags = (0 == conf->l2para) ? ((1 == conf->opt_reg) ? (UINT64_C(0)) : ~(UINT64_C(0))) : conf->l2para,
 		.constrained_maps = conf->constrained_maps,
 		.auto_norm = conf->auto_norm,
 		.no_sens_l2 = data->other.no_sens_l2,
@@ -405,11 +405,11 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 
 	// Always constrain last parameter map as default
 	if (-1 == conf2.constrained_maps)
-		conf2.constrained_maps = (1UL << (dims[COEFF_DIM] - 1));
+		conf2.constrained_maps = (UINT64_C(1) << (dims[COEFF_DIM] - 1));
 
 	assert(0 <= conf2.constrained_maps);
 
-	long irgnm_conf_dims[DIMS];
+	bart_dim_t irgnm_conf_dims[DIMS];
 	md_select_dims(DIMS, fft_flags|MAPS_FLAG|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, irgnm_conf_dims, imgs_dims);
 
 	irgnm_conf_dims[COIL_DIM] = coil_dims[COIL_DIM];
@@ -455,14 +455,14 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 }
 
 
-void moba_recon(const struct moba_conf* conf, struct moba_conf_s* data, const long dims[DIMS], complex float* img, complex float* sens, const complex float* pattern, const complex float* mask, const complex float* TI, const complex float* TE, const complex float* b1, const complex float* b0, const complex float* kspace_data, const complex float* init)
+void moba_recon(const struct moba_conf* conf, struct moba_conf_s* data, const bart_dim_t dims[DIMS], complex float* img, complex float* sens, const complex float* pattern, const complex float* mask, const complex float* TI, const complex float* TE, const complex float* b1, const complex float* b0, const complex float* kspace_data, const complex float* init)
 {
-	long imgs_dims[DIMS];
-	long coil_dims[DIMS];
-	long data_dims[DIMS];
-	long pat_dims[DIMS];
+	bart_dim_t imgs_dims[DIMS];
+	bart_dim_t coil_dims[DIMS];
+	bart_dim_t data_dims[DIMS];
+	bart_dim_t pat_dims[DIMS];
 
-	unsigned long fft_flags = FFT_FLAGS;
+	bart_flags_t fft_flags = FFT_FLAGS;
 
 	if (conf->sms)
 		fft_flags |= SLICE_FLAG;

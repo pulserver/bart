@@ -48,11 +48,11 @@ int main_caldir(int argc, char* argv[argc])
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 
 	complex float* in_data = load_cfl(in_file, DIMS, dims);
 
-	long calsize[3] = { calsize_ro, calsize_ro, calsize_ro };
+	bart_dim_t calsize[3] = { calsize_ro, calsize_ro, calsize_ro };
 
 	assert((dims[0] == 1) || (calsize_ro < dims[0]));
 	assert(1 == dims[4]);
@@ -60,7 +60,7 @@ int main_caldir(int argc, char* argv[argc])
 	complex float* out_data = create_cfl(out_file, DIMS, dims);
 
 
-	long caldims[DIMS];
+	bart_dim_t caldims[DIMS];
 	complex float* cal_data = extract_calib(caldims, calsize, dims, in_data, false);
 
 	debug_printf(DP_DEBUG1, "Calibration region %ldx%ldx%ld\n", caldims[0], caldims[1], caldims[2]);

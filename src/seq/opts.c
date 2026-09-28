@@ -46,7 +46,7 @@ int read_config_from_str(struct seq_config* seq, int N, const char* buffer_in)
 	};
 
 
-	long custom_params_long[SEQ_MAX_PARAMS_LONG] = { 0 };
+	bart_dim_t custom_params_long[SEQ_MAX_PARAMS_LONG] = { 0 };
 	double custom_params_double[SEQ_MAX_PARAMS_DOUBLE] = { 0. };
 
 

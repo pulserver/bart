@@ -47,8 +47,8 @@ int main_crop(int argc, char* argv[argc])
 	num_init();
 
 	int N = DIMS;
-	long in_dims[N];
-	long out_dims[N];
+	bart_dim_t in_dims[N];
+	bart_dim_t out_dims[N];
 	
 	complex float* in_data = load_cfl(in_file, N, in_dims);
 

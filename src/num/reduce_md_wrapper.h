@@ -1,3 +1,5 @@
+#include "misc/dimtypes.h"
+
 extern void reduce_zadd_inner_gpu(int N, const bart_dim_t dims[__VLA(N)], const bart_stride_t ostr[__VLA(N)], _Complex float* optr, const bart_stride_t istr1[__VLA(N)], const _Complex float* iptr1, const bart_stride_t istr2[__VLA(N)], const _Complex float* iptr2);
 extern void reduce_zadd_outer_gpu(int N, const bart_dim_t dims[__VLA(N)], const bart_stride_t ostr[__VLA(N)], _Complex float* optr, const bart_stride_t istr1[__VLA(N)], const _Complex float* iptr1, const bart_stride_t istr2[__VLA(N)], const _Complex float* iptr2);
 extern void reduce_zadd_gemv(int N, const bart_dim_t dims[__VLA(N)], const bart_stride_t ostr[__VLA(N)], _Complex float* optr, const bart_stride_t istr1[__VLA(N)], const _Complex float* iptr1, const bart_stride_t istr2[__VLA(N)], const _Complex float* iptr2);

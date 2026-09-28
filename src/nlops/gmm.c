@@ -29,10 +29,10 @@ struct gmm_s {
 	nlop_data_t super;
 
 	int N;
-	const long* score_dims;
-	const long* mean_dims;
-	const long* var_dims;
-	const long* wgh_dims;
+	const bart_dim_t* score_dims;
+	const bart_dim_t* mean_dims;
+	const bart_dim_t* var_dims;
+	const bart_dim_t* wgh_dims;
 
 	struct multiplace_array_s* mean;
 	struct multiplace_array_s* var;
@@ -97,25 +97,25 @@ static void gmm_del(const nlop_data_t* _data)
  * @param var variance of each gaussian in the gaussian mixture model
  * @param wgh weighting of each gaussian in the gaussian mixture model
  */
-struct nlop_s* nlop_gmm_score_create(int N, const long score_dims[N], const long mean_dims[N], const _Complex float* mean, const long var_dims[N], const _Complex float* var, const long wgh_dims[N], const _Complex float* wgh)
+struct nlop_s* nlop_gmm_score_create(int N, const bart_dim_t score_dims[N], const bart_dim_t mean_dims[N], const _Complex float* mean, const bart_dim_t var_dims[N], const _Complex float* var, const bart_dim_t wgh_dims[N], const _Complex float* wgh)
 {
 	PTR_ALLOC(struct gmm_s, data);
 	SET_TYPEID(gmm_s, data);
 
 	data->N = N;
-	data->score_dims = ARR_CLONE(long[N], score_dims);
-	data->mean_dims = ARR_CLONE(long[N], mean_dims);
-	data->var_dims = ARR_CLONE(long[N], var_dims);
-	data->wgh_dims = ARR_CLONE(long[N], wgh_dims);
+	data->score_dims = ARR_CLONE(bart_dim_t[N], score_dims);
+	data->mean_dims = ARR_CLONE(bart_dim_t[N], mean_dims);
+	data->var_dims = ARR_CLONE(bart_dim_t[N], var_dims);
+	data->wgh_dims = ARR_CLONE(bart_dim_t[N], wgh_dims);
 
 	data->mean = multiplace_move(N, mean_dims, CFL_SIZE, mean);
 	data->var = multiplace_move(N, var_dims, CFL_SIZE, var);
 	data->wgh = multiplace_move(N, wgh_dims, CFL_SIZE, wgh);
 
-	long odims[1][N];
+	bart_dim_t odims[1][N];
 	md_copy_dims(N, odims[0], score_dims); // Output dimensions
 
-	long idims[2][N];
+	bart_dim_t idims[2][N];
 	md_copy_dims(N, idims[0], score_dims); // Input dimensions
 	md_singleton_dims(N, idims[1]); // Singleton (noise_level)
 

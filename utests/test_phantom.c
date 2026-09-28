@@ -24,7 +24,7 @@
 static bool test_stl_kspace(void)
 {
         bool b = true;
-        long stldims[3];
+        bart_dim_t stldims[3];
 
 	struct phantom_opts popts;
 	popts.kspace = true;
@@ -64,7 +64,7 @@ UT_REGISTER_TEST(test_stl_kspace);
 static bool test_stl_kspace2(void)
 {
         bool b = true;
-        long stldims[3];
+        bart_dim_t stldims[3];
 
 	struct phantom_opts popts;
 	popts.kspace = true;

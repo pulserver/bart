@@ -1,6 +1,8 @@
 #ifndef BART_API_H_INCLUDED
 #define BART_API_H_INCLUDED
 
+#include "misc/dimtypes.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -21,7 +23,7 @@ extern "C" {
       *  \return Pointer to the data or NULL if no matching in-memory CFL file
       *  was found
       */
-     void* load_mem_cfl(const char* name, unsigned int D, long dimensions[]);
+     void* load_mem_cfl(const char* name, unsigned int D, bart_dim_t dimensions[]);
      
      //! Register some memory into the list of in-memory CFL files
      /*! 
@@ -42,7 +44,7 @@ extern "C" {
       *  \warning Be aware that if MEMONLY_CFL is not defined, names that do not
       *  end with the '.mem' extension will be unreachable by user code
       */
-     void register_mem_cfl_malloc(const char* name, unsigned int D, const long dimensions[], void* ptr);
+     void register_mem_cfl_malloc(const char* name, unsigned int D, const bart_dim_t dimensions[], void* ptr);
 
      //! Register some memory into the list of in-memory CFL files
      /*! 
@@ -63,7 +65,7 @@ extern "C" {
       *  \warning Be aware that if MEMONLY_CFL is not defined, names that do not
       *  end with the '.mem' extension will be unreachable by user code
       */
-     void register_mem_cfl_new(const char* name, unsigned int D, const long dimensions[], void* ptr);
+     void register_mem_cfl_new(const char* name, unsigned int D, const bart_dim_t dimensions[], void* ptr);
 
      //! Register some memory into the list of in-memory CFL files
      /*! 
@@ -82,7 +84,7 @@ extern "C" {
       *  \warning Be aware that if MEMONLY_CFL is not defined, names that do not
       *  end with the '.mem' extension will be unreachable by user code
       */
-     void register_mem_cfl_non_managed(const char* name, unsigned int D, const long dims[], void* ptr);
+     void register_mem_cfl_non_managed(const char* name, unsigned int D, const bart_dim_t dims[], void* ptr);
      
      //! BART's main function
      /*!

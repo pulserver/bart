@@ -2,15 +2,16 @@
 #ifndef _SEQ_ADC_RF_H
 #define _SEQ_ADC_RF_H
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 #include "seq/config.h"
 #include "seq/event.h"
 
 extern double phase_clamp(double phase);
-extern long flash_ex_calls(const struct seq_config* seq);
+extern bart_dim_t flash_ex_calls(const struct seq_config* seq);
 
-double rf_spoiling(int D, const long pos[__VLA(D)], const struct seq_config* seq);
+double rf_spoiling(int D, const bart_dim_t pos[__VLA(D)], const struct seq_config* seq);
 
 int prep_rf_inversion(struct seq_event* rf_ev, double start, const struct seq_config* seq);
 int prep_rf_excitation(struct seq_event* rf_ev, double start, double rf_spoil_phase,

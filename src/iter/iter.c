@@ -211,7 +211,7 @@ static bool checkeps(float eps)
 void iter_conjgrad(iter_conf* _conf,
 		const struct operator_s* normaleq_op,
 		const struct operator_p_s* thresh_prox,
-		long size, float* image, const float* image_adj,
+		bart_dim_t size, float* image, const float* image_adj,
 		struct iter_monitor_s* monitor)
 {
 	assert(NULL == thresh_prox);
@@ -223,7 +223,7 @@ void iter_conjgrad(iter_conf* _conf,
 void iter_landweber(iter_conf* _conf,
 		const struct operator_s* normaleq_op,
 		const struct operator_p_s* thresh_prox,
-		long size, float* image, const float* image_adj,
+		bart_dim_t size, float* image, const float* image_adj,
 		struct iter_monitor_s* monitor)
 {
 	auto conf = CAST_DOWN(iter_landweber_conf, _conf);
@@ -248,7 +248,7 @@ cleanup:
 void iter_ist(iter_conf* _conf,
 		const struct operator_s* normaleq_op,
 		const struct operator_p_s* thresh_prox,
-		long size, float* image, const float* image_adj,
+		bart_dim_t size, float* image, const float* image_adj,
 		struct iter_monitor_s* monitor)
 {
 	iter2_ist(_conf, normaleq_op, 1, &thresh_prox, NULL, NULL, NULL, size, image, image_adj, monitor);
@@ -257,7 +257,7 @@ void iter_ist(iter_conf* _conf,
 void iter_eulermaruyama(iter_conf* _conf,
 		const struct operator_s* normaleq_op,
 		const struct operator_p_s* thresh_prox,
-		long size, float* image, const float* image_adj,
+		bart_dim_t size, float* image, const float* image_adj,
 		struct iter_monitor_s* monitor)
 {
 	iter2_eulermaruyama(_conf, normaleq_op, 1, &thresh_prox, NULL, NULL, NULL, size, image, image_adj, monitor);
@@ -266,7 +266,7 @@ void iter_eulermaruyama(iter_conf* _conf,
 void iter_fista(iter_conf* _conf,
 		const struct operator_s* normaleq_op,
 		const struct operator_p_s* thresh_prox,
-		long size, float* image, const float* image_adj,
+		bart_dim_t size, float* image, const float* image_adj,
 		struct iter_monitor_s* monitor)
 {
 	iter2_fista(_conf, normaleq_op, 1, &thresh_prox, NULL, NULL, NULL, size, image, image_adj, monitor);
@@ -277,7 +277,7 @@ void iter_fista(iter_conf* _conf,
 void iter_admm(iter_conf* _conf,
 		const struct operator_s* normaleq_op,
 		const struct operator_p_s* thresh_prox,
-		long size, float* image, const float* image_adj,
+		bart_dim_t size, float* image, const float* image_adj,
 		struct iter_monitor_s* monitor)
 {
 	const struct linop_s* eye[1] = { linop_identity_create(1, MD_DIMS(size / 2)) }; // using complex float identity operator... divide size by 2
@@ -291,7 +291,7 @@ void iter_admm(iter_conf* _conf,
 void iter_call_iter2(iter_conf* _conf,
 		const struct operator_s* normaleq_op,
 		const struct operator_p_s* thresh_prox,
-		long size, float* image, const float* image_adj,
+		bart_dim_t size, float* image, const float* image_adj,
 		struct iter_monitor_s* monitor)
 {
 	auto it = CAST_DOWN(iter2_call_s, _conf);

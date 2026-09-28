@@ -1,6 +1,7 @@
 
 struct isrmrm_config_s;
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 #include "ismrmrd/ismrmrd.h"
@@ -20,6 +21,6 @@ extern void ismrm_read_encoding_limits(const char* filename, struct isrmrm_confi
 extern void ismrm_read_encoding_limits_from_xml(const char* xml, struct isrmrm_config_s* config);
 
 extern void ismrm_stream_read_meta(struct isrmrm_config_s* config);
-extern long ismrm_stream_read_acquisition(struct isrmrm_config_s* config, ISMRMRD_NS(ISMRMRD_Acquisition)* c_acq);
+extern bart_dim_t ismrm_stream_read_acquisition(struct isrmrm_config_s* config, ISMRMRD_NS(ISMRMRD_Acquisition)* c_acq);
 
 #include "misc/cppwrap.h"
