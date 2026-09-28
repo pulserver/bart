@@ -147,7 +147,7 @@ endif
 
 ifneq (,$(findstring MSYS,$(UNAME))$(findstring MINGW,$(UNAME)))
 	BUILDTYPE = MSYS
-	CPPFLAGS += -DNO_FIFO
+	CPPFLAGS += -DNO_FIFO -DBARTLIB_STATIC
 	#LDFLAGS += -lucrtbase # support for %F, %T formatting codes in strftime()
 	#LDFLAGS += -static-libgomp
 	NOLAPACKE ?= 1
