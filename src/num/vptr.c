@@ -137,8 +137,15 @@ struct vptr_hint_s* vptr_hint_create(unsigned long mpi_flags, int N, const long 
 	long rank1[tot];
 	long rank2[tot];
 
+	long base = tot / max_proc;
+	long rem = tot % max_proc;
+	long split = rem * (base + 1);
+
 	for (long i = 0; i < tot; i++)
-		rank1[i] = i % max_proc;
+		if (i < split)
+    			rank1[i] = i / (base + 1);
+		else 
+			rank1[i] = rem + (i - split) / base;
 
 	int order[N];
 	for (int i = 0; i < N; i++)
