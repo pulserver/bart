@@ -2276,7 +2276,7 @@ static void delayed_optimize_unset_clear(list_t ops_queue)
 
 		delayed_op_t* op = list_get_item(ops_queue, i);
 
-		if (delayed_op_is_alloc(op) && vptr_is_set_clear(op->args[0].ptr_base)) {
+		if (delayed_op_is_alloc(op) && vptr_is_set_clear(op->args[0].ptr_base) && !mpi_is_set_reduction_buffer(op->args[0].ptr_base)) {
 
 			vptr_unset_clear(op->args[0].ptr_base);
 			op = delayed_op_clear_create(op->args[0].N, op->args[0].adims, op->args[0].astrs, op->args[0].ptr_base, op->args[0].asize);
