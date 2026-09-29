@@ -27,9 +27,9 @@
 #include "utils.h"
 
 
-void noir_calc_weights(double a, double b, const long dims[3], complex float* dst)
+void noir_calc_weights(double a, double b, const bart_dim_t dims[3], complex float* dst)
 {
-	unsigned long flags = 0UL;
+	bart_flags_t flags = 0;
 
 	for (int i = 0; i < 3; i++)
 		if (1 != dims[i])
@@ -45,7 +45,7 @@ void noir_calc_weights(double a, double b, const long dims[3], complex float* ds
 	md_zspow(3, dims, dst, dst, -b / 2.);	// 1 + 220. \Laplace^16
 }
 
-static struct linop_s* linop_ifft_resize_create(int N, unsigned long flags, const long osdims[N], const long idims[N], const long kdims[N])
+static struct linop_s* linop_ifft_resize_create(int N, bart_flags_t flags, const bart_dim_t osdims[N], const bart_dim_t idims[N], const bart_dim_t kdims[N])
 {
 
 	auto lop_ret = linop_ifft_create(N, osdims, flags);
@@ -80,23 +80,23 @@ static struct linop_s* linop_ifft_resize_create(int N, unsigned long flags, cons
  * img_spacing = dx = fov / img_dims
  * ksp_spacing = dk = img_dims / fov
  */
-struct linop_s* linop_noir_weights_create(int N, const long img_dims[N], const long ksp_dims[N], const long ref_dims[N], unsigned long flags, double factor_fov, double a, double b, double c)
+struct linop_s* linop_noir_weights_create(int N, const bart_dim_t img_dims[N], const bart_dim_t ksp_dims[N], const bart_dim_t ref_dims[N], bart_flags_t flags, double factor_fov, double a, double b, double c)
 {
 	flags &= md_nontriv_dims(N, img_dims);
 
 	assert(md_nontriv_dims(N, img_dims) == md_nontriv_dims(N, ksp_dims));
 	assert(md_check_equal_dims(N, img_dims, ksp_dims, ~flags));
 
-	long os_dims[N];
+	bart_dim_t os_dims[N];
 
 	for (int i = 0; i < N; i++) {
 
-		os_dims[i] = lround(img_dims[i] * (MD_IS_SET(flags, i) ? fabs(factor_fov) : 1.));
+		os_dims[i] = llround(img_dims[i] * (MD_IS_SET(flags, i) ? fabs(factor_fov) : 1.));
 		if (fabs(img_dims[i] * (MD_IS_SET(flags, i) ? fabs(factor_fov) : 1.) - os_dims[i]) > 0.0001)
-			debug_printf(DP_WARN, "Sobolev oversampling factor %f is incompatible with grid size %ld!\n", factor_fov, img_dims[i]);
+			debug_printf(DP_WARN, "Sobolev oversampling factor %f is incompatible with grid size %" PRId64 "!\n", factor_fov, img_dims[i]);
 	}
 
-	long wgh_dims[N];
+	bart_dim_t wgh_dims[N];
 	md_select_dims(N, flags, wgh_dims, os_dims);
 
 	complex float* wgh = md_alloc(N, wgh_dims, CFL_SIZE);
@@ -118,8 +118,8 @@ struct linop_s* linop_noir_weights_create(int N, const long img_dims[N], const l
 
 	lop_ret = linop_ifft_resize_create(N, flags, os_dims, img_dims, ksp_dims);
 
-	long wgh_ksp_dims[N];
-	long wgh_img_dims[N];
+	bart_dim_t wgh_ksp_dims[N];
+	bart_dim_t wgh_img_dims[N];
 
 	md_select_dims(N, flags, wgh_ksp_dims, ksp_dims);
 	md_select_dims(N, flags, wgh_img_dims, img_dims);

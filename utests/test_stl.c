@@ -27,7 +27,7 @@
 
 static bool test_stl_normal_vector(void)
 {
-        long dims[3], strs[3], pos[3];
+        bart_dim_t dims[3], strs[3], pos[3];
         md_set_dims(3, pos, 0);
 
         double* model = stl_internal_tetrahedron(dims);
@@ -78,7 +78,7 @@ UT_REGISTER_TEST(test_stl_normal_vector);
 static bool test_stl_cfl_double_conversion(void)
 {
         bool b = true;
-        long dims[3];
+        bart_dim_t dims[3];
         double* model = stl_internal_tetrahedron(dims);
 
         complex float* cmodel = md_alloc(3, dims, CFL_SIZE);
@@ -93,17 +93,17 @@ static bool test_stl_cfl_double_conversion(void)
         md_zsub(3, dims, s, cmodel, cmodel0);
 
         complex float r;
-        md_zsum(3, dims, ~0UL, &r, s);
+        md_zsum(3, dims, ~UINT64_C(0), &r, s);
         if (0 < sqrt(creal(r) * creal(r) + cimag(r) * cimag(r)))
                 b = false;
-        long pos[3], strs[3];
+        bart_dim_t pos[3], strs[3];
         md_set_dims(3, pos, 0);
         md_calc_strides(3, strs, dims, DL_SIZE);
 
         double d = 0;
         do {
                 d += MD_ACCESS(3, strs, pos, model) - MD_ACCESS(3, strs, pos, model0);
-        } while(md_next(3, dims, ~0UL, pos));
+        } while(md_next(3, dims, ~UINT64_C(0), pos));
 
         if (0 < d)
                 b = false;
@@ -148,7 +148,7 @@ static bool check_triangle(const struct triangle* t)
 static bool test_stlgeomprocessing(void)
 {
         bool b = true;
-        long dims[3], strs[3], pos[3];
+        bart_dim_t dims[3], strs[3], pos[3];
 
         double* model = stl_internal_tetrahedron(dims);
 
@@ -288,8 +288,8 @@ static bool test_stl_measures(void)
 {
         bool b = true;
 
-	long dimshex[3];
-	long dimstet[3];
+	bart_dim_t dimshex[3];
+	bart_dim_t dimstet[3];
 
 	double* mhex = stl_internal_hexahedron(dimshex);
 	double* mtet = stl_internal_tetrahedron(dimstet);

@@ -7,13 +7,14 @@
 #include <math.h>
 #include <assert.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "splines.h"
 
 
-static long binomial(int n, int k)
+static int64_t binomial(int n, int k)
 {
-	long result = 1;
+	int64_t result = 1;
 
 	for (int i = 1; i <= k; i++)
 		result *= (n + 1 - i);

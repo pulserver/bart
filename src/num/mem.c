@@ -39,8 +39,8 @@ void memcache_off(void)
 
 static bool mem_init = false;
 
-static long unused_memory[CUDA_MAX_STREAMS + 1] = { };
-static long used_memory[CUDA_MAX_STREAMS + 1] = { };
+static bart_dim_t unused_memory[CUDA_MAX_STREAMS + 1] = { };
+static bart_dim_t used_memory[CUDA_MAX_STREAMS + 1] = { };
 
 static tree_t mem_allocs[CUDA_MAX_STREAMS + 1] = { NULL };
 static tree_t mem_cache[CUDA_MAX_STREAMS + 1] = { NULL };
@@ -136,7 +136,7 @@ static void print_mem_tree(int dl, tree_t tree)
 	struct mem_s* m[N];
 	tree_to_array(tree, N, (void**)m);
 
-	long total = 0;
+	bart_dim_t total = 0;
 
 	for (int j = 0; j < N; j++) {
 
@@ -161,7 +161,7 @@ void debug_print_memcache(int dl)
 		if (NULL == mem_allocs[i])
 			return;
 
-		debug_printf(dl, "%ld allocated for stream %i (%ld used / %ld unused)\n", unused_memory[i] + used_memory[i], i, used_memory[i], unused_memory[i]);
+		debug_printf(dl, "%" PRId64 " allocated for stream %i (%" PRId64 " used / %" PRId64 " unused)\n", unused_memory[i] + used_memory[i], i, used_memory[i], unused_memory[i]);
 
 		print_mem_tree(dl, mem_cache[i]);
 		print_mem_tree(dl, mem_allocs[i]);
@@ -198,7 +198,7 @@ static struct mem_s* search(const void* ptr, bool remove, int i)
 static int find_free_p(const void* _rptr, const void* _cmp)
 {
 	const struct mem_s* rptr = _rptr;
-	const long* cmp = _cmp;
+	const bart_dim_t* cmp = _cmp;
 
 	ssize_t min = cmp[0];
 	ssize_t max = cmp[1];
@@ -228,7 +228,7 @@ void memcache_clear(void (*device_free)(const void* x, bool host))
 
 	struct mem_s* nptr = find_free(0, cuda_get_stream_id());
 
-	long freed = 0;
+	bart_dim_t freed = 0;
 
 	while (NULL != nptr) {
 
@@ -246,7 +246,7 @@ void memcache_clear(void (*device_free)(const void* x, bool host))
 #pragma	omp atomic
 	unused_memory[cuda_get_stream_id()] -= freed;
 
-	debug_printf(DP_DEBUG2, "Freed %ld bytes.\n", freed);
+	debug_printf(DP_DEBUG2, "Freed %" PRId64 " bytes.\n", freed);
 }
 
 
@@ -327,7 +327,7 @@ void* mem_device_malloc(size_t size2, void* (*device_alloc)(size_t), bool host)
 	assert(0 < size2);
 
 	int stream = cuda_get_stream_id();
-	long size = (long)size2;
+	bart_dim_t size = (bart_stride_t)size2;
 
 	struct mem_s* nptr = host ? NULL : find_free(size, stream);
 

@@ -32,10 +32,10 @@ struct wavelet_thresh_s {
 	operator_data_t super;
 
 	int N;
-	const long* dims;
-	const long* minsize;
-	unsigned long flags;
-	unsigned long jflags;
+	const bart_dim_t* dims;
+	const bart_dim_t* minsize;
+	bart_flags_t flags;
+	bart_flags_t jflags;
 	float lambda;
 	bool randshift;
 	struct bart_rand_state* rand_state;
@@ -51,7 +51,7 @@ static void wavelet_thresh_apply(const operator_data_t* _data, float mu, complex
 {
 	const auto data = CAST_DOWN(wavelet_thresh_s, _data);
 
-	long shift[data->N];
+	bart_dim_t shift[data->N];
 	for (int i = 0; i < data->N; i++)
 		shift[i] = 0;
 
@@ -63,8 +63,8 @@ static void wavelet_thresh_apply(const operator_data_t* _data, float mu, complex
 
 				int levels = wavelet_num_levels(data->N, MD_BIT(i), data->dims, data->minsize, data->flen);
 
-				assert(levels + 1 < CHAR_BIT * (int)sizeof(long) - 1);
-				shift[i] = (long)rand_range_state(data->rand_state, (1 << levels) + 1u); // +1, as we want to include the limit
+				assert(levels + 1 < CHAR_BIT * (int)sizeof(bart_dim_t) - 1);
+				shift[i] = (bart_dim_t)rand_range_state(data->rand_state, (1 << levels) + 1u); // +1, as we want to include the limit
 
 				assert(shift[i] < data->dims[i]);
 			}
@@ -106,19 +106,19 @@ static void wavelet_thresh_del(const operator_data_t* _data)
  * @param lambda threshold parameter
  * @param randshift random shifting
  */
-const struct operator_p_s* prox_wavelet_thresh_create(int N, const long dims[N], unsigned long flags, unsigned long jflags,
-				enum wtype wtype, const long minsize[N], float lambda, bool randshift)
+const struct operator_p_s* prox_wavelet_thresh_create(int N, const bart_dim_t dims[N], bart_flags_t flags, bart_flags_t jflags,
+				enum wtype wtype, const bart_dim_t minsize[N], float lambda, bool randshift)
 {
 	PTR_ALLOC(struct wavelet_thresh_s, data);
 	SET_TYPEID(wavelet_thresh_s, data);
 
 	data->N = N;
 
-	long (*ndims)[N] = TYPE_ALLOC(long[N]);
+	bart_dim_t (*ndims)[N] = TYPE_ALLOC(bart_dim_t[N]);
 	md_copy_dims(N, (*ndims), dims);
 	data->dims = *ndims;
 
-	long (*nminsize)[N] = TYPE_ALLOC(long[N]);
+	bart_dim_t (*nminsize)[N] = TYPE_ALLOC(bart_dim_t[N]);
 	md_copy_dims(N, (*nminsize), minsize);
 	data->minsize = *nminsize;
 

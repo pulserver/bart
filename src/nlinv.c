@@ -97,11 +97,11 @@ int main_nlinv(int argc, char* argv[argc])
 
 	bool real_time_stream = false;
 
-	long my_img_dims[3] = { 0, 0, 0 };
-	long my_sens_dims[3] = { 0, 0, 0 };
-	long my_ksens_dims[3] = { 0, 0, 0 };
+	bart_dim_t my_img_dims[3] = { 0, 0, 0 };
+	bart_dim_t my_sens_dims[3] = { 0, 0, 0 };
+	bart_dim_t my_ksens_dims[3] = { 0, 0, 0 };
 
-	unsigned long cnstcoil_flags = 0;
+	bart_flags_t cnstcoil_flags = 0;
 	bool pattern_for_each_coil = false;
 	float oversampling_coils = -1.;
 
@@ -158,7 +158,7 @@ int main_nlinv(int argc, char* argv[argc])
 	conf.gpu = bart_use_gpu;
 
 
-	long ksp_dims[DIMS];
+	bart_dim_t ksp_dims[DIMS];
 	complex float* kspace = load_async_cfl(ksp_file, DIMS, ksp_dims);
 
 	if (NULL != stream_lookup(kspace))
@@ -178,7 +178,7 @@ int main_nlinv(int argc, char* argv[argc])
 	vptr_hint_free(hint);
 
 	const complex float* basis = NULL;
-	long bas_dims[DIMS];
+	bart_dim_t bas_dims[DIMS];
 
 	if (NULL != basis_file) {
 
@@ -190,7 +190,7 @@ int main_nlinv(int argc, char* argv[argc])
 	}
 
 	complex float* pattern = NULL;
-	long pat_dims[DIMS];
+	bart_dim_t pat_dims[DIMS];
 
 	if (NULL != psf_file) {
 
@@ -213,7 +213,7 @@ int main_nlinv(int argc, char* argv[argc])
 
 	if (1 != ksp_dims[SLICE_DIM]) {
 
-		debug_printf(DP_INFO, "SMS-NLINV reconstruction. Multiband factor: %ld\n", ksp_dims[SLICE_DIM]);
+		debug_printf(DP_INFO, "SMS-NLINV reconstruction. Multiband factor: %" PRId64 "\n", ksp_dims[SLICE_DIM]);
 
 		if (use_compat_to_version("v0.9.00") && (!conf.noncart || (NULL != trajectory))) {
 
@@ -238,16 +238,16 @@ int main_nlinv(int argc, char* argv[argc])
 		conf.noncart = true;
 		oversampling_coils = 1;
 
-		long dims[DIMS];
-		long trj_dims[DIMS];
-		long psf_dims[DIMS];
+		bart_dim_t dims[DIMS];
+		bart_dim_t trj_dims[DIMS];
+		bart_dim_t psf_dims[DIMS];
 
 		complex float* traj = load_cfl_sameplace(trajectory, DIMS, trj_dims, kspace);
 
 		if (0 == md_calc_size(3, my_img_dims)) {
 
 			estimate_im_dims(DIMS, FFT_FLAGS, dims, trj_dims, traj);
-			debug_printf(DP_INFO, "Est. image size: %ld %ld %ld\n", dims[0], dims[1], dims[2]);
+			debug_printf(DP_INFO, "Est. image size: %" PRId64 " %" PRId64 " %" PRId64 "\n", dims[0], dims[1], dims[2]);
 
 		} else {
 
@@ -333,13 +333,13 @@ int main_nlinv(int argc, char* argv[argc])
 	// we allow multiple images and sensitivities during the reconstruction
 	assert(1 == ksp_dims[MAPS_DIM]);
 
-	long ksp_strs[DIMS];
+	bart_stride_t ksp_strs[DIMS];
 	md_calc_strides(DIMS, ksp_strs, ksp_dims, CFL_SIZE);
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	md_copy_dims(DIMS, dims, ksp_dims);
 
-	long trj_dims[DIMS];
+	bart_dim_t trj_dims[DIMS];
 	complex float* traj  = NULL;
 
 	if (NULL != trajectory) {
@@ -359,7 +359,7 @@ int main_nlinv(int argc, char* argv[argc])
 				error("Streaming does not support estimation of image dims!\n");
 
 			estimate_im_dims(DIMS, FFT_FLAGS, dims, trj_dims, traj);
-			debug_printf(DP_INFO, "Est. image size: %ld %ld %ld\n", dims[0], dims[1], dims[2]);
+			debug_printf(DP_INFO, "Est. image size: %" PRId64 " %" PRId64 " %" PRId64 "\n", dims[0], dims[1], dims[2]);
 		}
 
 		md_copy_dims(DIMS - 3, dims + 3, ksp_dims + 3);
@@ -383,20 +383,20 @@ int main_nlinv(int argc, char* argv[argc])
 		if (conf.noncart)
 			assert(1 == md_calc_size(5, bas_dims));
 		else
-			md_check_compat(5, ~0UL, bas_dims, dims);
+			md_check_compat(5, ~UINT64_C(0), bas_dims, dims);
 
 		dims[COEFF_DIM] = bas_dims[COEFF_DIM];
 		dims[TE_DIM] = 1;
 		cnstcoil_flags = cnstcoil_flags | COEFF_FLAG;
 	}
 
-	long ksens_dims[DIMS];
+	bart_dim_t ksens_dims[DIMS];
 	md_select_dims(DIMS, ~cnstcoil_flags, ksens_dims, dims);
 
 	for (int i = 0; i < 3; i++)
 		ksens_dims[i] = my_ksens_dims[i] ?: ksens_dims[i];
 
-	long sens_dims[DIMS];
+	bart_dim_t sens_dims[DIMS];
 	md_select_dims(DIMS, ~cnstcoil_flags, sens_dims, dims);
 
 	for (int i = 0; i < 3; i++)
@@ -406,13 +406,13 @@ int main_nlinv(int argc, char* argv[argc])
 
 	if (conf.ret_os_coils)
 		for (int i = 0; i < 3; i++)
-			sens_dims[i] = (1 == sens_dims[i]) ? sens_dims[i] : lround(conf.oversampling_coils * (float)sens_dims[i]);
+			sens_dims[i] = (1 == sens_dims[i]) ? sens_dims[i] : llround(conf.oversampling_coils * (float)sens_dims[i]);
 
-	long img_dims[DIMS];
+	bart_dim_t img_dims[DIMS];
 	md_select_dims(DIMS, ~COIL_FLAG, img_dims, dims);
 
 
-	long cim_dims[DIMS];
+	bart_dim_t cim_dims[DIMS];
 	md_select_dims(DIMS, ~MAPS_FLAG, cim_dims, dims);
 
 
@@ -428,7 +428,7 @@ int main_nlinv(int argc, char* argv[argc])
 		img = ((!pprocess) ? create_cfl_sameplace : anon_cfl_sameplace)(img_file, DIMS, img_dims, kspace);
 	}
 
-	long msk_dims[DIMS];
+	bart_dim_t msk_dims[DIMS];
 	md_select_dims(DIMS, FFT_FLAGS, msk_dims, img_dims);
 
 	complex float* mask = NULL;
@@ -444,8 +444,8 @@ int main_nlinv(int argc, char* argv[argc])
 	// initialization
 	if (NULL != init_file) {
 
-		long skip = md_calc_size(DIMS, img_dims);
-		long init_dims[DIMS];
+		bart_dim_t skip = md_calc_size(DIMS, img_dims);
+		bart_dim_t init_dims[DIMS];
 
 		complex float* init = load_cfl_sameplace(init_file, DIMS, init_dims, kspace);
 
@@ -507,7 +507,7 @@ int main_nlinv(int argc, char* argv[argc])
 
 	if (pprocess) {
 
-		long img_output_dims[DIMS];
+		bart_dim_t img_output_dims[DIMS];
 		md_copy_dims(DIMS, img_output_dims, img_dims);
 
 		if ((conf.noncart) && (NULL == traj)) {

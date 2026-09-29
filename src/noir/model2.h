@@ -1,3 +1,5 @@
+#include "misc/dimtypes.h"
+
 
 struct linop_s;
 struct nlop_s;
@@ -7,10 +9,10 @@ struct noir2_model_conf_s {
 
 	bool noncart;
 
-	unsigned long fft_flags;
-	unsigned long cfft_flags;
-	unsigned long ufft_flags;
-	unsigned long wght_flags;
+	bart_flags_t fft_flags;
+	bart_flags_t cfft_flags;
+	bart_flags_t ufft_flags;
+	bart_flags_t wght_flags;
 
 	bool rvc;
 	bool sos;
@@ -52,62 +54,62 @@ struct noir2_s {
 
 
 	int N;
-	long* pat_dims;
-	long* bas_dims;
-	long* msk_dims;
-	long* ksp_dims;
-	long* cim_dims;
-	long* img_dims;
-	long* col_dims;
-	long* col_ten_dims;	// col dims as input of tenmul
-	long* trj_dims;
+	bart_dim_t* pat_dims;
+	bart_dim_t* bas_dims;
+	bart_dim_t* msk_dims;
+	bart_dim_t* ksp_dims;
+	bart_dim_t* cim_dims;
+	bart_dim_t* img_dims;
+	bart_dim_t* col_dims;
+	bart_dim_t* col_ten_dims;	// col dims as input of tenmul
+	bart_dim_t* trj_dims;
 
 	struct multiplace_array_s* basis;	// this is used in nlinv-net to store basis for trajectory update
 };
 
 extern struct noir2_s noir2_noncart_create(int N,
-	const long trj_dims[N], const _Complex float* traj,
-	const long wgh_dims[N], const _Complex float* weights,
-	const long bas_dims[N], const _Complex float* basis,
-	const long msk_dims[N], const _Complex float* mask,
-	const long ksp_dims[N],
-	const long cim_dims[N],
-	const long img_dims[N],
-	const long kco_dims[N],
-	const long col_dims[N],
+	const bart_dim_t trj_dims[N], const _Complex float* traj,
+	const bart_dim_t wgh_dims[N], const _Complex float* weights,
+	const bart_dim_t bas_dims[N], const _Complex float* basis,
+	const bart_dim_t msk_dims[N], const _Complex float* mask,
+	const bart_dim_t ksp_dims[N],
+	const bart_dim_t cim_dims[N],
+	const bart_dim_t img_dims[N],
+	const bart_dim_t kco_dims[N],
+	const bart_dim_t col_dims[N],
 	const struct noir2_model_conf_s* conf);
 
 extern struct noir2_s noir2_noncart_optimized_create(int N,
-	const long trj_dims[N], const _Complex float* traj,
-	const long wgh_dims[N], const _Complex float* weights,
-	const long bas_dims[N], const _Complex float* basis,
-	const long msk_dims[N], const _Complex float* mask,
-	const long ksp_dims[N],
-	const long cim_dims[N],
-	const long img_dims[N],
-	const long kco_dims[N],
-	const long col_dims[N],
+	const bart_dim_t trj_dims[N], const _Complex float* traj,
+	const bart_dim_t wgh_dims[N], const _Complex float* weights,
+	const bart_dim_t bas_dims[N], const _Complex float* basis,
+	const bart_dim_t msk_dims[N], const _Complex float* mask,
+	const bart_dim_t ksp_dims[N],
+	const bart_dim_t cim_dims[N],
+	const bart_dim_t img_dims[N],
+	const bart_dim_t kco_dims[N],
+	const bart_dim_t col_dims[N],
 	const struct noir2_model_conf_s* conf);
 
 extern struct noir2_s noir2_cart_create(int N,
-	const long pat_dims[N], const _Complex float* pattern,
-	const long bas_dims[N], const _Complex float* basis,
-	const long msk_dims[N], const _Complex float* mask,
-	const long ksp_dims[N],
-	const long cim_dims[N],
-	const long img_dims[N],
-	const long kco_dims[N],
-	const long col_dims[N],
+	const bart_dim_t pat_dims[N], const _Complex float* pattern,
+	const bart_dim_t bas_dims[N], const _Complex float* basis,
+	const bart_dim_t msk_dims[N], const _Complex float* mask,
+	const bart_dim_t ksp_dims[N],
+	const bart_dim_t cim_dims[N],
+	const bart_dim_t img_dims[N],
+	const bart_dim_t kco_dims[N],
+	const bart_dim_t col_dims[N],
 	const struct noir2_model_conf_s* conf);
 
 extern void noir2_noncart_update(struct noir2_s* model, int N,
-	const long trj_dims[N], const _Complex float* traj,
-	const long wgh_dims[N], const _Complex float* weights,
-	const long bas_dims[N], const _Complex float* basis);
+	const bart_dim_t trj_dims[N], const _Complex float* traj,
+	const bart_dim_t wgh_dims[N], const _Complex float* weights,
+	const bart_dim_t bas_dims[N], const _Complex float* basis);
 
 extern void noir2_cart_update(struct noir2_s* model, int N,
-	const long pat_dims[N], const _Complex float* pattern,
-	const long bas_dims[N], const _Complex float* basis);
+	const bart_dim_t pat_dims[N], const _Complex float* pattern,
+	const bart_dim_t bas_dims[N], const _Complex float* basis);
 
 #ifdef __GNUC__
 #if __GNUC__ <= 11
@@ -117,6 +119,6 @@ extern void noir2_cart_update(struct noir2_s* model, int N,
 
 extern void noir2_free(struct noir2_s* model);
 
-extern void noir2_orthogonalize(int N, const long col_dims[N], _Complex float* coils);
+extern void noir2_orthogonalize(int N, const bart_dim_t col_dims[N], _Complex float* coils);
 
 

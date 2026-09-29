@@ -2,6 +2,7 @@
 #ifndef _STREAM_PROTOCOL_H
 #define _STREAM_PROTOCOL_H 1
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 #define MSG_HDR_SIZE 24
@@ -31,10 +32,10 @@ struct stream_msg {
 
 	union {
 
-		long index;
-		long extsize;
-		long flags;
-		long data_long;
+		bart_dim_t index;
+		bart_dim_t extsize;
+		bart_dim_t flags;
+		bart_dim_t data_long;
 	} data;
 
 	bool ext;

@@ -29,7 +29,7 @@ int main_ones(int argc, char* argv[argc])
 {
 	int count = 0;
 	int N = -1;
-	long* dims = NULL;
+	bart_dim_t* dims = NULL;
 
 	const char* out_file = NULL;
 

@@ -1,3 +1,4 @@
+#include "misc/dimtypes.h"
 #include "misc/graph.h"
 
 struct operator_s;
@@ -19,7 +20,7 @@ extern graph_t operator_graph_chain_F(int N, graph_t ops[N]);
 extern graph_t operator_graph_dup_F(graph_t op, int a, int b);
 extern graph_t operator_graph_link_F(graph_t op, int oo, int ii);
 extern graph_t operator_graph_permute_F(graph_t op, int N, const int perm[N]);
-extern graph_t operator_graph_reshape_F(graph_t op, int i, int N, const long dims[N]);
+extern graph_t operator_graph_reshape_F(graph_t op, int i, int N, const bart_dim_t dims[N]);
 
 extern void operator_export_graph_dot(const char* filename, const struct operator_s* op);
 

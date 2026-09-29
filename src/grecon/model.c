@@ -26,25 +26,25 @@
 
 
 const struct linop_s* pics_model(const struct pics_config* conf,
-				const long img_dims[DIMS], const long ksp_dims[DIMS],
-				const long traj_dims[DIMS], const complex float* traj,
-				const long basis_dims[DIMS], const complex float* basis,
-				const long map_dims[DIMS], const complex float* maps,
-				const long pat_dims[DIMS], const complex float* pattern,
-				const long motion_dims[DIMS], complex float* motion,
-				const long fieldmap_dims[DIMS], complex float* fieldmap,
-				const long timemap_dims[DIMS], complex float* timemap,
+				const bart_dim_t img_dims[DIMS], const bart_dim_t ksp_dims[DIMS],
+				const bart_dim_t traj_dims[DIMS], const complex float* traj,
+				const bart_dim_t basis_dims[DIMS], const complex float* basis,
+				const bart_dim_t map_dims[DIMS], const complex float* maps,
+				const bart_dim_t pat_dims[DIMS], const complex float* pattern,
+				const bart_dim_t motion_dims[DIMS], complex float* motion,
+				const bart_dim_t fieldmap_dims[DIMS], complex float* fieldmap,
+				const bart_dim_t timemap_dims[DIMS], complex float* timemap,
 				const struct linop_s** nufft_op)
 {
 	const struct linop_s* forward_op = NULL;
 
 	// finalize dimensions
 
-	long max_dims[DIMS];
+	bart_dim_t max_dims[DIMS];
 	md_copy_dims(DIMS, max_dims, ksp_dims);
 	md_copy_dims(5, max_dims, map_dims);
 
-	long bmx_dims[DIMS];
+	bart_dim_t bmx_dims[DIMS];
 
 	if (NULL != basis) {
 
@@ -67,16 +67,16 @@ const struct linop_s* pics_model(const struct pics_config* conf,
 
 	// make sure the image dimension we get correspond to what we expect
 
-	long img2_dims[DIMS];
+	bart_dim_t img2_dims[DIMS];
 	md_select_dims(DIMS, ~(COIL_FLAG | conf->shared_img_flags), img2_dims, max_dims);
 
-	assert(md_check_compat(DIMS, 0UL, img2_dims, img_dims));
+	assert(md_check_compat(DIMS, 0, img2_dims, img_dims));
 
 	// build model
 
 	if (NULL == traj) {
 
-		unsigned long map_flags = FFT_FLAGS | SENS_FLAGS | md_nontriv_dims(DIMS, map_dims);
+		bart_flags_t map_flags = FFT_FLAGS | SENS_FLAGS | md_nontriv_dims(DIMS, map_dims);
 
 		forward_op = sense_init(conf->shared_img_flags & ~conf->motion_flags,
 					max_dims, map_flags, maps);
@@ -121,7 +121,7 @@ const struct linop_s* pics_model(const struct pics_config* conf,
 
 	if (NULL != motion) {
 
-		long img_motion_dims[DIMS];
+		bart_dim_t img_motion_dims[DIMS];
 		md_copy_dims(DIMS, img_motion_dims, img_dims);
 		md_max_dims(DIMS, ~MOTION_FLAG, img_motion_dims, img_motion_dims, motion_dims);
 

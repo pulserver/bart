@@ -9,6 +9,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#endif
+
 #include "misc/list.h"
 
 #include "misc/stream.h"
@@ -21,6 +26,16 @@
 
 // FIXME: for some reason we want to abort
 #define UTEST_ERR	abort()
+
+// A binary pipe with the 64 KiB buffer Linux gives one by default.
+static int open_pipe(int pipefds[2])
+{
+#ifdef _WIN32
+	return _pipe(pipefds, 1 << 16, _O_BINARY);
+#else
+	return pipe(pipefds);
+#endif
+}
 
 static bool generic_test_stream_transcode(struct stream_msg* out, const struct stream_msg msg_ref)
 {
@@ -89,7 +104,7 @@ static bool test_stream_transceive(void)
 	struct stream_msg msg_default = { .type = STREAM_MSG_INVALID };
 
 	int pipefds[2];
-	if (0 != pipe(pipefds))
+	if (0 != open_pipe(pipefds))
 		UTEST_ERR;
 
 	msg_ref = (struct stream_msg){ .type = STREAM_MSG_INDEX, .data.index = 2 };
@@ -120,15 +135,15 @@ static bool test_comm_msg2(void)
 {
 	int pipefds[2];
 
-	if (0 != pipe(pipefds))
+	if (0 != open_pipe(pipefds))
 		UTEST_ERR;
 
 	complex float a[3] = { 1, 2, 3 };
 	complex float b[3] = { 0, 0, 0 };
 
-	long dims[1] = { 3 };
-	long str[1] = { sizeof(complex float) };
-	long size = 3 * sizeof(complex float);
+	bart_dim_t dims[1] = { 3 };
+	bart_stride_t str[1] = { sizeof(complex float) };
+	bart_dim_t size = 3 * sizeof(complex float);
 
 	struct stream_msg msg = { .type = STREAM_MSG_RAW, .ext = true, .data.extsize = size };
 
@@ -159,7 +174,7 @@ static bool test_comm_followup(void)
 {
 	int pipefds[2];
 
-	if (0 != pipe(pipefds))
+	if (0 != open_pipe(pipefds))
 		UTEST_ERR;
 
 	struct stream_msg msg_ref = { .type = STREAM_MSG_INDEX, .data.index = 2 };
@@ -187,7 +202,7 @@ static bool test_comm_followup(void)
 
 static bool test_stream_registry(void)
 {
-	long dims[1] = { 1 };
+	bart_dim_t dims[1] = { 1 };
 	const int N = 1;
 
 	complex float a[6];
@@ -222,12 +237,12 @@ static bool test_stream_sync(void)
 {
 	int pipefds[2];
 
-	if (0 != pipe(pipefds))
+	if (0 != open_pipe(pipefds))
 		UTEST_ERR;
 
 	stream_t strm_in, strm_out;
 
-	long dims[1] = { 1 };
+	bart_dim_t dims[1] = { 1 };
 
 	if (!(strm_out = stream_create(1, dims, pipefds[1], false, false, 1, NULL, false)))
 		UTEST_ERR;
@@ -238,12 +253,12 @@ static bool test_stream_sync(void)
 	if (stream_is_synced(strm_in, 0) || stream_is_synced(strm_out, 0))
 		UTEST_ERR;
 
-	stream_sync_slice(strm_out, 1, dims, 1, (long[1]){ 0 });
+	stream_sync_slice(strm_out, 1, dims, 1, (bart_dim_t[1]){ 0 });
 
 	if (!stream_is_synced(strm_out, 0))
 		UTEST_ERR;
 
-	stream_sync_slice(strm_in, 1, dims, 1, (long[1]){ 0 });
+	stream_sync_slice(strm_in, 1, dims, 1, (bart_dim_t[1]){ 0 });
 
 	if (!stream_is_synced(strm_in, 0) || !stream_is_synced(strm_out, 0))
 		UTEST_ERR;
@@ -261,10 +276,10 @@ static bool test_binary_stream(void)
 {
 	int pipefds[2];
 
-	if (0 != pipe(pipefds))
+	if (0 != open_pipe(pipefds))
 		UTEST_ERR;
 
-	long dims[2] = { 1, 3 };
+	bart_dim_t dims[2] = { 1, 3 };
 	complex float out[3] = { 1, 2, 3 };
 	complex float  in[3] = { 0, 0, 0 };
 
@@ -282,11 +297,11 @@ static bool test_binary_stream(void)
 	if (stream_is_synced(strm_in, 0) || stream_is_synced(strm_out, 0))
 		UTEST_ERR;
 
-	stream_sync_slice(strm_out, 2, dims, 2, (long[2]){ 0, 0 });
-	stream_sync_slice(strm_out, 2, dims, 2, (long[2]){ 0, 2 });
+	stream_sync_slice(strm_out, 2, dims, 2, (bart_dim_t[2]){ 0, 0 });
+	stream_sync_slice(strm_out, 2, dims, 2, (bart_dim_t[2]){ 0, 2 });
 
-	stream_sync_slice(strm_in, 2, dims, 2, (long[2]){ 0, 0 });
-	stream_sync_slice(strm_in, 2, dims, 2, (long[2]){ 0, 2 });
+	stream_sync_slice(strm_in, 2, dims, 2, (bart_dim_t[2]){ 0, 0 });
+	stream_sync_slice(strm_in, 2, dims, 2, (bart_dim_t[2]){ 0, 2 });
 
 	if (out[0] != in[0])
 		UTEST_ERR;
@@ -310,12 +325,12 @@ static bool test_stream_events(void)
 {
 	int pipefds[2];
 
-	if (0 != pipe(pipefds))
+	if (0 != open_pipe(pipefds))
 		UTEST_ERR;
 
 	stream_t strm_in, strm_out;
 
-	long dims[1] = { 2 };
+	bart_dim_t dims[1] = { 2 };
 
 	if (!(strm_out = stream_create(1, dims, pipefds[1], false, false, 1, NULL, false)))
 		UTEST_ERR;
@@ -328,31 +343,31 @@ static bool test_stream_events(void)
 
 	// add 2 events
 	for (int i = 0; i < 2; i++)
-		if(!stream_add_event(strm_out, 1, (long[1]){ i }, 0, teststr[i], LEN))
+		if(!stream_add_event(strm_out, 1, (bart_dim_t[1]){ i }, 0, teststr[i], LEN))
 			UTEST_ERR;
 
 	// verify that we can't add to an input stream
-	if (stream_add_event(strm_in, 1, (long[1]){ 0 }, 0, teststr[0], LEN))
+	if (stream_add_event(strm_in, 1, (bart_dim_t[1]){ 0 }, 0, teststr[0], LEN))
 		UTEST_ERR;
 
-	stream_sync_slice(strm_out, 1, dims, 1, (long[1]){ 0 });
+	stream_sync_slice(strm_out, 1, dims, 1, (bart_dim_t[1]){ 0 });
 
 
 	// check that we can't add to already synced position
-	if (stream_add_event(strm_out, 1, (long[1]){ 0 }, 0, teststr[0], LEN))
+	if (stream_add_event(strm_out, 1, (bart_dim_t[1]){ 0 }, 0, teststr[0], LEN))
 		UTEST_ERR;
 
 
-	stream_sync_slice(strm_out, 1, dims, 1, (long[1]){ 1 });
+	stream_sync_slice(strm_out, 1, dims, 1, (bart_dim_t[1]){ 1 });
 
-	stream_sync_slice(strm_in, 1, dims, 1, (long[1]){ 0 });
+	stream_sync_slice(strm_in, 1, dims, 1, (bart_dim_t[1]){ 0 });
 
-	stream_sync_slice(strm_in, 1, dims, 1, (long[1]){ 1 });
+	stream_sync_slice(strm_in, 1, dims, 1, (bart_dim_t[1]){ 1 });
 
 
 	list_t rx_event_lists[] = {
-		stream_get_events(strm_in, 1, (long[1]){ 0 }),
-		stream_get_events(strm_in, 1, (long[1]){ 1 })
+		stream_get_events(strm_in, 1, (bart_dim_t[1]){ 0 }),
+		stream_get_events(strm_in, 1, (bart_dim_t[1]){ 1 })
 	};
 
 	for (int i = 0; i < 2; i++) {
@@ -367,7 +382,7 @@ static bool test_stream_events(void)
 		if (e->index != i)
 			UTEST_ERR;
 
-		if (e->size != (long)(strlen(teststr[i]) + 1))
+		if (e->size != (bart_dim_t)(strlen(teststr[i]) + 1))
 			UTEST_ERR;
 
 		if (0 != strcmp(teststr[i], e->data))

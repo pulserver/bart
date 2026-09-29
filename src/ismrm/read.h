@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include "misc/mri.h"
 
 #include "ismrmrd/ismrmrd.h"
@@ -13,16 +14,16 @@
 
 struct limit_s {
 
-	long size;
+	bart_dim_t size;
 
-	long size_hdr;	//size derived from xml-header
-	long center;	//center derived from xml-header
+	bart_dim_t size_hdr;	//size derived from xml-header
+	bart_dim_t center;	//center derived from xml-header
 
-	long min_hdr;	//minimum derived from xml-header
-	long max_hdr;	//maximum derived from xml-header
+	bart_dim_t min_hdr;	//minimum derived from xml-header
+	bart_dim_t max_hdr;	//maximum derived from xml-header
 
-	long min_idx;	//minimum found in acquisitions
-	long max_idx;	//maximum found in acquisitions
+	bart_dim_t min_idx;	//minimum found in acquisitions
+	bart_dim_t max_idx;	//maximum found in acquisitions
 };
 
 extern const struct limit_s ismrmrd_default_limit;
@@ -54,10 +55,10 @@ enum ISMRMRD_SLICE_ORDERING {
 };
 
 struct ismrmrd_convert_state {
-	long counter;
-	long counter_flags[64];
+	bart_dim_t counter;
+	bart_dim_t counter_flags[64];
 	int overwrite_counter;
-	long attempts;
+	bart_dim_t attempts;
 };
 
 struct isrmrm_config_s {
@@ -71,8 +72,8 @@ struct isrmrm_config_s {
 
 	bool check_dims_with_acquisition;
 
-	unsigned long merge_dims;
-	unsigned long shift;
+	bart_flags_t merge_dims;
+	bart_flags_t shift;
 
 	int measurement;
 	int repetition;
@@ -86,11 +87,11 @@ struct isrmrm_config_s {
 extern struct isrmrm_config_s ismrm_default_config;
 
 extern void ismrm_print_xml(const char* filename);
-extern void ismrm_read_dims(const char* datafile, struct isrmrm_config_s* config, int N, long dims[__VLA(N)]);
-extern void ismrm_read(const char* datafile, struct isrmrm_config_s* config, int N, long dims[__VLA(N)], _Complex float* buf);
+extern void ismrm_read_dims(const char* datafile, struct isrmrm_config_s* config, int N, bart_dim_t dims[__VLA(N)]);
+extern void ismrm_read(const char* datafile, struct isrmrm_config_s* config, int N, bart_dim_t dims[__VLA(N)], _Complex float* buf);
 
-extern void ismrm_stream_read_dims(struct isrmrm_config_s* config, int N, long dims[__VLA(N)]);
+extern void ismrm_stream_read_dims(struct isrmrm_config_s* config, int N, bart_dim_t dims[__VLA(N)]);
 
-extern long ismrm_stream_read(struct isrmrm_config_s* conf, int N, const long dims[__VLA(N)], long pos[__VLA(N)], _Complex float* out);
+extern bart_dim_t ismrm_stream_read(struct isrmrm_config_s* conf, int N, const bart_dim_t dims[__VLA(N)], bart_dim_t pos[__VLA(N)], _Complex float* out);
 
 #include "misc/cppwrap.h"

@@ -1,6 +1,7 @@
 #ifndef _STL_MISC_H
 #define _STL_MISC_H
 
+#include "misc/dimtypes.h"
 #include <stdio.h>
 
 #define MAX_NEIGHBORS 32
@@ -48,23 +49,23 @@ struct neighbors {
 	int v[MAX_NEIGHBORS];
 };
 
-extern void stl_center_fov(const long dims[3], double* model, double fov_size);
-extern void stl_stats(const long dims[3], const double* model);
-extern void stl_compute_normals(const long dims[3], double* model);
-extern void stl_shift_model(const long dims[3], double* model, const double shift[3]);
-extern void stl_scale_model(const long dims[3], double* model, const double scale[3]);
-extern void stl_rot_model(const long dims[3], double* model, const double drot[3]);
+extern void stl_center_fov(const bart_dim_t dims[3], double* model, double fov_size);
+extern void stl_stats(const bart_dim_t dims[3], const double* model);
+extern void stl_compute_normals(const bart_dim_t dims[3], double* model);
+extern void stl_shift_model(const bart_dim_t dims[3], double* model, const double shift[3]);
+extern void stl_scale_model(const bart_dim_t dims[3], double* model, const double scale[3]);
+extern void stl_rot_model(const bart_dim_t dims[3], double* model, const double drot[3]);
 
 extern bool stl_fileextension(const char* name);
-extern double* stl_read(FILE* name, long dims[3]);
-extern void stl_write(FILE* name, const long dims[3], const double* model, bool ascii);
-extern double* stl_cfl2d(const long dims[3], const _Complex float* cmodel);
-extern void stl_d2cfl(const long dims[3], _Complex float* cmodel, const double* model);
+extern double* stl_read(FILE* name, bart_dim_t dims[3]);
+extern void stl_write(FILE* name, const bart_dim_t dims[3], const double* model, bool ascii);
+extern double* stl_cfl2d(const bart_dim_t dims[3], const _Complex float* cmodel);
+extern void stl_d2cfl(const bart_dim_t dims[3], _Complex float* cmodel, const double* model);
 extern void stl_relative_position(struct triangle* t);
-extern struct triangle_stack* stl_preprocess_model(const long dims[3], const double* model);
-extern void stl_extract_vertices(long N, const long dims[3], const double* model, int* nv_out, double verts[N][3], int* nt_out, int tris[N][3]);
-extern void stl_update_vertices(long N, const long dims[3], double* model, const double verts[N][3], const int tris[N][3]);
-extern void stl_build_neighbors(long N,const long dims[3], const double* model, struct neighbors* neigh, int* nv_out, double verts_out[N][3], int* nt_out, int tris_out[N][3]);
+extern struct triangle_stack* stl_preprocess_model(const bart_dim_t dims[3], const double* model);
+extern void stl_extract_vertices(bart_dim_t N, const bart_dim_t dims[3], const double* model, int* nv_out, double verts[N][3], int* nt_out, int tris[N][3]);
+extern void stl_update_vertices(bart_dim_t N, const bart_dim_t dims[3], double* model, const double verts[N][3], const int tris[N][3]);
+extern void stl_build_neighbors(bart_dim_t N,const bart_dim_t dims[3], const double* model, struct neighbors* neigh, int* nv_out, double verts_out[N][3], int* nt_out, int tris_out[N][3]);
 extern void stl_add_neighbor(struct neighbors* nb, int v);
 
 #endif

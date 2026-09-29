@@ -1,6 +1,7 @@
 #ifndef _NN_DATA_LIST_H
 #define _NN_DATA_LIST_H
 
+#include "misc/dimtypes.h"
 #include "iter/batch_gen.h"
 
 #include "nn/nn.h"
@@ -9,7 +10,7 @@ struct named_data_list_s;
 
 extern struct named_data_list_s* named_data_list_create(void);
 extern void named_data_list_free(struct named_data_list_s* data_list);
-extern void named_data_list_append(struct named_data_list_s* data_list, int N, const long dims[N], _Complex float* data, const char* name);
+extern void named_data_list_append(struct named_data_list_s* data_list, int N, const bart_dim_t dims[N], _Complex float* data, const char* name);
 extern void debug_print_named_data_list(int level, const struct named_data_list_s* list);
 
 extern const struct iovec_s* named_data_list_get_iovec(struct named_data_list_s* data_list, const char* name);

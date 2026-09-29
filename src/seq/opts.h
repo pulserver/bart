@@ -1,6 +1,7 @@
 #ifndef __SEQ_OPTS_H
 #define __SEQ_OPTS_H
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 #include "misc/opts.h"
@@ -13,9 +14,9 @@ enum gradient_mode { GRAD_FAST, GRAD_NORMAL, GRAD_WHISPER };
 struct seq_opts {
 
 	double dt;
-	long samples;
+	bart_dim_t samples;
 	double rel_shift[3];
-	long raga_full_frames;
+	bart_dim_t raga_full_frames;
 	float dist;
 	double label_slice_shift[3];
 
@@ -30,7 +31,7 @@ struct seq_opts {
 	const char* shapes_file;
 	const char* events_file;
 
-	long custom_params_long[SEQ_MAX_PARAMS_LONG];
+	bart_dim_t custom_params_long[SEQ_MAX_PARAMS_LONG];
 	double custom_params_double[SEQ_MAX_PARAMS_DOUBLE];
 };
 

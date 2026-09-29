@@ -59,17 +59,17 @@ DEF_TYPEID(meco_old_phasecontrast_s);
 // ************************************************************* //
 //  Model: rho .* exp(i 2\pi fB0 TE) reproducing wrong scaling from old version
 // ************************************************************* //
-static void meco_fun_phasediff(const nlop_data_t* _data, int N, const long y_dims[N], complex float* dst, const long x_dims[N], const complex float* src, const long ddims[N], complex float* jac)
+static void meco_fun_phasediff(const nlop_data_t* _data, int N, const bart_dim_t y_dims[N], complex float* dst, const bart_dim_t x_dims[N], const complex float* src, const bart_dim_t ddims[N], complex float* jac)
 {
 	struct meco_old_phasecontrast_s* data = CAST_DOWN(meco_old_phasecontrast_s, _data);
 
-	long map_dims[N];
-	long TE_dims[N];
+	bart_dim_t map_dims[N];
+	bart_dim_t TE_dims[N];
 
 	md_select_dims(N, TE_FLAG, TE_dims, y_dims);
 	md_select_dims(N, ~COEFF_FLAG, map_dims, x_dims);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
 	complex float* tmp_exp = md_alloc_sameplace(N, y_dims, CFL_SIZE, dst);
@@ -118,20 +118,20 @@ static void meco_del(const nlop_data_t* _data)
 	xfree(data);
 }
 
-static struct nlop_s* nlop_meco_old_phase_constrast_create(const int N, const long x_dims[N], const long TE_dims[N], const complex float* TE)
+static struct nlop_s* nlop_meco_old_phase_constrast_create(const int N, const bart_dim_t x_dims[N], const bart_dim_t TE_dims[N], const complex float* TE)
 {
 	PTR_ALLOC(struct meco_old_phasecontrast_s, data);
 	SET_TYPEID(meco_old_phasecontrast_s, data);
 
 	data->TE = multiplace_move(N, TE_dims, CFL_SIZE, TE);
 
-	long y_dims[N];
-	md_max_dims(N, ~0UL, y_dims, x_dims, TE_dims);
+	bart_dim_t y_dims[N];
+	md_max_dims(N, ~UINT64_C(0), y_dims, x_dims, TE_dims);
 	md_select_dims(N, ~COEFF_FLAG, y_dims, y_dims);
 
-	long ddims[N];
-	assert(md_check_compat(N, ~0UL, y_dims, x_dims));
-	md_max_dims(N, ~0UL, ddims, y_dims, x_dims);
+	bart_dim_t ddims[N];
+	assert(md_check_compat(N, ~UINT64_C(0), y_dims, x_dims));
+	md_max_dims(N, ~UINT64_C(0), ddims, y_dims, x_dims);
 
 	return nlop_zblock_diag_create(CAST_UP(PTR_PASS(data)), N, y_dims, x_dims, ddims, meco_fun_phasediff, meco_del);
 }
@@ -154,7 +154,7 @@ int get_num_of_coeff(enum meco_model sel_model)
 	}
 }
 
-unsigned long get_PD_flag(enum meco_model sel_model)
+bart_flags_t get_PD_flag(enum meco_model sel_model)
 {
 	switch (sel_model) {
 	case MECO_WF:		return MD_BIT(0) | MD_BIT(1);
@@ -167,7 +167,7 @@ unsigned long get_PD_flag(enum meco_model sel_model)
 	}
 }
 
-unsigned long get_R2S_flag(enum meco_model sel_model)
+bart_flags_t get_R2S_flag(enum meco_model sel_model)
 {
 	switch (sel_model) {
 
@@ -183,7 +183,7 @@ unsigned long get_R2S_flag(enum meco_model sel_model)
 	}
 }
 
-static unsigned long get_R1S_flag(enum meco_model sel_model)
+static bart_flags_t get_R1S_flag(enum meco_model sel_model)
 {
 	switch (sel_model) {
 	case IR_MECO_T1_R2S:		return MD_BIT(2);
@@ -192,13 +192,13 @@ static unsigned long get_R1S_flag(enum meco_model sel_model)
 	}
 }
 
-unsigned long get_fB0_flag(enum meco_model sel_model)
+bart_flags_t get_fB0_flag(enum meco_model sel_model)
 {
 	// fB0 is always in the last position
 	return MD_BIT(get_num_of_coeff(sel_model) - 1);
 }
 
-static void calc_fat_modu(int N, const long dims[N], complex float* dst, const complex float* TE, enum fat_spec fat_spec, float B0)
+static void calc_fat_modu(int N, const bart_dim_t dims[N], complex float* dst, const complex float* TE, enum fat_spec fat_spec, float B0)
 {
 	assert(1 == bitcount(md_nontriv_dims(N, dims)));
 	md_clear(N, dims, dst, CFL_SIZE);
@@ -228,7 +228,7 @@ static void calc_fat_modu(int N, const long dims[N], complex float* dst, const c
 
 
 // F .* zm
-static arg_t fat_spectrum(arg_t F, int N, const long TE_dims[N], const complex float* TE, enum fat_spec fat_spec, float B0)
+static arg_t fat_spectrum(arg_t F, int N, const bart_dim_t TE_dims[N], const complex float* TE, enum fat_spec fat_spec, float B0)
 {
 	complex float* cshift = md_alloc(N, TE_dims, CFL_SIZE);
 
@@ -244,7 +244,7 @@ static arg_t fat_spectrum(arg_t F, int N, const long TE_dims[N], const complex f
 	return out;
 }
 
-static arg_t B0_modulation(arg_t M0, arg_t fB0, int N, const long TE_dims[N], const complex float* TE)
+static arg_t B0_modulation(arg_t M0, arg_t fB0, int N, const bart_dim_t TE_dims[N], const complex float* TE)
 {
 	arg_t arg_TE = snlop_const(N, TE_dims, TE, "TE");
 	arg_TE = snlop_scale_F(arg_TE, 2.i * M_PI);
@@ -259,7 +259,7 @@ static arg_t B0_modulation(arg_t M0, arg_t fB0, int N, const long TE_dims[N], co
 	return out;
 }
 
-static arg_t T2s_decay(arg_t M0, arg_t R2s, int N, const long TE_dims[N], const complex float* TE)
+static arg_t T2s_decay(arg_t M0, arg_t R2s, int N, const bart_dim_t TE_dims[N], const complex float* TE)
 {
 	arg_t arg_TE = snlop_const(N, TE_dims, TE, "TE");
 	arg_TE = snlop_scale_F(arg_TE, -1.);
@@ -274,7 +274,7 @@ static arg_t T2s_decay(arg_t M0, arg_t R2s, int N, const long TE_dims[N], const 
 	return out;
 }
 
-static arg_t inversion_recovery(arg_t MS, arg_t M0, arg_t R1s, int N, const long TI_dims[N], const complex float* TI)
+static arg_t inversion_recovery(arg_t MS, arg_t M0, arg_t R1s, int N, const bart_dim_t TI_dims[N], const complex float* TI)
 {
 	arg_t arg_TI = snlop_const(N, TI_dims, TI, "TI");
 	arg_TI = snlop_scale_F(arg_TI, -1.);
@@ -295,12 +295,12 @@ static arg_t inversion_recovery(arg_t MS, arg_t M0, arg_t R1s, int N, const long
 
 
 
-struct nlop_s* nlop_ir_meco_create(int N, const long out_dims[N], const long in_dims[N], const long TI_dims[N],
-				const complex float* TI, const long TE_dims[N], const complex float* TE, enum meco_model meco_model, enum fat_spec fat_spec, float B0)
+struct nlop_s* nlop_ir_meco_create(int N, const bart_dim_t out_dims[N], const bart_dim_t in_dims[N], const bart_dim_t TI_dims[N],
+				const complex float* TI, const bart_dim_t TE_dims[N], const complex float* TE, enum meco_model meco_model, enum fat_spec fat_spec, float B0)
 {
 	assert((MECO_PI != meco_model) || (get_num_of_coeff(meco_model) == in_dims[COEFF_DIM]));
 
-	long map_dims[N];
+	bart_dim_t map_dims[N];
 	md_select_dims(N, ~COEFF_FLAG, map_dims, in_dims);
 
 	arg_t args [in_dims[COEFF_DIM]];
@@ -434,25 +434,25 @@ struct nlop_s* nlop_ir_meco_create(int N, const long out_dims[N], const long in_
 		ret = nlop_meco_old_phase_constrast_create(N, in_dims, TE_dims, TE);
 	}
 
-	assert(md_check_equal_dims(N, out_dims, nlop_codomain(ret)->dims, ~0UL));
+	assert(md_check_equal_dims(N, out_dims, nlop_codomain(ret)->dims, ~UINT64_C(0)));
 
 
-	unsigned long real_constraint_flag = get_R2S_flag(meco_model) | get_R1S_flag(meco_model) | get_fB0_flag(meco_model);
+	bart_flags_t real_constraint_flag = get_R2S_flag(meco_model) | get_R1S_flag(meco_model) | get_fB0_flag(meco_model);
 
 	return nlop_chain_FF(nlop_from_linop_F(moba_rvc_create(N, in_dims, real_constraint_flag)), ret);
 }
 
-struct nlop_s* nlop_meco_create(const int N, const long y_dims[N], const long x_dims[N], const complex float* TE, enum meco_model sel_model, enum fat_spec fat_spec, float B0)
+struct nlop_s* nlop_meco_create(const int N, const bart_dim_t y_dims[N], const bart_dim_t x_dims[N], const complex float* TE, enum meco_model sel_model, enum fat_spec fat_spec, float B0)
 {
-	long TE_dims[N];
+	bart_dim_t TE_dims[N];
 	md_select_dims(N, TE_FLAG, TE_dims, y_dims);
 
-	long map_dims[N];
+	bart_dim_t map_dims[N];
 	md_select_dims(N, ~COEFF_FLAG, map_dims, x_dims);
 
 	struct nlop_s* model = nlop_ir_meco_create(N, y_dims, x_dims, NULL, NULL, TE_dims, TE, sel_model, fat_spec, B0);
 
-	assert(md_check_equal_dims(N, y_dims, nlop_codomain(model)->dims, ~0UL));
+	assert(md_check_equal_dims(N, y_dims, nlop_codomain(model)->dims, ~UINT64_C(0)));
 
 	return model;
 }

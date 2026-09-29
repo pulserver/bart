@@ -59,14 +59,14 @@ const struct initializer_s* initializer_clone(const struct initializer_s* x)
 	return x;
 }
 
-void initializer_apply(const struct initializer_s* x, int N, const long dims[N], complex float* weights)
+void initializer_apply(const struct initializer_s* x, int N, const bart_dim_t dims[N], complex float* weights)
 {
 	x->fun(x, N, dims, weights);
 }
 
-unsigned long in_flag_conv_generic(int N, unsigned long conv_flag, unsigned long channel_flag, unsigned long group_flag)
+bart_flags_t in_flag_conv_generic(int N, bart_flags_t conv_flag, bart_flags_t channel_flag, bart_flags_t group_flag)
 {
-	unsigned long in_flag = 0;
+	bart_flags_t in_flag = 0;
 
 	for (int i = N - 1; i >= 0; i--) {
 
@@ -92,9 +92,9 @@ unsigned long in_flag_conv_generic(int N, unsigned long conv_flag, unsigned long
 	return in_flag;
 }
 
-unsigned long out_flag_conv_generic(int N, unsigned long conv_flag, unsigned long channel_flag, unsigned long group_flag)
+bart_flags_t out_flag_conv_generic(int N, bart_flags_t conv_flag, bart_flags_t channel_flag, bart_flags_t group_flag)
 {
-	unsigned long out_flag = 0;
+	bart_flags_t out_flag = 0;
 
 	for (int i = N - 1; i >= 0; i--) {
 
@@ -122,9 +122,9 @@ unsigned long out_flag_conv_generic(int N, unsigned long conv_flag, unsigned lon
 	return out_flag;
 }
 
-unsigned long in_flag_conv(bool c1)
+bart_flags_t in_flag_conv(bool c1)
 {
-	unsigned long in_flags = c1 ? MD_BIT(1) : MD_BIT(3);
+	bart_flags_t in_flags = c1 ? MD_BIT(1) : MD_BIT(3);
 
 	//filters, channel, kx, ky, kz    or x, y, z channel, filters
 	for (int i = 0; i < 3; i++)
@@ -133,9 +133,9 @@ unsigned long in_flag_conv(bool c1)
 	return in_flags;
 }
 
-unsigned long out_flag_conv(bool c1)
+bart_flags_t out_flag_conv(bool c1)
 {
-	unsigned long out_flags = c1 ? MD_BIT(0) : MD_BIT(4);
+	bart_flags_t out_flags = c1 ? MD_BIT(0) : MD_BIT(4);
 
 	//filters, channel, kx, ky, kz    or x, y, z channel, filters
 	for (int i = 0; i < 3; i++)
@@ -153,7 +153,7 @@ struct initializer_const_s {
 
 static DEF_TYPEID(initializer_const_s);
 
-static void init_const_fun(const init_t* conf_, int N, const long dims[N], complex float* weights)
+static void init_const_fun(const init_t* conf_, int N, const bart_dim_t dims[N], complex float* weights)
 {
 	auto conf = CAST_DOWN(initializer_const_s, conf_);
 
@@ -187,19 +187,19 @@ struct initializer_fixed_s {
 	init_t super;
 
 	int N;
-	const long* dims;
+	const bart_dim_t* dims;
 
 	complex float* data;
 };
 
 static DEF_TYPEID(initializer_fixed_s);
 
-static void init_fixed_fun(const init_t* conf_, int N, const long dims[N], complex float* weights)
+static void init_fixed_fun(const init_t* conf_, int N, const bart_dim_t dims[N], complex float* weights)
 {
 	auto conf = CAST_DOWN(initializer_fixed_s, conf_);
 
 	assert(N == conf->N);
-	assert(md_check_equal_dims(N, dims, conf->dims, ~0UL));
+	assert(md_check_equal_dims(N, dims, conf->dims, ~UINT64_C(0)));
 
 	md_copy(N, dims, weights, conf->data, CFL_SIZE);
 }
@@ -217,7 +217,7 @@ static void init_fixed_del(const init_t* conf_)
  *
  * @returns Constant initializer
  */
-const struct initializer_s* init_array_create(int N, const long dims[N], const complex float* dat)
+const struct initializer_s* init_array_create(int N, const bart_dim_t dims[N], const complex float* dat)
 {
 	PTR_ALLOC(struct initializer_fixed_s, data);
 	SET_TYPEID(initializer_fixed_s, data);
@@ -228,7 +228,7 @@ const struct initializer_s* init_array_create(int N, const long dims[N], const c
 	data->super.fun = init_fixed_fun;
 
 	data->N = N;
-	data->dims = ARR_CLONE(long[N], dims);
+	data->dims = ARR_CLONE(bart_dim_t[N], dims);
 
 	complex float* tmp = md_alloc(N, dims, CFL_SIZE);
 	md_copy(N, dims, tmp, dat, CFL_SIZE);
@@ -239,7 +239,7 @@ const struct initializer_s* init_array_create(int N, const long dims[N], const c
 }
 
 // Returns real/complex uniform/normal distribution with mean 0 and variance 1
-static void get_base_dist(int N, const long dims[N], complex float* dst, bool uniform, bool real)
+static void get_base_dist(int N, const bart_dim_t dims[N], complex float* dst, bool uniform, bool real)
 {
 	if (uniform) {
 
@@ -274,15 +274,15 @@ static void get_base_dist(int N, const long dims[N], complex float* dst, bool un
 Xavier Glorot, Yoshua Bengio ; Proceedings of the Thirteenth International Conference on Artificial Intelligence and Statistics, JMLR Workshop and Conference Proceedings 9:249-256, 2010.
 Glorot, X. & Bengio, Y.. (2010). Understanding the difficulty of training deep feedforward neural networks. Proceedings of the Thirteenth International Conference on Artificial Intelligence and Statistics, in PMLR 9:249-256
 */
-static float get_scaling_xavier(int N, const long dims[N], unsigned long in_flags, unsigned long out_flags)
+static float get_scaling_xavier(int N, const bart_dim_t dims[N], bart_flags_t in_flags, bart_flags_t out_flags)
 {
-	long tdims[N];
+	bart_dim_t tdims[N];
 	md_select_dims(N, in_flags, tdims, dims);
 
-	long inputs = md_calc_size(N, tdims);
+	bart_dim_t inputs = md_calc_size(N, tdims);
 
 	md_select_dims(N, out_flags, tdims, dims);
-	long outputs = md_calc_size(N, tdims);
+	bart_dim_t outputs = md_calc_size(N, tdims);
 
 	return (float)sqrt(2. / (double)(inputs + outputs));
 }
@@ -290,11 +290,11 @@ static float get_scaling_xavier(int N, const long dims[N], unsigned long in_flag
 /*
 He, K.; Zhang, X.; Ren, S. & Sun, J. (2015). Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification
 */
-static float get_scaling_kaiming(int N, const long dims[N], unsigned long in_flags, float leaky_val)
+static float get_scaling_kaiming(int N, const bart_dim_t dims[N], bart_flags_t in_flags, float leaky_val)
 {
-	long tdims[N];
+	bart_dim_t tdims[N];
 	md_select_dims(N, in_flags, tdims, dims);
-	long inputs = md_calc_size(N, tdims);
+	bart_dim_t inputs = md_calc_size(N, tdims);
 
 	return (float)sqrt(2. / (double)(inputs) / (1. + leaky_val * leaky_val));
 }
@@ -306,15 +306,15 @@ struct initializer_xavier_kaiming_s {
 	bool uniform;
 	bool real;
 
-	unsigned long in_flags;
-	unsigned long out_flags;
+	bart_flags_t in_flags;
+	bart_flags_t out_flags;
 
 	float leaky_val;
 };
 
 static DEF_TYPEID(initializer_xavier_kaiming_s);
 
-static void init_xavier_fun(const init_t* conf_, int N, const long dims[N], complex float* weights)
+static void init_xavier_fun(const init_t* conf_, int N, const bart_dim_t dims[N], complex float* weights)
 {
 	auto conf = CAST_DOWN(initializer_xavier_kaiming_s, conf_);
 
@@ -322,7 +322,7 @@ static void init_xavier_fun(const init_t* conf_, int N, const long dims[N], comp
 	md_zsmul(N, dims, weights, weights, get_scaling_xavier(N, dims, conf->in_flags, conf->out_flags));
 }
 
-static void init_kaiming_fun(const init_t* conf_, int N, const long dims[N], complex float* weights)
+static void init_kaiming_fun(const init_t* conf_, int N, const bart_dim_t dims[N], complex float* weights)
 {
 	auto conf = CAST_DOWN(initializer_xavier_kaiming_s, conf_);
 
@@ -346,7 +346,7 @@ static void init_kaiming_fun(const init_t* conf_, int N, const long dims[N], com
  *
  * @returns Xavier initializer
  */
-const struct initializer_s* init_xavier_create(unsigned long in_flags, unsigned long out_flags, bool real, bool uniform)
+const struct initializer_s* init_xavier_create(bart_flags_t in_flags, bart_flags_t out_flags, bool real, bool uniform)
 {
 	PTR_ALLOC(struct initializer_xavier_kaiming_s, data);
 	SET_TYPEID(initializer_xavier_kaiming_s, data);
@@ -379,7 +379,7 @@ const struct initializer_s* init_xavier_create(unsigned long in_flags, unsigned 
  *
  * @returns Kaiming initializer
  */
-const struct initializer_s* init_kaiming_create(unsigned long in_flags, bool real, bool uniform, float leaky_val)
+const struct initializer_s* init_kaiming_create(bart_flags_t in_flags, bool real, bool uniform, float leaky_val)
 {
 	PTR_ALLOC(struct initializer_xavier_kaiming_s, data);
 	SET_TYPEID(initializer_xavier_kaiming_s, data);
@@ -411,7 +411,7 @@ struct initializer_std_normal_s {
 
 static DEF_TYPEID(initializer_std_normal_s);
 
-static void init_std_normal_fun(const init_t* conf_, int N, const long dims[N], complex float* weights)
+static void init_std_normal_fun(const init_t* conf_, int N, const bart_dim_t dims[N], complex float* weights)
 {
 	auto conf = CAST_DOWN(initializer_std_normal_s, conf_);
 
@@ -470,7 +470,7 @@ struct initializer_linspace_s {
 
 static DEF_TYPEID(initializer_linspace_s);
 
-static void init_linspace_fun(const init_t* conf_, int N, const long dims[N], complex float* weights)
+static void init_linspace_fun(const init_t* conf_, int N, const bart_dim_t dims[N], complex float* weights)
 {
 	auto conf = CAST_DOWN(initializer_linspace_s, conf_);
 
@@ -481,7 +481,7 @@ static void init_linspace_fun(const init_t* conf_, int N, const long dims[N], co
 	for (int i = 0; i < dims[conf->dim]; i++)
 		vals[i] = conf->min_val + i *(conf->max_val - conf->min_val) / ((float)dims[conf->dim] - (conf->max_inc ? 1. : 0.));
 
-	long vdims[N];
+	bart_dim_t vdims[N];
 	md_select_dims(N, MD_BIT(conf->dim), vdims, dims);
 
 	md_copy2(N, dims, MD_STRIDES(N, dims, CFL_SIZE), weights, MD_STRIDES(N, vdims, CFL_SIZE), vals, CFL_SIZE);
@@ -520,14 +520,14 @@ struct initializer_reshape_s {
 	init_t super;
 
 	int N;
-	long* dims;
+	bart_dim_t* dims;
 
 	const struct initializer_s* init;
 };
 
 static DEF_TYPEID(initializer_reshape_s);
 
-static void init_reshape_fun(const init_t* conf_, int N, const long dims[N], complex float* weights)
+static void init_reshape_fun(const init_t* conf_, int N, const bart_dim_t dims[N], complex float* weights)
 {
 	auto d = CAST_DOWN(initializer_reshape_s, conf_);
 
@@ -546,7 +546,7 @@ static void init_reshape_del(const init_t* conf_)
 /**
  * Used internally to apply initializer with original dimensions if the input of a nn_t is reshaped
  */
-const struct initializer_s* init_reshape_create(int N, const long dims[N], const struct initializer_s* init)
+const struct initializer_s* init_reshape_create(int N, const bart_dim_t dims[N], const struct initializer_s* init)
 {
 	if (NULL == init)
 		return NULL;
@@ -561,7 +561,7 @@ const struct initializer_s* init_reshape_create(int N, const long dims[N], const
 
 	data->N = N;
 
-	PTR_ALLOC(long[N], ndims);
+	PTR_ALLOC(bart_dim_t[N], ndims);
 
 	md_copy_dims(N, *ndims, dims);
 
@@ -576,9 +576,9 @@ struct initializer_stack_s {
 	init_t super;
 
 	int N;
-	long* dims;
-	long* dimsa;
-	long* dimsb;
+	bart_dim_t* dims;
+	bart_dim_t* dimsa;
+	bart_dim_t* dimsb;
 	int stack_dim;
 
 	const struct initializer_s* inita;
@@ -587,7 +587,7 @@ struct initializer_stack_s {
 
 static DEF_TYPEID(initializer_stack_s);
 
-static void init_stack_fun(const init_t* conf_, int N, const long dims[N], complex float* weights)
+static void init_stack_fun(const init_t* conf_, int N, const bart_dim_t dims[N], complex float* weights)
 {
 	auto d = CAST_DOWN(initializer_stack_s, conf_);
 
@@ -599,7 +599,7 @@ static void init_stack_fun(const init_t* conf_, int N, const long dims[N], compl
 	initializer_apply(d->inita, d->N, d->dimsa, weightsa);
 	initializer_apply(d->initb, d->N, d->dimsb, weightsb);
 
-	long pos[d->N];
+	bart_dim_t pos[d->N];
 	for (int i = 0; i < N; i++)
 		pos[i] = 0;
 
@@ -625,7 +625,7 @@ static void init_stack_del(const init_t* conf_)
  * Used internally to apply initializers of original inputs if two inputs of a nn_t are stacked
  * If only one initializer is set, the other will fall back to a zero initializer
  */
-const struct initializer_s* init_stack_create(int N, int stack_dim, const long dimsa[N], const struct initializer_s* inita, const long dimsb[N], const struct initializer_s* initb)
+const struct initializer_s* init_stack_create(int N, int stack_dim, const bart_dim_t dimsa[N], const struct initializer_s* inita, const bart_dim_t dimsb[N], const struct initializer_s* initb)
 {
 	if ((NULL == inita) && (NULL == initb))
 		return NULL;
@@ -646,15 +646,15 @@ const struct initializer_s* init_stack_create(int N, int stack_dim, const long d
 	data->inita = (NULL == inita) ? init_const_create(0) : initializer_clone(inita);
 	data->initb = (NULL == initb) ? init_const_create(0) : initializer_clone(initb);
 
-	PTR_ALLOC(long[N], ndimsa);
+	PTR_ALLOC(bart_dim_t[N], ndimsa);
 	md_copy_dims(N, *ndimsa, dimsa);
 	data->dimsa = *PTR_PASS(ndimsa);
 
-	PTR_ALLOC(long[N], ndimsb);
+	PTR_ALLOC(bart_dim_t[N], ndimsb);
 	md_copy_dims(N, *ndimsb, dimsb);
 	data->dimsb = *PTR_PASS(ndimsb);
 
-	PTR_ALLOC(long[N], dims);
+	PTR_ALLOC(bart_dim_t[N], dims);
 
 	for (int i = 0; i < N; i++) {
 

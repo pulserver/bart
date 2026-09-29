@@ -54,7 +54,7 @@ void polynom_from_roots(int N, complex double coeff[N + 1], const complex double
 		coeff[i] = 0.;
 
 	// assert N < 
-	for (unsigned long b = 0; b < (1u << N); b++) {
+	for (unsigned int b = 0; b < (1u << N); b++) {
 
 		complex double prod = 1.;
 		int count = 0;

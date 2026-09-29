@@ -54,9 +54,9 @@ int main_casorati(int argc, char* argv[argc])
 
 	num_init();
 
-	long idims[DIMS];
-	long kdims[DIMS];
-	long odims[2];
+	bart_dim_t idims[DIMS];
+	bart_dim_t kdims[DIMS];
+	bart_dim_t odims[2];
 
 	complex float* idata = load_cfl(in_file, DIMS, idims);
 
@@ -78,7 +78,7 @@ int main_casorati(int argc, char* argv[argc])
 
 	complex float* odata = create_cfl(out_file, 2, odims);
 
-	long istrs[DIMS];
+	bart_stride_t istrs[DIMS];
 	md_calc_strides(DIMS, istrs, idims, CFL_SIZE);
 
 	casorati_matrix(DIMS, kdims, odims, odata, idims, istrs, idata);

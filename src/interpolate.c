@@ -32,7 +32,7 @@ static const char help_str[] = "Interpolate with coordinates, displacement field
 
 int main_interpolate(int argc, char* argv[argc])
 {
-	unsigned long flags = 0;
+	bart_flags_t flags = 0;
 	const char* input_file = NULL;
 	const char* motion_file = NULL;
 	const char* output_file = NULL;
@@ -47,7 +47,7 @@ int main_interpolate(int argc, char* argv[argc])
 
 	bool nearest_neighbour = false;
 	bool cubic = false;
-	long out_dims[3] = { };
+	bart_dim_t out_dims[3] = { };
 
 	enum INTERPOLATION_TYPE interp_type = INTP_COORDS;
 
@@ -67,9 +67,9 @@ int main_interpolate(int argc, char* argv[argc])
 
 	num_init_gpu_support();
 
-	long dims[DIMS];
-	long odims[DIMS];
-	long mdims[DIMS];
+	bart_dim_t dims[DIMS];
+	bart_dim_t odims[DIMS];
+	bart_dim_t mdims[DIMS];
 
 	complex float* src_ptr = load_cfl(input_file, DIMS, dims);
 	assert(1 == dims[MOTION_DIM]);

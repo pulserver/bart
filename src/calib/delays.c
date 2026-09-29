@@ -42,20 +42,20 @@
 
 
 // [AC-Adaptive]
-void radial_self_delays(int N, float shifts[N], const float phi[N], const long dims[DIMS], const complex float* in)
+void radial_self_delays(int N, float shifts[N], const float phi[N], const bart_dim_t dims[DIMS], const complex float* in)
 {
 	int d = 2;
-	unsigned long flags = (1UL << d);
+	bart_flags_t flags = (UINT64_C(1) << d);
 
 	assert(N == dims[d]);
 
-	long dims1[DIMS];
+	bart_dim_t dims1[DIMS];
 	md_select_dims(DIMS, ~flags, dims1, dims);
 
 	complex float* tmp1 = md_alloc(DIMS, dims1, CFL_SIZE);
 	complex float* tmp2 = md_alloc(DIMS, dims1, CFL_SIZE);
 
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 
 	for (int i = 0; i < dims[d]; i++) {
 
@@ -167,7 +167,7 @@ static void find_intersec_sp(const int no_intersec_sp, int intersec_sp[no_inters
 
 
 // [RING] Test that hints if the chosen region (-r) is too small
-static void check_intersections(const int Nint, const int N, const float S[3], const float angles[N], const long idx[Nint][2], const int c_region)
+static void check_intersections(const int Nint, const int N, const float S[3], const float angles[N], const bart_dim_t idx[Nint][2], const int c_region)
 {
 	for (int i = 0; i < Nint; i++) {
 
@@ -201,17 +201,17 @@ static void check_intersections(const int Nint, const int N, const float S[3], c
 
 
 // [RING] Calculate intersection points
-static void calc_intersections(int Nint, int N, int no_intersec_sp, bool b0, float dist[Nint][2], long idx[Nint][2],
-		const float angles[N], const long kc_dims[DIMS], const complex float* kc)
+static void calc_intersections(int Nint, int N, int no_intersec_sp, bool b0, float dist[Nint][2], bart_dim_t idx[Nint][2],
+		const float angles[N], const bart_dim_t kc_dims[DIMS], const complex float* kc)
 {
-	long spoke_dims[DIMS];
+	bart_dim_t spoke_dims[DIMS];
 	md_select_dims(DIMS, ~PHS2_FLAG, spoke_dims, kc_dims);
 
 	complex float* spoke_i = md_alloc(DIMS, spoke_dims, CFL_SIZE);
 	complex float* spoke_j = md_alloc(DIMS, spoke_dims, CFL_SIZE);
 
-	long pos_i[DIMS] = { };
-	long pos_j[DIMS] = { };
+	bart_dim_t pos_i[DIMS] = { };
+	bart_dim_t pos_j[DIMS] = { };
 
 	int ROI = kc_dims[PHS1_DIM];
 
@@ -306,7 +306,7 @@ static void calc_intersections(int Nint, int N, int no_intersec_sp, bool b0, flo
 
 
 // [RING] Solve inverse problem AS = B using pseudoinverse
-static void calc_S(const int Nint, const int N, float S[3], const float angles[N], const float dist[Nint][2], const long idx[Nint][2])
+static void calc_S(const int Nint, const int N, float S[3], const float angles[N], const float dist[Nint][2], const bart_dim_t idx[Nint][2])
 {
 	complex float A[2 * Nint][3];
 	complex float B[2 * Nint];
@@ -355,7 +355,7 @@ struct ring_conf ring_defaults = {
 	.b0 = false,
 };
 
-void ring(const struct ring_conf* conf, float S[3], int N, const float angles[N], const long dims[DIMS], const complex float* in)
+void ring(const struct ring_conf* conf, float S[3], int N, const float angles[N], const bart_dim_t dims[DIMS], const complex float* in)
 {
 	assert(dims[2] == N);
 
@@ -372,7 +372,7 @@ void ring(const struct ring_conf* conf, float S[3], int N, const float angles[N]
 
 	// Sinc filter in k-space (= crop FOV in image space)
 
-	long crop_dims[DIMS];
+	bart_dim_t crop_dims[DIMS];
 
 	md_copy_dims(DIMS, crop_dims, dims);
 	crop_dims[PHS1_DIM] = conf->crop_factor * dims[PHS1_DIM];
@@ -385,7 +385,7 @@ void ring(const struct ring_conf* conf, float S[3], int N, const float angles[N]
 
 	//--- Refine grid ---
 
-	long pad_dims[DIMS];
+	bart_dim_t pad_dims[DIMS];
 
 	md_copy_dims(DIMS, pad_dims, dims);
 	pad_dims[PHS1_DIM] = conf->pad_factor * dims[PHS1_DIM];
@@ -401,14 +401,14 @@ void ring(const struct ring_conf* conf, float S[3], int N, const float angles[N]
 
 	//--- Consider only center region ---
 
-	long kc_dims[DIMS];
+	bart_dim_t kc_dims[DIMS];
 
 	md_copy_dims(DIMS, kc_dims, pad_dims);
 	kc_dims[PHS1_DIM] = c_region;
 
 	complex float* kc = md_alloc(DIMS, kc_dims, CFL_SIZE);
 
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 	pos[PHS1_DIM] = pad_dims[PHS1_DIM] / 2 - (c_region / 2);
 
 	md_copy_block(DIMS, pos, kc_dims, kc, pad_dims, pad, CFL_SIZE);
@@ -418,7 +418,7 @@ void ring(const struct ring_conf* conf, float S[3], int N, const float angles[N]
 	//--- Calculate intersections ---
 
 	int Nint = N * conf->no_intersec_sp; // Number of intersection points
-	long idx[Nint][2];
+	bart_dim_t idx[Nint][2];
 	float dist[Nint][2];
 
 	for (int i = 0; i < Nint; i++) { // analyzer false positive

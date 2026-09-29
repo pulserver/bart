@@ -56,12 +56,12 @@ static void noir_linop_del(const void* _data)
 	linop_free(_data);
 }
 
-struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], complex float* coil, const long pat_dims[DIMS], const complex float* psf, const struct noir_model_conf_s* conf)
+struct noir_s noir_create(const bart_dim_t dims[DIMS], const bart_dim_t coil_dims[DIMS], complex float* coil, const bart_dim_t pat_dims[DIMS], const complex float* psf, const struct noir_model_conf_s* conf)
 {
 
-	long data_dims[DIMS];
-	long data_red_dims[DIMS];
-	long imgs_dims[DIMS];
+	bart_dim_t data_dims[DIMS];
+	bart_dim_t data_red_dims[DIMS];
+	bart_dim_t imgs_dims[DIMS];
 
 	md_select_dims(DIMS, ~COIL_FLAG, imgs_dims, dims);
 	md_select_dims(DIMS, ~MAPS_FLAG, data_red_dims, dims);
@@ -70,8 +70,8 @@ struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], com
 	md_copy_dims(3, data_dims, pat_dims);
 	assert(md_check_compat(DIMS, md_nontriv_dims(DIMS, data_dims), data_dims, pat_dims));
 
-	unsigned long fft_flags = FFT_FLAGS;
-	unsigned long fftuc_flags = FFT_FLAGS;
+	bart_flags_t fft_flags = FFT_FLAGS;
+	bart_flags_t fftuc_flags = FFT_FLAGS;
 
 	if (conf->sms || conf->sos)
 		fft_flags |= SLICE_FLAG;
@@ -81,10 +81,10 @@ struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], com
 
 	const struct linop_s* lop_fft = linop_fft_create(DIMS, data_dims, fft_flags);
 
-	if (!md_check_equal_dims(DIMS, data_red_dims, data_dims, ~0UL))
+	if (!md_check_equal_dims(DIMS, data_red_dims, data_dims, ~UINT64_C(0)))
 		lop_fft = linop_chain_FF(linop_resize_center_create(DIMS, data_dims, data_red_dims), lop_fft);
 
-	long fft_dims[DIMS];
+	bart_dim_t fft_dims[DIMS];
 	md_select_dims(DIMS, fftuc_flags, fft_dims, data_dims);
 
 	complex float* fft_mod = md_alloc(DIMS, fft_dims, CFL_SIZE);
@@ -92,7 +92,7 @@ struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], com
 	fftscale(DIMS, fft_dims, fftuc_flags, fft_mod, fft_mod);
 	fftmod(DIMS, fft_dims, fftuc_flags, fft_mod, fft_mod);
 
-	long fft_red_dims[DIMS];
+	bart_dim_t fft_red_dims[DIMS];
 	md_select_dims(DIMS, fftuc_flags, fft_red_dims, data_red_dims);
 
 	complex float* fft_red_mod = md_alloc_sameplace(DIMS, fft_red_dims, CFL_SIZE, coil);

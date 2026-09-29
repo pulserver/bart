@@ -24,7 +24,7 @@
 
 
 
-static bool run_cuda_fft_test(const int D, const long* dims, const unsigned long flags,
+static bool run_cuda_fft_test(const int D, const bart_dim_t* dims, const bart_flags_t flags,
 			       const complex float* in, complex float* cpu_inout,
 			       complex float* gpu_inout, complex float* gpu_result)
 {
@@ -54,7 +54,7 @@ static bool test_cuda_fft(void)
 
 	enum { test_cuda_fft_dims = 7 };
 
-	const long dims[test_cuda_fft_dims] = { 4, 4, 4, 4, 4, 4, 1 }; // in last dim != 1 works...
+	const bart_dim_t dims[test_cuda_fft_dims] = { 4, 4, 4, 4, 4, 4, 1 }; // in last dim != 1 works...
 
 	const bool transform_dims[][test_cuda_fft_dims] = {
 		{ 1, 1, 1, 0, 0, 0, 0 },
@@ -77,7 +77,7 @@ static bool test_cuda_fft(void)
 
 	for (unsigned int i = 0; i < ARRAY_SIZE(transform_dims); ++i) {
 
-		unsigned long flags = 0;
+		bart_flags_t flags = 0;
 
 		for (unsigned int j = 0; j < D; ++j)
 			if (transform_dims[i][j])
@@ -106,7 +106,7 @@ static bool test_cuda_fftmod(void)
 	num_rand_init(5);
 
 	enum { DIMS = 4 };
-	const long dims[DIMS] = {3, 5, 9, 3};
+	const bart_dim_t dims[DIMS] = {3, 5, 9, 3};
 	complex float* cpu1 = md_alloc(DIMS, dims, CFL_SIZE);
 	md_gaussian_rand(DIMS, dims, cpu1);
 
@@ -137,7 +137,7 @@ static bool test_cuda_fftmod2(void)
 	num_rand_init(5);
 
 	enum { DIMS = 4 };
-	const long dims[DIMS] = {16, 4, 16, 3};
+	const bart_dim_t dims[DIMS] = {16, 4, 16, 3};
 	complex float* cpu1 = md_alloc(DIMS, dims, CFL_SIZE);
 	md_gaussian_rand(DIMS, dims, cpu1);
 

@@ -2,6 +2,7 @@
 #ifndef _ITER_ADMM_H
 #define _ITER_ADMM_H
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 #include "misc/types.h"
 
@@ -115,8 +116,8 @@ struct admm_history_s {
 
 
 extern void admm(const struct admm_plan_s* plan,
-		int D, const long z_dims[__VLA(D)],
-		long N, float* x, const float* x_adj,
+		int D, const bart_dim_t z_dims[__VLA(D)],
+		bart_dim_t N, float* x, const float* x_adj,
 		const struct vec_iter_s* vops,
 		struct iter_op_s Aop,
 		struct iter_monitor_s* monitor);

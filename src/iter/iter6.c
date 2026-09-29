@@ -36,10 +36,10 @@
 #endif
 #define NLOP2ITNLOP(nlop) (struct iter_nlop_s){ (NULL == nlop) ? NULL : iter6_nlop, CAST_UP(STRUCT_TMP_COPY(((struct iter6_nlop_s){ { &TYPEID(iter6_nlop_s) }, nlop }))) }
 #define NLOP2IT_ADJ_ARR(nlop) ({											\
-	long NO = nlop_get_nr_out_args(nlop);										\
-	long NI = nlop_get_nr_in_args(nlop);										\
-	const struct operator_s** adj_ops = (const struct operator_s**)alloca((size_t)((long)sizeof(struct operator_s*) * NI * NO));	\
-	bool* der_out = (bool*)alloca((size_t)((long)sizeof(bool) * NI));						\
+	bart_dim_t NO = nlop_get_nr_out_args(nlop);										\
+	bart_dim_t NI = nlop_get_nr_in_args(nlop);										\
+	const struct operator_s** adj_ops = (const struct operator_s**)alloca((size_t)((bart_stride_t)sizeof(struct operator_s*) * NI * NO));	\
+	bool* der_out = (bool*)alloca((size_t)((bart_stride_t)sizeof(bool) * NI));						\
 	for (int o = 0; o < NO; o++)											\
 		for (int i = 0; i < NI; i++)										\
 			adj_ops[i * NO + o] = nlop_get_derivative(nlop, o, i)->adjoint;					\
@@ -167,8 +167,8 @@ struct iter6_op_arr_s {
 
 	iter_op_data super;
 
-	long NO;
-	long NI;
+	bart_dim_t NO;
+	bart_dim_t NI;
 
 	const struct operator_s** ops;
 
@@ -241,13 +241,13 @@ static void iter6_op_arr_fun_deradj(iter_op_data* _o, int NO, float* dst[NO], in
 #endif
 }
 
-static const struct iter_dump_s* iter6_dump_default_create(const char* base_filename, long save_mod, const struct nlop_s* nlop, unsigned long save_flag, long NI, enum IN_TYPE in_type[NI])
+static const struct iter_dump_s* iter6_dump_default_create(const char* base_filename, bart_dim_t save_mod, const struct nlop_s* nlop, bart_flags_t save_flag, bart_dim_t NI, enum IN_TYPE in_type[NI])
 {
 	int D[NI];
-	const long* dims[NI];
+	const bart_dim_t* dims[NI];
 	bool save_array[NI];
 
-	bool guess_save_flag = (0UL == save_flag);
+	bool guess_save_flag = (0 == save_flag);
 
 	for (int i = 0; i < NI; i++) {
 
@@ -259,7 +259,7 @@ static const struct iter_dump_s* iter6_dump_default_create(const char* base_file
 			save_array[i] = ((IN_OPTIMIZE == in_type[i]) || (IN_BATCHNORM == in_type[i]) || (IN_STATIC == in_type[i]));
 		} else {
 
-			assert(i < 8 * (long)sizeof(save_flag));
+			assert(i < 8 * (bart_stride_t)sizeof(save_flag));
 			save_array[i] = MD_IS_SET(save_flag, i);
 		}
 	}
@@ -267,7 +267,7 @@ static const struct iter_dump_s* iter6_dump_default_create(const char* base_file
 	return iter_dump_default_create(base_filename, save_mod, NI, save_array, D, dims);
 }
 
-static const struct operator_p_s* get_update_operator(const iter6_conf* conf, int N, const long dims[N], long numbatches)
+static const struct operator_p_s* get_update_operator(const iter6_conf* conf, int N, const bart_dim_t dims[N], bart_dim_t numbatches)
 {
 	const auto conf_adadelta = CAST_MAYBE(iter6_adadelta_conf, conf);
 
@@ -307,7 +307,7 @@ static void get_learning_rate_schedule_exponential_decay(int epochs, int numbatc
 		float learning_rate, float min_learning_rate,
 		float (*result)[epochs][numbatches])
 {
-	long dims[2] = { numbatches, epochs };
+	bart_dim_t dims[2] = { numbatches, epochs };
 
 	if (0 >= min_learning_rate)
 		return;
@@ -339,8 +339,8 @@ static void learning_rate_schedule_add_warmup(int epochs, int numbatches, float 
 
 void iter6_sgd_like(	const iter6_conf* conf,
 			const struct nlop_s* nlop,
-			long NI, enum IN_TYPE in_type[NI], const struct operator_p_s* prox_ops[NI], float* dst[NI],
-			long NO, enum OUT_TYPE out_type[NO],
+			bart_dim_t NI, enum IN_TYPE in_type[NI], const struct operator_p_s* prox_ops[NI], float* dst[NI],
+			bart_dim_t NO, enum OUT_TYPE out_type[NO],
 			int batchsize, int numbatches, const struct nlop_s* nlop_batch_gen, struct monitor_iter6_s* monitor)
 {
 	struct iter_nlop_s nlop_iter = NLOP2ITNLOP(nlop);
@@ -365,8 +365,8 @@ void iter6_sgd_like(	const iter6_conf* conf,
 	for (int i = 0; i < NI; i++)
 		prox_iter[i] = OPERATOR_P2ITOP((NULL == prox_ops ? NULL : prox_ops[i]));
 
-	long isize[NI];
-	long osize[NO];
+	bart_dim_t isize[NI];
+	bart_dim_t osize[NO];
 
 	//array of update operators
 	const struct operator_p_s* upd_ops[NI];
@@ -427,7 +427,7 @@ void iter6_sgd_like(	const iter6_conf* conf,
 	    && (0 < conf->dump_mod))
 		dump = iter6_dump_default_create(conf->dump_filename, conf->dump_mod, nlop, conf->dump_flag, NI, in_type);
 
-	long dims[2] = { numbatches, conf->epochs };
+	bart_dim_t dims[2] = { numbatches, conf->epochs };
 
 	float (*learning_rate_schedule)[conf->epochs][numbatches] = md_alloc(2, dims, FL_SIZE);
 
@@ -493,8 +493,8 @@ void iter6_sgd_like(	const iter6_conf* conf,
 
 void iter6_adadelta(	const iter6_conf* _conf,
 			const struct nlop_s* nlop,
-			long NI, enum IN_TYPE in_type[NI], const struct operator_p_s* prox_ops[NI], float* dst[NI],
-			long NO, enum OUT_TYPE out_type[NO],
+			bart_dim_t NI, enum IN_TYPE in_type[NI], const struct operator_p_s* prox_ops[NI], float* dst[NI],
+			bart_dim_t NO, enum OUT_TYPE out_type[NO],
 			int batchsize, int numbatches, const struct nlop_s* nlop_batch_gen, struct monitor_iter6_s* monitor)
 {
 	auto conf = CAST_MAYBE(iter6_adadelta_conf, _conf);
@@ -510,8 +510,8 @@ void iter6_adadelta(	const iter6_conf* _conf,
 
 void iter6_adam(const iter6_conf* _conf,
 		const struct nlop_s* nlop,
-		long NI, enum IN_TYPE in_type[NI], const struct operator_p_s* prox_ops[NI], float* dst[NI],
-		long NO, enum OUT_TYPE out_type[NO],
+		bart_dim_t NI, enum IN_TYPE in_type[NI], const struct operator_p_s* prox_ops[NI], float* dst[NI],
+		bart_dim_t NO, enum OUT_TYPE out_type[NO],
 		int batchsize, int numbatches, const struct nlop_s* nlop_batch_gen, struct monitor_iter6_s* monitor)
 {
 	auto conf = CAST_MAYBE(iter6_adam_conf, _conf);
@@ -527,8 +527,8 @@ void iter6_adam(const iter6_conf* _conf,
 
 void iter6_sgd(		const iter6_conf* _conf,
 			const struct nlop_s* nlop,
-			long NI, enum IN_TYPE in_type[NI], const struct operator_p_s* prox_ops[NI], float* dst[NI],
-			long NO, enum OUT_TYPE out_type[NO],
+			bart_dim_t NI, enum IN_TYPE in_type[NI], const struct operator_p_s* prox_ops[NI], float* dst[NI],
+			bart_dim_t NO, enum OUT_TYPE out_type[NO],
 			int batchsize, int numbatches, const struct nlop_s* nlop_batch_gen, struct monitor_iter6_s* monitor)
 {
 	auto conf = CAST_MAYBE(iter6_sgd_conf, _conf);
@@ -544,15 +544,15 @@ void iter6_sgd(		const iter6_conf* _conf,
 
 void iter6_iPALM(	const iter6_conf* _conf,
 			const struct nlop_s* nlop,
-			long NI, enum IN_TYPE in_type[NI], const struct operator_p_s* prox_ops[NI], float* dst[NI],
-			long NO, enum OUT_TYPE out_type[NO],
+			bart_dim_t NI, enum IN_TYPE in_type[NI], const struct operator_p_s* prox_ops[NI], float* dst[NI],
+			bart_dim_t NO, enum OUT_TYPE out_type[NO],
 			int /*batchsize*/, int numbatches, const struct nlop_s* nlop_batch_gen, struct monitor_iter6_s* monitor)
 {
 	auto conf = CAST_DOWN(iter6_iPALM_conf, _conf);
 
 	//Compute sizes
-	long isize[NI];
-	long osize[NO];
+	bart_dim_t isize[NI];
+	bart_dim_t osize[NO];
 
 	for (int i = 0; i < NI; i++)
 		isize[i] = 2 * md_calc_size(nlop_generic_domain(nlop, i)->N, nlop_generic_domain(nlop, i)->dims);
@@ -674,8 +674,8 @@ void iter6_iPALM(	const iter6_conf* _conf,
 
 void iter6_by_conf(	const iter6_conf* _conf,
 			const struct nlop_s* nlop,
-			long NI, enum IN_TYPE in_type[NI], const struct operator_p_s* prox_ops[NI], float* dst[NI],
-			long NO, enum OUT_TYPE out_type[NO],
+			bart_dim_t NI, enum IN_TYPE in_type[NI], const struct operator_p_s* prox_ops[NI], float* dst[NI],
+			bart_dim_t NO, enum OUT_TYPE out_type[NO],
 			int batchsize, int numbatches, const struct nlop_s* nlop_batch_gen, struct monitor_iter6_s* monitor)
 {
 	auto algo = iter6_sgd_like;

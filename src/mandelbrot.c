@@ -56,7 +56,7 @@ int main_mandelbrot(int argc, char* argv[argc])
 
 	complex float off = offr + 1.i * offi;
 
-	long dims[3] = { size, size, iter };
+	bart_dim_t dims[3] = { size, size, iter };
 
 	complex float* o = create_async_cfl(out_file, MD_BIT(2), 3, dims);
 
@@ -75,7 +75,7 @@ int main_mandelbrot(int argc, char* argv[argc])
 
 	complex float* occur = o;
 	complex float* prev = o;
-	long skip = md_calc_size(2, dims);
+	bart_dim_t skip = md_calc_size(2, dims);
 
 	for (int i = 0; i < iter; i++) {
 
@@ -85,7 +85,7 @@ int main_mandelbrot(int argc, char* argv[argc])
 
 		// track non-divergent points
 		md_zabs(2, dims, t, x);
-		md_slessequal(3, (long[3]){ 2, dims[0], dims[1] }, (float*)t, (float*)t, thresh);
+		md_slessequal(3, (bart_dim_t[3]){ 2, dims[0], dims[1] }, (float*)t, (float*)t, thresh);
 		md_zreal(2, dims, t, t);
 		md_zsub(2, dims, occur, prev, t);
 
@@ -98,7 +98,7 @@ int main_mandelbrot(int argc, char* argv[argc])
 		}
 
 		if (strm_o)
-			stream_sync_slice(strm_o, 3, dims, MD_BIT(2), (long[3]){ [2] = i });
+			stream_sync_slice(strm_o, 3, dims, MD_BIT(2), (bart_dim_t[3]){ [2] = i });
 	}
 
 	md_free(t);

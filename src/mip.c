@@ -30,7 +30,7 @@ static const char help_str[] = "Maximum (minimum) intensity projection (MIP) alo
 
 int main_mip(int argc, char* argv[argc])
 {
-	unsigned long flags = 0;
+	bart_flags_t flags = 0;
 	const char* in_file = NULL;
 	const char* out_file = NULL;
 
@@ -55,10 +55,10 @@ int main_mip(int argc, char* argv[argc])
 
 	num_init();
 
-	long idims[DIMS];
+	bart_dim_t idims[DIMS];
 	complex float* in = load_cfl(in_file, DIMS, idims);
 
-	long odims[DIMS];
+	bart_dim_t odims[DIMS];
 	md_select_dims(DIMS, ~flags, odims, idims);
 
 	complex float* out = create_cfl(out_file, DIMS, odims);
@@ -70,8 +70,8 @@ int main_mip(int argc, char* argv[argc])
 	else
 		md_copy(DIMS, idims, tmp, in, CFL_SIZE);
 
-	long istr[DIMS];
-	long ostr[DIMS];
+	bart_stride_t istr[DIMS];
+	bart_stride_t ostr[DIMS];
 
 	md_calc_strides(DIMS, istr, idims, CFL_SIZE);
 	md_calc_strides(DIMS, ostr, odims, CFL_SIZE);

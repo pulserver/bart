@@ -2,6 +2,7 @@
 #ifndef _OPTREG_H
 #define _OPTREG_H
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 
@@ -16,8 +17,8 @@ struct reg_s {
 
 	enum { L1WAV, NIHTWAV, NIHTIM, TV, LLR, MLR, IMAGL1, IMAGL2, L1IMG, L2IMG, FTL1, LAPLACE, POS, TENFL, TGV, ICTV, ICTGV } xform;
 
-	unsigned long xflags;
-	unsigned long jflags;
+	bart_flags_t xflags;
+	bart_flags_t jflags;
 
 	float lambda;
 	int k;
@@ -32,7 +33,7 @@ struct opt_reg_s {
 	float lambda;
 	struct reg_s regs[NUM_REGS];
 	int r;
-	long svars;
+	bart_dim_t svars;
 	int sr;
 	
 	int tvscales_N;
@@ -55,9 +56,9 @@ struct opt_reg_s {
 extern bool opt_reg_init(struct opt_reg_s* ropts);
 
 extern void opt_bpursuit_configure(struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], const struct linop_s* model_op, const _Complex float* data, const float eps);
-extern void opt_precond_configure(struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], const struct linop_s* model_op, int N, const long ksp_dims[N], const _Complex float* data, const long pat_dims[N], const _Complex float* pattern);
+extern void opt_precond_configure(struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], const struct linop_s* model_op, int N, const bart_dim_t ksp_dims[N], const _Complex float* data, const bart_dim_t pat_dims[N], const _Complex float* pattern);
 
-extern void opt_reg_configure(int N, const long img_dims[__VLA(N)], struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], const long (*sdims[NUM_REGS])[N + 1], int llr_blk, int shift_mode, const char* wtype_str, bool use_gpu, int asl_dim);
+extern void opt_reg_configure(int N, const bart_dim_t img_dims[__VLA(N)], struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], const bart_dim_t (*sdims[NUM_REGS])[N + 1], int llr_blk, int shift_mode, const char* wtype_str, bool use_gpu, int asl_dim);
 
 extern void opt_reg_free(struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS]);
 

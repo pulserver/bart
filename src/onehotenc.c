@@ -51,18 +51,18 @@ int main_onehotenc(int argc, char* argv[argc])
 
 	if (!reverse) {
 
-		long idims[DIMS];
+		bart_dim_t idims[DIMS];
 		complex float* in = load_cfl(input, DIMS, idims);
 
 		while (1 != idims[class_index])
 			class_index++;
 
-		long odims[DIMS];
+		bart_dim_t odims[DIMS];
 		md_copy_dims(DIMS, odims, idims);
 
 		complex float max = in[0];
 		md_zmax2(DIMS, idims, MD_SINGLETON_STRS(DIMS), &max, MD_SINGLETON_STRS(DIMS), &max, MD_STRIDES(DIMS, idims, CFL_SIZE), in);
-		odims[class_index] = lroundf(crealf(max)) + 1;
+		odims[class_index] = llroundf(crealf(max)) + 1;
 
 		complex float* out = create_cfl(output, DIMS, odims);
 
@@ -73,10 +73,10 @@ int main_onehotenc(int argc, char* argv[argc])
 
 	} else {
 
-		long idims[DIMS];
+		bart_dim_t idims[DIMS];
 		complex float* in = load_cfl(input, DIMS, idims);
 
-		long odims[DIMS];
+		bart_dim_t odims[DIMS];
 		md_select_dims(DIMS, ~MD_BIT(class_index), odims, idims);
 
 		complex float* out = create_cfl(output, DIMS, odims);

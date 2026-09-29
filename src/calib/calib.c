@@ -86,7 +86,7 @@ static void eigen_herm3(int M, int N, float val[M], complex float matrix[N][N], 
 
 
 
-static void md_scurve(int N, const long dims[N], float* dst, const float* src)
+static void md_scurve(int N, const bart_dim_t dims[N], float* dst, const float* src)
 {
 	float* tmp1 = md_alloc_sameplace(N, dims, FL_SIZE, src);
 	float* tmp2 = md_alloc_sameplace(N, dims, FL_SIZE, src);
@@ -106,7 +106,7 @@ static void md_scurve(int N, const long dims[N], float* dst, const float* src)
 	md_free(tmp2);
 }
 
-static void md_crop_weight_fun(int N, const long dims[N], float crth, complex float* dst, const complex float* src)
+static void md_crop_weight_fun(int N, const bart_dim_t dims[N], float crth, complex float* dst, const complex float* src)
 {
 	md_zabs(N, dims, dst, src);
 
@@ -124,28 +124,28 @@ static void md_crop_weight_fun(int N, const long dims[N], float crth, complex fl
 	md_free(tmp);
 }
 
-static void md_crop_thresh_fun(int N, const long dims[N], float crth, complex float* dst, const complex float* src)
+static void md_crop_thresh_fun(int N, const bart_dim_t dims[N], float crth, complex float* dst, const complex float* src)
 {
 	md_zabs(N, dims, dst, src);
 	md_zsgreatequal(N, dims, dst, dst, crth);
 }
 
 
-typedef void (*md_weight_function)(int N, const long dims[N], float crth, complex float* dst, const complex float* src);
+typedef void (*md_weight_function)(int N, const bart_dim_t dims[N], float crth, complex float* dst, const complex float* src);
 
-static void md_crop_weight(int N, const long dims[N], complex float* ptr, md_weight_function fun, float crth, const complex float* map)
+static void md_crop_weight(int N, const bart_dim_t dims[N], complex float* ptr, md_weight_function fun, float crth, const complex float* map)
 {
 	assert(4 < N);
 
-	long wgh_dims[N];
+	bart_dim_t wgh_dims[N];
 	md_select_dims(N, FFT_FLAGS | MAPS_FLAG, wgh_dims, dims);
 
 	complex float* tmp = md_alloc_sameplace(N, wgh_dims, CFL_SIZE, map);
 
 	fun(N, wgh_dims, crth, tmp, map);
 
-	long strs[N];
-	long wgh_strs[N];
+	bart_stride_t strs[N];
+	bart_stride_t wgh_strs[N];
 
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 	md_calc_strides(N, wgh_strs, wgh_dims, CFL_SIZE);
@@ -157,7 +157,7 @@ static void md_crop_weight(int N, const long dims[N], complex float* ptr, md_wei
 
 
 
-void crop_sens(const long dims[DIMS], complex float* ptr, bool soft, float crth, const complex float* map)
+void crop_sens(const bart_dim_t dims[DIMS], complex float* ptr, bool soft, float crth, const complex float* map)
 {
 	md_crop_weight(DIMS, dims, ptr, soft ? md_crop_weight_fun : md_crop_thresh_fun, crth, map);
 }
@@ -176,15 +176,15 @@ void crop_sens(const long dims[DIMS], complex float* ptr, bool soft, float crth,
  *	calreg_dims     - Dimension of the calibration region.
  *	calreg	        - Calibration data.
  */
-static float sure_crop(float var, const long evec_dims[DIMS], complex float* evec_data, complex float* eptr, const long calreg_dims[DIMS], const complex float* calreg)
+static float sure_crop(float var, const bart_dim_t evec_dims[DIMS], complex float* evec_data, complex float* eptr, const bart_dim_t calreg_dims[DIMS], const complex float* calreg)
 {
 	assert(1 == md_calc_size(DIMS - 5, evec_dims + 5));
 	assert(1 == md_calc_size(DIMS - 5, calreg_dims + 5));
 
-	long num_maps = evec_dims[4];
+	bart_dim_t num_maps = evec_dims[4];
 
 	// Construct low-resolution image
-	long im_dims[5];
+	bart_dim_t im_dims[5];
 	md_select_dims(5, 15, im_dims, evec_dims);
 
 	complex float* im = md_alloc_sameplace(5, im_dims, CFL_SIZE, calreg);
@@ -198,7 +198,7 @@ static float sure_crop(float var, const long evec_dims[DIMS], complex float* eve
 	linop_adjoint(lop_fft_im, 5, im_dims, im, 5, im_dims, im);
 
 	// Temporary vector for crop dimensions
-	long cropdims[5];
+	bart_dim_t cropdims[5];
 	md_select_dims(5, 15, cropdims, calreg_dims);
 	cropdims[4] = num_maps;
 
@@ -217,7 +217,7 @@ static float sure_crop(float var, const long evec_dims[DIMS], complex float* eve
 	complex float* CM = md_alloc_sameplace(5, cropdims, CFL_SIZE, calreg);
 
 	// Eigenvalues (W)
-	long W_dims[5];
+	bart_dim_t W_dims[5];
 	md_select_dims(5, 23, W_dims, evec_dims);
 
 	complex float* W = md_alloc_sameplace(5, W_dims, CFL_SIZE, calreg);
@@ -230,36 +230,36 @@ static float sure_crop(float var, const long evec_dims[DIMS], complex float* eve
 	complex float* proj = md_alloc_sameplace(5, im_dims, CFL_SIZE, calreg);
 
 	// Place holder for divergence term
-	long div_dims[5] = { 1, 1, 1, 1, 1 };
+	bart_dim_t div_dims[5] = { 1, 1, 1, 1, 1 };
 	complex float* div = md_alloc_sameplace(5, div_dims, CFL_SIZE, calreg);
 
 	// Calculating strides.
-	long str1_ip[5];
-	long str2_ip[5];
-	long stro_ip[5];
+	bart_dim_t str1_ip[5];
+	bart_dim_t str2_ip[5];
+	bart_dim_t stro_ip[5];
 
 	md_calc_strides(5, str1_ip, im_dims, CFL_SIZE);
 	md_calc_strides(5, str2_ip, evec_dims, CFL_SIZE);
 	md_calc_strides(5, stro_ip, W_dims, CFL_SIZE);
 
-	long str1_proj[5];
-	long str2_proj[5];
-	long stro_proj[5];
+	bart_dim_t str1_proj[5];
+	bart_dim_t str2_proj[5];
+	bart_dim_t stro_proj[5];
 
 	md_calc_strides(5, str1_proj, W_dims, CFL_SIZE);
 	md_calc_strides(5, str2_proj, evec_dims, CFL_SIZE);
 	md_calc_strides(5, stro_proj, im_dims, CFL_SIZE);
 
-	long str1_div[5];
-	long str2_div[5];
-	long stro_div[5];
+	bart_dim_t str1_div[5];
+	bart_dim_t str2_div[5];
+	bart_dim_t stro_div[5];
 
 	md_calc_strides(5, str1_div, evec_dims, CFL_SIZE);
 	md_calc_strides(5, str2_div, evec_dims, CFL_SIZE);
 	md_calc_strides(5, stro_div, div_dims, CFL_SIZE);
 
-	long tdims_ip[5];
-	long tdims_proj[5];
+	bart_dim_t tdims_ip[5];
+	bart_dim_t tdims_proj[5];
 
 	for (int i = 0; i < 5; i++) {
 
@@ -276,8 +276,8 @@ static float sure_crop(float var, const long evec_dims[DIMS], complex float* eve
 
 	float s = -0.1;
 	float c = 0.99;
-	long ctr1 = 0;
-	long ctr2 = 0;
+	bart_dim_t ctr1 = 0;
+	bart_dim_t ctr2 = 0;
 
 
 	debug_printf(DP_INFO, "---------------------------------------------\n");
@@ -325,7 +325,7 @@ static float sure_crop(float var, const long evec_dims[DIMS], complex float* eve
 			mse += powf(md_znorm(5, im_dims, diff), 2);
 			md_free(diff);
 #else
-			for (long jdx = 0; jdx < md_calc_size(5, im_dims); jdx++)
+			for (bart_dim_t jdx = 0; jdx < md_calc_size(5, im_dims); jdx++)
 				mse += powf(cabsf(im[jdx] - proj[jdx]), 2.);
 #endif
 
@@ -343,9 +343,9 @@ static float sure_crop(float var, const long evec_dims[DIMS], complex float* eve
 			mse += 2. * var * crealf(div_cpu);
 
 			if (ctr2 == 1)
-				debug_printf(DP_INFO, "| %4ld | %4ld | %0.4f | %0.12e |\n", ctr1, ctr2, c, mse);
+				debug_printf(DP_INFO, "| %4" PRId64 " | %4" PRId64 " | %0.4f | %0.12e |\n", ctr1, ctr2, c, mse);
 			else
-				debug_printf(DP_INFO, "|      | %4ld | %0.4f | %0.12e |\n", ctr2, c, mse);
+				debug_printf(DP_INFO, "|      | %4" PRId64 " | %0.4f | %0.12e |\n", ctr2, c, mse);
 
 			c = c + s;
 		}
@@ -381,30 +381,30 @@ static float sure_crop(float var, const long evec_dims[DIMS], complex float* eve
 
 
 
-void calone(const struct ecalib_conf* conf, const long cov_dims[4], complex float* imgcov, int SN, float svals[SN], const long calreg_dims[DIMS], const complex float* data)
+void calone(const struct ecalib_conf* conf, const bart_dim_t cov_dims[4], complex float* imgcov, int SN, float svals[SN], const bart_dim_t calreg_dims[DIMS], const complex float* data)
 {
 	assert(1 == md_calc_size(DIMS - 5, calreg_dims + 5));
 
 #if 1
-	long nskerns_dims[5];
+	bart_dim_t nskerns_dims[5];
 	complex float* nskerns;
 	compute_kernels(conf, nskerns_dims, &nskerns, SN, svals, calreg_dims, data);
 #else
-	long channels = calreg_dims[3];
+	bart_dim_t channels = calreg_dims[3];
 
-	long kx = conf->kdims[0];
-	long ky = conf->kdims[1];
-	long kz = conf->kdims[2];
+	bart_dim_t kx = conf->kdims[0];
+	bart_dim_t ky = conf->kdims[1];
+	bart_dim_t kz = conf->kdims[2];
 
-	long nskerns_dims[5] = { kx, ky, kz, channels, 0 };
-	long N = md_calc_size(4, nskerns_dims);
+	bart_dim_t nskerns_dims[5] = { kx, ky, kz, channels, 0 };
+	bart_dim_t N = md_calc_size(4, nskerns_dims);
 
 	assert(N > 0);
 	nskerns_dims[4] = N;
 
 	complex float* nskerns = md_alloc(5, nskerns_dims, CFL_SIZE);
 
-	long nr_kernels = channels;
+	bart_dim_t nr_kernels = channels;
 	nskerns_dims[4] = channels;
 	spirit_kernel(nskerns_dims, nskerns, calreg_dims, data);
 #endif
@@ -424,7 +424,7 @@ void calone(const struct ecalib_conf* conf, const long cov_dims[4], complex floa
 /* calculate point-wise maps
  *
  */
-void eigenmaps(const long out_dims[DIMS], complex float* optr, complex float* eptr, const complex float* imgcov2, const long msk_dims[3], const bool* msk, bool orthiter, int num_orthiter, bool ecal_usegpu)
+void eigenmaps(const bart_dim_t out_dims[DIMS], complex float* optr, complex float* eptr, const complex float* imgcov2, const bart_dim_t msk_dims[3], const bool* msk, bool orthiter, int num_orthiter, bool ecal_usegpu)
 {
 #ifdef USE_GPU
 	if (ecal_usegpu) {
@@ -461,9 +461,9 @@ void eigenmaps(const long out_dims[DIMS], complex float* optr, complex float* ep
 	md_clear(5, out_dims, optr, CFL_SIZE);
 
 #pragma omp parallel for collapse(3)
-	for (long k = 0; k < zz; k++) {
-		for (long j = 0; j < yy; j++) {
-			for (long i = 0; i < xx; i++) {
+	for (bart_dim_t k = 0; k < zz; k++) {
+		for (bart_dim_t j = 0; j < yy; j++) {
+			for (bart_dim_t i = 0; i < xx; i++) {
 
 				if (!msk || msk[i + xx * (j + yy * k)])	{
 
@@ -472,7 +472,7 @@ void eigenmaps(const long out_dims[DIMS], complex float* optr, complex float* ep
 
 					complex float tmp[channels * (channels + 1) / 2];
 
-					for (long l = 0; l < channels * (channels + 1) / 2; l++)
+					for (bart_dim_t l = 0; l < channels * (channels + 1) / 2; l++)
 						tmp[l] = imgcov2[((l * zz + k) * yy + j) * xx + i] / scale;
 
 					unpack_tri_matrix(channels, cov, tmp);
@@ -506,25 +506,25 @@ void eigenmaps(const long out_dims[DIMS], complex float* optr, complex float* ep
 
 
 
-void caltwo(const struct ecalib_conf* conf, const long out_dims[DIMS], complex float* out_data, complex float* emaps, const long in_dims[4], complex float* in_data, const long msk_dims[3], const bool* msk)
+void caltwo(const struct ecalib_conf* conf, const bart_dim_t out_dims[DIMS], complex float* out_data, complex float* emaps, const bart_dim_t in_dims[4], complex float* in_data, const bart_dim_t msk_dims[3], const bool* msk)
 {
-	long xx = out_dims[0];
-	long yy = out_dims[1];
-	long zz = out_dims[2];
+	bart_dim_t xx = out_dims[0];
+	bart_dim_t yy = out_dims[1];
+	bart_dim_t zz = out_dims[2];
 
-	long xh = in_dims[0];
-	long yh = in_dims[1];
-	long zh = in_dims[2];
+	bart_dim_t xh = in_dims[0];
+	bart_dim_t yh = in_dims[1];
+	bart_dim_t zh = in_dims[2];
 
-	long channels = out_dims[3];
-	long cosize = channels * (channels + 1) / 2;
+	bart_dim_t channels = out_dims[3];
+	bart_dim_t cosize = channels * (channels + 1) / 2;
 
 	assert(DIMS >= 5);
 	assert(1 == md_calc_size(DIMS - 5, out_dims + 5));
 	assert(in_dims[3] == cosize);
 
-	long cov_dims[4] = { xh, yh, zh, cosize };
-	long covbig_dims[4] = { xx, yy, zz, cosize };
+	bart_dim_t cov_dims[4] = { xh, yh, zh, cosize };
+	bart_dim_t covbig_dims[4] = { xx, yy, zz, cosize };
 
 	assert(((xx == 1) && (xh == 1)) || (xx >= xh));
 	assert(((yy == 1) && (yh == 1)) || (yy >= yh));
@@ -547,17 +547,17 @@ void caltwo(const struct ecalib_conf* conf, const long out_dims[DIMS], complex f
 
 		assert(conf->econdim < 3);
 
-		long cov_int_dims[4] = { xh, yh, zh, cosize };
+		bart_dim_t cov_int_dims[4] = { xh, yh, zh, cosize };
 		cov_int_dims[conf->econdim] = covbig_dims[conf->econdim];
 
-		long edims[DIMS];
+		bart_dim_t edims[DIMS];
 		md_select_dims(DIMS, ~COIL_FLAG, edims, out_dims);
 
-		long sout_dims[DIMS];
-		long sin_dims[4];
-		long scov_dims[4];
-		long sedims[DIMS];
-		long smsk_dims[3];
+		bart_dim_t sout_dims[DIMS];
+		bart_dim_t sin_dims[4];
+		bart_dim_t scov_dims[4];
+		bart_dim_t sedims[DIMS];
+		bart_dim_t smsk_dims[3];
 
 		md_select_dims(DIMS, ~MD_BIT(conf->econdim), sout_dims, out_dims);
 		md_select_dims(4, ~MD_BIT(conf->econdim), sin_dims, cov_int_dims);
@@ -587,7 +587,7 @@ void caltwo(const struct ecalib_conf* conf, const long out_dims[DIMS], complex f
 #endif
 
 
-		long pos[DIMS] = { 0 };
+		bart_dim_t pos[DIMS] = { 0 };
 
 		double time = -timestamp();
 		debug_printf(DP_DEBUG1, "Point-wise eigen-decomposition (loop along %d) ... ", conf->econdim);
@@ -668,11 +668,11 @@ void caltwo(const struct ecalib_conf* conf, const long out_dims[DIMS], complex f
 
 
 
-void calone_dims(const struct ecalib_conf* conf, long cov_dims[4], long channels)
+void calone_dims(const struct ecalib_conf* conf, bart_dim_t cov_dims[4], bart_dim_t channels)
 {
-	long kx = conf->kdims[0];
-	long ky = conf->kdims[1];
-	long kz = conf->kdims[2];
+	bart_dim_t kx = conf->kdims[0];
+	bart_dim_t ky = conf->kdims[1];
+	bart_dim_t kz = conf->kdims[2];
 
 	cov_dims[0] = (1 == kx) ? 1 : (2 * kx);
 	cov_dims[1] = (1 == ky) ? 1 : (2 * ky);
@@ -711,10 +711,10 @@ const struct ecalib_conf ecalib_defaults = {
 
 
 
-void calib2(const struct ecalib_conf* conf, const long out_dims[DIMS], complex float* out_data, complex float* eptr, int SN, float svals[SN], const long calreg_dims[DIMS], const complex float* data, const long msk_dims[3], const bool* msk)
+void calib2(const struct ecalib_conf* conf, const bart_dim_t out_dims[DIMS], complex float* out_data, complex float* eptr, int SN, float svals[SN], const bart_dim_t calreg_dims[DIMS], const complex float* data, const bart_dim_t msk_dims[3], const bool* msk)
 {
-	long channels = calreg_dims[3];
-	long maps = out_dims[4];
+	bart_dim_t channels = calreg_dims[3];
+	bart_dim_t maps = out_dims[4];
 
 	assert(calreg_dims[3] == out_dims[3]);
 	assert(maps <= channels);
@@ -727,7 +727,7 @@ void calib2(const struct ecalib_conf* conf, const long out_dims[DIMS], complex f
 	if (conf->rotphase) {
 
 		// rotate the the phase with respect to the first principle component
-		long scc_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+		bart_dim_t scc_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 		scc_dims[COIL_DIM] = channels;
 		scc_dims[MAPS_DIM] = channels;
 		scc(scc_dims, &rot[0][0], calreg_dims, data);
@@ -740,7 +740,7 @@ void calib2(const struct ecalib_conf* conf, const long out_dims[DIMS], complex f
 	}
 
 
-	long cov_dims[4];
+	bart_dim_t cov_dims[4];
 
 	calone_dims(conf, cov_dims, channels);
 
@@ -797,7 +797,7 @@ void calib2(const struct ecalib_conf* conf, const long out_dims[DIMS], complex f
 
 
 
-void calib(const struct ecalib_conf* conf, const long out_dims[DIMS], complex float* out_data, complex float* eptr, int SN, float svals[SN], const long calreg_dims[DIMS], const complex float* data)
+void calib(const struct ecalib_conf* conf, const bart_dim_t out_dims[DIMS], complex float* out_data, complex float* eptr, int SN, float svals[SN], const bart_dim_t calreg_dims[DIMS], const complex float* data)
 {
 	calib2(conf, out_dims, out_data, eptr, SN, svals, calreg_dims, data, NULL, NULL);
 }
@@ -805,13 +805,13 @@ void calib(const struct ecalib_conf* conf, const long out_dims[DIMS], complex fl
 
 
 
-static void perturb(const long dims[2], complex float* vecs, float amt)
+static void perturb(const bart_dim_t dims[2], complex float* vecs, float amt)
 {
 	complex float* noise = md_alloc(2, dims, CFL_SIZE);
 
 	md_gaussian_rand(2, dims, noise);
 
-	for (long j = 0; j < dims[1]; j++) {
+	for (bart_dim_t j = 0; j < dims[1]; j++) {
 
 		float nrm = md_znorm(1, dims, noise + j * dims[0]);
 		complex float val = amt / nrm;
@@ -820,7 +820,7 @@ static void perturb(const long dims[2], complex float* vecs, float amt)
 
 	md_zadd(2, dims, vecs, vecs, noise);
 
-	for (long j = 0; j < dims[1]; j++) {
+	for (bart_dim_t j = 0; j < dims[1]; j++) {
 
 		float nrm = md_znorm(1, dims, vecs + j * dims[0]);
 		complex float val = 1 / nrm;
@@ -831,9 +831,9 @@ static void perturb(const long dims[2], complex float* vecs, float amt)
 }
 
 
-static long number_of_kernels(const struct ecalib_conf* conf, long N, long K, const float val[K])
+static bart_dim_t number_of_kernels(const struct ecalib_conf* conf, bart_dim_t N, bart_dim_t K, const float val[K])
 {
-	long n = 0;
+	bart_dim_t n = 0;
 
 	if (-1 != conf->numsv) {
 
@@ -860,7 +860,7 @@ static long number_of_kernels(const struct ecalib_conf* conf, long N, long K, co
 	if (val[0] <= 0.)
 		error("No signal.\n");
 
-	debug_printf(DP_DEBUG1, "Using %ld/%ld kernels (%.2f%%, last SV: %f%s).\n", n, N, (float)n / (float)N * 100., (n > 0) ? (val[n - 1] / val[0]) : 1., conf->weighting ? ", weighted" : "");
+	debug_printf(DP_DEBUG1, "Using %" PRId64 "/%" PRId64 " kernels (%.2f%%, last SV: %f%s).\n", n, N, (float)n / (float)N * 100., (n > 0) ? (val[n - 1] / val[0]) : 1., conf->weighting ? ", weighted" : "");
 
 	float tr = 0.;
 
@@ -878,7 +878,7 @@ static long number_of_kernels(const struct ecalib_conf* conf, long N, long K, co
 }
 
 
-void compute_kernels(const struct ecalib_conf* conf, long nskerns_dims[5], complex float** nskerns_ptr, int SN, float val[SN], const long caldims[DIMS], const complex float* caldata)
+void compute_kernels(const struct ecalib_conf* conf, bart_dim_t nskerns_dims[5], complex float** nskerns_ptr, int SN, float val[SN], const bart_dim_t caldims[DIMS], const complex float* caldata)
 {
 	assert(1 == md_calc_size(DIMS - 5, caldims + 5));
 
@@ -887,7 +887,7 @@ void compute_kernels(const struct ecalib_conf* conf, long nskerns_dims[5], compl
 	nskerns_dims[2] = conf->kdims[2];
 	nskerns_dims[3] = caldims[3];
 
-	long N = md_calc_size(4, nskerns_dims);
+	bart_dim_t N = md_calc_size(4, nskerns_dims);
 
 	assert(N > 0);
 	nskerns_dims[4] = N;
@@ -900,7 +900,7 @@ void compute_kernels(const struct ecalib_conf* conf, long nskerns_dims[5], compl
 	assert(NULL != val);
 	assert(SN == N);
 
-	long K = N;
+	bart_dim_t K = N;
 
 	if (conf->nystroem) {
 
@@ -942,14 +942,14 @@ void compute_kernels(const struct ecalib_conf* conf, long nskerns_dims[5], compl
 			covariance_function_fft(conf->kdims, N, *vec, caldims, caldata);
 			time += timestamp();
 
-			debug_printf(DP_DEBUG1, " done (%.3fs)\nEigen decomposition... (size: %ld) ... ", time, N);
+			debug_printf(DP_DEBUG1, " done (%.3fs)\nEigen decomposition... (size: %" PRId64 ") ... ", time, N);
 
 			time = -timestamp();
 
 			lapack_eig(N, tmp_val, *vec);
 		} else {
 
-			debug_printf(DP_DEBUG1, " using Nyström (K=%ld) ... ", K);
+			debug_printf(DP_DEBUG1, " using Nyström (K=%" PRId64 ") ... ", K);
 			casorati_gram_eig_nystroem(K, conf->nystroem_os, N, tmp_val, *vec, 4, nskerns_dims, caldims, caldata);
 		}
 
@@ -975,7 +975,7 @@ void compute_kernels(const struct ecalib_conf* conf, long nskerns_dims[5], compl
 
 		if (conf->perturb > 0.) {
 
-			long dims[2] = { K, N };
+			bart_dim_t dims[2] = { K, N };
 			perturb(dims, nskerns, conf->perturb);
 		}
 
@@ -988,7 +988,7 @@ void compute_kernels(const struct ecalib_conf* conf, long nskerns_dims[5], compl
 		if (nskerns_dims[4] < K)
 			break;
 
-		debug_printf(DP_DEBUG1, "Redo Nystöm kernel estimation as all (K=%ld) kernels are used.\n", K);
+		debug_printf(DP_DEBUG1, "Redo Nystöm kernel estimation as all (K=%" PRId64 ") kernels are used.\n", K);
 
 		K *= 2;
 		nskerns_dims[4] = N;
@@ -1003,24 +1003,24 @@ void compute_kernels(const struct ecalib_conf* conf, long nskerns_dims[5], compl
 
 
 
-void compute_imgcov(const long cov_dims[4], complex float* imgcov, const long nskerns_dims[5], const complex float* nskerns)
+void compute_imgcov(const bart_dim_t cov_dims[4], complex float* imgcov, const bart_dim_t nskerns_dims[5], const complex float* nskerns)
 {
 	debug_printf(DP_DEBUG1, "Zeropad...");
 
 	double time = -timestamp();
 
-	long xh = cov_dims[0];
-	long yh = cov_dims[1];
-	long zh = cov_dims[2];
+	bart_dim_t xh = cov_dims[0];
+	bart_dim_t yh = cov_dims[1];
+	bart_dim_t zh = cov_dims[2];
 
-	long kx = nskerns_dims[0];
-	long ky = nskerns_dims[1];
-	long kz = nskerns_dims[2];
+	bart_dim_t kx = nskerns_dims[0];
+	bart_dim_t ky = nskerns_dims[1];
+	bart_dim_t kz = nskerns_dims[2];
 
 	int channels = (int)nskerns_dims[3];
 	int nr_kernels = (int)nskerns_dims[4];
 
-	long imgkern_dims[5] = { xh, yh, zh, channels, nr_kernels };
+	bart_dim_t imgkern_dims[5] = { xh, yh, zh, channels, nr_kernels };
 
 	complex float* imgkern1 = md_alloc(5, imgkern_dims, CFL_SIZE);
 	complex float* imgkern2 = md_alloc(5, imgkern_dims, CFL_SIZE);
@@ -1035,16 +1035,16 @@ void compute_imgcov(const long cov_dims[4], complex float* imgcov, const long ns
 
 	debug_printf(DP_DEBUG1, "FFT (juggling)... ");
 
-	long istr[5];
-	long mstr[5];
+	bart_stride_t istr[5];
+	bart_stride_t mstr[5];
 
-	long idim[5] = { xh, yh, zh, channels, nr_kernels };
-	long mdim[5] = { nr_kernels, channels, xh, yh, zh };
+	bart_dim_t idim[5] = { xh, yh, zh, channels, nr_kernels };
+	bart_dim_t mdim[5] = { nr_kernels, channels, xh, yh, zh };
 
 	md_calc_strides(5, istr, idim, CFL_SIZE);
 	md_calc_strides(5, mstr, mdim, CFL_SIZE);
 
-	long m2str[5] = { mstr[2], mstr[3], mstr[4], mstr[1], mstr[0] };
+	bart_dim_t m2str[5] = { mstr[2], mstr[3], mstr[4], mstr[1], mstr[0] };
 
 	ifftmod(5, imgkern_dims, FFT_FLAGS, imgkern1, imgkern1);
 	ifft2(5, imgkern_dims, FFT_FLAGS, m2str, imgkern2, istr, imgkern1);

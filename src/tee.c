@@ -33,9 +33,11 @@
 static const char help_str[] = "Copy stdin to stdout + given output files.";
 
 
+#ifdef SIGPIPE
 static void stream_sigpipe_handler(int /*signum*/)
 {
 }
+#endif
 
 int main_tee(int argc, char* argv[argc])
 {
@@ -76,6 +78,7 @@ int main_tee(int argc, char* argv[argc])
 
 	if (keep_going) {
 
+#ifdef SIGPIPE
 		// sigpipe can occur when a receiving program closes a pipe early.
 		// tee explicitly allows that and therefore needs to ignore sigpipe.
 		struct sigaction old_sigaction = {};
@@ -84,9 +87,10 @@ int main_tee(int argc, char* argv[argc])
 		// Make sure we don't overwrite any other handler.
 		// this does not work if the program is run from a systemd unit.
 		// assert((SIG_DFL == old_sigaction.sa_handler) || (stream_sigpipe_handler == old_sigaction.sa_handler));
+#endif
 	}
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 
 
 	if (0 == strcmp("-", in_file)) {
@@ -106,7 +110,7 @@ int main_tee(int argc, char* argv[argc])
 	complex float* in_data = load_async_cfl(in_file, DIMS, dims);
 
 	stream_t stream_in = stream_lookup(in_data);
-	unsigned long stream_flags = stream_in ? stream_get_flags(stream_in) : 0;
+	bart_flags_t stream_flags = stream_in ? stream_get_flags(stream_in) : 0;
 
 	if (NULL != out0) {
 
@@ -115,7 +119,7 @@ int main_tee(int argc, char* argv[argc])
 
 		if (strm) {
 
-			stream_sync_slice_try(strm, DIMS, dims, 0, (long [DIMS]){ 0 });
+			stream_sync_slice_try(strm, DIMS, dims, 0, (bart_dim_t [DIMS]){ 0 });
 			stream_free(strm);
 		}
 
@@ -126,7 +130,7 @@ int main_tee(int argc, char* argv[argc])
 
 	count += files_offset;
 
-	long slice_dims[DIMS];
+	bart_dim_t slice_dims[DIMS];
 	md_select_dims(DIMS, ~stream_flags, slice_dims, dims);
 
 #pragma omp parallel for num_threads(count)
@@ -139,9 +143,9 @@ int main_tee(int argc, char* argv[argc])
 
 		complex float* out_data = create_async_cfl(name, stream_flags, DIMS, dims);
 
-		long pos[DIMS];
+		bart_dim_t pos[DIMS];
 		md_set_dims(DIMS, pos, 0);
-		long counter = 0;
+		bart_dim_t counter = 0;
 
 		do {
 
@@ -165,7 +169,7 @@ int main_tee(int argc, char* argv[argc])
 			}
 
 			if (timer)
-				fprintf(stderr, "frame %ld: %fs\n", counter, timestamp() - time);
+				fprintf(stderr, "frame %" PRId64 ": %fs\n", counter, timestamp() - time);
 
 			time = timestamp();
 

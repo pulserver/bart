@@ -75,14 +75,14 @@ int main_affinereg(int argc, char* argv[argc])
 
 	num_init_gpu_support();
 
-	long rdims[DIMS];
-	long mdims[DIMS];
+	bart_dim_t rdims[DIMS];
+	bart_dim_t mdims[DIMS];
 
 	complex float* ref_ptr = load_cfl(ref_file, DIMS, rdims);
 	complex float* mov_ptr = load_cfl(mov_file, DIMS, mdims);
 
-	if (   (0 != (~7ul & md_nontriv_dims(DIMS, rdims)))
-	    || (0 != (~7ul & md_nontriv_dims(DIMS, mdims))))
+	if (   (0 != (~UINT64_C(7) & md_nontriv_dims(DIMS, rdims)))
+	    || (0 != (~UINT64_C(7) & md_nontriv_dims(DIMS, mdims))))
 			error("Affine registration only supports the first three dimensions.\nUse bart looping for higher dimensions.\n");
 
 	md_zabs(DIMS, mdims, mov_ptr, mov_ptr);
@@ -97,13 +97,13 @@ int main_affinereg(int argc, char* argv[argc])
 	
 	if (NULL != msk_mov_file) {
 
-		long tdims[DIMS];
+		bart_dim_t tdims[DIMS];
 
 		msk_mov_ptr = load_cfl(msk_mov_file, DIMS, tdims);
-		assert(md_check_equal_dims(DIMS, mdims, tdims, ~0ul));
+		assert(md_check_equal_dims(DIMS, mdims, tdims, ~UINT64_C(0)));
 
 		msk_ref_ptr = load_cfl(msk_ref_file, DIMS, tdims);
-		assert(md_check_equal_dims(DIMS, rdims, tdims, ~0ul));
+		assert(md_check_equal_dims(DIMS, rdims, tdims, ~UINT64_C(0)));
 	} 
 
 	const struct nlop_s* trafo = NULL; // false positive
@@ -123,7 +123,7 @@ int main_affinereg(int argc, char* argv[argc])
 		break;
 	}
 
-	long aff_dims[DIMS] = { 3, 4, [ 2 ... DIMS - 1 ] = 1 };
+	bart_dim_t aff_dims[DIMS] = { 3, 4, [ 2 ... DIMS - 1 ] = 1 };
 	complex float* affine = create_cfl(affine_file, DIMS, aff_dims);
 
 	affine_init_id(affine);

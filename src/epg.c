@@ -54,8 +54,8 @@ int main_epg(int argc, char* argv[argc])
 	float B1 =   1.0;
 	int SP = 0;
 	int N = 10;
-	unsigned long unknowns = 3UL;
-	long verbose = 0;
+	bart_flags_t unknowns = 3;
+	bart_dim_t verbose = 0;
 
 	const struct opt_s opts[] = {
 
@@ -97,26 +97,26 @@ int main_epg(int argc, char* argv[argc])
 
 	complex float out_signal[N];
 
-	long dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 	dims[TE_DIM] = N;
 
 	// allocate on HEAP	to avoid memory limitation
 	complex float (*out_states)[M][N] = xmalloc(3 * sizeof *out_states);
 
-	long dims_states[DIMS];
+	bart_dim_t dims_states[DIMS];
 	md_copy_dims(DIMS, dims_states, dims);
 	dims_states[COEFF_DIM] = M;
 	dims_states[COEFF2_DIM] = 3;
 
 	complex float out_sigder[4][N];
-	long dims_sigder[DIMS];
+	bart_dim_t dims_sigder[DIMS];
    	md_copy_dims(DIMS, dims_sigder, dims);
 	dims_sigder[ITER_DIM] = 4;
 
 	// allocate on HEAP	to avoid memory limitation
 	complex float (*out_statesder)[3][M][N] = xmalloc(4 * sizeof *out_statesder);
 
-	long dims_statesder[DIMS];
+	bart_dim_t dims_statesder[DIMS];
    	md_copy_dims(DIMS, dims_statesder, dims_states);
 	dims_statesder[ITER_DIM] = 4;
 
@@ -224,7 +224,7 @@ int main_epg(int argc, char* argv[argc])
 		}
 	}
 
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 	md_copy_block(DIMS, pos, dims, signals, dims, out_signal, CFL_SIZE);
 
 	if (NULL != states_file)

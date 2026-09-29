@@ -36,8 +36,8 @@ int main_grid(int argc, char* argv[argc])
 		ARG_OUTFILE(true, &out_file, "grid"),
 	};
 
-	long sdims[3] = { -1, -1, -1 };
-	long timedim = -1;
+	bart_dim_t sdims[3] = { -1, -1, -1 };
+	bart_dim_t timedim = -1;
 
 	const struct opt_s opts[] = {
 
@@ -59,7 +59,7 @@ int main_grid(int argc, char* argv[argc])
 		error("Trajectory file and spatial/Fourier dims cannot be provided together.\n");
 
 	complex float* traj = NULL;
-	long tdims[DIMS];
+	bart_dim_t tdims[DIMS];
 
 	go.dims[TIME_DIM] = (0 >= timedim) ? 1 : timedim;
 
@@ -94,7 +94,7 @@ int main_grid(int argc, char* argv[argc])
 	if ((0. == go.b2[0]) && (0. == go.b2[1]) && (0. == go.b2[2]))
 		go.b2[2] = 0.5;
 
-	long gdims[DIMS];
+	bart_dim_t gdims[DIMS];
 
 	float* grid = compute_grid(DIMS, gdims, &go, tdims, traj);
 

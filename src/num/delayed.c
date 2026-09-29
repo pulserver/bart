@@ -75,7 +75,7 @@ struct queue_s {
 	list_t ops;
 };
 
-typedef void (*delayed_op_fun_t)(delayed_op_t* op, unsigned long slice_flag, long pos[MAX_DIMS]);
+typedef void (*delayed_op_fun_t)(delayed_op_t* op, bart_flags_t slice_flag, bart_dim_t pos[MAX_DIMS]);
 typedef const char* (*delayed_op_debug_t)(delayed_op_t* op, bool nested);
 typedef void (*delayed_op_del_t)(const delayed_op_t* op);
 
@@ -85,19 +85,19 @@ struct delayed_op_arg_s {
 	void* ptr_base;
 
 	int N;
-	long adims[MAX_DIMS];
-	long astrs[MAX_DIMS];
+	bart_dim_t adims[MAX_DIMS];
+	bart_stride_t astrs[MAX_DIMS];
 	size_t asize;
 
-	long mdims[MAX_DIMS];
+	bart_dim_t mdims[MAX_DIMS];
 	size_t msize;
-	long mpos[MAX_DIMS];
+	bart_dim_t mpos[MAX_DIMS];
 
-	unsigned long lflags;		// memory is accessed slice wise, i.e. memory position
+	bart_flags_t lflags;		// memory is accessed slice wise, i.e. memory position
 					// corresponds to access position and the pointer is not
 					// aliased by another position
-	unsigned long sflags;   	// only a slice of memory is accessed
-	unsigned long non_first_pos_flags;
+	bart_flags_t sflags;   	// only a slice of memory is accessed
+	bart_flags_t non_first_pos_flags;
 
 	bool full_access;	// all memory is accessed
 	bool fitting;		// memory access fits into the underlying allocation
@@ -110,12 +110,12 @@ struct ldim_s {
 	int D;
 
 	// loop dim should be exposed and can become a loop dim
-	unsigned long loop_flags;
-	long dims[MAX_DIMS];
+	bart_flags_t loop_flags;
+	bart_dim_t dims[MAX_DIMS];
 
 	// when looped, the function should only be executed in a selected slice
-	unsigned long slice_flags;
-	long slice_pos[MAX_DIMS];
+	bart_flags_t slice_flags;
+	bart_dim_t slice_pos[MAX_DIMS];
 };
 
 struct delayed_op_s {
@@ -132,11 +132,11 @@ struct delayed_op_s {
 	delayed_op_del_t del;
 	delayed_op_debug_t debug;
 
-	long mchange;
-	long mpeak;
+	bart_dim_t mchange;
+	bart_dim_t mpeak;
 };
 
-static void delayed_op_exec(delayed_op_t* op, unsigned long slice_flags, long pos[MAX_DIMS]);
+static void delayed_op_exec(delayed_op_t* op, bart_flags_t slice_flags, bart_dim_t pos[MAX_DIMS]);
 
 /*
  * Basic idea of looping with delayed operations:
@@ -170,16 +170,16 @@ static void delayed_queue(delayed_op_t* x);
 
 static void delayed_op_free(const delayed_op_t* x);
 static const char* print_delayed_fun_f(delayed_op_t* op, bool nested);
-static void delayed_op_exec_resolve(delayed_op_t* op, int D, int N, long dims[N][D], void* ptr[N], unsigned long slice_flags, long pos[MAX_DIMS]);
+static void delayed_op_exec_resolve(delayed_op_t* op, int D, int N, bart_dim_t dims[N][D], void* ptr[N], bart_flags_t slice_flags, bart_dim_t pos[MAX_DIMS]);
 
-static struct delayed_op_s* delayed_op_alloc_create(const void* ptr, int N, const long dims[N], size_t size);
-static struct delayed_op_s* delayed_op_free_create(const void* ptr, int N, const long dims[N], size_t size);
-static struct delayed_op_s* delayed_op_clear_create(int D, const long dim[D], const long str[D], void* ptr, size_t size);
-static struct delayed_op_s* delayed_op_copy_create(int D, const long dim[D], const long ostr[D], void* optr, const long istr[D], const void* iptr, size_t size);
-static struct delayed_op_s* delayed_op_circ_shift_create(int D, const long dimensions[D], const long center[D], const long str1[D], void* dst, const long str2[D], const void* src, size_t size);
-static struct delayed_op_s* delayed_op_md_fun_create(enum delayed_md_fun_type type, size_t offset, int D, const long dim[D], int N, const long* strs[N], const void* ptr[N], const size_t sizes[N]);
-static struct delayed_op_s* delayed_op_vptr_fun_create(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, unsigned long lflags, unsigned long wflags, unsigned long rflags, const long* dims[N], const long* strs[N], void* ptr[N], size_t sizes[N], bool resolve);
-static struct delayed_op_s* delayed_op_chain_create(list_t ops_list, unsigned long seq_flags);
+static struct delayed_op_s* delayed_op_alloc_create(const void* ptr, int N, const bart_dim_t dims[N], size_t size);
+static struct delayed_op_s* delayed_op_free_create(const void* ptr, int N, const bart_dim_t dims[N], size_t size);
+static struct delayed_op_s* delayed_op_clear_create(int D, const bart_dim_t dim[D], const bart_stride_t str[D], void* ptr, size_t size);
+static struct delayed_op_s* delayed_op_copy_create(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], void* optr, const bart_stride_t istr[D], const void* iptr, size_t size);
+static struct delayed_op_s* delayed_op_circ_shift_create(int D, const bart_dim_t dimensions[D], const bart_dim_t center[D], const bart_stride_t str1[D], void* dst, const bart_stride_t str2[D], const void* src, size_t size);
+static struct delayed_op_s* delayed_op_md_fun_create(enum delayed_md_fun_type type, size_t offset, int D, const bart_dim_t dim[D], int N, const bart_stride_t* strs[N], const void* ptr[N], const size_t sizes[N]);
+static struct delayed_op_s* delayed_op_vptr_fun_create(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, bart_flags_t lflags, bart_flags_t wflags, bart_flags_t rflags, const bart_dim_t* dims[N], const bart_stride_t* strs[N], void* ptr[N], size_t sizes[N], bool resolve);
+static struct delayed_op_s* delayed_op_chain_create(list_t ops_list, bart_flags_t seq_flags);
 
 static inline bool delayed_arg_same_access(struct delayed_op_arg_s arg1, struct delayed_op_arg_s arg2);
 static inline bool delayed_arg_depends_on(struct delayed_op_arg_s arg1, struct delayed_op_arg_s arg2);
@@ -197,14 +197,14 @@ static void delayed_optimize_unset_clear(list_t ops_queue);
 static bool delayed_optimize_accumulate(list_t ops_queue);
 
 
-static unsigned long queue_compute_loop_flags(long loop_dims[MAX_DIMS], list_t ops_queue);;
+static bart_flags_t queue_compute_loop_flags(bart_dim_t loop_dims[MAX_DIMS], list_t ops_queue);;
 static bool delayed_ptr_required(delayed_op_t* op, const void* ptr);
 static bool delayed_ptr_required_write(delayed_op_t* op, const void* ptr);
 
 static egraph_t delayed_op_queue_to_graph(list_t ops_queue);
-static unsigned long delayed_tmp_buffer_compute_loop_flags(egraph_t graph);
+static bart_flags_t delayed_tmp_buffer_compute_loop_flags(egraph_t graph);
 
-static void delayed_optimize_queue_looping_flags(egraph_t graph, bool multiple, unsigned long lflags);
+static void delayed_optimize_queue_looping_flags(egraph_t graph, bool multiple, bart_flags_t lflags);
 static void delayed_op_append_node(egraph_t graph, delayed_op_t* op);
 
 
@@ -227,7 +227,7 @@ static void queue_init(void)
 		if (NULL != str) {
 
 			errno = 0;
-			long r = strtol(str, NULL, 10);
+			bart_dim_t r = strtoll(str, NULL, 10);
 
 			if ((errno == 0) && (0 <= r) && (r < 10))
 				delayed_dl = r;
@@ -313,7 +313,7 @@ void delayed_compute(const void* /*ptr*/)
 #endif
 	}
 
-	long pos[MAX_DIMS] = { 0 };
+	bart_dim_t pos[MAX_DIMS] = { 0 };
 
 	delayed_op_t* op = list_pop(ops);
 
@@ -391,12 +391,12 @@ static void delayed_queue(delayed_op_t* x)
  ******************************************************************************/
 
 
-void delayed_alloc(const void* ptr, int N, const long dims[N], size_t size)
+void delayed_alloc(const void* ptr, int N, const bart_dim_t dims[N], size_t size)
 {
 	delayed_queue(delayed_op_alloc_create(ptr, N, dims, size));
 }
 
-void delayed_free(const void* ptr, int N, const long dims[N], size_t size)
+void delayed_free(const void* ptr, int N, const bart_dim_t dims[N], size_t size)
 {
 	struct queue_s* queue = global_queue[cfl_loop_worker_id()];
 
@@ -417,7 +417,7 @@ void delayed_free(const void* ptr, int N, const long dims[N], size_t size)
 
 }
 
-bool delayed_queue_clear(int D, const long dim[D], const long str[D], void* ptr, size_t size)
+bool delayed_queue_clear(int D, const bart_dim_t dim[D], const bart_stride_t str[D], void* ptr, size_t size)
 {
 	if (!is_delayed(ptr))
 		return false;
@@ -427,7 +427,7 @@ bool delayed_queue_clear(int D, const long dim[D], const long str[D], void* ptr,
 	return true;
 }
 
-bool delayed_queue_copy(int D, const long dim[D], const long ostr[D], void* optr, const long istr[D], const void* iptr, size_t size)
+bool delayed_queue_copy(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], void* optr, const bart_stride_t istr[D], const void* iptr, size_t size)
 {
 	if (is_delayed(optr) && is_delayed(iptr)) {
 
@@ -470,7 +470,7 @@ bool delayed_queue_copy(int D, const long dim[D], const long ostr[D], void* optr
 	return false;
 }
 
-bool delayed_queue_circ_shift(int D, const long dimensions[D], const long center[D], const long str1[D], void* dst, const long str2[D], const void* src, size_t size)
+bool delayed_queue_circ_shift(int D, const bart_dim_t dimensions[D], const bart_dim_t center[D], const bart_stride_t str1[D], void* dst, const bart_stride_t str2[D], const void* src, size_t size)
 {
 	if (!is_delayed(dst) || !is_delayed(src))
 		return false;
@@ -479,7 +479,7 @@ bool delayed_queue_circ_shift(int D, const long dimensions[D], const long center
 	return true;
 }
 
-bool delayed_queue_make_op(enum delayed_md_fun_type type, size_t offset, int D, const long dim[D], int N, const long* strs[N], const void* ptr[N], const size_t sizes[N])
+bool delayed_queue_make_op(enum delayed_md_fun_type type, size_t offset, int D, const bart_dim_t dim[D], int N, const bart_stride_t* strs[N], const void* ptr[N], const size_t sizes[N])
 {
 	for (int i = 0; i < N; i++)
 		if (!is_delayed(ptr[i]))
@@ -496,7 +496,7 @@ bool delayed_queue_make_op(enum delayed_md_fun_type type, size_t offset, int D, 
 	return true;
 }
 
-void exec_vptr_fun_delayed(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, unsigned long lflags, unsigned long wflags, unsigned long rflags, const long* dims[N], const long* strs[N], void* ptr[N], size_t sizes[N], bool resolve)
+void exec_vptr_fun_delayed(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, bart_flags_t lflags, bart_flags_t wflags, bart_flags_t rflags, const bart_dim_t* dims[N], const bart_stride_t* strs[N], void* ptr[N], size_t sizes[N], bool resolve)
 {
 	delayed_queue(delayed_op_vptr_fun_create(fun, data, N, D, lflags, wflags, rflags, dims, strs, ptr, sizes, resolve));
 }
@@ -508,7 +508,7 @@ void exec_vptr_fun_delayed(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, 
  ******************************************************************************/
 
 
-static struct delayed_op_arg_s arg_create(int N, const long dims[N], const long strs[N], const void* ptr, size_t size, bool read, bool write)
+static struct delayed_op_arg_s arg_create(int N, const bart_dim_t dims[N], const bart_stride_t strs[N], const void* ptr, size_t size, bool read, bool write)
 {
 	struct delayed_op_arg_s arg;
 
@@ -537,22 +537,22 @@ static struct delayed_op_arg_s arg_create(int N, const long dims[N], const long 
 	arg.non_first_pos_flags = ~md_nontriv_dims(arg.N, arg.mdims);
 
 	md_set_dims(MAX_DIMS, arg.mpos, 0);
-	md_unravel_index(arg.N, arg.mpos, ~0ul, arg.mdims, (arg.ptr - arg.ptr_base) / (long)arg.msize);
+	md_unravel_index(arg.N, arg.mpos, ~UINT64_C(0), arg.mdims, (arg.ptr - arg.ptr_base) / (bart_dim_t)arg.msize);
 
-	long mdims[arg.N + 1];
-	mdims[0] = (long)arg.msize;
+	bart_dim_t mdims[arg.N + 1];
+	mdims[0] = (bart_dim_t)arg.msize;
 	md_copy_dims(arg.N, mdims + 1, arg.mdims);
 
-	unsigned long aflags[N];
+	bart_flags_t aflags[N];
 	loop_access_dims(N, aflags, arg.adims, arg.astrs, arg.N + 1, mdims, (arg.ptr - arg.ptr_base));
 	for (int k = 0; k < N; k++)
 		aflags[k] /= 2;
 
-	long mstrides[arg.N];
+	bart_stride_t mstrides[arg.N];
 	md_calc_strides(arg.N, mstrides, arg.mdims, arg.msize);
 
-	arg.sflags = ~0UL;
-	arg.lflags = 0UL;
+	arg.sflags = ~UINT64_C(0);
+	arg.lflags = 0;
 
 	for (int k = 0; k < N; k++)
 		if ((0 == arg.mpos[k]) && (arg.astrs[k] == mstrides[k]) && ((arg.mdims[k] == arg.adims[k]) || 1 == arg.mdims[k]))
@@ -564,8 +564,8 @@ static struct delayed_op_arg_s arg_create(int N, const long dims[N], const long 
 		arg.sflags &= ~aflags[k];
 	}
 
-	arg.fitting =   md_check_equal_dims(arg.N, arg.adims, arg.mdims, ~0ul)
-		     && md_check_equal_dims(arg.N, arg.astrs, MD_STRIDES(arg.N, arg.mdims, arg.msize), ~0ul)
+	arg.fitting =   md_check_equal_dims(arg.N, arg.adims, arg.mdims, ~UINT64_C(0))
+		     && md_check_equal_dims(arg.N, arg.astrs, MD_STRIDES(arg.N, arg.mdims, arg.msize), ~UINT64_C(0))
 		     && (arg.asize == arg.msize);
 
 	arg.full_access = arg.fitting;
@@ -573,32 +573,32 @@ static struct delayed_op_arg_s arg_create(int N, const long dims[N], const long 
 	if (arg.fitting)
 		return arg;
 
-	long tdims[arg.N];
-	long tstrs[arg.N];
+	bart_dim_t tdims[arg.N];
+	bart_stride_t tstrs[arg.N];
 	md_copy_dims(arg.N, tdims, arg.adims);
 	md_copy_dims(arg.N, tstrs, arg.astrs);
-	long tsize = (long)arg.asize;
+	bart_dim_t tsize = (bart_dim_t)arg.asize;
 
 	for (int k = 0; k < arg.N; k++)
-		tstrs[k] = labs(tstrs[k]);
+		tstrs[k] = llabs(tstrs[k]);
 
-	long (*tstrs2[1])[arg.N] = { &tstrs };
+	bart_stride_t (*tstrs2[1])[arg.N] = { &tstrs };
 	int ND = optimize_dims_gpu(1, arg.N, tdims, tstrs2);
 
 	for (int i = 0; i < ND; i++)
 		if (tstrs[i] <= tsize)
 			tsize += (tdims[i] - 1) * tstrs[i];
 
-	assert(tsize <= md_calc_size(arg.N, arg.mdims) * (long)arg.msize);
+	assert(tsize <= md_calc_size(arg.N, arg.mdims) * (bart_dim_t)arg.msize);
 
-	if (tsize == md_calc_size(arg.N, arg.mdims) * (long)arg.msize)
+	if (tsize == md_calc_size(arg.N, arg.mdims) * (bart_dim_t)arg.msize)
 		arg.full_access = true;
 
 	return arg;
 }
 
 
-static struct ldim_s ldim_init(int D, unsigned long lflags, int N, struct delayed_op_arg_s args[N])
+static struct ldim_s ldim_init(int D, bart_flags_t lflags, int N, struct delayed_op_arg_s args[N])
 {
 	struct ldim_s ret;
 
@@ -610,7 +610,7 @@ static struct ldim_s ldim_init(int D, unsigned long lflags, int N, struct delaye
 	md_set_dims(MAX_DIMS, ret.slice_pos, 0);
 
 	// step 1: make slice flags loop flags, where possible
-	ret.slice_flags = ~0UL;
+	ret.slice_flags = ~UINT64_C(0);
 	for (int i = 0; i < N; i++) {
 
 		ret.slice_flags &= args[i].sflags;
@@ -651,9 +651,9 @@ static struct ldim_s ldim_init(int D, unsigned long lflags, int N, struct delaye
 }
 
 
-static void delayed_op_init(delayed_op_t* op, int D, unsigned long lflags,
+static void delayed_op_init(delayed_op_t* op, int D, bart_flags_t lflags,
 			  int N, struct delayed_op_arg_s args[N],
-			  long mchange, long mpeak,
+			  bart_dim_t mchange, bart_dim_t mpeak,
 			  delayed_op_fun_t fun, delayed_op_del_t del, delayed_op_debug_t debug)
 {
 	op->loop = ldim_init(D, lflags, N, args);
@@ -703,7 +703,7 @@ static void ptr_append_print_args(const char** ret, delayed_op_t* op)
 
 static void ptr_append_print_loopable_accessdims(const char** ret, delayed_op_t* op, int i)
 {
-	unsigned long loop_flags = op->loop.loop_flags & md_nontriv_dims(op->args[i].N, op->args[i].adims);
+	bart_flags_t loop_flags = op->loop.loop_flags & md_nontriv_dims(op->args[i].N, op->args[i].adims);
 
 	ptr_append_printf(ret, "[");
 
@@ -715,9 +715,9 @@ static void ptr_append_print_loopable_accessdims(const char** ret, delayed_op_t*
 	for (int j = 0; j < N; j++) {
 
 		if (1 < op->loop.dims[j] && MD_IS_SET(op->loop.slice_flags, j))
-			ptr_append_printf(ret, " %ldS%ld", op->loop.dims[j], op->loop.slice_pos[j]);
+			ptr_append_printf(ret, " %" PRId64 "S%" PRId64, op->loop.dims[j], op->loop.slice_pos[j]);
 		else
-			ptr_append_printf(ret, " %ld%s", op->args[i].adims[j], MD_IS_SET(loop_flags, j) ? "L" : "");
+			ptr_append_printf(ret, " %" PRId64 "%s", op->args[i].adims[j], MD_IS_SET(loop_flags, j) ? "L" : "");
 	}
 
 	ptr_append_printf(ret, " ]");
@@ -744,7 +744,7 @@ static const char* print_delayed_fun_f(delayed_op_t* op, bool nested)
 }
 
 
-static void delayed_op_exec_resolve(delayed_op_t* op, int D, int N, long dims[N][D], void* ptr[N], unsigned long slice_flags, long pos[MAX_DIMS])
+static void delayed_op_exec_resolve(delayed_op_t* op, int D, int N, bart_dim_t dims[N][D], void* ptr[N], bart_flags_t slice_flags, bart_dim_t pos[MAX_DIMS])
 {
 	assert(D == op->D);
 	assert(N == op->N);
@@ -758,7 +758,7 @@ static void delayed_op_exec_resolve(delayed_op_t* op, int D, int N, long dims[N]
 	}
 }
 
-static void delayed_op_exec(delayed_op_t* op, unsigned long slice_flags, long pos[MAX_DIMS])
+static void delayed_op_exec(delayed_op_t* op, bart_flags_t slice_flags, bart_dim_t pos[MAX_DIMS])
 {
 	delayed_nested_level++;
 	bool exec = true;
@@ -781,7 +781,7 @@ static void delayed_op_exec(delayed_op_t* op, unsigned long slice_flags, long po
 	if (exec) {
 		const char* prefix = ptr_printf("Exec delayed op ");
 		const char* op_str = print_delayed_fun_f(op, false);
-		debug_printf(delayed_dl, "%s%s %lu %lu ", prefix, op_str, slice_flags, op->loop.loop_flags & op->loop.slice_flags);
+		debug_printf(delayed_dl, "%s%s %" PRIu64 " %" PRIu64 " ", prefix, op_str, slice_flags, op->loop.loop_flags & op->loop.slice_flags);
 		xfree(op_str);
 		xfree(prefix);
 		debug_print_dims(DP_INFO, 32, pos);
@@ -789,7 +789,7 @@ static void delayed_op_exec(delayed_op_t* op, unsigned long slice_flags, long po
 
 	if (!delayed_op_is_chain(op) && exec) {
 
-		long dims[op->N][op->D];
+		bart_dim_t dims[op->N][op->D];
 		void* ptr[op->N];
 
 		delayed_op_exec_resolve(op, op->D, op->N, dims, ptr, slice_flags, pos);
@@ -821,7 +821,7 @@ struct delayed_op_alloc_s {
 
 static DEF_TYPEID(delayed_op_alloc_s);
 
-static void delayed_op_alloc_fun(delayed_op_t* op, unsigned long flags, long /*pos*/[MAX_DIMS])
+static void delayed_op_alloc_fun(delayed_op_t* op, bart_flags_t flags, bart_dim_t /*pos*/[MAX_DIMS])
 {
 	if (!vptr_is_mem_allocated(op->args[0].ptr_base))
 		vptr_set_loop_flags(op->args[0].ptr_base, flags & op->loop.loop_flags);
@@ -843,17 +843,17 @@ static const char* delayed_op_alloc_debug(delayed_op_t* op, bool /*nested*/)
 	return ret;
 }
 
-static struct delayed_op_s* delayed_op_alloc_create(const void* ptr, int N, const long dims[N], size_t size)
+static struct delayed_op_s* delayed_op_alloc_create(const void* ptr, int N, const bart_dim_t dims[N], size_t size)
 {
 	PTR_ALLOC(struct delayed_op_alloc_s, op);
 	SET_TYPEID(delayed_op_alloc_s, op);
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, size);
 
 	struct delayed_op_arg_s arg[1] = { arg_create(N, dims, strs, ptr, size, false, true) };
 
-	delayed_op_init(CAST_UP(op), N, ~0UL, 1, arg, md_calc_size(N, dims) * (long)size, 0, delayed_op_alloc_fun, NULL, delayed_op_alloc_debug);
+	delayed_op_init(CAST_UP(op), N, ~UINT64_C(0), 1, arg, md_calc_size(N, dims) * (bart_stride_t)size, 0, delayed_op_alloc_fun, NULL, delayed_op_alloc_debug);
 	CAST_UP(op)->loop.loop_flags &= md_nontriv_dims(N, dims);
 
 	op->tmp_buffer = false;
@@ -876,9 +876,9 @@ struct delayed_op_free_s {
 
 static DEF_TYPEID(delayed_op_free_s);
 
-static void delayed_op_free_fun(delayed_op_t* op, unsigned long flags, long pos[MAX_DIMS])
+static void delayed_op_free_fun(delayed_op_t* op, bart_flags_t flags, bart_dim_t pos[MAX_DIMS])
 {
-	long dims[1][op->D];
+	bart_dim_t dims[1][op->D];
 	void* ptr[1];
 
 	delayed_op_exec_resolve(op, op->D, 1, dims, ptr, flags, pos);
@@ -904,16 +904,16 @@ static const char* delayed_op_free_debug(delayed_op_t* op, bool /*nested*/)
 	return ret;
 }
 
-static struct delayed_op_s* delayed_op_free_create(const void* ptr, int N, const long dims[N], size_t size)
+static struct delayed_op_s* delayed_op_free_create(const void* ptr, int N, const bart_dim_t dims[N], size_t size)
 {
 	PTR_ALLOC(struct delayed_op_free_s, op);
 	SET_TYPEID(delayed_op_free_s, op);
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, size);
 
 	struct delayed_op_arg_s arg[1] = { arg_create(N, dims, strs, ptr, size, false, true) };
-	delayed_op_init(CAST_UP(op), N, ~0UL, 1, arg, -md_calc_size(N, dims) * (long)size, 0, delayed_op_free_fun, delayed_op_free_del, delayed_op_free_debug);
+	delayed_op_init(CAST_UP(op), N, ~UINT64_C(0), 1, arg, -md_calc_size(N, dims) * (bart_stride_t)size, 0, delayed_op_free_fun, delayed_op_free_del, delayed_op_free_debug);
 	CAST_UP(op)->loop.loop_flags &= md_nontriv_dims(N, dims);
 
 	op->tmp_buffer = false;
@@ -949,16 +949,16 @@ static const char* delayed_op_copy_debug(delayed_op_t* op, bool /*nested*/)
 	return ret;
 }
 
-static void delayed_op_copy_fun(delayed_op_t* op, unsigned long flags, long pos[MAX_DIMS])
+static void delayed_op_copy_fun(delayed_op_t* op, bart_flags_t flags, bart_dim_t pos[MAX_DIMS])
 {
-	long dims[2][op->D];
+	bart_dim_t dims[2][op->D];
 	void* ptr[2];
 
 	delayed_op_exec_resolve(op, op->D, 2, dims, ptr, flags, pos);
 	md_copy2(op->D, dims[0], op->args[0].astrs, ptr[0], op->args[1].astrs, ptr[1], op->args[0].asize);
 }
 
-static struct delayed_op_s* delayed_op_copy_create(int D, const long dim[D], const long ostr[D], void* optr, const long istr[D], const void* iptr, size_t size)
+static struct delayed_op_s* delayed_op_copy_create(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], void* optr, const bart_stride_t istr[D], const void* iptr, size_t size)
 {
 	struct delayed_op_arg_s arg[2];
 
@@ -968,7 +968,7 @@ static struct delayed_op_s* delayed_op_copy_create(int D, const long dim[D], con
 	PTR_ALLOC(struct delayed_op_copy_s, op);
 	SET_TYPEID(delayed_op_copy_s, op);
 
-	delayed_op_init(CAST_UP(op), D, ~0UL, 2, arg, 0, 0, delayed_op_copy_fun, NULL, delayed_op_copy_debug);
+	delayed_op_init(CAST_UP(op), D, ~UINT64_C(0), 2, arg, 0, 0, delayed_op_copy_fun, NULL, delayed_op_copy_debug);
 
 	return CAST_UP(PTR_PASS(op));
 }
@@ -984,7 +984,7 @@ struct delayed_op_circ_shift_s {
 
 	delayed_op_t super;
 
-	const long* center;
+	const bart_dim_t* center;
 };
 
 static DEF_TYPEID(delayed_op_circ_shift_s);
@@ -994,9 +994,9 @@ static void delayed_op_circ_shift_free(const delayed_op_t* op)
 	xfree(CAST_DOWN(delayed_op_circ_shift_s, op)->center);
 }
 
-static void delayed_op_circ_shift_fun(delayed_op_t* op, unsigned long flags, long pos[MAX_DIMS])
+static void delayed_op_circ_shift_fun(delayed_op_t* op, bart_flags_t flags, bart_dim_t pos[MAX_DIMS])
 {
-	long dims[2][op->D];
+	bart_dim_t dims[2][op->D];
 	void* ptr[2];
 
 	delayed_op_exec_resolve(op, op->D, 2, dims, ptr, flags, pos);
@@ -1006,10 +1006,10 @@ static void delayed_op_circ_shift_fun(delayed_op_t* op, unsigned long flags, lon
 	md_circ_shift2(op->D, dims[0], shift_op->center, op->args[0].astrs, ptr[0], op->args[1].astrs, ptr[1], op->args[0].asize);
 }
 
-static struct delayed_op_s* delayed_op_circ_shift_create(int D, const long dimensions[D], const long center[D], const long str1[D], void* dst, const long str2[D], const void* src, size_t size)
+static struct delayed_op_s* delayed_op_circ_shift_create(int D, const bart_dim_t dimensions[D], const bart_dim_t center[D], const bart_stride_t str1[D], void* dst, const bart_stride_t str2[D], const void* src, size_t size)
 {
-	long dims[D];
-	unsigned long lflags = ~md_nontriv_strides(D, center);
+	bart_dim_t dims[D];
+	bart_flags_t lflags = ~md_nontriv_strides(D, center);
 	md_select_dims(D, lflags, dims, dimensions);
 
 	struct delayed_op_arg_s arg[2] = {
@@ -1020,7 +1020,7 @@ static struct delayed_op_s* delayed_op_circ_shift_create(int D, const long dimen
 	PTR_ALLOC(struct delayed_op_circ_shift_s, op);
 	SET_TYPEID(delayed_op_circ_shift_s, op);
 
-	op->center = ARR_CLONE(long[D], center);
+	op->center = ARR_CLONE(bart_dim_t[D], center);
 
 	delayed_op_init(CAST_UP(op), D, lflags, 2, arg, 0, 0, delayed_op_circ_shift_fun, delayed_op_circ_shift_free, NULL);
 	return CAST_UP(PTR_PASS(op));
@@ -1035,18 +1035,18 @@ struct delayed_op_clear_s {
 
 static DEF_TYPEID(delayed_op_clear_s);
 
-static void delayed_op_clear_fun(delayed_op_t* op, unsigned long flags, long pos[MAX_DIMS])
+static void delayed_op_clear_fun(delayed_op_t* op, bart_flags_t flags, bart_dim_t pos[MAX_DIMS])
 {
-	long dims[1][op->D];
+	bart_dim_t dims[1][op->D];
 	void* ptr[1];
 
 	delayed_op_exec_resolve(op, op->D, 1, dims, ptr, flags, pos);
 	md_clear2(op->D, dims[0], op->args[0].astrs, ptr[0], op->args[0].asize);
 }
 
-static struct delayed_op_s* delayed_op_clear_create(int D, const long dim[D], const long str[D], void* ptr, size_t size)
+static struct delayed_op_s* delayed_op_clear_create(int D, const bart_dim_t dim[D], const bart_stride_t str[D], void* ptr, size_t size)
 {
-	long tdim[D];
+	bart_dim_t tdim[D];
 	md_select_dims(D, md_nontriv_strides(D, str), tdim, dim);
 
 	struct delayed_op_arg_s arg[1] = { arg_create(D, tdim, str, ptr, size, false, true) };
@@ -1054,7 +1054,7 @@ static struct delayed_op_s* delayed_op_clear_create(int D, const long dim[D], co
 	PTR_ALLOC(struct delayed_op_clear_s, op);
 	SET_TYPEID(delayed_op_clear_s, op);
 
-	delayed_op_init(CAST_UP(op), D, ~0UL, 1, arg, 0, 0, delayed_op_clear_fun, NULL, NULL);
+	delayed_op_init(CAST_UP(op), D, ~UINT64_C(0), 1, arg, 0, 0, delayed_op_clear_fun, NULL, NULL);
 	return CAST_UP(PTR_PASS(op));
 }
 
@@ -1070,16 +1070,16 @@ struct delayed_op_md_fun_s {
 	delayed_op_t super;
 
 	bool hide_real_dim;
-	long rstrs[3];
+	bart_stride_t rstrs[3];
 
 	enum delayed_md_fun_type type;
 	size_t offset;
-	unsigned long mpi_r_flags;
+	bart_flags_t mpi_r_flags;
 };
 
 static DEF_TYPEID(delayed_op_md_fun_s);
 
-static void delayed_op_md_fun(delayed_op_t* op, unsigned long flags, long pos[MAX_DIMS])
+static void delayed_op_md_fun(delayed_op_t* op, bart_flags_t flags, bart_dim_t pos[MAX_DIMS])
 {
 	void* ptr[op->N];
 
@@ -1091,8 +1091,8 @@ static void delayed_op_md_fun(delayed_op_t* op, unsigned long flags, long pos[MA
 	int shift = md_op->hide_real_dim ? 1 : 0;
 	int D = op->D + shift;
 
-	long dims[D?:1];
-	long strs[op->N][D?:1];
+	bart_dim_t dims[D?:1];
+	bart_stride_t strs[op->N][D?:1];
 
 	dims[0] = 2;
 	for (int i = 0; i < op->N; i++)
@@ -1243,7 +1243,7 @@ static const char* delayed_op_md_fun_debug(delayed_op_t* op, bool /*nested*/)
 	return ret;
 }
 
-static bool check_real_dim_hide(int D, int i, int N, const long dim[D], long rstrs[3], const long* strs[N], const void* ptr[N], size_t nsizes[N], const size_t sizes[N])
+static bool check_real_dim_hide(int D, int i, int N, const bart_dim_t dim[D], bart_stride_t rstrs[3], const bart_stride_t* strs[N], const void* ptr[N], size_t nsizes[N], const size_t sizes[N])
 {
 	if (2 != dim[i])
 		return false;
@@ -1252,13 +1252,13 @@ static bool check_real_dim_hide(int D, int i, int N, const long dim[D], long rst
 
 		nsizes[k] = vptr_get_shape(ptr[k])->size;
 
-		if (0 != strs[k][i] && (long)sizes[k] != strs[k][i])
+		if (0 != strs[k][i] && (bart_dim_t)sizes[k] != strs[k][i])
 			return false;
 
 		if (0 == strs[k][i] && nsizes[k] != sizes[k])
 			return false;
 
-		if ((long)sizes[k] == strs[k][i] && (nsizes[k] != sizes[k] * 2))
+		if ((bart_dim_t)sizes[k] == strs[k][i] && (nsizes[k] != sizes[k] * 2))
 			return false;
 	}
 
@@ -1268,7 +1268,7 @@ static bool check_real_dim_hide(int D, int i, int N, const long dim[D], long rst
 	return true;
 }
 
-static struct delayed_op_s* delayed_op_md_fun_create(enum delayed_md_fun_type type, size_t offset, int D, const long dim[D], int N, const long* strs[N], const void* ptr[N], const size_t sizes[N])
+static struct delayed_op_s* delayed_op_md_fun_create(enum delayed_md_fun_type type, size_t offset, int D, const bart_dim_t dim[D], int N, const bart_stride_t* strs[N], const void* ptr[N], const size_t sizes[N])
 {
 	PTR_ALLOC(struct delayed_op_md_fun_s, op);
 	SET_TYPEID(delayed_op_md_fun_s, op);
@@ -1289,7 +1289,7 @@ static struct delayed_op_s* delayed_op_md_fun_create(enum delayed_md_fun_type ty
 	for (int i = 1; i < N; i++)
 		arg[i] = arg_create(D, dim + shift, strs[i] + shift, ptr[i], op->hide_real_dim ? nsizes[i] : sizes[i], true, false);
 
-	delayed_op_init(CAST_UP(op), D, ~0UL, N, arg, 0, 0, delayed_op_md_fun, NULL, delayed_op_md_fun_debug);
+	delayed_op_init(CAST_UP(op), D, ~UINT64_C(0), N, arg, 0, 0, delayed_op_md_fun, NULL, delayed_op_md_fun_debug);
 
 	op->offset = offset;
 	op->type = type;
@@ -1331,20 +1331,20 @@ static void delayed_op_vptr_fun_free(const delayed_op_t* op)
 	xfree(CAST_DOWN(delayed_op_vptr_fun_s, op)->data);
 }
 
-static void delayed_op_vptr_fun_fun(delayed_op_t* op, unsigned long flags, long pos[MAX_DIMS])
+static void delayed_op_vptr_fun_fun(delayed_op_t* op, bart_flags_t flags, bart_dim_t pos[MAX_DIMS])
 {
 	void* ptr[op->N];
 
 	struct delayed_op_vptr_fun_s* fun = CAST_DOWN(delayed_op_vptr_fun_s, op);
 
-	long tdims[op->N][op->D];
-	long tstrs[op->N][op->D];
+	bart_dim_t tdims[op->N][op->D];
+	bart_stride_t tstrs[op->N][op->D];
 	size_t sizes[op->N];
 
 	delayed_op_exec_resolve(op, op->D, op->N, tdims, ptr, flags, pos);
 
-	const long* dims[op->N];
-	const long* strs[op->N];
+	const bart_dim_t* dims[op->N];
+	const bart_stride_t* strs[op->N];
 
 	for (int i = 0; i < op->N; i++) {
 
@@ -1372,7 +1372,7 @@ static const char* delayed_op_vptr_fun_debug(delayed_op_t* op, bool /*nested*/)
 	return ret;
 }
 
-static struct delayed_op_s* delayed_op_vptr_fun_create(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, unsigned long lflags, unsigned long wflags, unsigned long rflags, const long* dims[N], const long* strs[N], void* ptr[N], size_t sizes[N], bool resolve)
+static struct delayed_op_s* delayed_op_vptr_fun_create(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, bart_flags_t lflags, bart_flags_t wflags, bart_flags_t rflags, const bart_dim_t* dims[N], const bart_stride_t* strs[N], void* ptr[N], size_t sizes[N], bool resolve)
 {
 	PTR_ALLOC(struct delayed_op_vptr_fun_s, op);
 	SET_TYPEID(delayed_op_vptr_fun_s, op);
@@ -1396,8 +1396,8 @@ struct delayed_op_chain_s {
 
 	delayed_op_t super;
 
-	unsigned long seq_flags;
-	long ldims[MAX_DIMS];
+	bart_flags_t seq_flags;
+	bart_dim_t ldims[MAX_DIMS];
 
 	int M;
 	delayed_op_t** ops;
@@ -1405,7 +1405,7 @@ struct delayed_op_chain_s {
 
 static DEF_TYPEID(delayed_op_chain_s);
 
-static void delayed_chain_fun(delayed_op_t* _op, unsigned long flags, long pos[MAX_DIMS])
+static void delayed_chain_fun(delayed_op_t* _op, bart_flags_t flags, bart_dim_t pos[MAX_DIMS])
 {
 	struct delayed_op_chain_s* op = CAST_DOWN(delayed_op_chain_s, _op);
 
@@ -1431,7 +1431,7 @@ static const char* delayed_chain_debug(delayed_op_t* _op, bool nested)
 {
 	struct delayed_op_chain_s* op = CAST_DOWN(delayed_op_chain_s, _op);
 
-	const char* ret = ptr_printf("chain (%d ops, %lu)", op->M, op->seq_flags);
+	const char* ret = ptr_printf("chain (%d ops, %" PRIu64 ")", op->M, op->seq_flags);
 	ptr_append_print_args(&ret, _op);
 
 	int N = MAX_DIMS;
@@ -1439,7 +1439,7 @@ static const char* delayed_chain_debug(delayed_op_t* _op, bool nested)
 		N--;
 
 	for (int i = 0; i < N; i++)
-		ptr_append_printf(&ret, " %ld%s", op->ldims[i], (1 == op->ldims[i]) || !MD_IS_SET(_op->loop.loop_flags, i) ? "" : MD_IS_SET(op->seq_flags, i) ? "S" : "L");
+		ptr_append_printf(&ret, " %" PRId64 "%s", op->ldims[i], (1 == op->ldims[i]) || !MD_IS_SET(_op->loop.loop_flags, i) ? "" : MD_IS_SET(op->seq_flags, i) ? "S" : "L");
 
 	ptr_append_printf(&ret, " ]");
 
@@ -1461,7 +1461,7 @@ static const char* delayed_chain_debug(delayed_op_t* _op, bool nested)
 }
 
 
-static delayed_op_t* delayed_op_chain_create(list_t ops_list, unsigned long seq_flags)
+static delayed_op_t* delayed_op_chain_create(list_t ops_list, bart_flags_t seq_flags)
 {
 	int D = ((delayed_op_t*)list_get_item(ops_list, 0))->D;
 	for (int i = 0; i < list_count(ops_list); i++)
@@ -1536,11 +1536,11 @@ static delayed_op_t* delayed_op_chain_create(list_t ops_list, unsigned long seq_
 	PTR_ALLOC(struct delayed_op_chain_s, x);
 	SET_TYPEID(delayed_op_chain_s, x);
 
-	unsigned long loop_flags = queue_compute_loop_flags(x->ldims, ops_list);
+	bart_flags_t loop_flags = queue_compute_loop_flags(x->ldims, ops_list);
 	x->seq_flags = loop_flags & seq_flags;
 
-	long mchange = 0;
-	long mpeak = 0;
+	bart_dim_t mchange = 0;
+	bart_dim_t mpeak = 0;
 
 	for (int i = 0; i < list_count(ops_list); i++) {
 
@@ -1548,7 +1548,7 @@ static delayed_op_t* delayed_op_chain_create(list_t ops_list, unsigned long seq_
 
 		if (delayed_op_is_alloc(op) || delayed_op_is_free(op)) {
 
-			long dims[op->D];
+			bart_dim_t dims[op->D];
 			md_select_dims(op->D, x->seq_flags, dims, op->args[0].adims);
 			op->mchange /= md_calc_size(op->D, dims);
 		}
@@ -1580,8 +1580,8 @@ bool delayed_op_is_chain(const delayed_op_t* op)
 static inline bool delayed_arg_same_access(struct delayed_op_arg_s arg1, struct delayed_op_arg_s arg2)
 {
 	return (   (arg1.ptr == arg2.ptr) && (arg1.asize == arg2.asize)
-		&& md_check_equal_dims(MAX(arg1.N, arg2.N), arg1.adims, arg2.adims, ~0UL)
-		&& md_check_equal_dims(MAX(arg1.N, arg2.N), arg1.astrs, arg2.astrs, ~0UL));
+		&& md_check_equal_dims(MAX(arg1.N, arg2.N), arg1.adims, arg2.adims, ~UINT64_C(0))
+		&& md_check_equal_dims(MAX(arg1.N, arg2.N), arg1.astrs, arg2.astrs, ~UINT64_C(0)));
 }
 
 static inline bool delayed_arg_depends_on(struct delayed_op_arg_s arg1, struct delayed_op_arg_s arg2)
@@ -1595,7 +1595,7 @@ static inline bool delayed_arg_depends_on(struct delayed_op_arg_s arg1, struct d
 #if 0
 	// More precise dependency analysis (slower)
 	int N = MIN(arg1.N, arg2.N);
-	unsigned long sflags = arg1.sflags & arg2.sflags;
+	bart_flags_t sflags = arg1.sflags & arg2.sflags;
 
 	if (0 != sflags)
 		for (int k = 0; k < N; k++)
@@ -1696,10 +1696,10 @@ static egraph_t delayed_op_queue_to_graph(list_t ops_queue)
 struct access_s {
 
 	const void* ptr;
-	unsigned long read;
-	unsigned long written;
-	long rpos[MAX_DIMS];
-	long wpos[MAX_DIMS];
+	bart_flags_t read;
+	bart_flags_t written;
+	bart_dim_t rpos[MAX_DIMS];
+	bart_dim_t wpos[MAX_DIMS];
 };
 
 static bool cmp_write(const void* arg, const void* ref)
@@ -1707,10 +1707,10 @@ static bool cmp_write(const void* arg, const void* ref)
 	return ((struct access_s*)arg)->ptr == ref;
 }
 
-static unsigned long queue_compute_loop_flags(long loop_dims[MAX_DIMS], list_t ops_queue)
+static bart_flags_t queue_compute_loop_flags(bart_dim_t loop_dims[MAX_DIMS], list_t ops_queue)
 {
 	md_singleton_dims(MAX_DIMS, loop_dims);
-	unsigned long loop_flags = ~0UL;
+	bart_flags_t loop_flags = ~UINT64_C(0);
 
 	list_t written = list_create();
 
@@ -1741,7 +1741,7 @@ static unsigned long queue_compute_loop_flags(long loop_dims[MAX_DIMS], list_t o
 
 			if (arg->write) {
 
-				unsigned long rflags = loop_flags & w->read;
+				bart_flags_t rflags = loop_flags & w->read;
 				for (int i = 0; i < op->loop.D; i++)
 					if ((MD_IS_SET(rflags & op->loop.slice_flags, i)) && (w->rpos[i] <= op->loop.slice_pos[i]))
 						rflags = MD_CLEAR(rflags, i);
@@ -1751,7 +1751,7 @@ static unsigned long queue_compute_loop_flags(long loop_dims[MAX_DIMS], list_t o
 
 			if (arg->read)  {
 
-				unsigned long wflags = loop_flags & w->written;
+				bart_flags_t wflags = loop_flags & w->written;
 				for (int i = 0; i < op->loop.D; i++)
 					if ((MD_IS_SET(wflags & op->loop.slice_flags, i)) && (w->wpos[i] <= op->loop.slice_pos[i]))
 						wflags = MD_CLEAR(wflags, i);
@@ -1769,8 +1769,8 @@ static unsigned long queue_compute_loop_flags(long loop_dims[MAX_DIMS], list_t o
 
 				PTR_ALLOC(struct access_s, x);
 				x->ptr = arg->ptr_base;
-				x->written = 0UL;
-				x->read = 0UL;
+				x->written = 0;
+				x->read = 0;
 
 				memset(x->rpos, 0, sizeof(x->rpos));
 				memset(x->wpos, 0, sizeof(x->wpos));
@@ -1779,7 +1779,7 @@ static unsigned long queue_compute_loop_flags(long loop_dims[MAX_DIMS], list_t o
 				list_push(written, w);
 			}
 
-			unsigned long flags = op->loop.loop_flags & arg->non_first_pos_flags;
+			bart_flags_t flags = op->loop.loop_flags & arg->non_first_pos_flags;
 
 			if (arg->write) {
 
@@ -1789,7 +1789,7 @@ static unsigned long queue_compute_loop_flags(long loop_dims[MAX_DIMS], list_t o
 					if (!MD_IS_SET(flags, i))
 						continue;
 
-					long apos = MD_IS_SET(op->loop.slice_flags, i) ? op->loop.slice_pos[i] : (op->loop.dims[i] - 1);
+					bart_dim_t apos = MD_IS_SET(op->loop.slice_flags, i) ? op->loop.slice_pos[i] : (op->loop.dims[i] - 1);
 					w->wpos[i] = MAX(w->wpos[i], apos);
 				}
 
@@ -1803,7 +1803,7 @@ static unsigned long queue_compute_loop_flags(long loop_dims[MAX_DIMS], list_t o
 					if (!MD_IS_SET(flags, i))
 						continue;
 
-					long apos = MD_IS_SET(op->loop.slice_flags, i) ? op->loop.slice_pos[i] : (op->loop.dims[i] - 1);
+					bart_dim_t apos = MD_IS_SET(op->loop.slice_flags, i) ? op->loop.slice_pos[i] : (op->loop.dims[i] - 1);
 					w->rpos[i] = MAX(w->rpos[i], apos);
 				}
 			}
@@ -1819,9 +1819,9 @@ static unsigned long queue_compute_loop_flags(long loop_dims[MAX_DIMS], list_t o
 	return loop_flags;
 }
 
-static unsigned long delayed_tmp_buffer_compute_loop_flags(egraph_t graph)
+static bart_flags_t delayed_tmp_buffer_compute_loop_flags(egraph_t graph)
 {
-	unsigned long ret = 0;
+	bart_flags_t ret = 0;
 
 	for (int i = 0; i < list_count(graph); i++) {
 
@@ -1854,8 +1854,8 @@ static unsigned long delayed_tmp_buffer_compute_loop_flags(egraph_t graph)
 				list_append(between, enode_get_data(node));
 		}
 
-		long loop_dims[MAX_DIMS];
-		unsigned long lflags = queue_compute_loop_flags(loop_dims, between);
+		bart_dim_t loop_dims[MAX_DIMS];
+		bart_flags_t lflags = queue_compute_loop_flags(loop_dims, between);
 		op->loop.loop_flags &= lflags;
 		op2->loop.loop_flags &= lflags;
 		list_free(between);
@@ -1868,7 +1868,7 @@ static unsigned long delayed_tmp_buffer_compute_loop_flags(egraph_t graph)
 	return ret;
 }
 
-static void delayed_optimize_queue_looping_flags(egraph_t graph, bool multiple, unsigned long lflags)
+static void delayed_optimize_queue_looping_flags(egraph_t graph, bool multiple, bart_flags_t lflags)
 {
 
 	for (int i = 0; i < list_count(graph); i++) {
@@ -1922,8 +1922,8 @@ static void delayed_optimize_queue_looping_flags(egraph_t graph, bool multiple, 
 		for (int i = 0; i < list_count(chain); i++)
 			list_insert(chain, enode_get_data(list_remove_item(chain, i)), i);
 
-		long loop_dims[MAX_DIMS];
-		unsigned long loop_flags = queue_compute_loop_flags(loop_dims, chain);
+		bart_dim_t loop_dims[MAX_DIMS];
+		bart_flags_t loop_flags = queue_compute_loop_flags(loop_dims, chain);
 
 		if (0 != (lflags & ~loop_flags)) {
 
@@ -1933,14 +1933,14 @@ static void delayed_optimize_queue_looping_flags(egraph_t graph, bool multiple, 
 			continue;
 		}
 
-		long old_mpeak = compute_mpeak(graph, true);
+		bart_dim_t old_mpeak = compute_mpeak(graph, true);
 
-		long lsize = md_calc_size(MAX_DIMS, loop_dims);
+		bart_dim_t lsize = md_calc_size(MAX_DIMS, loop_dims);
 
 		for (int j = 0; j < list_count(alloc_ops); j++)
 			((delayed_op_t*)list_get_item(alloc_ops, j))->mchange /= lsize;
 
-		long new_mpeak = compute_mpeak(tmp_graph, true);
+		bart_dim_t new_mpeak = compute_mpeak(tmp_graph, true);
 
 		for (int j = 0; j < list_count(alloc_ops); j++)
 			((delayed_op_t*)list_get_item(alloc_ops, j))->mchange *= lsize;
@@ -2021,10 +2021,10 @@ void delayed_optimize_queue_looping(list_t ops_queue)
 
 	egraph_t graph = delayed_op_queue_to_graph(ops_queue);
 
-	unsigned long loop_flags = delayed_tmp_buffer_compute_loop_flags(graph);
+	bart_flags_t loop_flags = delayed_tmp_buffer_compute_loop_flags(graph);
 
 	int N = 0;
-	long loop_dims[ARRAY_SIZE(bart_delayed_loop_dims)];
+	bart_dim_t loop_dims[ARRAY_SIZE(bart_delayed_loop_dims)];
 
 	for (int i = ARRAY_SIZE(bart_delayed_loop_dims) - 1; i >= 0; i--) {
 
@@ -2040,8 +2040,8 @@ void delayed_optimize_queue_looping(list_t ops_queue)
 
 	NESTED(int, cmp_ord, (int a, int b))
 	{
-		int da = bitcount((unsigned long)a);
-		int db = bitcount((unsigned long)a);
+		int da = bitcount((bart_flags_t)a);
+		int db = bitcount((bart_flags_t)a);
 
 		if (da != db)
 			return (db > da) - (db < da);
@@ -2054,10 +2054,10 @@ void delayed_optimize_queue_looping(list_t ops_queue)
 
 	for (int i = 0; i < (int)MD_BIT(N) - 1; i++) {
 
-		unsigned long loc_loop_flags = 0;
+		bart_flags_t loc_loop_flags = 0;
 
 		for (int j = 0; j < N; j++)
-			if (MD_IS_SET((unsigned long)order[i], j))
+			if (MD_IS_SET((bart_flags_t)order[i], j))
 				loc_loop_flags |= MD_BIT(loop_dims[j]);
 
 		delayed_optimize_queue_looping_flags(graph, true, loc_loop_flags);
@@ -2661,13 +2661,13 @@ static bool delayed_optimize_accumulate(list_t ops_queue)
 		if (   add_op->args[1].fitting
 		    && (add_op->args[1].ptr_base == free_op->args[0].ptr_base)
 		    && (add_op->args[0].ptr == add_op->args[2].ptr)
-		    && md_check_equal_dims(add_op->D, add_op->args[0].astrs, add_op->args[2].astrs, ~0UL))
+		    && md_check_equal_dims(add_op->D, add_op->args[0].astrs, add_op->args[2].astrs, ~UINT64_C(0)))
 			accum = 1;
 
 		if (   add_op->args[2].fitting
 		    && (add_op->args[2].ptr_base == free_op->args[0].ptr_base)
 		    && (add_op->args[0].ptr == add_op->args[1].ptr)
-		    && md_check_equal_dims(add_op->D, add_op->args[0].astrs, add_op->args[1].astrs, ~0UL))
+		    && md_check_equal_dims(add_op->D, add_op->args[0].astrs, add_op->args[1].astrs, ~UINT64_C(0)))
 			accum = 2;
 
 		if (-1 == accum)
@@ -2746,11 +2746,11 @@ static bool delayed_optimize_accumulate(list_t ops_queue)
 		    || (op->args[0].ptr_base != add_op->args[accum].ptr_base)
 		    || (op->args[0].ptr != add_op->args[accum].ptr_base)
 		    || (op->args[0].msize != op->args[0].asize)
-		    || !md_check_equal_dims(op->args[0].N, op->args[0].astrs, MD_STRIDES(op->args[0].N, op->args[0].mdims, op->args[0].msize), ~0UL))
+		    || !md_check_equal_dims(op->args[0].N, op->args[0].astrs, MD_STRIDES(op->args[0].N, op->args[0].mdims, op->args[0].msize), ~UINT64_C(0)))
 			continue;
 
 		const void* ptr[] = { add_op->args[0].ptr, op->args[1].ptr, op->args[2].ptr };
-		const long* strs[] = { add_op->args[0].astrs, op->args[1].astrs, op->args[2].astrs };
+		const bart_stride_t* strs[] = { add_op->args[0].astrs, op->args[1].astrs, op->args[2].astrs };
 		size_t sizes[] = { CFL_SIZE, CFL_SIZE, CFL_SIZE };
 
 
@@ -2927,7 +2927,7 @@ static void delayed_optimize_copy(list_t ops_queue)
 			continue;
 
 		//remove inplace copy
-		if (op->args[0].ptr == op->args[1].ptr && (op->args[0].N == op->args[1].N) && md_check_equal_dims(op->args[0].N, op->args[0].astrs, op->args[1].astrs, ~0UL)) {
+		if (op->args[0].ptr == op->args[1].ptr && (op->args[0].N == op->args[1].N) && md_check_equal_dims(op->args[0].N, op->args[0].astrs, op->args[1].astrs, ~UINT64_C(0))) {
 
 			delayed_op_free(op);
 			continue;
@@ -3022,8 +3022,8 @@ void debug_mpeak_queue(int dl, list_t ops_queue, bool node)
 	if (dl > debug_level)
 		return;
 
-	long mchange = 0;
-	long mpeak = 0;
+	bart_dim_t mchange = 0;
+	bart_dim_t mpeak = 0;
 
 	for (int i = 0; i < list_count(ops_queue); i++) {
 
@@ -3038,17 +3038,17 @@ void debug_mpeak_queue(int dl, list_t ops_queue, bool node)
 
 		const char* ops = print_delayed_fun_f(op, false);
 		mchange += op->mchange;
-		debug_printf(dl, "%d: %ld %ld - %s\n", i, mchange, mpeak, ops);
+		debug_printf(dl, "%d: %" PRId64 " %" PRId64 " - %s\n", i, mchange, mpeak, ops);
 		xfree(ops);
 	}
 
-	debug_printf(dl, "Total peak: %ld\n", mpeak);
+	debug_printf(dl, "Total peak: %" PRId64 "\n", mpeak);
 }
 
-long compute_mpeak(list_t ops_queue, bool node)
+bart_dim_t compute_mpeak(list_t ops_queue, bool node)
 {
-	long mpeak = 0;
-	long mchange = 0;
+	bart_dim_t mpeak = 0;
+	bart_dim_t mchange = 0;
 
 	for (int i = 0; i < list_count(ops_queue); i++) {
 
@@ -3066,9 +3066,9 @@ long compute_mpeak(list_t ops_queue, bool node)
 	return mpeak;
 }
 
-long compute_mchange(list_t ops_queue, bool node)
+bart_dim_t compute_mchange(list_t ops_queue, bool node)
 {
-	long mchange = 0;
+	bart_dim_t mchange = 0;
 
 	for (int i = 0; i < list_count(ops_queue); i++) {
 

@@ -48,8 +48,8 @@
  * @param swap_kernel_matrix if true, the kernel has dims (IC, OC) instead of (OC, IC)
  */
 const struct nlop_s* append_convcorr_layer_generic(const struct nlop_s* network, int o,
-						unsigned long conv_flag, unsigned long channel_flag, unsigned long group_flag,
-						int N, long const kernel_dims[N], const long strides[N], const long dilations[N],
+						bart_flags_t conv_flag, bart_flags_t channel_flag, bart_flags_t group_flag,
+						int N, bart_dim_t const kernel_dims[N], const bart_stride_t strides[N], const bart_dim_t dilations[N],
 						bool conv, enum PADDING conv_pad)
 {
 	int NO = nlop_get_nr_out_args(network);
@@ -63,7 +63,7 @@ const struct nlop_s* append_convcorr_layer_generic(const struct nlop_s* network,
 	assert(0 == (channel_flag & group_flag));
 
 	//set default dilation/strides
-	long ones[N];
+	bart_dim_t ones[N];
 	for (int i = 0; i < N; i++)
 		ones[i] = 1;
 
@@ -73,29 +73,29 @@ const struct nlop_s* append_convcorr_layer_generic(const struct nlop_s* network,
 	if (NULL == dilations)
 		dilations = ones;
 
-	long idims[N];
-	long kdims[2 * N];
-	long odims[N];
+	bart_dim_t idims[N];
+	bart_dim_t kdims[2 * N];
+	bart_dim_t odims[N];
 
 	md_copy_dims(N, idims, nlop_generic_codomain(network, o)->dims);
 	md_singleton_dims(2 * N, kdims);
 	md_singleton_dims(N, odims);
 
-	long idims_op[2 * N];
-	long odims_op[2 * N];
-	long kdims_op[2 * N];
+	bart_dim_t idims_op[2 * N];
+	bart_dim_t odims_op[2 * N];
+	bart_dim_t kdims_op[2 * N];
 
 	md_singleton_dims(2 * N, idims_op);
 	md_singleton_dims(2 * N, odims_op);
 	md_singleton_dims(2 * N, kdims_op);
 
-	long dil_op[2 * N];
-	long str_op[2 * N];
+	bart_dim_t dil_op[2 * N];
+	bart_stride_t str_op[2 * N];
 
 	md_singleton_dims(2 * N, dil_op);
 	md_singleton_dims(2 * N, str_op);
 
-	unsigned long conv_op_flags = 0;
+	bart_flags_t conv_op_flags = 0;
 
 	int ip = 0;
 	int ik = 0;
@@ -227,8 +227,8 @@ const struct nlop_s* append_convcorr_layer_generic(const struct nlop_s* network,
  * @param swap_kernel_matrix if true, the kernel has dims (IC, OC) instead of (OC, IC)
  */
 const struct nlop_s* append_transposed_convcorr_layer_generic(const struct nlop_s* network, int o,
-						unsigned long conv_flag, unsigned long channel_flag, unsigned long group_flag,
-						int N, long const kernel_dims[N], const long strides[N], const long dilations[N],
+						bart_flags_t conv_flag, bart_flags_t channel_flag, bart_flags_t group_flag,
+						int N, bart_dim_t const kernel_dims[N], const bart_stride_t strides[N], const bart_dim_t dilations[N],
 						bool conv, enum PADDING conv_pad, bool adjoint)
 {
 	int NO = nlop_get_nr_out_args(network);
@@ -242,7 +242,7 @@ const struct nlop_s* append_transposed_convcorr_layer_generic(const struct nlop_
 	assert(0 == (channel_flag & group_flag));
 
 	//set default dilation/strides
-	long ones[N];
+	bart_dim_t ones[N];
 	for (int i = 0; i < N; i++)
 		ones[i] = 1;
 
@@ -252,29 +252,29 @@ const struct nlop_s* append_transposed_convcorr_layer_generic(const struct nlop_
 	if (NULL == dilations)
 		dilations = ones;
 
-	long idims[N];
-	long kdims[2 * N];
-	long odims[N];
+	bart_dim_t idims[N];
+	bart_dim_t kdims[2 * N];
+	bart_dim_t odims[N];
 
 	md_copy_dims(N, odims, nlop_generic_codomain(network, o)->dims);
 	md_singleton_dims(2 * N, kdims);
 	md_singleton_dims(N, idims);
 
-	long idims_op[2 * N];
-	long odims_op[2 * N];
-	long kdims_op[2 * N];
+	bart_dim_t idims_op[2 * N];
+	bart_dim_t odims_op[2 * N];
+	bart_dim_t kdims_op[2 * N];
 
 	md_singleton_dims(2 * N, idims_op);
 	md_singleton_dims(2 * N, odims_op);
 	md_singleton_dims(2 * N, kdims_op);
 
-	long dil_op[2 * N];
-	long str_op[2 * N];
+	bart_dim_t dil_op[2 * N];
+	bart_stride_t str_op[2 * N];
 
 	md_singleton_dims(2 * N, dil_op);
 	md_singleton_dims(2 * N, str_op);
 
-	unsigned long conv_op_flags = 0;
+	bart_flags_t conv_op_flags = 0;
 
 	int ip = 0;
 	int ik = 0;
@@ -400,13 +400,13 @@ const struct nlop_s* append_transposed_convcorr_layer_generic(const struct nlop_
  * @param strides only take into account convolutions separated by strides {sx, sy, sz} (0 == (idims_xyz[i] - dilations[i] * (kernel_size[i] - 1) - 1) % strides[i]))
  * @param dilations elements of kernel dilated by {dx, dy, dz}
  */
-const struct nlop_s* append_convcorr_layer(const struct nlop_s* network, int o, int filters, long const kernel_size[3], bool conv, enum PADDING conv_pad, bool channel_first, const long strides[3], const long dilations[3])
+const struct nlop_s* append_convcorr_layer(const struct nlop_s* network, int o, int filters, bart_dim_t const kernel_size[3], bool conv, enum PADDING conv_pad, bool channel_first, const bart_stride_t strides[3], const bart_dim_t dilations[3])
 {
 	if (channel_first) {
 
-		long kernel[5] = { filters, kernel_size[0], kernel_size[1], kernel_size[2], 1 };
-		long dil_tmp[5] = { 1, 1, 1, 1, 1 };
-		long str_tmp[5] = { 1, 1, 1, 1, 1 };
+		bart_dim_t kernel[5] = { filters, kernel_size[0], kernel_size[1], kernel_size[2], 1 };
+		bart_dim_t dil_tmp[5] = { 1, 1, 1, 1, 1 };
+		bart_stride_t str_tmp[5] = { 1, 1, 1, 1, 1 };
 
 		if (NULL != dilations)
 			md_copy_dims(3, dil_tmp + 1, dilations);
@@ -421,9 +421,9 @@ const struct nlop_s* append_convcorr_layer(const struct nlop_s* network, int o, 
 
 	} else {
 
-		long kernel[5] = { kernel_size[0], kernel_size[1], kernel_size[2], filters, 1 };
-		long dil_tmp[5] = { 1, 1, 1, 1, 1 };
-		long str_tmp[5] = { 1, 1, 1, 1, 1 };
+		bart_dim_t kernel[5] = { kernel_size[0], kernel_size[1], kernel_size[2], filters, 1 };
+		bart_dim_t dil_tmp[5] = { 1, 1, 1, 1, 1 };
+		bart_stride_t str_tmp[5] = { 1, 1, 1, 1, 1 };
 
 		if (NULL != dilations)
 			md_copy_dims(3, dil_tmp, dilations);
@@ -453,13 +453,13 @@ const struct nlop_s* append_convcorr_layer(const struct nlop_s* network, int o, 
  * @param strides only take into account convolutions separated by strides {sx, sy, sz}
  * @param dilations elements of kernel dilated by {dx, dy, dz}
  */
-const struct nlop_s* append_transposed_convcorr_layer(const struct nlop_s* network, int o, int channels, long const kernel_size[3], bool conv, bool adjoint, enum PADDING conv_pad, bool channel_first, const long strides[3], const long dilations[3])
+const struct nlop_s* append_transposed_convcorr_layer(const struct nlop_s* network, int o, int channels, bart_dim_t const kernel_size[3], bool conv, bool adjoint, enum PADDING conv_pad, bool channel_first, const bart_stride_t strides[3], const bart_dim_t dilations[3])
 {
 	if (channel_first) {
 
-		long kernel[5] = { channels, kernel_size[0], kernel_size[1], kernel_size[2], 1 };
-		long dil_tmp[5] = { 1, 1, 1, 1, 1 };
-		long str_tmp[5] = { 1, 1, 1, 1, 1 };
+		bart_dim_t kernel[5] = { channels, kernel_size[0], kernel_size[1], kernel_size[2], 1 };
+		bart_dim_t dil_tmp[5] = { 1, 1, 1, 1, 1 };
+		bart_stride_t str_tmp[5] = { 1, 1, 1, 1, 1 };
 
 		if (NULL != dilations)
 			md_copy_dims(3, dil_tmp + 1, dilations);
@@ -474,9 +474,9 @@ const struct nlop_s* append_transposed_convcorr_layer(const struct nlop_s* netwo
 
 	} else {
 
-		long kernel[5] = { kernel_size[0], kernel_size[1], kernel_size[2], channels, 1 };
-		long dil_tmp[5] = { 1, 1, 1, 1, 1 };
-		long str_tmp[5] = { 1, 1, 1, 1, 1 };
+		bart_dim_t kernel[5] = { kernel_size[0], kernel_size[1], kernel_size[2], channels, 1 };
+		bart_dim_t dil_tmp[5] = { 1, 1, 1, 1, 1 };
+		bart_stride_t str_tmp[5] = { 1, 1, 1, 1, 1 };
 
 		if (NULL != dilations)
 			md_copy_dims(3, dil_tmp, dilations);
@@ -491,7 +491,7 @@ const struct nlop_s* append_transposed_convcorr_layer(const struct nlop_s* netwo
 	}
 }
 
-static bool calc_pooling_working_dims(int N, long dims_working[N], const long dims[N], const long pool_size[N], enum PADDING conv_pad)
+static bool calc_pooling_working_dims(int N, bart_dim_t dims_working[N], const bart_dim_t dims[N], const bart_dim_t pool_size[N], enum PADDING conv_pad)
 {
 	md_copy_dims(N, dims_working, dims);
 
@@ -532,7 +532,7 @@ static bool calc_pooling_working_dims(int N, long dims_working[N], const long di
  * @param pool_size {px, py, pz} size of pooling
  * @param conv_pad must be PAD_VALID/PAD_SAME if image size is not a multiple of padding size, the image is shrunk/expanded to a multiple
  */
-const struct nlop_s* append_maxpool_layer_generic(const struct nlop_s* network, int o, int N, const long pool_size[N], enum PADDING conv_pad)
+const struct nlop_s* append_maxpool_layer_generic(const struct nlop_s* network, int o, int N, const bart_dim_t pool_size[N], enum PADDING conv_pad)
 {
 	// FIXME: we should adapt to tf convention (include strides)
 
@@ -543,8 +543,8 @@ const struct nlop_s* append_maxpool_layer_generic(const struct nlop_s* network, 
 
 	assert(nlop_generic_codomain(network, o)->N == N);
 
-	long idims_layer[N];
-	long idims_working[N];
+	bart_dim_t idims_layer[N];
+	bart_dim_t idims_working[N];
 	md_copy_dims(N, idims_layer, nlop_generic_codomain(network, o)->dims);
 
 	bool resize_needed = calc_pooling_working_dims(N, idims_working, idims_layer, pool_size, conv_pad);
@@ -570,10 +570,10 @@ const struct nlop_s* append_maxpool_layer_generic(const struct nlop_s* network, 
  * @param conv_pad must be PAD_VALID/PAD_SAME if image size is not a multiple of padding size, the image is shrunk/expanded to a multiple
  * @param channel_first data layout is {c, x, y, z} if true, {x, y, z, c}else
  */
-const struct nlop_s* append_maxpool_layer(const struct nlop_s* network, int o, const long pool_size[3], enum PADDING conv_pad, bool channel_first)
+const struct nlop_s* append_maxpool_layer(const struct nlop_s* network, int o, const bart_dim_t pool_size[3], enum PADDING conv_pad, bool channel_first)
 {
 	//Fixme: we should adapt to tf convention (include strides)
-	long npool_size[5];
+	bart_dim_t npool_size[5];
 	md_singleton_dims(5, npool_size);
 	md_copy_dims(3, channel_first ? npool_size + 1 : npool_size, pool_size);
 
@@ -597,19 +597,19 @@ const struct nlop_s* append_dense_layer(const struct nlop_s* network, int o, int
 	assert(o < NO);
 	assert((nlop_generic_codomain(network, o))->N == 2);
 
-	long batch = (nlop_generic_codomain(network, o)->dims)[1];
-	long in_neurons = (nlop_generic_codomain(network, o)->dims)[0];
+	bart_dim_t batch = (nlop_generic_codomain(network, o)->dims)[1];
+	bart_dim_t in_neurons = (nlop_generic_codomain(network, o)->dims)[0];
 
-	long idims_layer[] = { in_neurons, batch };       //in neurons, batch
-	long odims_layer[] = { out_neurons, batch };      //out neurons, batch
-	long wdims_layer[] = { out_neurons, in_neurons }; //out neurons, in neurons
+	bart_dim_t idims_layer[] = { in_neurons, batch };       //in neurons, batch
+	bart_dim_t odims_layer[] = { out_neurons, batch };      //out neurons, batch
+	bart_dim_t wdims_layer[] = { out_neurons, in_neurons }; //out neurons, in neurons
 
-	long istrs_layer[2];
+	bart_dim_t istrs_layer[2];
 	md_copy_strides(2, istrs_layer, nlop_generic_codomain(network, o)->strs);
 
-	long idims_working[] = { 1, in_neurons, batch };       //in neurons, batch
-	long odims_working[] = { out_neurons, 1, batch };      //out neurons, batch
-	long wdims_working[] = { out_neurons, in_neurons, 1 }; //out neurons, in neurons
+	bart_dim_t idims_working[] = { 1, in_neurons, batch };       //in neurons, batch
+	bart_dim_t odims_working[] = { out_neurons, 1, batch };      //out neurons, batch
+	bart_dim_t wdims_working[] = { out_neurons, in_neurons, 1 }; //out neurons, in neurons
 
 	const struct nlop_s* matmul = nlop_tenmul_create(3, odims_working, idims_working, wdims_working);
 	matmul = nlop_reshape_out_F(matmul, 0, 2, odims_layer);
@@ -639,7 +639,7 @@ const struct nlop_s* append_dropout_layer(const struct nlop_s* network, int o, f
 	assert(o < NO);
 
 	int N = nlop_generic_codomain(network, o)->N;
-	long idims[N];
+	bart_dim_t idims[N];
 	md_copy_dims(N, idims, nlop_generic_codomain(network, o)->dims);
 
 	const struct nlop_s* dropout_op = NULL;
@@ -671,11 +671,11 @@ const struct nlop_s* append_flatten_layer(const struct nlop_s* network, int o)
 
 	int N = nlop_generic_codomain(network, o)->N;
 
-	long idims[N];
+	bart_dim_t idims[N];
 	md_copy_dims(N, idims, nlop_generic_codomain(network, o)->dims);
 
-	long size = md_calc_size(N - 1, idims);
-	long odims[] = { size, idims[N - 1] };
+	bart_dim_t size = md_calc_size(N - 1, idims);
+	bart_dim_t odims[] = { size, idims[N - 1] };
 
 	return nlop_reshape_out_F(network, o, 2, odims);
 }
@@ -691,7 +691,7 @@ const struct nlop_s* append_flatten_layer(const struct nlop_s* network, int o)
  * @param pad_after
  * @param pad_type
  */
-const struct nlop_s* append_padding_layer(const struct nlop_s* network, int o, long N, long pad_for[N], long pad_after[N], enum PADDING pad_type)
+const struct nlop_s* append_padding_layer(const struct nlop_s* network, int o, bart_dim_t N, bart_dim_t pad_for[N], bart_dim_t pad_after[N], enum PADDING pad_type)
 {
 	int NO = nlop_get_nr_out_args(network);
 	assert(o < NO);
@@ -714,7 +714,7 @@ const struct nlop_s* append_padding_layer(const struct nlop_s* network, int o, l
  * @param o output index of network, the layer is appended
  * @param norm_flags select dimension over which we normalize
  */
-const struct nlop_s* append_batchnorm_layer(const struct nlop_s* network, int o, unsigned long norm_flags, enum NETWORK_STATUS status)
+const struct nlop_s* append_batchnorm_layer(const struct nlop_s* network, int o, bart_flags_t norm_flags, enum NETWORK_STATUS status)
 {
 	int NO = nlop_get_nr_out_args(network);
 	int NI = nlop_get_nr_in_args(network);
@@ -740,7 +740,7 @@ const struct nlop_s* append_batchnorm_layer(const struct nlop_s* network, int o,
  * @param norm_flags select dimension over which we normalize
  * @param epsilon small factor for numerical stability
  */
-const struct nlop_s* append_normalize_layer(const struct nlop_s* network, int o, unsigned long norm_flags, float epsilon)
+const struct nlop_s* append_normalize_layer(const struct nlop_s* network, int o, bart_flags_t norm_flags, float epsilon)
 {
 	int NO = nlop_get_nr_out_args(network);
 

@@ -63,24 +63,24 @@
 
 
 // Copy spokes from input array to correct position in output array
-static void asgn_bins(const long bins_dims[DIMS], const float* bins, const long sg_dims[DIMS], complex float* sg, const long in_dims[DIMS], const complex float* in, const int n_card, const int n_resp)
+static void asgn_bins(const bart_dim_t bins_dims[DIMS], const float* bins, const bart_dim_t sg_dims[DIMS], complex float* sg, const bart_dim_t in_dims[DIMS], const complex float* in, const int n_card, const int n_resp)
 {
 	// Array to keep track of numbers of spokes already assigned to each bin
-	long count_dims[2] = { n_card, n_resp };
+	bart_dim_t count_dims[2] = { n_card, n_resp };
 
 	int* count = md_calloc(2, count_dims, sizeof(int));
 
 
 	// Array to store a single spoke (including read-out, [coils] and slices)
-	long in_singleton_dims[DIMS];
+	bart_dim_t in_singleton_dims[DIMS];
 	md_select_dims(DIMS, ~TIME_FLAG, in_singleton_dims, in_dims);
 
 	complex float* in_singleton = md_alloc(DIMS, in_singleton_dims, CFL_SIZE);
 
 	int T = (int)bins_dims[TIME_DIM]; // Number of time samples
 
-	long pos0[DIMS] = { };
-	long pos1[DIMS] = { };
+	bart_dim_t pos0[DIMS] = { };
+	bart_dim_t pos1[DIMS] = { };
 
 	for (int t = 0; t < T; t++) { // Iterate all spokes of input array
 
@@ -105,7 +105,7 @@ static void asgn_bins(const long bins_dims[DIMS], const float* bins, const long 
 
 
 
-static int find_dim(int N, long dims[N])
+static int find_dim(int N, bart_dim_t dims[N])
 {
 	int dim = -1;
 	int count = 0;
@@ -136,7 +136,7 @@ int main_bin(int argc, char* argv[argc])
 	bool reorder = false;
 	bool amplitude = false;
 	struct bin_conf_s conf = bin_defaults;
-	long zero_fill[2] = { 0, 1 };
+	bart_dim_t zero_fill[2] = { 0, 1 };
 	bool is_stream = false;
 
 	const char* label_file = NULL;
@@ -172,10 +172,10 @@ int main_bin(int argc, char* argv[argc])
 	num_init();
 
 	// Input
-	long labels_dims[DIMS];
+	bart_dim_t labels_dims[DIMS];
 	complex float* labels = load_cfl(label_file, DIMS, labels_dims);
 
-	long src_dims[DIMS];
+	bart_dim_t src_dims[DIMS];
 	complex float* src = (is_stream ? load_async_cfl : load_cfl)(src_file, DIMS, src_dims);
 	stream_t strm_src = stream_lookup(src);
 
@@ -234,7 +234,7 @@ int main_bin(int argc, char* argv[argc])
 	if (is_stream && (BIN_QUADRATURE == bin_type))
 		error("Streaming not supported with BIN_QUADRATURE.\n");
 
-	long bins_dims[DIMS];
+	bart_dim_t bins_dims[DIMS];
 	float* bins = NULL;
 	complex float* binned = NULL;
 	int binsize_max = 0;
@@ -254,7 +254,7 @@ int main_bin(int argc, char* argv[argc])
 
 		binsize_max = bin_quadrature(bins_dims, bins, labels_dims, labels, conf);
 
-		long binned_dims[DIMS];
+		bart_dim_t binned_dims[DIMS];
 		md_copy_dims(DIMS, binned_dims, src_dims);
 		binned_dims[TIME_DIM] = conf.n_card;
 		binned_dims[TIME2_DIM] = conf.n_resp;
@@ -277,7 +277,7 @@ int main_bin(int argc, char* argv[argc])
 
 		int dim = -1;
 
-		long loop_dims[DIMS];
+		bart_dim_t loop_dims[DIMS];
 		md_singleton_dims(DIMS, loop_dims);
 
 		if (1 < bitcount(md_nontriv_dims(DIMS, labels_dims))) {
@@ -296,12 +296,12 @@ int main_bin(int argc, char* argv[argc])
 			dim = find_dim(DIMS, labels_dims); // Dimension to be binned
 		}
 
-		long N = labels_dims[dim]; // number of samples to be binned
+		bart_dim_t N = labels_dims[dim]; // number of samples to be binned
 
 		// Determine number of clusters
 		int n_clusters = 0;
 
-		for (long i = 0; i < N; i++) {
+		for (bart_dim_t i = 0; i < N; i++) {
 
 			int label = (int)crealf(labels[i]);
 
@@ -329,7 +329,7 @@ int main_bin(int argc, char* argv[argc])
 			cluster_max = MAX(cluster_max, cluster_size[i]);
 
 		// Initialize output
-		long dst_dims[DIMS];
+		bart_dim_t dst_dims[DIMS];
 		md_copy_dims(DIMS, dst_dims, src_dims);
 
 		if ((BIN_REORDER != bin_type) && (BIN_ZEROFILL != bin_type)) {
@@ -345,8 +345,8 @@ int main_bin(int argc, char* argv[argc])
 			assert(n_clusters <= src_dims[dim]);
 		}
 
-		long spokes_per_frame = 0;
-		long zero_filled_dim = 0;
+		bart_dim_t spokes_per_frame = 0;
+		bart_dim_t zero_filled_dim = 0;
 
 		if (BIN_ZEROFILL == bin_type) {
 
@@ -359,7 +359,7 @@ int main_bin(int argc, char* argv[argc])
 
 			dst_dims[zero_filled_dim] = zero_fill[1];
 
-			debug_printf(DP_DEBUG3, "Spokes per Frame: %ld\n", spokes_per_frame);
+			debug_printf(DP_DEBUG3, "Spokes per Frame: %" PRId64 "\n", spokes_per_frame);
 			debug_printf(DP_DEBUG3, "dst_dim:\n");
 			debug_print_dims(DP_DEBUG3, DIMS, dst_dims);
 		}
@@ -376,7 +376,7 @@ int main_bin(int argc, char* argv[argc])
 		md_clear(DIMS, dst_dims, dst, CFL_SIZE);
 
 
-		long singleton_dims[DIMS];
+		bart_dim_t singleton_dims[DIMS];
 		md_select_dims(DIMS, ~(MD_BIT(dim) | md_nontriv_dims(DIMS, loop_dims)), singleton_dims, src_dims);
 
 		complex float* singleton = md_alloc(DIMS, singleton_dims, CFL_SIZE);
@@ -386,12 +386,12 @@ int main_bin(int argc, char* argv[argc])
 		for (int i = 0; i < n_clusters; i++)
 			idx[i] = 0;
 
-		long pos_src[DIMS] = { };
-		long pos_dst[DIMS] = { };
+		bart_dim_t pos_src[DIMS] = { };
+		bart_dim_t pos_dst[DIMS] = { };
 
-		long pos_loop[DIMS] = { };
+		bart_dim_t pos_loop[DIMS] = { };
 
-		long label_strs[DIMS];
+		bart_stride_t label_strs[DIMS];
 		md_calc_strides(DIMS, label_strs, labels_dims, CFL_SIZE);
 
 		do  {
@@ -442,8 +442,8 @@ int main_bin(int argc, char* argv[argc])
 					stream_sync_slice(strm_dst, DIMS, dst_dims, MD_BIT(dim), pos_dst);
 			}
 
-			long size = md_calc_size(DIMS, loop_dims);
-			long index = md_ravel_index(DIMS, loop_dims, ~0U, pos_loop);
+			bart_dim_t size = md_calc_size(DIMS, loop_dims);
+			bart_dim_t index = md_ravel_index(DIMS, loop_dims, ~UINT64_C(0), pos_loop);
 
 			if (0 == index % ((10 >= size) ? 1 : size / 10))
 				debug_printf(DP_DEBUG3, "Binning: %f\n", 100. * index / (double)size);

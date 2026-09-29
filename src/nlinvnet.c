@@ -88,9 +88,9 @@ int main_nlinvnet(int argc, char* argv[argc])
 	bool apply = false;
 
 
-	unsigned long batch_flags = BATCH_FLAG;
-	unsigned long cnstcoil_flags = 0;
-	unsigned long scl_flags = 0;
+	bart_flags_t batch_flags = BATCH_FLAG;
+	bart_flags_t cnstcoil_flags = 0;
+	bart_flags_t scl_flags = 0;
 	int Nb = 0;
 
 	const char* filename_weights_load = NULL;
@@ -117,7 +117,7 @@ int main_nlinvnet(int argc, char* argv[argc])
 	};
 
 	bool unet = false;
-	long im_vec[3] = {0, 0, 0};
+	bart_dim_t im_vec[3] = {0, 0, 0};
 
 	struct opt_s network_opts[] = {
 
@@ -225,11 +225,11 @@ int main_nlinvnet(int argc, char* argv[argc])
 	nlinvnet.network->loopdim = BATCH_DIM;
 	nlinvnet.network->low_mem = true;
 
-	long ksp_dims[DIMS];
+	bart_dim_t ksp_dims[DIMS];
 	complex float* kspace = load_cfl(ksp_file, DIMS, ksp_dims);
 
 	complex float* pattern = NULL;
-	long pat_dims[DIMS];
+	bart_dim_t pat_dims[DIMS];
 
 	if (NULL != pat_file) {
 
@@ -244,12 +244,12 @@ int main_nlinvnet(int argc, char* argv[argc])
 
 	assert(1 == ksp_dims[MAPS_DIM]);
 
-	long ksp_strs[DIMS];
+	bart_stride_t ksp_strs[DIMS];
 	md_calc_strides(DIMS, ksp_strs, ksp_dims, CFL_SIZE);
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 
-	long trj_dims[DIMS];
+	bart_dim_t trj_dims[DIMS];
 	complex float* traj  = NULL;
 
 	if (NULL != traj_file) {
@@ -261,7 +261,7 @@ int main_nlinvnet(int argc, char* argv[argc])
 		if (0 == md_calc_size(3, im_vec)) {
 
 			estimate_im_dims(DIMS, FFT_FLAGS, dims, trj_dims, traj);
-			debug_printf(DP_INFO, "Est. image size: %ld %ld %ld\n", dims[0], dims[1], dims[2]);
+			debug_printf(DP_INFO, "Est. image size: %" PRId64 " %" PRId64 " %" PRId64 "\n", dims[0], dims[1], dims[2]);
 
 		} else {
 
@@ -276,7 +276,7 @@ int main_nlinvnet(int argc, char* argv[argc])
 		md_singleton_dims(DIMS, trj_dims);
 	}
 
-	long bas_dims[DIMS];
+	bart_dim_t bas_dims[DIMS];
 	const complex float* basis = NULL;
 
 	if (NULL != basis_file) {
@@ -293,7 +293,7 @@ int main_nlinvnet(int argc, char* argv[argc])
 
 	dims[MAPS_DIM] = 1;
 
-	long sens_dims[DIMS];
+	bart_dim_t sens_dims[DIMS];
 	md_select_dims(DIMS, ~cnstcoil_flags, sens_dims, dims);
 
 	if (NULL != basis) {
@@ -307,25 +307,25 @@ int main_nlinvnet(int argc, char* argv[argc])
 	}
 
 
-	long scl_dims[DIMS];
+	bart_dim_t scl_dims[DIMS];
 	md_select_dims(DIMS, scl_flags, scl_dims, dims);
 	nlinvnet.scaling *= sqrtf((float)md_calc_size(DIMS, scl_dims));
 
-	long img_dims[DIMS];
-	long cim_dims[DIMS];
-	long msk_dims[DIMS];
+	bart_dim_t img_dims[DIMS];
+	bart_dim_t cim_dims[DIMS];
+	bart_dim_t msk_dims[DIMS];
 
 	md_select_dims(DIMS, ~COIL_FLAG, img_dims, dims);
 	md_select_dims(DIMS, ~MAPS_FLAG, cim_dims, dims);
 	md_select_dims(DIMS, FFT_FLAGS, msk_dims, img_dims);
 
-	long col_dims_s[DIMS];
-	long img_dims_s[DIMS];
-	long cim_dims_s[DIMS];
-	long msk_dims_s[DIMS];
-	long ksp_dims_s[DIMS];
-	long pat_dims_s[DIMS];
-	long trj_dims_s[DIMS];
+	bart_dim_t col_dims_s[DIMS];
+	bart_dim_t img_dims_s[DIMS];
+	bart_dim_t cim_dims_s[DIMS];
+	bart_dim_t msk_dims_s[DIMS];
+	bart_dim_t ksp_dims_s[DIMS];
+	bart_dim_t pat_dims_s[DIMS];
+	bart_dim_t trj_dims_s[DIMS];
 
 	if (train)
 		assert(BATCH_FLAG == batch_flags);
@@ -345,7 +345,7 @@ int main_nlinvnet(int argc, char* argv[argc])
 
 	nlinvnet_init(&nlinvnet, DIMS, traj ? trj_dims_s : NULL, pat_dims_s, bas_dims, basis, ksp_dims_s,	cim_dims_s, img_dims_s,	col_dims_s);
 
-	long fil_dims[DIMS];
+	bart_dim_t fil_dims[DIMS];
 
 	if (NULL != filename_filter) {
 
@@ -360,10 +360,10 @@ int main_nlinvnet(int argc, char* argv[argc])
 			nlinvnet.weights = load_nn_weights(filename_weights_load);
 
 
-		long out_dims[DIMS];
+		bart_dim_t out_dims[DIMS];
 		complex float* ref = load_cfl(out_file, DIMS, out_dims);
 
-		assert(md_check_equal_dims(DIMS, nlinvnet.ksp_training ? ksp_dims : cim_dims, out_dims, ~0UL));
+		assert(md_check_equal_dims(DIMS, nlinvnet.ksp_training ? ksp_dims : cim_dims, out_dims, ~UINT64_C(0)));
 
 		auto train_data_list = named_data_list_create();
 		named_data_list_append(train_data_list, DIMS, out_dims, ref, "ref");
@@ -374,7 +374,7 @@ int main_nlinvnet(int argc, char* argv[argc])
 			named_data_list_append(train_data_list, DIMS, trj_dims, traj, "trj");
 
 		complex float* mask = NULL;
-		long mask_dims[DIMS];
+		bart_dim_t mask_dims[DIMS];
 
 		if (NULL != filename_mask) {
 
@@ -383,11 +383,11 @@ int main_nlinvnet(int argc, char* argv[argc])
 			named_data_list_append(train_data_list, DIMS, mask_dims, mask, "loss_mask");
 		}
 
-		long ksp_dims_val[DIMS];
-		long cim_dims_val[DIMS];
-		long pat_dims_val[DIMS];
-		long trj_dims_val[DIMS];
-		long mask_dims_val[DIMS];
+		bart_dim_t ksp_dims_val[DIMS];
+		bart_dim_t cim_dims_val[DIMS];
+		bart_dim_t pat_dims_val[DIMS];
+		bart_dim_t trj_dims_val[DIMS];
+		bart_dim_t mask_dims_val[DIMS];
 
 		complex float* val_kspace = NULL;
 		complex float* val_ref = NULL;
@@ -475,7 +475,7 @@ int main_nlinvnet(int argc, char* argv[argc])
 
 		if (-1. != nlinvnet.ksp_split) {
 
-			long sdims[DIMS];
+			bart_dim_t sdims[DIMS];
 			md_select_dims(DIMS, ~nlinvnet.ksp_shared_dims, sdims, pat_dims);
 			complex float* tmp = md_alloc(DIMS, pat_dims, CFL_SIZE);
 

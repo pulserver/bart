@@ -13,7 +13,7 @@
 
 #include "laplace.h"
 
-void md_laplace_fd_scaled(int N, const long dims[N], unsigned long flags, const float scale[N], complex float* out, const complex float* in)
+void md_laplace_fd_scaled(int N, const bart_dim_t dims[N], bart_flags_t flags, const float scale[N], complex float* out, const complex float* in)
 {
 	complex float* tmp = md_alloc_sameplace(N, dims, CFL_SIZE, in);
 	md_copy(N, dims, tmp, in, CFL_SIZE);
@@ -29,7 +29,7 @@ void md_laplace_fd_scaled(int N, const long dims[N], unsigned long flags, const 
 
 		md_zaxpy(N, dims, out, -2. * scale[i], tmp);
 
-		long pos[N];
+		bart_dim_t pos[N];
 		md_set_dims(N, pos, 0);
 
 		md_circ_shift(N, dims, (pos[i] = 1, pos), tmp1, tmp, CFL_SIZE);
@@ -43,7 +43,7 @@ void md_laplace_fd_scaled(int N, const long dims[N], unsigned long flags, const 
 	md_free(tmp1);
 }
 
-void md_laplace_fd(int N, const long dims[N], unsigned long flags, complex float* out, const complex float* in)
+void md_laplace_fd(int N, const bart_dim_t dims[N], bart_flags_t flags, complex float* out, const complex float* in)
 {
 	float resolution[N];
 	for (int i = 0; i < N; i++)
@@ -53,7 +53,7 @@ void md_laplace_fd(int N, const long dims[N], unsigned long flags, complex float
 }
 
 
-void md_laplace_fd_wrapped_phase_scaled(int N, const long dims[N], unsigned long flags, const float scale[N], complex float* out, const complex float* in)
+void md_laplace_fd_wrapped_phase_scaled(int N, const bart_dim_t dims[N], bart_flags_t flags, const float scale[N], complex float* out, const complex float* in)
 {
 	complex float* tmp = md_alloc_sameplace(N, dims, CFL_SIZE, in);
 	md_zexpj(N, dims, tmp, in);
@@ -67,7 +67,7 @@ void md_laplace_fd_wrapped_phase_scaled(int N, const long dims[N], unsigned long
 		if (!MD_IS_SET(flags, i))
 			continue;
 
-		long pos[N];
+		bart_dim_t pos[N];
 		md_set_dims(N, pos, 0);
 
 		md_circ_shift(N, dims, (pos[i] = 1, pos), tmp1, tmp, CFL_SIZE);
@@ -85,7 +85,7 @@ void md_laplace_fd_wrapped_phase_scaled(int N, const long dims[N], unsigned long
 	md_free(tmp1);
 }
 
-void md_laplace_fd_wrapped_phase(int N, const long dims[N], unsigned long flags, complex float* out, const complex float* in)
+void md_laplace_fd_wrapped_phase(int N, const bart_dim_t dims[N], bart_flags_t flags, complex float* out, const complex float* in)
 {
 	float scale[N];
 	for (int i = 0; i < N; i++)
@@ -97,7 +97,7 @@ void md_laplace_fd_wrapped_phase(int N, const long dims[N], unsigned long flags,
 
 
 //use Lap(phi) = Im(exp(-i phi) * Lap(exp(i phi)))
-void md_laplace_fd_wrapped_phase_exp_scaled(int N, const long dims[N], unsigned long flags, const float scale[N], complex float* out, const complex float* in)
+void md_laplace_fd_wrapped_phase_exp_scaled(int N, const bart_dim_t dims[N], bart_flags_t flags, const float scale[N], complex float* out, const complex float* in)
 {
 	complex float* tmp = md_alloc_sameplace(N, dims, CFL_SIZE, in);
 	md_zexpj(N, dims, tmp, in);
@@ -111,7 +111,7 @@ void md_laplace_fd_wrapped_phase_exp_scaled(int N, const long dims[N], unsigned 
 }
 
 //use Lap(phi) = Im(exp(-i phi) * Lap(exp(i phi)))
-void md_laplace_fd_wrapped_phase_exp(int N, const long dims[N], unsigned long flags, complex float* out, const complex float* in)
+void md_laplace_fd_wrapped_phase_exp(int N, const bart_dim_t dims[N], bart_flags_t flags, complex float* out, const complex float* in)
 {
 	float scale[N];
 	for (int i = 0; i < N; i++)

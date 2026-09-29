@@ -1,14 +1,15 @@
 #ifndef _SEQ_FLASH_H
 #define _SEQ_FLASH_H
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 #include "seq/event.h"
 
 struct seq_config;
 
-extern void flash_interface_custom_params(int reverse, struct seq_config* seq, int nl, long params_long[__VLA(nl)], int nd, double params_double[__VLA(nd)]);
-extern void flash_interface_loop_dims(int reverse, struct seq_config* seq, const int D, long dims[__VLA(D)]);
+extern void flash_interface_custom_params(int reverse, struct seq_config* seq, int nl, bart_dim_t params_long[__VLA(nl)], int nd, double params_double[__VLA(nd)]);
+extern void flash_interface_loop_dims(int reverse, struct seq_config* seq, const int D, bart_dim_t dims[__VLA(D)]);
 
 extern double flash_minimum_tr(const struct seq_config* seq);
 extern void flash_minimum_te(const struct seq_config* seq, double* min_te, double* fill_te);

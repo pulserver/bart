@@ -255,7 +255,7 @@ static bool assert_asl_seq_events(
 	seq->loop_dims[COEFF2_DIM] = calc_asl_coeff2_dim(seq);
 	if (seq->loop_dims[COEFF2_DIM] != expected_num_loop_dims) {
 
-		debug_printf(DP_INFO, "Wrong number of loop dims: expected: %d | actual: %ld\n",
+		debug_printf(DP_INFO, "Wrong number of loop dims: expected: %d | actual: %" PRId64 "\n",
 			     expected_num_loop_dims, seq->loop_dims[COEFF2_DIM]);
 		return false;
 	}
@@ -342,7 +342,7 @@ static bool test_asl_m0_image(void)
 
 static bool test_asl_label_condition(void)
 {
-	long pos[DIMS] = { 0 };
+	bart_dim_t pos[DIMS] = { 0 };
 	pos[15] = 1;
 
 	struct seq_state seq_state = { };

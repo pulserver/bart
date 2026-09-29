@@ -178,7 +178,7 @@ static int dicom_write_element(int len, char buf[static 8 + len], struct element
 
 
 
-int dicom_write(const char* name, int cols, int rows, long inum, const unsigned char* img)
+int dicom_write(const char* name, int cols, int rows, bart_dim_t inum, const unsigned char* img)
 {
 	int fd;
 	void* addr;
@@ -216,10 +216,10 @@ int dicom_write(const char* name, int cols, int rows, long inum, const unsigned 
 	dicom_elements[ITAG_IMAGE_ROWS].data = &(uint16_t){ rows };
 	dicom_elements[ITAG_IMAGE_COLS].data = &(uint16_t){ cols };
 
-	assert(inum >= 0L);
+	assert(inum >= 0);
 
 	char inst_num[13]; // max number of bytes for InstanceNumber tag
-	ilen = snprintf(inst_num, 13, "%04ld", inum);
+	ilen = snprintf(inst_num, 13, "%04" PRId64, inum);
 
 	assert(ilen < 13);
 
@@ -239,7 +239,7 @@ int dicom_write(const char* name, int cols, int rows, long inum, const unsigned 
 		size += (size_t)(8 + dicom_elements[i].len);
 
 
-	if (-1 == ftruncate(fd, (long)size))
+	if (-1 == ftruncate(fd, (off_t)size))
 		goto cleanup;
 
 	if (MAP_FAILED == (addr = mmap(NULL, size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0)))

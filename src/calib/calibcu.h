@@ -3,9 +3,10 @@
  * a BSD-style license which can be found in the LICENSE file.
  */
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
-extern void eigenmapscu(const long dims[5], _Complex float* optr, _Complex float* eptr, const _Complex float* imgcov2, int num_orthiter);
+extern void eigenmapscu(const bart_dim_t dims[5], _Complex float* optr, _Complex float* eptr, const _Complex float* imgcov2, int num_orthiter);
 
 #include "misc/cppwrap.h"
 

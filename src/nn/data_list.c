@@ -25,7 +25,7 @@
 struct named_tensor_s {
 
 	int N;
-	long* dims;
+	bart_dim_t* dims;
 	complex float* data;
 	const char* name;
 };
@@ -37,12 +37,12 @@ static void debug_print_named_tensor(int level, const struct named_tensor_s* ten
 }
 
 
-static const struct named_tensor_s* named_tensor_create(int N, const long dims[N], complex float* data, const char* name)
+static const struct named_tensor_s* named_tensor_create(int N, const bart_dim_t dims[N], complex float* data, const char* name)
 {
 	auto result = TYPE_ALLOC(struct named_tensor_s);
 
 	result->N = N;
-	result->dims = *TYPE_ALLOC(long[N]);
+	result->dims = *TYPE_ALLOC(bart_dim_t[N]);
 	md_copy_dims(N, result->dims, dims);
 
 	result->data = data;
@@ -84,7 +84,7 @@ void named_data_list_free(struct named_data_list_s* data_list)
 	list_free((list_t)data_list);
 }
 
-void named_data_list_append(struct named_data_list_s* data_list, int N, const long dims[N], complex float* data, const char* name)
+void named_data_list_append(struct named_data_list_s* data_list, int N, const bart_dim_t dims[N], complex float* data, const char* name)
 {
 	assert(NULL != data);
 	list_append((list_t)data_list, (void*)named_tensor_create(N, dims, data, name));
@@ -143,8 +143,8 @@ const struct nlop_s* nn_batchgen_create(struct bat_gen_conf_s* config, nn_t netw
 		D++;
 	}
 
-	long bat_dims[D][N];
-	long tot_dims[D][N];
+	bart_dim_t bat_dims[D][N];
+	bart_dim_t tot_dims[D][N];
 	const complex float* data[D];
 
 	int d = 0;
@@ -215,13 +215,13 @@ void nn_apply_named_list(nn_t nn_apply, struct named_data_list_s* data, const vo
 	int DO[OO];
 	int DI[II];
 	
-	const long* odims[OO];
-	const long* idims[II];
+	const bart_dim_t* odims[OO];
+	const bart_dim_t* idims[II];
 	
 	complex float* dst[OO];
 	const complex float* src[II];
 
-	unsigned long loop_flags = 0;
+	bart_flags_t loop_flags = 0;
 
 	for (int i = 0; i < OO; i++) {
 

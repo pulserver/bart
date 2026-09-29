@@ -36,15 +36,15 @@ struct T1_s {
 
 	int N;
 
-	const long* map_dims;
-	const long* TI_dims;
-	const long* in_dims;
-	const long* out_dims;
+	const bart_dim_t* map_dims;
+	const bart_dim_t* TI_dims;
+	const bart_dim_t* in_dims;
+	const bart_dim_t* out_dims;
 
-	const long* map_strs;
-	const long* TI_strs;
-	const long* in_strs;
-	const long* out_strs;
+	const bart_stride_t* map_strs;
+	const bart_stride_t* TI_strs;
+	const bart_stride_t* in_strs;
+	const bart_stride_t* out_strs;
 
 	complex float* tmp_dMss;
 	complex float* tmp_dM0;
@@ -74,7 +74,7 @@ static void T1_fun(const nlop_data_t* _data, complex float* dst, const complex f
 
 	T1_init(data, dst);
 
-	long pos[data->N];
+	bart_dim_t pos[data->N];
 
 	for (int i = 0; i < data->N; i++)
 		pos[i] = 0;
@@ -160,7 +160,7 @@ static void T1_der(const nlop_data_t* _data, int /*o*/, int /*i*/, complex float
 {
 	struct T1_s* data = CAST_DOWN(T1_s, _data);
 
-	long pos[data->N];
+	bart_dim_t pos[data->N];
 
 	for (int i = 0; i < data->N; i++)
 		pos[i] = 0;
@@ -202,7 +202,7 @@ static void T1_adj(const nlop_data_t* _data, int /*o*/, int /*i*/, complex float
 {
 	struct T1_s* data = CAST_DOWN(T1_s, _data);
 
-	long pos[data->N];
+	bart_dim_t pos[data->N];
 
 	for (int i = 0; i < data->N; i++)
 		pos[i] = 0;
@@ -263,44 +263,44 @@ static void T1_del(const nlop_data_t* _data)
 }
 
 
-struct nlop_s* nlop_T1_create(int N, const long out_dims[N], const long in_dims[N], const long TI_dims[N], const complex float* TI,
+struct nlop_s* nlop_T1_create(int N, const bart_dim_t out_dims[N], const bart_dim_t in_dims[N], const bart_dim_t TI_dims[N], const complex float* TI,
 				float scaling_M0)
 {
 	PTR_ALLOC(struct T1_s, data);
 	SET_TYPEID(T1_s, data);
 
-	long map_dims[N];
+	bart_dim_t map_dims[N];
 	md_select_dims(N, ~COEFF_FLAG, map_dims, in_dims);
 
-	PTR_ALLOC(long[N], ndims);
+	PTR_ALLOC(bart_dim_t[N], ndims);
 	md_copy_dims(N, *ndims, map_dims);
 	data->map_dims = *PTR_PASS(ndims);
 
-	PTR_ALLOC(long[N], nodims);
+	PTR_ALLOC(bart_dim_t[N], nodims);
 	md_copy_dims(N, *nodims, out_dims);
 	data->out_dims = *PTR_PASS(nodims);
 
-	PTR_ALLOC(long[N], nidims);
+	PTR_ALLOC(bart_dim_t[N], nidims);
 	md_copy_dims(N, *nidims, in_dims);
 	data->in_dims = *PTR_PASS(nidims);
 
-	PTR_ALLOC(long[N], ntidims);
+	PTR_ALLOC(bart_dim_t[N], ntidims);
 	md_copy_dims(N, *ntidims, TI_dims);
 	data->TI_dims = *PTR_PASS(ntidims);
 
-	PTR_ALLOC(long[N], nmstr);
+	PTR_ALLOC(bart_dim_t[N], nmstr);
 	md_calc_strides(N, *nmstr, map_dims, CFL_SIZE);
 	data->map_strs = *PTR_PASS(nmstr);
 
-	PTR_ALLOC(long[N], nostr);
+	PTR_ALLOC(bart_dim_t[N], nostr);
 	md_calc_strides(N, *nostr, out_dims, CFL_SIZE);
 	data->out_strs = *PTR_PASS(nostr);
 
-	PTR_ALLOC(long[N], nistr);
+	PTR_ALLOC(bart_dim_t[N], nistr);
 	md_calc_strides(N, *nistr, in_dims, CFL_SIZE);
 	data->in_strs = *PTR_PASS(nistr);
 
-	PTR_ALLOC(long[N], ntistr);
+	PTR_ALLOC(bart_dim_t[N], ntistr);
 	md_calc_strides(N, *ntistr, TI_dims, CFL_SIZE);
 	data->TI_strs = *PTR_PASS(ntistr);
 
@@ -317,24 +317,24 @@ struct nlop_s* nlop_T1_create(int N, const long out_dims[N], const long in_dims[
 }
 
 // p0 * ( 1 - exp(-x*real(p1) + real(p2)))
-const struct nlop_s* nlop_ir_create(int N, const long dims[N], const complex float* enc)
+const struct nlop_s* nlop_ir_create(int N, const bart_dim_t dims[N], const complex float* enc)
 {
 	auto lo = linop_fmac_create(N, dims, COEFF_FLAG, TE_FLAG, ~(TE_FLAG | COEFF_FLAG), enc);
 
-	long in_dims[N];
+	bart_dim_t in_dims[N];
 	md_select_dims(N, ~COEFF_FLAG & ~TE_FLAG, in_dims, dims);
 
-	long out_dims[N];
+	bart_dim_t out_dims[N];
 	md_select_dims(N, ~COEFF_FLAG, out_dims, dims);
 
-	const struct nlop_s* nl1 = nlop_zaxpbz2_create(N, out_dims, ~0UL, -1, ~TE_FLAG, 1);
+	const struct nlop_s* nl1 = nlop_zaxpbz2_create(N, out_dims, ~UINT64_C(0), -1, ~TE_FLAG, 1);
 	nl1 = nlop_prepend_FF(nlop_from_linop_F(lo), nl1, 0);
 	nl1 = nlop_prepend_FF(nlop_from_linop_F(linop_zreal_create(N, in_dims)), nl1, 0);
 	nl1 = nlop_prepend_FF(nlop_from_linop_F(linop_zreal_create(N, in_dims)), nl1, 1);
 
 	nl1 = nlop_append_FF(nl1, 0, nlop_zexp_create(N, out_dims));
 	nl1 = nlop_chain2_FF(nl1, 0, nlop_tenmul_create(N, out_dims, in_dims, out_dims), 1);
-	nl1 = nlop_chain2_FF(nl1, 0, nlop_zaxpbz2_create(N, out_dims, ~TE_FLAG, 1, ~0UL, -1), 1);
+	nl1 = nlop_chain2_FF(nl1, 0, nlop_zaxpbz2_create(N, out_dims, ~TE_FLAG, 1, ~UINT64_C(0), -1), 1);
 	nl1 = nlop_dup_F(nl1, 0, 1);
 
 	nl1 = nlop_stack_inputs_F(nl1, 0, 1, COEFF_DIM);

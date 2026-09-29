@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include "simu/signals.h"
 #include "simu/simulation.h"
 
@@ -46,8 +47,8 @@ struct moba_conf {
         bool sms;
         bool sos;
 	int not_wav_maps;
-	unsigned long constrained_maps;
-	unsigned long l2para;
+	bart_flags_t constrained_maps;
+	bart_flags_t l2para;
 	int pusteps;
 	float ratio;
 	float l1val;

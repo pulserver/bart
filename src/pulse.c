@@ -126,7 +126,7 @@ int main_pulse(int argc, char* argv[argc])
 		break;
 	}
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	md_singleton_dims(DIMS, dims);
 	dims[READ_DIM] = Ntime;
 	dims[SLICE_DIM] = mb;

@@ -289,31 +289,31 @@ void calc_base_angles(double base_angle[DIMS], int Y, int E, struct traj_conf co
 }
 
 
-long raga_increment_from_pos(const int order[DIMS], const long pos[DIMS], unsigned long flags, const long dims[DIMS], const struct traj_conf* conf)
+bart_dim_t raga_increment_from_pos(const int order[DIMS], const bart_dim_t pos[DIMS], bart_flags_t flags, const bart_dim_t dims[DIMS], const struct traj_conf* conf)
 {
 	assert(conf->rational);
 
-	unsigned long outer_loops = 0;
+	bart_flags_t outer_loops = 0;
 
 	bool outer = false;
 	for (int d = 0; d < DIMS; d++) {
 
 		if (outer)
-			outer_loops |= (1UL << order[d]);
+			outer_loops |= (UINT64_C(1) << order[d]);
 
 		if (TIME_DIM == order[d])
 			outer = true;
 	}
 
-	long idx_inner = md_ravel_index_permuted(DIMS, pos, flags & ~(conf->aligned_flags | outer_loops), dims, order);
-	long idx_outer = md_ravel_index_permuted(DIMS, pos, flags & ~conf->aligned_flags & outer_loops, dims, order);
+	bart_dim_t idx_inner = md_ravel_index_permuted(DIMS, pos, flags & ~(conf->aligned_flags | outer_loops), dims, order);
+	bart_dim_t idx_outer = md_ravel_index_permuted(DIMS, pos, flags & ~conf->aligned_flags & outer_loops, dims, order);
 
 	return conf->raga_inc * (idx_inner + idx_outer) % conf->Y;
 }
 
 
 
-void indices_from_position(long ind[DIMS], const long pos[DIMS], struct traj_conf conf)
+void indices_from_position(bart_dim_t ind[DIMS], const bart_dim_t pos[DIMS], struct traj_conf conf)
 {
 	assert(!conf.rational);
 
@@ -329,10 +329,10 @@ void indices_from_position(long ind[DIMS], const long pos[DIMS], struct traj_con
 
 
 // z-Undersampling
-bool zpartition_skip(long partitions, long z_usamp[2], long partition, long frame)
+bool zpartition_skip(bart_dim_t partitions, bart_dim_t z_usamp[2], bart_dim_t partition, bart_dim_t frame)
 {
-	long z_reflines = z_usamp[0];
-	long z_acc = z_usamp[1];
+	bart_dim_t z_reflines = z_usamp[0];
+	bart_dim_t z_acc = z_usamp[1];
 
 	if (1 == z_acc) // No undersampling. Do not skip partition
 		return false;
@@ -340,16 +340,16 @@ bool zpartition_skip(long partitions, long z_usamp[2], long partition, long fram
 
 	// Auto-Calibration region
 
-	long DC_idx = partitions / 2;
-	long AC_lowidx = DC_idx - floor(z_reflines / 2.);
-	long AC_highidx = DC_idx + ceil(z_reflines / 2.) - 1;
+	bart_dim_t DC_idx = partitions / 2;
+	bart_dim_t AC_lowidx = DC_idx - floor(z_reflines / 2.);
+	bart_dim_t AC_highidx = DC_idx + ceil(z_reflines / 2.) - 1;
 
 	if ((partition >= AC_lowidx) && (partition <= AC_highidx)) // Auto-calibration line. Do not skip partition.
 		return false;
 
 	// Check if this non-Auto-calibration line should be sampled.
 
-	long part = (partition < AC_lowidx) ? partition : (partition - AC_highidx - 1);
+	bart_dim_t part = (partition < AC_lowidx) ? partition : (partition - AC_highidx - 1);
 
 	if (0 == ((part - (frame % z_acc)) % z_acc))
 		return false;

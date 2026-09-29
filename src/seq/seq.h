@@ -8,6 +8,7 @@
 
 // DO NOT CHANGE THIS HEADER !
 
+#include "misc/dimtypes.h"
 #include "misc/dllspec.h"
 #include "misc/cppwrap.h"
 
@@ -35,10 +36,10 @@ enum seq_context {
 struct seq_state {
 
 	enum seq_block mode;
-	long chrono_slice;
+	bart_dim_t chrono_slice;
 	enum seq_context context;
 	int seq_ut; //perform ut
-	long pos[DIMS];
+	bart_dim_t pos[DIMS];
 	double start_block;
 };
 

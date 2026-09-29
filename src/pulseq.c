@@ -74,8 +74,8 @@ int main_pulseq(int argc, char *argv[argc])
 	complex float* shapes = NULL;
 	complex float* events = NULL;
 
-	long shape_dims[DIMS];
-	long event_dims[DIMS];
+	bart_dim_t shape_dims[DIMS];
+	bart_dim_t event_dims[DIMS];
 
 
 	FILE *fp = fopen(seq_file, (write) ? "w+" : "r");
@@ -101,9 +101,9 @@ int main_pulseq(int argc, char *argv[argc])
 		seq_pulse_shapes_from_cfl(shape_dims[TIME_DIM], rf_shapes, DIMS, shape_dims, shapes);
 		pulse_shapes_to_pulseq(&ps, shape_dims[TIME_DIM], rf_shapes);
 
-		long pos[DIMS] = { };
+		bart_dim_t pos[DIMS] = { };
 
-		long strs[DIMS];
+		bart_stride_t strs[DIMS];
 		md_calc_strides(DIMS, strs, event_dims, 1);
 
 

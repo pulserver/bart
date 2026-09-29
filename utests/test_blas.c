@@ -40,9 +40,9 @@ static bool test_blas_matrix_mult(void)
 	int B = 20;
 	int C = 30;
 
-	long odims[3] = { A, 1, C };
-	long idims1[3] = { 1, B, C };
-	long idims2[3] = { A, B, 1 };
+	bart_dim_t odims[3] = { A, 1, C };
+	bart_dim_t idims1[3] = { 1, B, C };
+	bart_dim_t idims2[3] = { A, B, 1 };
 
 	complex float* dst1 = md_alloc(3, odims, CFL_SIZE);
 	complex float* dst2 = md_alloc(3, odims, CFL_SIZE);

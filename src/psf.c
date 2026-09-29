@@ -52,13 +52,13 @@ int main_psf(int argc, char* argv[argc])
 
 	num_init();
 
-	long tdims[DIMS];
+	bart_dim_t tdims[DIMS];
 	complex float* traj = load_cfl(traj_file, DIMS, tdims);
 
 	if (1 != md_calc_size(DIMS - 3, tdims + 3))
 		error("Trajectory has additional dimensions!");
 
-	long img_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t img_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 	img_dims[READ_DIM] = tdims[PHS1_DIM];
 	img_dims[PHS1_DIM] = tdims[PHS1_DIM];
 

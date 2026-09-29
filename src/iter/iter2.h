@@ -2,6 +2,7 @@
 #ifndef _ITER_ITER2_H
 #define _ITER_ITER2_H
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 #include "misc/types.h"
 
@@ -51,7 +52,7 @@ typedef void (italgo_fun2_f)(const iter_conf* conf,
 		const struct linop_s* ops[__VLA2(D)],
 		const float* biases[__VLA2(D)],
 		const struct operator_p_s* xupdate_op,
-		long size, float* image, const float* image_adj,
+		bart_dim_t size, float* image, const float* image_adj,
 		struct iter_monitor_s* monitor);
 
 typedef italgo_fun2_f* italgo_fun2_t;

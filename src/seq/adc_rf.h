@@ -2,6 +2,7 @@
 #ifndef _SEQ_ADC_RF_H
 #define _SEQ_ADC_RF_H
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 #include "seq/config.h"
@@ -9,7 +10,7 @@
 
 extern double phase_clamp(double phase);
 
-double rf_spoiling(int D, const long pos[__VLA(D)], const struct seq_config* seq);
+double rf_spoiling(int D, const bart_dim_t pos[__VLA(D)], const struct seq_config* seq);
 
 int prep_rf_inversion(struct seq_event* rf_ev, double start, const struct seq_config* seq);
 int prep_rf_excitation(struct seq_event* rf_ev, double start, double rf_spoil_phase,
@@ -17,7 +18,7 @@ int prep_rf_excitation(struct seq_event* rf_ev, double start, double rf_spoil_ph
 int prep_rf_hanning(struct seq_event* rf_ev, double start, double phase_shift, 
 	const struct seq_config* seq);
 
-double adc_time_to_echo(long echo, const struct seq_config* seq);
+double adc_time_to_echo(bart_dim_t echo, const struct seq_config* seq);
 double adc_duration(const struct seq_config* seq);
 
 int prep_adc(struct seq_event* adc_ev, double start, double rf_spoil_phase,

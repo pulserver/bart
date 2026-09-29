@@ -267,7 +267,7 @@ static void adj_not_implemented(const nlop_data_t* _data, int o, int i, complex 
 }
 
 
-struct nlop_s* nlop_generic_managed_create2(	int OO, int ON, const long odims[OO][ON], const long ostr[OO][ON], int II, int IN, const long idims[II][IN], const long istr[II][IN],
+struct nlop_s* nlop_generic_managed_create2(	int OO, int ON, const bart_dim_t odims[OO][ON], const bart_stride_t ostr[OO][ON], int II, int IN, const bart_dim_t idims[II][IN], const bart_stride_t istr[II][IN],
 						nlop_data_t* data, nlop_gen_fun_t forward, nlop_der_fun_t deriv[II][OO], nlop_der_fun_t adjoint[II][OO], nlop_der_fun_t normal[II][OO], nlop_p_fun_t norm_inv[II][OO],
 						nlop_del_fun_t del,
 						nlop_clear_der_fun_t clear_der, nlop_graph_t get_graph)
@@ -295,12 +295,12 @@ struct nlop_s* nlop_generic_managed_create2(	int OO, int ON, const long odims[OO
 	for (int i = 0; i < OO + II; i++)
 		D[i] = (i < OO) ? ON : IN;
 
-	const long* dims[OO + II];
+	const bart_dim_t* dims[OO + II];
 
 	for (int i = 0; i < OO + II; i++)
 		dims[i] = (i < OO) ? odims[i] : idims[i - OO];
 
-	const long* strs[OO + II];
+	const bart_stride_t* strs[OO + II];
 
 	for (int i = 0; i < OO + II; i++)
 		strs[i] = (i < OO) ? ostr[i] : istr[i - OO];
@@ -345,14 +345,14 @@ struct nlop_s* nlop_generic_managed_create2(	int OO, int ON, const long odims[OO
 	return PTR_PASS(n);
 }
 
-struct nlop_s* nlop_generic_managed_create(int OO, int ON, const long odims[OO][ON], int II, int IN, const long idims[II][IN],
+struct nlop_s* nlop_generic_managed_create(int OO, int ON, const bart_dim_t odims[OO][ON], int II, int IN, const bart_dim_t idims[II][IN],
 	nlop_data_t* data, nlop_gen_fun_t forward, nlop_der_fun_t deriv[II][OO], nlop_der_fun_t adjoint[II][OO], nlop_der_fun_t normal[II][OO], nlop_p_fun_t norm_inv[II][OO], nlop_del_fun_t del,
 	nlop_clear_der_fun_t clear_der, nlop_graph_t get_graph)
 {
-	long istrs[II][IN];
+	bart_stride_t istrs[II][IN];
 	for (int i = 0; i < II; i++)
 		md_calc_strides(IN, istrs[i], idims[i], CFL_SIZE);
-	long ostrs[OO][ON];
+	bart_stride_t ostrs[OO][ON];
 	for (int o = 0; o < OO; o++)
 		md_calc_strides(ON, ostrs[o], odims[o], CFL_SIZE);
 
@@ -360,22 +360,22 @@ struct nlop_s* nlop_generic_managed_create(int OO, int ON, const long odims[OO][
 }
 
 
-struct nlop_s* nlop_generic_create2(	int OO, int ON, const long odims[OO][ON], const long ostr[OO][ON], int II, int IN, const long idims[II][IN], const long istr[II][IN],
+struct nlop_s* nlop_generic_create2(	int OO, int ON, const bart_dim_t odims[OO][ON], const bart_stride_t ostr[OO][ON], int II, int IN, const bart_dim_t idims[II][IN], const bart_stride_t istr[II][IN],
 					nlop_data_t* data, nlop_gen_fun_t forward, nlop_der_fun_t deriv[II][OO], nlop_der_fun_t adjoint[II][OO], nlop_der_fun_t normal[II][OO], nlop_p_fun_t norm_inv[II][OO],
 					nlop_del_fun_t del)
 {
 	return nlop_generic_managed_create2(OO, ON, odims, ostr, II, IN, idims, istr, data, forward, deriv, adjoint, normal, norm_inv, del, NULL, NULL);
 }
 
-struct nlop_s* nlop_generic_create(int OO, int ON, const long odims[OO][ON], int II, int IN, const long idims[II][IN],
+struct nlop_s* nlop_generic_create(int OO, int ON, const bart_dim_t odims[OO][ON], int II, int IN, const bart_dim_t idims[II][IN],
 	nlop_data_t* data, nlop_gen_fun_t forward, nlop_der_fun_t deriv[II][OO], nlop_der_fun_t adjoint[II][OO], nlop_der_fun_t normal[II][OO], nlop_p_fun_t norm_inv[II][OO], nlop_del_fun_t del)
 {
-	long istrs[II?:1][IN?:1];
+	bart_stride_t istrs[II?:1][IN?:1];
 
 	for (int i = 0; i < II; i++)
 		md_calc_strides(IN, istrs[i], idims[i], CFL_SIZE);
 
-	long ostrs[OO?:1][ON?:1];
+	bart_stride_t ostrs[OO?:1][ON?:1];
 
 	for (int o = 0; o < OO; o++)
 		md_calc_strides(ON, ostrs[o], odims[o], CFL_SIZE);
@@ -385,11 +385,11 @@ struct nlop_s* nlop_generic_create(int OO, int ON, const long odims[OO][ON], int
 
 
 
-struct nlop_s* nlop_create2(int ON, const long odims[ON], const long ostrs[ON],
-				int IN, const long idims[IN], const long istrs[IN], nlop_data_t* data,
+struct nlop_s* nlop_create2(int ON, const bart_dim_t odims[ON], const bart_stride_t ostrs[ON],
+				int IN, const bart_dim_t idims[IN], const bart_stride_t istrs[IN], nlop_data_t* data,
 				nlop_fun_t forward, nlop_der_fun_t deriv, nlop_der_fun_t adjoint, nlop_der_fun_t normal, nlop_p_fun_t norm_inv, nlop_del_fun_t del)
 {
-	struct nlop_s* op = nlop_generic_create2(1, ON, (const long(*)[])&odims[0], (const long(*)[])&ostrs[0], 1, IN, (const long(*)[])&idims[0], (const long(*)[])&istrs[0], data, NULL,
+	struct nlop_s* op = nlop_generic_create2(1, ON, (const bart_dim_t(*)[])&odims[0], (const bart_stride_t(*)[])&ostrs[0], 1, IN, (const bart_dim_t(*)[])&idims[0], (const bart_stride_t(*)[])&istrs[0], data, NULL,
 					(nlop_der_fun_t[1][1]){ { deriv } }, (nlop_der_fun_t[1][1]){ { adjoint } }, (NULL != normal) ? (nlop_der_fun_t[1][1]){ { normal } } : NULL, (NULL != norm_inv) ? (nlop_p_fun_t[1][1]){ { norm_inv } } : NULL, del);
 
 	auto data2 = CAST_DOWN(nlop_op_data_s, operator_get_data(op->op));
@@ -399,7 +399,7 @@ struct nlop_s* nlop_create2(int ON, const long odims[ON], const long ostrs[ON],
 	return op;
 }
 
-struct nlop_s* nlop_create(int ON, const long odims[ON], int IN, const long idims[IN], nlop_data_t* data,
+struct nlop_s* nlop_create(int ON, const bart_dim_t odims[ON], int IN, const bart_dim_t idims[IN], nlop_data_t* data,
 				nlop_fun_t forward, nlop_der_fun_t deriv, nlop_der_fun_t adjoint, nlop_der_fun_t normal, nlop_p_fun_t norm_inv, nlop_del_fun_t del)
 {
 	return nlop_create2(	ON, odims, MD_STRIDES(ON, odims, CFL_SIZE),
@@ -578,12 +578,12 @@ nlop_data_t* nlop_get_data_nested(const struct nlop_s* nlop)
 }
 
 
-void nlop_apply(const struct nlop_s* op, int ON, const long odims[ON], complex float* dst, int IN, const long idims[IN], const complex float* src)
+void nlop_apply(const struct nlop_s* op, int ON, const bart_dim_t odims[ON], complex float* dst, int IN, const bart_dim_t idims[IN], const complex float* src)
 {
 	operator_apply(op->op, ON, odims, dst, IN, idims, src);
 }
 
-void nlop_derivative(const struct nlop_s* op, int ON, const long odims[ON], complex float* dst, int IN, const long idims[IN], const complex float* src)
+void nlop_derivative(const struct nlop_s* op, int ON, const bart_dim_t odims[ON], complex float* dst, int IN, const bart_dim_t idims[IN], const complex float* src)
 {
 	assert(1 == nlop_get_nr_in_args(op));
 	assert(1 == nlop_get_nr_out_args(op));
@@ -591,7 +591,7 @@ void nlop_derivative(const struct nlop_s* op, int ON, const long odims[ON], comp
 	linop_forward(nlop_get_derivative(op, 0, 0), ON, odims, dst, IN, idims, src);
 }
 
-void nlop_adjoint(const struct nlop_s* op, int ON, const long odims[ON], complex float* dst, int IN, const long idims[IN], const complex float* src)
+void nlop_adjoint(const struct nlop_s* op, int ON, const bart_dim_t odims[ON], complex float* dst, int IN, const bart_dim_t idims[IN], const complex float* src)
 {
 	assert(1 == nlop_get_nr_in_args(op));
 	assert(1 == nlop_get_nr_out_args(op));
@@ -626,7 +626,7 @@ void nlop_generic_apply_select_derivative_array_unchecked(const struct nlop_s* o
 	nlop_set_derivatives(op, II, OO, select_all);
 }
 
-void nlop_generic_apply_select_derivative_unchecked(const struct nlop_s* op, int N, void* args[N], unsigned long out_der_flag, unsigned long in_der_flag)
+void nlop_generic_apply_select_derivative_unchecked(const struct nlop_s* op, int N, void* args[N], bart_flags_t out_der_flag, bart_flags_t in_der_flag)
 {
 	int II = nlop_get_nr_in_args(op);
 	int OO = nlop_get_nr_out_args(op);
@@ -820,7 +820,7 @@ struct flatten_graph_s {
 
 	nlop_data_t super;
 
-	long* off;
+	bart_stride_t* off;
 	const struct nlop_s* op;
 
 	const struct operator_s* der;
@@ -926,11 +926,11 @@ static struct nlop_s* nlop_flatten_graph(const struct nlop_s* op)
 	int II = nlop_get_nr_in_args(op);
 	int OO = nlop_get_nr_out_args(op);
 
-	long odims[1] = { 0 };
-	long ostrs[] = { CFL_SIZE };
-	long olast = 0;
+	bart_dim_t odims[1] = { 0 };
+	bart_stride_t ostrs[] = { CFL_SIZE };
+	bart_dim_t olast = 0;
 
-	PTR_ALLOC(long[OO + II], offs);
+	PTR_ALLOC(bart_dim_t[OO + II], offs);
 
 	for (int o = 0; o < OO; o++) {
 
@@ -941,13 +941,13 @@ static struct nlop_s* nlop_flatten_graph(const struct nlop_s* op)
 
 		odims[0] += md_calc_size(iov->N, iov->dims);
 		(*offs)[o] = olast;
-		olast = odims[0] * (long)CFL_SIZE;
+		olast = odims[0] * (bart_stride_t)CFL_SIZE;
 	}
 
 
-	long idims[1] = { 0 };
-	long istrs[1] = { CFL_SIZE };
-	long ilast = 0;
+	bart_dim_t idims[1] = { 0 };
+	bart_stride_t istrs[1] = { CFL_SIZE };
+	bart_dim_t ilast = 0;
 
 	for (int i = 0; i < II; i++) {
 
@@ -958,7 +958,7 @@ static struct nlop_s* nlop_flatten_graph(const struct nlop_s* op)
 
 		idims[0] += md_calc_size(iov->N, iov->dims);
 		(*offs)[OO + i] = ilast;
-		ilast = idims[0] * (long)CFL_SIZE;
+		ilast = idims[0] * (bart_stride_t)CFL_SIZE;
 	}
 
 	PTR_ALLOC(struct flatten_graph_s, data);
@@ -1038,7 +1038,7 @@ struct flatten_s {
 
 	nlop_data_t super;
 
-	long* off;
+	bart_stride_t* off;
 	const struct nlop_s* op;
 };
 
@@ -1174,11 +1174,11 @@ struct nlop_s* nlop_flatten(const struct nlop_s* op)
 		return nlop_flatten_F(op);
 	}
 
-	long odims[1] = { 0 };
-	long ostrs[] = { CFL_SIZE };
-	long olast = 0;
+	bart_dim_t odims[1] = { 0 };
+	bart_stride_t ostrs[] = { CFL_SIZE };
+	bart_dim_t olast = 0;
 
-	PTR_ALLOC(long[OO + II], offs);
+	PTR_ALLOC(bart_dim_t[OO + II], offs);
 
 	for (int o = 0; o < OO; o++) {
 
@@ -1189,13 +1189,13 @@ struct nlop_s* nlop_flatten(const struct nlop_s* op)
 
 		odims[0] += md_calc_size(iov->N, iov->dims);
 		(*offs)[o] = olast;
-		olast = odims[0] * (long)CFL_SIZE;
+		olast = odims[0] * (bart_stride_t)CFL_SIZE;
 	}
 
 
-	long idims[1] = { 0 };
-	long istrs[1] = { CFL_SIZE };
-	long ilast = 0;
+	bart_dim_t idims[1] = { 0 };
+	bart_stride_t istrs[1] = { CFL_SIZE };
+	bart_dim_t ilast = 0;
 
 	for (int i = 0; i < II; i++) {
 
@@ -1206,7 +1206,7 @@ struct nlop_s* nlop_flatten(const struct nlop_s* op)
 
 		idims[0] += md_calc_size(iov->N, iov->dims);
 		(*offs)[OO + i] = ilast;
-		ilast = idims[0] * (long)CFL_SIZE;
+		ilast = idims[0] * (bart_stride_t)CFL_SIZE;
 	}
 
 	PTR_ALLOC(struct flatten_s, data);
@@ -1230,7 +1230,7 @@ struct nlop_s* nlop_flatten_inputs_F(const struct nlop_s* op)
 	assert(1 == nlop_get_nr_out_args(op));
 
 	int N = nlop_generic_codomain(op, 0)->N;
-	long dims[N];
+	bart_dim_t dims[N];
 	md_copy_dims(N, dims, nlop_generic_codomain(op, 0)->dims);
 
 	op = nlop_flatten_F(op);
@@ -1246,13 +1246,13 @@ const struct nlop_s* nlop_flatten_get_op(struct nlop_s* op)
 	return (NULL == data) ? NULL : data->op;
 }
 
-const struct nlop_s* nlop_reshape_in(const struct nlop_s* op, int i, int NI, const long idims[NI])
+const struct nlop_s* nlop_reshape_in(const struct nlop_s* op, int i, int NI, const bart_dim_t idims[NI])
 {
 	int II = nlop_get_nr_in_args(op);
 	int OO = nlop_get_nr_out_args(op);
 
 	int oNI = nlop_generic_domain(op, i)->N;
-	const long* oidims = nlop_generic_domain(op, i)->dims;
+	const bart_dim_t* oidims = nlop_generic_domain(op, i)->dims;
 
 	debug_printf(DP_DEBUG4, "nlop_reshape_in %d:\t", i);
 	debug_print_dims(DP_DEBUG4, oNI, oidims);
@@ -1277,13 +1277,13 @@ const struct nlop_s* nlop_reshape_in(const struct nlop_s* op, int i, int NI, con
 
 
 
-const struct nlop_s* nlop_reshape_out(const struct nlop_s* op, int o, int NO, const long odims[NO])
+const struct nlop_s* nlop_reshape_out(const struct nlop_s* op, int o, int NO, const bart_dim_t odims[NO])
 {
 	int II = nlop_get_nr_in_args(op);
 	int OO = nlop_get_nr_out_args(op);
 
 	int oNO = nlop_generic_codomain(op, o)->N;
-	const long* oodims = nlop_generic_codomain(op, o)->dims;
+	const bart_dim_t* oodims = nlop_generic_codomain(op, o)->dims;
 
 	debug_printf(DP_DEBUG4, "nlop_reshape_out %d:\t", o);
 	debug_print_dims(DP_DEBUG4, oNO, oodims);
@@ -1305,21 +1305,21 @@ const struct nlop_s* nlop_reshape_out(const struct nlop_s* op, int o, int NO, co
 }
 
 
-const struct nlop_s* nlop_reshape_in_F(const struct nlop_s* op, int i, int NI, const long idims[NI])
+const struct nlop_s* nlop_reshape_in_F(const struct nlop_s* op, int i, int NI, const bart_dim_t idims[NI])
 {
 	auto result = nlop_reshape_in(op, i, NI,idims);
 	nlop_free(op);
 	return result;
 }
 
-const struct nlop_s* nlop_reshape_out_F(const struct nlop_s* op, int o, int NO, const long odims[NO])
+const struct nlop_s* nlop_reshape_out_F(const struct nlop_s* op, int o, int NO, const bart_dim_t odims[NO])
 {
 	auto result = nlop_reshape_out(op, o, NO,odims);
 	nlop_free(op);
 	return result;
 }
 
-const struct nlop_s* nlop_reshape2_in_F(const struct nlop_s* op, int i, int NI, unsigned long flags, const long idims[NI])
+const struct nlop_s* nlop_reshape2_in_F(const struct nlop_s* op, int i, int NI, bart_flags_t flags, const bart_dim_t idims[NI])
 {
 	auto iov = nlop_generic_domain(op, i);
 
@@ -1331,7 +1331,7 @@ const struct nlop_s* nlop_reshape2_in_F(const struct nlop_s* op, int i, int NI, 
 	return nlop_prepend_FF(nlop_from_linop_F(linop_reshape2_create(NI, flags, iov->dims, idims)), op, i);
 }
 
-const struct nlop_s* nlop_reshape2_out_F(const struct nlop_s* op, int o, int NO, unsigned long flags, const long odims[NO])
+const struct nlop_s* nlop_reshape2_out_F(const struct nlop_s* op, int o, int NO, bart_flags_t flags, const bart_dim_t odims[NO])
 {
 	auto iov = nlop_generic_codomain(op, o);
 
@@ -1358,9 +1358,9 @@ const struct nlop_s* nlop_flatten_out_F(const struct nlop_s* op, int o)
 
 const struct nlop_s* nlop_append_singleton_dim_in_F(const struct nlop_s* op, int i)
 {
-	long N = nlop_generic_domain(op, i)->N;
+	bart_dim_t N = nlop_generic_domain(op, i)->N;
 
-	long dims[N + 1];
+	bart_dim_t dims[N + 1];
 	md_copy_dims(N, dims, nlop_generic_domain(op, i)->dims);
 	dims[N] = 1;
 
@@ -1369,9 +1369,9 @@ const struct nlop_s* nlop_append_singleton_dim_in_F(const struct nlop_s* op, int
 
 const struct nlop_s* nlop_append_singleton_dim_out_F(const struct nlop_s* op, int o)
 {
-	long N = nlop_generic_codomain(op, o)->N;
+	bart_dim_t N = nlop_generic_codomain(op, o)->N;
 
-	long dims[N + 1];
+	bart_dim_t dims[N + 1];
 	md_copy_dims(N, dims, nlop_generic_codomain(op, o)->dims);
 	dims[N] = 1;
 
@@ -1439,8 +1439,8 @@ void nlop_debug(enum debug_levels dl, const struct nlop_s* x)
 
 
 void nlop_generic_apply2_sameplace(const struct nlop_s* op,
-	int NO, int DO[NO], const long* odims[NO], const long* ostrs[NO], complex float* dst[NO],
-	int NI, int DI[NI], const long* idims[NI], const long* istrs[NI], const complex float* src[NI],
+	int NO, int DO[NO], const bart_dim_t* odims[NO], const bart_stride_t* ostrs[NO], complex float* dst[NO],
+	int NI, int DI[NI], const bart_dim_t* idims[NI], const bart_stride_t* istrs[NI], const complex float* src[NI],
 	const void* ref)
 {
 	int N = NO + NI;
@@ -1474,25 +1474,25 @@ void nlop_generic_apply2_sameplace(const struct nlop_s* op,
 
 
 void nlop_generic_apply_sameplace(const struct nlop_s* op,
-	int NO, int DO[NO], const long* odims[NO], complex float* dst[NO],
-	int NI, int DI[NI], const long* idims[NI], const complex float* src[NI],
+	int NO, int DO[NO], const bart_dim_t* odims[NO], complex float* dst[NO],
+	int NI, int DI[NI], const bart_dim_t* idims[NI], const complex float* src[NI],
 	const void* ref)
 {
-	const long* ostrs[NO];
-	const long* istrs[NI];
+	const bart_stride_t* ostrs[NO];
+	const bart_stride_t* istrs[NI];
 
 	for (int i = 0; i < NO; i++) {
 
-		ostrs[i] = *TYPE_ALLOC(long[DO[i]]);
+		ostrs[i] = *TYPE_ALLOC(bart_dim_t[DO[i]]);
 
-		md_calc_strides(DO[i], (long*)ostrs[i], odims[i], CFL_SIZE);
+		md_calc_strides(DO[i], (bart_stride_t*)ostrs[i], odims[i], CFL_SIZE);
 	}
 
 	for (int i = 0; i < NI; i++) {
 
-		istrs[i] = *TYPE_ALLOC(long[DI[i]]);
+		istrs[i] = *TYPE_ALLOC(bart_dim_t[DI[i]]);
 
-		md_calc_strides(DI[i], (long*)istrs[i], idims[i], CFL_SIZE);
+		md_calc_strides(DI[i], (bart_stride_t*)istrs[i], idims[i], CFL_SIZE);
 	}
 
 	nlop_generic_apply2_sameplace(op, NO, DO, odims, ostrs, dst, NI, DI, idims, istrs, src, ref);
@@ -1505,24 +1505,24 @@ void nlop_generic_apply_sameplace(const struct nlop_s* op,
 }
 
 void nlop_generic_apply(const struct nlop_s* op,
-	int NO, int DO[NO], const long* odims[NO], complex float* dst[NO],
-	int NI, int DI[NI], const long* idims[NI], const complex float* src[NI])
+	int NO, int DO[NO], const bart_dim_t* odims[NO], complex float* dst[NO],
+	int NI, int DI[NI], const bart_dim_t* idims[NI], const complex float* src[NI])
 {
 	nlop_generic_apply_sameplace(op, NO, DO, odims, dst, NI, DI, idims, src, NULL);
 }
 
 void nlop_generic_apply2(const struct nlop_s* op,
-	int NO, int DO[NO], const long* odims[NO], const long* ostrs[NO], complex float* dst[NO],
-	int NI, int DI[NI], const long* idims[NI], const long* istrs[NI], const complex float* src[NI])
+	int NO, int DO[NO], const bart_dim_t* odims[NO], const bart_stride_t* ostrs[NO], complex float* dst[NO],
+	int NI, int DI[NI], const bart_dim_t* idims[NI], const bart_stride_t* istrs[NI], const complex float* src[NI])
 {
 	nlop_generic_apply2_sameplace(op, NO, DO, odims, ostrs, dst, NI, DI, idims, istrs, src, NULL);
 }
 
 
 
-void nlop_generic_apply_loop_sameplace(const struct nlop_s* op, unsigned long loop_flags,
-	int NO, int DO[NO], const long* odims[NO], complex float* dst[NO],
-	int NI, int DI[NI], const long* idims[NI], const complex float* src[NI],
+void nlop_generic_apply_loop_sameplace(const struct nlop_s* op, bart_flags_t loop_flags,
+	int NO, int DO[NO], const bart_dim_t* odims[NO], complex float* dst[NO],
+	int NI, int DI[NI], const bart_dim_t* idims[NI], const complex float* src[NI],
 	const void* ref)
 {
 	int D = 0;
@@ -1535,45 +1535,45 @@ void nlop_generic_apply_loop_sameplace(const struct nlop_s* op, unsigned long lo
 
 	assert(D < (int)sizeof(loop_flags) * CHAR_BIT);
 
-	long loop_dims[D];
+	bart_dim_t loop_dims[D];
 	md_singleton_dims(D, loop_dims);
 
-	const long* nodims[NO];
-	const long* nidims[NI];
-	const long* ostrs[NO];
-	const long* istrs[NI];
+	const bart_dim_t* nodims[NO];
+	const bart_dim_t* nidims[NI];
+	const bart_stride_t* ostrs[NO];
+	const bart_stride_t* istrs[NI];
 
 	for (int i = 0; i < NO; i++) {
 
-		nodims[i] = *TYPE_ALLOC(long[DO[i]]);
-		ostrs[i] = *TYPE_ALLOC(long[DO[i]]);
+		nodims[i] = *TYPE_ALLOC(bart_dim_t[DO[i]]);
+		ostrs[i] = *TYPE_ALLOC(bart_dim_t[DO[i]]);
 
-		md_select_dims(DO[i], ~loop_flags, (long*)nodims[i], odims[i]);
-		md_calc_strides(DO[i], (long*)ostrs[i], odims[i], CFL_SIZE);
+		md_select_dims(DO[i], ~loop_flags, (bart_dim_t*)nodims[i], odims[i]);
+		md_calc_strides(DO[i], (bart_stride_t*)ostrs[i], odims[i], CFL_SIZE);
 
-		long tloop_dims[DO[i]];
+		bart_dim_t tloop_dims[DO[i]];
 		md_select_dims(DO[i], loop_flags, tloop_dims, odims[i]);
 
-		assert(md_check_compat(DO[i], ~0ul, loop_dims, tloop_dims));
-		md_max_dims(DO[i], ~0ul, loop_dims, loop_dims, tloop_dims);
+		assert(md_check_compat(DO[i], ~UINT64_C(0), loop_dims, tloop_dims));
+		md_max_dims(DO[i], ~UINT64_C(0), loop_dims, loop_dims, tloop_dims);
 	}
 
 	for (int i = 0; i < NI; i++) {
 
-		nidims[i] = *TYPE_ALLOC(long[DI[i]]);
-		istrs[i] = *TYPE_ALLOC(long[DI[i]]);
+		nidims[i] = *TYPE_ALLOC(bart_dim_t[DI[i]]);
+		istrs[i] = *TYPE_ALLOC(bart_dim_t[DI[i]]);
 
-		md_select_dims(DI[i], ~loop_flags, (long*)nidims[i], idims[i]);
-		md_calc_strides(DI[i], (long*)istrs[i], idims[i], CFL_SIZE);
+		md_select_dims(DI[i], ~loop_flags, (bart_dim_t*)nidims[i], idims[i]);
+		md_calc_strides(DI[i], (bart_stride_t*)istrs[i], idims[i], CFL_SIZE);
 
-		long tloop_dims[DI[i]];
+		bart_dim_t tloop_dims[DI[i]];
 		md_select_dims(DI[i], loop_flags, tloop_dims, idims[i]);
 
-		assert(md_check_compat(DI[i], ~0ul, loop_dims, tloop_dims));
-		md_max_dims(DI[i], ~0ul, loop_dims, loop_dims, tloop_dims);
+		assert(md_check_compat(DI[i], ~UINT64_C(0), loop_dims, tloop_dims));
+		md_max_dims(DI[i], ~UINT64_C(0), loop_dims, loop_dims, tloop_dims);
 	}
 
-	long pos[D];
+	bart_dim_t pos[D];
 	md_singleton_strides(D, pos);
 
 	do {
@@ -1606,9 +1606,9 @@ void nlop_generic_apply_loop_sameplace(const struct nlop_s* op, unsigned long lo
 	}
 }
 
-void nlop_generic_apply_loop(const struct nlop_s* op, unsigned long loop_flags,
-	int NO, int DO[NO], const long* odims[NO], complex float* dst[NO],
-	int NI, int DI[NI], const long* idims[NI], const complex float* src[NI])
+void nlop_generic_apply_loop(const struct nlop_s* op, bart_flags_t loop_flags,
+	int NO, int DO[NO], const bart_dim_t* odims[NO], complex float* dst[NO],
+	int NI, int DI[NI], const bart_dim_t* idims[NI], const complex float* src[NI])
 {
 	nlop_generic_apply_loop_sameplace(op, loop_flags, NO, DO, odims, dst, NI, DI, idims, src, NULL);
 }
@@ -1618,14 +1618,14 @@ void nlop_export_graph(const char* filename, const struct nlop_s* op)
 	operator_export_graph_dot(filename, op->op);
 }
 
-const struct nlop_s* nlop_copy_wrapper(int OO, const long* ostrs[OO], int II, const long* istrs[II], const struct nlop_s* nlop)
+const struct nlop_s* nlop_copy_wrapper(int OO, const bart_stride_t* ostrs[OO], int II, const bart_stride_t* istrs[II], const struct nlop_s* nlop)
 {
 	PTR_ALLOC(struct nlop_s, n);
 
 	assert(nlop_get_nr_in_args(nlop) == II);
 	assert(nlop_get_nr_out_args(nlop) == OO);
 
-	const long* strs[II + OO];
+	const bart_stride_t* strs[II + OO];
 
 	for (int i = 0; i < OO; i++)
 		strs[i] = ostrs[i];
@@ -1655,7 +1655,7 @@ const struct nlop_s* nlop_copy_wrapper(int OO, const long* ostrs[OO], int II, co
 	return PTR_PASS(n);
 }
 
-const struct nlop_s* nlop_copy_wrapper_F(int OO, const long* ostrs[OO], int II, const long* istrs[II], const struct nlop_s* nlop)
+const struct nlop_s* nlop_copy_wrapper_F(int OO, const bart_stride_t* ostrs[OO], int II, const bart_stride_t* istrs[II], const struct nlop_s* nlop)
 {
 	auto result = nlop_copy_wrapper(OO, ostrs, II, istrs, nlop);
 	nlop_free(nlop);

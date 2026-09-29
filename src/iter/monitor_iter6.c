@@ -28,11 +28,11 @@
 typedef struct monitor_iter6_value_data_s {
 
 	const struct typeid_s* TYPEID;
-	long N_vals;
+	bart_dim_t N_vals;
 
 } monitor_iter6_value_data_t;
 
-typedef void (*monitor_iter6_value_fun_t)(const monitor_iter6_value_data_t* data, long N, complex float vals[N], int NI, const float* args[NI]);
+typedef void (*monitor_iter6_value_fun_t)(const monitor_iter6_value_data_t* data, bart_dim_t N, complex float vals[N], int NI, const float* args[NI]);
 typedef bool (*monitor_iter6_value_eval_t)(const monitor_iter6_value_data_t* data, int epoch, int batch, int numbatches);
 typedef const char* (*monitor_iter6_value_print_string_t)(const monitor_iter6_value_data_t* data);
 typedef void (*monitor_iter6_value_free_t)(const monitor_iter6_value_data_t* data);
@@ -65,10 +65,10 @@ struct monitor_iter6_default_s {
 	const struct monitor_value_s** val_monitors;
 
 	bool use_record;
-	long epochs_written;
-	long epochs_created;
-	long num_batches;
-	long record_dim;
+	bart_dim_t epochs_written;
+	bart_dim_t epochs_created;
+	bart_dim_t num_batches;
+	bart_dim_t record_dim;
 	complex float* record;
 };
 
@@ -112,14 +112,14 @@ static void create_record(struct monitor_iter6_default_s* monitor, int epoch, in
 
 	if (epoch >= monitor->epochs_created) {
 
-		long new_epochs_created = epoch + 1;
-		long new_record_dims[4] = { new_epochs_created, num_batches, 2, monitor->record_dim };
+		bart_dim_t new_epochs_created = epoch + 1;
+		bart_dim_t new_record_dims[4] = { new_epochs_created, num_batches, 2, monitor->record_dim };
 
 		complex float* new_record = md_calloc(4, new_record_dims, CFL_SIZE);
 
 		if (NULL != monitor->record) {
 
-			long old_record_dims[4] = { monitor->epochs_created, num_batches, 2, monitor->record_dim };
+			bart_dim_t old_record_dims[4] = { monitor->epochs_created, num_batches, 2, monitor->record_dim };
 
 			md_copy2(4, old_record_dims, MD_STRIDES(4, new_record_dims, CFL_SIZE), new_record, MD_STRIDES(4, old_record_dims, CFL_SIZE), monitor->record, CFL_SIZE);
 
@@ -146,8 +146,8 @@ void monitor_iter6_dump_record(struct monitor_iter6_s* _monitor, const char* fil
 	if (NULL == monitor->record)
 		error("Record not available!\n");
 
-	long rdims_write[4] = { monitor->epochs_written, monitor->num_batches, 2, monitor->record_dim };
-	long rdims_read[4] = { monitor->epochs_created, monitor->num_batches, 2, monitor->record_dim };
+	bart_dim_t rdims_write[4] = { monitor->epochs_written, monitor->num_batches, 2, monitor->record_dim };
+	bart_dim_t rdims_read[4] = { monitor->epochs_created, monitor->num_batches, 2, monitor->record_dim };
 
 	complex float* file = create_cfl(filename, 4, rdims_write);
 
@@ -156,13 +156,13 @@ void monitor_iter6_dump_record(struct monitor_iter6_s* _monitor, const char* fil
 	unmap_cfl(4, rdims_write, file);
 }
 
-static const char* compute_val_monitors(struct monitor_iter6_default_s* monitor, int epoch, int batch, int num_batches, long NI, const float* x[NI])
+static const char* compute_val_monitors(struct monitor_iter6_default_s* monitor, int epoch, int batch, int num_batches, bart_dim_t NI, const float* x[NI])
 {
 	create_record(monitor, epoch, num_batches);
 
 	const char* result = ptr_printf("%s", "");
 
-	long rpos[4] = { epoch, batch, 0, 2 };
+	bart_dim_t rpos[4] = { epoch, batch, 0, 2 };
 
 	for (int i = 0; i < monitor->num_val_monitors; i++) {
 
@@ -197,7 +197,7 @@ static const char* compute_val_monitors(struct monitor_iter6_default_s* monitor,
 
 		if (NULL != monitor->record) {
 
-			long rstrs[4];
+			bart_stride_t rstrs[4];
 			md_calc_strides(4, rstrs, MD_DIMS(monitor->epochs_created, num_batches, 2, monitor->record_dim), CFL_SIZE);
 
 			rpos[2] = 0;
@@ -215,7 +215,7 @@ static const char* compute_val_monitors(struct monitor_iter6_default_s* monitor,
 
 
 
-static void monitor6_default_fun(struct monitor_iter6_s* _monitor, int epoch, int batch, int numbatches, float objective, long NI, const float* x[NI], char* post_string)
+static void monitor6_default_fun(struct monitor_iter6_s* _monitor, int epoch, int batch, int numbatches, float objective, bart_dim_t NI, const float* x[NI], char* post_string)
 {
 	auto monitor = CAST_DOWN(monitor_iter6_default_s, _monitor);
 
@@ -253,8 +253,8 @@ static void monitor6_default_fun(struct monitor_iter6_s* _monitor, int epoch, in
 
 	if (NULL != monitor->record) {
 
-		long dims[4] = { monitor->epochs_created, numbatches, 2, monitor->record_dim };
-		long pos[4] = { epoch, batch, 0, 0 };
+		bart_dim_t dims[4] = { monitor->epochs_created, numbatches, 2, monitor->record_dim };
+		bart_dim_t pos[4] = { epoch, batch, 0, 0 };
 
 		MD_ACCESS(4, MD_STRIDES(4, dims, sizeof(complex float)), pos, monitor->record) = 1;
 
@@ -358,7 +358,7 @@ struct monitor_iter6_nlop_s {
 
 static DEF_TYPEID(monitor_iter6_nlop_s);
 
-static void monitor_iter6_nlop_fun(const monitor_iter6_value_data_t* data, long N, complex float vals[N], int NI, const float* args[NI])
+static void monitor_iter6_nlop_fun(const monitor_iter6_value_data_t* data, bart_dim_t N, complex float vals[N], int NI, const float* args[NI])
 {
         const auto d = CAST_DOWN(monitor_iter6_nlop_s, data);
 
@@ -500,7 +500,7 @@ struct monitor_iter6_function_s {
 
 static DEF_TYPEID(monitor_iter6_function_s);
 
-static void monitor_iter6_function_fun(const monitor_iter6_value_data_t* data, long N, complex float vals[N], int NI, const float* args[NI])
+static void monitor_iter6_function_fun(const monitor_iter6_value_data_t* data, bart_dim_t N, complex float vals[N], int NI, const float* args[NI])
 {
 	const auto d = CAST_DOWN(monitor_iter6_function_s, data);
 	assert(1 == N);

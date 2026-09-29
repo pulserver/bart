@@ -19,30 +19,30 @@
 #include "vptr_fun.h"
 
 
-void exec_vptr_fun_internal(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, unsigned long lflags, const long* dims[N], const long* strs[N], void* ptr[N], size_t sizes[N], bool resolve)
+void exec_vptr_fun_internal(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, bart_flags_t lflags, const bart_dim_t* dims[N], const bart_stride_t* strs[N], void* ptr[N], size_t sizes[N], bool resolve)
 {
-	long ldims[D];
+	bart_dim_t ldims[D];
 	md_select_dims(D, lflags, ldims, dims[0]);
 
 	for (int i = 1; i < N; i++) {
 
-		long tdims[D];
+		bart_dim_t tdims[D];
 		md_select_dims(D, lflags, tdims, dims[i]);
 
-		assert(md_check_compat(D, ~0UL, tdims, ldims));
-		md_max_dims(D, ~0UL, ldims, ldims, tdims);
+		assert(md_check_compat(D, ~UINT64_C(0), tdims, ldims));
+		md_max_dims(D, ~UINT64_C(0), ldims, ldims, tdims);
 	}
 
-	unsigned long vptr_loop_flags = 0UL;
+	bart_flags_t vptr_loop_flags = 0;
 
 	for (int i = 0; i < N; i++)
 		vptr_loop_flags |= vptr_block_loop_flags(D, ldims, strs[i], ptr[i], sizes[i], true);
 
-	long tdims[N][D];
-	long tstrs[N][D];
+	bart_dim_t tdims[N][D];
+	bart_stride_t tstrs[N][D];
 
-	const long* ndims[N];
-	const long* nstrs[N];
+	const bart_dim_t* ndims[N];
+	const bart_stride_t* nstrs[N];
 	void* sptr[N];
 
 	for (int i = 0; i < N; i++) {
@@ -54,7 +54,7 @@ void exec_vptr_fun_internal(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D,
 		nstrs[i] = tstrs[i];
 	}
 
-	long pos[D];
+	bart_dim_t pos[D];
 	md_set_dims(D, pos, 0);
 
 	do {
@@ -76,7 +76,7 @@ void exec_vptr_fun_internal(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D,
 }
 
 
-void exec_vptr_fun_gen(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, unsigned long lflags, unsigned long wflags, unsigned long rflags, const long* dims[N], const long* strs[N], void* _ptr[N], size_t sizes[N], bool resolve)
+void exec_vptr_fun_gen(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, bart_flags_t lflags, bart_flags_t wflags, bart_flags_t rflags, const bart_dim_t* dims[N], const bart_stride_t* strs[N], void* _ptr[N], size_t sizes[N], bool resolve)
 {
 	for (int i = 1; i < N; i++)
 		assert(is_vptr(_ptr[0]) == is_vptr(_ptr[i]));
@@ -112,7 +112,7 @@ void exec_vptr_fun_gen(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, unsi
 }
 
 
-void exec_vptr_zfun(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, unsigned long lflags, unsigned long wflags, unsigned long rflags, const long* dims[N], const long* strs[N], complex float* cptr[N])
+void exec_vptr_zfun(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, bart_flags_t lflags, bart_flags_t wflags, bart_flags_t rflags, const bart_dim_t* dims[N], const bart_stride_t* strs[N], complex float* cptr[N])
 {
 	size_t sizes[N];
 	void* ptr[N];
@@ -127,7 +127,7 @@ void exec_vptr_zfun(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, unsigne
 }
 
 
-void exec_vptr_fun(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, unsigned long lflags, unsigned long wflags, unsigned long rflags, const long* dims[N], const long* strs[N], float* cptr[N])
+void exec_vptr_fun(vptr_fun_t fun, vptr_fun_data_t* data, int N, int D, bart_flags_t lflags, bart_flags_t wflags, bart_flags_t rflags, const bart_dim_t* dims[N], const bart_stride_t* strs[N], float* cptr[N])
 {
 	size_t sizes[N];
 	void* ptr[N];

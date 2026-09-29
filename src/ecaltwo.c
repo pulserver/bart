@@ -36,9 +36,9 @@ static const char help_str[] =
 
 int main_ecaltwo(int argc, char* argv[argc])
 {
-	long x = 0;
-	long y = 0;
-	long z = 0;
+	bart_dim_t x = 0;
+	bart_dim_t y = 0;
+	bart_dim_t z = 0;
 	const char* in_file = NULL;
 	const char* out_file = NULL;
 	const char* emaps_file = NULL;
@@ -53,7 +53,7 @@ int main_ecaltwo(int argc, char* argv[argc])
 		ARG_OUTFILE(false, &emaps_file, "ev-maps"),
 	};
 
-	long maps = 2; // channels;
+	bart_dim_t maps = 2; // channels;
 	struct ecalib_conf conf = ecalib_defaults;
 
 
@@ -71,7 +71,7 @@ int main_ecaltwo(int argc, char* argv[argc])
 	bart_use_gpu = conf.usegpu;
 	num_init_gpu_support();
 
-	long in_dims[DIMS];
+	bart_dim_t in_dims[DIMS];
 
 	complex float* in_data = load_cfl(in_file, DIMS, in_dims);
 
@@ -85,8 +85,8 @@ int main_ecaltwo(int argc, char* argv[argc])
 	assert(maps <= channels);
 
 
-	long out_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
-	long map_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t out_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t map_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 	
 	out_dims[0] = x;
 	out_dims[1] = y;

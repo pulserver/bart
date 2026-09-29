@@ -21,7 +21,7 @@
 static bool test_mdfft(void)
 {
 	enum { N = 4 };
-	long dims[N] = { 10, 10, 1, 1 };
+	bart_dim_t dims[N] = { 10, 10, 1, 1 };
 
 	complex float* x = md_calloc(N, dims, sizeof(complex float));
 	complex float* y = md_calloc(N, dims, sizeof(complex float));

@@ -112,7 +112,7 @@ static bool test_init_prepare(void)
 	seq_ui_interface_standard_conf(0, bart_seq->conf, &init_std);
 
 	// initialize custom UI
-	long custom_long[SEQ_MAX_PARAMS_LONG] = { };
+	bart_dim_t custom_long[SEQ_MAX_PARAMS_LONG] = { };
 	double custom_double[SEQ_MAX_PARAMS_DOUBLE] = { };
 
 	for (int i = 0; i < (custom_ui->sizes[SEQ_UI_SELECTION] + custom_ui->sizes[SEQ_UI_BOOL] + custom_ui->sizes[SEQ_UI_LONG] + custom_ui->sizes[SEQ_UI_longarr]); i++) {
@@ -141,7 +141,7 @@ static bool test_init_prepare(void)
 
 	seq_ui_interface_custom_params(0, bart_seq->conf, nl, custom_long, nd, custom_double);
 
-	long init_dims[DIMS];
+	bart_dim_t init_dims[DIMS];
 	seq_ui_interface_loop_dims(2, bart_seq->conf, DIMS, init_dims);
 	seq_ui_interface_loop_dims(0, bart_seq->conf, DIMS, init_dims);
 
@@ -755,7 +755,7 @@ static bool test_block_cest_OC_non_equidistant(void)
 		SEQ_BLOCK_KERNEL_IMAGE,
 	};
 
-	long expected_offsets = 58;
+	bart_stride_t expected_offsets = 58;
 
 	struct bart_seq* seq = bart_seq_alloc("");
 	bart_seq_defaults(seq);

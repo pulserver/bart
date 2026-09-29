@@ -31,7 +31,7 @@
 // #define DO_SPEEDTEST
 
 enum { N = 5 };
-long dims[N] = { 10, 7, 3, 16,128 };
+bart_dim_t dims[N] = { 10, 7, 3, 16,128 };
 
 
 static bool test_cuda_uniform_rand(void)
@@ -151,21 +151,21 @@ UT_GPU_REGISTER_TEST(test_cuda_rand_one);
 #ifndef DO_SPEEDTEST
 enum { rounds = 1 };
 enum { N2 = 5 };
-long dims2[N2] = { 10, 7, 3, 16,128 };
+bart_dim_t dims2[N2] = { 10, 7, 3, 16,128 };
 #else
 enum { rounds = 5 };
 #if 1
 // 2 GiB
 enum { N2 = 5 };
-long dims2[N2] = { 128,64,64,8,64};
+bart_dim_t dims2[N2] = { 128,64,64,8,64};
 #else
 // 64 GiB
 enum { N2 = 6 };
-long dims2[N2] = { 1024,64,64,8,16,16};
+bart_dim_t dims2[N2] = { 1024,64,64,8,16,16};
 #endif
 #endif
 
-typedef void (*md_rand_t)(int D, const long dims[D], complex float* dst);
+typedef void (*md_rand_t)(int D, const bart_dim_t dims[D], complex float* dst);
 
 static bool test_cuda_rand(md_rand_t function, const char* name, double tol)
 {
@@ -198,7 +198,7 @@ static bool test_cuda_rand(md_rand_t function, const char* name, double tol)
 
 	num_rand_init(0xDEADBEEF);
 	if (print_bench)
-		bart_printf("times (%s, %ld elements, ~%.2f GiB, %2d rounds):\t%5d threads: ", name, md_calc_size(N2, dims2), gibi, rounds, some_threads);
+		bart_printf("times (%s, %" PRId64 " elements, ~%.2f GiB, %2d rounds):\t%5d threads: ", name, md_calc_size(N2, dims2), gibi, rounds, some_threads);
 	run_bench(rounds, print_bench, sync_gpu, f_mt);
 
 

@@ -17,6 +17,8 @@
 
 #ifndef _SOFT_WEIGHT_H_
 #define _SOFT_WEIGHT_H_
+
+#include "misc/dimtypes.h"
  
 /**
  * soft_weight_singular_vectors - This returns weights for the singular vectors derived from the 
@@ -31,6 +33,6 @@
  *  S           - Array of singular values. 
  *  W           - Array to store weights to.
  */
-extern void soft_weight_singular_vectors(long N, float var, const long kernel_dims[3], const long calreg_dims[4], const float S[N], float W[N]);
+extern void soft_weight_singular_vectors(bart_dim_t N, float var, const bart_dim_t kernel_dims[3], const bart_dim_t calreg_dims[4], const float S[N], float W[N]);
 
 #endif

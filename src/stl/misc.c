@@ -58,7 +58,7 @@ struct triangle_stack triangle_stack_defaults = {
 
 
 // compute minimal and maximal vertex coordinates
-static void stl_coordinate_limits(const long dims[3], const double* model, double min_v[3], double max_v[3])
+static void stl_coordinate_limits(const bart_dim_t dims[3], const double* model, double min_v[3], double max_v[3])
 {
 	assert(3 == dims[0]);
 	assert(4 == dims[1]);
@@ -69,10 +69,10 @@ static void stl_coordinate_limits(const long dims[3], const double* model, doubl
 		max_v[i] = -INFINITY;
 	}
 
-	long strs[3];
+	bart_stride_t strs[3];
 	md_calc_strides(3, strs, dims, DL_SIZE);
 
-	long pos[3] = { 0, 0, 0 };
+	bart_dim_t pos[3] = { 0, 0, 0 };
 
 	for (pos[0] = 0; pos[0] < 3; pos[0]++) {
 		for (pos[1] = 0; pos[1] < 3; pos[1]++) {
@@ -88,7 +88,7 @@ static void stl_coordinate_limits(const long dims[3], const double* model, doubl
 }
 
 // Scales all vertex coordinates by scale vector. It doesnt scale the normal vector.
-void stl_scale_model(const long dims[3], double* model, const double scale[3])
+void stl_scale_model(const bart_dim_t dims[3], double* model, const double scale[3])
 {
         double min_v[3];
 	double max_v[3];
@@ -101,13 +101,13 @@ void stl_scale_model(const long dims[3], double* model, const double scale[3])
 
         stl_shift_model(dims, model, shift);
 
-        long strs[3];
+        bart_stride_t strs[3];
         md_calc_strides(3, strs, dims, DL_SIZE);
 
 #pragma omp parallel for
         for (int i = 0; i < dims[2]; i++) {
 
-                long pos[3] = { [2] = i };
+                bart_dim_t pos[3] = { [2] = i };
 
                 for (pos[0] = 0; pos[0] < dims[0]; pos[0]++)
                         for (pos[1] = 0; pos[1] < dims[1] - 1; pos[1]++)
@@ -118,15 +118,15 @@ void stl_scale_model(const long dims[3], double* model, const double scale[3])
 }
 
 // Shifts all vertex coordinates by shift vector. It doesn't shift the normal vector (shift invariant)
-void stl_shift_model(const long dims[3], double* model, const double shift[3])
+void stl_shift_model(const bart_dim_t dims[3], double* model, const double shift[3])
 {
-        long strs[3];
+        bart_stride_t strs[3];
         md_calc_strides(3, strs, dims, DL_SIZE);
 
 #pragma omp parallel for
         for (int i = 0; i < dims[2]; i++) {
 
-                long pos[3] = { [2] = i };
+                bart_dim_t pos[3] = { [2] = i };
 
                 for (pos[0] = 0; pos[0] < dims[0]; pos[0]++)
                         for (pos[1] = 0; pos[1] < dims[1] - 1; pos[1]++)
@@ -135,12 +135,12 @@ void stl_shift_model(const long dims[3], double* model, const double shift[3])
 }
 
 // Rotates all *centered* vertex coordinates by rot vector.
-void stl_rot_model(const long dims[3], double* model, const double drot[3])
+void stl_rot_model(const bart_dim_t dims[3], double* model, const double drot[3])
 {
 	// first shift model into origin
         double* model_ = md_alloc(3, dims, DL_SIZE);
 
-	memcpy(model_, model, (unsigned long) md_calc_size(3, dims) * DL_SIZE);
+	memcpy(model_, model, (size_t)md_calc_size(3, dims) * DL_SIZE);
 
         double min_v[3];
 	double max_v[3];
@@ -153,7 +153,7 @@ void stl_rot_model(const long dims[3], double* model, const double drot[3])
 
         stl_shift_model(dims, model_, shift);
 
-        long strs[3];
+        bart_stride_t strs[3];
         md_calc_strides(3, strs, dims, DL_SIZE);
 
 	double rot[3] = { drot[0] / 180. * M_PI, drot[1] / 180. * M_PI, drot[2] / 180. * M_PI };
@@ -174,7 +174,7 @@ void stl_rot_model(const long dims[3], double* model, const double drot[3])
 #pragma omp parallel for
         for (int i = 0; i < dims[2]; i++) {
 
-                long pos[3] = { [2] = i };
+                bart_dim_t pos[3] = { [2] = i };
 
 		for (pos[1] = 0; pos[1] < 3; pos[1]++) {
 
@@ -197,7 +197,7 @@ void stl_rot_model(const long dims[3], double* model, const double drot[3])
 #define TOL 1E-14
 
 // shift and scale the model to FOV of size fov_size > 0.
-void stl_center_fov(const long dims[3], double* model, double fov_size)
+void stl_center_fov(const bart_dim_t dims[3], double* model, double fov_size)
 {
         if (0. >= fov_size)
                 error("fov_size should be positive.\n");
@@ -221,9 +221,9 @@ void stl_center_fov(const long dims[3], double* model, double fov_size)
 	debug_printf(DP_INFO, "%f:%f:%f:%f:0:0:0\n", scale[0], shift[0], shift[1], shift[2]);
 }
 
-void stl_stats(const long dims[3], const double* model)
+void stl_stats(const bart_dim_t dims[3], const double* model)
 {
-        debug_printf(DP_INFO, "Number of triangles: %ld\n", dims[2]);
+        debug_printf(DP_INFO, "Number of triangles: %" PRId64 "\n", dims[2]);
 
         double min_v[3];
 	double max_v[3];
@@ -237,18 +237,18 @@ void stl_stats(const long dims[3], const double* model)
 }
 
 
-static void stl_write_ascii(FILE *fp, const long dims[3], const double* model)
+static void stl_write_ascii(FILE *fp, const bart_dim_t dims[3], const double* model)
 {
 	assert(3 == dims[0]);
 	assert(4 == dims[1]);
 
-        long strs[3];
+        bart_stride_t strs[3];
         md_calc_strides(3, strs, dims, DL_SIZE);
 
-	long pos[3] = { };
+	bart_dim_t pos[3] = { };
 
-	long* posp = pos;	// clang workaround
-	long* strsp = strs;
+	bart_dim_t* posp = pos;	// clang workaround
+	bart_dim_t* strsp = strs;
 
 	fprintf(fp, "solid\n");
 
@@ -279,18 +279,18 @@ static void stl_write_ascii(FILE *fp, const long dims[3], const double* model)
 }
 
 
-void stl_compute_normals(const long dims[3], double* model)
+void stl_compute_normals(const bart_dim_t dims[3], double* model)
 {
-        long strs[3];
+        bart_stride_t strs[3];
         md_calc_strides(3, strs, dims, DL_SIZE);
 
 #pragma omp parallel for
         for (int i = 0; i < dims[2]; i++) {
 
-                long pos0[3] = { [1] = 0, [2] = i };
-		long pos1[3] = { [1] = 1, [2] = i };
-		long pos2[3] = { [1] = 2, [2] = i };
-		long posn[3] = { [1] = 3, [2] = i };
+                bart_dim_t pos0[3] = { [1] = 0, [2] = i };
+		bart_dim_t pos1[3] = { [1] = 1, [2] = i };
+		bart_dim_t pos2[3] = { [1] = 2, [2] = i };
+		bart_dim_t posn[3] = { [1] = 3, [2] = i };
 
                 double d1[3];
 		double d2[3];
@@ -320,7 +320,7 @@ struct stl_triangle {
 	uint16_t abc;	// attribute byte count
 };
 
-static void stl_write_binary(FILE* fp, const long dims[3], const double* model)
+static void stl_write_binary(FILE* fp, const bart_dim_t dims[3], const double* model)
 {
 	int fd = fileno(fp);
 
@@ -337,7 +337,7 @@ static void stl_write_binary(FILE* fp, const long dims[3], const double* model)
 
 	// write triangles
 
-        long strs[3];
+        bart_stride_t strs[3];
         md_calc_strides(3, strs, dims, DL_SIZE);
 
         for (int i = 0; i < dims[2]; i++) {
@@ -345,7 +345,7 @@ static void stl_write_binary(FILE* fp, const long dims[3], const double* model)
 		struct stl_triangle tri = { };
 		_Static_assert(TRI_SIZE <= sizeof(tri), "");
 
-                long pos[3] = { [1] = 3, [2] = i };
+                bart_dim_t pos[3] = { [1] = 3, [2] = i };
 
                 for (int k = 0; k < 3; k++)
                         tri.nv[k] = MD_ACCESS(3, strs, (pos[0] = k, pos), model);
@@ -363,7 +363,7 @@ static void stl_write_binary(FILE* fp, const long dims[3], const double* model)
         }
 }
 
-void stl_write(FILE* fp, const long dims[3], const double* model, bool ascii)
+void stl_write(FILE* fp, const bart_dim_t dims[3], const double* model, bool ascii)
 {
 	return (ascii ? stl_write_ascii : stl_write_binary)(fp, dims, model);
 }
@@ -371,19 +371,19 @@ void stl_write(FILE* fp, const long dims[3], const double* model, bool ascii)
 #define MAX_LINE_LENGTH 128
 
 
-static void stl_read_ascii(FILE *fp, long dims[3], double* model)
+static void stl_read_ascii(FILE *fp, bart_dim_t dims[3], double* model)
 {
-        long strs[3];
+        bart_stride_t strs[3];
 
 	if (NULL != model)
 		md_calc_strides(3, strs, dims, DL_SIZE);
 
-	long pos[3] = { };
+	bart_dim_t pos[3] = { };
         char line[MAX_LINE_LENGTH];
 
 	char* linep = line; // clang workaround
-	long* posp = pos;
-	long* strsp = strs;
+	bart_dim_t* posp = pos;
+	bart_dim_t* strsp = strs;
 
 	NESTED(bool, keyword, (const char* kw))
 	{
@@ -503,7 +503,7 @@ static void stl_read_ascii(FILE *fp, long dims[3], double* model)
  * block size: 50 Byte
  **/
 // read binary encoded stl files.
-static double* stl_read_binary(FILE* fp, long dims[3])
+static double* stl_read_binary(FILE* fp, bart_dim_t dims[3])
 {
         int fd = fileno(fp);
 #ifdef __APPLE__
@@ -536,7 +536,7 @@ static double* stl_read_binary(FILE* fp, long dims[3])
 
         double* model = md_calloc(3, dims, DL_SIZE);
 
-        long strs[3];
+        bart_stride_t strs[3];
         md_calc_strides(3, strs, dims, DL_SIZE);
 
         for (int i = 0; i < N; i++) {
@@ -547,7 +547,7 @@ static double* stl_read_binary(FILE* fp, long dims[3])
 		if (TRI_SIZE != xread(fd, TRI_SIZE, (char*)&tri))
 			error("stl file could not be read (3)\n");
 
-                long pos[3] = { [2] = i };
+                bart_dim_t pos[3] = { [2] = i };
                 pos[1] = 3;
 
                 for (int k = 0; k < 3; k++)
@@ -565,7 +565,7 @@ static double* stl_read_binary(FILE* fp, long dims[3])
         return model;
 }
 
-double* stl_read(FILE* fp, long dims[3])
+double* stl_read(FILE* fp, bart_dim_t dims[3])
 {
 	dims[2] = 0;
 	stl_read_ascii(fp, dims, NULL);
@@ -597,42 +597,42 @@ bool stl_fileextension(const char* name)
 }
 
 // convert model in cfl md array to model in double md array
-double* stl_cfl2d(const long dims[3], const complex float* cmodel)
+double* stl_cfl2d(const bart_dim_t dims[3], const complex float* cmodel)
 {
         double* model = md_alloc(3, dims, DL_SIZE);
 
-        long pos[3] = { };
+        bart_dim_t pos[3] = { };
 
-	long dstrs[3];
+	bart_stride_t dstrs[3];
         md_calc_strides(3, dstrs, dims, DL_SIZE);
 
-	long cstrs[3];
+	bart_stride_t cstrs[3];
         md_calc_strides(3, cstrs, dims, CFL_SIZE);
 
         do {
                 MD_ACCESS(3, dstrs, pos, model) = (float) MD_ACCESS(3, cstrs, pos, cmodel);
 
-        } while (md_next(3, dims, ~0UL, pos));
+        } while (md_next(3, dims, ~UINT64_C(0), pos));
 
         return model;
 }
 
 // convert model in double md array to model in cfl md array
-void stl_d2cfl(const long dims[3], complex float* cmodel, const double* model)
+void stl_d2cfl(const bart_dim_t dims[3], complex float* cmodel, const double* model)
 {
-	long pos[3] = { };
+	bart_dim_t pos[3] = { };
 
-        long dstrs[3];
+        bart_stride_t dstrs[3];
         md_calc_strides(3, dstrs, dims, DL_SIZE);
 
-        long cstrs[3];
+        bart_stride_t cstrs[3];
         md_calc_strides(3, cstrs, dims, CFL_SIZE);
 
         do {
 
                 MD_ACCESS(3, cstrs, pos, cmodel) = (float) MD_ACCESS(3, dstrs, pos, model) + 0.j;
 
-        } while (md_next(3, dims, ~0UL, pos));
+        } while (md_next(3, dims, ~UINT64_C(0), pos));
 }
 
 // compute relative position (shift, rotation, ...) of the triangle wrt to the origin and z-axis
@@ -708,23 +708,23 @@ void stl_relative_position(struct triangle* t)
 	t->svol = copysign(vec3d_sdot(tmp, t->v2) / 6., vec3d_sdot(t->v0, t->n));
 }
 
-struct triangle_stack* stl_preprocess_model(const long dims[3], const double* model)
+struct triangle_stack* stl_preprocess_model(const bart_dim_t dims[3], const double* model)
 {
 	struct triangle_stack* ts = xmalloc(sizeof(struct triangle_stack));
 
 	ts->N = dims[2];
 	ts->tri = xmalloc((size_t) ts->N * sizeof(struct triangle));
 
-	long tdims[3];
+	bart_dim_t tdims[3];
 	md_copy_dims(3, tdims, dims);
 
-	long tstrs[3];
+	bart_stride_t tstrs[3];
 	md_calc_strides(3, tstrs, tdims, DL_SIZE);
 
 #pragma omp parallel for
 	for (int i = 0; i < ts->N; i++) {
 
-		long pos[3] = { [2] = i };
+		bart_dim_t pos[3] = { [2] = i };
 
 		memcpy(&ts->tri[i], &MD_ACCESS(3, tstrs, pos, model), 12 * DL_SIZE);
 
@@ -734,10 +734,10 @@ struct triangle_stack* stl_preprocess_model(const long dims[3], const double* mo
 	return ts;
 }
 
-void stl_extract_vertices(long N, const long dims[3], const double* model,
+void stl_extract_vertices(bart_dim_t N, const bart_dim_t dims[3], const double* model,
 	int* nv_out, double verts[N][3], int* nt_out, int tris[N][3])
 {
-	long strs[3];
+	bart_stride_t strs[3];
 	md_calc_strides(3, strs, dims, DL_SIZE);
 
 	int nv = 0;
@@ -752,7 +752,7 @@ void stl_extract_vertices(long N, const long dims[3], const double* model,
 
 			for (int d = 0; d < 3; d++) {
 
-				long pos[3] = { d, v, t };
+				bart_dim_t pos[3] = { d, v, t };
 				p[d] = MD_ACCESS(3, strs, pos, model);
 			}
 
@@ -786,16 +786,16 @@ void stl_extract_vertices(long N, const long dims[3], const double* model,
 	*nt_out = nt;
 }
 
-void stl_update_vertices(long N, const long dims[3], double* model, const double verts[N][3], const int tris[N][3])
+void stl_update_vertices(bart_dim_t N, const bart_dim_t dims[3], double* model, const double verts[N][3], const int tris[N][3])
 {
-	long strs[3];
+	bart_stride_t strs[3];
 	md_calc_strides(3, strs, dims, DL_SIZE);
 
 	for (int t = 0; t < dims[2]; t++)
 		for (int v = 0; v < 3; v++)
 			for (int d = 0; d < 3; d++) {
 
-				long pos[3] = {d, v, t};
+				bart_dim_t pos[3] = {d, v, t};
 
 				MD_ACCESS(3, strs, pos, model) = verts[ tris[t][v] ][d];
 			}
@@ -813,7 +813,7 @@ void stl_add_neighbor(struct neighbors* nb, int v)
 	nb->v[nb->n++] = v;
 }
 
-void stl_build_neighbors(long N, const long dims[3], const double* model, struct neighbors* neigh,
+void stl_build_neighbors(bart_dim_t N, const bart_dim_t dims[3], const double* model, struct neighbors* neigh,
 	int* nv_out, double verts_out[N][3], int* nt_out, int tris_out[N][3])
 {
 	int nv;

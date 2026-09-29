@@ -46,7 +46,7 @@ static const char help_str[] = "Perform total generalized variation denoising al
 int main_tgv(int argc, char* argv[argc])
 {
 	float lambda = 0.;
-	unsigned long flags = 0;
+	bart_flags_t flags = 0;
 	const char* in_file = NULL;
 	const char* out_file = NULL;
 
@@ -73,19 +73,19 @@ int main_tgv(int argc, char* argv[argc])
 
 	num_init();
 
-	long in_dims[DIMS];
+	bart_dim_t in_dims[DIMS];
 
 	complex float* in_data = load_cfl(in_file, DIMS, in_dims);
 
 	if (1 != in_dims[DIMS - 1])
 		error("Last dimension must have size 1");
 
-	long out_dims[DIMS];
+	bart_dim_t out_dims[DIMS];
 	md_copy_dims(DIMS, out_dims, in_dims);
 
 	out_dims[DIMS - 1] = 1 + bitcount(flags);
 
-	long ext_shift = md_calc_size(DIMS, in_dims);
+	bart_dim_t ext_shift = md_calc_size(DIMS, in_dims);
 
 	const struct linop_s* lop_trafo = NULL;
 
@@ -94,7 +94,7 @@ int main_tgv(int argc, char* argv[argc])
 
 	complex float* out_data = create_cfl(out_file, DIMS, out_dims);
 
-	auto id = linop_extract_create(DIMS, (long[DIMS]){ }, in_dims, out_dims);
+	auto id = linop_extract_create(DIMS, (bart_dim_t[DIMS]){ }, in_dims, out_dims);
 
 	struct iter_admm_conf conf = iter_admm_defaults;
 

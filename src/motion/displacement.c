@@ -17,7 +17,7 @@
 #include "displacement.h"
 
 
-static void compose_displacement_internal(int N, int d, unsigned long flags, const long dims[N], complex float* composed, const complex float* d1, const complex float* d2, const complex float* pos)
+static void compose_displacement_internal(int N, int d, bart_flags_t flags, const bart_dim_t dims[N], complex float* composed, const complex float* d1, const complex float* d2, const complex float* pos)
 {
 	assert(d + 1< N);
 	assert(dims[d] == bitcount(flags));
@@ -34,7 +34,7 @@ static void compose_displacement_internal(int N, int d, unsigned long flags, con
 		md_zadd(N, dims, tmp, pos, d1);
 	}
 
-	long cdims[N];
+	bart_dim_t cdims[N];
 	md_transpose_dims(N, d, d + 1, cdims, dims);
 
 	md_interpolate(d + 1, flags, 1, N, dims, composed, cdims, tmp, dims, d2);
@@ -43,7 +43,7 @@ static void compose_displacement_internal(int N, int d, unsigned long flags, con
 	md_free(tmp);
 }
 
-void compose_displacement(int N, int d, unsigned long flags, const long dims[N], complex float* composed, const complex float* d1, const complex float* d2)
+void compose_displacement(int N, int d, bart_flags_t flags, const bart_dim_t dims[N], complex float* composed, const complex float* d1, const complex float* d2)
 {
 	compose_displacement_internal(N, d, flags, dims, composed, d1, d2, NULL);
 }
@@ -53,7 +53,7 @@ void compose_displacement(int N, int d, unsigned long flags, const long dims[N],
  * A simple fixed-point approach to invert a deformation field.
  * Medical Physics, 35(1), 81. doi:10.1118/1.2816107
 **/
-void invert_displacement(int N, int d, unsigned long flags, const long dims[N], complex float* inv_disp, const complex float* disp)
+void invert_displacement(int N, int d, bart_flags_t flags, const bart_dim_t dims[N], complex float* inv_disp, const complex float* disp)
 {
 	int max_iter = 20;
 	float tol = 0.001;
@@ -65,7 +65,7 @@ void invert_displacement(int N, int d, unsigned long flags, const long dims[N], 
 
 	md_positions(N, d, flags, dims, dims, pos);
 
-	long img_dims[N];
+	bart_dim_t img_dims[N];
 	md_select_dims(N, ~MD_BIT(d), img_dims, dims);
 
 	complex float* tmp = md_alloc_sameplace(N, dims, CFL_SIZE, disp);
@@ -80,7 +80,7 @@ void invert_displacement(int N, int d, unsigned long flags, const long dims[N], 
 		md_ztenmulc(N, img_dims, mag, dims, tmp, dims, tmp);
 		md_zreal(N, img_dims, mag, mag);
 		md_zsqrt(N, img_dims, mag, mag);
-		md_zavg(N, img_dims, ~0ul, err, mag);
+		md_zavg(N, img_dims, ~UINT64_C(0), err, mag);
 
 		// inv_disp = - disp(pos + inv_disp)
 		md_zaxpy(N, dims, inv_disp, -0.25, tmp);
@@ -96,9 +96,9 @@ void invert_displacement(int N, int d, unsigned long flags, const long dims[N], 
 }
 
 
-const struct linop_s* linop_interpolate_displacement_create(int d, unsigned long flags, int ord, int N, const long idims[N], const long mdims[N], const complex float* motion, const long gdims[N])
+const struct linop_s* linop_interpolate_displacement_create(int d, bart_flags_t flags, int ord, int N, const bart_dim_t idims[N], const bart_dim_t mdims[N], const complex float* motion, const bart_dim_t gdims[N])
 {
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_select_dims(N, MD_BIT(d), sdims, mdims);
 
 	complex float* scale = md_alloc_sameplace(N, sdims, CFL_SIZE, motion);

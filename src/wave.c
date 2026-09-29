@@ -80,9 +80,9 @@ static void print_opdims(const struct linop_s* op)
 }
 
 /* ESPIRiT operator. */
-static const struct linop_s* linop_espirit_create(long sx, long sy, long sz, long nc, long md, complex float* maps)
+static const struct linop_s* linop_espirit_create(bart_dim_t sx, bart_dim_t sy, bart_dim_t sz, bart_dim_t nc, bart_dim_t md, complex float* maps)
 {
-	long max_dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t max_dims[] = { [0 ... DIMS - 1] = 1};
 	max_dims[0] = sx;
 	max_dims[1] = sy;
 	max_dims[2] = sz;
@@ -95,14 +95,14 @@ static const struct linop_s* linop_espirit_create(long sx, long sy, long sz, lon
 }
 
 /* Resize operator. */
-static const struct linop_s* Xlinop_reshape_create(long wx, long sx, long sy, long sz, long nc)
+static const struct linop_s* Xlinop_reshape_create(bart_dim_t wx, bart_dim_t sx, bart_dim_t sy, bart_dim_t sz, bart_dim_t nc)
 {
-	long input_dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t input_dims[] = { [0 ... DIMS - 1] = 1};
 	input_dims[0] = sx;
 	input_dims[1] = sy;
 	input_dims[2] = sz;
 	input_dims[3] = nc;
-	long output_dims[DIMS];
+	bart_dim_t output_dims[DIMS];
 	md_copy_dims(DIMS, output_dims, input_dims);
 	output_dims[0] = wx;
 
@@ -112,9 +112,9 @@ static const struct linop_s* Xlinop_reshape_create(long wx, long sx, long sy, lo
 }
 
 /* Fx operator. */
-static const struct linop_s* linop_fx_create(long wx, long sy, long sz, long nc)
+static const struct linop_s* linop_fx_create(bart_dim_t wx, bart_dim_t sy, bart_dim_t sz, bart_dim_t nc)
 {
-	long dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t dims[] = { [0 ... DIMS - 1] = 1};
 	dims[0] = wx;
 	dims[1] = sy;
 	dims[2] = sz;
@@ -126,9 +126,9 @@ static const struct linop_s* linop_fx_create(long wx, long sy, long sz, long nc)
 }
 
 /* Wave operator. */
-static const struct linop_s* linop_wave_create(long wx, long sy, long sz, long nc, complex float* psf)
+static const struct linop_s* linop_wave_create(bart_dim_t wx, bart_dim_t sy, bart_dim_t sz, bart_dim_t nc, complex float* psf)
 {
-	long dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t dims[] = { [0 ... DIMS - 1] = 1};
 	dims[0] = wx;
 	dims[1] = sy;
 	dims[2] = sz;
@@ -138,9 +138,9 @@ static const struct linop_s* linop_wave_create(long wx, long sy, long sz, long n
 }
 
 /* Fyz operator. */
-static const struct linop_s* linop_fyz_create(long wx, long sy, long sz, long nc)
+static const struct linop_s* linop_fyz_create(bart_dim_t wx, bart_dim_t sy, bart_dim_t sz, bart_dim_t nc)
 {
-	long dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t dims[] = { [0 ... DIMS - 1] = 1};
 	dims[0] = wx;
 	dims[1] = sy;
 	dims[2] = sz;
@@ -150,9 +150,9 @@ static const struct linop_s* linop_fyz_create(long wx, long sy, long sz, long nc
 }
 
 /* Sampling operator. */
-static const struct linop_s* linop_samp_create(long wx, long sy, long sz, long nc, complex float* mask)
+static const struct linop_s* linop_samp_create(bart_dim_t wx, bart_dim_t sy, bart_dim_t sz, bart_dim_t nc, complex float* mask)
 {
-	long dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t dims[] = { [0 ... DIMS - 1] = 1};
 	dims[0] = wx;
 	dims[1] = sy;
 	dims[2] = sz;
@@ -214,13 +214,13 @@ int main_wave(int argc, char* argv[argc])
 
 	debug_printf(DP_INFO, "Loading data... ");
 
-	long maps_dims[DIMS];
+	bart_dim_t maps_dims[DIMS];
 	complex float* maps = load_cfl(maps_file, DIMS, maps_dims);
 
-	long wave_dims[DIMS];
+	bart_dim_t wave_dims[DIMS];
 	complex float* wave = load_cfl(wave_file, DIMS, wave_dims);
 
-	long kspc_dims[DIMS];
+	bart_dim_t kspc_dims[DIMS];
 	complex float* kspc = load_cfl(ksp_file, DIMS, kspc_dims);
 
 	debug_printf(DP_INFO, "Done.\n");
@@ -235,7 +235,7 @@ int main_wave(int argc, char* argv[argc])
 	int nc = maps_dims[3];
 	int md = maps_dims[4];
 
-	long recon_dims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t recon_dims[] = { [0 ... DIMS - 1] = 1 };
 	recon_dims[0] = sx;
 	recon_dims[1] = sy;
 	recon_dims[2] = sz;
@@ -248,7 +248,7 @@ int main_wave(int argc, char* argv[argc])
 	debug_printf(DP_INFO, "Done.\n");
 
 	debug_printf(DP_INFO, "Estimating sampling mask... ");
-	long mask_dims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t mask_dims[] = { [0 ... DIMS - 1] = 1 };
 	mask_dims[0] = wx;
 	mask_dims[1] = sy;
 	mask_dims[2] = sz;
@@ -325,12 +325,12 @@ int main_wave(int argc, char* argv[argc])
 	debug_printf(DP_INFO, "Done.\n");
 
 	const struct operator_p_s* T = NULL;
-	long blkdims[MAX_LEV][DIMS];
-	long minsize[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t blkdims[MAX_LEV][DIMS];
+	bart_dim_t minsize[] = { [0 ... DIMS - 1] = 1 };
 	minsize[0] = MIN(sx, 16);
 	minsize[1] = MIN(sy, 16);
 	minsize[2] = MIN(sz, 16);
-	unsigned long WAVFLAG = (sx > 1) * READ_FLAG | (sy > 1) * PHS1_FLAG | (sz > 2) * PHS2_FLAG;
+	bart_flags_t WAVFLAG = (sx > 1) * READ_FLAG | (sy > 1) * PHS1_FLAG | (sz > 2) * PHS2_FLAG;
 
 	enum algo_t algo = CG;
 
@@ -348,7 +348,7 @@ int main_wave(int argc, char* argv[argc])
 
 			debug_printf(DP_INFO, "Creating locally low rank threshold operator across real-imag dimension... ");
 			llr_blkdims(blkdims, ~ITER_FLAG, recon_dims, blksize);
-			T = lrthresh_create(recon_dims, true, ~ITER_FLAG, (const long (*)[])blkdims, lambda, false, false, false);
+			T = lrthresh_create(recon_dims, true, ~ITER_FLAG, (const bart_dim_t (*)[])blkdims, lambda, false, false, false);
 		}
 
 		debug_printf(DP_INFO, "Done.\n");

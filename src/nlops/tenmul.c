@@ -30,12 +30,12 @@ struct tenmul_s {
 	nlop_data_t super;
 
 	int N;
-	const long* dims;
-	const long* dims1;
-	const long* dims2;
-	const long* ostr;
-	const long* istr1;
-	const long* istr2;
+	const bart_dim_t* dims;
+	const bart_dim_t* dims1;
+	const bart_dim_t* dims2;
+	const bart_stride_t* ostr;
+	const bart_stride_t* istr1;
+	const bart_stride_t* istr2;
 
 	complex float* der1;
 	complex float* der2;
@@ -112,7 +112,7 @@ static void tenmul_der2(const nlop_data_t* _data, int /*o*/, int /*i*/, complex 
 	complex float* x1 = data->der1;
 
 	if (NULL == x1)
-		error("Tenmul %x derivative not available\n", data);
+		error("Tenmul %p derivative not available\n", data);
 
 	md_ztenmul2(data->N, data->dims, data->ostr, dst, data->istr2, src, MD_STRIDES(data->N, data->dims1, CFL_SIZE), x1);
 }
@@ -123,7 +123,7 @@ static void tenmul_adj2(const nlop_data_t* _data, int /*o*/, int /*i*/, complex 
 	complex float* x1 = data->der1;
 
 	if (NULL == x1)
-		error("Tenmul %x derivative not available\n", data);
+		error("Tenmul %p derivative not available\n", data);
 
 
 	md_ztenmulc2(data->N, data->dims, data->istr2, dst, data->ostr, src, MD_STRIDES(data->N, data->dims1, CFL_SIZE), x1);
@@ -135,7 +135,7 @@ static void tenmul_der1(const nlop_data_t* _data, int /*o*/, int /*i*/, complex 
 	complex float* x2 = data->der2;
 
 	if (NULL == x2)
-		error("Tenmul %x derivative not available\n", data);
+		error("Tenmul %p derivative not available\n", data);
 
 	md_ztenmul2(data->N, data->dims, data->ostr, dst, data->istr1, src, MD_STRIDES(data->N, data->dims2, CFL_SIZE), x2);
 }
@@ -146,7 +146,7 @@ static void tenmul_adj1(const nlop_data_t* _data, int /*o*/, int /*i*/, complex 
 	complex float* x2 = data->der2;
 
 	if (NULL == x2)
-		error("Tenmul %x derivative not available\n", data);
+		error("Tenmul %p derivative not available\n", data);
 
 	md_ztenmulc2(data->N, data->dims, data->istr1, dst, data->ostr, src, MD_STRIDES(data->N, data->dims2, CFL_SIZE), x2);
 }
@@ -170,25 +170,25 @@ static void tenmul_del(const nlop_data_t* _data)
 }
 
 
-struct nlop_s* nlop_tenmul_create2(int N, const long dims[N], const long ostr[N],
-		const long istr1[N], const long istr2[N])
+struct nlop_s* nlop_tenmul_create2(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N],
+		const bart_stride_t istr1[N], const bart_stride_t istr2[N])
 {
 	PTR_ALLOC(struct tenmul_s, data);
 	SET_TYPEID(tenmul_s, data);
 
-	PTR_ALLOC(long[N], ndims);
+	PTR_ALLOC(bart_dim_t[N], ndims);
 	md_copy_dims(N, *ndims, dims);
 
-	PTR_ALLOC(long[N], nostr);
+	PTR_ALLOC(bart_dim_t[N], nostr);
 	md_copy_strides(N, *nostr, ostr);
 
-	PTR_ALLOC(long[N], ndims1);
-	PTR_ALLOC(long[N], nistr1);
+	PTR_ALLOC(bart_dim_t[N], ndims1);
+	PTR_ALLOC(bart_dim_t[N], nistr1);
 	md_select_dims(N, md_nontriv_strides(N, istr1), *ndims1, dims);
 	md_copy_strides(N, *nistr1, istr1);
 
-	PTR_ALLOC(long[N], ndims2);
-	PTR_ALLOC(long[N], nistr2);
+	PTR_ALLOC(bart_dim_t[N], ndims2);
+	PTR_ALLOC(bart_dim_t[N], nistr2);
 	md_select_dims(N, md_nontriv_strides(N, istr2), *ndims2, dims);
 	md_copy_strides(N, *nistr2, istr2);
 
@@ -203,17 +203,17 @@ struct nlop_s* nlop_tenmul_create2(int N, const long dims[N], const long ostr[N]
 	data->der1 = NULL;
 	data->der2 = NULL;
 
-	long nl_odims[1][N];
+	bart_dim_t nl_odims[1][N];
 	md_select_dims(N, md_nontriv_strides(N, ostr), nl_odims[0], dims);
 
-	long nl_ostr[1][N];
+	bart_stride_t nl_ostr[1][N];
 	md_copy_strides(N, nl_ostr[0], ostr);
 
-	long nl_idims[2][N];
+	bart_dim_t nl_idims[2][N];
 	md_copy_dims(N, nl_idims[0], data->dims1);
 	md_copy_dims(N, nl_idims[1], data->dims2);
 
-	long nl_istr[2][N];
+	bart_stride_t nl_istr[2][N];
 	md_copy_strides(N, nl_istr[0], istr1);
 	md_copy_strides(N, nl_istr[1], istr2);
 
@@ -228,13 +228,13 @@ struct tenmul_block_diag_s {
 
 DEF_TYPEID(tenmul_block_diag_s);
 
-static void tenmul_block_diag_fun(const nlop_data_t* /*_data*/, int N, int OO, const long odims[OO][N], complex float* dst[OO], int II, const long idims[II][N], const complex float* src[II], const long ddims[OO][II][N], complex float* jac[OO][II])
+static void tenmul_block_diag_fun(const nlop_data_t* /*_data*/, int N, int OO, const bart_dim_t odims[OO][N], complex float* dst[OO], int II, const bart_dim_t idims[II][N], const complex float* src[II], const bart_dim_t ddims[OO][II][N], complex float* jac[OO][II])
 {
 	assert(1 == OO);
 	assert(2 == II);
 
-	assert(md_check_equal_dims(N, idims[0], ddims[0][1], ~0UL));
-	assert(md_check_equal_dims(N, idims[1], ddims[0][0], ~0UL));
+	assert(md_check_equal_dims(N, idims[0], ddims[0][1], ~UINT64_C(0)));
+	assert(md_check_equal_dims(N, idims[1], ddims[0][0], ~UINT64_C(0)));
 
 	md_ztenmul(N, odims[0], dst[0], idims[0], src[0], idims[1], src[1]);
 
@@ -245,7 +245,7 @@ static void tenmul_block_diag_fun(const nlop_data_t* /*_data*/, int N, int OO, c
 		md_copy(N, ddims[0][1], jac[0][1], src[0], CFL_SIZE);
 }
 
-struct nlop_s* nlop_tenmul_create(int N, const long odim[N], const long idim1[N], const long idim2[N])
+struct nlop_s* nlop_tenmul_create(int N, const bart_dim_t odim[N], const bart_dim_t idim1[N], const bart_dim_t idim2[N])
 {
 	PTR_ALLOC(struct tenmul_block_diag_s, data);
 	SET_TYPEID(tenmul_block_diag_s, data);
@@ -253,10 +253,10 @@ struct nlop_s* nlop_tenmul_create(int N, const long odim[N], const long idim1[N]
 	int OO = 1;
 	int II = 2;
 
-	long odims[OO][N];
-	long idims[II][N];
+	bart_dim_t odims[OO][N];
+	bart_dim_t idims[II][N];
 
-	unsigned long diag_flags[OO][II];
+	bart_flags_t diag_flags[OO][II];
 
 	md_copy_dims(N, odims[0], odim);
 	md_copy_dims(N, idims[0], idim1);

@@ -46,7 +46,7 @@ int main_conway(int argc, char* argv[argc])
 
 	num_init();
 
-	long dims[2];
+	bart_dim_t dims[2];
 
 	complex float* init = load_cfl(in_file, 2, dims);
 
@@ -57,11 +57,11 @@ int main_conway(int argc, char* argv[argc])
 	unmap_cfl(2, dims, init);
 
 
-	long wdims[3];
+	bart_dim_t wdims[3];
 	md_copy_dims(2, wdims, dims);
 	wdims[2] = 1;
 
-	long odims[3];
+	bart_dim_t odims[3];
 	md_copy_dims(2, odims, dims);
 	odims[2] = iter;
 
@@ -70,7 +70,7 @@ int main_conway(int argc, char* argv[argc])
 	stream_t out_stream = stream_lookup(out);
 	bool sync = out_stream;
 
-	long mdims[2] = { 3, 3 };
+	bart_dim_t mdims[2] = { 3, 3 };
 
 	complex float mask[3][3] = {
 		{ 1., 1., 1., },
@@ -81,7 +81,7 @@ int main_conway(int argc, char* argv[argc])
 	complex float* buf = md_alloc(2, dims, CFL_SIZE);
 	complex float* tmp = md_alloc(2, dims, CFL_SIZE);
 
-	struct conv_plan* plan = conv_plan(2, 3UL, periodic ? CONV_CYCLIC : CONV_TRUNCATED, CONV_SYMMETRIC, dims, dims, mdims, &mask[0][0]);
+	struct conv_plan* plan = conv_plan(2, 3, periodic ? CONV_CYCLIC : CONV_TRUNCATED, CONV_SYMMETRIC, dims, dims, mdims, &mask[0][0]);
 
 	for (int i = 0; i < iter; i++) {
 
@@ -92,10 +92,10 @@ int main_conway(int argc, char* argv[argc])
 		md_zsgreatequal(2, dims, world, buf, 2.9);
 		md_zmul(2, dims, world, world, tmp);
 
-		md_copy_block(3, (long[3]){ [2] = i }, odims, out, wdims, world, CFL_SIZE);
+		md_copy_block(3, (bart_dim_t[3]){ [2] = i }, odims, out, wdims, world, CFL_SIZE);
 
 		if (sync)
-			stream_sync_slice(out_stream, 3, odims, MD_BIT(2), (long[3]){ [2] = i });
+			stream_sync_slice(out_stream, 3, odims, MD_BIT(2), (bart_dim_t[3]){ [2] = i });
 	}
 
 	conv_free(plan);

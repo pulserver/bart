@@ -2,6 +2,7 @@
 #ifndef EGRAPH_H
 #define EGRAPH_H
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 struct enode_s;
@@ -15,7 +16,7 @@ enode_t enode_create(const char* name, void* data);
 
 extern bool enode_is_active(enode_t node);
 extern void* enode_get_data(enode_t node);
-extern long enode_get_count(enode_t node);
+extern bart_dim_t enode_get_count(enode_t node);
 
 extern void enode_add_dependency(enode_t a, enode_t b);
 extern list_t enode_get_iedges(enode_t node);
@@ -28,16 +29,16 @@ extern void egraph_add_node(egraph_t graph, enode_t node);
 extern enode_t egraph_get_node(egraph_t graph, int idx);
 extern enode_t egraph_remove_node(egraph_t graph, int idx);
 
-extern long egraph_diameter(egraph_t graph);
+extern bart_dim_t egraph_diameter(egraph_t graph);
 
 
-extern long egraph_depth_first_search(egraph_t graph, enode_t src, long count, bool reverse);
+extern bart_dim_t egraph_depth_first_search(egraph_t graph, enode_t src, bart_dim_t count, bool reverse);
 
 extern void egraph_dijkstra(egraph_t graph, enode_t src, bool reverse);
 extern void egraph_bfs(egraph_t graph, enode_t src, bool reverse);
 
 extern list_t egraph_shortest_path(egraph_t graph, enode_t src, enode_t dst);
-extern long egraph_longest_distance(enode_t* dst, enode_t* src, egraph_t graph, list_t nodes);
+extern bart_dim_t egraph_longest_distance(enode_t* dst, enode_t* src, egraph_t graph, list_t nodes);
 
 extern enode_t egraph_find_most_distant(egraph_t graph, enode_t src);
 extern list_t egraph_split_connected_components(egraph_t graph);

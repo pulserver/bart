@@ -33,7 +33,7 @@ struct monitor_default_s {
 
 	iter_monitor_t super;
 
-	long N;
+	bart_dim_t N;
 	const float* image_truth;
 	double it_norm;
 
@@ -52,7 +52,7 @@ static void monitor_default_fun(struct iter_monitor_s* _data, const struct vec_i
 	double err = -1.;
 	double obj = -1.;
 
-	long N = data->N;
+	bart_dim_t N = data->N;
 
 	if (NULL != data->image_truth) {
 
@@ -76,7 +76,7 @@ static void monitor_default_fun(struct iter_monitor_s* _data, const struct vec_i
 	data->super.err = err;
 }
 
-struct iter_monitor_s* iter_monitor_create(long N, const float* image_truth, void* data, float (*objective)(const void* data, const float* x))
+struct iter_monitor_s* iter_monitor_create(bart_dim_t N, const float* image_truth, void* data, float (*objective)(const void* data, const float* x))
 {
 	PTR_ALLOC(struct monitor_default_s, monitor);
 	SET_TYPEID(monitor_default_s, monitor);
@@ -96,7 +96,7 @@ struct iter_monitor_s* iter_monitor_create(long N, const float* image_truth, voi
 }
 
 
-void monitor_iter6(struct monitor_iter6_s* monitor, int epoch, int batch, int num_batches, float objective, long NI, const float* x[NI], char* post_string)
+void monitor_iter6(struct monitor_iter6_s* monitor, int epoch, int batch, int num_batches, float objective, bart_dim_t NI, const float* x[NI], char* post_string)
 {
 	if ((NULL != monitor) && (NULL != monitor->fun))
 		monitor->fun(monitor, epoch, batch, num_batches, objective, NI, x, post_string);

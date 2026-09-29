@@ -32,9 +32,9 @@ static const char help_str[] = "Apply multi-channel noise pre-whitening on <inpu
 				"Optionally output whitening matrix and noise covariance matrix";
 
 
-static void whiten(const long dims[DIMS], complex float* out, const long mat_dims[DIMS], const complex float* mat, const complex float* in)
+static void whiten(const bart_dim_t dims[DIMS], complex float* out, const bart_dim_t mat_dims[DIMS], const complex float* mat, const complex float* in)
 {
-	long trp_dims[DIMS];
+	bart_dim_t trp_dims[DIMS];
 
 	md_transpose_dims(DIMS, COIL_DIM, MAPS_DIM, trp_dims, dims);
 	md_zmatmul(DIMS, trp_dims, out, mat_dims, mat, dims, in);
@@ -43,9 +43,9 @@ static void whiten(const long dims[DIMS], complex float* out, const long mat_dim
 /* 
  * Calculate noise covariance matrix. Assumes noise is zero-mean
  */
-static void calc_covar(const long mat_dims[DIMS], complex float* covar, const long noise_dims[DIMS], const complex float* ndata)
+static void calc_covar(const bart_dim_t mat_dims[DIMS], complex float* covar, const bart_dim_t noise_dims[DIMS], const complex float* ndata)
 {
-	long trp_dims[DIMS];
+	bart_dim_t trp_dims[DIMS];
 	md_transpose_dims(DIMS, COIL_DIM, MAPS_DIM, trp_dims, noise_dims);
 
 	md_zmatmulc(DIMS, mat_dims, covar, trp_dims, ndata, noise_dims, ndata);
@@ -56,9 +56,9 @@ static void calc_covar(const long mat_dims[DIMS], complex float* covar, const lo
 /* 
  * Calculate noise whitening matrix W = inv(L), where N = L * L^H is the Cholesky decomposition of noise N
  */
-static void calc_optmat(const long mat_dims[DIMS], complex float* optmat, const complex float* covar)
+static void calc_optmat(const bart_dim_t mat_dims[DIMS], complex float* optmat, const complex float* covar)
 {
-	long N = mat_dims[COIL_DIM];
+	bart_dim_t N = mat_dims[COIL_DIM];
 
 	complex float* chol = md_alloc(DIMS, mat_dims, CFL_SIZE);
 
@@ -110,9 +110,9 @@ int main_whiten(int argc, char* argv[argc])
 
 	num_init();
 
-	long dims[DIMS];
-	long noise_dims[DIMS];
-	long mat_dims[DIMS];
+	bart_dim_t dims[DIMS];
+	bart_dim_t noise_dims[DIMS];
+	bart_dim_t mat_dims[DIMS];
 
 	complex float* idata = load_cfl(in_file, DIMS, dims);
 	complex float* ndata = load_cfl(ndata_file, DIMS, noise_dims);
@@ -171,7 +171,7 @@ int main_whiten(int argc, char* argv[argc])
 
 	if (normalize) {
 
-		long std_dims[DIMS];
+		bart_dim_t std_dims[DIMS];
 		md_singleton_dims(DIMS, std_dims);
 
 		complex float* nwhite = md_alloc(DIMS, noise_dims, CFL_SIZE);
@@ -180,7 +180,7 @@ int main_whiten(int argc, char* argv[argc])
 		// get scale factor by whitening the noise data and taking stdev
 		whiten(noise_dims, nwhite, mat_dims, optmat_out, ndata);
 
-		md_zstd(DIMS, noise_dims, ~0UL, nstdev, nwhite);
+		md_zstd(DIMS, noise_dims, ~UINT64_C(0), nstdev, nwhite);
 
 		float stdev = md_zasum(DIMS, std_dims, nstdev);
 

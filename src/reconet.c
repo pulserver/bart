@@ -59,7 +59,7 @@ int main_reconet(int argc, char* argv[argc])
 
 	const char* filename_weights_load = NULL;
 
-	long Nb = 0;
+	bart_dim_t Nb = 0;
 
 	bool load_mem = false;
 
@@ -298,7 +298,7 @@ int main_reconet(int argc, char* argv[argc])
 
 
 	bool use_valid_data = false;
-	long Nt_val = 0;
+	bart_dim_t Nt_val = 0;
 
 	if (   (NULL != valid_data.filename_coil)
 	    && (NULL != valid_data.filename_kspace)
@@ -333,7 +333,7 @@ int main_reconet(int argc, char* argv[argc])
 		auto train_data_list = network_data_get_named_list(&data);
 
 		complex float* mask = NULL;
-		long mask_dims[DIMS];
+		bart_dim_t mask_dims[DIMS];
 
 		if (NULL != filename_mask) {
 
@@ -343,7 +343,7 @@ int main_reconet(int argc, char* argv[argc])
 		}
 
 		complex float* mask_val = NULL;
-		long mask_dims_val[DIMS];
+		bart_dim_t mask_dims_val[DIMS];
 
 		struct named_data_list_s* valid_data_list = NULL;
 

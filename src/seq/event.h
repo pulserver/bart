@@ -8,6 +8,7 @@
 
 // DO NOT CHANGE THIS HEADER !
 
+#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 #include "misc/mri.h"
@@ -52,10 +53,10 @@ struct seq_gradient {
 
 struct seq_adc {
 
-	long dwell_ns;
-	long columns;
-	long pos[DIMS];
-	unsigned long flags;
+	bart_dim_t dwell_ns;
+	bart_dim_t columns;
+	bart_dim_t pos[DIMS];
+	bart_flags_t flags;
 
 	double os;
 
@@ -91,7 +92,7 @@ struct rf_shape {
 	double max; // can be scaled by ev->pulse.fa / fa_prep
 	double integral;
 
-	long samples;	// shape defined in rad / s
+	bart_dim_t samples;	// shape defined in rad / s
 #ifdef __cplusplus
 	float  shape[SEQ_MAX_RF_SAMPLES][2];
 #else

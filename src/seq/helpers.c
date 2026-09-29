@@ -69,15 +69,15 @@ void seq_minimum_te(const struct seq_config* seq, double* min_te, double* fill_t
 
 
 
-static long kernels_per_measurement(const long loop_dims[DIMS])
+static bart_dim_t kernels_per_measurement(const bart_dim_t loop_dims[DIMS])
 {
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	md_select_dims(DIMS, (PHS1_FLAG|TIME2_FLAG|AVG_FLAG|SLICE_FLAG|PHS2_FLAG|CSHIFT_FLAG), dims, loop_dims);
 
 	return md_calc_size(DIMS, dims);
 }
 
-long seq_relevant_readouts_meas_time(const struct seq_config* seq)
+bart_dim_t seq_relevant_readouts_meas_time(const struct seq_config* seq)
 {
 	return kernels_per_measurement(seq->loop_dims) / seq->loop_dims[PHS1_DIM];
 }
@@ -99,7 +99,7 @@ double seq_total_measure_time(const struct seq_config* seq)
 }
 
 
-void seq_ui_interface_custom_params(int reverse, struct seq_config* seq, int nl, long params_long[__VLA(nl)], int nd, double params_double[__VLA(nd)])
+void seq_ui_interface_custom_params(int reverse, struct seq_config* seq, int nl, bart_dim_t params_long[__VLA(nl)], int nd, double params_double[__VLA(nd)])
 {
 	switch (seq->seq_type) {
 
@@ -255,14 +255,14 @@ void seq_ui_interface_standard_conf(int reverse, struct seq_config* conf, struct
 }
 
 
-static void seq_init_loop_dims(const int D, long dims[D])
+static void seq_init_loop_dims(const int D, bart_dim_t dims[D])
 {
 	for (int i = 0; i < D; i++)
 		dims[i] = 1;
 }
 
 
-void seq_ui_interface_loop_dims(int reverse, struct seq_config* seq, const int D, long dims[__VLA(D)])
+void seq_ui_interface_loop_dims(int reverse, struct seq_config* seq, const int D, bart_dim_t dims[__VLA(D)])
 {
 	if (2 == reverse) {
 
@@ -325,7 +325,7 @@ struct seq_interface_conf seq_get_interface_conf(struct seq_config* conf)
 
 void seq_set_fov_pos(int N, int M, const float* shifts, struct seq_config* seq)
 {
-	long total_slices = get_slices(seq);
+	bart_dim_t total_slices = get_slices(seq);
 	assert(total_slices <= N);
 
 	seq->geom.sms_distance = 0;
@@ -388,7 +388,7 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 			seq->geom.baseres, seq->geom.mb_factor, seq->geom.sms_distance);
 	
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
-			"\nPE_Mode/Turns-GA/aligned flags/order\t%d (\"%s\")/%d/%ld/%d\nis3D/slab-os\t\t\t\t%d/%.2f",
+			"\nPE_Mode/Turns-GA/aligned flags/order\t%d (\"%s\")/%d/%" PRIu64 "/%d\nis3D/slab-os\t\t\t\t%d/%.2f",
 			seq->enc.pe_mode, get_pemode_str(seq->enc.pe_mode), seq->enc.tiny, seq->enc.aligned_flags, seq->enc.order,
 			seq->enc.is3D, seq->geom.slab_os);
 
@@ -397,7 +397,7 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 			seq->magn.mag_prep, seq->magn.ti, seq->magn.inv_delay_time);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
-			"\ninit delay/prep scans\t\t\t%.2f/%ld",
+			"\ninit delay/prep scans\t\t\t%.2f/%" PRId64,
 			seq->magn.init_delay, seq->magn.prep_scans);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
@@ -406,7 +406,7 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
-			"\nloop_dims\t %ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t%ld|%ld|%ld|%ld\t\t\n",
+			"\nloop_dims\t %" PRId64 "|%" PRId64 "|%" PRId64 "|%" PRId64 "\t\t%" PRId64 "|%" PRId64 "|%" PRId64 "|%" PRId64 "\t\t%" PRId64 "|%" PRId64 "|%" PRId64 "|%" PRId64 "\t\t%" PRId64 "|%" PRId64 "|%" PRId64 "|%" PRId64 "\t\t\n",
 			seq->loop_dims[READ_DIM], seq->loop_dims[PHS1_DIM], seq->loop_dims[PHS2_DIM], seq->loop_dims[COIL_DIM],
 			seq->loop_dims[MAPS_DIM], seq->loop_dims[TE_DIM], seq->loop_dims[COEFF_DIM], seq->loop_dims[COEFF2_DIM],
 			seq->loop_dims[ITER_DIM], seq->loop_dims[CSHIFT_DIM], seq->loop_dims[TIME_DIM], seq->loop_dims[TIME2_DIM],
@@ -415,7 +415,7 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 	if (SEQ_TYPE_FLASH == seq->seq_type) {
 
 		ctr += snprintf(info + ctr, (size_t)(N - ctr),
-			"\nCEST sat\t\ttype=%d \t n=%ld \t\t\t (pause: %.4f)",
+			"\nCEST sat\t\ttype=%d \t n=%" PRId64 " \t\t\t (pause: %.4f)",
 			seq->cest.sat_type, seq->cest.sat_pulses, seq->cest.sat_pulse_pause);
 		ctr += snprintf(info + ctr, (size_t)(N - ctr),
 			"\nCEST gauss\t\tdur %f\t fa %.2f \t (OC_B1: %.2f)",

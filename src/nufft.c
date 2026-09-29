@@ -64,7 +64,7 @@ int main_nufft(int argc, char* argv[argc])
 
 	struct iter_conjgrad_conf cgconf = iter_conjgrad_defaults;
 
-	long coilim_vec[3] = { };
+	bart_dim_t coilim_vec[3] = { };
 
 	float lambda = 0.;
 	bool precomp = true;
@@ -118,32 +118,32 @@ int main_nufft(int argc, char* argv[argc])
 	if (!inverse)
 		conf.toeplitz = false;
 
-	long coilim_dims[DIMS] = { };
+	bart_dim_t coilim_dims[DIMS] = { };
 	md_copy_dims(3, coilim_dims, coilim_vec);
 
 	// Read trajectory
-	long traj_dims[DIMS];
+	bart_dim_t traj_dims[DIMS];
 	complex float* traj = load_cfl(traj_file, DIMS, traj_dims);
 
 	assert(3 == traj_dims[0]);
 
-	long coilest_dims[DIMS];
+	bart_dim_t coilest_dims[DIMS];
 
 	estimate_im_dims(DIMS, FFT_FLAGS, coilest_dims, traj_dims, traj);
 
 	if (8 >= md_calc_size(3, coilest_dims)) {
 
-		debug_printf(DP_WARN,	"\tThe estimated image size %ldx%ldx%ld is very small.\n"
+		debug_printf(DP_WARN,	"\tThe estimated image size %" PRId64 "x%" PRId64 "x%" PRId64 " is very small.\n"
 					"\tDid you scale your trajectory correctly?\n"
 					"\tThe unit of measurement is pixel_size / FOV.\n",
 					coilest_dims[0], coilest_dims[1], coilest_dims[2]);
 	}
 
 	// Read fieldmap and timemap for B0 Inhomogeneity correction
-	long fieldmap_dims[DIMS];
+	bart_dim_t fieldmap_dims[DIMS];
 	complex float* fieldmap = NULL;
 
-	long timemap_dims[DIMS];
+	bart_dim_t timemap_dims[DIMS];
 	complex float* timemap = NULL;
 
 	if (NULL != fieldmap_file) {
@@ -163,7 +163,7 @@ int main_nufft(int argc, char* argv[argc])
 		}
 	}
 
-	long basis_dims[DIMS];
+	bart_dim_t basis_dims[DIMS];
 	complex float* basis = NULL;
 
 	if (NULL != basis_file) {
@@ -173,7 +173,7 @@ int main_nufft(int argc, char* argv[argc])
 		assert(!md_check_dimensions(DIMS, basis_dims, COEFF_FLAG | TE_FLAG));
 	}
 
-	long pattern_dims[DIMS];
+	bart_dim_t pattern_dims[DIMS];
 	complex float* pattern = NULL;
 
 	if (NULL != pattern_file)
@@ -182,7 +182,7 @@ int main_nufft(int argc, char* argv[argc])
 
 	if (inverse || adjoint) {
 
-		long ksp_dims[DIMS];
+		bart_dim_t ksp_dims[DIMS];
 		const complex float* ksp = load_cfl(in_file, DIMS, ksp_dims);
 
 		assert(1 == ksp_dims[0]);
@@ -191,7 +191,7 @@ int main_nufft(int argc, char* argv[argc])
 		if (0 == md_calc_size(3, coilim_dims)) {
 
 			md_copy_dims(DIMS, coilim_dims, coilest_dims);
-			debug_printf(DP_INFO, "Est. image size: %ldx%ldx%ld\n", coilim_dims[0], coilim_dims[1], coilim_dims[2]);
+			debug_printf(DP_INFO, "Est. image size: %" PRId64 "x%" PRId64 "x%" PRId64 "\n", coilim_dims[0], coilim_dims[1], coilim_dims[2]);
 
 			if (!conf.decomp) {
 
@@ -279,7 +279,7 @@ int main_nufft(int argc, char* argv[argc])
 		const complex float* img = load_cfl(in_file, DIMS, coilim_dims);
 
 		// Initialize kspace data
-		long ksp_dims[DIMS];
+		bart_dim_t ksp_dims[DIMS];
 		md_select_dims(DIMS, PHS1_FLAG|PHS2_FLAG, ksp_dims, traj_dims);
 		md_copy_dims(DIMS - 3, ksp_dims + 3, coilim_dims + 3);
 

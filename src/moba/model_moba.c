@@ -49,11 +49,11 @@
 #include "model_moba.h"
 
 
-struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const complex float* TE, const complex float* b1,
-		const complex float* b0, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, float B0, const long psf_dims[DIMS], const complex float* psf, const long coil_dims[DIMS], complex float* coil, const struct noir_model_conf_s* conf, struct moba_conf_s* data,
+struct mobamod moba_create(const bart_dim_t dims[DIMS], const complex float* TI, const complex float* TE, const complex float* b1,
+		const complex float* b0, const float* scale_fB0, enum meco_model meco_model, enum fat_spec fat_spec, float B0, const bart_dim_t psf_dims[DIMS], const complex float* psf, const bart_dim_t coil_dims[DIMS], complex float* coil, const struct noir_model_conf_s* conf, struct moba_conf_s* data,
 		float scaling_M0, const complex float* fixed_maps)
 {
-	long data_dims[DIMS];
+	bart_dim_t data_dims[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, data_dims, dims);
 
 	struct noir_model_conf_s mconf = *conf;
@@ -63,11 +63,11 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 	struct mobamod ret;
 
 	// FIXME: unify them more
-	long out_dims[DIMS];
-	long in_dims[DIMS];
-	long map_dims[DIMS];
-	long TI_dims[DIMS];
-	long TE_dims[DIMS];
+	bart_dim_t out_dims[DIMS];
+	bart_dim_t in_dims[DIMS];
+	bart_dim_t map_dims[DIMS];
+	bart_dim_t TI_dims[DIMS];
+	bart_dim_t TE_dims[DIMS];
 
 	md_select_dims(DIMS, FFT_FLAGS|SLICE_FLAG|TE_FLAG|CSHIFT_FLAG|TIME_FLAG|TIME2_FLAG, out_dims, dims);
 	md_select_dims(DIMS, FFT_FLAGS|SLICE_FLAG|COEFF_FLAG|TIME_FLAG|TIME2_FLAG, in_dims, dims);
@@ -75,9 +75,9 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 	md_select_dims(DIMS, CSHIFT_FLAG|TIME_FLAG|TIME2_FLAG, TE_dims, dims);
 	md_select_dims(DIMS, ~COEFF_FLAG, map_dims, in_dims);
 
-	long out_dims2[DIMS];
-	long in_dims2[DIMS];
-	long map_dims2[DIMS];
+	bart_dim_t out_dims2[DIMS];
+	bart_dim_t in_dims2[DIMS];
+	bart_dim_t map_dims2[DIMS];
 
 	float fov = data->other.fov_reduction_factor;
 
@@ -96,7 +96,7 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 	for (int i = 0; i < (int)ARRAY_SIZE(ret.linop_sobolev); i++)
 		ret.linop_sobolev[i] = NULL;
 
-	unsigned long sobolev_trafo_flags = mconf.sos ? FFT_FLAGS | SLICE_FLAG : FFT_FLAGS;
+	bart_flags_t sobolev_trafo_flags = mconf.sos ? FFT_FLAGS | SLICE_FLAG : FFT_FLAGS;
 
 	switch (data->model) {
 
@@ -181,10 +181,10 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 		break;
 	}
 
-	if (!md_check_equal_dims(DIMS, out_dims, out_dims2, ~0UL))
+	if (!md_check_equal_dims(DIMS, out_dims, out_dims2, ~UINT64_C(0)))
 		model = nlop_chain_FF(model, nlop_from_linop_F(linop_resize_center_create(DIMS, out_dims, out_dims2)));
 
-	if (!md_check_equal_dims(DIMS, in_dims, in_dims2, ~0UL))
+	if (!md_check_equal_dims(DIMS, in_dims, in_dims2, ~UINT64_C(0)))
 		model = nlop_chain_FF(nlop_from_linop_F(linop_resize_center_create(DIMS, in_dims2, in_dims)), model);
 
 	for (int i = 0; i < NC; i++)
@@ -211,14 +211,14 @@ struct mobamod moba_create(const long dims[DIMS], const complex float* TI, const
 	return ret;
 }
 
-const struct nlop_s* moba_get_nlop(struct mobafit_model_config* config, const long out_dims[DIMS], const long param_dims[DIMS], const long enc_dims[DIMS], complex float* enc)
+const struct nlop_s* moba_get_nlop(struct mobafit_model_config* config, const bart_dim_t out_dims[DIMS], const bart_dim_t param_dims[DIMS], const bart_dim_t enc_dims[DIMS], complex float* enc)
 {
 	const struct nlop_s* nlop = NULL;
 	int n_params = param_dims[COEFF_DIM];
 
-	assert(md_check_compat(DIMS, ~0UL, param_dims, out_dims));
+	assert(md_check_compat(DIMS, ~UINT64_C(0), param_dims, out_dims));
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	md_copy_dims(DIMS, dims, out_dims);
 	dims[COEFF_DIM] = enc_dims[COEFF_DIM];
 
@@ -282,9 +282,9 @@ const struct nlop_s* moba_get_nlop(struct mobafit_model_config* config, const lo
 
 
 // Simple phase evolution. Not integrated moba_get_nlop becaus it requires the signal itself.
-const struct nlop_s* mobafit_phase_nlop(const long out_dims[DIMS], const complex float* sig, const long enc_dims[DIMS], complex float* enc)
+const struct nlop_s* mobafit_phase_nlop(const bart_dim_t out_dims[DIMS], const complex float* sig, const bart_dim_t enc_dims[DIMS], complex float* enc)
 {
-	long map_dims[DIMS];
+	bart_dim_t map_dims[DIMS];
 	md_select_dims(DIMS, ~TE_FLAG, map_dims, out_dims);
 
 	arg_t args[2] = { snlop_input(DIMS, map_dims, "Phi0"), snlop_input(DIMS, map_dims, "fB0") };
@@ -310,11 +310,11 @@ const struct nlop_s* mobafit_phase_nlop(const long out_dims[DIMS], const complex
 	return nlop_stack_inputs_F(ret, 0, 1, COEFF_DIM);
 }
 
-static void mobafit_phase_average(int N, const long dims[N], complex float* fB0, const complex float* sig, const long TE_dims[N], complex float* TE)
+static void mobafit_phase_average(int N, const bart_dim_t dims[N], complex float* fB0, const complex float* sig, const bart_dim_t TE_dims[N], complex float* TE)
 {
 	assert(TE_DIM < N);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 	pos[TE_DIM] = -1;
 
@@ -326,13 +326,13 @@ static void mobafit_phase_average(int N, const long dims[N], complex float* fB0,
 	md_circ_shift(N, dims, pos, dsig, sig, CFL_SIZE);
 	md_zmulc(N, dims, dsig, dsig, sig);
 
-	long TE_strs[N];
-	long sig_strs[N];
+	bart_stride_t TE_strs[N];
+	bart_stride_t sig_strs[N];
 
 	md_calc_strides(N, TE_strs, TE_dims, CFL_SIZE);
 	md_calc_strides(N, sig_strs, dims, CFL_SIZE);
 
-	long sTE_dims[N];
+	bart_dim_t sTE_dims[N];
 	md_select_dims(N, ~TE_FLAG, sTE_dims, TE_dims);
 	pos[TE_DIM] = 0;
 
@@ -351,14 +351,14 @@ static void mobafit_phase_average(int N, const long dims[N], complex float* fB0,
 
 	md_free(dTE_tmp);
 
-	long avg_dims[N];
+	bart_dim_t avg_dims[N];
 	md_copy_dims(N, avg_dims, dims);
 	avg_dims[TE_DIM] = pos[TE_DIM];
 
-	debug_printf(DP_INFO, "Use first %ld echos to initialize fB0.\n", pos[TE_DIM] + 1);
+	debug_printf(DP_INFO, "Use first %" PRId64 " echos to initialize fB0.\n", pos[TE_DIM] + 1);
 
-	long fB0_dims[N];
-	long fB0_strs[N];
+	bart_dim_t fB0_dims[N];
+	bart_stride_t fB0_strs[N];
 	md_select_dims(N, ~TE_FLAG, fB0_dims, dims);
 	md_calc_strides(N, fB0_strs, fB0_dims, CFL_SIZE);
 
@@ -377,27 +377,27 @@ static void mobafit_phase_average(int N, const long dims[N], complex float* fB0,
 }
 
 
-void mobafit_phase_init(enum seq_type seq, const long coeff_dims[DIMS], complex float* init, const long sig_dims[DIMS], const complex float* sig, const long enc_dims[DIMS], complex float* enc)
+void mobafit_phase_init(enum seq_type seq, const bart_dim_t coeff_dims[DIMS], complex float* init, const bart_dim_t sig_dims[DIMS], const complex float* sig, const bart_dim_t enc_dims[DIMS], complex float* enc)
 {
 	if (PHASE != seq && MGRE != seq)
 		error("Phase initialization only available for phase contrast and MGRE models");
 
-	long map_dims[DIMS];
+	bart_dim_t map_dims[DIMS];
 	md_select_dims(DIMS, ~TE_FLAG, map_dims, sig_dims);
 
 	complex float* fB0 = md_alloc_sameplace(DIMS, map_dims, CFL_SIZE, sig);
 	mobafit_phase_average(DIMS, sig_dims, fB0, sig, enc_dims, enc);
 
-	long pos[DIMS] = { 0 };
+	bart_dim_t pos[DIMS] = { 0 };
 	pos[COEFF_DIM] = coeff_dims[COEFF_DIM] - 1; // fB0 is always the last coefficient
 	md_copy_block(DIMS, pos,coeff_dims, init, map_dims, fB0, CFL_SIZE);
 
 	// also init phase at TE=0
 	if (PHASE == seq) {
 
-		long sig_strs[DIMS];
-		long coeff_strs[DIMS];
-		long map_strs[DIMS];
+		bart_stride_t sig_strs[DIMS];
+		bart_stride_t coeff_strs[DIMS];
+		bart_stride_t map_strs[DIMS];
 
 		md_calc_strides(DIMS, sig_strs, sig_dims, CFL_SIZE);
 		md_calc_strides(DIMS, coeff_strs, coeff_dims, CFL_SIZE);
@@ -406,7 +406,7 @@ void mobafit_phase_init(enum seq_type seq, const long coeff_dims[DIMS], complex 
 		md_zarg2(DIMS, map_dims, coeff_strs, init, sig_strs, sig);
 		md_zsmul2(DIMS, map_dims, coeff_strs, init, coeff_strs, init, 1. / (2. * M_PI));
 
-		long enc_strs[DIMS];
+		bart_stride_t enc_strs[DIMS];
 		md_calc_strides(DIMS, enc_strs, enc_dims, CFL_SIZE);
 
 		md_zsmul(DIMS, map_dims, fB0, fB0, -1.);

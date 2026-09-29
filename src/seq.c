@@ -33,9 +33,9 @@
 #endif
 
 
-static long count_blocks(int* max_E, struct bart_seq* seq) 
+static bart_dim_t count_blocks(int* max_E, struct bart_seq* seq) 
 {
-	long blocks = 0;
+	bart_dim_t blocks = 0;
 
 	seq->state->mode = SEQ_BLOCK_UNDEFINED;
 	for (int i = 0; i < DIMS; i++)
@@ -58,8 +58,8 @@ static long count_blocks(int* max_E, struct bart_seq* seq)
 }
 
 
-static void position_to_save(int D, long pos_save[D], bool chrono, int E, const struct seq_event ev[E],
-				const long pos[D], const struct seq_config* conf)
+static void position_to_save(int D, bart_dim_t pos_save[D], bool chrono, int E, const struct seq_event ev[E],
+				const bart_dim_t pos[D], const struct seq_config* conf)
 {
 	if (chrono) {
 
@@ -111,7 +111,7 @@ int main_seq(int argc, char* argv[argc])
 	struct bart_seq* seq = bart_seq_alloc("");
 	bart_seq_defaults(seq);
 
-	long stat_counter[5] = { }; // all, all_empty, max_empty, temp, events_file_pos
+	bart_dim_t stat_counter[5] = { }; // all, all_empty, max_empty, temp, events_file_pos
 
 	struct seq_opts seq_opts = seq_opts_defaults;
 
@@ -119,16 +119,16 @@ int main_seq(int argc, char* argv[argc])
 		seq->conf, &seq_opts, 0, NULL);
 
 
-	debug_printf(DP_INFO, "loops: %ld \t dims: ", md_calc_size(DIMS, seq->conf->loop_dims));
+	debug_printf(DP_INFO, "loops: %" PRId64 " \t dims: ", md_calc_size(DIMS, seq->conf->loop_dims));
 	debug_print_dims(DP_INFO, DIMS, seq->conf->loop_dims);
 
-	long kernel_dims[DIMS];
+	bart_dim_t kernel_dims[DIMS];
 	md_select_dims(DIMS, ~(COEFF_FLAG | COEFF2_FLAG | ITER_FLAG), kernel_dims, seq->conf->loop_dims);
 
-	debug_printf(DP_INFO, "kernels: %ld \t dims: ", md_calc_size(DIMS, kernel_dims));
+	debug_printf(DP_INFO, "kernels: %" PRId64 " \t dims: ", md_calc_size(DIMS, kernel_dims));
 	debug_print_dims(DP_INFO, DIMS, kernel_dims);
 
-	long mdims[DIMS];
+	bart_dim_t mdims[DIMS];
 	md_select_dims(DIMS, ~TE_FLAG, mdims, kernel_dims);
 
 	int E = 0;
@@ -160,35 +160,35 @@ int main_seq(int argc, char* argv[argc])
 	double g2[seq_opts.samples][mdims[READ_DIM]];
 	float m0[seq_opts.samples][3];
 
-	long mstrs[DIMS];
+	bart_stride_t mstrs[DIMS];
 	md_calc_strides(DIMS, mstrs, mdims, CFL_SIZE);
 
-	long adims[DIMS];
+	bart_dim_t adims[DIMS];
 	md_copy_dims(DIMS, adims, kernel_dims);
 
 	adims[PHS2_DIM] *= adims[PHS1_DIM]; // consistency with traj tool
-	adims[PHS1_DIM] = lround(seq->conf->geom.baseres * seq->conf->phys.os * (0.5 + seq->conf->phys.asym_echo));
+	adims[PHS1_DIM] = llround(seq->conf->geom.baseres * seq->conf->phys.os * (0.5 + seq->conf->phys.asym_echo));
 	adims[READ_DIM] = 5;
 
-	long shape_dims[DIMS]; // after bart_seq_prepare
+	bart_dim_t shape_dims[DIMS]; // after bart_seq_prepare
 	md_singleton_dims(DIMS, shape_dims);
 
-	long event_dims[DIMS]; // after bart_seq_prepare
+	bart_dim_t event_dims[DIMS]; // after bart_seq_prepare
 	md_singleton_dims(DIMS, event_dims);
 
-	long adc_dims[DIMS];
+	bart_dim_t adc_dims[DIMS];
 	md_select_dims(DIMS, (READ_FLAG | PHS1_FLAG | TE_FLAG), adc_dims, adims);
 
-	long adc_strs[DIMS];
+	bart_stride_t adc_strs[DIMS];
 	md_calc_strides(DIMS, adc_strs, adc_dims, CFL_SIZE);
 
-	long astrs[DIMS];
+	bart_stride_t astrs[DIMS];
 	md_calc_strides(DIMS, astrs, adims, CFL_SIZE);
 
-	long ind_dims[DIMS];
+	bart_dim_t ind_dims[DIMS];
 	md_select_dims(DIMS, ~(READ_FLAG | PHS1_FLAG), ind_dims, adims);
 
-	long ind_strs[DIMS];
+	bart_stride_t ind_strs[DIMS];
 	md_calc_strides(DIMS, ind_strs, ind_dims, CFL_SIZE);
 
 	complex float* out_grad = NULL;
@@ -255,7 +255,7 @@ int main_seq(int argc, char* argv[argc])
 
 	debug_printf(DP_INFO, "Nr. of RF shapes: %d\n", prepped_rfs);
 
-	long pulse_calls[prepped_rfs];
+	bart_dim_t pulse_calls[prepped_rfs];
 
 	for (int i = 0; i < prepped_rfs; i++) {
 
@@ -275,7 +275,7 @@ int main_seq(int argc, char* argv[argc])
 
 	if (NULL != seq_opts.shapes_file) {
 
-		long max_len = 0;
+		bart_dim_t max_len = 0;
 
 		for (int i = 0; i < prepped_rfs; i++)
 			max_len = MAX(max_len, seq->rf_shape[i].samples);
@@ -291,7 +291,7 @@ int main_seq(int argc, char* argv[argc])
 	if (NULL != seq_opts.events_file) {
 
 		int max_ev = 0;
-		long blocks = count_blocks(&max_ev, seq);
+		bart_dim_t blocks = count_blocks(&max_ev, seq);
 
 		event_dims[READ_DIM] = 26; // start/mid/end, type, event-specific (DIMS + 6 for adc)
 		event_dims[PHS1_DIM] = max_ev;
@@ -348,7 +348,7 @@ int main_seq(int argc, char* argv[argc])
 
 		if (NULL != out_raga) {
 
-			long pos_save[DIMS] = { };
+			bart_dim_t pos_save[DIMS] = { };
 
 			do {
 				position_to_save(DIMS, pos_save, true, E, seq->event, seq->state->pos, seq->conf);
@@ -363,7 +363,7 @@ int main_seq(int argc, char* argv[argc])
 		}
 
 		
-		long pos_save_grad[DIMS] = { };
+		bart_dim_t pos_save_grad[DIMS] = { };
 		if (SEQ_BLOCK_KERNEL_IMAGE == seq->state->mode)
 			position_to_save(DIMS, pos_save_grad, seq_opts.chrono, E, seq->event, seq->state->pos, seq->conf);
 
@@ -385,7 +385,7 @@ int main_seq(int argc, char* argv[argc])
 			float m0_adc[adc_dims[PHS1_DIM]][3];
 
 			do {
-				long pos_save[DIMS] = { };
+				bart_dim_t pos_save[DIMS] = { };
 				pos_save[TE_DIM] = seq->state->pos[TE_DIM];
 				position_to_save(DIMS, pos_save, seq_opts.chrono, E, seq->event, seq->state->pos, seq->conf);
 
@@ -475,16 +475,16 @@ debug_print_events:
 	for (int i = 0; i < prepped_rfs; i++) {
 
 		if (pulse_calls[i] != seq->rf_shape[i].sar_calls)
-			debug_printf(DP_WARN, "Calculation of pulse calls invalid! pulse_id: %d, calls: %ld (expected: %.0f)\n",
+			debug_printf(DP_WARN, "Calculation of pulse calls invalid! pulse_id: %d, calls: %" PRId64 " (expected: %.0f)\n",
 				i, pulse_calls[i], seq->rf_shape[i].sar_calls);
 
 		if (seq_opts.stats)
-			debug_printf(DP_INFO, "Pulse statistics: pulse_id: %d, calls: %ld\n",
+			debug_printf(DP_INFO, "Pulse statistics: pulse_id: %d, calls: %" PRId64 "\n",
 				i, pulse_calls[i]);
 	}
 
 	if (seq_opts.stats)
-		debug_printf(DP_INFO, "Block statistics: all: %ld \t empty: %ld (%.1f%%) \t max empty: %ld\n",
+		debug_printf(DP_INFO, "Block statistics: all: %" PRId64 " \t empty: %" PRId64 " (%.1f%%) \t max empty: %" PRId64 "\n",
 				stat_counter[0], stat_counter[1], 100. * stat_counter[1] / stat_counter[0], stat_counter[2]);
 
 	unmap_cfl(DIMS, mdims, out_grad);

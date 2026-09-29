@@ -48,7 +48,7 @@
 
 // for Windows DLLs
 #ifndef MAP_NORESERVE
-#define MAP_NORESERVE 0UL
+#define MAP_NORESERVE 0
 #endif
 
 // for BSD compatibility
@@ -136,23 +136,23 @@ static void io_error(const char* fmt, ...)
 
 bool mpi_shared_files = false;
 
-unsigned long cfl_loop_rand_flags = ~0ul;
+bart_flags_t cfl_loop_rand_flags = ~UINT64_C(0);
 bool strided_cfl_loop = false;
 
 struct cfl_loop_desc_s {
 
 	int D;
 	int omp_threads;
-	unsigned long flags;
-	long loop_dims[DIMS];
-	long offs_dims[DIMS];
+	bart_flags_t flags;
+	bart_dim_t loop_dims[DIMS];
+	bart_stride_t offs_dims[DIMS];
 };
 
 static struct cfl_loop_desc_s cfl_loop_desc = {
 
 	.D = DIMS,
 	.omp_threads = 1,
-	.flags = 0UL,
+	.flags = 0,
 	.loop_dims =  { [0 ... DIMS - 1] = 1 },
 	.offs_dims =  { [0 ... DIMS - 1] = 0 },
 };
@@ -160,7 +160,7 @@ static struct cfl_loop_desc_s cfl_loop_desc = {
 #define MAX_WORKER 128
 #define THREAD_BATCH_LVL 1
 
-static long cfl_loop_index[MAX_WORKER] = { [ 0 ... MAX_WORKER - 1 ] = 0 };
+static bart_dim_t cfl_loop_index[MAX_WORKER] = { [ 0 ... MAX_WORKER - 1 ] = 0 };
 static list_t unmap_addrs = NULL;
 
 
@@ -234,7 +234,7 @@ int cfl_loop_num_workers(void)
 
 
 
-void cfl_loop_init_desc(int D, const long loop_dims[__VLA(D)], long start_dims[__VLA(D)], unsigned long flags, int omp_threads, int index)
+void cfl_loop_init_desc(int D, const bart_dim_t loop_dims[__VLA(D)], bart_dim_t start_dims[__VLA(D)], bart_flags_t flags, int omp_threads, int index)
 {
 	if (MAX_WORKER < omp_threads)
 		error("Maximum supported number of OMP workers exceeded!\n");
@@ -256,13 +256,13 @@ void cfl_loop_init_desc(int D, const long loop_dims[__VLA(D)], long start_dims[_
 }
 
 
-long cfl_loop_desc_total(void)
+bart_dim_t cfl_loop_desc_total(void)
 {
 	return md_calc_size(cfl_loop_desc.D, cfl_loop_desc.loop_dims);
 }
 
 
-void cfl_loop_set_index(long index)
+void cfl_loop_set_index(bart_dim_t index)
 {
 	if (!cfl_loop_desc_active())
 		return;
@@ -272,11 +272,11 @@ void cfl_loop_set_index(long index)
 	cfl_loop_index[worker_id] = index;
 }
 
-long cfl_loop_get_index()
+bart_dim_t cfl_loop_get_index()
 {
 	int worker_id = cfl_loop_worker_id();
 
-	debug_printf(DP_DEBUG2, "loop index: %ld\n", cfl_loop_index[worker_id]);
+	debug_printf(DP_DEBUG2, "loop index: %" PRId64 "\n", cfl_loop_index[worker_id]);
 
 	return cfl_loop_index[worker_id];
 }
@@ -292,7 +292,7 @@ void cfl_loop_desc_set_inactive(void)
 	cfl_loop_desc.flags = 0;
 }
 
-unsigned long cfl_loop_get_flags(void)
+bart_flags_t cfl_loop_get_flags(void)
 {
 	return cfl_loop_desc.flags;
 }
@@ -302,13 +302,13 @@ int cfl_loop_get_rank(void)
 	return cfl_loop_desc.D;
 }
 
-void cfl_loop_get_dims(int D, long dims[D])
+void cfl_loop_get_dims(int D, bart_dim_t dims[D])
 {
 	assert(cfl_loop_desc.D == D);
 	md_copy_dims(D, dims, cfl_loop_desc.loop_dims);
 }
 
-void cfl_loop_get_pos(int D, long pos[D])
+void cfl_loop_get_pos(int D, bart_dim_t pos[D])
 {
 	assert(cfl_loop_desc.D == D);
 	md_set_dims(cfl_loop_desc.D , pos, 0);
@@ -325,9 +325,9 @@ struct cfl_file_desc_s {
 	void* data_addr;
 
 	int D;
-	long* file_dims;
-	long* data_dims;
-	long* pos;
+	bart_dim_t* file_dims;
+	bart_dim_t* data_dims;
+	bart_dim_t* pos;
 
 	bool writeback;
 };
@@ -340,7 +340,7 @@ static bool cmp_addr(const void* _item, const void* _ref)
 	return (item->data_addr == ref);
 }
 
-static void work_buffer_get_pos(int D, const long dims[D], long pos[D], bool output, long index)
+static void work_buffer_get_pos(int D, const bart_dim_t dims[D], bart_dim_t pos[D], bool output, bart_dim_t index)
 {
 	md_set_dims(D, pos, 0);
 	md_unravel_index(MIN(D, cfl_loop_desc.D), pos, cfl_loop_desc.flags, cfl_loop_desc.loop_dims, index);
@@ -365,7 +365,7 @@ static void work_buffer_get_pos(int D, const long dims[D], long pos[D], bool out
  * Creates working buffer containing slices of the original file
  * dims contain file_dims on entry and slice dims on return
 **/
-static void* create_worker_buffer(int D, long dims[D], void* addr, bool output)
+static void* create_worker_buffer(int D, bart_dim_t dims[D], void* addr, bool output)
 {
 	if (!cfl_loop_desc_active())
 		return addr;
@@ -373,16 +373,16 @@ static void* create_worker_buffer(int D, long dims[D], void* addr, bool output)
 	if (output)
 		assert(md_check_equal_dims(MIN(D, DIMS), dims, cfl_loop_desc.loop_dims, cfl_loop_desc.flags));
 
-	long slc_dims[D];
+	bart_dim_t slc_dims[D];
 	md_select_dims(D, ~cfl_loop_desc.flags, slc_dims, dims);
 
-	long slc_strs[D];
-	long tot_strs[D];
+	bart_stride_t slc_strs[D];
+	bart_stride_t tot_strs[D];
 
 	md_calc_strides(D, tot_strs, dims, sizeof(complex float));
 	md_calc_strides(D, slc_strs, slc_dims, sizeof(complex float));
 
-	long pos[D];
+	bart_dim_t pos[D];
 	work_buffer_get_pos(D, dims, pos, output, cfl_loop_index[cfl_loop_worker_id()]);
 
 	void* buf = NULL;
@@ -410,7 +410,7 @@ static void* create_worker_buffer(int D, long dims[D], void* addr, bool output)
 
 			if (mpi_is_main_proc()) {
 
-				long tpos[D];
+				bart_dim_t tpos[D];
 				work_buffer_get_pos(D, dims, tpos, output, cfl_loop_index[cfl_loop_worker_id()] + i);
 
 				src = addr + md_calc_offset(D, tot_strs, tpos);
@@ -423,9 +423,9 @@ static void* create_worker_buffer(int D, long dims[D], void* addr, bool output)
 	PTR_ALLOC(struct cfl_file_desc_s, desc);
 
 	desc->D = D;
-	desc->file_dims = ARR_CLONE(long[D], dims);
-	desc->data_dims = ARR_CLONE(long[D], slc_dims);
-	desc->pos = ARR_CLONE(long[D], pos);
+	desc->file_dims = ARR_CLONE(bart_dim_t[D], dims);
+	desc->data_dims = ARR_CLONE(bart_dim_t[D], slc_dims);
+	desc->pos = ARR_CLONE(bart_dim_t[D], pos);
 
 	desc->file_addr = addr;
 	desc->data_addr = buf;
@@ -445,7 +445,7 @@ static void* create_worker_buffer(int D, long dims[D], void* addr, bool output)
  * Check if addr contains a working buffer and return underlying pointer to file
  * dims contain slice dims on entry and file dims on return
 **/
-static const void* free_worker_buffer(int D, long dims[D], const void* addr)
+static const void* free_worker_buffer(int D, bart_dim_t dims[D], const void* addr)
 {
 	struct cfl_file_desc_s* desc = NULL;
 
@@ -468,16 +468,16 @@ static const void* free_worker_buffer(int D, long dims[D], const void* addr)
 
 				complex float* dst = NULL;
 
-				long file_strs[D];
+				bart_stride_t file_strs[D];
 				md_calc_strides(D, file_strs, desc->file_dims, sizeof(complex float));
 
-				long data_strs[D];
+				bart_stride_t data_strs[D];
 				md_calc_strides(D, data_strs, desc->data_dims, sizeof(complex float));
 
 
 				if (mpi_is_main_proc()) {
 
-					long tpos[D];
+					bart_dim_t tpos[D];
 					work_buffer_get_pos(D, dims, tpos, true, cfl_loop_index[cfl_loop_worker_id()] + i);
 
 					dst = desc->file_addr + md_calc_offset(D, file_strs, tpos);
@@ -507,12 +507,12 @@ static const void* free_worker_buffer(int D, long dims[D], const void* addr)
 }
 
 
-static complex float* load_zra_internal(int fd, const char* name, int D, long dims[D])
+static complex float* load_zra_internal(int fd, const char* name, int D, bart_dim_t dims[D])
 {
 	if (-1 == read_ra(fd, D, dims))
 		error("Loading ra file %s\n", name);
 
-	long T;
+	bart_dim_t T;
 	if (-1 == (T = io_calc_size(D, dims, sizeof(complex float))))
 		error("Loading ra file %s\n", name);
 
@@ -547,7 +547,7 @@ static complex float* load_zra_internal(int fd, const char* name, int D, long di
 }
 
 
-complex float* load_zra(const char* name, int D, long dims[D])
+complex float* load_zra(const char* name, int D, bart_dim_t dims[D])
 {
 	int fd;
 	if (-1 == (fd = open(name, O_RDONLY)))
@@ -556,7 +556,7 @@ complex float* load_zra(const char* name, int D, long dims[D])
 	return load_zra_internal(fd, name, D, dims);
 }
 
-complex float* load_zshm(const char* name, int D, long dims[D])
+complex float* load_zshm(const char* name, int D, bart_dim_t dims[D])
 {
 	if ('/' != name[0])
 		error("shm file name does not start with a slash.\n");
@@ -574,8 +574,8 @@ static void* create_data(int ofd, size_t header_size, size_t size)
 	if (-1 == ftruncate(ofd, (off_t)(size + header_size)))
 		return NULL;
 
-	size_t skip = header_size & ~4095UL;
-	size_t off = header_size & 4095UL;
+	size_t skip = header_size & ~UINT64_C(4095);
+	size_t off = header_size & 4095;
 	void* addr;
 
 	if (MAP_FAILED == (addr = mmap(NULL, size + off, PROT_READ|PROT_WRITE, MAP_SHARED, ofd, (off_t)skip)))
@@ -585,12 +585,12 @@ static void* create_data(int ofd, size_t header_size, size_t size)
 }
 
 
-static complex float* create_zra_internal(int ofd, const char* name, int D, const long dims[D])
+static complex float* create_zra_internal(int ofd, const char* name, int D, const bart_dim_t dims[D])
 {
 	if (-1 == write_ra(ofd, D, dims))
 		error("Creating ra file %s\n", name);
 
-	long T;
+	bart_dim_t T;
 	if (-1 == (T = io_calc_size(D, dims, sizeof(complex float))))
 		error("Creating ra file %s\n", name);
 
@@ -615,7 +615,7 @@ static complex float* create_zra_internal(int ofd, const char* name, int D, cons
 }
 
 
-complex float* create_zra(const char* name, int D, const long dims[D])
+complex float* create_zra(const char* name, int D, const bart_dim_t dims[D])
 {
 	int ofd;
 	if (-1 == (ofd = open(name, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)))
@@ -625,7 +625,7 @@ complex float* create_zra(const char* name, int D, const long dims[D])
 }
 
 
-complex float* create_zshm(const char* name, int D, const long dims[D])
+complex float* create_zshm(const char* name, int D, const bart_dim_t dims[D])
 {
 	if ('/' != name[0])
 		error("shm file name does not start with a slash.\n");
@@ -638,7 +638,7 @@ complex float* create_zshm(const char* name, int D, const long dims[D])
 }
 
 
-float* create_coo(const char* name, int D, const long dims[D])
+float* create_coo(const char* name, int D, const bart_dim_t dims[D])
 {
 	int fd;
 
@@ -648,7 +648,7 @@ float* create_coo(const char* name, int D, const long dims[D])
 	if (-1 == write_coo(fd, D, dims))
 		error("Creating coo file %s\n", name);
 
-	long T;
+	bart_dim_t T;
 
 	if (-1 == (T = io_calc_size(D, dims, sizeof(float))))
 		error("Creating coo file %s\n", name);
@@ -669,11 +669,11 @@ float* create_coo(const char* name, int D, const long dims[D])
 }
 
 
-complex float* create_zcoo(const char* name, int D, const long dimensions[D])
+complex float* create_zcoo(const char* name, int D, const bart_dim_t dimensions[D])
 {
-	long dims[D + 1];
+	bart_dim_t dims[D + 1];
 	dims[0] = 2; // complex
-	memcpy(dims + 1, dimensions, sizeof(long[D]));
+	memcpy(dims + 1, dimensions, sizeof(bart_dim_t[D]));
 
 	return (complex float*)create_coo(name, D + 1, dims);
 }
@@ -691,7 +691,7 @@ static complex float* stream_clone_if_exists(const char* name, stream_t* strm, b
 	return stream_get_data(*strm);
 }
 
-static complex float* create_binary_pipe(const char* name, int D, long dimensions[D], unsigned long stream_flags)
+static complex float* create_binary_pipe(const char* name, int D, bart_dim_t dimensions[D], bart_flags_t stream_flags)
 {
 	complex float* ptr;
 	stream_t strm;
@@ -717,9 +717,9 @@ static complex float* create_binary_pipe(const char* name, int D, long dimension
 	return ptr;
 }
 
-static complex float* create_pipe(const char* name, int D, long dimensions[D], unsigned long stream_flags)
+static complex float* create_pipe(const char* name, int D, bart_dim_t dimensions[D], bart_flags_t stream_flags)
 {
-	long T;
+	bart_dim_t T;
 	complex float* ptr;
 	bool call_msync = false;
 
@@ -793,7 +793,7 @@ static complex float* create_pipe(const char* name, int D, long dimensions[D], u
 }
 
 
-static complex float* create_cfl_internal2(const char* name, int D, const long dims[D])
+static complex float* create_cfl_internal2(const char* name, int D, const bart_dim_t dims[D])
 {
 	char name_bdy[1024];
 	if (1024 <= snprintf(name_bdy, 1024, "%s.cfl", name))
@@ -817,7 +817,7 @@ static complex float* create_cfl_internal2(const char* name, int D, const long d
 }
 
 
-static complex float* create_cfl_typed(enum file_types_e type, const char* name, int D, long dims[D], unsigned long stream_flags)
+static complex float* create_cfl_typed(enum file_types_e type, const char* name, int D, bart_dim_t dims[D], bart_flags_t stream_flags)
 {
 	complex float* addr = NULL;
 
@@ -863,9 +863,9 @@ static complex float* create_cfl_typed(enum file_types_e type, const char* name,
 	return addr;
 }
 
-static complex float* create_cfl_internal(const char* name, int D, const long dimensions[D], unsigned long stream_flags)
+static complex float* create_cfl_internal(const char* name, int D, const bart_dim_t dimensions[D], bart_flags_t stream_flags)
 {
-	long dims[D];
+	bart_dim_t dims[D];
 	md_copy_dims(D, dims, dimensions);
 
 	if (cfl_loop_desc_active()) {
@@ -924,13 +924,13 @@ static complex float* create_cfl_internal(const char* name, int D, const long di
 }
 
 
-complex float* create_cfl(const char* name, int D, const long dimensions[D])
+complex float* create_cfl(const char* name, int D, const bart_dim_t dimensions[D])
 {
 	return create_cfl_internal(name, D, dimensions, cfl_loop_desc.flags);
 }
 
 
-complex float* create_cfl_sameplace(const char* name, int D, const long dimensions[D], const void* ref)
+complex float* create_cfl_sameplace(const char* name, int D, const bart_dim_t dimensions[D], const void* ref)
 {
 	complex float* ret = create_cfl(name, D, dimensions);
 
@@ -941,7 +941,7 @@ complex float* create_cfl_sameplace(const char* name, int D, const long dimensio
 }
 
 
-complex float* create_async_cfl(const char* name, const unsigned long flags, int D, const long dimensions[D])
+complex float* create_async_cfl(const char* name, const bart_flags_t flags, int D, const bart_dim_t dimensions[D])
 {
 	if (FILE_TYPE_PIPE != file_type(name))
 		return create_cfl(name, D, dimensions);
@@ -952,12 +952,12 @@ complex float* create_async_cfl(const char* name, const unsigned long flags, int
 	if (0 != (md_nontriv_dims(D, dimensions) & flags))
 		error("Creating stream %s: Cannot combine streaming and looping!\n", name);
 
-	return create_cfl_internal(name, D, dimensions, 0UL);
+	return create_cfl_internal(name, D, dimensions, 0);
 }
 
 
 
-float* load_coo(const char* name, int D, long dims[D])
+float* load_coo(const char* name, int D, bart_dim_t dims[D])
 {
 	int fd;
 
@@ -967,7 +967,7 @@ float* load_coo(const char* name, int D, long dims[D])
 	if (-1 == read_coo(fd, D, dims))
 		error("Loading coo file %s\n", name);
 
-	long T;
+	bart_dim_t T;
 
 	if (-1 == (T = io_calc_size(D, dims, sizeof(float))))
 		error("Loading coo file %s\n", name);
@@ -995,21 +995,21 @@ float* load_coo(const char* name, int D, long dims[D])
 }
 
 
-complex float* load_zcoo(const char* name, int D, long dimensions[D])
+complex float* load_zcoo(const char* name, int D, bart_dim_t dimensions[D])
 {
-	long dims[D + 1];
+	bart_dim_t dims[D + 1];
 	float* data = load_coo(name, D + 1, dims);
 
 	if (2 != dims[0])
 		error("Loading coo file %s\n", name);
 
-	memcpy(dimensions, dims + 1, sizeof(long[D]));
+	memcpy(dimensions, dims + 1, sizeof(bart_dim_t[D]));
 
 	return (complex float*)data;
 }
 
 
-static complex float* load_cfl_internal(const char* name, int D, long dimensions[D], bool priv, bool stream)
+static complex float* load_cfl_internal(const char* name, int D, bart_dim_t dimensions[D], bool priv, bool stream)
 {
 	io_register_input(name);
 
@@ -1125,7 +1125,7 @@ static complex float* load_cfl_internal(const char* name, int D, long dimensions
 	}
 
 	if (1 < mpi_get_num_procs() && !mpi_shared_files)
-		mpi_sync_val(dimensions, (long)sizeof(long[D]));
+		mpi_sync_val(dimensions, (bart_dim_t)sizeof(bart_dim_t[D]));
 
 	strm = stream_lookup(addr);
 
@@ -1134,7 +1134,7 @@ static complex float* load_cfl_internal(const char* name, int D, long dimensions
 
 	if (!stream || cfl_loop_desc_active()) {
 
-		long pos[D];
+		bart_dim_t pos[D];
 		work_buffer_get_pos(D, dimensions, pos, false, cfl_loop_index[cfl_loop_worker_id()]);
 
 		stream_sync_slice(strm, D, dimensions, cfl_loop_desc.flags, pos);
@@ -1154,12 +1154,12 @@ static complex float* load_cfl_internal(const char* name, int D, long dimensions
 }
 
 
-complex float* load_cfl(const char* name, int D, long dimensions[D])
+complex float* load_cfl(const char* name, int D, bart_dim_t dimensions[D])
 {
 	return load_cfl_internal(name, D, dimensions, true, false);
 }
 
-complex float* load_cfl_sameplace(const char* name, int D, long dimensions[D], const void* ref)
+complex float* load_cfl_sameplace(const char* name, int D, bart_dim_t dimensions[D], const void* ref)
 {
 	complex float* ret = load_cfl(name, D, dimensions);
 
@@ -1170,13 +1170,13 @@ complex float* load_cfl_sameplace(const char* name, int D, long dimensions[D], c
 }
 
 
-complex float* load_shared_cfl(const char* name, int D, long dimensions[D])
+complex float* load_shared_cfl(const char* name, int D, bart_dim_t dimensions[D])
 {
 	return load_cfl_internal(name, D, dimensions, false, false);
 }
 
 
-complex float* load_async_cfl(const char* name, int D, long dimensions[D])
+complex float* load_async_cfl(const char* name, int D, bart_dim_t dimensions[D])
 {
 	// we don't mix streaming via looping and explicit streaming
 	if (cfl_loop_desc_active())
@@ -1186,12 +1186,12 @@ complex float* load_async_cfl(const char* name, int D, long dimensions[D])
 }
 
 
-complex float* shared_cfl(int D, const long dims[D], const char* name)
+complex float* shared_cfl(int D, const bart_dim_t dims[D], const char* name)
 {
 //	struct stat st;
 	int fd;
 	void* addr;
-	long T;
+	bart_dim_t T;
 
 	if (-1 == (T = io_calc_size(D, dims, sizeof(complex float))))
 		error("shared cfl %s\n", name);
@@ -1222,10 +1222,10 @@ complex float* shared_cfl(int D, const long dims[D], const char* name)
 }
 
 
-complex float* anon_cfl(const char* /*name*/, int D, const long dims[D])
+complex float* anon_cfl(const char* /*name*/, int D, const bart_dim_t dims[D])
 {
 	void* addr;
-	long T;
+	bart_dim_t T;
 
 	if (-1 == (T = io_calc_size(D, dims, sizeof(complex float))))
 		error("anon cfl\n");
@@ -1236,7 +1236,7 @@ complex float* anon_cfl(const char* /*name*/, int D, const long dims[D])
 	return addr;
 }
 
-complex float* anon_cfl_sameplace(const char* /*name*/, int D, const long dimensions[D], const void* ref)
+complex float* anon_cfl_sameplace(const char* /*name*/, int D, const bart_dim_t dimensions[D], const void* ref)
 {
 	complex float* ret = anon_cfl(NULL, D, dimensions);
 
@@ -1286,9 +1286,9 @@ void* private_raw(size_t* size, const char* name)
 }
 
 
-complex float* private_cfl(int D, const long dims[D], const char* name)
+complex float* private_cfl(int D, const bart_dim_t dims[D], const char* name)
 {
-	long T;
+	bart_dim_t T;
 
 	if (-1 == (T = io_calc_size(D, dims, sizeof(complex float))))
 		error("private cfl %s: header yields invalid size\n", name);
@@ -1303,8 +1303,10 @@ complex float* private_cfl(int D, const long dims[D], const char* name)
 	if (-1 == (fstat(fd, &st)))
 		io_error("private cfl %s: cannot stat file\n", name);
 
-	if (T != st.st_size)
-		error("private cfl %s: file size (%ld) does not match header (%ld)\n", name, st.st_size, T);
+	intmax_t file_size = st.st_size;
+
+	if (T != file_size)
+		error("private cfl %s: file size (%jd) does not match header (%" PRId64 ")\n", name, file_size, T);
 
 	if (MAP_FAILED == (addr = mmap(NULL, (size_t)T, PROT_READ|PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, fd, 0)))
 		io_error("private cfl %s: cannot mmap file\n", name);
@@ -1319,9 +1321,9 @@ complex float* private_cfl(int D, const long dims[D], const char* name)
 	return addr;
 }
 
-static int munmap_rounded(const complex float* x, long sz)
+static int munmap_rounded(const complex float* x, bart_dim_t sz)
 {
-	complex float* trunc_ptr = (complex float*)((uintptr_t)x & ~4095UL);
+	complex float* trunc_ptr = (complex float*)((uintptr_t)x & ~UINT64_C(4095));
 
 	ptrdiff_t pdiff = (const void*)x - (const void*)trunc_ptr;
 	assert(0 <= pdiff);
@@ -1334,7 +1336,7 @@ static int munmap_rounded(const complex float* x, long sz)
 }
 
 
-void unmap_cfl(int D, const long dims[D], const complex float* x)
+void unmap_cfl(int D, const bart_dim_t dims[D], const complex float* x)
 {
 	if (NULL == x)
 		return;
@@ -1348,10 +1350,10 @@ void unmap_cfl(int D, const long dims[D], const complex float* x)
 	if (memcfl_unmap(x))
 		return;
 
-	long tdims[D?:1];
+	bart_dim_t tdims[D?:1];
 	md_copy_dims(D, tdims, dims);
 
-	long pos[D?:1];
+	bart_dim_t pos[D?:1];
 	md_set_dims(D, pos, 0);
 
 	if (cfl_loop_desc_active())
@@ -1375,12 +1377,12 @@ void unmap_cfl(int D, const long dims[D], const complex float* x)
 }
 
 
-void unmap_shared_cfl(int D, const long dims[D], const complex float* x)
+void unmap_shared_cfl(int D, const bart_dim_t dims[D], const complex float* x)
 {
 	if (NULL == x)
 		return;
 
-	long T;
+	bart_dim_t T;
 
 	if (-1 == (T = io_calc_size(D, dims, sizeof(complex float))))
 		error("unmap cfl\n");
@@ -1404,7 +1406,7 @@ void unmap_shared_cfl(int D, const long dims[D], const complex float* x)
  * @param dimensions[N] pointer to dimensions of each array
  * @param args[N] pointer to the first element of each memory mapped array
  */
-void create_multi_cfl(const char* name, int N, int D[N], const long* dimensions[N], complex float* args[N])
+void create_multi_cfl(const char* name, int N, int D[N], const bart_dim_t* dimensions[N], complex float* args[N])
 {
 	io_register_output(name);
 
@@ -1440,7 +1442,7 @@ void create_multi_cfl(const char* name, int N, int D[N], const long* dimensions[
 	if (-1 == (fd = open(name_hdr, O_RDWR|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)))
 		io_error("Creating multi cfl file %s\n", name);
 
-	long num_ele = 0;
+	bart_dim_t num_ele = 0;
 	for (int i = 0; i < N; i++)
 		num_ele += md_calc_size(D[i], dimensions[i]);
 
@@ -1462,7 +1464,7 @@ void create_multi_cfl(const char* name, int N, int D[N], const long* dimensions[
 }
 
 
-static int load_multi_cfl_internal(const char* name, int N_max, int D_max, int D[N_max], long dimensions[N_max][D_max], complex float* args[N_max], bool priv)
+static int load_multi_cfl_internal(const char* name, int N_max, int D_max, int D[N_max], bart_dim_t dimensions[N_max][D_max], complex float* args[N_max], bool priv)
 {
 	io_register_input(name);
 
@@ -1511,9 +1513,9 @@ static int load_multi_cfl_internal(const char* name, int N_max, int D_max, int D
 #endif
 
 
-	long num_ele = 0;
+	bart_dim_t num_ele = 0;
 	int N = 0;
-	long off[N_max];
+	bart_stride_t off[N_max];
 
 	for (int i = 0; i < N_max; i++) {
 
@@ -1527,7 +1529,7 @@ static int load_multi_cfl_internal(const char* name, int N_max, int D_max, int D
 		num_ele += md_calc_size(D[i], dimensions[i]);
 	}
 
-	long dims[1] = { num_ele };
+	bart_dim_t dims[1] = { num_ele };
 	args[0] = (priv ? private_cfl : shared_cfl)(1, dims, name_bdy);
 
 	for (int i = 1; i < N_max; i++) {
@@ -1556,7 +1558,7 @@ static int load_multi_cfl_internal(const char* name, int N_max, int D_max, int D
  * @param dimensions[N_max][D_max] dimensions read from header
  * @param args[N] returned pointer to the first element of each memory mapped array
  */
-int load_multi_cfl(const char* name, int N_max, int D_max, int D[N_max], long dimensions[N_max][D_max], complex float* args[N_max])
+int load_multi_cfl(const char* name, int N_max, int D_max, int D[N_max], bart_dim_t dimensions[N_max][D_max], complex float* args[N_max])
 {
 	return load_multi_cfl_internal(name, N_max, D_max, D, dimensions, args, true);
 }
@@ -1569,7 +1571,7 @@ int load_multi_cfl(const char* name, int N_max, int D_max, int D[N_max], long di
  * @param dimensions[N] pointer to dimensions of each array
  * @param args[N] pointer to the first element of each memory mapped array
  */
-void unmap_multi_cfl(int N, int D[N], const long* dimensions[N], complex float* args[N])
+void unmap_multi_cfl(int N, int D[N], const bart_dim_t* dimensions[N], complex float* args[N])
 {
 #ifdef MEMONLY_CFL
 	error("multi cfl not supported with MEMONLY_CFL\n");
@@ -1583,10 +1585,10 @@ void unmap_multi_cfl(int N, int D[N], const long* dimensions[N], complex float* 
 
 	for (int i = 0; i < N; i++) {
 
-		if (args[i] != args[0] + (T / (long)sizeof(complex float)))
-			error("unmap multi cfl 1 %ld\n", T);
+		if (args[i] != args[0] + (T / (bart_stride_t)sizeof(complex float)))
+			error("unmap multi cfl 1 %zu\n", T);
 
-		long isize = io_calc_size(D[i], dimensions[i], sizeof(complex float));
+		bart_dim_t isize = io_calc_size(D[i], dimensions[i], sizeof(complex float));
 
 		if (-1 == isize)
 			error("unmap multi cfl 2\n");

@@ -15,7 +15,7 @@
 
 static bool test_md_znlmeans_distance(void)
 {
-	const long pdim[] = { 7, 7 };
+	const bart_dim_t pdim[] = { 7, 7 };
 	// 3x3 array which has been padded to 7x7 by reflection
 	const complex float padded[][7] = {
 		{ 0, 0,  0, 0, 0,  0, 0 },
@@ -29,7 +29,7 @@ static bool test_md_znlmeans_distance(void)
 		{ 0, 0,  0, 0, 0,  0, 0 },
 	};
 
-	const long odim[] = { 5, 5, 3, 3 };
+	const bart_dim_t odim[] = { 5, 5, 3, 3 };
 	// c-array access is transposed compared to md function.
 	complex float output[3][3][5][5];
 
@@ -64,7 +64,7 @@ static bool test_md_znlmeans_distance(void)
 static bool test_md_znlmeans1(void)
 {
 	//test if restriction to a search window works as expected
-	const long idim[] = { 5, 5 };
+	const bart_dim_t idim[] = { 5, 5 };
 	const complex float input[] = {
 		0., 0., 0., 0., 0.,
 		0., 0., 0., 0., 0.,
@@ -88,7 +88,7 @@ static bool test_md_znlmeans1(void)
 static bool test_md_znlmeans2(void)
 {
 	//Check invariance of a constant input (the only invariance under NLMeans)
-	const long idim[1] = { 10 };
+	const bart_dim_t idim[1] = { 10 };
 	const complex float input[] = { 1., 1., 1., 1., 1., 1., 1., 1., 1., 1. };
 	complex float output[10];
 
@@ -100,7 +100,7 @@ static bool test_md_znlmeans2(void)
 static bool test_md_znlmeans3(void)
 {
 	//Check successful denoising in one example
-	const long idim[1] = { 5 };
+	const bart_dim_t idim[1] = { 5 };
 	const complex float ref[] = { 1., 0., 0., 0., 1. };
 	const complex float input[] = { 1.1, 0., 0., 0., 0.9 };
 	complex float output[5];

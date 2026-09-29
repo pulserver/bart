@@ -133,23 +133,23 @@ static complex float median_geometric_complex_float(int N, const complex float a
 	return x;
 }
 
-void md_medianz2(int D, int M, const long dim[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_medianz2(int D, int M, const bart_dim_t dim[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
 	assert(M < D);
-	const long* nstr[2] = { ostr, istr };
+	const bart_stride_t* nstr[2] = { ostr, istr };
 	void* nptr[2] = { optr, (void*)iptr };
 
-        long length = dim[M];
-        long stride = istr[M];
+        bart_dim_t length = dim[M];
+        bart_stride_t stride = istr[M];
 
-	long dim2[D];
-	md_select_dims(D, ~(1u << M), dim2, dim);
+	bart_dim_t dim2[D];
+	md_select_dims(D, ~MD_BIT(M), dim2, dim);
 
 	NESTED(void, nary_medianz, (void* ptr[]))
 	{
 		complex float tmp[length];
 
-		for (long i = 0; i < length; i++)
+		for (bart_dim_t i = 0; i < length; i++)
 			tmp[i] = *((complex float*)(ptr[1] + i * stride));
 
 		*(complex float*)ptr[0] = median_complex_float(length, tmp);
@@ -158,15 +158,15 @@ void md_medianz2(int D, int M, const long dim[D], const long ostr[D], complex fl
 	md_nary(2, D, dim2, nstr, nptr, nary_medianz);
 }
 
-void md_medianz(int D, int M, const long dim[D], complex float* optr, const complex float* iptr)
+void md_medianz(int D, int M, const bart_dim_t dim[D], complex float* optr, const complex float* iptr)
 {
 	assert(M < D);
 
-	long dim2[D];
-	md_select_dims(D, ~(1u << M), dim2, dim);
+	bart_dim_t dim2[D];
+	md_select_dims(D, ~MD_BIT(M), dim2, dim);
 
-	long istr[D];
-	long ostr[D];
+	bart_stride_t istr[D];
+	bart_stride_t ostr[D];
 
 	md_calc_strides(D, istr, dim, CFL_SIZE);
 	md_calc_strides(D, ostr, dim2, CFL_SIZE);
@@ -174,23 +174,23 @@ void md_medianz(int D, int M, const long dim[D], complex float* optr, const comp
 	md_medianz2(D, M, dim, ostr, optr, istr, iptr);
 }
 
-void md_geometric_medianz2(int D, int M, const long dim[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_geometric_medianz2(int D, int M, const bart_dim_t dim[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
 	assert(M < D);
-	const long* nstr[2] = { ostr, istr };
+	const bart_stride_t* nstr[2] = { ostr, istr };
 	void* nptr[2] = { optr, (void*)iptr };
 
-	long dim2[D];
-        long length = dim[M];
-	long stride = istr[M];
+	bart_dim_t dim2[D];
+        bart_dim_t length = dim[M];
+	bart_stride_t stride = istr[M];
 
-	md_select_dims(D, ~(1u << M), dim2, dim);
+	md_select_dims(D, ~MD_BIT(M), dim2, dim);
 
 	NESTED(void, nary_medianz, (void* ptr[]))
 	{
 		complex float tmp[length];
 
-		for (long i = 0; i < length; i++)
+		for (bart_dim_t i = 0; i < length; i++)
 			tmp[i] = *((complex float*)(ptr[1] + i * stride));
 
 		*(complex float*)ptr[0] = median_geometric_complex_float(length, tmp);
@@ -199,16 +199,16 @@ void md_geometric_medianz2(int D, int M, const long dim[D], const long ostr[D], 
 	md_nary(2, D, dim2, nstr, nptr, nary_medianz);
 }
 
-void md_geometric_medianz(int D, int M, const long dim[D], complex float* optr, const complex float* iptr)
+void md_geometric_medianz(int D, int M, const bart_dim_t dim[D], complex float* optr, const complex float* iptr)
 {
 	assert(M < D);
 
-	long dim2[D];
+	bart_dim_t dim2[D];
 
-	md_select_dims(D, ~(1u << M), dim2, dim);
+	md_select_dims(D, ~MD_BIT(M), dim2, dim);
 
-	long istr[D];
-	long ostr[D];
+	bart_stride_t istr[D];
+	bart_stride_t ostr[D];
 
 	md_calc_strides(D, istr, dim, CFL_SIZE);
 	md_calc_strides(D, ostr, dim2, CFL_SIZE);
@@ -217,7 +217,7 @@ void md_geometric_medianz(int D, int M, const long dim[D], complex float* optr, 
 }
 
 
-void md_moving_avgz2(int D, int M, const long dim[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_moving_avgz2(int D, int M, const bart_dim_t dim[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
 	assert(M < D);
 	assert(0 == ostr[M]);
@@ -225,17 +225,17 @@ void md_moving_avgz2(int D, int M, const long dim[D], const long ostr[D], comple
 	md_zavg2(D, dim, (1u << M), ostr, optr, istr, iptr);
 }
 
-void md_moving_avgz(int D, int M, const long dim[D], complex float* optr, const complex float* iptr)
+void md_moving_avgz(int D, int M, const bart_dim_t dim[D], complex float* optr, const complex float* iptr)
 {
 	assert(M < D);
 
-	long dim2[D];
+	bart_dim_t dim2[D];
 	md_copy_dims(D, dim2, dim);
 
 	dim2[M] = 1;
 
-	long istr[D];
-	long ostr[D];
+	bart_stride_t istr[D];
+	bart_stride_t ostr[D];
 
 	md_calc_strides(D, istr, dim, CFL_SIZE);
 	md_calc_strides(D, ostr, dim2, CFL_SIZE);
@@ -246,7 +246,7 @@ void md_moving_avgz(int D, int M, const long dim[D], complex float* optr, const 
 
 
 
-void centered_gradient(int N, const long dims[N], const complex float grad[N], complex float* out)
+void centered_gradient(int N, const bart_dim_t dims[N], const complex float grad[N], complex float* out)
 {
 	md_zgradient(N, dims, out, grad);
 
@@ -255,13 +255,13 @@ void centered_gradient(int N, const long dims[N], const complex float grad[N], c
 	for (int n = 0; n < N; n++)
 		 cn -= grad[n] * (float)(dims[n] / 2);
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
 	md_zsadd2(N, dims, strs, out, strs, out, cn);
 }
 
-void linear_phase(int N, const long dims[N], const float pos[N], complex float* out)
+void linear_phase(int N, const bart_dim_t dims[N], const float pos[N], complex float* out)
 {
 	complex float grad[N];
 
@@ -273,9 +273,9 @@ void linear_phase(int N, const long dims[N], const float pos[N], complex float* 
 }
 
 
-void klaplace_scaled(int N, const long dims[N], unsigned long flags, const float sc[N], complex float* out)
+void klaplace_scaled(int N, const bart_dim_t dims[N], bart_flags_t flags, const float sc[N], complex float* out)
 {
-	unsigned long flags2 = flags;
+	bart_flags_t flags2 = flags;
 
 	complex float* tmp = md_alloc_sameplace(N, dims, CFL_SIZE, out);
 
@@ -283,7 +283,7 @@ void klaplace_scaled(int N, const long dims[N], unsigned long flags, const float
 
 	for (int i = 0; i < bitcount(flags); i++) {
 
-		int lsb = ffs(flags2) - 1;
+		int lsb = md_min_idx(flags2);
 		flags2 = MD_CLEAR(flags2, lsb);
 
 		complex float grad[N];
@@ -307,7 +307,7 @@ void klaplace_scaled(int N, const long dims[N], unsigned long flags, const float
  * factor of -(2pi)^2 assuming voxel spacing of dx=1 (c.f. test_klaplace_filter)
  * Usually, it needs to be rescaled for physical units. */
 
-void klaplace(int N, const long dims[N], unsigned long flags, complex float* out)
+void klaplace(int N, const bart_dim_t dims[N], bart_flags_t flags, complex float* out)
 {
 	float sc[N];
 	for (int j = 0; j < N; j++)
@@ -319,7 +319,7 @@ void klaplace(int N, const long dims[N], unsigned long flags, complex float* out
 
 
 
-static void nary_zwindow(const long N, const float alpha, const float beta, complex float* ptr)
+static void nary_zwindow(const bart_dim_t N, const float alpha, const float beta, complex float* ptr)
 {
 	if (1 == N) {
 
@@ -328,11 +328,11 @@ static void nary_zwindow(const long N, const float alpha, const float beta, comp
 	}
 
 #pragma omp parallel for
-	for (long i = 0; i < N; i++)
+	for (bart_dim_t i = 0; i < N; i++)
 		ptr[i] = alpha - beta * cosf(2. * M_PI * (double)i / (double)(N - 1));
 }
 
-static void nary_zhamming(const long N, complex float* ptr)
+static void nary_zhamming(const bart_dim_t N, complex float* ptr)
 {
 #if 0
 	const float alpha = 0.53836;
@@ -346,7 +346,7 @@ static void nary_zhamming(const long N, complex float* ptr)
 
 }
 
-static void nary_zhann(const long N, complex float* ptr)
+static void nary_zhann(const bart_dim_t N, complex float* ptr)
 {
 	const float alpha = 0.5;
 	const float beta = 0.5;
@@ -356,7 +356,7 @@ static void nary_zhann(const long N, complex float* ptr)
 
 enum window_type { WINDOW_HAMMING, WINDOW_HANN };
 
-static void md_zwindow2(int D, const long dims[D], unsigned long flags, const long ostrs[D], complex float* optr, const long istrs[D], const complex float* iptr, enum window_type wt)
+static void md_zwindow2(int D, const bart_dim_t dims[D], bart_flags_t flags, const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs[D], const complex float* iptr, enum window_type wt)
 {
 	if (0 == flags) {
 
@@ -366,10 +366,10 @@ static void md_zwindow2(int D, const long dims[D], unsigned long flags, const lo
 
 	// process first flagged dimension
 
-	int lsb = ffs(flags) - 1;
+	int lsb = md_min_idx(flags);
 
-	long win_dims[D];
-	long win_strs[D];
+	bart_dim_t win_dims[D];
+	bart_stride_t win_strs[D];
 
 	md_select_dims(D, MD_BIT(lsb), win_dims, dims);
 	md_calc_strides(D, win_strs, win_dims, CFL_SIZE);
@@ -397,9 +397,9 @@ static void md_zwindow2(int D, const long dims[D], unsigned long flags, const lo
 
 
 #if 0
-static void md_zwindow(const int D, const long dims[D], const long flags, complex float* optr, const complex float* iptr, bool hamming)
+static void md_zwindow(const int D, const bart_dim_t dims[D], const bart_dim_t flags, complex float* optr, const complex float* iptr, bool hamming)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
 	md_zwindow2(D, dims, flags, strs, optr, strs, iptr, hamming);
@@ -410,9 +410,9 @@ static void md_zwindow(const int D, const long dims[D], const long flags, comple
 /*
  * Apply Hamming window to iptr along flags
  */
-void md_zhamming(int D, const long dims[D], const unsigned long flags, complex float* optr, const complex float* iptr)
+void md_zhamming(int D, const bart_dim_t dims[D], const bart_flags_t flags, complex float* optr, const complex float* iptr)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
 	return md_zhamming2(D, dims, flags, strs, optr, strs, iptr);
@@ -422,7 +422,7 @@ void md_zhamming(int D, const long dims[D], const unsigned long flags, complex f
 /*
  * Apply Hamming window to iptr along flags (with strides)
  */
-void md_zhamming2(int D, const long dims[D], const unsigned long flags, const long ostrs[D], complex float* optr, const long istrs[D], const complex float* iptr)
+void md_zhamming2(int D, const bart_dim_t dims[D], const bart_flags_t flags, const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs[D], const complex float* iptr)
 {
 	return md_zwindow2(D, dims, flags, ostrs, optr, istrs, iptr, WINDOW_HAMMING);
 }
@@ -431,9 +431,9 @@ void md_zhamming2(int D, const long dims[D], const unsigned long flags, const lo
 /*
  * Apply Hann window to iptr along flags
  */
-void md_zhann(int D, const long dims[D], const unsigned long flags, complex float* optr, const complex float* iptr)
+void md_zhann(int D, const bart_dim_t dims[D], const bart_flags_t flags, complex float* optr, const complex float* iptr)
 {
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
 	return md_zhann2(D, dims, flags, strs, optr, strs, iptr);
@@ -443,14 +443,14 @@ void md_zhann(int D, const long dims[D], const unsigned long flags, complex floa
 /*
  * Apply Hann window to iptr along flags (with strides)
  */
-void md_zhann2(int D, const long dims[D], const unsigned long flags, const long ostrs[D], complex float* optr, const long istrs[D], const complex float* iptr)
+void md_zhann2(int D, const bart_dim_t dims[D], const bart_flags_t flags, const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs[D], const complex float* iptr)
 {
 	return md_zwindow2(D, dims, flags, ostrs, optr, istrs, iptr, WINDOW_HANN);
 }
 
 
 
-void md_zsample_filter(int N, const long dims[N], unsigned long flags, const float resolution[N], complex float* z, sample_filter_fun fun, bool centered)
+void md_zsample_filter(int N, const bart_dim_t dims[N], bart_flags_t flags, const float resolution[N], complex float* z, sample_filter_fun fun, bool centered)
 {
 	if (NULL == resolution) {
 
@@ -466,10 +466,10 @@ void md_zsample_filter(int N, const long dims[N], unsigned long flags, const flo
 	for (int i = 0; i < N; i++)
 		scale[i] = MD_IS_SET(flags, i) ? 2 * M_PI / (dims[i] * resolution[i]) : 0.;
 
-	const long* dimsp = dims;	// because of clang
+	const bart_dim_t* dimsp = dims;	// because of clang
 	const float* scalep = scale;	// because of clang
 
-	NESTED(complex float, filter_kernel, (const long pos[]))
+	NESTED(complex float, filter_kernel, (const bart_dim_t pos[]))
 	{
 		float kpos[N];
 		for (int i = 0; i < N; i++) {
@@ -488,11 +488,11 @@ void md_zsample_filter(int N, const long dims[N], unsigned long flags, const flo
 	md_parallel_zsample(N, dims, z, filter_kernel);
 }
 
-void klaplace_fd_scaled_uncentered(int N, const long dims[N], const float scale[N], complex float* z)
+void klaplace_fd_scaled_uncentered(int N, const bart_dim_t dims[N], const float scale[N], complex float* z)
 {
 	const float* scalep = scale;	// because of clang
 
-	NESTED(complex float, filter_kernel_laplace, (const long /*pos*/[], const float kpos[]))
+	NESTED(complex float, filter_kernel_laplace, (const bart_dim_t /*pos*/[], const float kpos[]))
 	{
 		complex float val = 0;
 
@@ -502,10 +502,10 @@ void klaplace_fd_scaled_uncentered(int N, const long dims[N], const float scale[
 		return val;
 	};
 
-	md_zsample_filter(N, dims, ~0UL, NULL, z, CLOSURE(sample_filter_fun, filter_kernel_laplace), false);
+	md_zsample_filter(N, dims, ~UINT64_C(0), NULL, z, CLOSURE(sample_filter_fun, filter_kernel_laplace), false);
 }
 
-void klaplace_fd_uncentered(int N, const long dims[N], complex float* z)
+void klaplace_fd_uncentered(int N, const bart_dim_t dims[N], complex float* z)
 {
 	float scale[N];
 	for (int i = 0; i < N; i++)

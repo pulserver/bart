@@ -19,14 +19,14 @@
 
 static void fft1(int N, complex float tmp[N], const complex float ext[N])
 {
-	fft(1, (long[1]){ N }, 1, tmp, ext);
-	md_zsmul(1, (long[1]){ N }, tmp, tmp, 1. / sqrt((double)N));
+	fft(1, (bart_dim_t[1]){ N }, 1, tmp, ext);
+	md_zsmul(1, (bart_dim_t[1]){ N }, tmp, tmp, 1. / sqrt((double)N));
 }
 
 static void ifft1(int N, complex float tmp[N], const complex float ext[N])
 {
-	ifft(1, (long[1]){ N }, 1, tmp, ext);
-	md_zsmul(1, (long[1]){ N }, tmp, tmp, 1. / sqrt((double)N));
+	ifft(1, (bart_dim_t[1]){ N }, 1, tmp, ext);
+	md_zsmul(1, (bart_dim_t[1]){ N }, tmp, tmp, 1. / sqrt((double)N));
 }
 
 void chebpoly(int N, float coeff[N], const float val[N])

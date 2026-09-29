@@ -18,17 +18,17 @@
 
 struct cuda_strides_upper_triagmat {
 
-	long N;	 //Continous vector
-	long NC; //Coils dimension (stride N)
-	long NM; //Matrix dimension
+	bart_dim_t N;	 //Continous vector
+	bart_dim_t NC; //Coils dimension (stride N)
+	bart_dim_t NM; //Matrix dimension
 
 	//strides of matrix dimension (do not need to be contigous)
-	long ostr;
-	long istr;
-	long mstr;
+	bart_stride_t ostr;
+	bart_stride_t istr;
+	bart_stride_t mstr;
 };
 
-__device__ static long upper_triag_idx(long i, long j)
+__device__ static bart_dim_t upper_triag_idx(bart_dim_t i, bart_dim_t j)
 {
 	if (i > j)
 		return -(i + ((j + 1) * j) / 2);
@@ -42,18 +42,18 @@ __global__ static void kern_zrfmac_upper_triagmat(struct cuda_strides_upper_tria
 	int start = threadIdx.x + blockDim.x * blockIdx.x;
 	int stride = blockDim.x * gridDim.x;
 
-	for (long i = start; i < strs.N; i += stride) {
+	for (bart_dim_t i = start; i < strs.N; i += stride) {
 
-		for (long m = 0; m < strs.NM; m++) {
+		for (bart_dim_t m = 0; m < strs.NM; m++) {
 
-			for (long n = 0; n <= m; n++) {
+			for (bart_dim_t n = 0; n <= m; n++) {
 
 				float val = mat[i + upper_triag_idx(n, m) * strs.mstr];
 
 				if (0. == val)
 					continue;
 
-				for (long c = 0; c < strs.NC; c++) {
+				for (bart_dim_t c = 0; c < strs.NC; c++) {
 
 					dst[i + strs.N * c + strs.ostr * m].x += val * src[i + strs.N * c + strs.istr * n].x;
 					dst[i + strs.N * c + strs.ostr * m].y += val * src[i + strs.N * c + strs.istr * n].y;
@@ -71,19 +71,19 @@ __global__ static void kern_zrfmac_upper_triagmat(struct cuda_strides_upper_tria
 
 #define BLOCKSIZE 1024
 
-static int blocksize(long N)
+static int blocksize(bart_dim_t N)
 {
 	return BLOCKSIZE;
 }
 
-static long gridsize(long N)
+static bart_dim_t gridsize(bart_dim_t N)
 {
 	// to ensure that "start" does not overflow we need to restrict gridsize!
 	return MIN((N + BLOCKSIZE - 1) / BLOCKSIZE, 65536 - 1);
 }
 
 
-extern "C" void cuda_zrfmac_upper_triagmat(long N, long NC, long NM, long ostr, long istr, long mstr, float* dst, const float* src, const float* mat)
+extern "C" void cuda_zrfmac_upper_triagmat(bart_dim_t N, bart_dim_t NC, bart_dim_t NM, bart_stride_t ostr, bart_stride_t istr, bart_stride_t mstr, float* dst, const float* src, const float* mat)
 {
 	cuda_strides_upper_triagmat conf;
 	conf.N = N;

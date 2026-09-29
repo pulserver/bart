@@ -17,7 +17,7 @@
 #include "utest.h"
 
 
-static bool test_window(int D, long dims[D], unsigned long flags, bool hamming, const complex float* ref)
+static bool test_window(int D, bart_dim_t dims[D], bart_flags_t flags, bool hamming, const complex float* ref)
 {
 	complex float* in = md_alloc(3, dims, CFL_SIZE);
 	md_zfill(3, dims, in, 1.);
@@ -53,7 +53,7 @@ static bool test_hamming(void)
 		 0.0432, 0.0432, 0.0064, 0.0064,
 	};
 
-	long dims[3] = { 2, 5, 4 };
+	bart_dim_t dims[3] = { 2, 5, 4 };
 
 	return test_window(3, dims, MD_BIT(1) | MD_BIT(2), true, ref);
 }
@@ -80,7 +80,7 @@ static bool test_hann(void)
 		0.0000, 0.0000, 0.0000, 0.0000,
 	};
 
-	long dims[3] = { 4, 2, 5 };
+	bart_dim_t dims[3] = { 4, 2, 5 };
 
 	return test_window(3, dims, MD_BIT(0) | MD_BIT(2), false, ref);
 }

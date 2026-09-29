@@ -149,7 +149,7 @@ static void debug_print_ISMRMRD_index(int level, struct ISMRMRD_EncodingCounters
 static void debug_print_ISMRMRD_acq(int level, struct ISMRMRD_AcquisitionHeader head)
 {
 	debug_printf(level, "%s: %u\n", "version", head.version);
-	debug_printf(level, "%s: %lu\n", "flags", head.flags);
+	debug_printf(level, "%s: %" PRIu64 "\n", "flags", head.flags);
 	debug_printf(level, "%s: %u\n", "measurement_uid", head.measurement_uid);
 	debug_printf(level, "%s: %u\n", "scan_counter", head.scan_counter);
 	debug_printf(level, "%s: %u\n", "acquisition_time_stamp", head.acquisition_time_stamp);
@@ -167,10 +167,10 @@ static void debug_print_ISMRMRD_acq(int level, struct ISMRMRD_AcquisitionHeader 
 }
 
 static void ismrm_conf_merge_unmapped_dims(struct isrmrm_config_s* config);
-static void ismrm_conf_to_dims(const struct isrmrm_config_s* config, int N, long dims[__VLA(N)]);
+static void ismrm_conf_to_dims(const struct isrmrm_config_s* config, int N, bart_dim_t dims[__VLA(N)]);
 static bool ismrm_validate_limits(struct isrmrm_config_s* config);
 
-void ismrm_read_dims(const char* datafile, struct isrmrm_config_s* config, int N, long dims[N])
+void ismrm_read_dims(const char* datafile, struct isrmrm_config_s* config, int N, bart_dim_t dims[N])
 {
 	ismrm_read_encoding_limits(datafile, config);
 
@@ -187,7 +187,7 @@ void ismrm_read_dims(const char* datafile, struct isrmrm_config_s* config, int N
 	ismrm_conf_to_dims(config, N, dims);
 }
 
-void ismrm_stream_read_dims(struct isrmrm_config_s* config, int N, long dims[N])
+void ismrm_stream_read_dims(struct isrmrm_config_s* config, int N, bart_dim_t dims[N])
 {
 	assert(NULL != config->ismrm_cpp_state);
 
@@ -205,7 +205,7 @@ static bool ismrm_validate_limits(struct isrmrm_config_s* config)
 
 		if ((1 != config->limits[i].size) && (config->limits[i].max_idx == config->limits[i].min_idx)) {
 
-			debug_printf(DP_WARN, "Dimension \"%s\" has size %ld but all acquisitions have the same index (%ld)!\n      => Set dimension to one!\n",
+			debug_printf(DP_WARN, "Dimension \"%s\" has size %" PRId64 " but all acquisitions have the same index (%" PRId64 ")!\n      => Set dimension to one!\n",
 						ismrmrd_get_dim_string(i), config->limits[i].size, config->limits[i].max_idx);
 
 			config->limits[i].size = 1;
@@ -215,7 +215,7 @@ static bool ismrm_validate_limits(struct isrmrm_config_s* config)
 
 		if ((1 == config->limits[i].size) && (config->limits[i].max_idx == config->limits[i].min_idx) && (0 < config->limits[i].max_idx)) {
 
-			debug_printf(DP_WARN, "Dimension \"%s\" has size %ld but all acquisitions have the same index (%ld)!\n      => Set indices to 0!\n",
+			debug_printf(DP_WARN, "Dimension \"%s\" has size %" PRId64 " but all acquisitions have the same index (%" PRId64 ")!\n      => Set indices to 0!\n",
 						ismrmrd_get_dim_string(i), config->limits[i].size, config->limits[i].max_idx);
 
 			config->limits[i].size = 1;
@@ -225,7 +225,7 @@ static bool ismrm_validate_limits(struct isrmrm_config_s* config)
 
 		if ((1 == config->limits[i].size) && (config->limits[i].max_idx > config->limits[i].min_idx)) {
 
-			debug_printf(DP_WARN, "Dimension \"%s\" has size %ld but acquisitions extend from %ld to %ld!\n      => All indices are set to 0, check for overwriting data!\n",
+			debug_printf(DP_WARN, "Dimension \"%s\" has size %" PRId64 " but acquisitions extend from %" PRId64 " to %" PRId64 "!\n      => All indices are set to 0, check for overwriting data!\n",
 						ismrmrd_get_dim_string(i), config->limits[i].size, config->limits[i].min_idx, config->limits[i].max_idx);
 
 			config->limits[i].size = 1;
@@ -235,7 +235,7 @@ static bool ismrm_validate_limits(struct isrmrm_config_s* config)
 
 		if ((!MD_IS_SET(config->shift, i)) && (config->limits[i].max_idx > config->limits[i].min_idx) && (config->limits[i].max_idx + 1 < config->limits[i].size)) {
 
-			debug_printf(DP_WARN, "Dimension \"%s\" has size %ld but acquisitions extend only to %ld!\n      => Dimension is reduced!\n",
+			debug_printf(DP_WARN, "Dimension \"%s\" has size %" PRId64 " but acquisitions extend only to %" PRId64 "!\n      => Dimension is reduced!\n",
 						ismrmrd_get_dim_string(i), config->limits[i].size, config->limits[i].max_idx);
 
 			config->limits[i].size = config->limits[i].max_idx + 1;
@@ -251,7 +251,7 @@ static void ismrm_conf_merge_unmapped_dims(struct isrmrm_config_s* config)
 
 		if ((1 != config->limits[i].size) && (-1 == config->dim_mapping[i])) {
 
-			debug_printf(DP_WARN, "Dimension \"%s\" has size %ld but is not mapped to BART dimension!\n      => All indices are set to 0, check for overwriting data!\n",
+			debug_printf(DP_WARN, "Dimension \"%s\" has size %" PRId64 " but is not mapped to BART dimension!\n      => All indices are set to 0, check for overwriting data!\n",
 						ismrmrd_get_dim_string(i), config->limits[i].size);
 
 			config->limits[i].size = 1;
@@ -260,14 +260,14 @@ static void ismrm_conf_merge_unmapped_dims(struct isrmrm_config_s* config)
 	}
 }
 
-static void ismrm_conf_to_dims(const struct isrmrm_config_s* config, int N, long dims[N])
+static void ismrm_conf_to_dims(const struct isrmrm_config_s* config, int N, bart_dim_t dims[N])
 {
 	for (int i = ISMRMRD_PHS1_DIM; i < ISMRMRD_NAMED_DIMS + ISMRMRD_USER_INTS; i++)
 		assert ((1 == config->limits[i].size) || (-1 != config->dim_mapping[i]));
 
-	long max[N];
-	long min[N];
-	long ctr[N];
+	bart_dim_t max[N];
+	bart_dim_t min[N];
+	bart_dim_t ctr[N];
 
 	for (int i = 0; i < N; i++) {
 
@@ -299,7 +299,7 @@ static void ismrm_conf_to_dims(const struct isrmrm_config_s* config, int N, long
 	debug_printf(DP_DEBUG1, "Center: "); debug_print_dims(DP_DEBUG1, N, ctr);
 }
 
-inline static bool set_pos(struct isrmrm_config_s* config, int N, long pos[N], int map, int idx)
+inline static bool set_pos(struct isrmrm_config_s* config, int N, bart_dim_t pos[N], int map, int idx)
 {
 	assert(config->dim_mapping[map] < N);
 
@@ -324,7 +324,7 @@ inline static bool set_pos(struct isrmrm_config_s* config, int N, long pos[N], i
 			case ISMRMRD_SLICE_ASCENDING: break;
 			case ISMRMRD_SLICE_INTERLEAVED:
 			{
-				long max = config->limits[map].size;
+				bart_dim_t max = config->limits[map].size;
 
 				if (0 == max % 2)
 					idx = (idx < max / 2) ? idx * 2 : 2 * idx - max + 1;
@@ -334,7 +334,7 @@ inline static bool set_pos(struct isrmrm_config_s* config, int N, long pos[N], i
 			break;
 			case ISMRMRD_SLICE_INTERLEAVED_SIEMENS:
 			{
-				long max = config->limits[map].size;
+				bart_dim_t max = config->limits[map].size;
 
 				if (0 == max % 2)
 					idx = (idx < max / 2) ? idx * 2 + 1 : 2 * idx - max;
@@ -352,7 +352,7 @@ inline static bool set_pos(struct isrmrm_config_s* config, int N, long pos[N], i
 		if (warn) {
 
 			warn = false;
-			debug_printf(DP_WARN, "Acquisition index %d out of bounds for \"%s\" (size=%ld)! -> set to 0.\n"
+			debug_printf(DP_WARN, "Acquisition index %d out of bounds for \"%s\" (size=%" PRId64 ")! -> set to 0.\n"
 						"Check for overwriting.\n"
 						"Further warnings will be suppressed!\n",
 					idx, ismrmrd_get_dim_string((unsigned)map), config->limits[map].size);
@@ -378,7 +378,7 @@ inline static bool set_pos(struct isrmrm_config_s* config, int N, long pos[N], i
 	return true;
 }
 
-static bool ismrm_read_idx(struct isrmrm_config_s* config, struct ISMRMRD_EncodingCounters idx, int N, long pos[N])
+static bool ismrm_read_idx(struct isrmrm_config_s* config, struct ISMRMRD_EncodingCounters idx, int N, bart_dim_t pos[N])
 {
 	for (int i = 0; i < N; i++)
 		pos[i] = 0;
@@ -391,44 +391,44 @@ static bool ismrm_read_idx(struct isrmrm_config_s* config, struct ISMRMRD_Encodi
 	return result;
 }
 
-static bool ismrmrd_convert_acquisition(struct isrmrm_config_s* config, const ISMRMRD_Acquisition* acq, int N, const long dims[N], long strs[N], long pos[N], complex float* buf);
+static bool ismrmrd_convert_acquisition(struct isrmrm_config_s* config, const ISMRMRD_Acquisition* acq, int N, const bart_dim_t dims[N], bart_stride_t strs[N], bart_dim_t pos[N], complex float* buf);
 
-void ismrm_read(const char* datafile, struct isrmrm_config_s* config, int N, long dims[N], complex float* buf)
+void ismrm_read(const char* datafile, struct isrmrm_config_s* config, int N, bart_dim_t dims[N], complex float* buf)
 {
 	ISMRMRD_Dataset d;
 	ismrmrd_init_dataset(&d, datafile, "/dataset");
 	ismrmrd_open_dataset(&d, false);
 
-	long number_of_acquisitions = ismrmrd_get_number_of_acquisitions(&d);
+	bart_dim_t number_of_acquisitions = ismrmrd_get_number_of_acquisitions(&d);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	for (int i = 0; i < N; i++)
 		pos[i] = 0;
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
 	ISMRMRD_Acquisition acq;
 
 	config->convert_state = (struct ismrmrd_convert_state){ 0 };
 
-	for (long i = 0; i < number_of_acquisitions; i++) {
+	for (bart_dim_t i = 0; i < number_of_acquisitions; i++) {
 
 		ismrmrd_init_acquisition(&acq);
 		ismrmrd_read_acquisition(&d, i, &acq);
 		if ((!ismrmrd_convert_acquisition(config, &acq, N, dims, strs, pos, buf)) && (NULL != buf))
-			debug_printf(DP_WARN, "SKIPPED ACQUISITION %ld!\n", i);
+			debug_printf(DP_WARN, "SKIPPED ACQUISITION %" PRId64 "!\n", i);
 	}
 
 	debug_printf(DP_DEBUG2, "Counter flags: ");
 	debug_print_dims(DP_DEBUG2, 64, config->convert_state.counter_flags);
 
 	if (NULL != buf)
-		debug_printf(DP_DEBUG1, "In total %ld acquisitions copied!\n", config->convert_state.counter);
+		debug_printf(DP_DEBUG1, "In total %" PRId64 " acquisitions copied!\n", config->convert_state.counter);
 }
 
 
-static bool ismrmrd_convert_acquisition(struct isrmrm_config_s* config, const ISMRMRD_Acquisition* acq, int N, const long dims[N], long strs[N], long pos[N], complex float* buf)
+static bool ismrmrd_convert_acquisition(struct isrmrm_config_s* config, const ISMRMRD_Acquisition* acq, int N, const bart_dim_t dims[N], bart_stride_t strs[N], bart_dim_t pos[N], complex float* buf)
 {
 	config->convert_state.attempts++;
 	bool skip = false;
@@ -469,17 +469,17 @@ static bool ismrmrd_convert_acquisition(struct isrmrm_config_s* config, const IS
 	if ((!ismrm_read_idx(config, acq->head.idx, N, pos)) || (NULL == buf))
 		return false;
 
-	long channels = acq->head.available_channels;
+	bart_dim_t channels = acq->head.available_channels;
 	if (acq->head.available_channels != acq->head.active_channels)
 		error("All channels must be active, but (%d/%d) are active!\n", acq->head.active_channels, acq->head.available_channels);
 
-	long samples = acq->head.number_of_samples;
+	bart_dim_t samples = acq->head.number_of_samples;
 
 	assert(channels == dims[config->dim_mapping[ISMRMRD_COIL_DIM]]);
 	assert(samples + acq->head.discard_post + acq->head.discard_pre == dims[config->dim_mapping[ISMRMRD_READ_DIM]]);
 
-	long adc_dims[N];
-	long adc_strs[N];
+	bart_dim_t adc_dims[N];
+	bart_stride_t adc_strs[N];
 
 	md_singleton_dims(N, adc_dims);
 	assert(config->dim_mapping[ISMRMRD_READ_DIM] < config->dim_mapping[ISMRMRD_COIL_DIM]);
@@ -527,22 +527,22 @@ static bool ismrmrd_convert_acquisition(struct isrmrm_config_s* config, const IS
 	return true;
 }
 
-long ismrm_stream_read(struct isrmrm_config_s* conf, int N, const long dims[N], long pos[N], complex float* out)
+bart_dim_t ismrm_stream_read(struct isrmrm_config_s* conf, int N, const bart_dim_t dims[N], bart_dim_t pos[N], complex float* out)
 {
 	assert(NULL != conf->ismrm_cpp_state);
 
 	ISMRMRD_Acquisition acq;
 	ismrmrd_init_acquisition(&acq);
 
-	long bytes = ismrm_stream_read_acquisition(conf, &acq);
+	bart_dim_t bytes = ismrm_stream_read_acquisition(conf, &acq);
 	if (0 == bytes)
 		return bytes;
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
 	if(!ismrmrd_convert_acquisition(conf, &acq, N, dims, strs, pos, out))
-		debug_printf(DP_WARN, "SKIPPED ACQUISITION %ld!\n", conf->convert_state.attempts);
+		debug_printf(DP_WARN, "SKIPPED ACQUISITION %" PRId64 "!\n", conf->convert_state.attempts);
 
 	return bytes;
 }

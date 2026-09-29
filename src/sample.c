@@ -64,21 +64,21 @@ static const char help_str[] =
 	"unadjusted Langevin algorithm.\n";
 
 
-static void print_stats(int dl, float t, long img_dims[DIMS], const complex float* samples, float sigma)
+static void print_stats(int dl, float t, bart_dim_t img_dims[DIMS], const complex float* samples, float sigma)
 {
 	complex float* std_device = md_alloc_sameplace(1, MD_DIMS(1), CFL_SIZE, samples);
 
-	md_zstd(DIMS, img_dims, ~0UL, std_device, samples);
+	md_zstd(DIMS, img_dims, ~UINT64_C(0), std_device, samples);
 
 	float std_samples;
 	md_copy(1, MD_DIMS(1), &std_samples, std_device, FL_SIZE);
 
-	long corn_dims[DIMS];
+	bart_dim_t corn_dims[DIMS];
 	md_copy_dims(DIMS, corn_dims, img_dims);
 	corn_dims[0] = MIN(16, img_dims[0]);
 	corn_dims[1] = MIN(16, img_dims[1]);
 
-	md_zstd2(DIMS, corn_dims, ~0UL, MD_SINGLETON_STRS(DIMS), std_device, MD_STRIDES(DIMS, img_dims, CFL_SIZE), samples);
+	md_zstd2(DIMS, corn_dims, ~UINT64_C(0), MD_SINGLETON_STRS(DIMS), std_device, MD_STRIDES(DIMS, img_dims, CFL_SIZE), samples);
 
 	float std_corner;
 	md_copy(1, MD_DIMS(1), &std_corner, std_device, FL_SIZE);
@@ -86,7 +86,7 @@ static void print_stats(int dl, float t, long img_dims[DIMS], const complex floa
 	complex float* tmp = md_alloc_sameplace(DIMS, img_dims, CFL_SIZE, samples);
 
 	fftuc(DIMS, img_dims, FFT_FLAGS, tmp, samples);
-	md_zstd2(DIMS, corn_dims, ~0UL, MD_SINGLETON_STRS(DIMS), std_device, MD_STRIDES(DIMS, img_dims, CFL_SIZE), tmp);
+	md_zstd2(DIMS, corn_dims, ~UINT64_C(0), MD_SINGLETON_STRS(DIMS), std_device, MD_STRIDES(DIMS, img_dims, CFL_SIZE), tmp);
 
 	md_free(tmp);
 
@@ -102,7 +102,7 @@ static void print_stats(int dl, float t, long img_dims[DIMS], const complex floa
 
 
 
-static void get_init(int N, long img_dims[N], complex float* samples, float sigma, const struct linop_s* A, const complex float* AHy, struct iter_eulermaruyama_conf em_conf)
+static void get_init(int N, bart_dim_t img_dims[N], complex float* samples, float sigma, const struct linop_s* A, const complex float* AHy, struct iter_eulermaruyama_conf em_conf)
 {
 	if ((NULL == A) || linop_is_null(A)) {
 
@@ -171,7 +171,7 @@ int main_sample(int argc, char* argv[argc])
 	bool real_valued = false;
 	bool dps = false;
 
-	long save_mod = 0;
+	bart_dim_t save_mod = 0;
 
 	float gamma_base = 0.5;
 
@@ -183,7 +183,7 @@ int main_sample(int argc, char* argv[argc])
 
 	bool annealed = false;
 
-	long img_dims[DIMS];
+	bart_dim_t img_dims[DIMS];
 	md_singleton_dims(DIMS, img_dims);
 	img_dims[0] = 256;
 	img_dims[1] = 256;
@@ -294,13 +294,13 @@ int main_sample(int argc, char* argv[argc])
 
 	bool posterior = (NULL != kspace_file);
 
-	long ksp_dims[DIMS];
+	bart_dim_t ksp_dims[DIMS];
 	complex float* ksp = NULL;
 
-	long pat_dims[DIMS];
+	bart_dim_t pat_dims[DIMS];
 	complex float* pat = NULL;
 
-	long map_dims[DIMS];
+	bart_dim_t map_dims[DIMS];
 	complex float* sens = NULL;
 
 	complex float yHy = 0.;
@@ -313,7 +313,7 @@ int main_sample(int argc, char* argv[argc])
 		sens = load_cfl(sens_file, DIMS, map_dims);
 		md_select_dims(DIMS, ~COIL_FLAG, img_dims, map_dims);
 
-		long trj_dims[DIMS];
+		bart_dim_t trj_dims[DIMS];
 		complex float* traj = NULL;
 
 		if (traj_file)
@@ -353,7 +353,7 @@ int main_sample(int argc, char* argv[argc])
 
 	float min_var = 0.;
 
-	long msk_dims[DIMS];
+	bart_dim_t msk_dims[DIMS];
 	complex float* msk = NULL;
 
 	if (NULL != mask_file)
@@ -372,16 +372,16 @@ int main_sample(int argc, char* argv[argc])
 
 	} else if (NULL != means_file) {
 
-		long means_dims[DIMS];
+		bart_dim_t means_dims[DIMS];
 		complex float* means = load_cfl(means_file, DIMS, means_dims);
 
-		long weights_dims[DIMS];
+		bart_dim_t weights_dims[DIMS];
 		const complex float* weights = NULL;
 
 		if (NULL != ws_file)
 			weights = load_cfl(ws_file, DIMS, weights_dims);
 
-		long vars_dims[DIMS];
+		bart_dim_t vars_dims[DIMS];
 		const complex float* vars = NULL;
 
 		if (NULL != vars_file)
@@ -403,21 +403,21 @@ int main_sample(int argc, char* argv[argc])
 
 	unmap_cfl(DIMS, msk_dims, msk);
 
-	nlop = nlop_reshape_in_F(nlop, 1, 1, (long[1]) { 1 }); // reshape noise scale from [1,1,1....1] to [1]
+	nlop = nlop_reshape_in_F(nlop, 1, 1, (bart_dim_t[1]) { 1 }); // reshape noise scale from [1,1,1....1] to [1]
 
 	if (0 == save_mod)
 		save_mod = N;
 
 	assert(0 == N % save_mod);
 
-	long out_dims[DIMS];
+	bart_dim_t out_dims[DIMS];
 	md_copy_dims(DIMS, out_dims, img_dims);
 	out_dims[ITER_DIM] = N / save_mod;
 
 	complex float* expectation = (mmse_file ? create_cfl : anon_cfl)(mmse_file, DIMS, out_dims);
 
 	complex float* out = create_async_cfl(samples_file, MD_BIT(ITER_DIM), DIMS, out_dims);
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 
 	stream_t strm_o = stream_lookup(out);
 
@@ -433,7 +433,7 @@ int main_sample(int argc, char* argv[argc])
 		if (0 == em_conf.precond_max_iter)
 			maxeigen = estimate_maxeigenval_sameplace(linop->normal, 30, samples);
 
-		long img_single_dims[DIMS];
+		bart_dim_t img_single_dims[DIMS];
 		md_select_dims(DIMS, ~BATCH_FLAG, img_single_dims, img_dims);
 
 		complex float* tmp_AHy = md_alloc_sameplace(DIMS, img_single_dims, CFL_SIZE, ksp);
@@ -445,7 +445,7 @@ int main_sample(int argc, char* argv[argc])
 
 		md_free(tmp_AHy);
 
-		long loop_dims[DIMS];
+		bart_dim_t loop_dims[DIMS];
 		md_select_dims(DIMS, BATCH_FLAG, loop_dims, img_dims);
 
 		linop = linop_loop_F(DIMS, loop_dims, (struct linop_s*)linop);
@@ -517,7 +517,7 @@ int main_sample(int argc, char* argv[argc])
 
 				if (dps) {
 
-					long bdims[DIMS];
+					bart_dim_t bdims[DIMS];
 					md_select_dims(DIMS, BATCH_FLAG, bdims, img_dims);
 
 					complex float* nrm = md_alloc_sameplace(DIMS, bdims, CFL_SIZE, tmp1);

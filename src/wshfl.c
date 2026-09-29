@@ -106,36 +106,36 @@ static void print_opdims(const struct linop_s* op)
 
 	debug_printf(DP_INFO, "\tDomain:   [");
 
-	for (long k = 0; k < domain->N; k ++)
-		debug_printf(DP_INFO, "%6ld", domain->dims[k]);
+	for (bart_dim_t k = 0; k < domain->N; k ++)
+		debug_printf(DP_INFO, "%6" PRId64, domain->dims[k]);
 
 	debug_printf(DP_INFO, "]\n");
 	debug_printf(DP_INFO, "\tCodomain: [");
 
-	for (long k = 0; k < codomain->N; k ++)
-		debug_printf(DP_INFO, "%6ld", codomain->dims[k]);
+	for (bart_dim_t k = 0; k < codomain->N; k ++)
+		debug_printf(DP_INFO, "%6" PRId64, codomain->dims[k]);
 
 	debug_printf(DP_INFO, "]\n");
 }
 
 /* Construct sampling mask array from reorder tables. */
 static void construct_mask(
-	long reorder_dims[DIMS], complex float* reorder,
-	long mask_dims[DIMS],    complex float* mask)
+	bart_dim_t reorder_dims[DIMS], complex float* reorder,
+	bart_dim_t mask_dims[DIMS],    complex float* mask)
 {
-	long n  = reorder_dims[0];
-	long sy = mask_dims[1];
-	long sz = mask_dims[2];
+	bart_dim_t n  = reorder_dims[0];
+	bart_dim_t sy = mask_dims[1];
+	bart_dim_t sz = mask_dims[2];
 
-	long y = 0;
-	long z = 0;
-	long t = 0;
+	bart_dim_t y = 0;
+	bart_dim_t z = 0;
+	bart_dim_t t = 0;
 
 	for (int i = 0; i < n; i++) {
 
-		y = lround(creal(reorder[i]));
-		z = lround(creal(reorder[i + n]));
-		t = lround(creal(reorder[i + 2 * n]));
+		y = llround(creal(reorder[i]));
+		z = llround(creal(reorder[i + n]));
+		t = llround(creal(reorder[i + 2 * n]));
 
 		mask[(y + z * sy) + t * sy * sz] = 1;
 	}
@@ -148,10 +148,10 @@ struct kern_s {
 
 	int N;
 
-	long* reorder_dims; // Dimension of the index table:    ( n,  3,  1,  1, 1,  1,  1,  1)
-	long* phi_dims;     // Dimension of the temporal basis: ( 1,  1,  1,  1, 1, tf, tk,  1)
-	long* table_dims;   // Dimension of the data table:     (wx, nc,  n,  1, 1,  1,  1,  1)
-	long* kernel_dims;  // Dimension of the kernel:         ( 1, sy, sz,  1, 1,  1, tk, tk)
+	bart_dim_t* reorder_dims; // Dimension of the index table:    ( n,  3,  1,  1, 1,  1,  1,  1)
+	bart_dim_t* phi_dims;     // Dimension of the temporal basis: ( 1,  1,  1,  1, 1, tf, tk,  1)
+	bart_dim_t* table_dims;   // Dimension of the data table:     (wx, nc,  n,  1, 1,  1,  1,  1)
+	bart_dim_t* kernel_dims;  // Dimension of the kernel:         ( 1, sy, sz,  1, 1,  1, tk, tk)
 
 	complex float* reorder;
 	complex float* phi;
@@ -167,22 +167,22 @@ static void kern_apply(const linop_data_t* _data, complex float* dst, const comp
 {
 	const struct kern_s* data = CAST_DOWN(kern_s, _data);
 
-	long wx = data->table_dims[0];
-	long sy = data->kernel_dims[1];
-	long sz = data->kernel_dims[2];
-	long nc = data->table_dims[1];
-	long n  = data->reorder_dims[0];
-	long tf = data->phi_dims[5];
-	long tk = data->phi_dims[6];
+	bart_dim_t wx = data->table_dims[0];
+	bart_dim_t sy = data->kernel_dims[1];
+	bart_dim_t sz = data->kernel_dims[2];
+	bart_dim_t nc = data->table_dims[1];
+	bart_dim_t n  = data->reorder_dims[0];
+	bart_dim_t tf = data->phi_dims[5];
+	bart_dim_t tk = data->phi_dims[6];
 
-	long input_dims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t input_dims[] = { [0 ... DIMS - 1] = 1 };
 	input_dims[0] = wx;
 	input_dims[1] = sy;
 	input_dims[2] = sz;
 	input_dims[3] = nc;
 	input_dims[6] = tk;
 
-	long perm_dims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t perm_dims[] = { [0 ... DIMS - 1] = 1 };
 	perm_dims[0] = wx;
 	perm_dims[1] = nc;
 	perm_dims[3] = tk;
@@ -198,21 +198,21 @@ static void kern_apply(const linop_data_t* _data, complex float* dst, const comp
 
 	md_permute(DIMS, permute_order, perm_dims, perm, input_dims, src, CFL_SIZE);
 
-	long vec_dims[]     = {wx, nc, tf,  1};
-	long phi_mat_dims[] = { 1,  1, tf, tk};
-	long phi_in_dims[]  = {wx, nc,  1, tk};
-	long fmac_dims[]    = {wx, nc, tf, tk};
-	long line_dims[]    = {wx, nc,  1,  1};
+	bart_dim_t vec_dims[]     = {wx, nc, tf,  1};
+	bart_dim_t phi_mat_dims[] = { 1,  1, tf, tk};
+	bart_dim_t phi_in_dims[]  = {wx, nc,  1, tk};
+	bart_dim_t fmac_dims[]    = {wx, nc, tf, tk};
+	bart_dim_t line_dims[]    = {wx, nc,  1,  1};
 
 	complex float* vec = md_alloc_sameplace(4, vec_dims, CFL_SIZE, src);
 
-	long vec_str[4];
+	bart_stride_t vec_str[4];
 	md_calc_strides(4, vec_str, vec_dims, CFL_SIZE);
-	long phi_mat_str[4];
+	bart_stride_t phi_mat_str[4];
 	md_calc_strides(4, phi_mat_str, phi_mat_dims, CFL_SIZE);
-	long phi_in_str[4];
+	bart_stride_t phi_in_str[4];
 	md_calc_strides(4, phi_in_str, phi_in_dims, CFL_SIZE);
-	long fmac_str[4];
+	bart_stride_t fmac_str[4];
 	md_calc_strides(4, fmac_str, fmac_dims, CFL_SIZE);
 
 	int y = -1;
@@ -221,9 +221,9 @@ static void kern_apply(const linop_data_t* _data, complex float* dst, const comp
 
 	for (int i = 0; i < n; i ++) {
 
-		y = lround(creal(data->reorder[i]));
-		z = lround(creal(data->reorder[i + n]));
-		t = lround(creal(data->reorder[i + 2 * n]));
+		y = llround(creal(data->reorder[i]));
+		z = llround(creal(data->reorder[i + n]));
+		t = llround(creal(data->reorder[i + 2 * n]));
 
 		md_clear(4, vec_dims, vec, CFL_SIZE);
 		md_zfmac2(4, fmac_dims, vec_str, vec, phi_in_str, (perm + ((wx * nc * tk) * (y + z * sy))), phi_mat_str, data->phi);
@@ -239,15 +239,15 @@ static void kern_adjoint(const linop_data_t* _data, complex float* dst, const co
 {
 	const struct kern_s* data = CAST_DOWN(kern_s, _data);
 
-	long wx = data->table_dims[0];
-	long sy = data->kernel_dims[1];
-	long sz = data->kernel_dims[2];
-	long nc = data->table_dims[1];
-	long n  = data->reorder_dims[0];
-	long tf = data->phi_dims[5];
-	long tk = data->phi_dims[6];
+	bart_dim_t wx = data->table_dims[0];
+	bart_dim_t sy = data->kernel_dims[1];
+	bart_dim_t sz = data->kernel_dims[2];
+	bart_dim_t nc = data->table_dims[1];
+	bart_dim_t n  = data->reorder_dims[0];
+	bart_dim_t tf = data->phi_dims[5];
+	bart_dim_t tk = data->phi_dims[6];
 
-	long perm_dims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t perm_dims[] = { [0 ... DIMS - 1] = 1 };
 	perm_dims[0] = wx;
 	perm_dims[1] = nc;
 	perm_dims[3] = tk;
@@ -258,31 +258,31 @@ static void kern_adjoint(const linop_data_t* _data, complex float* dst, const co
 	md_clear(DIMS, perm_dims, perm, CFL_SIZE);
 
 #ifdef _OPENMP
-	long num_threads = omp_get_max_threads();
+	bart_dim_t num_threads = omp_get_max_threads();
 #else
-	long num_threads = 1;
+	bart_dim_t num_threads = 1;
 #endif
 
-	long vec_dims[]     = { wx, nc, tf,  1 };
-	long phi_mat_dims[] = { 1,  1, tf, tk };
-	long phi_out_dims[] = { wx, nc,  1, tk };
-	long fmac_dims[]    = { wx, nc, tf, tk };
-	long line_dims[]    = { wx, nc,  1,  1 };
-	long vthrd_dims[]   = { wx, nc, tf,  1, num_threads };
+	bart_dim_t vec_dims[]     = { wx, nc, tf,  1 };
+	bart_dim_t phi_mat_dims[] = { 1,  1, tf, tk };
+	bart_dim_t phi_out_dims[] = { wx, nc,  1, tk };
+	bart_dim_t fmac_dims[]    = { wx, nc, tf, tk };
+	bart_dim_t line_dims[]    = { wx, nc,  1,  1 };
+	bart_dim_t vthrd_dims[]   = { wx, nc, tf,  1, num_threads };
 
 	complex float* vec = md_alloc_sameplace(5, vthrd_dims, CFL_SIZE, dst);
 	md_clear(5, vthrd_dims, vec, CFL_SIZE);
 
-	long vec_str[4];
+	bart_stride_t vec_str[4];
 	md_calc_strides(4, vec_str, vec_dims, CFL_SIZE);
-	long phi_mat_str[4];
+	bart_stride_t phi_mat_str[4];
 	md_calc_strides(4, phi_mat_str, phi_mat_dims, CFL_SIZE);
-	long phi_out_str[4];
+	bart_stride_t phi_out_str[4];
 	md_calc_strides(4, phi_out_str, phi_out_dims, CFL_SIZE);
-	long fmac_str[4];
+	bart_stride_t fmac_str[4];
 	md_calc_strides(4, fmac_str, fmac_dims, CFL_SIZE);
 
-	long flag_dims[1] = { n };
+	bart_dim_t flag_dims[1] = { n };
 	complex float* flags = md_calloc(1, flag_dims, CFL_SIZE);
 
 #pragma omp parallel for
@@ -292,8 +292,8 @@ static void kern_adjoint(const linop_data_t* _data, complex float* dst, const co
 #else
 		int tid = 0;
 #endif
-		int y = lround(creal(data->reorder[k]));
-		int z = lround(creal(data->reorder[k + n]));
+		int y = llround(creal(data->reorder[k]));
+		int z = llround(creal(data->reorder[k + n]));
 		int t = -1;
 
 		if (0 == flags[k]) {
@@ -302,10 +302,10 @@ static void kern_adjoint(const linop_data_t* _data, complex float* dst, const co
 
 			for (int i = k; i < n; i ++) {
 
-				if ((y == lround(creal(data->reorder[i]))) && (z == lround(creal(data->reorder[i + n])))) {
+				if ((y == llround(creal(data->reorder[i]))) && (z == llround(creal(data->reorder[i + n])))) {
 
 					flags[i] = 1;
-					t = lround(creal(data->reorder[i + 2 * n]));
+					t = llround(creal(data->reorder[i + 2 * n]));
 
 					md_copy(4, line_dims, (vec + (wx * nc * tf * tid) + t * wx * nc), (src + i * wx * nc), CFL_SIZE);
 				}
@@ -315,7 +315,7 @@ static void kern_adjoint(const linop_data_t* _data, complex float* dst, const co
 		}
 	}
 
-	long out_dims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t out_dims[] = { [0 ... DIMS - 1] = 1 };
 	out_dims[0] = wx;
 	out_dims[1] = sy;
 	out_dims[2] = sz;
@@ -338,40 +338,40 @@ static void kern_normal(const linop_data_t* _data, complex float* dst, const com
 {
 	const struct kern_s* data = CAST_DOWN(kern_s, _data);
 
-	long wx = data->table_dims[0];
-	long sy = data->kernel_dims[1];
-	long sz = data->kernel_dims[2];
-	long nc = data->table_dims[1];
-	long tk = data->phi_dims[6];
+	bart_dim_t wx = data->table_dims[0];
+	bart_dim_t sy = data->kernel_dims[1];
+	bart_dim_t sz = data->kernel_dims[2];
+	bart_dim_t nc = data->table_dims[1];
+	bart_dim_t tk = data->phi_dims[6];
 
-	long input_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t input_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 	input_dims[0] = wx;
 	input_dims[1] = sy;
 	input_dims[2] = sz;
 	input_dims[3] = nc;
 	input_dims[6] = tk;
-	long input_str[DIMS];
+	bart_stride_t input_str[DIMS];
 	md_calc_strides(DIMS, input_str, input_dims, CFL_SIZE);
 
-	long output_dims[DIMS];
+	bart_dim_t output_dims[DIMS];
 	md_copy_dims(DIMS, output_dims, input_dims);
 	output_dims[6] = 1;
 	output_dims[7] = tk;
-	long output_str[DIMS];
+	bart_stride_t output_str[DIMS];
 	md_calc_strides(DIMS, output_str, output_dims, CFL_SIZE);
 
-	long gpu_kernel_dims[DIMS] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t gpu_kernel_dims[DIMS] = { [0 ... DIMS - 1] = 1};
 	md_copy_dims(DIMS, gpu_kernel_dims, data->kernel_dims);
 	gpu_kernel_dims[0] = wx;
 	gpu_kernel_dims[3] = nc;
 
-	long kernel_str[DIMS];
+	bart_stride_t kernel_str[DIMS];
 	md_calc_strides(DIMS, kernel_str, data->kernel_dims, CFL_SIZE);
 
-	long gpu_kernel_str[DIMS];
+	bart_stride_t gpu_kernel_str[DIMS];
 	md_calc_strides(DIMS, gpu_kernel_str, gpu_kernel_dims, CFL_SIZE);
 
-	long fmac_dims[DIMS];
+	bart_dim_t fmac_dims[DIMS];
 	md_merge_dims(DIMS, fmac_dims, input_dims, data->kernel_dims);
 
 	md_clear(DIMS, output_dims, dst, CFL_SIZE);
@@ -401,18 +401,18 @@ static void kern_free(const linop_data_t* _data)
 }
 
 static const struct linop_s* linop_kern_create(bool gpu_flag,
-	const long _reorder_dims[DIMS], complex float* reorder,
-	const long _phi_dims[DIMS],     complex float* phi,
-	const long _kernel_dims[DIMS],  complex float* kernel,
-	const long _table_dims[DIMS])
+	const bart_dim_t _reorder_dims[DIMS], complex float* reorder,
+	const bart_dim_t _phi_dims[DIMS],     complex float* phi,
+	const bart_dim_t _kernel_dims[DIMS],  complex float* kernel,
+	const bart_dim_t _table_dims[DIMS])
 {
 	PTR_ALLOC(struct kern_s, data);
 	SET_TYPEID(kern_s, data);
 
-	PTR_ALLOC(long[DIMS], reorder_dims);
-	PTR_ALLOC(long[DIMS], phi_dims);
-	PTR_ALLOC(long[DIMS], table_dims);
-	PTR_ALLOC(long[DIMS], kernel_dims);
+	PTR_ALLOC(bart_dim_t[DIMS], reorder_dims);
+	PTR_ALLOC(bart_dim_t[DIMS], phi_dims);
+	PTR_ALLOC(bart_dim_t[DIMS], table_dims);
+	PTR_ALLOC(bart_dim_t[DIMS], kernel_dims);
 
 	md_copy_dims(DIMS, *reorder_dims, _reorder_dims);
 	md_copy_dims(DIMS, *phi_dims,     _phi_dims);
@@ -432,13 +432,13 @@ static const struct linop_s* linop_kern_create(bool gpu_flag,
 #ifdef USE_GPU
 	if (gpu_flag) {
 
-		long repmat_kernel_dims[DIMS] = { [0 ... DIMS - 1] = 1};
+		bart_dim_t repmat_kernel_dims[DIMS] = { [0 ... DIMS - 1] = 1};
 		md_copy_dims(DIMS, repmat_kernel_dims, _kernel_dims);
 		repmat_kernel_dims[0] = _table_dims[0];
 		repmat_kernel_dims[3] = _table_dims[1];
 
-		long kernel_strs[DIMS];
-		long repmat_kernel_strs[DIMS];
+		bart_stride_t kernel_strs[DIMS];
+		bart_stride_t repmat_kernel_strs[DIMS];
 		md_calc_strides(DIMS,        kernel_strs,       _kernel_dims, CFL_SIZE);
 		md_calc_strides(DIMS, repmat_kernel_strs, repmat_kernel_dims, CFL_SIZE);
 
@@ -453,14 +453,14 @@ static const struct linop_s* linop_kern_create(bool gpu_flag,
 	(void)gpu_flag;
 #endif
 
-	long input_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t input_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 	input_dims[0] = _table_dims[0];
 	input_dims[1] = _kernel_dims[1];
 	input_dims[2] = _kernel_dims[2];
 	input_dims[3] = _table_dims[1];
 	input_dims[6] = _phi_dims[6];
 
-	long output_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t output_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 	output_dims[0] = _table_dims[0];
 	output_dims[1] = _table_dims[1];
 	output_dims[2] = _reorder_dims[0];
@@ -486,33 +486,33 @@ static void multc_apply(const linop_data_t* _data, complex float* dst, const com
 
 	// Loading single channel operator.
 	const struct operator_s* fwd = data->sc_op->forward;
-	const long* sc_inp_dims = linop_domain(data->sc_op)->dims;
-	const long* sc_out_dims = linop_codomain(data->sc_op)->dims;
+	const bart_dim_t* sc_inp_dims = linop_domain(data->sc_op)->dims;
+	const bart_dim_t* sc_out_dims = linop_codomain(data->sc_op)->dims;
 
-	long sx = sc_inp_dims[0];
-	long sy = sc_inp_dims[1];
-	long sz = sc_inp_dims[2];
-	long wx = sc_out_dims[0];
-	long  n = sc_out_dims[2];
-	long nc = data->nc;
-	long md = data->md;
+	bart_dim_t sx = sc_inp_dims[0];
+	bart_dim_t sy = sc_inp_dims[1];
+	bart_dim_t sz = sc_inp_dims[2];
+	bart_dim_t wx = sc_out_dims[0];
+	bart_dim_t  n = sc_out_dims[2];
+	bart_dim_t nc = data->nc;
+	bart_dim_t md = data->md;
 
-	long src_dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t src_dims[] = { [0 ... DIMS - 1] = 1};
 	md_copy_dims(DIMS, src_dims, sc_inp_dims);
 	src_dims[MAPS_DIM] = md;
 
-	long dst_dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t dst_dims[] = { [0 ... DIMS - 1] = 1};
 	md_copy_dims(DIMS, dst_dims, sc_out_dims);
 	dst_dims[1] = nc;
 
-	long map_dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t map_dims[] = { [0 ... DIMS - 1] = 1};
 	map_dims[0] = sx;
 	map_dims[1] = sy;
 	map_dims[2] = sz;
 	map_dims[3] = nc;
 	map_dims[4] = md;
 
-	long single_map_dims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t single_map_dims[] = { [0 ... DIMS - 1] = 1 };
 	md_copy_dims(DIMS, single_map_dims, map_dims);
 	single_map_dims[COIL_DIM] = 1;
 
@@ -520,26 +520,26 @@ static void multc_apply(const linop_data_t* _data, complex float* dst, const com
 
 	complex float* buffer = md_alloc_sameplace(DIMS, sc_inp_dims, CFL_SIZE, src);
 
-	long tbl_dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t tbl_dims[] = { [0 ... DIMS - 1] = 1};
 	tbl_dims[0] = wx;
 	tbl_dims[1] = n;
 	tbl_dims[2] = nc;
 	complex float* tbl = md_alloc_sameplace(DIMS, tbl_dims, CFL_SIZE, src);
 	md_clear(DIMS, tbl_dims, tbl, CFL_SIZE);
 
-	long pos[] = { [0 ... DIMS - 1] = 0 };
+	bart_dim_t pos[] = { [0 ... DIMS - 1] = 0 };
 
-	long zfmac_dims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t zfmac_dims[] = { [0 ... DIMS - 1] = 1 };
 	md_copy_dims(DIMS, zfmac_dims, src_dims);
 
-	long strides_single_map[DIMS];
+	bart_stride_t strides_single_map[DIMS];
 	md_calc_strides(DIMS, strides_single_map, single_map_dims, CFL_SIZE);
-	long strides_src[DIMS];
+	bart_stride_t strides_src[DIMS];
 	md_calc_strides(DIMS, strides_src, src_dims, CFL_SIZE);
-	long strides_sc_inp[DIMS];
+	bart_stride_t strides_sc_inp[DIMS];
 	md_calc_strides(DIMS, strides_sc_inp, sc_inp_dims, CFL_SIZE);
 
-	for (long k = 0; k < data->nc; k++) {
+	for (bart_dim_t k = 0; k < data->nc; k++) {
 
 		md_clear(DIMS, single_map_dims, single_map, CFL_SIZE);
 		md_clear(DIMS, sc_inp_dims, buffer, CFL_SIZE);
@@ -573,33 +573,33 @@ static void multc_adjoint(const linop_data_t* _data, complex float* dst, const c
 
 	// Loading single channel operator.
 	const struct operator_s* adj = data->sc_op->adjoint;
-	const long* sc_inp_dims = linop_codomain(data->sc_op)->dims;
-	const long* sc_out_dims = linop_domain(data->sc_op)->dims;
+	const bart_dim_t* sc_inp_dims = linop_codomain(data->sc_op)->dims;
+	const bart_dim_t* sc_out_dims = linop_domain(data->sc_op)->dims;
 
-	long sx = sc_out_dims[0];
-	long sy = sc_out_dims[1];
-	long sz = sc_out_dims[2];
-	long wx = sc_inp_dims[0];
-	long  n = sc_inp_dims[2];
-	long nc = data->nc;
-	long md = data->md;
+	bart_dim_t sx = sc_out_dims[0];
+	bart_dim_t sy = sc_out_dims[1];
+	bart_dim_t sz = sc_out_dims[2];
+	bart_dim_t wx = sc_inp_dims[0];
+	bart_dim_t  n = sc_inp_dims[2];
+	bart_dim_t nc = data->nc;
+	bart_dim_t md = data->md;
 
-	long src_dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t src_dims[] = { [0 ... DIMS - 1] = 1};
 	md_copy_dims(DIMS, src_dims, sc_inp_dims);
 	src_dims[1] = nc;
 
-	long dst_dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t dst_dims[] = { [0 ... DIMS - 1] = 1};
 	md_copy_dims(DIMS, dst_dims, sc_out_dims);
 	dst_dims[MAPS_DIM] = md;
 
-	long map_dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t map_dims[] = { [0 ... DIMS - 1] = 1};
 	map_dims[0] = sx;
 	map_dims[1] = sy;
 	map_dims[2] = sz;
 	map_dims[3] = nc;
 	map_dims[4] = md;
 
-	long single_map_dims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t single_map_dims[] = { [0 ... DIMS - 1] = 1 };
 	md_copy_dims(DIMS, single_map_dims, map_dims);
 	single_map_dims[COIL_DIM] = 1;
 	complex float* single_map = md_alloc_sameplace(DIMS, single_map_dims, CFL_SIZE, src);
@@ -607,23 +607,23 @@ static void multc_adjoint(const linop_data_t* _data, complex float* dst, const c
 	complex float* buffer1 = md_alloc_sameplace(DIMS, sc_out_dims, CFL_SIZE, src);
 	complex float* buffer2 = md_alloc_sameplace(DIMS, dst_dims, CFL_SIZE, src);
 
-	long tbl_dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t tbl_dims[] = { [0 ... DIMS - 1] = 1};
 	tbl_dims[0] = wx;
 	tbl_dims[2] = n;
 	complex float* tbl = md_alloc_sameplace(DIMS, tbl_dims, CFL_SIZE, src);
 
-	long pos[] = { [0 ... DIMS - 1] = 0 };
+	bart_dim_t pos[] = { [0 ... DIMS - 1] = 0 };
 
-	long strides_single_map[DIMS];
+	bart_stride_t strides_single_map[DIMS];
 	md_calc_strides(DIMS, strides_single_map, single_map_dims, CFL_SIZE);
-	long strides_sc_out[DIMS];
+	bart_stride_t strides_sc_out[DIMS];
 	md_calc_strides(DIMS, strides_sc_out, sc_out_dims, CFL_SIZE);
-	long strides_dst[DIMS];
+	bart_stride_t strides_dst[DIMS];
 	md_calc_strides(DIMS, strides_dst, dst_dims, CFL_SIZE);
 
 	md_clear(DIMS, dst_dims, dst, CFL_SIZE);
 
-	for (long k = 0; k < data->nc; k++) {
+	for (bart_dim_t k = 0; k < data->nc; k++) {
 
 
 		md_clear(DIMS, single_map_dims, single_map, CFL_SIZE);
@@ -657,26 +657,26 @@ static void multc_normal(const linop_data_t* _data, complex float* dst, const co
 
 	// Loading single channel operator.
 	const struct operator_s* nrm = data->sc_op->normal;
-	const long* sc_dims = linop_domain(data->sc_op)->dims;
+	const bart_dim_t* sc_dims = linop_domain(data->sc_op)->dims;
 
-	long sx = sc_dims[0];
-	long sy = sc_dims[1];
-	long sz = sc_dims[2];
-	long nc = data->nc;
-	long md = data->md;
+	bart_dim_t sx = sc_dims[0];
+	bart_dim_t sy = sc_dims[1];
+	bart_dim_t sz = sc_dims[2];
+	bart_dim_t nc = data->nc;
+	bart_dim_t md = data->md;
 
-	long dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t dims[] = { [0 ... DIMS - 1] = 1};
 	md_copy_dims(DIMS, dims, sc_dims);
 	dims[MAPS_DIM] = md;
 
-	long map_dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t map_dims[] = { [0 ... DIMS - 1] = 1};
 	map_dims[0] = sx;
 	map_dims[1] = sy;
 	map_dims[2] = sz;
 	map_dims[3] = nc;
 	map_dims[4] = md;
 
-	long single_map_dims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t single_map_dims[] = { [0 ... DIMS - 1] = 1 };
 	md_copy_dims(DIMS, single_map_dims, map_dims);
 	single_map_dims[COIL_DIM] = 1;
 	complex float* single_map = md_alloc_sameplace(DIMS, single_map_dims, CFL_SIZE, src);
@@ -685,18 +685,18 @@ static void multc_normal(const linop_data_t* _data, complex float* dst, const co
 	complex float* buffer2 = md_alloc_sameplace(DIMS, sc_dims, CFL_SIZE, src);
 	complex float* buffer3 = md_alloc_sameplace(DIMS, dims, CFL_SIZE, src);
 
-	long pos[] = { [0 ... DIMS - 1] = 0 };
+	bart_dim_t pos[] = { [0 ... DIMS - 1] = 0 };
 
-	long strides_single_map[DIMS];
+	bart_stride_t strides_single_map[DIMS];
 	md_calc_strides(DIMS, strides_single_map, single_map_dims, CFL_SIZE);
-	long strides_sc[DIMS];
+	bart_stride_t strides_sc[DIMS];
 	md_calc_strides(DIMS, strides_sc, sc_dims, CFL_SIZE);
-	long strides[DIMS];
+	bart_stride_t strides[DIMS];
 	md_calc_strides(DIMS, strides, dims, CFL_SIZE);
 
 	md_clear(DIMS, dims, dst, CFL_SIZE);
 
-	for (long k = 0; k < data->nc; k++) {
+	for (bart_dim_t k = 0; k < data->nc; k++) {
 
 		md_clear(DIMS, single_map_dims, single_map, CFL_SIZE);
 		md_clear(DIMS, sc_dims, buffer1, CFL_SIZE);
@@ -727,7 +727,7 @@ static void multc_free(const linop_data_t* _data)
 	xfree(data);
 }
 
-static struct linop_s* linop_multc_create(long nc, long md, const complex float* maps, const struct linop_s* sc_op)
+static struct linop_s* linop_multc_create(bart_dim_t nc, bart_dim_t md, const complex float* maps, const struct linop_s* sc_op)
 {
 	PTR_ALLOC(struct multc_s, data);
 	SET_TYPEID(multc_s, data);
@@ -737,11 +737,11 @@ static struct linop_s* linop_multc_create(long nc, long md, const complex float*
 	data->maps = maps;
 	data->sc_op = sc_op;
 
-	long input_dims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t input_dims[] = { [0 ... DIMS - 1] = 1 };
 	md_copy_dims(DIMS, input_dims, linop_domain(sc_op)->dims);
 	input_dims[MAPS_DIM] = md;
 
-	long output_dims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t output_dims[] = { [0 ... DIMS - 1] = 1 };
 	md_copy_dims(DIMS, output_dims, linop_codomain(sc_op)->dims);
 	output_dims[1] = nc;
 
@@ -750,15 +750,15 @@ static struct linop_s* linop_multc_create(long nc, long md, const complex float*
 }
 
 /* Resize operator. */
-static const struct linop_s* linop_wavereshape_create(long wx, long sx, long sy, long sz, long nc, long tk)
+static const struct linop_s* linop_wavereshape_create(bart_dim_t wx, bart_dim_t sx, bart_dim_t sy, bart_dim_t sz, bart_dim_t nc, bart_dim_t tk)
 {
-	long input_dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t input_dims[] = { [0 ... DIMS - 1] = 1};
 	input_dims[0] = sx;
 	input_dims[1] = sy;
 	input_dims[2] = sz;
 	input_dims[3] = nc;
 	input_dims[6] = tk;
-	long output_dims[DIMS];
+	bart_dim_t output_dims[DIMS];
 	md_copy_dims(DIMS, output_dims, input_dims);
 	output_dims[0] = wx;
 	struct linop_s* R = linop_resize_center_create(DIMS, output_dims, input_dims);
@@ -766,9 +766,9 @@ static const struct linop_s* linop_wavereshape_create(long wx, long sx, long sy,
 }
 
 /* Fx operator. */
-static const struct linop_s* linop_fx_create(long wx, long sy, long sz, long nc, long tk, bool centered)
+static const struct linop_s* linop_fx_create(bart_dim_t wx, bart_dim_t sy, bart_dim_t sz, bart_dim_t nc, bart_dim_t tk, bool centered)
 {
-	long dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t dims[] = { [0 ... DIMS - 1] = 1};
 	dims[0] = wx;
 	dims[1] = sy;
 	dims[2] = sz;
@@ -783,9 +783,9 @@ static const struct linop_s* linop_fx_create(long wx, long sy, long sz, long nc,
 }
 
 /* Wave operator. */
-static const struct linop_s* linop_wave_create(long wx, long sy, long sz, long nc, long tk, long psf_tk, complex float* psf)
+static const struct linop_s* linop_wave_create(bart_dim_t wx, bart_dim_t sy, bart_dim_t sz, bart_dim_t nc, bart_dim_t tk, bart_dim_t psf_tk, complex float* psf)
 {
-	long dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t dims[] = { [0 ... DIMS - 1] = 1};
 	dims[0] = wx;
 	dims[1] = sy;
 	dims[2] = sz;
@@ -795,9 +795,9 @@ static const struct linop_s* linop_wave_create(long wx, long sy, long sz, long n
 }
 
 /* Fyz operator. */
-static const struct linop_s* linop_fyz_create(long wx, long sy, long sz, long nc, long tk, bool centered)
+static const struct linop_s* linop_fyz_create(bart_dim_t wx, bart_dim_t sy, bart_dim_t sz, bart_dim_t nc, bart_dim_t tk, bool centered)
 {
-	long dims[] = { [0 ... DIMS - 1] = 1};
+	bart_dim_t dims[] = { [0 ... DIMS - 1] = 1};
 	dims[0] = wx;
 	dims[1] = sy;
 	dims[2] = sz;
@@ -813,35 +813,35 @@ static const struct linop_s* linop_fyz_create(long wx, long sy, long sz, long nc
 
 /* Construction sampling temporal kernel.*/
 static void construct_kernel(
-	long mask_dims[DIMS], complex float* mask,
-	long phi_dims[DIMS],  complex float* phi,
-	long kern_dims[DIMS], complex float* kern)
+	bart_dim_t mask_dims[DIMS], complex float* mask,
+	bart_dim_t phi_dims[DIMS],  complex float* phi,
+	bart_dim_t kern_dims[DIMS], complex float* kern)
 {
-	long sy = mask_dims[1];
-	long sz = mask_dims[2];
-	long tf = phi_dims[5];
-	long tk = phi_dims[6];
+	bart_dim_t sy = mask_dims[1];
+	bart_dim_t sz = mask_dims[2];
+	bart_dim_t tf = phi_dims[5];
+	bart_dim_t tk = phi_dims[6];
 
-	long cvec_dims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t cvec_dims[] = { [0 ... DIMS - 1] = 1 };
 	cvec_dims[6] = tk;
-	long cvec_str[DIMS];
+	bart_stride_t cvec_str[DIMS];
 	md_calc_strides(DIMS, cvec_str, cvec_dims, CFL_SIZE);
 
 	complex float cvec[tk];
 
-	long tvec_dims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t tvec_dims[] = { [0 ... DIMS - 1] = 1 };
 	tvec_dims[5] = tf;
-	long tvec_str[DIMS];
+	bart_stride_t tvec_str[DIMS];
 	md_calc_strides(DIMS, tvec_str, tvec_dims, CFL_SIZE);
 
 	complex float mvec[tf];
 	complex float tvec1[tf];
 	complex float tvec2[tf];
 
-	long phi_str[DIMS];
+	bart_stride_t phi_str[DIMS];
 	md_calc_strides(DIMS, phi_str, phi_dims, CFL_SIZE);
 
-	long out_dims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t out_dims[] = { [0 ... DIMS - 1] = 1 };
 	out_dims[0] = tk;
 	out_dims[1] = sy;
 	out_dims[2] = sz;
@@ -881,19 +881,19 @@ static void construct_kernel(
 	md_free(out);
 }
 
-static void fftmod_apply(long sy, long sz,
-	long reorder_dims[DIMS], complex float* reorder,
-	long table_dims[DIMS],   complex float* table,
-	long maps_dims[DIMS],    complex float* maps)
+static void fftmod_apply(bart_dim_t sy, bart_dim_t sz,
+	bart_dim_t reorder_dims[DIMS], complex float* reorder,
+	bart_dim_t table_dims[DIMS],   complex float* table,
+	bart_dim_t maps_dims[DIMS],    complex float* maps)
 {
-	long wx = table_dims[0];
-	long nc = table_dims[1];
+	bart_dim_t wx = table_dims[0];
+	bart_dim_t nc = table_dims[1];
 
 	fftmod(DIMS, table_dims, READ_FLAG, table, table);
 	fftmod(DIMS, maps_dims, FFT_FLAGS, maps, maps);
 
-	long y = -1;
-	long z = -1;
+	bart_dim_t y = -1;
+	bart_dim_t z = -1;
 
 	double dy = ((double) sy/2)/((double) sy);
 	double dz = ((double) sz/2)/((double) sz);
@@ -901,14 +901,14 @@ static void fftmod_apply(long sy, long sz,
 	complex float py = 1;
 	complex float pz = 1;
 
-	long dims[] = { [0 ... DIMS] = 1};
+	bart_dim_t dims[] = { [0 ... DIMS] = 1};
 	dims[0] = wx;
 	dims[1] = nc;
 
-	long n = reorder_dims[0];
-	for (long k = 0; k < n; k++) {
-		y = lround(creal(reorder[k]));
-		z = lround(creal(reorder[k + n]));
+	bart_dim_t n = reorder_dims[0];
+	for (bart_dim_t k = 0; k < n; k++) {
+		y = llround(creal(reorder[k]));
+		z = llround(creal(reorder[k + n]));
 
 		py = cexp(2.i * M_PI * dy * y);
 		pz = cexp(2.i * M_PI * dz * z);
@@ -977,19 +977,19 @@ int main_wshfl(int argc, char* argv[argc])
 
 	debug_printf(DP_INFO, "Loading data... ");
 
-	long maps_dims[DIMS];
+	bart_dim_t maps_dims[DIMS];
 	complex float* maps = load_cfl(maps_file, DIMS, maps_dims);
 
-	long wave_dims[DIMS];
+	bart_dim_t wave_dims[DIMS];
 	complex float* wave = load_cfl(wave_file, DIMS, wave_dims);
 
-	long phi_dims[DIMS];
+	bart_dim_t phi_dims[DIMS];
 	complex float* phi = load_cfl(phi_file, DIMS, phi_dims);
 
-	long reorder_dims[DIMS];
+	bart_dim_t reorder_dims[DIMS];
 	complex float* reorder = load_cfl(reorder_file, DIMS, reorder_dims);
 
-	long table_dims[DIMS];
+	bart_dim_t table_dims[DIMS];
 	complex float* table = load_cfl(table_file, DIMS, table_dims);
 
 	debug_printf(DP_INFO, "Done.\n");
@@ -1006,7 +1006,7 @@ int main_wshfl(int argc, char* argv[argc])
 	int tk = phi_dims[6];
 
 	debug_printf(DP_INFO, "Constructing sampling mask from reorder table... ");
-	long mask_dims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t mask_dims[] = { [0 ... DIMS - 1] = 1 };
 	mask_dims[1] = sy;
 	mask_dims[2] = sz;
 	mask_dims[5] = tf;
@@ -1015,7 +1015,7 @@ int main_wshfl(int argc, char* argv[argc])
 	debug_printf(DP_INFO, "Done.\n");
 
 	debug_printf(DP_INFO, "Constructing sampling-temporal kernel... ");
-	long kernel_dims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t kernel_dims[] = { [0 ... DIMS - 1] = 1 };
 	kernel_dims[1] = sy;
 	kernel_dims[2] = sz;
 	kernel_dims[6] = tk;
@@ -1025,7 +1025,7 @@ int main_wshfl(int argc, char* argv[argc])
 	md_free(mask);
 	debug_printf(DP_INFO, "Done.\n");
 
-	long coeff_dims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t coeff_dims[] = { [0 ... DIMS - 1] = 1 };
 	coeff_dims[0] = sx;
 	coeff_dims[1] = sy;
 	coeff_dims[2] = sz;
@@ -1036,7 +1036,7 @@ int main_wshfl(int argc, char* argv[argc])
 	if (ksp) {
 
 		const struct linop_s* Knc = linop_kern_create(bart_use_gpu, reorder_dims, reorder, phi_dims, phi, kernel_dims, kernel, table_dims);
-		long ksp_dims[] = { [0 ... DIMS - 1] = 1 };
+		bart_dim_t ksp_dims[] = { [0 ... DIMS - 1] = 1 };
 		ksp_dims[0] = wx;
 		ksp_dims[1] = sy;
 		ksp_dims[2] = sz;
@@ -1085,7 +1085,7 @@ int main_wshfl(int argc, char* argv[argc])
 	debug_printf(DP_INFO, "\tFyz: %f seconds.\n", t2 - t1);
 
 	t1 = timestamp();
-	long single_channel_table_dims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t single_channel_table_dims[] = { [0 ... DIMS - 1] = 1 };
 	md_copy_dims(DIMS, single_channel_table_dims, table_dims);
 	single_channel_table_dims[1] = 1;
 	const struct linop_s* K = linop_kern_create(bart_use_gpu, reorder_dims, reorder, phi_dims, phi, kernel_dims, kernel, single_channel_table_dims);

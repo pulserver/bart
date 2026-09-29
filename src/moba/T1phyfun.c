@@ -37,15 +37,15 @@ struct T1_phy_s {
 
 	int N;
 
-	const long* map_dims;
-	const long* TI_dims;
-	const long* in_dims;
-	const long* out_dims;
+	const bart_dim_t* map_dims;
+	const bart_dim_t* TI_dims;
+	const bart_dim_t* in_dims;
+	const bart_dim_t* out_dims;
 
-	const long* map_strs;
-	const long* TI_strs;
-	const long* in_strs;
-	const long* out_strs;
+	const bart_stride_t* map_strs;
+	const bart_stride_t* TI_strs;
+	const bart_stride_t* in_strs;
+	const bart_stride_t* out_strs;
 
 	// Parameter maps
 	complex float* M0;
@@ -103,7 +103,7 @@ static void T1_fun(const nlop_data_t* _data, complex float* dst, const complex f
 		data->tmp_dalpha = md_alloc_sameplace(data->N, data->out_dims, CFL_SIZE, dst);
 	}
 
-	long pos[data->N];
+	bart_dim_t pos[data->N];
 
 	for (int i = 0; i < data->N; i++)
 		pos[i] = 0;
@@ -175,7 +175,7 @@ static void T1_fun(const nlop_data_t* _data, complex float* dst, const complex f
 static void T1_der(const nlop_data_t* _data, int /*o*/, int /*i*/, complex float* dst, const complex float* src)
 {
 	struct T1_phy_s* data = CAST_DOWN(T1_phy_s, _data);
-	long pos[data->N];
+	bart_dim_t pos[data->N];
 
 	for (int i = 0; i < data->N; i++)
 		pos[i] = 0;
@@ -208,7 +208,7 @@ static void T1_adj(const nlop_data_t* _data, int /*o*/, int /*i*/, complex float
 {
 	struct T1_phy_s* data = CAST_DOWN(T1_phy_s, _data);
 
-	long pos[data->N];
+	bart_dim_t pos[data->N];
 
 	for (int i = 0; i < data->N; i++)
 		pos[i] = 0;
@@ -276,43 +276,43 @@ static void T1_del(const nlop_data_t* _data)
 }
 
 
-struct nlop_s* nlop_T1_phy_create(int N, const long out_dims[N], const long in_dims[N], const long TI_dims[N], const complex float* TI,  const struct moba_conf_s* config)
+struct nlop_s* nlop_T1_phy_create(int N, const bart_dim_t out_dims[N], const bart_dim_t in_dims[N], const bart_dim_t TI_dims[N], const complex float* TI,  const struct moba_conf_s* config)
 {
 	PTR_ALLOC(struct T1_phy_s, data);
 	SET_TYPEID(T1_phy_s, data);
 
-	long map_dims[N];
+	bart_dim_t map_dims[N];
 	md_select_dims(N, ~COEFF_FLAG, map_dims, in_dims);
 
-	PTR_ALLOC(long[N], ndims);
+	PTR_ALLOC(bart_dim_t[N], ndims);
 	md_copy_dims(N, *ndims, map_dims);
 	data->map_dims = *PTR_PASS(ndims);
 
-	PTR_ALLOC(long[N], nodims);
+	PTR_ALLOC(bart_dim_t[N], nodims);
 	md_copy_dims(N, *nodims, out_dims);
 	data->out_dims = *PTR_PASS(nodims);
 
-	PTR_ALLOC(long[N], nidims);
+	PTR_ALLOC(bart_dim_t[N], nidims);
 	md_copy_dims(N, *nidims, in_dims);
 	data->in_dims = *PTR_PASS(nidims);
 
-	PTR_ALLOC(long[N], ntidims);
+	PTR_ALLOC(bart_dim_t[N], ntidims);
 	md_copy_dims(N, *ntidims, TI_dims);
 	data->TI_dims = *PTR_PASS(ntidims);
 
-	PTR_ALLOC(long[N], nmstr);
+	PTR_ALLOC(bart_dim_t[N], nmstr);
 	md_calc_strides(N, *nmstr, map_dims, CFL_SIZE);
 	data->map_strs = *PTR_PASS(nmstr);
 
-	PTR_ALLOC(long[N], nostr);
+	PTR_ALLOC(bart_dim_t[N], nostr);
 	md_calc_strides(N, *nostr, out_dims, CFL_SIZE);
 	data->out_strs = *PTR_PASS(nostr);
 
-	PTR_ALLOC(long[N], nistr);
+	PTR_ALLOC(bart_dim_t[N], nistr);
 	md_calc_strides(N, *nistr, in_dims, CFL_SIZE);
 	data->in_strs = *PTR_PASS(nistr);
 
-	PTR_ALLOC(long[N], ntistr);
+	PTR_ALLOC(bart_dim_t[N], ntistr);
 	md_calc_strides(N, *ntistr, TI_dims, CFL_SIZE);
 	data->TI_strs = *PTR_PASS(ntistr);
 

@@ -24,19 +24,19 @@
 #define CFL_SIZE sizeof(complex float)
 #endif
 
-static void rounded_div(int D, const long dims[D], float bound, complex float* out, const complex float* in)
+static void rounded_div(int D, const bart_dim_t dims[D], float bound, complex float* out, const complex float* in)
 {
-	long size = md_calc_size(D, dims);
+	bart_dim_t size = md_calc_size(D, dims);
 
 #pragma omp parallel for
-	for (long i = 0; i < size; i++) {
+	for (bart_dim_t i = 0; i < size; i++) {
 
 		float d = crealf(in[i]) / bound;
 		out[i] = (d > 1.) ? - ceilf(d) : (d < -1.) ? - floorf(d) : 0.;
 	}
 }
 
-static void unwrap(int D, const long dims[D], int d, float bounds,
+static void unwrap(int D, const bart_dim_t dims[D], int d, float bounds,
 	complex float* optr, const complex float* iptr)
 {
 	md_zfdiff0(D, dims, d, optr, iptr);
@@ -48,19 +48,19 @@ static void unwrap(int D, const long dims[D], int d, float bounds,
 	md_zadd(D, dims, optr, optr, iptr);
 }
 
-static void unwrap_lap(int D, const long dims[D], unsigned long flags, float bounds, complex float* optr, const complex float* iptr)
+static void unwrap_lap(int D, const bart_dim_t dims[D], bart_flags_t flags, float bounds, complex float* optr, const complex float* iptr)
 {
 	md_zsmul(D, dims, optr, iptr, M_PI / bounds);
 
 	md_laplace_fd_wrapped_phase(D, dims, flags, optr, optr);
 
-	long fft_dims[D];
+	bart_dim_t fft_dims[D];
 	md_select_dims(D, flags, fft_dims, dims);
 
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
-	long fft_strs[D];
+	bart_stride_t fft_strs[D];
 	md_calc_strides(D, fft_strs, fft_dims, CFL_SIZE);
 
 	complex float* kernel = md_alloc_sameplace(D, fft_dims, CFL_SIZE, iptr);
@@ -88,7 +88,7 @@ enum MODE { MODE_CUMSUM, MODE_LAP };
 
 int main_unwrap(int argc, char* argv[argc])
 {
-	unsigned long flags = 0;
+	bart_flags_t flags = 0;
 	const char* in_file = NULL;
 	const char* out_file = NULL;
 
@@ -110,8 +110,8 @@ int main_unwrap(int argc, char* argv[argc])
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
 
-	long in_dims[DIMS];
-	long out_dims[DIMS];
+	bart_dim_t in_dims[DIMS];
+	bart_dim_t out_dims[DIMS];
 
 	complex float* in_data = load_cfl(in_file, DIMS, in_dims);
 

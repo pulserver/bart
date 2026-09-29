@@ -1,4 +1,5 @@
 
+#include "misc/dimtypes.h"
 #include "misc/types.h"
 
 struct iter_monitor_s;
@@ -47,8 +48,8 @@ struct iter3_levenberg_marquardt_conf {
 	int cgiter;
 	float redu;
 	float maxreg;
-	long Bi;
-	long Bo;
+	bart_dim_t Bi;
+	bart_dim_t Bo;
 	float l2lambda;
 };
 

@@ -32,8 +32,8 @@ static const char help_str[] = "Extracts a slice from positions along dimensions
 int main_slice(int argc, char* argv[argc])
 {
 	int count = 0;
-	long* dims = NULL;
-	long* poss = NULL;
+	bart_dim_t* dims = NULL;
+	bart_dim_t* poss = NULL;
 
 	const char* in_file = NULL;
 	const char* out_file = NULL;
@@ -53,14 +53,14 @@ int main_slice(int argc, char* argv[argc])
 
 	num_init();
 
-	long in_dims[DIMS];
-	long out_dims[DIMS];
+	bart_dim_t in_dims[DIMS];
+	bart_dim_t out_dims[DIMS];
 	
 	complex float* in_data = load_cfl(in_file, DIMS, in_dims);
 	md_copy_dims(DIMS, out_dims, in_dims);
 
-	long pos2[DIMS] = { [0 ... DIMS - 1] = 0 };
-	unsigned long flags = 0L;
+	bart_dim_t pos2[DIMS] = { [0 ... DIMS - 1] = 0 };
+	bart_flags_t flags = 0;
 
 	for (int i = 0; i < count; i++) {
 

@@ -28,7 +28,7 @@
 #include "morph.h"
 
 
-complex float* md_structuring_element_cube(int N, long dims[N], int radius, unsigned long flags, const void* ref)
+complex float* md_structuring_element_cube(int N, bart_dim_t dims[N], int radius, bart_flags_t flags, const void* ref)
 {
 	for (int i = 0; i < N; i++)
 		dims[i] = (MD_IS_SET(flags, i)) ? 1 + 2 * radius : 1;
@@ -39,21 +39,21 @@ complex float* md_structuring_element_cube(int N, long dims[N], int radius, unsi
 	return structure;
 }
 
-complex float* md_structuring_element_ball(int N, long dims[N], int radius, unsigned long flags, const void* ref)
+complex float* md_structuring_element_ball(int N, bart_dim_t dims[N], int radius, bart_flags_t flags, const void* ref)
 {
 	for (int i = 0; i < N; i++)
 		dims[i] = (MD_IS_SET(flags, i)) ? 1 + 2 * radius : 1;
 
 	complex float* structure = md_alloc_sameplace(N, dims, CFL_SIZE, ref);
-	const long* dimsp = dims;
+	const bart_dim_t* dimsp = dims;
 
-	NESTED(complex float, ball_kernel, (const long pos[]))
+	NESTED(complex float, ball_kernel, (const bart_dim_t pos[]))
 	{
 		complex float val = 0.;
 
 		float rad = 0.;
 		for (int i = 0; i < N; i++)
-			rad += powf(labs(pos[i] - dimsp[i] / 2), 2);
+			rad += powf(llabs(pos[i] - dimsp[i] / 2), 2);
 
 		if (rad <= powf(radius, 2))
 			val = 1.;
@@ -67,15 +67,15 @@ complex float* md_structuring_element_ball(int N, long dims[N], int radius, unsi
 	return structure;
 }
 
-complex float* md_structuring_element_cross(int N, long dims[N], int radius, unsigned long flags, const void* ref)
+complex float* md_structuring_element_cross(int N, bart_dim_t dims[N], int radius, bart_flags_t flags, const void* ref)
 {
 	for (int i = 0; i < N; i++)
 		dims[i] = (MD_IS_SET(flags, i)) ? 1 + 2 * radius : 1;
 
 	complex float* structure = md_alloc_sameplace(N, dims, CFL_SIZE, ref);
-	const long* dimsp = dims;
+	const bart_dim_t* dimsp = dims;
 
-	NESTED(complex float, ball_kernel, (const long pos[]))
+	NESTED(complex float, ball_kernel, (const bart_dim_t pos[]))
 	{
 		complex float val = 0.;
 
@@ -92,12 +92,12 @@ complex float* md_structuring_element_cross(int N, long dims[N], int radius, uns
 }
 
 
-static void mask_conv(int D, const long mask_dims[D], complex float* mask, const long dims[D], complex float* out, const complex float* in, enum conv_type ctype)
+static void mask_conv(int D, const bart_dim_t mask_dims[D], complex float* mask, const bart_dim_t dims[D], complex float* out, const complex float* in, enum conv_type ctype)
 {
 	conv(D, md_nontriv_dims(D, mask_dims), ctype, CONV_SYMMETRIC, dims, out, dims, in, mask_dims, mask);
 }
 
-void md_erosion(int D, const long mask_dims[D], complex float* mask, const long dims[D], complex float* out, const complex float* in, enum conv_type ctype)
+void md_erosion(int D, const bart_dim_t mask_dims[D], complex float* mask, const bart_dim_t dims[D], complex float* out, const complex float* in, enum conv_type ctype)
 {
 	complex float* tmp = md_alloc_sameplace(D, dims, CFL_SIZE, in);
 
@@ -110,7 +110,7 @@ void md_erosion(int D, const long mask_dims[D], complex float* mask, const long 
 }
 
 
-void md_dilation(int D, const long mask_dims[D], complex float* mask, const long dims[D], complex float* out, const complex float* in, enum conv_type ctype)
+void md_dilation(int D, const bart_dim_t mask_dims[D], complex float* mask, const bart_dim_t dims[D], complex float* out, const complex float* in, enum conv_type ctype)
 {
 	complex float* tmp = md_alloc_sameplace(D, dims, CFL_SIZE, in);
 
@@ -122,7 +122,7 @@ void md_dilation(int D, const long mask_dims[D], complex float* mask, const long
 	md_free(tmp);
 }
 
-void md_opening(int D, const long mask_dims[D], complex float* mask, const long dims[D], complex float* out, const complex float* in, enum conv_type ctype)
+void md_opening(int D, const bart_dim_t mask_dims[D], complex float* mask, const bart_dim_t dims[D], complex float* out, const complex float* in, enum conv_type ctype)
 {
 	complex float* tmp = md_alloc_sameplace(D, dims, CFL_SIZE, in);
 
@@ -133,7 +133,7 @@ void md_opening(int D, const long mask_dims[D], complex float* mask, const long 
 	md_free(tmp);
 }
 
-void md_closing(int D, const long mask_dims[D], complex float* mask, const long dims[D], complex float* out, const complex float* in, enum conv_type ctype)
+void md_closing(int D, const bart_dim_t mask_dims[D], complex float* mask, const bart_dim_t dims[D], complex float* out, const complex float* in, enum conv_type ctype)
 {
 	complex float* tmp = md_alloc_sameplace(D, dims, CFL_SIZE, in);
 
@@ -147,7 +147,7 @@ void md_closing(int D, const long mask_dims[D], complex float* mask, const long 
 
 
 // this assumes a zero padded input such that if pos exceeds the input it evaluates to false
-static bool extend_label(int N, const long lstrs[N], complex float* labels, const long istrs[N], const complex float* in, const long sdims[N], const long sstrs[N], const complex float* structure, long label)
+static bool extend_label(int N, const bart_stride_t lstrs[N], complex float* labels, const bart_stride_t istrs[N], const complex float* in, const bart_dim_t sdims[N], const bart_stride_t sstrs[N], const complex float* structure, bart_dim_t label)
 {
 	if (0. == *in)
 		return false;
@@ -157,17 +157,17 @@ static bool extend_label(int N, const long lstrs[N], complex float* labels, cons
 
 	*labels = label;
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
-	long offset[N];
+	bart_stride_t offset[N];
 	for (int i = 0; i < N; i++)
 		offset[i] = -sdims[i] / 2;
 
 	labels = &MD_ACCESS(N, lstrs, offset, labels);
 	in = &MD_ACCESS(N, istrs, offset, in);
 
-	while (md_next(N, sdims, ~0UL, pos)) {
+	while (md_next(N, sdims, ~UINT64_C(0), pos)) {
 
 		if (0. == MD_ACCESS(N, sstrs, pos, structure))
 			continue;
@@ -178,17 +178,17 @@ static bool extend_label(int N, const long lstrs[N], complex float* labels, cons
 	return true;
 }
 
-static long md_label_int2(int N, const long dims[N], const long lstrs[N], complex float* labels, const long istrs[N], const complex float* in, const long sdims[N], const complex float* structure)
+static bart_dim_t md_label_int2(int N, const bart_dim_t dims[N], const bart_stride_t lstrs[N], complex float* labels, const bart_stride_t istrs[N], const complex float* in, const bart_dim_t sdims[N], const complex float* structure)
 {
 	md_clear2(N, dims, lstrs, labels, CFL_SIZE);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
-	long sstrs[N];
+	bart_stride_t sstrs[N];
 	md_calc_strides(N, sstrs, sdims, CFL_SIZE);
 
-	long label = 0;
+	bart_dim_t label = 0;
 
 	do {
 
@@ -196,25 +196,25 @@ static long md_label_int2(int N, const long dims[N], const long lstrs[N], comple
 		if (!extend_label(N, lstrs, &MD_ACCESS(N, lstrs, pos, labels), istrs, &MD_ACCESS(N, istrs, pos, in), sdims, sstrs, structure, label))
 			label--;
 
-	} while (md_next(N, dims, ~0UL, pos));
+	} while (md_next(N, dims, ~UINT64_C(0), pos));
 
 	return label;
 }
 
 
-long md_label(int N, const long dims[N], complex float* labels, const complex float* src, const long sdims[N], const complex float* structure)
+bart_dim_t md_label(int N, const bart_dim_t dims[N], complex float* labels, const complex float* src, const bart_dim_t sdims[N], const complex float* structure)
 {
-	long ndims[N];
+	bart_dim_t ndims[N];
 	for (int i = 0; i < N; i++)
 		ndims[i] = dims[i] + sdims[i] - 1;
 
 	complex float* tin = md_alloc(N, ndims, CFL_SIZE);
 	md_resize_center(N, ndims, tin, dims, src, CFL_SIZE);
 
-	long tstrs[N];
+	bart_stride_t tstrs[N];
 	md_calc_strides(N, tstrs, ndims, CFL_SIZE);
 
-	long offset[N];
+	bart_stride_t offset[N];
 	for (int i = 0; i < N; i++)
 		offset[i] = (sdims[i] / 2);
 
@@ -223,7 +223,7 @@ long md_label(int N, const long dims[N], complex float* labels, const complex fl
 
 	complex float* cpu_labels = md_alloc(N, dims, CFL_SIZE);
 
-	long label = md_label_int2(N, dims, MD_STRIDES(N, dims, CFL_SIZE), cpu_labels, tstrs, &MD_ACCESS(N, tstrs, offset, tin), sdims, cpu_structure);
+	bart_dim_t label = md_label_int2(N, dims, MD_STRIDES(N, dims, CFL_SIZE), cpu_labels, tstrs, &MD_ACCESS(N, tstrs, offset, tin), sdims, cpu_structure);
 	md_free(tin);
 
 	md_copy(N, dims, labels, cpu_labels, CFL_SIZE);
@@ -234,7 +234,7 @@ long md_label(int N, const long dims[N], complex float* labels, const complex fl
 }
 
 
-complex float* md_label_simple_connection(int N, long dims[N], float radius, unsigned long flags)
+complex float* md_label_simple_connection(int N, bart_dim_t dims[N], float radius, bart_flags_t flags)
 {
 	int r = (int)floor(radius);
 	assert(0 < r);
@@ -244,28 +244,28 @@ complex float* md_label_simple_connection(int N, long dims[N], float radius, uns
 
 	complex float* structure = md_alloc(N, dims, CFL_SIZE);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
-	long center[N];
+	bart_dim_t center[N];
 	for (int i = 0; i < N; i++)
 		center[i] = dims[i] / 2;
 
 	do {
-		long sum = 0;
+		bart_dim_t sum = 0;
 		for (int i = 0; i < N; i++)
-			sum += pow(labs(pos[i] - center[i]), 2);
+			sum += pow(llabs(pos[i] - center[i]), 2);
 
 		MD_ACCESS(N, strs, pos, structure) = (pow(radius, 2) >= sum) ? 1. : 0.;
-	} while (md_next(N, dims, ~0UL, pos));
+	} while (md_next(N, dims, ~UINT64_C(0), pos));
 
 	return structure;
 }
 
-void md_center_of_mass(int N_labels, int N, float com[N_labels][N], const long dims[N], const complex float* labels, const complex float* wgh)
+void md_center_of_mass(int N_labels, int N, float com[N_labels][N], const bart_dim_t dims[N], const complex float* labels, const complex float* wgh)
 {
 	complex float* labels_cpu = md_alloc(N, dims, CFL_SIZE);
 	md_copy(N, dims, labels_cpu, labels, CFL_SIZE);
@@ -279,10 +279,10 @@ void md_center_of_mass(int N_labels, int N, float com[N_labels][N], const long d
 
 	float count[N_labels];
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
 	for (int i = 0; i < N_labels; i++) {
@@ -294,7 +294,7 @@ void md_center_of_mass(int N_labels, int N, float com[N_labels][N], const long d
 	}
 
 	do {
-		long label = MD_ACCESS(N, strs, pos, labels_cpu) - 1;
+		bart_dim_t label = MD_ACCESS(N, strs, pos, labels_cpu) - 1;
 
 		if (-1 == label)
 			continue;
@@ -310,7 +310,7 @@ void md_center_of_mass(int N_labels, int N, float com[N_labels][N], const long d
 		for (int j = 0; j < N; j++)
 			com[label][j] += pos[j] * val;
 
-	} while (md_next(N, dims, ~0UL, pos));
+	} while (md_next(N, dims, ~UINT64_C(0), pos));
 
 	for (int i = 0; i < N_labels; i++) {
 
@@ -325,12 +325,12 @@ void md_center_of_mass(int N_labels, int N, float com[N_labels][N], const long d
 		md_free(wgh_cpu);
 }
 
-static void extract_neighborhood(bool neighbor[3][3][3], long strs[3], complex float* src)
+static void extract_neighborhood(bool neighbor[3][3][3], bart_stride_t strs[3], complex float* src)
 {
 	for (int p = -1; p < 2; p++)
 		for (int r = -1; r < 2; r++)
 			for (int c = -1; c < 2; c++)
-				neighbor[p + 1][c + 1][r + 1] = (0. != src[(c * strs[0] + r * strs[1] + p * strs[2]) / (long)sizeof(*src)]) ? true : false;
+				neighbor[p + 1][c + 1][r + 1] = (0. != src[(c * strs[0] + r * strs[1] + p * strs[2]) / (bart_dim_t)sizeof(*src)]) ? true : false;
 }
 
 static int euler[256] = {
@@ -449,17 +449,17 @@ static bool is_border(int type, bool neighbors[3][3][3])
 	};
 }
 
-static void thinning_3D(const long dims[3], complex float* dst, const complex float* keep)
+static void thinning_3D(const bart_dim_t dims[3], complex float* dst, const complex float* keep)
 {
-	long count = 0;
-	long size = md_calc_size(3, dims);
-	for (long i = 0; i < size; i++)
+	bart_dim_t count = 0;
+	bart_dim_t size = md_calc_size(3, dims);
+	for (bart_dim_t i = 0; i < size; i++)
 		if (0. != dst[i])
 			count++;
 
-	long pos[6][count?:1][3];
+	bart_dim_t pos[6][count?:1][3];
 
-	long strs[3];
+	bart_stride_t strs[3];
 	md_calc_strides(3, strs, dims, CFL_SIZE);
 
 	bool redo = true;
@@ -468,9 +468,9 @@ static void thinning_3D(const long dims[3], complex float* dst, const complex fl
 
 		redo = false;
 
-		long count_boarders[6] = { 0, 0, 0, 0, 0, 0 };
+		bart_dim_t count_boarders[6] = { 0, 0, 0, 0, 0, 0 };
 
-		for (long i = 0; i < size; i++) {
+		for (bart_dim_t i = 0; i < size; i++) {
 
 			if (0. == dst[i])
 				continue;
@@ -497,7 +497,7 @@ static void thinning_3D(const long dims[3], complex float* dst, const complex fl
 					continue;
 
 				int idx = count_boarders[j]++;
-				md_unravel_index(3, pos[j][idx], 7UL, dims, i);
+				md_unravel_index(3, pos[j][idx], 7, dims, i);
 			}
 		}
 
@@ -505,7 +505,7 @@ static void thinning_3D(const long dims[3], complex float* dst, const complex fl
 
 			bool neighbors[3][3][3];
 
-			for (long i = 0; i < count_boarders[j]; i++) {
+			for (bart_dim_t i = 0; i < count_boarders[j]; i++) {
 
 				extract_neighborhood(neighbors, strs, &MD_ACCESS(3, strs, pos[j][i], dst));
 
@@ -519,12 +519,12 @@ static void thinning_3D(const long dims[3], complex float* dst, const complex fl
 	}
 }
 
-void md_thinning_3D(int N, const long dims[N], complex float* dst, const complex float* src, const complex float* keep)
+void md_thinning_3D(int N, const bart_dim_t dims[N], complex float* dst, const complex float* src, const complex float* keep)
 {
 	assert(3 >= bitcount(md_nontriv_dims(N, dims)));
 
-	long rdims[3] = { 1, 1, 1 };
-	long ndims[3] = { 1, 1, 1 };
+	bart_dim_t rdims[3] = { 1, 1, 1 };
+	bart_dim_t ndims[3] = { 1, 1, 1 };
 
 	for (int i =0, ip = 0; i < N; i++)
 		if (1 < dims[i])

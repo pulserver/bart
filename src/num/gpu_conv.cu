@@ -49,7 +49,7 @@ struct im2col_descriptor {
 };
 
 template <int DIMS, typename T>
-static struct im2col_descriptor<DIMS, T>get_im2col_descriptor(const long odims[5], const long idims[5], const long kdims[5], const long dilation[5], const long strides[5])
+static struct im2col_descriptor<DIMS, T>get_im2col_descriptor(const bart_dim_t odims[5], const bart_dim_t idims[5], const bart_dim_t kdims[5], const bart_dim_t dilation[5], const bart_stride_t strides[5])
 {
 	struct im2col_descriptor<DIMS, T>config;
 
@@ -64,7 +64,7 @@ static struct im2col_descriptor<DIMS, T>get_im2col_descriptor(const long odims[5
 
 	config.triv_strides_dilation = true;
 
-	long istrs[5];
+	bart_stride_t istrs[5];
 	md_calc_strides(5, istrs, idims, 1);
 
 	for (int i = 0; i < DIMS; i++) {
@@ -230,7 +230,7 @@ __global__ static void kern_im2col_valid_no_dil_str(struct im2col_descriptor<DIM
 }
 
 template <int DIMS, typename T, bool transp>
-static void cuda_im2col_int(_Complex float* dst, const _Complex float* src, const long odims[5], const long idims[5], const long kdims[5], const long dilation[5], const long strides[5])
+static void cuda_im2col_int(_Complex float* dst, const _Complex float* src, const bart_dim_t odims[5], const bart_dim_t idims[5], const bart_dim_t kdims[5], const bart_dim_t dilation[5], const bart_stride_t strides[5])
 {
 	struct im2col_descriptor<DIMS, T> config = get_im2col_descriptor<DIMS, T>(odims, idims, kdims, dilation, strides);
 
@@ -265,9 +265,9 @@ static void cuda_im2col_int(_Complex float* dst, const _Complex float* src, cons
 }
 
 template <bool transp>
-static void cuda_im2col_int2(_Complex float* dst, const _Complex float* src, const long odims[5], const long idims[5], const long kdims[5], const long dilation[5], const long strides[5])
+static void cuda_im2col_int2(_Complex float* dst, const _Complex float* src, const bart_dim_t odims[5], const bart_dim_t idims[5], const bart_dim_t kdims[5], const bart_dim_t dilation[5], const bart_stride_t strides[5])
 {
-	long Nout = idims[1] * md_calc_size(3, kdims + 2) * md_calc_size(3, odims + 2);
+	bart_dim_t Nout = idims[1] * md_calc_size(3, kdims + 2) * md_calc_size(3, odims + 2);
 	int DIMS = bitcount(md_nontriv_dims(3, kdims + 2) | md_nontriv_dims(3, odims + 2));
 
 	for (int i = 0 ; i < 3; i++)
@@ -320,7 +320,7 @@ static void cuda_im2col_int2(_Complex float* dst, const _Complex float* src, con
  * istrs:	[ISC, ISX * DX, ISY * DY, ISZ * DZ, ISX * SX, ISY * SY, ISZ * SZ]
  * where IS* are trivial strides of idims
  * */
-extern "C" void cuda_im2col(_Complex float* dst, const _Complex float* src, const long odims[5], const long idims[5], const long kdims[5], const long dilation[5], const long strides[5])
+extern "C" void cuda_im2col(_Complex float* dst, const _Complex float* src, const bart_dim_t odims[5], const bart_dim_t idims[5], const bart_dim_t kdims[5], const bart_dim_t dilation[5], const bart_stride_t strides[5])
 {
 	cuda_im2col_int2<false>(dst, src, odims, idims, kdims, dilation, strides);
 }
@@ -342,7 +342,7 @@ extern "C" void cuda_im2col(_Complex float* dst, const _Complex float* src, cons
  * istrs:	trivial strides of dims
  * where IS* are trivial strides of idims
  * */
-extern "C" void cuda_im2col_transp(_Complex float* dst, const _Complex float* src, const long odims[5], const long idims[5], const long kdims[5], const long dilation[5], const long strides[5])
+extern "C" void cuda_im2col_transp(_Complex float* dst, const _Complex float* src, const bart_dim_t odims[5], const bart_dim_t idims[5], const bart_dim_t kdims[5], const bart_dim_t dilation[5], const bart_stride_t strides[5])
 {
 	cuda_im2col_int2<true>(dst, src, odims, idims, kdims, dilation, strides);
 }
