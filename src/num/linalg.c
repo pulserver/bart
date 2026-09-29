@@ -117,9 +117,9 @@ void vecd_saxpy(int N, double dst[N], double alpha, const double b[N])
 		dst[i] += alpha * b[i];
 }
 
-void vecf_axpbz(long N, float* dst, const float alpha, const float* src1, const float beta, const float* src2)
+void vecf_axpbz(bart_dim_t N, float* dst, const float alpha, const float* src1, const float beta, const float* src2)
 {
-	for (long i = 0; i < N; i++)
+	for (bart_dim_t i = 0; i < N; i++)
 		dst[i] = alpha * src1[i] + beta * src2[i];
 }
 

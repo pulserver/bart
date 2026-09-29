@@ -63,9 +63,9 @@ extern double* stl_cfl2d(const bart_dim_t dims[3], const _Complex float* cmodel)
 extern void stl_d2cfl(const bart_dim_t dims[3], _Complex float* cmodel, const double* model);
 extern void stl_relative_position(struct triangle* t);
 extern struct triangle_stack* stl_preprocess_model(const bart_dim_t dims[3], const double* model);
-extern void stl_extract_vertices(long N, const long dims[3], const double* model, int* nv_out, double verts[N][3], int* nt_out, int tris[N][3]);
-extern void stl_update_vertices(long N, const long dims[3], double* model, const double verts[N][3], const int tris[N][3]);
-extern void stl_build_neighbors(long N,const long dims[3], const double* model, struct neighbors* neigh, int* nv_out, double verts_out[N][3], int* nt_out, int tris_out[N][3]);
+extern void stl_extract_vertices(bart_dim_t N, const bart_dim_t dims[3], const double* model, int* nv_out, double verts[N][3], int* nt_out, int tris[N][3]);
+extern void stl_update_vertices(bart_dim_t N, const bart_dim_t dims[3], double* model, const double verts[N][3], const int tris[N][3]);
+extern void stl_build_neighbors(bart_dim_t N,const bart_dim_t dims[3], const double* model, struct neighbors* neigh, int* nv_out, double verts_out[N][3], int* nt_out, int tris_out[N][3]);
 extern void stl_add_neighbor(struct neighbors* nb, int v);
 
 #endif

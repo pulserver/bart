@@ -1,6 +1,7 @@
 
 #ifndef LINSEG_H
 #define LINSEG_H
+#include "misc/dimtypes.h"
 
 struct lseg_s {
 
@@ -13,10 +14,10 @@ extern float dist_of_linesegs(const float seg1[2][3], const float seg2[2][3]);
 
 extern _Bool dist_of_linesegs_smaller(const float seg1[2][3], const float seg2[2][3], float tol);
 
-extern long douglas_peucker(long N, float pos[N][3], float tol);
+extern bart_dim_t douglas_peucker(bart_dim_t N, float pos[N][3], float tol);
 
 
-extern struct lseg_s md_trace_binary_mask(int N, const long dims[N], _Complex float* mask, float tol);
+extern struct lseg_s md_trace_binary_mask(int N, const bart_dim_t dims[N], _Complex float* mask, float tol);
 
 extern void line_segments_revert(int N, float seg[N][2][3]);
 extern void line_segments_sort(struct lseg_s* seg);

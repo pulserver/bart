@@ -167,9 +167,9 @@ static void traj_radial_direction_int(int N, bart_dim_t idx, const bart_dim_t dd
 	md_free(nrm);
 }
 
-void traj_radial_dcshifts(int N, const long sdims[__VLA(N)], complex float* shift, const long tdims[__VLA(N)], const _Complex float* traj)
+void traj_radial_dcshifts(int N, const bart_dim_t sdims[__VLA(N)], complex float* shift, const bart_dim_t tdims[__VLA(N)], const _Complex float* traj)
 {
-	long tdims1[N];
+	bart_dim_t tdims1[N];
 	md_select_dims(N, ~MD_BIT(1), tdims1, tdims);
 
 	assert(md_check_compat(N, MD_BIT(0), sdims, tdims1));

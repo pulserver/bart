@@ -70,7 +70,7 @@ int main_reshape(int argc, char* argv[argc])
 	bart_dim_t otot = 1;
 	bart_dim_t itot = 1;
 
-	long place_dim = -1;
+	int place_dim = -1;
 
 	for (int i = 0; i < DIMS; i++) {
 
@@ -100,7 +100,7 @@ int main_reshape(int argc, char* argv[argc])
 			otot *= out_dims[place_dim];
 		} else {
 
-			error("Cannot fill in placeholder (%d) since remainder does not vanish (%ld %% %ld = %ld).\n", place_dim, itot, otot, itot % otot);
+			error("Cannot fill in placeholder (%d) since remainder does not vanish (%" PRId64 " %% %" PRId64 " = %" PRId64 ").\n", place_dim, itot, otot, itot % otot);
 		}
 	}
 

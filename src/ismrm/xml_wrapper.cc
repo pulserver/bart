@@ -391,7 +391,7 @@ static void ismrm_send_img(const ISMRMRD::Image<T> &img, const struct isrmrm_con
 	}
 }
 
-extern "C" void ismrm_stream_write_cfl_image(struct isrmrm_config_s* config, long size0, long size1, _Complex float* buf)
+extern "C" void ismrm_stream_write_cfl_image(struct isrmrm_config_s* config, bart_dim_t size0, bart_dim_t size1, _Complex float* buf)
 {
 	ISMRMRD::Image<std::complex<float> > img(size0, size1);
 
@@ -404,7 +404,7 @@ extern "C" void ismrm_stream_write_cfl_image(struct isrmrm_config_s* config, lon
 	ismrm_send_img(img, config);
 }
 
-extern "C" void ismrm_stream_write_mag_image(struct isrmrm_config_s* config, long size0, long size1, unsigned short* buf)
+extern "C" void ismrm_stream_write_mag_image(struct isrmrm_config_s* config, bart_dim_t size0, bart_dim_t size1, unsigned short* buf)
 {
 	ISMRMRD::Image<unsigned short> img(size0, size1);
 

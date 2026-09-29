@@ -72,7 +72,7 @@ static void stl_coordinate_limits(const bart_dim_t dims[3], const double* model,
 	bart_stride_t strs[3];
 	md_calc_strides(3, strs, dims, DL_SIZE);
 
-	long pos[3] = { 0, 0, 0 };
+	bart_dim_t pos[3] = { 0, 0, 0 };
 
 	for (pos[0] = 0; pos[0] < 3; pos[0]++) {
 		for (pos[1] = 0; pos[1] < 3; pos[1]++) {
@@ -135,12 +135,12 @@ void stl_shift_model(const bart_dim_t dims[3], double* model, const double shift
 }
 
 // Rotates all *centered* vertex coordinates by rot vector.
-void stl_rot_model(const long dims[3], double* model, const double drot[3])
+void stl_rot_model(const bart_dim_t dims[3], double* model, const double drot[3])
 {
 	// first shift model into origin
         double* model_ = md_alloc(3, dims, DL_SIZE);
 
-	memcpy(model_, model, (unsigned long) md_calc_size(3, dims) * DL_SIZE);
+	memcpy(model_, model, (size_t)md_calc_size(3, dims) * DL_SIZE);
 
         double min_v[3];
 	double max_v[3];
@@ -153,7 +153,7 @@ void stl_rot_model(const long dims[3], double* model, const double drot[3])
 
         stl_shift_model(dims, model_, shift);
 
-        long strs[3];
+        bart_stride_t strs[3];
         md_calc_strides(3, strs, dims, DL_SIZE);
 
 	double rot[3] = { drot[0] / 180. * M_PI, drot[1] / 180. * M_PI, drot[2] / 180. * M_PI };
@@ -174,7 +174,7 @@ void stl_rot_model(const long dims[3], double* model, const double drot[3])
 #pragma omp parallel for
         for (int i = 0; i < dims[2]; i++) {
 
-                long pos[3] = { [2] = i };
+                bart_dim_t pos[3] = { [2] = i };
 
 		for (pos[1] = 0; pos[1] < 3; pos[1]++) {
 
@@ -734,10 +734,10 @@ struct triangle_stack* stl_preprocess_model(const bart_dim_t dims[3], const doub
 	return ts;
 }
 
-void stl_extract_vertices(long N, const long dims[3], const double* model,
+void stl_extract_vertices(bart_dim_t N, const bart_dim_t dims[3], const double* model,
 	int* nv_out, double verts[N][3], int* nt_out, int tris[N][3])
 {
-	long strs[3];
+	bart_stride_t strs[3];
 	md_calc_strides(3, strs, dims, DL_SIZE);
 
 	int nv = 0;
@@ -752,7 +752,7 @@ void stl_extract_vertices(long N, const long dims[3], const double* model,
 
 			for (int d = 0; d < 3; d++) {
 
-				long pos[3] = { d, v, t };
+				bart_dim_t pos[3] = { d, v, t };
 				p[d] = MD_ACCESS(3, strs, pos, model);
 			}
 
@@ -786,16 +786,16 @@ void stl_extract_vertices(long N, const long dims[3], const double* model,
 	*nt_out = nt;
 }
 
-void stl_update_vertices(long N, const long dims[3], double* model, const double verts[N][3], const int tris[N][3])
+void stl_update_vertices(bart_dim_t N, const bart_dim_t dims[3], double* model, const double verts[N][3], const int tris[N][3])
 {
-	long strs[3];
+	bart_stride_t strs[3];
 	md_calc_strides(3, strs, dims, DL_SIZE);
 
 	for (int t = 0; t < dims[2]; t++)
 		for (int v = 0; v < 3; v++)
 			for (int d = 0; d < 3; d++) {
 
-				long pos[3] = {d, v, t};
+				bart_dim_t pos[3] = {d, v, t};
 
 				MD_ACCESS(3, strs, pos, model) = verts[ tris[t][v] ][d];
 			}
@@ -813,7 +813,7 @@ void stl_add_neighbor(struct neighbors* nb, int v)
 	nb->v[nb->n++] = v;
 }
 
-void stl_build_neighbors(long N, const long dims[3], const double* model, struct neighbors* neigh,
+void stl_build_neighbors(bart_dim_t N, const bart_dim_t dims[3], const double* model, struct neighbors* neigh,
 	int* nv_out, double verts_out[N][3], int* nt_out, int tris_out[N][3])
 {
 	int nv;

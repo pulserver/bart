@@ -135,7 +135,7 @@ static void rescale_maps(int model, double scaling_Y, int nr_coeff, const struct
 
 
 void meco_recon(const struct moba_conf* moba_conf, struct moba_conf_s* data,
-		const long dims[DIMS],
+		const bart_dim_t dims[DIMS],
 		enum meco_model sel_model, enum fat_spec fat_spec,
 		const float* scale_fB0, bool warmstart, bool out_origin_maps,
 		const bart_dim_t maps_dims[DIMS], complex float* maps,
@@ -170,10 +170,10 @@ void meco_recon(const struct moba_conf* moba_conf, struct moba_conf_s* data,
 	bart_dim_t Y_1s_dims[DIMS];
 	md_copy_dims(DIMS, Y_1s_dims, Y_dims);
 
-	long dims_1s[DIMS];
+	bart_dim_t dims_1s[DIMS];
 	md_copy_dims(DIMS, dims_1s, dims);
 
-	long P_1s_dims[DIMS];
+	bart_dim_t P_1s_dims[DIMS];
 	md_copy_dims(DIMS, P_1s_dims, P_dims);
 
 	if (!moba_conf->stack_frames) {

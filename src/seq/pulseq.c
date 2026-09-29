@@ -284,8 +284,8 @@ static int check_existing_gradient_shape(const struct pulseq* ps, const struct s
 static void grad_to_pulseq(int grad_id[3], struct pulseq *ps, double grad_start,
 			  double grad_len, double g[SEQ_MAX_GRAD_POINTS][3])
 {
-	long grad_start_brt = lround(grad_start / ps->gradient_raster_time);
-	long grad_len_brt = lround(grad_len / ps->gradient_raster_time);
+	bart_dim_t grad_start_brt = llround(grad_start / ps->gradient_raster_time);
+	bart_dim_t grad_len_brt = llround(grad_len / ps->gradient_raster_time);
 
 	double g_axis[grad_len_brt];
 
@@ -359,9 +359,9 @@ static int adc_to_pulseq(struct pulseq *ps, int i_adc, double block_start, int N
 	struct adc a = {
 
 		.id = adc_id,
-		.num = (unsigned long)samples,
-		.dwell = (unsigned long)lround(ev[adc_idx].adc.dwell_ns / ev[adc_idx].adc.os),
-		.delay = (unsigned long)lround((ev[adc_idx].start - block_start) / ps->rf_raster_time),
+		.num = (uint64_t)samples,
+		.dwell = (uint64_t)llround(ev[adc_idx].adc.dwell_ns / ev[adc_idx].adc.os),
+		.delay = (uint64_t)llround((ev[adc_idx].start - block_start) / ps->rf_raster_time),
 		.freq = ev[adc_idx].adc.freq,
 		.phase = phase_pulseq(&ev[adc_idx])
 	};
@@ -614,7 +614,7 @@ void events_to_pulseq(struct pulseq *ps, enum seq_block mode, double tr, int M, 
 		struct ps_block b = {
 
 			.num = VEC_LEN(ps->ps_blocks) + 1,
-			.dur = (bart_flags_t)lround(dur_split / ps->block_raster_time),
+			.dur = (uint64_t)llround(dur_split / ps->block_raster_time),
 			.rf = rf_id,
 			.g = { g_id[0], g_id[1], g_id[2] },
 			.adc = adc_id,

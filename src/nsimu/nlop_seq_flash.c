@@ -141,11 +141,11 @@ struct list_s* ir_flash_ops_create(struct sim_config_s sim, struct flash_config_
 	return ret;
 }
 
-struct nlop_s* nlop_phy_create(int N, const long map_dims[N], const long out_dims[N], struct flash_config_s config, struct sim_config_s sim)
+struct nlop_s* nlop_phy_create(int N, const bart_dim_t map_dims[N], const bart_dim_t out_dims[N], struct flash_config_s config, struct sim_config_s sim)
 {
 	sim_config_set_dims(&sim, N, map_dims, 1);
 
-	long in_dims[N];
+	bart_dim_t in_dims[N];
 	md_copy_dims(N, in_dims, map_dims);
 	in_dims[COEFF_DIM] = config.nparams;
 
@@ -194,7 +194,7 @@ struct nlop_s* nlop_phy_create(int N, const long map_dims[N], const long out_dim
 	*/
 	ret = nlop_del_out_F(ret, 0);
 
-	assert(md_check_equal_dims(N, out_dims, nlop_codomain(ret)->dims, ~0UL));
+	assert(md_check_equal_dims(N, out_dims, nlop_codomain(ret)->dims, ~UINT64_C(0)));
 
 	// out_dims = [ 16  16  1  1  1  10  1  1  1  1  1  1  1  1  1  1 ]
 	// map_dims = [ 16  16  1  1  1   1  1  1  1  1  1  1  1  1  1  1 ]
@@ -211,7 +211,7 @@ struct nlop_s* nlop_phy_create(int N, const long map_dims[N], const long out_dim
 	*/
 	ret = nlop_chain_FF(nlop_from_linop_F(linop_transpose_create(N, sim.PI_DIM, COEFF_DIM, in_dims)), ret);
 
-	assert(md_check_equal_dims(N, in_dims, nlop_domain(ret)->dims, ~0UL));
+	assert(md_check_equal_dims(N, in_dims, nlop_domain(ret)->dims, ~UINT64_C(0)));
 
 	nlop_debug(DP_DEBUG2, ret);
 

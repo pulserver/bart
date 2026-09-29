@@ -44,16 +44,16 @@ int main_extractdc(int argc, char* argv[argc])
 
 	num_init();
 
-	long ksp_dims[DIMS];
+	bart_dim_t ksp_dims[DIMS];
 	complex float* ksp = load_cfl(ksp_file, DIMS, ksp_dims);
 
-	long trj_dims[DIMS];
+	bart_dim_t trj_dims[DIMS];
 	complex float* trj = load_cfl(traj_file, DIMS, trj_dims);
 
 	if (!md_check_compat(DIMS, MD_BIT(0) | ~md_nontriv_dims(DIMS, trj_dims), trj_dims, ksp_dims))
 		error("k-Space and trajectory are inconsistent!\n");
 
-	long shift_dims[DIMS];
+	bart_dim_t shift_dims[DIMS];
 	md_select_dims(DIMS, ~(MD_BIT(0) | MD_BIT(1)), shift_dims, trj_dims);
 
 	complex float* shift = md_alloc(DIMS, shift_dims, CFL_SIZE);
@@ -65,24 +65,24 @@ int main_extractdc(int argc, char* argv[argc])
 
 	fftc(DIMS, ksp_dims, MD_BIT(1), ksp, ksp);
 
-	long linphs_dims[DIMS];
+	bart_dim_t linphs_dims[DIMS];
 	md_select_dims(DIMS, MD_BIT(1), linphs_dims, ksp_dims);
 
 	complex float* linphs = md_alloc(DIMS, linphs_dims, CFL_SIZE);
 
-	long linphs_strs[DIMS];
+	bart_stride_t linphs_strs[DIMS];
 	md_calc_strides(DIMS, linphs_strs, linphs_dims, CFL_SIZE);
 
-	long shift_strs[DIMS];
+	bart_stride_t shift_strs[DIMS];
 	md_calc_strides(DIMS, shift_strs, shift_dims, CFL_SIZE);
 
-	long ksp_strs[DIMS];
+	bart_stride_t ksp_strs[DIMS];
 	md_calc_strides(DIMS, ksp_strs, ksp_dims, CFL_SIZE);
 
-	long red_dims[DIMS];
+	bart_dim_t red_dims[DIMS];
 	md_select_dims(DIMS, MD_BIT(1) | COIL_FLAG, red_dims, ksp_dims);
 
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 
 	do {
 		float tshift = -crealf(MD_ACCESS(DIMS, shift_strs, pos, shift));
@@ -95,7 +95,7 @@ int main_extractdc(int argc, char* argv[argc])
 
 	md_free(linphs);
 
-	long dc_dims[DIMS];
+	bart_dim_t dc_dims[DIMS];
 	md_select_dims(DIMS, ~(MD_BIT(0) | MD_BIT(1)), dc_dims, ksp_dims);
 	
 	complex float* dc = create_cfl(dc_file, DIMS, dc_dims);

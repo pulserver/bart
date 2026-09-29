@@ -224,14 +224,14 @@ struct noir2_s noir2_noncart_create(int N,
 	else
 		md_copy_dims(N, mod_wgh_dims, ret.pat_dims);
 
-	long fftmod_dims[N];
+	bart_dim_t fftmod_dims[N];
 	complex float* fftmod_diag = NULL;
 
 	complex float* mod_wgh = NULL;
 
 	if (0 != (conf->cfft_flags & ~FFT_FLAGS) || 0 != (conf->ufft_flags & ~FFT_FLAGS)) {
 
-		long ufft_dims[N];
+		bart_dim_t ufft_dims[N];
 		md_select_dims(N, (conf->ufft_flags & ~FFT_FLAGS), ufft_dims, ksp_dims);
 		float scale = 1. / sqrtf(sqrtf((float)md_calc_size(N, ufft_dims)));
 
@@ -240,8 +240,8 @@ struct noir2_s noir2_noncart_create(int N,
 		md_zfill(N, fftmod_dims, fftmod_diag, scale);
 		fftmod(N, fftmod_dims, conf->cfft_flags & ~FFT_FLAGS, fftmod_diag, fftmod_diag);
 
-		long mod_wgh_dims2[N];
-		md_max_dims(N, ~0UL, mod_wgh_dims2, mod_wgh_dims, fftmod_dims);
+		bart_dim_t mod_wgh_dims2[N];
+		md_max_dims(N, ~UINT64_C(0), mod_wgh_dims2, mod_wgh_dims, fftmod_dims);
 		mod_wgh = md_alloc_sameplace(N, mod_wgh_dims2, CFL_SIZE, weights ?: traj);
 
 		if (NULL != weights)
@@ -901,17 +901,17 @@ void noir2_noncart_update(struct noir2_s* model, int N,
 {
 	assert(NULL != model->lop_nufft);
 
-	long mod_wgh_dims[N];
+	bart_dim_t mod_wgh_dims[N];
 	md_copy_dims(N, mod_wgh_dims, wgh_dims);
 	complex float* mod_wgh = NULL;
 
 	if (0 != (model->model_conf.cfft_flags & ~FFT_FLAGS) || 0 != (model->model_conf.ufft_flags & ~FFT_FLAGS)) {
 
-		long ufft_dims[N];
+		bart_dim_t ufft_dims[N];
 		md_select_dims(N, (model->model_conf.ufft_flags & ~FFT_FLAGS), ufft_dims, model->ksp_dims);
 		float scale = 1. / sqrtf(sqrtf((float)md_calc_size(N, ufft_dims)));
 
-		long fftmod_dims[N];
+		bart_dim_t fftmod_dims[N];
 		complex float* fftmod_diag = NULL;
 
 		md_select_dims(N, (model->model_conf.cfft_flags & ~FFT_FLAGS), fftmod_dims, model->ksp_dims);
@@ -921,7 +921,7 @@ void noir2_noncart_update(struct noir2_s* model, int N,
 
 		if (NULL != weights) {
 
-			md_max_dims(N, ~0UL, mod_wgh_dims, wgh_dims, fftmod_dims);
+			md_max_dims(N, ~UINT64_C(0), mod_wgh_dims, wgh_dims, fftmod_dims);
 			mod_wgh = md_alloc_sameplace(N, mod_wgh_dims, CFL_SIZE, weights ?: traj);
 
 			md_ztenmul(N, mod_wgh_dims, mod_wgh, wgh_dims, weights, fftmod_dims, fftmod_diag);

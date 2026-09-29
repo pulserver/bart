@@ -110,7 +110,7 @@ int main_ismrmrd(int argc, char* argv[argc])
 		bart_cfl = load_async_cfl(in_file, D, dims);
 		bart_stream = stream_lookup(bart_cfl);
 
-		long count = 0;
+		bart_dim_t count = 0;
 		flags = ~(MD_BIT(0) | MD_BIT(1));
 
 		assert(1 < dims[0] && 1 < dims[1]);
@@ -131,11 +131,11 @@ int main_ismrmrd(int argc, char* argv[argc])
 
 				unsigned short* buf = md_alloc(2, dims, sizeof(unsigned short));
 
-				long* dimsp = dims;
+				bart_dim_t* dimsp = dims;
 
-				NESTED(void, sample_kernel, (const long ipos[]))
+				NESTED(void, sample_kernel, (const bart_dim_t ipos[]))
 				{
-					long offset = ipos[0] + dimsp[0] * ipos[1];
+					bart_dim_t offset = ipos[0] + dimsp[0] * ipos[1];
 					float re = ((float*)(src + offset))[0] ;
 					buf[offset] = CLAMP(re, 0., ((float)USHRT_MAX));
 				};

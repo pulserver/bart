@@ -596,7 +596,7 @@ void noir2_recon_noncart(
 	const bart_dim_t msk_dims[N], const complex float* mask,
 	const bart_dim_t cim_dims[N])
 {
-	unsigned long loop_flags = (conf->realtime ? TIME_FLAG : 0);
+	bart_flags_t loop_flags = (conf->realtime ? TIME_FLAG : 0);
 
 	assert(0 == (loop_flags & md_nontriv_dims(N, bas_dims)));
 	assert(0 == (loop_flags & md_nontriv_dims(N, msk_dims)));

@@ -64,7 +64,7 @@ static void get_circle_coords(struct pole_config_s* conf, bart_dim_t pos[3], int
 		pos[normal] = 0;
 }
 
-static int get_diameter(struct pole_config_s conf, int normal, const long dims[3], bool print)
+static int get_diameter(struct pole_config_s conf, int normal, const bart_dim_t dims[3], bool print)
 {
 	if (conf.espirit) {
 
@@ -72,19 +72,19 @@ static int get_diameter(struct pole_config_s conf, int normal, const long dims[3
 		return 1;
 	}
 
-	long tdims[3];
+	bart_dim_t tdims[3];
 	for (int i = 0; i < 3; i++)
 		tdims[i] = dims[i];
 
-	tdims[0] = lroundf(tdims[0] / conf.osx);
+	tdims[0] = llroundf(tdims[0] / conf.osx);
 
 	if (print && (tdims[(normal + 1) % 3] != tdims[(normal + 2) % 3]))
-		debug_printf(DP_DEBUG1, "Non-square dimensions detected (%ld, %ld, %ld): ", tdims[0], tdims[1], tdims[2]);
+		debug_printf(DP_DEBUG1, "Non-square dimensions detected (%" PRId64 ", %" PRId64 ", %" PRId64 "): ", tdims[0], tdims[1], tdims[2]);
 
 	int diameter = roundf(ceil(conf.diameter * MAX(tdims[(normal + 1) % 3], tdims[(normal + 2) % 3])));
 
 	if (print)
-		debug_printf(DP_DEBUG1, "Circle diameter set to %d (%.3f * %ld).\n", diameter, conf.diameter,  MAX(tdims[(normal + 1) % 3], tdims[(normal + 2) % 3]));
+		debug_printf(DP_DEBUG1, "Circle diameter set to %d (%.3f * %" PRId64 ").\n", diameter, conf.diameter,  MAX(tdims[(normal + 1) % 3], tdims[(normal + 2) % 3]));
 
 	return diameter;
 }
@@ -708,7 +708,7 @@ float integrate_phase(int M, const float pos[M][3], int N, const float r[N][2][3
 }
 
 
-static void search_start(long pos[3], const long dims[3], int D, const float r[D][2][3])
+static void search_start(bart_dim_t pos[3], const bart_dim_t dims[3], int D, const float r[D][2][3])
 {
 	for (int i = 0; i < 3; i++)
 		pos[i] = dims[i] / 2;
@@ -721,32 +721,32 @@ static void search_start(long pos[3], const long dims[3], int D, const float r[D
 
 	while (2. > get_min_dist(fpos, D, r)) {
 
-		md_unravel_index(3, pos, 7ul, dims, rand_range_state(rstate, md_calc_size(3, dims)));
+		md_unravel_index(3, pos, 7, dims, rand_range_state(rstate, md_calc_size(3, dims)));
 		for (int i = 0; i < 3; i++)
 			fpos[i] = pos[i];
 	}
 }
 
-static long get_integration_order(const long dims[3], long* sint, long* eint, complex float* visited, long start_idx, int D, const float r[D][2][3])
+static bart_dim_t get_integration_order(const bart_dim_t dims[3], bart_dim_t* sint, bart_dim_t* eint, complex float* visited, bart_dim_t start_idx, int D, const float r[D][2][3])
 {
 	double time = -timestamp();
 	debug_printf(DP_DEBUG1, "Start finding integration path ... ");
 
-	long qmax = 0; // queue of points to be processed
-	long qmin = 0;
+	bart_dim_t qmax = 0; // queue of points to be processed
+	bart_dim_t qmin = 0;
 
 	md_clear(3, dims, visited, CFL_SIZE);
 
-	long idx = start_idx;
+	bart_dim_t idx = start_idx;
 	visited[idx] = 1.;
 
 	do {
-		long pos[3];
-		md_unravel_index(3, pos, ~0UL, dims, idx);
+		bart_dim_t pos[3];
+		md_unravel_index(3, pos, ~UINT64_C(0), dims, idx);
 
 		for (int i = 0; i < 6; i++) {
 
-			long pos2[3];
+			bart_dim_t pos2[3];
 			md_copy_dims(3, pos2, pos);
 
 			pos2[i / 2] += (0 == i % 2) ? 1 : -1;
@@ -754,7 +754,7 @@ static long get_integration_order(const long dims[3], long* sint, long* eint, co
 			if ((0 > pos2[i / 2]) || (dims[i / 2] == pos2[i / 2]))
 				continue;
 
-			long idx2 = md_ravel_index(3, pos2, ~0UL, dims);
+			bart_dim_t idx2 = md_ravel_index(3, pos2, ~UINT64_C(0), dims);
 
 			if (0. != visited[idx2])
 				continue;
@@ -792,22 +792,22 @@ static long get_integration_order(const long dims[3], long* sint, long* eint, co
 	return qmax;
 }
 
-static void integrate_path(long qmax, const long dims[3], float* dphi, const long* sint, const long* eint, int D, const float r[D][2][3], float tol)
+static void integrate_path(bart_dim_t qmax, const bart_dim_t dims[3], float* dphi, const bart_dim_t* sint, const bart_dim_t* eint, int D, const float r[D][2][3], float tol)
 {
 	debug_printf(DP_DEBUG1, "Start integrating phases ... ");
 	double time = -timestamp();
 
 #pragma omp parallel for
-	for (long i = 0; i < qmax; i++) {
+	for (bart_dim_t i = 0; i < qmax; i++) {
 
-		long idx = sint[i];
-		long idx2 = eint[i];
+		bart_dim_t idx = sint[i];
+		bart_dim_t idx2 = eint[i];
 
-		long pos[3];
-		long pos2[3];
+		bart_dim_t pos[3];
+		bart_dim_t pos2[3];
 
-		md_unravel_index(3, pos, ~0UL, dims, idx);
-		md_unravel_index(3, pos2, ~0UL, dims, idx2);
+		md_unravel_index(3, pos, ~UINT64_C(0), dims, idx);
+		md_unravel_index(3, pos2, ~UINT64_C(0), dims, idx2);
 
 		float fpos[2][3];
 
@@ -823,24 +823,24 @@ static void integrate_path(long qmax, const long dims[3], float* dphi, const lon
 			dphi[i] = 0.;
 	}
 
-	debug_printf(DP_DEBUG1, "done (%ld paths, took %es)\n", qmax, timestamp() + time);
+	debug_printf(DP_DEBUG1, "done (%" PRId64 " paths, took %es)\n", qmax, timestamp() + time);
 }
 
 
-static void grid_to_fov(const long dims[3], vec3_t pos)
+static void grid_to_fov(const bart_dim_t dims[3], vec3_t pos)
 {
 	for (int i = 0; i < 3; i++)
 		pos[i] = (pos[i] - dims[i] / 2) / (float)dims[i];
 }
 
-static void fov_to_grid(const long dims[3], vec3_t pos)
+static void fov_to_grid(const bart_dim_t dims[3], vec3_t pos)
 {
 	for (int i = 0; i < 3; i++)
 		pos[i] = pos[i] * dims[i] + dims[i] / 2;
 }
 
 
-void sample_phase_pole_3D(int N, const long dims[N], complex float* dst, int D, const float r_fov[D][2][3], float tol)
+void sample_phase_pole_3D(int N, const bart_dim_t dims[N], complex float* dst, int D, const float r_fov[D][2][3], float tol)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(dst)) {
@@ -855,10 +855,10 @@ void sample_phase_pole_3D(int N, const long dims[N], complex float* dst, int D, 
 	assert(3 <= N);
 	assert(1 == md_calc_size(N - 3, dims + 3));
 
-	long* eint = md_alloc(1, MD_DIMS(md_calc_size(3, dims)), sizeof(long));
-	long* sint = md_alloc(1, MD_DIMS(md_calc_size(3, dims)), sizeof(long));
-	md_clear(N, dims, eint, sizeof(long));
-	md_clear(N, dims, sint, sizeof(long));
+	bart_dim_t* eint = md_alloc(1, MD_DIMS(md_calc_size(3, dims)), sizeof(bart_dim_t));
+	bart_dim_t* sint = md_alloc(1, MD_DIMS(md_calc_size(3, dims)), sizeof(bart_dim_t));
+	md_clear(N, dims, eint, sizeof(bart_dim_t));
+	md_clear(N, dims, sint, sizeof(bart_dim_t));
 
 	float r[D][2][3];
 
@@ -873,13 +873,13 @@ void sample_phase_pole_3D(int N, const long dims[N], complex float* dst, int D, 
 
 	// we don't want to integrate through singularities
 	// so we start with a point away from singularities
-	long pos[3];
+	bart_dim_t pos[3];
 	search_start(pos, dims, D, r);
 
-	debug_printf(DP_DEBUG1, "Found start position for integraion: (%ld, %ld, %ld)\n", pos[0], pos[1], pos[2]);
+	debug_printf(DP_DEBUG1, "Found start position for integraion: (%" PRId64 ", %" PRId64 ", %" PRId64 ")\n", pos[0], pos[1], pos[2]);
 
-	long idx = md_ravel_index(3, pos, ~0UL, dims);
-	long qmax = get_integration_order(dims, sint, eint, dst, idx, D, r);
+	bart_dim_t idx = md_ravel_index(3, pos, ~UINT64_C(0), dims);
+	bart_dim_t qmax = get_integration_order(dims, sint, eint, dst, idx, D, r);
 
 	float* dphi = md_alloc(1, MD_DIMS(qmax), FL_SIZE);
 
@@ -889,7 +889,7 @@ void sample_phase_pole_3D(int N, const long dims[N], complex float* dst, int D, 
 
 	dst[sint[0]] = 1.;
 
-	for (long i = 0; i < qmax; i++)
+	for (bart_dim_t i = 0; i < qmax; i++)
 		dst[eint[i]] = cexpf(-1.I * dphi[i]) * dst[sint[i]];
 
 	md_free(eint);
@@ -901,7 +901,7 @@ void sample_phase_pole_3D(int N, const long dims[N], complex float* dst, int D, 
 
 
 
-static float phase_pole_3D_estimate_polarity(int N, const long dims[N], const complex float* col, float r[2][3], float radius, int segments)
+static float phase_pole_3D_estimate_polarity(int N, const bart_dim_t dims[N], const complex float* col, float r[2][3], float radius, int segments)
 {
 	vec3_t cen;
 	vec3_add(cen, r[0], r[1]);
@@ -924,14 +924,14 @@ static float phase_pole_3D_estimate_polarity(int N, const long dims[N], const co
 		for (int j = 0; j < 3; j++)
 			evecT[i][j] = evec[j][i];
 
-	long pos1[N];
-	long pos2[N];
+	bart_dim_t pos1[N];
+	bart_dim_t pos2[N];
 
 	md_set_dims(N, pos1, 0);
 	md_set_dims(N, pos2, 0);
 
-	long sdims[N];
-	md_select_dims(N, ~7UL, sdims, dims);
+	bart_dim_t sdims[N];
+	md_select_dims(N, ~UINT64_C(7), sdims, dims);
 
 	complex float* tmp1 = md_alloc(N, sdims, CFL_SIZE);
 	complex float* tmp2 = md_alloc(N, sdims, CFL_SIZE);
@@ -947,15 +947,15 @@ static float phase_pole_3D_estimate_polarity(int N, const long dims[N], const co
 
 		for (int j = 0; j < 3; j++) {
 
-			pos1[j] = MAX(MIN(dims[j] - 1, lroundf(vec3_sdot(pos_seg1, evecT[j]) + cen[j])), 0);
-			pos2[j] = MAX(MIN(dims[j] - 1, lroundf(vec3_sdot(pos_seg2, evecT[j]) + cen[j])), 0);
+			pos1[j] = MAX(MIN(dims[j] - 1, llroundf(vec3_sdot(pos_seg1, evecT[j]) + cen[j])), 0);
+			pos2[j] = MAX(MIN(dims[j] - 1, llroundf(vec3_sdot(pos_seg2, evecT[j]) + cen[j])), 0);
 		}
 
-		if (md_check_equal_dims(3, pos1, pos2, 7UL))
+		if (md_check_equal_dims(3, pos1, pos2, 7))
 			continue;
 
-		md_slice(N, 7UL, pos1, dims, tmp1, col, CFL_SIZE);
-		md_slice(N, 7UL, pos2, dims, tmp2, col, CFL_SIZE);
+		md_slice(N, 7, pos1, dims, tmp1, col, CFL_SIZE);
+		md_slice(N, 7, pos2, dims, tmp2, col, CFL_SIZE);
 
 		md_zmulc(N, sdims, tmp1, tmp1, tmp2);
 		md_zphsr(N, sdims, tmp1, tmp1); // to handle 0.+0.i case
@@ -993,7 +993,7 @@ static float phase_pole_3D_estimate_polarity(int N, const long dims[N], const co
 	return (float)ret;
 }
 
-static void phase_pole_3D_fix_polarity(int N, const long dims[N], const complex float* col, struct lseg_s* seg, float radius, int segments)
+static void phase_pole_3D_fix_polarity(int N, const bart_dim_t dims[N], const complex float* col, struct lseg_s* seg, float radius, int segments)
 {
 	line_segments_sort(seg);
 
@@ -1042,7 +1042,7 @@ static void phase_pole_3D_fix_polarity(int N, const long dims[N], const complex 
 }
 
 
-struct lseg_s extract_phase_poles_3D(struct pole_config_s conf, int N, const long dims[N], const _Complex float* curl_map, const long sens_dims[N], const _Complex float* sens)
+struct lseg_s extract_phase_poles_3D(struct pole_config_s conf, int N, const bart_dim_t dims[N], const _Complex float* curl_map, const bart_dim_t sens_dims[N], const _Complex float* sens)
 {
 	complex float* tmp = md_alloc_sameplace(N, dims, CFL_SIZE, curl_map);
 

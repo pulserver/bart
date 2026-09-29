@@ -375,7 +375,7 @@ static bool simple_zconvcorr_bwd_in(	int N, const bart_dim_t dims[N],
 	bart_flags_t flags;
 	bool conv;
 	bart_dim_t nodims[N];
-	long nidims[N] = { };	// GCC ANALYZER
+	bart_dim_t nidims[N] = { };	// GCC ANALYZER
 	bart_dim_t nkdims[N];
 
 	bart_stride_t nostrs[N];
@@ -478,7 +478,7 @@ static bool simple_zconvcorr_bwd_krn(	int N, const bart_dim_t dims[N],
 	bart_flags_t flags;
 	bool conv;
 	bart_dim_t nodims[N];
-	long nidims[N] = { };	// GCC ANAYLZER
+	bart_dim_t nidims[N] = { };	// GCC ANAYLZER
 	bart_dim_t nkdims[N];
 
 	bart_stride_t nostrs[N];

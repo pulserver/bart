@@ -147,7 +147,7 @@ int main_ccapply(int argc, char* argv[argc])
 		out_data = create_cfl(out_file, DIMS, out_dims);
 	}
 
-	long opt_dims[DIMS];
+	bart_dim_t opt_dims[DIMS];
 	complex float* opt_mat = NULL;
 
 	if (NULL != white_file)
@@ -255,13 +255,13 @@ rt_loop:
 		assert(1 == cc2_dims[6]);
 		assert(1 == opt_dims[6]);
 
-		long in1_dims[DIMS];
+		bart_dim_t in1_dims[DIMS];
 		md_transpose_dims(DIMS, COIL_DIM, 6, in1_dims, cc2_dims);
 
 		complex float* tmp = md_alloc_sameplace(DIMS, in1_dims, CFL_SIZE, cc_data);
 		md_transpose(DIMS, COIL_DIM, 6, in1_dims, tmp, cc2_dims, cc_mat, CFL_SIZE);
 
-		long topt_dims[DIMS];
+		bart_dim_t topt_dims[DIMS];
 		md_singleton_dims(DIMS, topt_dims);
 		md_max_dims(DIMS, MD_BIT(6) | MD_BIT(COIL_DIM), topt_dims, in1_dims, opt_dims);
 

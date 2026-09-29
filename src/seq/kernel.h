@@ -17,20 +17,20 @@ extern void seq_compute_moment0_offset(int M, float moments[__VLA(M)][3], double
 extern void seq_compute_adc_samples(int D, const bart_dim_t adc_dims[__VLA(D)], _Complex float* adc, int N, const struct seq_event ev[__VLA(N)]);
 extern void seq_gradients_support(int M, double gradients[__VLA(M)][6], int N, const struct seq_event ev[__VLA(N)]);
 
-extern void seq_pulse_shapes_to_cfl(int D, const long sdims[__VLA(D)], _Complex float* shapes,
+extern void seq_pulse_shapes_to_cfl(int D, const bart_dim_t sdims[__VLA(D)], _Complex float* shapes,
 				int N, const struct rf_shape rf_shapes[__VLA(N)]);
 
 extern void seq_pulse_shapes_from_cfl(int N, struct rf_shape rf_shapes[__VLA(N)],
-					int D, const long sdims[__VLA(D)], const _Complex float* shapes);
+					int D, const bart_dim_t sdims[__VLA(D)], const _Complex float* shapes);
 
-extern void seq_events_to_cfl(int D, const long edims[__VLA(D)], _Complex float* events,
-				long* block_pos, double start_block, int N, const struct seq_event ev[__VLA(N)]);
+extern void seq_events_to_cfl(int D, const bart_dim_t edims[__VLA(D)], _Complex float* events,
+				bart_dim_t* block_pos, double start_block, int N, const struct seq_event ev[__VLA(N)]);
 
 extern int seq_events_from_cfl(int N, struct seq_event ev[__VLA(N)], double* start_block,
-				int D, const long edims[__VLA(D)], const _Complex float* events);
+				int D, const bart_dim_t edims[__VLA(D)], const _Complex float* events);
 
 extern _Bool seq_events_is_image_block(int E, struct seq_event ev[__VLA(E)]);
-extern double seq_events_cfl_find_tr(int D, const long edims[__VLA(D)], _Complex float* events);
+extern double seq_events_cfl_find_tr(int D, const bart_dim_t edims[__VLA(D)], _Complex float* events);
 
 #include "misc/cppwrap.h"
 

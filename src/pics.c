@@ -319,14 +319,14 @@ int main_pics(int argc, char* argv[argc])
 
 	// load field map
 
-	long fieldmap_dims[DIMS] = { };
+	bart_dim_t fieldmap_dims[DIMS] = { };
 
 	complex float* fieldmap =  NULL;
 
 	if (NULL != fieldmap_file)
 		fieldmap = load_cfl_sameplace(fieldmap_file, DIMS, fieldmap_dims, fieldmap);
 
-	long timemap_dims[DIMS] = { };
+	bart_dim_t timemap_dims[DIMS] = { };
 
 	complex float* timemap =  NULL;
 
@@ -460,8 +460,8 @@ int main_pics(int argc, char* argv[argc])
 
 		if (nufft_conf_options.dft) {
 
-			long T = md_calc_size(DIMS, pat_dims);
-			long samples = (long)pow(md_znorm(DIMS, pat_dims, pattern), 2.);
+			bart_dim_t T = md_calc_size(DIMS, pat_dims);
+			bart_dim_t samples = (bart_dim_t)pow(md_znorm(DIMS, pat_dims, pattern), 2.);
 
 			if (T != samples)
 				debug_printf(DP_WARN, "Pattern ignored\n");

@@ -120,7 +120,7 @@ static const double stl_icosahedron[20][3][3] = {
         { { PHI, 0, 1 }, { PHI, 0, -1 }, { 1, PHI, 0 } },
 };
 
-double* stl_internal_icosahedron(long dims[3])
+double* stl_internal_icosahedron(bart_dim_t dims[3])
 {
         dims[0] = 3;
         dims[1] = 4;
@@ -149,7 +149,7 @@ static inline unsigned stl_edge_hash(int a, int b)
 	return ((unsigned)a * 73856093u) ^ ((unsigned)b * 19349663u);
 }
 
-static int stl_edge_midpoint(struct stl_edge_entry* table, long N, double verts[N][3], int* vert_count, int i, int j)
+static int stl_edge_midpoint(struct stl_edge_entry* table, bart_dim_t N, double verts[N][3], int* vert_count, int i, int j)
 {
 	if (i > j) {
 		int t = i;
@@ -184,12 +184,12 @@ static int stl_edge_midpoint(struct stl_edge_entry* table, long N, double verts[
 	return idx;
 }
 
-double* stl_subdivide_model(long dims_out[3], const long dims_in[3], const double* model_in)
+double* stl_subdivide_model(bart_dim_t dims_out[3], const bart_dim_t dims_in[3], const double* model_in)
 {
 	assert(3 == dims_in[0]);
 	assert(4 == dims_in[1]);
 
-	long N = dims_in[2];
+	bart_dim_t N = dims_in[2];
 
 	double (*verts)[3 * N][3] = xmalloc(sizeof(*verts));
 	int (*tris)[N][3] = xmalloc(sizeof(*tris));
@@ -197,16 +197,16 @@ double* stl_subdivide_model(long dims_out[3], const long dims_in[3], const doubl
 	int nv = 0;
 	int nt = 0;
 
-	long strs_in[3];
+	bart_stride_t strs_in[3];
 	md_calc_strides(3, strs_in, dims_in, DL_SIZE);
 
-	for (long i = 0; i < N; i++) {
+	for (bart_dim_t i = 0; i < N; i++) {
 
 		for (int v = 0; v < 3; v++) {
 
 			for (int d = 0; d < 3; d++) {
 
-				long pos[3] = { d, v, i };
+				bart_dim_t pos[3] = { d, v, i };
 				(*verts)[nv][d] = MD_ACCESS(3, strs_in, pos, model_in);
 			}
 
@@ -222,7 +222,7 @@ double* stl_subdivide_model(long dims_out[3], const long dims_in[3], const doubl
 
 	double (*verts_out)[6 * N][3] = xmalloc(sizeof(*verts_out));
 	int (*tris_out)[4 * N][3] = xmalloc(sizeof(*tris_out));
-	memcpy(*verts_out, *verts, (unsigned long)nv * sizeof((*verts_out)[0]));
+	memcpy(*verts_out, *verts, (size_t)nv * sizeof((*verts_out)[0]));
 
 	int vert_count = nv;
 	int tri_count = 0;
@@ -266,14 +266,14 @@ double* stl_subdivide_model(long dims_out[3], const long dims_in[3], const doubl
 
 	double* model_out = md_alloc(3, dims_out, DL_SIZE);
 
-	long strs_out[3];
+	bart_stride_t strs_out[3];
 	md_calc_strides(3, strs_out, dims_out, DL_SIZE);
 
 	for (int t = 0; t < tri_count; t++)
 		for (int v = 0; v < 3; v++)
 			for (int d = 0; d < 3; d++) {
 
-				long pos[3] = { d, v, t };
+				bart_dim_t pos[3] = { d, v, t };
 				MD_ACCESS(3, strs_out, pos, model_out) =
 					(*verts_out)[ (*tris_out)[t][v] ][d];
 			}
@@ -288,7 +288,7 @@ double* stl_subdivide_model(long dims_out[3], const long dims_in[3], const doubl
 	return model_out;
 }
 
-double* stl_multiple_subdivide_model(int sub_divs, long dims_out[3], const long dims_in[3], const double *model)
+double* stl_multiple_subdivide_model(int sub_divs, bart_dim_t dims_out[3], const bart_dim_t dims_in[3], const double *model)
 {
 	md_copy_dims(3, dims_out, dims_in);
 
@@ -296,7 +296,7 @@ double* stl_multiple_subdivide_model(int sub_divs, long dims_out[3], const long 
 
         for (int i = 0; i < sub_divs; i++) {
 
-		long dims[3];
+		bart_dim_t dims[3];
 
 		double* model = stl_subdivide_model(dims, dims_out, current_model);
 

@@ -1233,9 +1233,9 @@ void* vptr_wrap_range(int D, void* ptr[D], bool free)
  * long apos[N];
  * do {
  * 	long mpos[D];
- * 	md_unravel_index(D, mpos, ~0UL, mdims, offset + md_calc_offset(N, astrs, apos));
+ * 	md_unravel_index(D, mpos, ~UINT64_C(0), mdims, offset + md_calc_offset(N, astrs, apos));
  * 	...
- * } while (md_next(N, adims, ~0UL, apos));
+ * } while (md_next(N, adims, ~UINT64_C(0), apos));
  *
  * This function computes the positions in mpos which may change due to a change of apos[i].
  *
@@ -1277,8 +1277,8 @@ void loop_access_dims(int N, bart_flags_t flags[N], const bart_dim_t adims[N], c
 				dstrs[i][j] = -dstrs[i][j];
 	}
 
-	long mlpos[D] = { };	// GCC ANALYZER
-	long mupos[D] = { };	// GCC ANALYZER
+	bart_dim_t mlpos[D] = { };	// GCC ANALYZER
+	bart_dim_t mupos[D] = { };	// GCC ANALYZER
 
 	for (int j = 0; j < D; j++) {
 

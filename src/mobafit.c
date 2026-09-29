@@ -114,13 +114,13 @@ static void mobafit_bound(iter_op_data* _data, float* dst, const float* src)
 	md_free(tmp_map);
 }
 
-static void mobafit_compute_covariance(struct iter_conjgrad_conf conjgrad_conf, const struct nlop_s* nlop, const long cov_dims[DIMS], complex float* cov, const long ydims[DIMS], const complex float* y, const long xdims[DIMS], const complex float* x)
+static void mobafit_compute_covariance(struct iter_conjgrad_conf conjgrad_conf, const struct nlop_s* nlop, const bart_dim_t cov_dims[DIMS], complex float* cov, const bart_dim_t ydims[DIMS], const complex float* y, const bart_dim_t xdims[DIMS], const complex float* x)
 {
 	complex float* res = md_alloc_sameplace(DIMS, ydims, CFL_SIZE, y);
 	nlop_apply(nlop, DIMS, ydims, res, DIMS, xdims, x);
 	md_zsub(DIMS, ydims, res, res, y);
 
-	long bdims[DIMS];
+	bart_dim_t bdims[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, bdims, xdims);
 
 	complex float* sig = md_alloc_sameplace(DIMS, bdims, CFL_SIZE, x);
@@ -131,12 +131,12 @@ static void mobafit_compute_covariance(struct iter_conjgrad_conf conjgrad_conf, 
 
 	md_free(res);
 
-	long cov_strs[DIMS];
+	bart_stride_t cov_strs[DIMS];
 	md_calc_strides(DIMS, cov_strs, cov_dims, CFL_SIZE);
 
 	md_clear(DIMS, cov_dims, cov, CFL_SIZE);
 
-	long pos[DIMS] = { 0 };
+	bart_dim_t pos[DIMS] = { 0 };
 
 	for (pos[COEFF_DIM] = 0; pos[COEFF_DIM] < cov_dims[COEFF_DIM]; pos[COEFF_DIM]++) {
 
@@ -459,7 +459,7 @@ int main_mobafit(int argc, char* argv[argc])
 
 	complex float* x = create_cfl(coeff_file, DIMS, x_dims);
 
-	long cov_dims[DIMS];
+	bart_dim_t cov_dims[DIMS];
 	md_copy_dims(DIMS, cov_dims, x_dims);
 	cov_dims[TE_DIM] = cov_dims[COEFF_DIM];
 
@@ -599,10 +599,10 @@ int main_mobafit(int argc, char* argv[argc])
 
 	if (NULL != init_file) {
 
-		long init_dims[DIMS];
+		bart_dim_t init_dims[DIMS];
 		complex float* init = load_cfl(init_file, DIMS, init_dims);
 
-		if (!md_check_equal_dims(DIMS, init_dims, x_dims, ~0UL))
+		if (!md_check_equal_dims(DIMS, init_dims, x_dims, ~UINT64_C(0)))
 			error("Dimensions of init file do not match!\n");
 
 		if (fB0_init)

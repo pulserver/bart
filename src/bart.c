@@ -458,12 +458,12 @@ static bool loop_step(bart_dim_t start, bart_dim_t total, bart_dim_t workers, ba
 		return false;
 	}
 
-	unsigned long flags = cfl_loop_get_flags();
+	bart_flags_t flags = cfl_loop_get_flags();
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	cfl_loop_get_dims(DIMS, dims);
 
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 
 
 	if (NULL != ref_stream) {
@@ -504,8 +504,8 @@ static bool loop_step(bart_dim_t start, bart_dim_t total, bart_dim_t workers, ba
 	debug_printf(DP_DEBUG4, "].\n");
 
 	// calculate permuted index
-	long pdims[DIMS];
-	long pstr[DIMS];
+	bart_dim_t pdims[DIMS];
+	bart_stride_t pstr[DIMS];
 
 	md_permute_dims(DIMS, order, pstr, MD_STRIDES(DIMS, dims, 1));
 	md_permute_dims(DIMS, order, pdims, dims);
@@ -582,8 +582,8 @@ int main_bart(int argc, char* argv[argc])
 
 		int final_ret = 0;
 
-		long total = cfl_loop_desc_total();
-		long workers = cfl_loop_num_workers();
+		bart_dim_t total = cfl_loop_desc_total();
+		bart_dim_t workers = cfl_loop_num_workers();
 
 		if (cfl_loop_omp()) {
 

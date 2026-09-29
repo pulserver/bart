@@ -397,7 +397,7 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 			seq->magn.mag_prep, seq->magn.ti, seq->magn.inv_delay_time);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
-			"\ninit delay/prep scans\t\t\t%.2f/%ld",
+			"\ninit delay/prep scans\t\t\t%.2f/%" PRId64,
 			seq->magn.init_delay, seq->magn.prep_scans);
 
 	ctr += snprintf(info + ctr, (size_t)(N - ctr),
@@ -415,7 +415,7 @@ int seq_print_info_config(int N, char* info, const struct seq_config* seq)
 	if (SEQ_TYPE_FLASH == seq->seq_type) {
 
 		ctr += snprintf(info + ctr, (size_t)(N - ctr),
-			"\nCEST sat\t\ttype=%d \t n=%ld \t\t\t (pause: %.4f)",
+			"\nCEST sat\t\ttype=%d \t n=%" PRId64 " \t\t\t (pause: %.4f)",
 			seq->cest.sat_type, seq->cest.sat_pulses, seq->cest.sat_pulse_pause);
 		ctr += snprintf(info + ctr, (size_t)(N - ctr),
 			"\nCEST gauss\t\tdur %f\t fa %.2f \t (OC_B1: %.2f)",

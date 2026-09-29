@@ -398,7 +398,7 @@ static void opt_reg_IRLL_configure(int N, const bart_dim_t dims[N], struct opt_r
 	bart_dim_t coil_dims[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, coil_dims, dims);
 
-	long x_dims[1] = { md_calc_size(DIMS, img_dims) + md_calc_size(DIMS, coil_dims) };
+	bart_dim_t x_dims[1] = { md_calc_size(DIMS, img_dims) + md_calc_size(DIMS, coil_dims) };
 
 	bart_dim_t map_dims[DIMS];
 	md_copy_dims(DIMS, map_dims, img_dims);

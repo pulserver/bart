@@ -130,7 +130,7 @@ int check_gen_fib(int spokes, int tiny_ga)
 /*
  * center-out, zig-zag
  */
-long cartesian_line(const long pos[DIMS], const struct seq_config* seq)
+bart_dim_t cartesian_line(const bart_dim_t pos[DIMS], const struct seq_config* seq)
 {
 	assert(   (SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode)
 	       || (SEQ_PEMODE_CARTESIAN_LINEAR == seq->enc.pe_mode));
@@ -138,8 +138,8 @@ long cartesian_line(const long pos[DIMS], const struct seq_config* seq)
 	if (SEQ_PEMODE_CARTESIAN_LINEAR == seq->enc.pe_mode)
 		return pos[PHS1_DIM];
 
-	long center = seq->loop_dims[PHS1_DIM] / 2;
-	long off = (pos[PHS1_DIM] + 1) / 2;
+	bart_dim_t center = seq->loop_dims[PHS1_DIM] / 2;
+	bart_stride_t off = (pos[PHS1_DIM] + 1) / 2;
 
 	if (pos[PHS1_DIM] % 2)
 		off *= -1;

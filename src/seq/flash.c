@@ -69,7 +69,7 @@ static double ro_time_to_echo(bart_dim_t echo, const struct seq_config* seq)
 	return ro_shift(echo, seq) + adc_time_to_echo(echo, seq);
 }
 
-static double ro_time_after_echo(long echo, const struct seq_config* seq)
+static double ro_time_after_echo(bart_dim_t echo, const struct seq_config* seq)
 {
 	return round_up_raster(adc_duration(seq) + ro_shift(echo, seq), seq->sys.raster_grad) 
 		- ro_time_to_echo(echo, seq);
@@ -85,7 +85,7 @@ static double ro_momentum_to_echo(bart_dim_t echo, const struct seq_config* seq)
 		+ ro_shift(echo, seq) + adc_time_to_echo(echo, seq));
 }
 
-static double ro_momentum(long echo, const struct seq_config* seq)
+static double ro_momentum(bart_dim_t echo, const struct seq_config* seq)
 {
 	double amp = ro_amplitude(seq);
 
@@ -157,7 +157,7 @@ static int prep_grad_ro_deph(struct grad_trapezoid* grad, const struct seq_confi
 	return 1;
 }
 
-static int prep_grad_phs1_encoding(struct grad_trapezoid* grad, int rew, const long pos[DIMS], const struct seq_config* seq)
+static int prep_grad_phs1_encoding(struct grad_trapezoid* grad, int rew, const bart_dim_t pos[DIMS], const struct seq_config* seq)
 {
 	*grad = (struct grad_trapezoid){ 0 };
 
@@ -170,7 +170,7 @@ static int prep_grad_phs1_encoding(struct grad_trapezoid* grad, int rew, const l
 	struct grad_limits limits = seq->sys.grad;
 	limits.max_amplitude *= SCALE_GRAD;
 
-	long center = 0.5 * seq->loop_dims[PHS1_DIM];
+	bart_dim_t center = 0.5 * seq->loop_dims[PHS1_DIM];
 
 	double moment = (cartesian_line(pos, seq) - center) / (seq->sys.gamma * seq->geom.fov);
 
@@ -302,7 +302,7 @@ static int prep_grad_sli(struct grad_trapezoid* grad, const struct seq_config* s
 }
 
 
-static int prep_grad_sli_reph(struct grad_trapezoid* grad, long pos_phs2, const struct seq_config* seq)
+static int prep_grad_sli_reph(struct grad_trapezoid* grad, bart_dim_t pos_phs2, const struct seq_config* seq)
 {
 	*grad = (struct grad_trapezoid){ 0 };
 
@@ -325,7 +325,7 @@ static int prep_grad_sli_reph(struct grad_trapezoid* grad, long pos_phs2, const 
 }
 
 
-static int prep_grad_pe3d_rewinder(struct grad_trapezoid* grad, const long pos[DIMS], const struct seq_config* seq)
+static int prep_grad_pe3d_rewinder(struct grad_trapezoid* grad, const bart_dim_t pos[DIMS], const struct seq_config* seq)
 {
 	*grad = (struct grad_trapezoid){ 0 };
 
@@ -350,7 +350,7 @@ static int prep_grad_pe3d_rewinder(struct grad_trapezoid* grad, const long pos[D
 }
 
 
-static void custom_params_to_config(struct seq_config* seq, int nl, const long custom_long[nl], int nd, const double custom_double[nd])
+static void custom_params_to_config(struct seq_config* seq, int nl, const bart_dim_t custom_long[nl], int nd, const double custom_double[nd])
 {
 	seq->enc.pe_mode = (enum pe_mode)custom_long[SEQ_UI_IDX_LONG_PE_MODE];
 	seq->phys.contrast = (enum flash_contrast)custom_long[SEQ_UI_IDX_LONG_CONTRAST];
@@ -371,7 +371,7 @@ static void custom_params_to_config(struct seq_config* seq, int nl, const long c
 					? ASL_BATCH_DIM_SIZE 
 					: custom_long[SEQ_UI_IDX_LONG_INVERSIONS];
 	seq->magn.inv_delay_time = custom_long[SEQ_UI_IDX_LONG_INV_DELAY];
-	seq->enc.aligned_flags = (unsigned long)custom_long[SEQ_UI_IDX_LONG_RAGA_ALIGNED_FLAGS];
+	seq->enc.aligned_flags = (bart_flags_t)custom_long[SEQ_UI_IDX_LONG_RAGA_ALIGNED_FLAGS];
 
 
 	seq->phys.bwtp = custom_double[SEQ_UI_IDX_DOUBLE_BWTP];
@@ -397,7 +397,7 @@ static void custom_params_to_config(struct seq_config* seq, int nl, const long c
 }
 
 
-static void config_to_custom_params(int nl, long custom_long[nl], int nd, double custom_double[nd], const struct seq_config* seq)
+static void config_to_custom_params(int nl, bart_dim_t custom_long[nl], int nd, double custom_double[nd], const struct seq_config* seq)
 {
 	custom_long[SEQ_UI_IDX_LONG_PE_MODE] = seq->enc.pe_mode;;
 	custom_long[SEQ_UI_IDX_LONG_CONTRAST] = seq->phys.contrast;
@@ -410,35 +410,35 @@ static void config_to_custom_params(int nl, long custom_long[nl], int nd, double
 
 	custom_long[SEQ_UI_IDX_LONG_TINY] = seq->enc.tiny;
 	custom_long[SEQ_UI_IDX_LONG_PREP_SCANS] = seq->magn.prep_scans;
-	custom_long[SEQ_UI_IDX_LONG_RF_DURATION_US] = lround(1.E6 * seq->phys.rf_duration);
+	custom_long[SEQ_UI_IDX_LONG_RF_DURATION_US] = llround(1.E6 * seq->phys.rf_duration);
 	custom_long[SEQ_UI_IDX_LONG_INIT_DELAY] = seq->magn.init_delay;
 	custom_long[SEQ_UI_IDX_LONG_INVERSIONS] = seq->loop_dims[BATCH_DIM];
 	custom_long[SEQ_UI_IDX_LONG_INV_DELAY] = seq->magn.inv_delay_time;
-	custom_long[SEQ_UI_IDX_LONG_RAGA_ALIGNED_FLAGS] = (long)seq->enc.aligned_flags;
+	custom_long[SEQ_UI_IDX_LONG_RAGA_ALIGNED_FLAGS] = (bart_dim_t)seq->enc.aligned_flags;
 	custom_double[SEQ_UI_IDX_DOUBLE_BWTP] = seq->phys.bwtp;
 	custom_double[SEQ_UI_IDX_DOUBLE_ASYM_ECHO] = seq->phys.asym_echo;
 
 	// CEST
 	custom_long[SEQ_UI_IDX_LONG_CEST_SATURATION] =seq->cest.sat_type;
 	custom_long[SEQ_UI_IDX_LONG_CEST_SAT_PULSES]= seq->cest.sat_pulses;
-	custom_long[SEQ_UI_IDX_LONG_CEST_SAT_PULSE_PAUSE_MS] = lround(1.E3 * seq->cest.sat_pulse_pause); // s -> ms
+	custom_long[SEQ_UI_IDX_LONG_CEST_SAT_PULSE_PAUSE_MS] = llround(1.E3 * seq->cest.sat_pulse_pause); // s -> ms
 
-	custom_long[SEQ_UI_IDX_LONG_CEST_GAUSS_DURATION_MS] = lround(1.E3 * seq->cest.gauss_pulse_duration); // s -> ms
-	custom_long[SEQ_UI_IDX_LONG_CEST_GAUSS_FA] = (long)seq->cest.gauss_pulse_fa;
+	custom_long[SEQ_UI_IDX_LONG_CEST_GAUSS_DURATION_MS] = llround(1.E3 * seq->cest.gauss_pulse_duration); // s -> ms
+	custom_long[SEQ_UI_IDX_LONG_CEST_GAUSS_FA] = (bart_dim_t)seq->cest.gauss_pulse_fa;
 	custom_double[SEQ_UI_IDX_DOUBLE_CEST_OC_B1_SCALING] = seq->cest.oc_pulse_b1_scaling;
 
 	custom_long[SEQ_UI_IDX_LONG_CEST_OFFSET_TYPE] = seq->cest.offset_type;
 	custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_FIRST_PPM] = seq->cest.offset_first;
 	custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_LAST_PPM] = seq->cest.offset_last;
 	custom_double[SEQ_UI_IDX_DOUBLE_CEST_OFFSET_INCREMENT_PPM] = seq->cest.offset_increment;
-	custom_long[SEQ_UI_IDX_LONG_CEST_OFFSET_PAUSE_MS] = lround(1.E3 * seq->cest.offset_pause);
+	custom_long[SEQ_UI_IDX_LONG_CEST_OFFSET_PAUSE_MS] = llround(1.E3 * seq->cest.offset_pause);
 
 	custom_long[SEQ_UI_IDX_LONG_ASL_MODE] = seq->asl.label_type;
-	custom_long[SEQ_UI_IDX_LONG_ASL_LD_MS] = lround(1.E3 * seq->asl.ld);
-	custom_long[SEQ_UI_IDX_LONG_ASL_PLD_MS] = lround(1.E3 * seq->asl.pld);
+	custom_long[SEQ_UI_IDX_LONG_ASL_LD_MS] = llround(1.E3 * seq->asl.ld);
+	custom_long[SEQ_UI_IDX_LONG_ASL_PLD_MS] = llround(1.E3 * seq->asl.pld);
 }
 
-void flash_interface_custom_params(int reverse, struct seq_config* seq, int nl, long params_long[nl], int nd, double params_double[nd])
+void flash_interface_custom_params(int reverse, struct seq_config* seq, int nl, bart_dim_t params_long[nl], int nd, double params_double[nd])
 {
 	if (reverse)
 		config_to_custom_params(nl, params_long, nd, params_double, seq);
@@ -447,7 +447,7 @@ void flash_interface_custom_params(int reverse, struct seq_config* seq, int nl, 
 }
 
 
-static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in_dims[D])
+static void loop_dims_to_conf(struct seq_config* seq, const int D, const bart_dim_t in_dims[D])
 {
 	if(SEQ_ASL_NONE != seq->asl.label_type)
 		seq->enc.order = SEQ_ORDER_SEQ_ASL;
@@ -464,7 +464,7 @@ static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in
 
 	} else {
 
-		long total_slices = in_dims[SLICE_DIM];
+		bart_dim_t total_slices = in_dims[SLICE_DIM];
 
 		if (1 < seq->geom.mb_factor) {
 
@@ -481,16 +481,16 @@ static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in
 			seq->loop_dims[PHS2_DIM] = -1; //mb groups
 	}
 
-	long frames = in_dims[TIME_DIM];
+	bart_dim_t frames = in_dims[TIME_DIM];
 	seq->loop_dims[TIME_DIM] = frames;
 
 	seq->loop_dims[BATCH_DIM] = (SEQ_ASL_NONE != seq->asl.label_type) ? ASL_BATCH_DIM_SIZE : seq->loop_dims[BATCH_DIM];
 
-	long radial_views = in_dims[PHS1_DIM];
+	bart_dim_t radial_views = in_dims[PHS1_DIM];
 
 	if (SEQ_PEMODE_RAGA == seq->enc.pe_mode) {
 
-		seq->loop_dims[TIME_DIM] = (long)ceil(1. * frames / radial_views);
+		seq->loop_dims[TIME_DIM] = (bart_dim_t)ceil(1. * frames / radial_views);
 		seq->loop_dims[ITER_DIM] = frames % radial_views;
 
 		if (0 == seq->loop_dims[ITER_DIM])
@@ -519,7 +519,7 @@ static void loop_dims_to_conf(struct seq_config* seq, const int D, const long in
 	seq->loop_dims[COEFF_DIM] = 3; // pre-/post- and actual kernel calls
 }
 
-static void conf_to_loop_dims(const int D, long dims[D], struct seq_config* seq)
+static void conf_to_loop_dims(const int D, bart_dim_t dims[D], struct seq_config* seq)
 {
 	if (seq->enc.is3D) {
 
@@ -546,7 +546,7 @@ static void conf_to_loop_dims(const int D, long dims[D], struct seq_config* seq)
 	dims[AVG_DIM] = seq->loop_dims[AVG_DIM];
 }
 
-void flash_interface_loop_dims(int reverse, struct seq_config* seq, const int D, long dims[D])
+void flash_interface_loop_dims(int reverse, struct seq_config* seq, const int D, bart_dim_t dims[D])
 {
 	if (reverse)
 		conf_to_loop_dims(D, dims, seq);
@@ -642,9 +642,9 @@ void flash_minimum_te(const struct seq_config* seq, double* min_te, double* fill
 	}
 }
 
-static long inv_calls(const struct seq_config* seq)
+static bart_dim_t inv_calls(const struct seq_config* seq)
 {
-	long calls = seq->loop_dims[BATCH_DIM] * ((SEQ_ASL_NONE == seq->asl.label_type) ? seq->loop_dims[CSHIFT_DIM] : 1);
+	bart_dim_t calls = seq->loop_dims[BATCH_DIM] * ((SEQ_ASL_NONE == seq->asl.label_type) ? seq->loop_dims[CSHIFT_DIM] : 1);
 
 	if (SEQ_ORDER_SEQ_MS == seq->enc.order)
 		return calls * seq->loop_dims[SLICE_DIM];
@@ -652,12 +652,12 @@ static long inv_calls(const struct seq_config* seq)
 	return calls;
 }
 
-static long flash_ex_calls(const struct seq_config* seq)
+static bart_dim_t flash_ex_calls(const struct seq_config* seq)
 {
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	md_select_dims(DIMS, SEQ_FLAGS & ~(COEFF_FLAG|COEFF2_FLAG), dims, seq->loop_dims);
 
-	long incomplete_raga_spks = 0;
+	bart_dim_t incomplete_raga_spks = 0;
 	if (SEQ_PEMODE_RAGA == seq->enc.pe_mode)
 		incomplete_raga_spks = seq->loop_dims[PHS1_DIM] - seq->loop_dims[ITER_DIM];
 
@@ -680,7 +680,7 @@ static long flash_ex_calls(const struct seq_config* seq)
 		dims[BATCH_DIM] = 1;
 	}
 
-	long factor = dims[SLICE_DIM];
+	bart_dim_t factor = dims[SLICE_DIM];
 	if (1 < seq->geom.mb_factor)
 		factor = dims[PHS2_DIM];
 
@@ -716,7 +716,7 @@ double flash_total_measure_time(const struct seq_config* seq)
 		prep_pulse_duration += seq->cest.offset_pause * (cest_offsets(seq) - 1);
 	}
 
-	long img_calls = flash_ex_calls(seq) * seq->geom.mb_factor;
+	bart_dim_t img_calls = flash_ex_calls(seq) * seq->geom.mb_factor;
 	double imaging_duration = seq->phys.tr * img_calls;
 
 	if ((SEQ_TRIGGER_OFF != seq->trigger.type) && (1 < seq->trigger.pulses))
@@ -740,7 +740,7 @@ int flash_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq_con
 
 		const float alpha = 0.5;
 
-		pulse[idx].samples = lround(1.E6 * seq->phys.rf_duration);
+		pulse[idx].samples = llround(1.E6 * seq->phys.rf_duration);
 
 		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
 			return -1;
@@ -777,7 +777,7 @@ int flash_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq_con
 		pulse[idx].sar_calls = seq->loop_dims[BATCH_DIM];
 		pulse[idx].sar_dur = pp->duration;
 
-		pulse[idx].samples = lround(0.5 * 1E6 * pulse[idx].sar_dur);
+		pulse[idx].samples = llround(0.5 * 1E6 * pulse[idx].sar_dur);
 
 		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
 			return -1;
@@ -805,7 +805,7 @@ int flash_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq_con
 		pulse[idx].sar_dur = seq->cest.gauss_pulse_duration;
 		pulse[idx].fa_prep = seq->cest.gauss_pulse_fa;
 
-		pulse[idx].samples = lround(1E4 * pulse[idx].sar_dur);
+		pulse[idx].samples = llround(1E4 * pulse[idx].sar_dur);
 
 		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
 			return -1;
@@ -855,7 +855,7 @@ int flash_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq_con
 
 		const float alpha = 0.5;
 
-		pulse[idx].samples = lround(1.E6 * seq->asl.hanning.rf_duration);
+		pulse[idx].samples = llround(1.E6 * seq->asl.hanning.rf_duration);
 
 		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
 			return -1;
@@ -1075,7 +1075,7 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 	if (seq_block_end_flat(i, ev, seq->sys.raster_grad) - 1E-9 > seq->phys.tr)
 		return ERROR_END_FLAT_KERNEL;
 
-	long last_idx[DIMS];
+	bart_dim_t last_idx[DIMS];
 	for (int i = 0; i < DIMS; i++)
 		last_idx[i] = seq->loop_dims[i] - 1;
 
@@ -1089,7 +1089,7 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 }
 
 
-static long get_chrono_slice(const struct seq_state* seq_state, const struct seq_config* seq)
+static bart_dim_t get_chrono_slice(const struct seq_state* seq_state, const struct seq_config* seq)
 {
 	if ((SEQ_ASL_NONE != seq->asl.label_type) && (0 == seq_state->pos[COEFF_DIM]))
 		return seq->asl.label_slice_index;
@@ -1175,17 +1175,17 @@ int flash_block(int N, struct seq_event ev[N], struct seq_state* seq_state, cons
 	    || (SEQ_BLOCK_KERNEL_CHECK == seq_state->mode))
 		return flash(N, ev, seq_state, seq);
 
-	long zeros[DIMS] = { };
-	long last_idx[DIMS];
+	bart_dim_t zeros[DIMS] = { };
+	bart_dim_t last_idx[DIMS];
 
 	for (int i = 0; i < DIMS; i++)
 		last_idx[i] = seq->loop_dims[i] - 1;
 
 	// changed beahvior for sequential multislice
-	unsigned long msm_flag = 0UL;
+	bart_flags_t msm_flag = 0;
 
 	// changed behavior for ASL
-	unsigned long asl_flag = 0UL;
+	bart_flags_t asl_flag = 0;
 
 	if (md_check_equal_order(DIMS, seq->order, seq_loop_order_multislice, SEQ_FLAGS))
 	       msm_flag = SLICE_FLAG ;
@@ -1195,7 +1195,7 @@ int flash_block(int N, struct seq_event ev[N], struct seq_state* seq_state, cons
 
 	if (0 == seq_state->pos[COEFF_DIM]) {
 
-		if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~0UL)) {
+		if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~UINT64_C(0))) {
 
 			seq_state->mode = SEQ_BLOCK_PRE;
 
@@ -1204,7 +1204,7 @@ int flash_block(int N, struct seq_event ev[N], struct seq_state* seq_state, cons
 
 		zeros[COEFF2_DIM] = 1;
 
-		if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~0UL)) {
+		if (md_check_equal_dims(DIMS, zeros, seq_state->pos, ~UINT64_C(0))) {
 
 			seq_state->mode = SEQ_BLOCK_KERNEL_NOISE;
 
@@ -1300,7 +1300,7 @@ int flash_block(int N, struct seq_event ev[N], struct seq_state* seq_state, cons
 		seq_state->mode = SEQ_BLOCK_KERNEL_IMAGE;
 		md_max_dims(DIMS, (COEFF2_FLAG), seq_state->pos, seq_state->pos, last_idx);
 
-		if (seq->trigger.trigger_out && md_check_equal_dims(DIMS, (long [DIMS]){ 0 }, seq_state->pos, PHS1_FLAG))
+		if (seq->trigger.trigger_out && md_check_equal_dims(DIMS, (bart_dim_t [DIMS]){ 0 }, seq_state->pos, PHS1_FLAG))
 			ev[i++] = (struct seq_event){ .start = 0., .mid = 0., .end = 1e-3, .type = SEQ_EVENT_OUTPUT, NULL };
 
 		return flash(N - i, ev + i, seq_state, seq) + i;

@@ -344,7 +344,7 @@ static void inverse_admm(iter_op_data* _data, float alpha, float* dst, const flo
 }
 
 
-static const struct operator_p_s* create_prox(const long img_dims[DIMS], unsigned long wav_flags, unsigned long jflag, float lambda)
+static const struct operator_p_s* create_prox(const bart_dim_t img_dims[DIMS], bart_flags_t wav_flags, bart_flags_t jflag, float lambda)
 {
 	bool randshift = true;
 	bart_dim_t minsize[DIMS] = { [0 ... DIMS - 1] = 1 };
@@ -419,8 +419,8 @@ static const struct operator_p_s* T1inv_p_create(const struct mdb_irgnm_l1_conf*
 	auto cd = nlop_codomain(nlop);
 	auto dm = nlop_domain(nlop);
 
-	long M = 2 * md_calc_size(cd->N, cd->dims);
-	long N = 2 * md_calc_size(dm->N, dm->dims);
+	bart_dim_t M = 2 * md_calc_size(cd->N, cd->dims);
+	bart_dim_t N = 2 * md_calc_size(dm->N, dm->dims);
 
 	bart_dim_t* ndims = *TYPE_ALLOC(bart_dim_t[DIMS]);
 	md_copy_dims(DIMS, ndims, dims);
@@ -428,10 +428,10 @@ static const struct operator_p_s* T1inv_p_create(const struct mdb_irgnm_l1_conf*
 	bart_dim_t img_dims[DIMS];
 	md_select_dims(DIMS, ~COIL_FLAG, img_dims, dims);
 
-	long red_dims[DIMS];
+	bart_dim_t red_dims[DIMS];
 	md_copy_dims(DIMS, red_dims, img_dims);
 	red_dims[COEFF_DIM] = bitcount(conf->wavflags & (MD_BIT(img_dims[COEFF_DIM]) - 1));
-        debug_printf(DP_DEBUG2, "nr. of penalized maps: %ld\n", red_dims[COEFF_DIM]);
+        debug_printf(DP_DEBUG2, "nr. of penalized maps: %" PRId64 "\n", red_dims[COEFF_DIM]);
 
 	auto prox1 = create_prox(red_dims, conf->wav_trans_flags, COEFF_FLAG, conf->l1val);
 	auto prox2 = operator_p_ref(prox1);

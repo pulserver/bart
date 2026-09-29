@@ -199,7 +199,7 @@ static complex float* compute_linphases(int N, bart_dim_t lph_dims[N + 1], bart_
 
 	int s = 0;
 
-	for (unsigned long i = 0; i < (1UL << T); i++) {
+	for (bart_flags_t i = 0; i < (UINT64_C(1) << T); i++) {
 
 		bool skip = false;
 
@@ -1206,10 +1206,10 @@ struct linop_s* nufft_create2(int N,
 				const bart_dim_t ksp_dims[N],
 				const bart_dim_t cim_dims[N],
 				const bart_dim_t traj_dims[N], const complex float* traj,
-				const long wgh_dims[N], const complex float* weights,
+				const bart_dim_t wgh_dims[N], const complex float* weights,
 				const bart_dim_t bas_dims[N], const complex float* basis,
-				const long fm_dims[N], const complex float* fieldmap,
-				const long tm_dims[N], const complex float* timemap,
+				const bart_dim_t fm_dims[N], const complex float* fieldmap,
+				const bart_dim_t tm_dims[N], const complex float* timemap,
 				struct nufft_conf_s conf)
 {
 	if (conf.dft) {

@@ -450,7 +450,7 @@ void md_zhann2(int D, const bart_dim_t dims[D], const bart_flags_t flags, const 
 
 
 
-void md_zsample_filter(int N, const long dims[N], unsigned long flags, const float resolution[N], complex float* z, sample_filter_fun fun, bool centered)
+void md_zsample_filter(int N, const bart_dim_t dims[N], bart_flags_t flags, const float resolution[N], complex float* z, sample_filter_fun fun, bool centered)
 {
 	if (NULL == resolution) {
 
@@ -466,10 +466,10 @@ void md_zsample_filter(int N, const long dims[N], unsigned long flags, const flo
 	for (int i = 0; i < N; i++)
 		scale[i] = MD_IS_SET(flags, i) ? 2 * M_PI / (dims[i] * resolution[i]) : 0.;
 
-	const long* dimsp = dims;	// because of clang
+	const bart_dim_t* dimsp = dims;	// because of clang
 	const float* scalep = scale;	// because of clang
 
-	NESTED(complex float, filter_kernel, (const long pos[]))
+	NESTED(complex float, filter_kernel, (const bart_dim_t pos[]))
 	{
 		float kpos[N];
 		for (int i = 0; i < N; i++) {
@@ -488,11 +488,11 @@ void md_zsample_filter(int N, const long dims[N], unsigned long flags, const flo
 	md_parallel_zsample(N, dims, z, filter_kernel);
 }
 
-void klaplace_fd_scaled_uncentered(int N, const long dims[N], const float scale[N], complex float* z)
+void klaplace_fd_scaled_uncentered(int N, const bart_dim_t dims[N], const float scale[N], complex float* z)
 {
 	const float* scalep = scale;	// because of clang
 
-	NESTED(complex float, filter_kernel_laplace, (const long /*pos*/[], const float kpos[]))
+	NESTED(complex float, filter_kernel_laplace, (const bart_dim_t /*pos*/[], const float kpos[]))
 	{
 		complex float val = 0;
 
@@ -502,10 +502,10 @@ void klaplace_fd_scaled_uncentered(int N, const long dims[N], const float scale[
 		return val;
 	};
 
-	md_zsample_filter(N, dims, ~0UL, NULL, z, CLOSURE(sample_filter_fun, filter_kernel_laplace), false);
+	md_zsample_filter(N, dims, ~UINT64_C(0), NULL, z, CLOSURE(sample_filter_fun, filter_kernel_laplace), false);
 }
 
-void klaplace_fd_uncentered(int N, const long dims[N], complex float* z)
+void klaplace_fd_uncentered(int N, const bart_dim_t dims[N], complex float* z)
 {
 	float scale[N];
 	for (int i = 0; i < N; i++)

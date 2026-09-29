@@ -1868,19 +1868,19 @@ void md_flip(int D, const bart_dim_t dims[D], bart_flags_t flags, void* optr, co
 /**
  * Try to factorize dimensions of flagged reshape to single call of md_copy2
  */
-static bool md_reshape_factor(int D, long dims[2 * D], long ostrs[2 * D], long istrs[2 * D], unsigned long flags, const long odims[D], const long idims[D], size_t size)
+static bool md_reshape_factor(int D, bart_dim_t dims[2 * D], bart_stride_t ostrs[2 * D], bart_stride_t istrs[2 * D], bart_flags_t flags, const bart_dim_t odims[D], const bart_dim_t idims[D], size_t size)
 {
 	assert(md_calc_size(D, odims) == md_calc_size(D, idims));
 	assert(md_check_equal_dims(D, odims, idims, ~flags));
 
-	long nodims[D];
-	long nidims[D];
+	bart_dim_t nodims[D];
+	bart_dim_t nidims[D];
 
 	md_copy_dims(D, nodims, odims);
 	md_copy_dims(D, nidims, idims);
 
 	// merge selected dimensions when contiguous
-	long idx = -1;
+	bart_dim_t idx = -1;
 	
 	for (int i = 0; i < D; i++) {
 
@@ -1900,8 +1900,8 @@ static bool md_reshape_factor(int D, long dims[2 * D], long ostrs[2 * D], long i
 			idx = -1;
 	}
 
-	long nostrs[D];
-	long nistrs[D];
+	bart_stride_t nostrs[D];
+	bart_stride_t nistrs[D];
 
 	md_calc_strides(D, nostrs, nodims, size);
 	md_calc_strides(D, nistrs, nidims, size);
@@ -2039,7 +2039,7 @@ void md_reshape(int D, bart_flags_t flags, const bart_dim_t odims[D], void* optr
 
 		void* buf = (void*)iptr;
 
-		if (iptr == optr && !md_check_equal_dims(2 * D, fostrs, fistrs, ~0UL)) {
+		if (iptr == optr && !md_check_equal_dims(2 * D, fostrs, fistrs, ~UINT64_C(0))) {
 
 			buf = md_alloc_sameplace(D, idims, size, iptr);
 			md_copy(D, idims, buf, iptr, size);
@@ -2628,7 +2628,7 @@ void* md_alloc_gpu(int D, const bart_dim_t dimensions[D], size_t size)
 /**
  * Allocate distributed GPU memory
  */
-void* md_alloc_gpu_mpi(int D, unsigned long f, const long dimensions[D], size_t size)
+void* md_alloc_gpu_mpi(int D, bart_flags_t f, const bart_dim_t dimensions[D], size_t size)
 {
 	auto hint = hint_mpi_create(f, D, dimensions);
 	void* ret = vptr_alloc(D, dimensions, size, hint);
@@ -2671,7 +2671,7 @@ void* md_gpu_move(int D, const bart_dim_t dims[D], const void* ptr, size_t size)
 /**
  * Allocate MPI memory and copy from pointer
  */
-void* md_gpu_mpi_move(int D, unsigned long f, const long dims[D], const void* ptr, size_t size)
+void* md_gpu_mpi_move(int D, bart_flags_t f, const bart_dim_t dims[D], const void* ptr, size_t size)
 {
 	if (NULL == ptr)
 		return NULL;

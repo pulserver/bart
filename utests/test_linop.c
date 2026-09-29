@@ -410,7 +410,7 @@ static bool test_linop_gradient(void)
 UT_REGISTER_TEST(test_linop_gradient);
 
 
-static const struct linop_s* linop_laplace_chain_create(int N, const long dims[N], unsigned long flags)
+static const struct linop_s* linop_laplace_chain_create(int N, const bart_dim_t dims[N], bart_flags_t flags)
 {
 	const struct linop_s* lop_grad = linop_grad_forward_create(N, dims, N, flags);
 	const struct linop_s* lop_div_tmp = linop_grad_forward_create(N, dims, N, flags);
@@ -426,8 +426,8 @@ static const struct linop_s* linop_laplace_chain_create(int N, const long dims[N
 static bool test_linop_laplace_cmp(void)
 {
 	enum { N = 3 };
-	long idims[N] = { 16, 16, 4 };
-	unsigned long flags = MD_BIT(0) | MD_BIT(2);
+	bart_dim_t idims[N] = { 16, 16, 4 };
+	bart_flags_t flags = MD_BIT(0) | MD_BIT(2);
 
 	const struct linop_s* lop_laplace1 = linop_laplace_create(N, idims, flags);
 	const struct linop_s* lop_laplace2 = linop_laplace_chain_create(N, idims, flags);
@@ -460,8 +460,8 @@ UT_REGISTER_TEST(test_linop_laplace_cmp);
 static bool test_linop_laplace_adjoint(void)
 {
 	enum { N = 3 };
-	long idims[N] = { 16, 16, 4 };
-	unsigned long flags = MD_BIT(0) | MD_BIT(2);
+	bart_dim_t idims[N] = { 16, 16, 4 };
+	bart_flags_t flags = MD_BIT(0) | MD_BIT(2);
 
 	const struct linop_s* lop_laplace = linop_laplace_create(N, idims, flags);
 

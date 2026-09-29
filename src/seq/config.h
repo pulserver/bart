@@ -108,7 +108,7 @@ struct seq_magn {
 
 	enum mag_prep mag_prep;
 	double ti;
-	long prep_scans;
+	bart_dim_t prep_scans;
 	double init_delay;
 	double inv_delay_time;
 };
@@ -157,7 +157,7 @@ struct seq_asl {
 struct seq_cest {
 
 	enum cest_saturation_type sat_type;
-	long sat_pulses;
+	bart_dim_t sat_pulses;
 	double sat_pulse_pause;
 	double gauss_pulse_duration;
 	double gauss_pulse_fa;

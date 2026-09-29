@@ -60,8 +60,8 @@ static void wavelet_forward(const linop_data_t* _data, complex float* dst, const
 
 				int levels = wavelet_num_levels(data->N, MD_BIT(i), data->idims, data->minsize, data->flen);
 
-				assert((size_t)levels < sizeof(long) * CHAR_BIT - 1);
-				data->shifts[i] = (long)rand_range_state(data->rand_state, (1 << levels) + 1u); // +1, as we want to include the limit
+				assert((size_t)levels < sizeof(bart_dim_t) * CHAR_BIT - 1);
+				data->shifts[i] = (bart_dim_t)rand_range_state(data->rand_state, (1 << levels) + 1u); // +1, as we want to include the limit
 
 				assert(data->shifts[i] < data->idims[i]);
 			}

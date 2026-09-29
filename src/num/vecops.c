@@ -427,13 +427,13 @@ static void zcos(bart_dim_t N, complex float* dst, const complex float* src)
 
 static void zasin(bart_dim_t N, complex float* dst, const complex float* src)
 {
-	for (long i = 0; i < N; i++)
+	for (bart_dim_t i = 0; i < N; i++)
 		dst[i] = casinf(src[i]);
 }
 
 static void zacos(bart_dim_t N, complex float* dst, const complex float* src)
 {
-	for (long i = 0; i < N; i++)
+	for (bart_dim_t i = 0; i < N; i++)
 		dst[i] = cacosf(src[i]);
 }
 

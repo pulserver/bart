@@ -484,10 +484,10 @@ struct prox_selction_wrapper_s {
 	const struct operator_p_s* op;
 
 	int N;
-	const long* dims;
+	const bart_dim_t* dims;
 
 	int sdim;
-	unsigned long flags;
+	bart_flags_t flags;
 };
 
 DEF_TYPEID(prox_selction_wrapper_s);
@@ -496,9 +496,9 @@ static void prox_selection_wrapper_apply(const operator_data_t* _data, float mu,
 {
 	auto data = CAST_DOWN(prox_selction_wrapper_s, _data);
 
-	long ipos[data->N];
-	long opos[data->N];
-	long mdims[data->N];
+	bart_dim_t ipos[data->N];
+	bart_dim_t opos[data->N];
+	bart_dim_t mdims[data->N];
 
 	md_set_dims(data->N, ipos, 0);
 	md_set_dims(data->N, opos, 0);
@@ -549,7 +549,7 @@ static void prox_selection_wrapper_del(const operator_data_t* _data)
 	xfree(data);
 }
 
-const struct operator_p_s* prox_select_maps_F(int N, const long dims[__VLA(N)], unsigned long flags, const struct operator_p_s* prox)
+const struct operator_p_s* prox_select_maps_F(int N, const bart_dim_t dims[__VLA(N)], bart_flags_t flags, const struct operator_p_s* prox)
 {
 	if (0 == flags) {
 
@@ -585,7 +585,7 @@ const struct operator_p_s* prox_select_maps_F(int N, const long dims[__VLA(N)], 
 	data->flags = flags;
 
 	data->N = N;
-	data->dims = ARR_CLONE(long[N], dims);
+	data->dims = ARR_CLONE(bart_dim_t[N], dims);
 
 	return operator_p_create(N, dims, N, dims, CAST_UP(PTR_PASS(data)), prox_selection_wrapper_apply, prox_selection_wrapper_del);
 }

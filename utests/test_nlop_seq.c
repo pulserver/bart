@@ -58,7 +58,7 @@ static const struct nlop_s* nlop_set_output_real(const struct nlop_s* nlop, int 
 
 static float flash_signal(complex float* sig_ref, const struct flash_config_s config, float* adc_phase) {
 
-	long pixels = config.npixels * config.npixels;
+	bart_dim_t pixels = config.npixels * config.npixels;
 	float flip_rad = DEG2RAD(config.flip_angle);
 
 	float mz = config.m0;
@@ -83,7 +83,7 @@ static bool test_nlop_pulse(void)
 	struct pulse_sinc ps = pulse_sinc_defaults;
 	pulse_sinc_init(&ps, 0.001, 90., 0., 4., ps.alpha);
 
-	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -119,7 +119,7 @@ static bool test_nlop_hard_pulse(void)
 	struct pulse_sinc ps = pulse_sinc_defaults;
 	pulse_sinc_init(&ps, 0.001, 45., 0., 4., ps.alpha);
 
-	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -156,7 +156,7 @@ UT_REGISTER_TEST(test_nlop_hard_pulse);
 
 static bool test_nlop_hard_pulse2(void)
 {
-	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -196,7 +196,7 @@ static bool test_nlop_hard_pulse3(void)
 	struct pulse_sinc ps = pulse_sinc_defaults;
 	pulse_sinc_init(&ps, 0.001, 45., 0., 4., ps.alpha);
 
-	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -247,7 +247,7 @@ static bool test_nlop_inv_pulse(void)
 	struct pulse_hypsec ps = pulse_hypsec_defaults;
 	pulse_hypsec_init(GYRO, &ps);
 
-	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -281,7 +281,7 @@ static bool test_nlop_phase_wrap(void)
 	struct pulse_sinc ps = pulse_sinc_defaults;
 	pulse_sinc_init(&ps, 0.001, 90., 0., 4., ps.alpha);
 
-	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -319,7 +319,7 @@ static bool test_nlop_pulse_der(void)
 	struct pulse_sinc ps = pulse_sinc_defaults;
 	pulse_sinc_init(&ps, 0.001, 45., 0., 4., ps.alpha);
 
-	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -342,7 +342,7 @@ static bool test_nlop_pulse_der(void)
 	float errm = nlop_test_affine_at(nlop_m, mag);
 	nlop_free(nlop_m);
 
-	long idims[N];
+	bart_dim_t idims[N];
 	md_transpose_dims(N, sim.MI_DIM, sim.MO_DIM, idims, sim.mdims);
 
 	const struct nlop_s* nlop_p = nlop_set_input_const(nlop, 0, N, idims, false, mag);
@@ -364,7 +364,7 @@ static bool test_nlop_pulse_der_phase(void)
 	struct pulse_sinc ps = pulse_sinc_defaults;
 	pulse_sinc_init(&ps, 0.001, 45., 0., 4., ps.alpha);
 
-	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -387,7 +387,7 @@ static bool test_nlop_pulse_der_phase(void)
 	float errm = nlop_test_affine_at(nlop_m, mag);
 	nlop_free(nlop_m);
 
-	long idims[N];
+	bart_dim_t idims[N];
 	md_transpose_dims(N, sim.MI_DIM, sim.MO_DIM, idims, sim.mdims);
 
 	const struct nlop_s* nlop_p = nlop_set_input_const(nlop, 0, N, idims, false, mag);
@@ -411,7 +411,7 @@ static bool test_nlop_pulse_stm(void)
 	struct pulse_sinc ps = pulse_sinc_defaults;
 	pulse_sinc_init(&ps, 0.001, 45., 0., 4., ps.alpha);
 
-	long dims[] = { 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -447,7 +447,7 @@ UT_REGISTER_TEST(test_nlop_pulse_stm);
 
 static bool test_nlop_flash_cmp(void)
 {
-	long dims[] = { 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -486,7 +486,7 @@ UT_REGISTER_TEST(test_nlop_flash_cmp);
 
 static bool test_nlop_flash_adc(void)
 {
-	long dims[] = { 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -506,7 +506,7 @@ UT_REGISTER_TEST(test_nlop_flash_adc);
 
 static bool test_nlop_pulse_order(void)
 {
-	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim1 = sim_config_default_cpu;
@@ -547,7 +547,7 @@ UT_REGISTER_TEST(test_nlop_pulse_order);
 
 static bool test_nlop_ir_flash_no_excitation(void)
 {
-	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -564,7 +564,7 @@ static bool test_nlop_ir_flash_no_excitation(void)
 	complex float mag_in[] = { 0., 0., 1. };
 	complex float par[] = { config.r1, config.r2, config.b1, config.b0 };
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_copy_dims(N, sdims, nlop_generic_codomain(nlop, 1)->dims);
 
 	float mz = 1. - 2. * expf(-(config.TI + config.TR * config.excitations) * config.r1);
@@ -590,7 +590,7 @@ UT_REGISTER_TEST(test_nlop_ir_flash_no_excitation);
 
 static bool test_nlop_ir_flash(void)
 {
-	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -603,7 +603,7 @@ static bool test_nlop_ir_flash(void)
 	complex float mag_in[] = { 0., 0., 1. };
 	complex float par[] = { config.r1, config.r2, config.b1, config.b0 };
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_copy_dims(N, sdims, nlop_generic_codomain(nlop, 1)->dims);
 
 	// Calculate reference signal for IR-FLASH sequence
@@ -629,7 +629,7 @@ UT_REGISTER_TEST(test_nlop_ir_flash);
 
 static bool test_nlop_flash(void)
 {
-	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -644,7 +644,7 @@ static bool test_nlop_flash(void)
 	complex float mag_in[] = { 0., 0., 1. };
 	complex float par[] = { config.r1, config.r2, config.b1, config.b0 };
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_copy_dims(N, sdims, nlop_generic_codomain(nlop, 1)->dims);
 
 	// Calculate reference signal for FLASH sequence
@@ -674,22 +674,22 @@ static bool test_nlop_phy_create(void)
 	config.inv = true;
 	config.npixels = 16;
 	config.excitations = 10;
-	long num_tot_pixels = config.npixels * config.npixels;
+	bart_dim_t num_tot_pixels = config.npixels * config.npixels;
 
-	long dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
-	long map_dims[N];
+	bart_dim_t map_dims[N];
 	md_select_dims(N, ~TE_FLAG & ~COEFF_FLAG, map_dims, dims);
 
-	long out_dims[N];
+	bart_dim_t out_dims[N];
 	md_select_dims(N, ~COEFF_FLAG, out_dims, dims);
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_copy_dims(N, sdims, out_dims);
 	complex float sig[md_calc_size(N, sdims)];
 
-	long pdims[N];
+	bart_dim_t pdims[N];
 	md_select_dims(N, ~TE_FLAG, pdims, dims);
 	complex float par[num_tot_pixels * config.nparams];
 	for (int i = 0; i < num_tot_pixels; i++) {
@@ -719,7 +719,7 @@ UT_REGISTER_TEST(test_nlop_phy_create);
 
 static bool test_nlop_flash_sim_pulse(void)
 {
-	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -741,7 +741,7 @@ static bool test_nlop_flash_sim_pulse(void)
 	complex float imag[] = { 0., 0., 1. };
 	complex float par[] = { config.r1, config.r2, config.b1, config.b0 };
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_copy_dims(N, sdims, nlop_generic_codomain(nlop_hard_pulse, 1)->dims);
 
 	complex float omag_hard_pulse[3];
@@ -768,7 +768,7 @@ UT_REGISTER_TEST(test_nlop_flash_sim_pulse);
 
 static bool test_nlop_ir_flash_sim_pulse(void)
 {
-	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -790,7 +790,7 @@ static bool test_nlop_ir_flash_sim_pulse(void)
 	complex float imag[] = { 0., 0., 1. };
 	complex float par[] = { config.r1, config.r2, config.b1, config.b0 };
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_copy_dims(N, sdims, nlop_generic_codomain(nlop_hard_pulse, 1)->dims);
 
 	complex float omag_hard_pulse[3];
@@ -834,22 +834,22 @@ static bool test_nlop_phy_create_flash_sim_pulse(void)
 	config.r1 = 0;
 	config.r2 = 0;
 
-	long num_tot_pixels = config.npixels * config.npixels;
+	bart_dim_t num_tot_pixels = config.npixels * config.npixels;
 
-	long dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
-	long mdims[N];
+	bart_dim_t mdims[N];
 	md_select_dims(N, ~TE_FLAG & ~COEFF_FLAG, mdims, dims);
 
-	long odims[N];
+	bart_dim_t odims[N];
 	md_select_dims(N, ~COEFF_FLAG, odims, dims);
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_copy_dims(N, sdims, odims);
 	complex float sig[md_calc_size(N, sdims)];
 
-	long pdims[N];
+	bart_dim_t pdims[N];
 	md_select_dims(N, ~TE_FLAG, pdims, dims);
 
 	complex float par[num_tot_pixels * config.nparams];
@@ -892,22 +892,22 @@ static bool test_nlop_phy_create_flash_hard_pulse(void)
 	config.TR = 0.05;
 	config.TI = 0;
 
-	long num_tot_pixels = config.npixels * config.npixels;
+	bart_dim_t num_tot_pixels = config.npixels * config.npixels;
 
-	long dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
-	long mdims[N];
+	bart_dim_t mdims[N];
 	md_select_dims(N, ~TE_FLAG & ~COEFF_FLAG, mdims, dims);
 
-	long odims[N];
+	bart_dim_t odims[N];
 	md_select_dims(N, ~COEFF_FLAG, odims, dims);
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_copy_dims(N, sdims, odims);
 	complex float sig[md_calc_size(N, sdims)];
 
-	long pdims[N];
+	bart_dim_t pdims[N];
 	md_select_dims(N, ~TE_FLAG, pdims, dims);
 
 	complex float par[num_tot_pixels * config.nparams];
@@ -955,22 +955,22 @@ static bool test_nlop_phy_create_ir_flash_sim_pulse(void)
 	config.r1 = 0;
 	config.r2 = 0;
 
-	long num_tot_pixels = config.npixels * config.npixels;
+	bart_dim_t num_tot_pixels = config.npixels * config.npixels;
 
-	long dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
-	long mdims[N];
+	bart_dim_t mdims[N];
 	md_select_dims(N, ~TE_FLAG & ~COEFF_FLAG, mdims, dims);
 
-	long odims[N];
+	bart_dim_t odims[N];
 	md_select_dims(N, ~COEFF_FLAG, odims, dims);
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_copy_dims(N, sdims, odims);
 	complex float sig[md_calc_size(N, sdims)];
 
-	long pdims[N];
+	bart_dim_t pdims[N];
 	md_select_dims(N, ~TE_FLAG, pdims, dims);
 
 	complex float par[num_tot_pixels * config.nparams];
@@ -1012,7 +1012,7 @@ static bool test_flash_seq_to_nlop_hard_pulse()
 	struct sim_config_s sim = sim_config_default_gpu;
 	sim.hard_pulse_sim = true;
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	md_set_dims(DIMS, dims, 1);
 	int N = ARRAY_SIZE(dims);
 
@@ -1026,17 +1026,17 @@ static bool test_flash_seq_to_nlop_hard_pulse()
 	seq->conf->phys.contrast = SEQ_CONTRAST_NO_SPOILING; // Note: Spoiling not supported yet (only one spin simulated, but for spoiling multiple spins needed)
 	seq->conf->geom.baseres = config.npixels;
 
-	long odims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t odims[] = { [0 ... DIMS - 1] = 1 };
 	odims[READ_DIM] = config.npixels;
 	odims[PHS1_DIM] = config.npixels;
 
-	long pdims[DIMS];
+	bart_dim_t pdims[DIMS];
 	md_copy_dims(DIMS, pdims, odims);
 	pdims[TE_DIM] = 1;
 
 	const struct nlop_s* nlop = seq_to_nlop(N, pdims, odims, sim, seq);
 
-	long sdims[DIMS];
+	bart_dim_t sdims[DIMS];
 	md_copy_dims(DIMS, sdims, nlop_codomain(nlop)->dims);
 	complex float signals[md_calc_size(DIMS, sdims)];
 
@@ -1074,7 +1074,7 @@ static bool test_ir_flash_seq_to_nlop_hard_pulse()
 	struct sim_config_s sim = sim_config_default_gpu;
 	sim.hard_pulse_sim = true;
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	md_set_dims(DIMS, dims, 1);
 	int N = ARRAY_SIZE(dims);
 
@@ -1090,17 +1090,17 @@ static bool test_ir_flash_seq_to_nlop_hard_pulse()
 	seq->conf->phys.contrast = SEQ_CONTRAST_NO_SPOILING; // Note: Spoiling not supported yet (only one spin simulated, but for spoiling multiple spins needed)
 	seq->conf->geom.baseres = config.npixels;
 
-	long odims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t odims[] = { [0 ... DIMS - 1] = 1 };
 	odims[READ_DIM] = config.npixels;
 	odims[PHS1_DIM] = config.npixels;
 
-	long pdims[DIMS];
+	bart_dim_t pdims[DIMS];
 	md_copy_dims(DIMS, pdims, odims);
 	pdims[TE_DIM] = 1;
 
 	const struct nlop_s* nlop = seq_to_nlop(N, pdims, odims, sim, seq);
 
-	long sdims[DIMS];
+	bart_dim_t sdims[DIMS];
 	md_copy_dims(DIMS, sdims, nlop_codomain(nlop)->dims);
 	complex float signals[md_calc_size(DIMS, sdims)];
 
@@ -1137,7 +1137,7 @@ static bool test_flash_seq_to_nlop_sim_pulse()
 	struct sim_config_s sim = sim_config_default_gpu;
 	sim.hard_pulse_sim = false;
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	md_set_dims(DIMS, dims, 1);
 	int N = ARRAY_SIZE(dims);
 
@@ -1152,17 +1152,17 @@ static bool test_flash_seq_to_nlop_sim_pulse()
 	seq->conf->phys.flip_angle = config.flip_angle;
 	seq->conf->geom.baseres = config.npixels;
 
-	long odims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t odims[] = { [0 ... DIMS - 1] = 1 };
 	odims[READ_DIM] = config.npixels;
 	odims[PHS1_DIM] = config.npixels;
 
-	long pdims[DIMS];
+	bart_dim_t pdims[DIMS];
 	md_copy_dims(DIMS, pdims, odims);
 	pdims[TE_DIM] = 1;
 
 	const struct nlop_s* nlop = seq_to_nlop(N, pdims, odims, sim, seq);
 
-	long sdims[DIMS];
+	bart_dim_t sdims[DIMS];
 	md_copy_dims(DIMS, sdims, nlop_codomain(nlop)->dims);
 	complex float signals[md_calc_size(DIMS, sdims)];
 
@@ -1200,7 +1200,7 @@ static bool test_flash_seq_to_nlop_sim_pulse_4x4pixels()
 	struct sim_config_s sim = sim_config_default_gpu;
 	sim.hard_pulse_sim = false;
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	md_set_dims(DIMS, dims, 1);
 	int N = ARRAY_SIZE(dims);
 
@@ -1215,17 +1215,17 @@ static bool test_flash_seq_to_nlop_sim_pulse_4x4pixels()
 	seq->conf->phys.flip_angle = config.flip_angle;
 	seq->conf->geom.baseres = config.npixels;
 
-	long odims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t odims[] = { [0 ... DIMS - 1] = 1 };
 	odims[READ_DIM] = config.npixels;
 	odims[PHS1_DIM] = config.npixels;
 
-	long pdims[DIMS];
+	bart_dim_t pdims[DIMS];
 	md_copy_dims(DIMS, pdims, odims);
 	pdims[TE_DIM] = 1;
 
 	const struct nlop_s* nlop = seq_to_nlop(N, pdims, odims, sim, seq);
 
-	long sdims[DIMS];
+	bart_dim_t sdims[DIMS];
 	md_copy_dims(DIMS, sdims, nlop_codomain(nlop)->dims);
 	complex float signals[md_calc_size(DIMS, sdims)];
 
@@ -1271,7 +1271,7 @@ static bool test_ir_flash_seq_to_nlop_sim_pulse()
 	struct sim_config_s sim = sim_config_default_gpu;
 	sim.hard_pulse_sim = false;
 
-	long dims[DIMS];
+	bart_dim_t dims[DIMS];
 	md_set_dims(DIMS, dims, 1);
 	int N = ARRAY_SIZE(dims);
 
@@ -1287,17 +1287,17 @@ static bool test_ir_flash_seq_to_nlop_sim_pulse()
 	seq->conf->phys.contrast = SEQ_CONTRAST_NO_SPOILING;
 	seq->conf->geom.baseres = config.npixels;
 
-	long odims[] = { [0 ... DIMS - 1] = 1 };
+	bart_dim_t odims[] = { [0 ... DIMS - 1] = 1 };
 	odims[READ_DIM] = config.npixels;
 	odims[PHS1_DIM] = config.npixels;
 
-	long pdims[DIMS];
+	bart_dim_t pdims[DIMS];
 	md_copy_dims(DIMS, pdims, odims);
 	pdims[TE_DIM] = 1;
 
 	const struct nlop_s* nlop = seq_to_nlop(N, pdims, odims, sim, seq);
 
-	long sdims[DIMS];
+	bart_dim_t sdims[DIMS];
 	md_copy_dims(DIMS, sdims, nlop_codomain(nlop)->dims);
 	complex float signals[md_calc_size(DIMS, sdims)];
 
@@ -1330,7 +1330,7 @@ static bool test_nlop_pulse_shape_create(void)
 	struct rf_shape rf_shapes[1];
 	seq_sample_rf_shapes(1, rf_shapes, &seq);
 
-	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -1370,7 +1370,7 @@ static bool test_nlop_pulse_shape_create2(void)
 	struct pulse_sms ps = pulse_sms_defaults;
 	pulse_sms_init(&ps, seq.phys.rf_duration, seq.phys.flip_angle, 0., seq.phys.bwtp, 0.5, seq.geom.mb_factor, 0, seq.geom.sms_distance, seq.geom.slice_thickness);
 
-	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -1416,7 +1416,7 @@ static bool test_nlop_pulse_shape_create3(void)
 	struct pulse_sms ps = pulse_sms_defaults;
 	pulse_sms_init(&ps, seq.phys.rf_duration, seq.phys.flip_angle, 0., seq.phys.bwtp, 0.5, seq.geom.mb_factor, 0, seq.geom.sms_distance, seq.geom.slice_thickness);
 
-	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -1470,7 +1470,7 @@ static bool test_pulse_shape_create_inv_pulse(void)
 	struct pulse_hypsec ps = pulse_hypsec_defaults;
 	pulse_hypsec_init(GYRO, &ps);
 
-	long dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	bart_dim_t dims[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;

@@ -1201,16 +1201,16 @@ extern "C" void cuda_zfftmod(bart_dim_t N, _Complex float* dst, const _Complex f
 	CUDA_KERNEL_ERROR;
 }
 
-__global__ void kern_zfftmod_1d(long N, cuFloatComplex* dst, const cuFloatComplex* src, bool inv, double phase)
+__global__ void kern_zfftmod_1d(bart_dim_t N, cuFloatComplex* dst, const cuFloatComplex* src, bool inv, double phase)
 {
 	int start = threadIdx.x + blockDim.x * blockIdx.x;
 	int stride = blockDim.x * gridDim.x;
 
-	for (long i = start; i < N; i += stride)
+	for (bart_dim_t i = start; i < N; i += stride)
 		dst[i] = cuDouble2Float(cuCmul(fftmod_phase2(N, i, inv, phase), cuFloat2Double(src[i])));
 }
 
-extern "C" void cuda_zfftmod_1d(long N, _Complex float* dst, const _Complex float* src, bool inv, double phase)
+extern "C" void cuda_zfftmod_1d(bart_dim_t N, _Complex float* dst, const _Complex float* src, bool inv, double phase)
 {
 	kern_zfftmod_1d<<<gridsize(N), blocksize(N), 0, cuda_get_stream()>>>(N, (cuFloatComplex*)dst, (const cuFloatComplex*)src, inv, phase);
 	CUDA_KERNEL_ERROR;
@@ -1376,12 +1376,12 @@ __global__ void kern_smin(bart_dim_t N, float val, float* dst, const float* src1
 	int start = threadIdx.x + blockDim.x * blockIdx.x;
 	int stride = blockDim.x * gridDim.x;
 
-	for (long i = start; i < N; i += stride)
+	for (bart_dim_t i = start; i < N; i += stride)
 		dst[i] = MIN(src1[i], val);
 }
 
 
-extern "C" void cuda_smin(long N, float val, float* dst, const float* src1)
+extern "C" void cuda_smin(bart_dim_t N, float val, float* dst, const float* src1)
 {
 	kern_smin<<<gridsize(N), blocksize(N), 0, cuda_get_stream()>>>(N, val, dst, src1);
 	CUDA_KERNEL_ERROR;

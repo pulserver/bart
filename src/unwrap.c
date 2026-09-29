@@ -48,19 +48,19 @@ static void unwrap(int D, const bart_dim_t dims[D], int d, float bounds,
 	md_zadd(D, dims, optr, optr, iptr);
 }
 
-static void unwrap_lap(int D, const long dims[D], unsigned long flags, float bounds, complex float* optr, const complex float* iptr)
+static void unwrap_lap(int D, const bart_dim_t dims[D], bart_flags_t flags, float bounds, complex float* optr, const complex float* iptr)
 {
 	md_zsmul(D, dims, optr, iptr, M_PI / bounds);
 
 	md_laplace_fd_wrapped_phase(D, dims, flags, optr, optr);
 
-	long fft_dims[D];
+	bart_dim_t fft_dims[D];
 	md_select_dims(D, flags, fft_dims, dims);
 
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
-	long fft_strs[D];
+	bart_stride_t fft_strs[D];
 	md_calc_strides(D, fft_strs, fft_dims, CFL_SIZE);
 
 	complex float* kernel = md_alloc_sameplace(D, fft_dims, CFL_SIZE, iptr);
@@ -88,7 +88,7 @@ enum MODE { MODE_CUMSUM, MODE_LAP };
 
 int main_unwrap(int argc, char* argv[argc])
 {
-	unsigned long flags = 0;
+	bart_flags_t flags = 0;
 	const char* in_file = NULL;
 	const char* out_file = NULL;
 

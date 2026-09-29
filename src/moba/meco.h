@@ -30,10 +30,10 @@ extern bart_flags_t get_fB0_flag(enum meco_model sel_model);
 
 
 
-extern struct nlop_s* nlop_meco_create(int N, const long y_dims[N], const long x_dims[N], const complex float* TE, enum meco_model sel_model, enum fat_spec fat_spec, float B0);
+extern struct nlop_s* nlop_meco_create(int N, const bart_dim_t y_dims[N], const bart_dim_t x_dims[N], const complex float* TE, enum meco_model sel_model, enum fat_spec fat_spec, float B0);
 
-extern struct nlop_s* nlop_ir_meco_create(int N, const long out_dims[N], const long in_dims[N], const long TI_dims[N],
-		const complex float* TI, const long TE_dims[N], const complex float* TE, enum meco_model meco_model, enum fat_spec fat_spec, float B0);
+extern struct nlop_s* nlop_ir_meco_create(int N, const bart_dim_t out_dims[N], const bart_dim_t in_dims[N], const bart_dim_t TI_dims[N],
+		const complex float* TI, const bart_dim_t TE_dims[N], const complex float* TE, enum meco_model meco_model, enum fat_spec fat_spec, float B0);
 
 
 #endif // _MECO_H

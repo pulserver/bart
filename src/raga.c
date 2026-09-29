@@ -104,7 +104,7 @@ int main_raga(int argc, char* argv[argc])
 	seq_print_info_radial_views(300, radial_info, &seq_conf);
 
 	if (!check_gen_fib(Y / (double_base ? 1 : 2), tiny_gold))
-		error(radial_info);
+		error("%s", radial_info);
 
 	assert(0 < tiny_gold);
 

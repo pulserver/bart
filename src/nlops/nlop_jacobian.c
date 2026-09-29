@@ -1377,7 +1377,7 @@ const struct nlop_data_s* nlop_zblock_diag_get_data(const struct nlop_s* nlop)
 }
 
 
-void nlop_zblock_diag_get_dims(const struct nlop_s* nlop, int N, int OO, long odims[OO][N], int II, long idims[II][N], long ddims[OO][II][N])
+void nlop_zblock_diag_get_dims(const struct nlop_s* nlop, int N, int OO, bart_dim_t odims[OO][N], int II, bart_dim_t idims[II][N], bart_dim_t ddims[OO][II][N])
 {
 	auto data = CAST_DOWN(block_diag_s, nlop_get_data(nlop));
 
@@ -1401,7 +1401,7 @@ void nlop_zblock_diag_get_dims(const struct nlop_s* nlop, int N, int OO, long od
 			md_copy_dims(N, ddims[o][i], ((*iov_der)[o][i])->dims);
 }
 
-void nlop_zblock_diag_apply(const struct nlop_s* nlop, int N, int OO, const long odims[OO][N], complex float* dst[OO], int II, const long idims[II][N], const complex float* src[II], const long ddims[OO][II][N], complex float* jac[OO][II])
+void nlop_zblock_diag_apply(const struct nlop_s* nlop, int N, int OO, const bart_dim_t odims[OO][N], complex float* dst[OO], int II, const bart_dim_t idims[II][N], const complex float* src[II], const bart_dim_t ddims[OO][II][N], complex float* jac[OO][II])
 {
 	auto data = CAST_DOWN(block_diag_s, nlop_get_data(nlop));
 

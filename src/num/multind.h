@@ -180,8 +180,8 @@ extern void* md_calloc(int D, const bart_dim_t dimensions[__VLA(D)], size_t size
 #ifdef USE_GPU
 extern void* md_alloc_gpu(int D, const bart_dim_t dimensions[__VLA(D)], size_t size);
 extern void* md_gpu_move(int D, const bart_dim_t dims[__VLA(D)], const void* ptr, size_t size);
-extern void* md_gpu_mpi_move(int D, unsigned long dist_flags, const bart_dim_t dims[__VLA(D)], const void* ptr, size_t size);
-extern void* md_alloc_gpu_mpi(int D, unsigned long dist_flags, const bart_dim_t dims[__VLA(D)], size_t size);
+extern void* md_gpu_mpi_move(int D, bart_flags_t dist_flags, const bart_dim_t dims[__VLA(D)], const void* ptr, size_t size);
+extern void* md_alloc_gpu_mpi(int D, bart_flags_t dist_flags, const bart_dim_t dims[__VLA(D)], size_t size);
 #endif
 extern void* md_alloc_sameplace(int D, const bart_dim_t dimensions[__VLA(D)], size_t size, const void* ptr);
 extern void md_free(const void* p);

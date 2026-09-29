@@ -354,7 +354,7 @@ static void prox_indicator_apply(const operator_data_t* _data, float /*mu*/, com
 		md_clear(d->N, d->dims, dst, CFL_SIZE);
 }
 
-const struct operator_p_s* prox_indicator_create(int N, const long dims[N], const complex float* y)
+const struct operator_p_s* prox_indicator_create(int N, const bart_dim_t dims[N], const complex float* y)
 {
 	PTR_ALLOC(struct prox_l2ball_data, pdata);
 	SET_TYPEID(prox_l2ball_data, pdata);
@@ -362,8 +362,8 @@ const struct operator_p_s* prox_indicator_create(int N, const long dims[N], cons
 	pdata->y = (NULL == y) ? NULL : multiplace_move(N, dims, CFL_SIZE, y);
 	pdata->eps = 0;
 	pdata->N = N;
-	pdata->flags = ~0UL;
-	pdata->dims = ARR_CLONE(long[N], dims);
+	pdata->flags = ~UINT64_C(0);
+	pdata->dims = ARR_CLONE(bart_dim_t[N], dims);
 
 
 	return operator_p_create(N, dims, N, dims, CAST_UP(PTR_PASS(pdata)), prox_indicator_apply, prox_l2ball_del);

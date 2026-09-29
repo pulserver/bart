@@ -31,12 +31,12 @@ extern void md_zhamming2(int D, const bart_dim_t dims[__VLA(D)], const bart_flag
 extern void md_zhann(int D, const bart_dim_t dims[__VLA(D)], const bart_flags_t flags, complex float* optr, const complex float* iptr);
 extern void md_zhann2(int D, const bart_dim_t dims[__VLA(D)], const bart_flags_t flags, const bart_stride_t ostr[__VLA(D)], complex float* optr, const bart_stride_t istr[__VLA(D)], const complex float* iptr);
 
-typedef CLOSURE_TYPE(complex float, (const long pos[], const float kpos[])) sample_filter_fun;
+typedef CLOSURE_TYPE(complex float, (const bart_dim_t pos[], const float kpos[])) sample_filter_fun;
 
-extern void md_zsample_filter(int D, const long dims[__VLA(D)], unsigned long flags, const float resolution[__VLA2(D)], _Complex float* z, sample_filter_fun fun, bool centered);
+extern void md_zsample_filter(int D, const bart_dim_t dims[__VLA(D)], bart_flags_t flags, const float resolution[__VLA2(D)], _Complex float* z, sample_filter_fun fun, bool centered);
 
-extern void klaplace_fd_scaled_uncentered(int N, const long dims[__VLA(N)], const float scale[__VLA(N)], complex float* z);
-extern void klaplace_fd_uncentered(int N, const long dims[__VLA(N)], complex float* z);
+extern void klaplace_fd_scaled_uncentered(int N, const bart_dim_t dims[__VLA(N)], const float scale[__VLA(N)], complex float* z);
+extern void klaplace_fd_uncentered(int N, const bart_dim_t dims[__VLA(N)], complex float* z);
 
 #include "misc/cppwrap.h"
 

@@ -1046,7 +1046,7 @@ static void delayed_op_clear_fun(delayed_op_t* op, bart_flags_t flags, bart_dim_
 
 static struct delayed_op_s* delayed_op_clear_create(int D, const bart_dim_t dim[D], const bart_stride_t str[D], void* ptr, size_t size)
 {
-	long tdim[D];
+	bart_dim_t tdim[D];
 	md_select_dims(D, md_nontriv_strides(D, str), tdim, dim);
 
 	struct delayed_op_arg_s arg[1] = { arg_create(D, tdim, str, ptr, size, false, true) };
@@ -2661,13 +2661,13 @@ static bool delayed_optimize_accumulate(list_t ops_queue)
 		if (   add_op->args[1].fitting
 		    && (add_op->args[1].ptr_base == free_op->args[0].ptr_base)
 		    && (add_op->args[0].ptr == add_op->args[2].ptr)
-		    && md_check_equal_dims(add_op->D, add_op->args[0].astrs, add_op->args[2].astrs, ~0UL))
+		    && md_check_equal_dims(add_op->D, add_op->args[0].astrs, add_op->args[2].astrs, ~UINT64_C(0)))
 			accum = 1;
 
 		if (   add_op->args[2].fitting
 		    && (add_op->args[2].ptr_base == free_op->args[0].ptr_base)
 		    && (add_op->args[0].ptr == add_op->args[1].ptr)
-		    && md_check_equal_dims(add_op->D, add_op->args[0].astrs, add_op->args[1].astrs, ~0UL))
+		    && md_check_equal_dims(add_op->D, add_op->args[0].astrs, add_op->args[1].astrs, ~UINT64_C(0)))
 			accum = 2;
 
 		if (-1 == accum)
@@ -2746,11 +2746,11 @@ static bool delayed_optimize_accumulate(list_t ops_queue)
 		    || (op->args[0].ptr_base != add_op->args[accum].ptr_base)
 		    || (op->args[0].ptr != add_op->args[accum].ptr_base)
 		    || (op->args[0].msize != op->args[0].asize)
-		    || !md_check_equal_dims(op->args[0].N, op->args[0].astrs, MD_STRIDES(op->args[0].N, op->args[0].mdims, op->args[0].msize), ~0UL))
+		    || !md_check_equal_dims(op->args[0].N, op->args[0].astrs, MD_STRIDES(op->args[0].N, op->args[0].mdims, op->args[0].msize), ~UINT64_C(0)))
 			continue;
 
 		const void* ptr[] = { add_op->args[0].ptr, op->args[1].ptr, op->args[2].ptr };
-		const long* strs[] = { add_op->args[0].astrs, op->args[1].astrs, op->args[2].astrs };
+		const bart_stride_t* strs[] = { add_op->args[0].astrs, op->args[1].astrs, op->args[2].astrs };
 		size_t sizes[] = { CFL_SIZE, CFL_SIZE, CFL_SIZE };
 
 

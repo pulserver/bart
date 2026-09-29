@@ -527,17 +527,17 @@ static int check_batched_select(int N, bart_dim_t ndims[N], bart_stride_t nostrs
 	return MIN(4, i);
 }
 
-static void compute_permutation(int N, int ord[N], const long strs[N])
+static void compute_permutation(int N, int ord[N], const bart_stride_t strs[N])
 {
-	__block const long* strsp = strs; // clang workaround
+	__block const bart_stride_t* strsp = strs; // clang workaround
 
 	for (int i = 0; i < N; i++)
 		ord[i] = i;
 
 	NESTED(int, cmp_strides, (int a, int b))
 	{
-		long da = labs(strsp[a]);
-		long db = labs(strsp[b]);
+		bart_stride_t da = llabs(strsp[a]);
+		bart_stride_t db = llabs(strsp[b]);
 
 		return (da > db) - (da < db);
 	};
@@ -545,7 +545,7 @@ static void compute_permutation(int N, int ord[N], const long strs[N])
 	quicksort(N, ord, cmp_strides);
 }
 
-static void reorder_long(int N, int ord[N], long dst[N], const long src[N])
+static void reorder_long(int N, int ord[N], bart_dim_t dst[N], const bart_dim_t src[N])
 {
 	for (int i = 0; i < N; i++)
 		dst[i] = src[ord[i]];
@@ -575,7 +575,7 @@ static int check_unfold(int N, bart_dim_t ndims[N], bart_stride_t nostrs[N], bar
 	int i = 1;
 
 	while ( i < N
-		&& (labs(nostrs[i]) >= labs(nostrs[i - 1]) * ndims[i - 1])
+		&& (llabs(nostrs[i]) >= llabs(nostrs[i - 1]) * ndims[i - 1])
 		&& (1 != ndims[i]))
 		i++;
 
@@ -779,8 +779,8 @@ static bool simple_z3op(int N_checks, struct simple_z3op_check strided_calls[N_c
 	if ((1 == N) && (CFL_SIZE == ostrs[0]) && (CFL_SIZE == istrs1[0]) && (CFL_SIZE == istrs2[0]))
 		return false;
 
-	long ndims[N] = { };	// GCC ANALYZER
-	long nostrs[N] = { };	// GCC ANALYZER
+	bart_dim_t ndims[N] = { };	// GCC ANALYZER
+	bart_stride_t nostrs[N] = { };	// GCC ANALYZER
 	bart_stride_t nistrs1[N] = { };	// GCC ANALYZER
 	bart_stride_t nistrs2[N] = { };	// GCC ANALYZER
 

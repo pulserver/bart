@@ -245,9 +245,9 @@ struct symmetrize_s {
 	linop_data_t super;
 
 	int N;
-	const long* dims;
-	const long* sdims;
-	const long* strs;
+	const bart_dim_t* dims;
+	const bart_dim_t* sdims;
+	const bart_stride_t* strs;
 
 	int dim1;
 	int dim2;
@@ -262,7 +262,7 @@ static void symmetrize_apply(const linop_data_t* _data, complex float* dst, cons
 	assert(dst != src);
 	md_copy2(data->N, data->dims, data->strs, dst, data->strs, src, CFL_SIZE);
 
-	long pos[data->N] = { };
+	bart_dim_t pos[data->N] = { };
 
 	for (int i = 0; i < data->dims[data->dim1]; i++) {
 
@@ -293,7 +293,7 @@ static void symmetrize_free(const linop_data_t* _data)
 }
 
 
-struct linop_s* linop_symmetrize_create(long N, const long dims[N], unsigned long flags)
+struct linop_s* linop_symmetrize_create(bart_dim_t N, const bart_dim_t dims[N], bart_flags_t flags)
 {
 	PTR_ALLOC(struct symmetrize_s, data);
 	SET_TYPEID(symmetrize_s, data);
@@ -303,15 +303,15 @@ struct linop_s* linop_symmetrize_create(long N, const long dims[N], unsigned lon
 	data->N = N;
 	assert(2 == bitcount(flags));
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_select_dims(N, ~flags, sdims, dims);
 
-	data->dims = ARR_CLONE(long[N], dims);
-	data->sdims = ARR_CLONE(long[N], sdims);
-	data->strs = ARR_CLONE(long[N], strs);
+	data->dims = ARR_CLONE(bart_dim_t[N], dims);
+	data->sdims = ARR_CLONE(bart_dim_t[N], sdims);
+	data->strs = ARR_CLONE(bart_dim_t[N], strs);
 
 	data->dim1 = md_min_idx(flags);
 	data->dim2 = md_max_idx(flags);
@@ -329,8 +329,8 @@ struct laplace_s {
 	linop_data_t super;
 
 	int N;
-	long* dims;
-	unsigned long flags;
+	bart_dim_t* dims;
+	bart_flags_t flags;
 	const float* scaling;
 };
 
@@ -353,21 +353,21 @@ static void laplace_free(const linop_data_t* _data)
 }
 
 
-struct linop_s* linop_scaled_laplace_create(long N, const long dims[N], unsigned long flags, const float scaling[N])
+struct linop_s* linop_scaled_laplace_create(bart_dim_t N, const bart_dim_t dims[N], bart_flags_t flags, const float scaling[N])
 {
 	PTR_ALLOC(struct laplace_s, data);
 	SET_TYPEID(laplace_s, data);
 
 	data->N = N;
 	data->flags = flags;
-	data->dims = ARR_CLONE(long[N], dims);
+	data->dims = ARR_CLONE(bart_dim_t[N], dims);
 	data->scaling = ARR_CLONE(float[N], scaling);
 
 	return linop_create(N, dims, N, dims, CAST_UP(PTR_PASS(data)), laplace_apply, laplace_apply, NULL, NULL, laplace_free);
 }
 
 
-struct linop_s* linop_laplace_create(long N, const long dims[N], unsigned long flags)
+struct linop_s* linop_laplace_create(bart_dim_t N, const bart_dim_t dims[N], bart_flags_t flags)
 {
 	float scaling[N];
 	for (int i = 0; i < N; i++)

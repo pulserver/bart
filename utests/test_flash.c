@@ -396,12 +396,12 @@ static bool test_flash_momentum_meco64(void)
 	seq.phys.te =  3.E-3;
 	seq.geom.slice_thickness = 5.E-3;
 
-	long loops[DIMS] =  { [0 ... DIMS - 1] = 1 };
+	bart_dim_t loops[DIMS] =  { [0 ... DIMS - 1] = 1 };
 	loops[READ_DIM] = 10;
 	loops[PHS1_DIM] = 10;
 	loops[PHS2_DIM] = 10;
 	
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 
 	do {
 
@@ -665,7 +665,7 @@ static bool test_raga_spokes(void)
 
 	int ctr = 0;
 	int E = 0;
-	long last_raga_idx = -1;
+	bart_dim_t last_raga_idx = -1;
 
 	do {
 
@@ -741,10 +741,10 @@ static bool test_rfshapes_cfl(void)
 
 	int prepped_rfs = bart_seq_prepare(seq);
 
-	long sdims[DIMS];
+	bart_dim_t sdims[DIMS];
 	md_singleton_dims(DIMS, sdims);
 
-	long max_len = 0;
+	bart_dim_t max_len = 0;
 
 	for (int i = 0; i < prepped_rfs; i++)
 		max_len = MAX(max_len, seq->rf_shape[i].samples);
@@ -802,13 +802,13 @@ static bool test_events_cfl(void)
 	E = flash(E, ev_ref, &seq_state, &seq);
 
 
-	long edims[DIMS];
+	bart_dim_t edims[DIMS];
 	md_singleton_dims(DIMS, edims);
 	edims[READ_DIM] = 26;
 	edims[PHS1_DIM] = E;
 
 	complex float* event_cfl = md_alloc(DIMS, edims, sizeof(complex float));
-	long block_pos  = 0;
+	bart_dim_t block_pos  = 0;
 	double start_block  = 0.;
 
 	seq_events_to_cfl(DIMS, edims, event_cfl, &block_pos, start_block, E, ev_ref);

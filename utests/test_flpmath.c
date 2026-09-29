@@ -391,7 +391,7 @@ print("};")
 
 static bool test_md_zcos(void)
 {
-	const long dim[] = { 8, 8 };
+	const bart_dim_t dim[] = { 8, 8 };
 	complex float x[64];
 	complex float y[64];
 
@@ -407,7 +407,7 @@ static bool test_md_zcos(void)
 
 static bool test_md_zsin(void)
 {
-	const long dim[] = { 8, 8 };
+	const bart_dim_t dim[] = { 8, 8 };
 	complex float x[64];
 	complex float y[64];
 

@@ -2655,7 +2655,7 @@ void md_zcos(int D, const bart_dim_t dims[D], complex float* optr, const complex
  *
  * optr = zasin(iptr)
  */
-void md_zasin2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_zasin2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
 	MAKE_Z2OP(zasin, D, dims, ostr, optr, istr, iptr);
 }
@@ -2666,7 +2666,7 @@ void md_zasin2(int D, const long dims[D], const long ostr[D], complex float* opt
  *
  * optr = zasin(iptr)
  */
-void md_zasin(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zasin(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 	make_z2op_simple(md_zasin2, D, dims, optr, iptr);
 }
@@ -2677,7 +2677,7 @@ void md_zasin(int D, const long dims[D], complex float* optr, const complex floa
  *
  * optr = zacos(iptr)
  */
-void md_zacos2(int D, const long dims[D], const long ostr[D], complex float* optr, const long istr[D], const complex float* iptr)
+void md_zacos2(int D, const bart_dim_t dims[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr[D], const complex float* iptr)
 {
 	MAKE_Z2OP(zacos, D, dims, ostr, optr, istr, iptr);
 }
@@ -2688,7 +2688,7 @@ void md_zacos2(int D, const long dims[D], const long ostr[D], complex float* opt
  *
  * optr = zacos(iptr)
  */
-void md_zacos(int D, const long dims[D], complex float* optr, const complex float* iptr)
+void md_zacos(int D, const bart_dim_t dims[D], complex float* optr, const complex float* iptr)
 {
 	make_z2op_simple(md_zacos2, D, dims, optr, iptr);
 }

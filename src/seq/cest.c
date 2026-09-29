@@ -51,13 +51,13 @@ static const double cest_offsets_invivo[SEQ_CEST_NUM_OFFSETS_INVIVO] = { // Menn
 };
 
 
-long cest_offsets(const struct seq_config *seq_config)
+bart_stride_t cest_offsets(const struct seq_config *seq_config)
 {
 	if (SEQ_CEST_NONE == seq_config->cest.sat_type)
 		return 1;
 
 	if (SEQ_CEST_OFFSET_EQUIDISTANT == seq_config->cest.offset_type)
-		return (long)((fabs(seq_config->cest.offset_first) + fabs(seq_config->cest.offset_last)) / seq_config->cest.offset_increment) + 1;
+		return (bart_dim_t)((fabs(seq_config->cest.offset_first) + fabs(seq_config->cest.offset_last)) / seq_config->cest.offset_increment) + 1;
 	else if (SEQ_CEST_OFFSET_PHANTOM == seq_config->cest.offset_type)
 		return SEQ_CEST_NUM_OFFSETS_PHA;
 	else if (SEQ_CEST_OFFSET_INVIVO == seq_config->cest.offset_type)
@@ -75,7 +75,7 @@ static int prep_grad_spoiler(struct grad_trapezoid* grad, double moment, double 
 	return 1;
 }
 
-static double calc_offset(long pos_cshift, const struct seq_config* seq_config)
+static double calc_offset(bart_dim_t pos_cshift, const struct seq_config* seq_config)
 {
 	double ppm = 0.;
 

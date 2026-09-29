@@ -495,16 +495,16 @@ static void bloch_del(const nlop_data_t* _data)
 }
 
 
-struct nlop_s* nlop_bloch_create(int N, const long out_dims[N], const long in_dims[N],
+struct nlop_s* nlop_bloch_create(int N, const bart_dim_t out_dims[N], const bart_dim_t in_dims[N],
 			const complex float* b1, const complex float* b0, const struct moba_conf_s* config)
 {
 	PTR_ALLOC(struct blochfun_s, data);
 	SET_TYPEID(blochfun_s, data);
 
-	long der_dims[N];
-	md_max_dims(N, ~0UL, der_dims, out_dims, in_dims);
+	bart_dim_t der_dims[N];
+	md_max_dims(N, ~UINT64_C(0), der_dims, out_dims, in_dims);
 
-	long map_dims[N];
+	bart_dim_t map_dims[N];
 	md_select_dims(N, ~COEFF_FLAG, map_dims, in_dims);
 
 	PTR_ALLOC(bart_dim_t[N], derdims);
@@ -563,7 +563,7 @@ struct nlop_s* nlop_bloch_create(int N, const long out_dims[N], const long in_di
 
 	const struct nlop_s* ret = nlop_create(N, out_dims, N, in_dims, CAST_UP(PTR_PASS(data)), bloch_fun, bloch_der, bloch_adj, NULL, NULL, bloch_del);
 
-	unsigned long rvc = MD_BIT(0) | MD_BIT(2) | MD_BIT(3); // R1, R2, B1
+	bart_flags_t rvc = MD_BIT(0) | MD_BIT(2) | MD_BIT(3); // R1, R2, B1
 	for (int p = 0; p < config->sim.voxel.P - 1; p++) {
 
 		rvc |= MD_BIT(4 + 0 * (config->sim.voxel.P - 1) + p); // R1_2

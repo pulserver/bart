@@ -848,9 +848,9 @@ void opt_reg_configure(int N, const bart_dim_t img_dims[N], struct opt_reg_s* ro
 			int DO[1] = { 1 };
 			int DI[1] = { DIMS };
 
-			long odims[1] = { 1 };
-			const long* odims2[1] = { odims };
-			const long* idims2[1] = { img_dims };
+			bart_dim_t odims[1] = { 1 };
+			const bart_dim_t* odims2[1] = { odims };
+			const bart_dim_t* idims2[1] = { img_dims };
 
 			const struct nlop_s* tf_ops = nlop_external_graph_create(regs[nr].graph_file, 1, DO, odims2, 1, DI, idims2, use_gpu, NULL);
 

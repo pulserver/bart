@@ -29,18 +29,18 @@
  * */
 
 
-__device__ static void vec_saxpy(long S, int N, float dst[/*N][S*/], const float a[/*N][S*/], float alpha, const float b[/*N][S*/])
+__device__ static void vec_saxpy(bart_dim_t S, int N, float dst[/*N][S*/], const float a[/*N][S*/], float alpha, const float b[/*N][S*/])
 {
 	for (int i = 0; i < N; i++)
 		dst[i * S] = a[i * S] + alpha * b[i * S];
 }
 
-__device__ static void vec_copy(long S, int N, float dst[/*N][S*/], const float src[/*N][S*/])
+__device__ static void vec_copy(bart_dim_t S, int N, float dst[/*N][S*/], const float src[/*N][S*/])
 {
 	vec_saxpy(S, N, dst, src, 0., src);
 }
 
-__device__ static float vec_sdot(long S, int N, const float a[/*N][S*/], const float b[/*N][S*/])
+__device__ static float vec_sdot(bart_dim_t S, int N, const float a[/*N][S*/], const float b[/*N][S*/])
 {
 	float ret = 0.;
 
@@ -50,16 +50,16 @@ __device__ static float vec_sdot(long S, int N, const float a[/*N][S*/], const f
 	return ret;
 }
 
-__device__ static float vec_norm(long S, int N, const float x[/*N][S*/])
+__device__ static float vec_norm(bart_dim_t S, int N, const float x[/*N][S*/])
 {
 	return sqrtf(vec_sdot(S, N, x, x));
 }
 
-typedef void (*ode_fun_f)(long S, float out[/*N][S*/], float t, const float yn[/*N][S*/], const void* data);
+typedef void (*ode_fun_f)(bart_dim_t S, float out[/*N][S*/], float t, const float yn[/*N][S*/], const void* data);
 
 #define tridiag(s) (s * (s + 1) / 2)
 
-__device__ static void runge_kutta_step(long S, float h, int s, const float a[/*tridiag(s)*/], const float b[/*s*/], const float c[/*s - 1*/], int N, int K, float k[/*K][N][S*/], float ynp[/*N][S*/], float tmp[/*N][S*/], float tn, const float yn[/*N][S*/], ode_fun_f f, const void* data)
+__device__ static void runge_kutta_step(bart_dim_t S, float h, int s, const float a[/*tridiag(s)*/], const float b[/*s*/], const float c[/*s - 1*/], int N, int K, float k[/*K][N][S*/], float ynp[/*N][S*/], float tmp[/*N][S*/], float tn, const float yn[/*N][S*/], ode_fun_f f, const void* data)
 {
 	vec_saxpy(S, N, ynp, yn, h * b[0], k + 0);
 
@@ -111,7 +111,7 @@ __constant__ static float b_dps[7] = { 5179. / 57600., 0.,  7571. / 16695., 393.
 __constant__ static float c_dps[6] = { 1. / 5., 3. / 10., 4. / 5., 8. / 9., 1., 1. };
 
 
-__device__ static float kern_dormand_prince_step2(long S, float h, int N, float ynp[/*N][S*/], float tn, const float yn[/*N][S*/], float k[/*6][N][S*/], float tmp[/*N][S*/], ode_fun_f f, const void* data)
+__device__ static float kern_dormand_prince_step2(bart_dim_t S, float h, int N, float ynp[/*N][S*/], float tn, const float yn[/*N][S*/], float k[/*6][N][S*/], float tmp[/*N][S*/], ode_fun_f f, const void* data)
 {
 	runge_kutta_step(S, h, 7, a_dps, b_dps, c_dps, N, 6, k, ynp, tmp, tn, yn, f, data);
 
@@ -119,7 +119,7 @@ __device__ static float kern_dormand_prince_step2(long S, float h, int N, float 
 	return vec_norm(S, N, tmp);
 }
 
-__device__ static void kern_ode_interval(long S, float h, float tol, int N, float mem[/*9][N][S*/], float st, float end, ode_fun_f f, const void* data)
+__device__ static void kern_ode_interval(bart_dim_t S, float h, float tol, int N, float mem[/*9][N][S*/], float st, float end, ode_fun_f f, const void* data)
 {
 	float* yn/*[N][S]*/	= mem + 0 * N * S;
 	float* ynp/*[N][S]*/	= mem + 1 * N * S;
@@ -153,7 +153,7 @@ __device__ static void kern_ode_interval(long S, float h, float tol, int N, floa
 struct bloch_fields_s {
 
 	float TP;
-	long NP;
+	bart_dim_t NP;
 
 	const cuFloatComplex* pulse;
 	float pr;
@@ -191,7 +191,7 @@ __device__ static void compute_fields(float t, float field[3], const struct bloc
 
 
 
-__device__ inline void kern_vec3_rot(long So, float out[/*3][So*/], long S1, const float src1[/*3][S1*/], long S2, const float src2[/*3][S2*/])
+__device__ inline void kern_vec3_rot(bart_dim_t So, float out[/*3][So*/], bart_dim_t S1, const float src1[/*3][S1*/], bart_dim_t S2, const float src2[/*3][S2*/])
 {
 	out[0 * So] = src1[1 * S1] * src2[2 * S2] - src1[2 * S1] * src2[1 * S2];
 	out[1 * So] = src1[2 * S1] * src2[0 * S2] - src1[0 * S1] * src2[2 * S2];
@@ -199,7 +199,7 @@ __device__ inline void kern_vec3_rot(long So, float out[/*3][So*/], long S1, con
 }
 
 
-__device__ void f_bloch(long S, float out[/*3][S*/], float t, const float yn[/*3][S*/], const void* data)
+__device__ void f_bloch(bart_dim_t S, float out[/*3][S*/], float t, const float yn[/*3][S*/], const void* data)
 {
 	const struct bloch_data_s* d = (const struct bloch_data_s*)data;
 
@@ -216,7 +216,7 @@ __device__ void f_bloch(long S, float out[/*3][S*/], float t, const float yn[/*3
 	out[2 * S] -= (yn[2 * S] - 1.) * d->R1;
 }
 
-__device__ void f_bloch_pdy(long S, float out[/*3][3][S*/], float t, const float in[/*3][S*/], const void* data)
+__device__ void f_bloch_pdy(bart_dim_t S, float out[/*3][3][S*/], float t, const float in[/*3][S*/], const void* data)
 {
 	const struct bloch_data_s* d = (const struct bloch_data_s*)data;
 
@@ -235,7 +235,7 @@ __device__ void f_bloch_pdy(long S, float out[/*3][3][S*/], float t, const float
 	out[(2 * 3 + 2) * S] -= d->R1;
 }
 
-__device__ void f_bloch_b1b0_pdp(long S, float out[/*3][3][S*/], float t, const float in[/*3][S*/], const void* data)
+__device__ void f_bloch_b1b0_pdp(bart_dim_t S, float out[/*3][3][S*/], float t, const float in[/*3][S*/], const void* data)
 {
 	const struct bloch_data_s* d = (const struct bloch_data_s*)data;
 
@@ -256,7 +256,7 @@ __device__ void f_bloch_b1b0_pdp(long S, float out[/*3][3][S*/], float t, const 
 }
 
 
-__device__ void f_bloch_init_pdp(long S, float out[/*3][3][S*/], float t, const float in[/*3][S*/], const void* data)
+__device__ void f_bloch_init_pdp(bart_dim_t S, float out[/*3][3][S*/], float t, const float in[/*3][S*/], const void* data)
 {
 	out[(0 * 3 + 0) * S] = 0.;
 	out[(0 * 3 + 1) * S] = 0.;
@@ -269,7 +269,7 @@ __device__ void f_bloch_init_pdp(long S, float out[/*3][3][S*/], float t, const 
 	out[(2 * 3 + 2) * S] = 0.;
 }
 
-__device__ void f_bloch_init_b1b0_pdp(long S, float out[/*6][3][S*/], float t, const float in[/*3][S*/], const void* data)
+__device__ void f_bloch_init_b1b0_pdp(bart_dim_t S, float out[/*6][3][S*/], float t, const float in[/*3][S*/], const void* data)
 {
 	f_bloch_init_pdp(S, out + 0 * 3 * S, t, in, data);
 	f_bloch_b1b0_pdp(  S, out + 3 * 3 * S, t, in, data);
@@ -290,7 +290,7 @@ struct sa_data_s
 	float* tmp; //[N][N][S]
 };
 
-__device__ static void f_sa(long S, float out[/*P + 1][N][S*/], float t, const float yn[/*P + 1][N][S*/], const void* data)
+__device__ static void f_sa(bart_dim_t S, float out[/*P + 1][N][S*/], float t, const float yn[/*P + 1][N][S*/], const void* data)
 {
 	const struct sa_data_s* d = (const struct sa_data_s*)data;
 
@@ -307,7 +307,7 @@ __device__ static void f_sa(long S, float out[/*P + 1][N][S*/], float t, const f
 				out[((1 + i) * d->N + j) * S] += d->tmp[(d->N * k + j) * S] * yn[((1 + i) * d->N + k) * S];
 }
 
-__device__ const struct bloch_data_s load_bloch_data(long i, struct bloch_fields_s* p, long SPP, long SPV, const cuFloatComplex* par)
+__device__ const struct bloch_data_s load_bloch_data(bart_dim_t i, struct bloch_fields_s* p, bart_dim_t SPP, bart_dim_t SPV, const cuFloatComplex* par)
 {
 	struct bloch_data_s db;
 	db.p = p;
@@ -329,7 +329,7 @@ __device__ __host__ static int kern_bloch_mem(int N, int P)
 	return mem;
 }
 
-__global__ static void kern_ode_interval_bloch(long M, float* buf_glb, long SMM, long SMV, cuFloatComplex* omag, const cuFloatComplex* imag, long SPP, long SPV, const cuFloatComplex* par, struct bloch_fields_s p, float h, float tol, float st, float end)
+__global__ static void kern_ode_interval_bloch(bart_dim_t M, float* buf_glb, bart_dim_t SMM, bart_dim_t SMV, cuFloatComplex* omag, const cuFloatComplex* imag, bart_dim_t SPP, bart_dim_t SPV, const cuFloatComplex* par, struct bloch_fields_s p, float h, float tol, float st, float end)
 {
 	extern __shared__ float buf_shm[];
 
@@ -337,8 +337,8 @@ __global__ static void kern_ode_interval_bloch(long M, float* buf_glb, long SMM,
 	int stride = blockDim.x * gridDim.x;
 
 	int N = 3;
-	long S = 1;
-	long T = kern_bloch_mem(N, 0);
+	bart_dim_t S = 1;
+	bart_dim_t T = kern_bloch_mem(N, 0);
 
 	float* buf;
 
@@ -351,7 +351,7 @@ __global__ static void kern_ode_interval_bloch(long M, float* buf_glb, long SMM,
 		buf = buf_glb + start;
 	}
 
-	for (long i = start; i < M; i += stride) {
+	for (bart_dim_t i = start; i < M; i += stride) {
 
 		struct bloch_data_s d = load_bloch_data(i, &p, SPP, SPV, par);
 
@@ -365,7 +365,7 @@ __global__ static void kern_ode_interval_bloch(long M, float* buf_glb, long SMM,
 	}
 }
 
-extern "C" void cuda_ode_interval_bloch(long M, long SMM, long SMV, _Complex float* mag, long SPP, long SPV, const _Complex float* par, long Np, float Tp, const _Complex float* pulse, float h, float tol, float st, float end)
+extern "C" void cuda_ode_interval_bloch(bart_dim_t M, bart_dim_t SMM, bart_dim_t SMV, _Complex float* mag, bart_dim_t SPP, bart_dim_t SPV, const _Complex float* par, bart_dim_t Np, float Tp, const _Complex float* pulse, float h, float tol, float st, float end)
 {
 	int memsize = kern_bloch_mem(3, 0) * sizeof(float);
 	int max_blocksize = (48 * 1024) / memsize;
@@ -392,7 +392,7 @@ extern "C" void cuda_ode_interval_bloch(long M, long SMM, long SMV, _Complex flo
 }
 
 
-__global__ static void kern_ode_interval_bloch_sa(long M, float* buf_glb, long SMM, long SMV, cuFloatComplex* omag, const cuFloatComplex* imag, long SDMM, long SDMV, cuFloatComplex* odmag, const cuFloatComplex* idmag, long SDPP, long SDPV, cuFloatComplex* odpar, const cuFloatComplex* idpar, long SPP, long SPV, const cuFloatComplex* par, struct bloch_fields_s p, float h, float tol, float st, float end)
+__global__ static void kern_ode_interval_bloch_sa(bart_dim_t M, float* buf_glb, bart_dim_t SMM, bart_dim_t SMV, cuFloatComplex* omag, const cuFloatComplex* imag, bart_dim_t SDMM, bart_dim_t SDMV, cuFloatComplex* odmag, const cuFloatComplex* idmag, bart_dim_t SDPP, bart_dim_t SDPV, cuFloatComplex* odpar, const cuFloatComplex* idpar, bart_dim_t SPP, bart_dim_t SPV, const cuFloatComplex* par, struct bloch_fields_s p, float h, float tol, float st, float end)
 {
 	extern __shared__ float buf_shm[];
 
@@ -402,7 +402,7 @@ __global__ static void kern_ode_interval_bloch_sa(long M, float* buf_glb, long S
 	int N = 3;
 	int P = 0;
 	int Pp = 0; // number of parameter derivative directions
-	long S = 1;
+	bart_dim_t S = 1;
 
 	if (NULL != idmag)
 		P += 3; // (M0_x M0_y M0_z)
@@ -413,7 +413,7 @@ __global__ static void kern_ode_interval_bloch_sa(long M, float* buf_glb, long S
 		P += Pp;
 	}
 
-	long T = kern_bloch_mem(N, P);
+	bart_dim_t T = kern_bloch_mem(N, P);
 
 	float* buf;
 
@@ -426,7 +426,7 @@ __global__ static void kern_ode_interval_bloch_sa(long M, float* buf_glb, long S
 		buf = buf_glb + start;
 	}
 
-	for (long i = start; i < M; i += stride) {
+	for (bart_dim_t i = start; i < M; i += stride) {
 
 		int j = 0;
 		for (int k = 0; k < N; k++)
@@ -477,7 +477,7 @@ __global__ static void kern_ode_interval_bloch_sa(long M, float* buf_glb, long S
 
 
 
-extern "C" void cuda_ode_interval_bloch_sa(long M, long SMM, long SMV, _Complex float* mag, long SDMM, long SDMV, _Complex float* dmag, long SDPP, long SDPV, _Complex float* dpar, long SPP, long SPV, const _Complex float* par, long Np, float Tp, const _Complex float* pulse, float h, float tol, float st, float end)
+extern "C" void cuda_ode_interval_bloch_sa(bart_dim_t M, bart_dim_t SMM, bart_dim_t SMV, _Complex float* mag, bart_dim_t SDMM, bart_dim_t SDMV, _Complex float* dmag, bart_dim_t SDPP, bart_dim_t SDPV, _Complex float* dpar, bart_dim_t SPP, bart_dim_t SPV, const _Complex float* par, bart_dim_t Np, float Tp, const _Complex float* pulse, float h, float tol, float st, float end)
 {
 	int N = 3;
 	int P = 0;

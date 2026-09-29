@@ -322,7 +322,7 @@ static MPI_Request* mpi_get_request(void)
 }
 
 
-static void mpi_send(void* src, long size, int recv_rank, bool blocking) 
+static void mpi_send(void* src, bart_dim_t size, int recv_rank, bool blocking) 
 {
 	if (blocking) 
 		MPI_ERROR(MPI_Send(src, size, MPI_BYTE, recv_rank, 0, mpi_get_comm()));
@@ -414,12 +414,12 @@ static void mpi_copy_kernel(void* dst, bart_dim_t size, const void* src, int sen
 #endif
 }
 
-void mpi_copy(void* dst, long size, const void* src, int sender_rank, int recv_rank)
+void mpi_copy(void* dst, bart_dim_t size, const void* src, int sender_rank, int recv_rank)
 {
 	mpi_copy_kernel(dst, size, src, sender_rank, recv_rank, true);
 }
 
-void mpi_copy_nonblocking(void* dst, long size, const void* src, int sender_rank, int recv_rank)
+void mpi_copy_nonblocking(void* dst, bart_dim_t size, const void* src, int sender_rank, int recv_rank)
 {
 	mpi_copy_kernel(dst, size, src, sender_rank, recv_rank, false);
 }
@@ -448,9 +448,9 @@ void mpi_copy2(int N, const bart_dim_t dim[N], const bart_stride_t ostr[N], void
 }
 
 
-void mpi_copy2_nonblocking(int N, const long dim[N], const long ostr[N], void* optr, const long istr[N], const void* iptr, long size, int sender_rank, int recv_rank)
+void mpi_copy2_nonblocking(int N, const bart_dim_t dim[N], const bart_stride_t ostr[N], void* optr, const bart_stride_t istr[N], const void* iptr, bart_dim_t size, int sender_rank, int recv_rank)
 {
-	const long (*nstr[2])[N] = { (const long (*)[N])ostr, (const long (*)[N])istr };
+	const bart_dim_t (*nstr[2])[N] = { (const bart_dim_t (*)[N])ostr, (const bart_dim_t (*)[N])istr };
 	extern bool num_auto_parallelize;
 	bool ap_save = num_auto_parallelize;
 	num_auto_parallelize = false;
@@ -461,7 +461,7 @@ void mpi_copy2_nonblocking(int N, const long dim[N], const long ostr[N], void* o
 
 	NESTED(void, nary_copy_mpi, (struct nary_opt_data_s* opt_data, void* ptr[]))
 	{
-		long size2 = size * opt_data->size;
+		bart_dim_t size2 = size * opt_data->size;
 
 		mpi_copy_nonblocking(ptr[0], size2, ptr[1], sender_rank, recv_rank);
 	};

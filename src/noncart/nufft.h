@@ -55,10 +55,10 @@ extern struct linop_s* nufft_create2(int N,
 				const bart_dim_t ksp_dims[N],
 				const bart_dim_t cim_dims[N],
 				const bart_dim_t traj_dims[N], const complex float* traj,
-				const long wgh_dims[N], const complex float* weights,
+				const bart_dim_t wgh_dims[N], const complex float* weights,
 				const bart_dim_t bas_dims[N], const complex float* basis,
-				const long fm_dims[N], const complex float* fieldmap,
-				const long tm_dims[N], const complex float* timemap,
+				const bart_dim_t fm_dims[N], const complex float* fieldmap,
+				const bart_dim_t tm_dims[N], const complex float* timemap,
 				struct nufft_conf_s conf);
 
 extern _Complex float* compute_psf(int N,

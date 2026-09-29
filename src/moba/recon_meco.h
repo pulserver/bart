@@ -13,7 +13,7 @@ enum fat_spec;
 void init_meco_maps(const bart_dim_t maps_dims[DIMS], complex float* maps, enum meco_model sel_model);
 
 void meco_recon(const struct moba_conf* moba_conf, struct moba_conf_s* data,
-		const long dims[DIMS],
+		const bart_dim_t dims[DIMS],
 		enum meco_model sel_model, enum fat_spec fat_spec,
 		const float* scale_fB0, bool warmstart, bool out_origin_maps,
 		const bart_dim_t maps_dims[DIMS], complex float* maps,

@@ -238,14 +238,14 @@ void seq_gradients_support(int M, double gradients[M][6], int N, const struct se
 }
 
 
-void seq_pulse_shapes_to_cfl(int D, const long sdims[D], complex float* shapes, int N, const struct rf_shape rf_shapes[N])
+void seq_pulse_shapes_to_cfl(int D, const bart_dim_t sdims[D], complex float* shapes, int N, const struct rf_shape rf_shapes[N])
 {
-	long sstrs[D];
+	bart_stride_t sstrs[D];
 	md_calc_strides(D, sstrs, sdims, CFL_SIZE);
 
 	md_clear(D, sdims, shapes, CFL_SIZE);
 
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 
 	do {
 
@@ -269,12 +269,12 @@ void seq_pulse_shapes_to_cfl(int D, const long sdims[D], complex float* shapes, 
 
 }
 
-extern void seq_pulse_shapes_from_cfl(int N, struct rf_shape rf_shapes[N], int D, const long sdims[D], const _Complex float* shapes)
+extern void seq_pulse_shapes_from_cfl(int N, struct rf_shape rf_shapes[N], int D, const bart_dim_t sdims[D], const _Complex float* shapes)
 {
-	long sstrs[D];
+	bart_stride_t sstrs[D];
 	md_calc_strides(D, sstrs, sdims, CFL_SIZE);
 
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 
 	do {
 
@@ -284,7 +284,7 @@ extern void seq_pulse_shapes_from_cfl(int N, struct rf_shape rf_shapes[N], int D
 		rf_shapes[pos[TIME_DIM]].fa_prep = MD_ACCESS(D, sstrs, (pos[PHS1_DIM] = 2, pos), shapes);
 		rf_shapes[pos[TIME_DIM]].max = MD_ACCESS(D, sstrs, (pos[PHS1_DIM] = 3, pos), shapes);
 		rf_shapes[pos[TIME_DIM]].integral = MD_ACCESS(D, sstrs, (pos[PHS1_DIM] = 4, pos), shapes);
-		rf_shapes[pos[TIME_DIM]].samples = (long)MD_ACCESS(D, sstrs, (pos[PHS1_DIM] = 5, pos), shapes);
+		rf_shapes[pos[TIME_DIM]].samples = (bart_dim_t)MD_ACCESS(D, sstrs, (pos[PHS1_DIM] = 5, pos), shapes);
 
 		pos[READ_DIM] = 0;
 
@@ -295,12 +295,12 @@ extern void seq_pulse_shapes_from_cfl(int N, struct rf_shape rf_shapes[N], int D
 }
 
 
-void seq_events_to_cfl(int D, const long edims[D], complex float* events, long* block_pos, double start_block, int N, const struct seq_event ev[N])
+void seq_events_to_cfl(int D, const bart_dim_t edims[D], complex float* events, bart_dim_t* block_pos, double start_block, int N, const struct seq_event ev[N])
 {
-	long estrs[D];
+	bart_stride_t estrs[D];
 	md_calc_strides(D, estrs, edims, CFL_SIZE);
 
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 	pos[TIME_DIM] = *block_pos;
 
 	do {
@@ -352,14 +352,14 @@ void seq_events_to_cfl(int D, const long edims[D], complex float* events, long* 
 
 }
 
-extern int seq_events_from_cfl(int N, struct seq_event ev[N], double* start_block, int D, const long edims[D], const _Complex float* events)
+extern int seq_events_from_cfl(int N, struct seq_event ev[N], double* start_block, int D, const bart_dim_t edims[D], const _Complex float* events)
 {
 	assert(N >= edims[PHS1_DIM]);
 
-	long estrs[D];
+	bart_stride_t estrs[D];
 	md_calc_strides(D, estrs, edims, CFL_SIZE);
 
-	long pos[DIMS] = { };
+	bart_dim_t pos[DIMS] = { };
 	*start_block = MD_ACCESS(D, estrs, (pos[READ_DIM] = 0, pos), events); // FIXME
 
 	do {
@@ -392,14 +392,14 @@ extern int seq_events_from_cfl(int N, struct seq_event ev[N], double* start_bloc
 
 		case SEQ_EVENT_ADC:
 
-			ev[pos[PHS1_DIM]].adc.dwell_ns = (long)MD_ACCESS(D, estrs, (pos[READ_DIM] = 4, pos), events);
-			ev[pos[PHS1_DIM]].adc.columns = (long)MD_ACCESS(D, estrs, (pos[READ_DIM] = 5, pos), events);
+			ev[pos[PHS1_DIM]].adc.dwell_ns = (bart_dim_t)MD_ACCESS(D, estrs, (pos[READ_DIM] = 4, pos), events);
+			ev[pos[PHS1_DIM]].adc.columns = (bart_dim_t)MD_ACCESS(D, estrs, (pos[READ_DIM] = 5, pos), events);
 			ev[pos[PHS1_DIM]].adc.os = MD_ACCESS(D, estrs, (pos[READ_DIM] = 6, pos), events);
 			ev[pos[PHS1_DIM]].adc.freq = MD_ACCESS(D, estrs, (pos[READ_DIM] = 7, pos), events);
 			ev[pos[PHS1_DIM]].adc.phase = MD_ACCESS(D, estrs, (pos[READ_DIM] = 8, pos), events);
-			ev[pos[PHS1_DIM]].adc.flags = (unsigned long)MD_ACCESS(D, estrs, (pos[READ_DIM] = 9, pos), events);
+			ev[pos[PHS1_DIM]].adc.flags = (bart_flags_t)MD_ACCESS(D, estrs, (pos[READ_DIM] = 9, pos), events);
 			for (int idx = 0; idx < DIMS; idx++)
-				ev[pos[PHS1_DIM]].adc.pos[idx] = (long)MD_ACCESS(D, estrs, (pos[READ_DIM] = 10 + idx, pos), events);
+				ev[pos[PHS1_DIM]].adc.pos[idx] = (bart_dim_t)MD_ACCESS(D, estrs, (pos[READ_DIM] = 10 + idx, pos), events);
 			break;
 
 		default:
@@ -428,16 +428,16 @@ bool seq_events_is_image_block(int E, struct seq_event ev[E])
 }
 
 
-double seq_events_cfl_find_tr(int D, const long edims[D], _Complex float* events)
+double seq_events_cfl_find_tr(int D, const bart_dim_t edims[D], _Complex float* events)
 {
-	long pos[D] = { };
+	bart_dim_t pos[D] = { };
 
-	long strs[D];
+	bart_stride_t strs[D];
 	md_calc_strides(D, strs, edims, 1);
 
 	double time = -1.;
 	double start_block = 0.;
-	long image1_pos = 0;
+	bart_dim_t image1_pos = 0;
 
 	struct seq_event ev[edims[PHS1_DIM]] = { };
 

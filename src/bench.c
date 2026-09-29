@@ -40,7 +40,7 @@
 
 static bool use_distributed_computing = false;
 
-static void* bench_alloc(int D, unsigned long mpi_flags, const long dimensions[D], size_t size)
+static void* bench_alloc(int D, bart_flags_t mpi_flags, const bart_dim_t dimensions[D], size_t size)
 {
 	if (use_distributed_computing) {
 #ifdef USE_GPU
@@ -93,10 +93,10 @@ static double bench_generic_copy(bart_dim_t dims[DIMS])
 	return toc - tic;
 }
 
-static double bench_generic_circ_shift(long dims[DIMS], unsigned long mpi_flags, unsigned long shift_dim, long shift)
+static double bench_generic_circ_shift(bart_dim_t dims[DIMS], bart_flags_t mpi_flags, bart_flags_t shift_dim, bart_dim_t shift)
 {
-	long center[DIMS] = {};
-	long strs[DIMS];
+	bart_dim_t center[DIMS] = {};
+	bart_stride_t strs[DIMS];
 
 	md_calc_strides(DIMS, strs, dims, CFL_SIZE);
 	center[shift_dim] = shift;
@@ -269,8 +269,8 @@ static double bench_copy2(bart_dim_t scale)
 
 static double bench_circ_shift(bart_dim_t scale)
 {
-	long dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 1, 16, 1, 16 };
-	unsigned long mpi_flags = MD_BIT(5);
+	bart_dim_t dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 1, 16, 1, 16 };
+	bart_flags_t mpi_flags = MD_BIT(5);
 	return bench_generic_circ_shift(dims, mpi_flags, 5, 1);
 }
 
@@ -308,10 +308,10 @@ static double bench_tall_matmul1(bart_dim_t scale)
 static double bench_tall_matmul2(bart_dim_t scale)
 {
 	bart_dim_t dims[DIMS] = { 1, 100000 * scale, 8, 8, 1, 1, 1, 1 };
-	unsigned long mpi_flags = MD_BIT(3);
-	long dimsX[DIMS];
-	long dimsY[DIMS];
-	long dimsZ[DIMS];
+	bart_flags_t mpi_flags = MD_BIT(3);
+	bart_dim_t dimsX[DIMS];
+	bart_dim_t dimsY[DIMS];
+	bart_dim_t dimsZ[DIMS];
 
 	md_select_dims(DIMS, 2 * 3 + 17, dimsX, dims);	// 1 110 1
 	md_select_dims(DIMS, 2 * 6 + 17, dimsY, dims);	// 1 011 1
@@ -433,10 +433,10 @@ static double bench_transpose(bart_dim_t scale)
 }
 
 
-static double bench_transpose2(long scale)
+static double bench_transpose2(bart_dim_t scale)
 {
-	long dims[DIMS] = { 200 * scale, 200 * scale, 1, 1, 1, 16, 1, 1 };
-	unsigned long mpi_flags = MD_BIT(1);
+	bart_dim_t dims[DIMS] = { 200 * scale, 200 * scale, 1, 1, 1, 16, 1, 1 };
+	bart_flags_t mpi_flags = MD_BIT(1);
 
 	complex float* x = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
 	complex float* y = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
@@ -531,8 +531,8 @@ static double bench_znorm(bart_dim_t scale)
 {
 	complex float* x;
 	complex float* y;
-	long dims[DIMS] = { 256 * scale, 256 * scale, 1, 16, 1, 1, 1, 1 };
-	unsigned long mpi_flags = MD_BIT(3);
+	bart_dim_t dims[DIMS] = { 256 * scale, 256 * scale, 1, 16, 1, 1, 1, 1 };
+	bart_flags_t mpi_flags = MD_BIT(3);
 	x = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
 	y = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
 	
@@ -554,7 +554,7 @@ static double bench_znorm(bart_dim_t scale)
 static double bench_wavelet(bart_dim_t scale)
 {
 	bart_dim_t dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 16, 1, 1, 1 };
-	unsigned long mpi_flags = MD_BIT(4);
+	bart_flags_t mpi_flags = MD_BIT(4);
 	bart_dim_t minsize[DIMS] = { [0 ... DIMS - 1] = 1 };
 	minsize[0] = MIN(dims[0], 16);
 	minsize[1] = MIN(dims[1], 16);
@@ -578,7 +578,7 @@ static double bench_wavelet(bart_dim_t scale)
 }
 
 
-static double bench_generic_mdfft(long dims[DIMS], unsigned long flags, unsigned long mpi_flags)
+static double bench_generic_mdfft(bart_dim_t dims[DIMS], bart_flags_t flags, bart_flags_t mpi_flags)
 {
 	complex float* x = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
 	complex float* y = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
@@ -600,13 +600,13 @@ static double bench_generic_mdfft(long dims[DIMS], unsigned long flags, unsigned
 static double bench_mdfft(bart_dim_t scale)
 {
 	bart_dim_t dims[DIMS] = { 1, 128 * scale, 128 * scale, 1, 1, 4, 1, 4 };
-	unsigned long mpi_flags = MD_BIT(5);
+	bart_flags_t mpi_flags = MD_BIT(5);
 	return bench_generic_mdfft(dims, 6, mpi_flags);
 }
 
 
 
-static double bench_generic_fft(long dims[DIMS], unsigned long flags, unsigned long mpi_flags)
+static double bench_generic_fft(bart_dim_t dims[DIMS], bart_flags_t flags, bart_flags_t mpi_flags)
 {
 	complex float* x = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
 	complex float* y = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
@@ -630,7 +630,7 @@ static double bench_generic_fft(long dims[DIMS], unsigned long flags, unsigned l
 static double bench_fft(bart_dim_t scale)
 {
 	bart_dim_t dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 1, 16, 1, 8 };
-	unsigned long mpi_flags = MD_BIT(5);
+	bart_flags_t mpi_flags = MD_BIT(5);
 	return bench_generic_fft(dims, 6, mpi_flags);
 }
 
@@ -670,7 +670,7 @@ enum bench_typ { BENCH_ZFILL, BENCH_ZSMUL, BENCH_LINPHASE };
 static double bench_generic_expand(enum bench_typ typ, bart_dim_t scale)
 {
 	bart_dim_t dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 1, 16, 1, 16 };
-	unsigned long mpi_flags = MD_BIT(5);
+	bart_flags_t mpi_flags = MD_BIT(5);
 
 	float linphase_pos[DIMS] = { 0.5, 0.1 };
 

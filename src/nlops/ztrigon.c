@@ -60,7 +60,7 @@ static void zsinc_free(const nlop_data_t* _data)
 	xfree(_data);
 }
 
-static void zsinc_apply(const nlop_data_t* /*data*/, int N, const long dims[N], complex float* dst, const complex float* src, complex float* der)
+static void zsinc_apply(const nlop_data_t* /*data*/, int N, const bart_dim_t dims[N], complex float* dst, const complex float* src, complex float* der)
 {
 	assert(dst != src);
 
@@ -83,7 +83,7 @@ static void zsinc_apply(const nlop_data_t* /*data*/, int N, const long dims[N], 
 	}
 }
 
-const struct nlop_s* nlop_zsinc_create(int N, const long dims[N])
+const struct nlop_s* nlop_zsinc_create(int N, const bart_dim_t dims[N])
 {
 	PTR_ALLOC(struct zsinc_s, data);
 	SET_TYPEID(zsinc_s, data);
@@ -141,7 +141,7 @@ static void zasin_free(const nlop_data_t* _data)
 	xfree(_data);
 }
 
-static void zasin_apply(const nlop_data_t* /*data*/, int N, const long dims[N], complex float* dst, const complex float* src, complex float* der)
+static void zasin_apply(const nlop_data_t* /*data*/, int N, const bart_dim_t dims[N], complex float* dst, const complex float* src, complex float* der)
 {
 
 	if (NULL != der) {
@@ -156,7 +156,7 @@ static void zasin_apply(const nlop_data_t* /*data*/, int N, const long dims[N], 
 	md_zasin(N, dims, dst, src);
 }
 
-const struct nlop_s* nlop_zasin_create(int N, const long dims[N])
+const struct nlop_s* nlop_zasin_create(int N, const bart_dim_t dims[N])
 {
 	PTR_ALLOC(struct zsin_s, data);
 	SET_TYPEID(zsin_s, data);
@@ -179,7 +179,7 @@ static void zacos_free(const nlop_data_t* _data)
 	xfree(_data);
 }
 
-static void zacos_apply(const nlop_data_t* /*_data*/, int N, const long dims[N], complex float* dst, const complex float* src, complex float* der)
+static void zacos_apply(const nlop_data_t* /*_data*/, int N, const bart_dim_t dims[N], complex float* dst, const complex float* src, complex float* der)
 {
 
 	if (NULL != der) {
@@ -195,7 +195,7 @@ static void zacos_apply(const nlop_data_t* /*_data*/, int N, const long dims[N],
 	md_zacos(N, dims, dst, src);
 }
 
-const struct nlop_s* nlop_zacos_create(int N, const long dims[N])
+const struct nlop_s* nlop_zacos_create(int N, const bart_dim_t dims[N])
 {
 	PTR_ALLOC(struct zcos_s, data);
 	SET_TYPEID(zcos_s, data);

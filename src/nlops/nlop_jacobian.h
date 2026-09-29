@@ -64,6 +64,6 @@ extern struct nlop_s* nlop_zrprecomp_jacobian_F(const struct nlop_s* nlop);
 
 extern bool nlop_is_zblock_diag(const struct nlop_s* nlop);
 extern const struct nlop_data_s* nlop_zblock_diag_get_data(const struct nlop_s* nlop);
-extern void nlop_zblock_diag_get_dims(const struct nlop_s* nlop, int N, int OO, long odims[OO][N], int II, long idims[II][N], long ddims[OO][II][N]);
-extern void nlop_zblock_diag_apply(const struct nlop_s* nlop, int N, int OO, const long odims[OO][N], _Complex float* dst[OO], int II, const long idims[II][N], const _Complex float* src[II], const long ddims[OO][II][N], _Complex float* jac[OO][II]);
+extern void nlop_zblock_diag_get_dims(const struct nlop_s* nlop, int N, int OO, bart_dim_t odims[OO][N], int II, bart_dim_t idims[II][N], bart_dim_t ddims[OO][II][N]);
+extern void nlop_zblock_diag_apply(const struct nlop_s* nlop, int N, int OO, const bart_dim_t odims[OO][N], _Complex float* dst[OO], int II, const bart_dim_t idims[II][N], const _Complex float* src[II], const bart_dim_t ddims[OO][II][N], _Complex float* jac[OO][II]);
 

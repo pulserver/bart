@@ -239,7 +239,7 @@ int dicom_write(const char* name, int cols, int rows, bart_dim_t inum, const uns
 		size += (size_t)(8 + dicom_elements[i].len);
 
 
-	if (-1 == ftruncate(fd, (bart_stride_t)size))
+	if (-1 == ftruncate(fd, (off_t)size))
 		goto cleanup;
 
 	if (MAP_FAILED == (addr = mmap(NULL, size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0)))

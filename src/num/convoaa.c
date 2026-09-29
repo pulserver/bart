@@ -481,7 +481,7 @@ void overlapandsave2NE(int N, bart_flags_t flags, const bart_dim_t blk[N], const
 
 void overlapandsave2NEB(int N, bart_flags_t flags, const bart_dim_t blk[N], const bart_dim_t odims[N], complex float* dst, const bart_dim_t dims1[N], const complex float* src1, const bart_dim_t dims2[N], const complex float* src2, const bart_dim_t mdims[N], const complex float* msk)
 {
-	long dims1B[N] = { };	// maybe-uninitialized
+	bart_dim_t dims1B[N] = { };	// maybe-uninitialized
 
 	bart_dim_t tdims[2 * N] = { };	// GCC ANALYZER
 	bart_dim_t nodims[2 * N] = { };	// GCC ANALYZER
@@ -650,7 +650,7 @@ void overlapandsave2NEB(int N, bart_flags_t flags, const bart_dim_t blk[N], cons
 
 void overlapandsave2HB(int N, bart_flags_t flags, const bart_dim_t blk[N], const bart_dim_t dims1[N], complex float* dst, const bart_dim_t odims[N], const complex float* src1, const bart_dim_t dims2[N], const complex float* src2, const bart_dim_t mdims[N], const complex float* msk)
 {
-	long dims1B[N] = { };	// maybe-uninitialized
+	bart_dim_t dims1B[N] = { };	// maybe-uninitialized
 
 	bart_dim_t tdims[2 * N] = { };	// GCC ANALYZER
 	bart_dim_t nodims[2 * N] = { };	// GCC ANALYZER

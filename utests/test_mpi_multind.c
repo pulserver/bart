@@ -160,9 +160,9 @@ UT_UNUSED_TEST(test_mpi_transpose);
 static bool test_mpi_circshift(void)
 {
 	enum { N = 5 };
-	long dims[N] = { 128, 128, 1, 16, 1 };
-	unsigned long mpi_flags = MD_BIT(3);
-	long center[N] = {};
+	bart_dim_t dims[N] = { 128, 128, 1, 16, 1 };
+	bart_flags_t mpi_flags = MD_BIT(3);
+	bart_dim_t center[N] = {};
 
 	complex float* a = md_alloc(N, dims, CFL_SIZE);
 	complex float* b = md_alloc(N, dims, CFL_SIZE);

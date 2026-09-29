@@ -1125,7 +1125,7 @@ static complex float* load_cfl_internal(const char* name, int D, bart_dim_t dime
 	}
 
 	if (1 < mpi_get_num_procs() && !mpi_shared_files)
-		mpi_sync_val(dimensions, (long)sizeof(long[D]));
+		mpi_sync_val(dimensions, (bart_dim_t)sizeof(bart_dim_t[D]));
 
 	strm = stream_lookup(addr);
 
@@ -1236,7 +1236,7 @@ complex float* anon_cfl(const char* /*name*/, int D, const bart_dim_t dims[D])
 	return addr;
 }
 
-complex float* anon_cfl_sameplace(const char* /*name*/, int D, const long dimensions[D], const void* ref)
+complex float* anon_cfl_sameplace(const char* /*name*/, int D, const bart_dim_t dimensions[D], const void* ref)
 {
 	complex float* ret = anon_cfl(NULL, D, dimensions);
 

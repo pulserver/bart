@@ -157,7 +157,7 @@ int main_join(int argc, char* argv[argc])
 
 	if (append) {
 
-		if (md_check_dimensions(N - dim - 1, out_dims + dim + 1, 0UL)) {
+		if (md_check_dimensions(N - dim - 1, out_dims + dim + 1, 0)) {
 
 			debug_printf(DP_INFO, "dim: %d; out_dims + dim + 1:\n", dim);
 			debug_print_dims(DP_INFO, N - dim - 1, out_dims + dim + 1);
@@ -183,7 +183,7 @@ int main_join(int argc, char* argv[argc])
 		out_data = create_cfl(out_file, N, out_dims);
 
 
-	if (append && md_check_dimensions(N - dim - 1, out_dims + dim + 1, 0UL)) {
+	if (append && md_check_dimensions(N - dim - 1, out_dims + dim + 1, 0)) {
 
 		// fake append: rewriting the contents of the output
 		md_copy2(N, in_dims[0], MD_STRIDES(N, out_dims, CFL_SIZE), out_data,

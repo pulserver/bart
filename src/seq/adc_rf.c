@@ -146,12 +146,12 @@ int prep_rf_hanning(struct seq_event* rf_ev, double start, double phase_shift, c
 }
 
 
-static long cols_to_echo(long echo, const struct seq_config* seq)
+static bart_dim_t cols_to_echo(bart_dim_t echo, const struct seq_config* seq)
 {
 	return (0 == (echo % 2)) ? (seq->geom.baseres * seq->phys.asym_echo) : (seq->geom.baseres - (seq->geom.baseres * seq->phys.asym_echo));
 }
 
-double adc_time_to_echo(long echo, const struct seq_config* seq)
+double adc_time_to_echo(bart_dim_t echo, const struct seq_config* seq)
 {
 	double dc_shift = 0.;
 	if (   (SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode)

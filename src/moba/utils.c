@@ -26,9 +26,9 @@ struct moba_rvc_s {
 	linop_data_t super;
 
 	int N;
-	const long* dims;
+	const bart_dim_t* dims;
 
-	unsigned long rvc;
+	bart_flags_t rvc;
 };
 
 DEF_TYPEID(moba_rvc_s);
@@ -39,13 +39,13 @@ static void moba_rvc_apply(const linop_data_t* _data, complex float* dst, const 
 
 	md_copy(data->N, data->dims, dst, src, CFL_SIZE);
 
-	long pos[data->N];
+	bart_dim_t pos[data->N];
 	md_set_dims(data->N, pos, 0);
 
-	long map_dims[data->N];
+	bart_dim_t map_dims[data->N];
 	md_select_dims(data->N, ~COEFF_FLAG, map_dims, data->dims);
 
-	long strs[data->N];
+	bart_stride_t strs[data->N];
 	md_calc_strides(data->N, strs, data->dims, CFL_SIZE);
 
 	for (; pos[COEFF_DIM] < data->dims[COEFF_DIM]; pos[COEFF_DIM]++)
@@ -62,13 +62,13 @@ static void moba_rvc_del(const linop_data_t* _data)
 	xfree(data);
 }
 
-const struct linop_s* moba_rvc_create(int N, const long in_dims[N], unsigned long flags)
+const struct linop_s* moba_rvc_create(int N, const bart_dim_t in_dims[N], bart_flags_t flags)
 {
 	PTR_ALLOC(struct moba_rvc_s, data);
 	SET_TYPEID(moba_rvc_s, data);
 
 	data->N = N;
-	data->dims = ARR_CLONE(long[N], in_dims);
+	data->dims = ARR_CLONE(bart_dim_t[N], in_dims);
 	data->rvc = flags;
 
 	return linop_create(N, in_dims, N, in_dims, CAST_UP(PTR_PASS(data)), moba_rvc_apply, moba_rvc_apply, moba_rvc_apply, NULL, moba_rvc_del);
@@ -81,11 +81,11 @@ struct moba_precond_s {
 	nlop_data_t super;
 
 	int N;
-	const long* dims;
-	const long* map_dims;
+	const bart_dim_t* dims;
+	const bart_dim_t* map_dims;
 
-	const long* strs;
-	const long* scl_strs;
+	const bart_stride_t* strs;
+	const bart_stride_t* scl_strs;
 
 	struct multiplace_array_s* diag;
 	const struct linop_s** map_linops;
@@ -106,7 +106,7 @@ static void moba_precond_derivative(const nlop_data_t* _data, int /*o*/, int /*i
 	complex float* tmp1 = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
 	complex float* tmp2 = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
 
-	long pos[data->N];
+	bart_dim_t pos[data->N];
 	md_set_dims(data->N, pos, 0);
 
 	for (; pos[COEFF_DIM] < data->dims[COEFF_DIM]; pos[COEFF_DIM]++) {
@@ -139,7 +139,7 @@ static void moba_precond_adjoint(const nlop_data_t* _data, int /*o*/, int /*i*/,
 	complex float* tmp1 = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
 	complex float* tmp2 = md_alloc_sameplace(data->N, data->map_dims, CFL_SIZE, dst);
 
-	long pos[data->N];
+	bart_dim_t pos[data->N];
 	md_set_dims(data->N, pos, 0);
 
 	for (; pos[COEFF_DIM] < data->dims[COEFF_DIM]; pos[COEFF_DIM]++) {
@@ -166,7 +166,7 @@ static void moba_precond_apply(const nlop_data_t* _data, complex float* dst, con
 
 	const auto data = CAST_DOWN(moba_precond_s, _data);
 
-	long pos[data->N];
+	bart_dim_t pos[data->N];
 	md_set_dims(data->N, pos, 0);
 
 	const complex float* diag = multiplace_read(data->diag, NULL);
@@ -189,7 +189,7 @@ static void moba_precond_del(const nlop_data_t* _data)
 {
 	const auto data = CAST_DOWN(moba_precond_s, _data);
 
-	for (long i = 0; i < data->dims[COEFF_DIM]; i++)
+	for (bart_dim_t i = 0; i < data->dims[COEFF_DIM]; i++)
 		if (NULL != data->map_linops[i])
 			linop_free(data->map_linops[i]);
 
@@ -207,7 +207,7 @@ static void moba_precond_del(const nlop_data_t* _data)
 	xfree(data);
 }
 
-const struct nlop_s* moba_precond_create(int N, const long in_dims[N], const struct linop_s* linops[in_dims[COEFF_DIM]], const float scaling[in_dims[COEFF_DIM]], const float init[in_dims[COEFF_DIM]], const complex float* init_maps)
+const struct nlop_s* moba_precond_create(int N, const bart_dim_t in_dims[N], const struct linop_s* linops[in_dims[COEFF_DIM]], const float scaling[in_dims[COEFF_DIM]], const float init[in_dims[COEFF_DIM]], const complex float* init_maps)
 {
 	assert(COEFF_DIM < N);
 
@@ -215,25 +215,25 @@ const struct nlop_s* moba_precond_create(int N, const long in_dims[N], const str
 	SET_TYPEID(moba_precond_s, data);
 
 	data->N = N;
-	data->dims = ARR_CLONE(long[N], in_dims);
+	data->dims = ARR_CLONE(bart_dim_t[N], in_dims);
 
-	long map_dims[N];
+	bart_dim_t map_dims[N];
 	md_select_dims(N, ~COEFF_FLAG, map_dims, in_dims);
-	data->map_dims = ARR_CLONE(long[N], map_dims);
+	data->map_dims = ARR_CLONE(bart_dim_t[N], map_dims);
 
-	long strs[N];
+	bart_stride_t strs[N];
 	md_calc_strides(N, strs, in_dims, CFL_SIZE);
-	data->strs = ARR_CLONE(long[N], strs);
+	data->strs = ARR_CLONE(bart_dim_t[N], strs);
 
-	long scl_strs[N];
+	bart_stride_t scl_strs[N];
 	md_calc_strides_selected(N, COEFF_FLAG, scl_strs, in_dims, CFL_SIZE);
-	data->scl_strs = ARR_CLONE(long[N], scl_strs);
+	data->scl_strs = ARR_CLONE(bart_dim_t[N], scl_strs);
 
 	complex float scale_diag[in_dims[COEFF_DIM]];
 	for (int i = 0; i < in_dims[COEFF_DIM]; i++)
 		scale_diag[i] = scaling[i];
 
-	long scl_dims[N];
+	bart_dim_t scl_dims[N];
 	md_select_dims(N, COEFF_FLAG, scl_dims, in_dims);
 
 	data->diag = multiplace_move(N, scl_dims, CFL_SIZE, scale_diag);

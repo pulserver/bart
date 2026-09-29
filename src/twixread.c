@@ -349,7 +349,7 @@ static void skip_to_next(const char* hdr, int fd, off_t offset)
 		error("seeking\n");
 }
 
-static void siemens_dims_mapping(long pos[DIMS], uint16_t sLC[14], unsigned long ignore_dims_flags, bool radial)
+static void siemens_dims_mapping(bart_dim_t pos[DIMS], uint16_t sLC[14], bart_flags_t ignore_dims_flags, bool radial)
 {
 	pos[PHS1_DIM]	= sLC[0];
 	pos[AVG_DIM]	= sLC[1];
@@ -364,7 +364,7 @@ static void siemens_dims_mapping(long pos[DIMS], uint16_t sLC[14], unsigned long
 	if (radial) {
 
 		if ((0 != pos[SLICE_DIM]) && (0 != pos[PHS2_DIM]))
-			error("Reading radial data with pos[SLICE_DIM]=%ld and pos[PHS2_DIM]=%ld\n", pos[SLICE_DIM], pos[PHS2_DIM]);
+			error("Reading radial data with pos[SLICE_DIM]=%" PRId64 " and pos[PHS2_DIM]=%" PRId64 "\n", pos[SLICE_DIM], pos[PHS2_DIM]);
 
 		pos[SLICE_DIM] = MAX(pos[SLICE_DIM], pos[PHS2_DIM]);
 		pos[PHS2_DIM] = pos[PHS1_DIM];
@@ -453,8 +453,8 @@ static enum adc_return siemens_bounds(bool vd, bool noise, bool dummy, bool refs
 
 
 static enum adc_return siemens_adc_read(bool vd, int fd, bool noise, bool dummy, bool refscan, bool refscan_ac,
-					unsigned long ignore_dims_flags, bool linectr, bool partctr, bool radial,
-					const long dims[DIMS], long pos[DIMS], complex float* buf, complex float* pmu_val)
+					bart_flags_t ignore_dims_flags, bool linectr, bool partctr, bool radial,
+					const bart_dim_t dims[DIMS], bart_dim_t pos[DIMS], complex float* buf, complex float* pmu_val)
 {
 	char scan_hdr[vd ? 192 : 0];
 	xread(fd, scan_hdr, sizeof(scan_hdr));
@@ -696,8 +696,8 @@ int main_twixread(int argc, char* argv[argc])
 	unlink_cfl(out_file);
 	complex float* out = create_cfl(out_file, DIMS, dims);
 
-	long pdims[DIMS];
-	long pstrs[DIMS];
+	bart_dim_t pdims[DIMS];
+	bart_stride_t pstrs[DIMS];
 
 	md_select_dims(DIMS, ~md_nontriv_dims(DIMS, adc_dims), pdims, dims);
 	md_calc_strides(DIMS, pstrs, pdims, CFL_SIZE);

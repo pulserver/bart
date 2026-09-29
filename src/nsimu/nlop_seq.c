@@ -91,7 +91,7 @@ struct sim_config_s sim_config_default_gpu = {
 	.hard_pulse_sim = true,
 };
 
-void sim_config_set_dims(struct sim_config_s* sim, int N, const long dims[N], int Nspins)
+void sim_config_set_dims(struct sim_config_s* sim, int N, const bart_dim_t dims[N], int Nspins)
 {
 	assert(DIMS >= N);
 	sim->N = N;
@@ -130,22 +130,22 @@ struct nlop_seq_data_s;
 
 
 typedef void (*nlop_seq_fun_t)(const struct nlop_seq_data_s* d, int N,
-	const long modims[N], complex float* omag,
-	const long midims[N], const complex float* imag,
-	const long pdims[N], const complex float* pars,
-	const long dmmdims[N], complex float* dmm,
-	const long dmpdims[N], complex float* dmp
+	const bart_dim_t modims[N], complex float* omag,
+	const bart_dim_t midims[N], const complex float* imag,
+	const bart_dim_t pdims[N], const complex float* pars,
+	const bart_dim_t dmmdims[N], complex float* dmm,
+	const bart_dim_t dmpdims[N], complex float* dmp
 );
 
 typedef void (*nlop_seq_sig_fun_t)(const struct nlop_seq_data_s* d, int N,
-	const long modims[N], complex float* omag,
-	int S, const long sdims[S][N], complex float* signal[S],
-	const long midims[N], const complex float* imag,
-	const long pdims[N], const complex float* pars,
-	const long dmmdims[N], complex float* dmm,
-	const long dmpdims[N], complex float* dmp,
-	const long dsmdims[S][N], complex float* dsm[S],
-	const long dspdims[S][N], complex float* dsp[S]
+	const bart_dim_t modims[N], complex float* omag,
+	int S, const bart_dim_t sdims[S][N], complex float* signal[S],
+	const bart_dim_t midims[N], const complex float* imag,
+	const bart_dim_t pdims[N], const complex float* pars,
+	const bart_dim_t dmmdims[N], complex float* dmm,
+	const bart_dim_t dmpdims[N], complex float* dmp,
+	const bart_dim_t dsmdims[S][N], complex float* dsm[S],
+	const bart_dim_t dspdims[S][N], complex float* dsp[S]
 );
 
 typedef void (*nlop_seq_free_t)(const struct nlop_seq_data_s* d);
@@ -166,15 +166,15 @@ typedef struct nlop_seq_data_s {
 
 DEF_TYPEID(nlop_seq_data_s);
 
-static void nlop_seq_fun(const nlop_data_t* data, int N, int OO, const long odims[OO][N], complex float* arr_dst[OO], int II, const long idims[II][N], const complex float* arr_src[II], const long ddims[OO][II][N], complex float* jac[OO][II])
+static void nlop_seq_fun(const nlop_data_t* data, int N, int OO, const bart_dim_t odims[OO][N], complex float* arr_dst[OO], int II, const bart_dim_t idims[II][N], const complex float* arr_src[II], const bart_dim_t ddims[OO][II][N], complex float* jac[OO][II])
 {
 	auto d = CAST_DOWN(nlop_seq_data_s, data);
 
 	assert(2 == II);
 
 	assert(N == d->sim.N);
-	assert(md_check_equal_dims(N, d->sim.mdims, odims[0], ~0UL));
-	assert(md_check_equal_dims(N, d->sim.pdims, idims[1], ~0UL));
+	assert(md_check_equal_dims(N, d->sim.mdims, odims[0], ~UINT64_C(0)));
+	assert(md_check_equal_dims(N, d->sim.pdims, idims[1], ~UINT64_C(0)));
 
 	if (NULL != d->fun) {
 
@@ -199,8 +199,8 @@ static void nlop_seq_fun(const nlop_data_t* data, int N, int OO, const long odim
 		complex float* dsm[S ?: 1];
 		complex float* dsp[S ?: 1];
 
-		long dsmdims[S ?: 1][N];
-		long dspdims[S ?: 1][N];
+		bart_dim_t dsmdims[S ?: 1][N];
+		bart_dim_t dspdims[S ?: 1][N];
 
 		for (int i = 0; i < S; i++) {
 
@@ -240,22 +240,22 @@ static const struct nlop_s* nlop_seq_create(const struct sim_config_s* sim, nlop
 	int II = 2;
 	int N = sim->N;
 
-	long odims[1][N];
+	bart_dim_t odims[1][N];
 	md_copy_dims(N, odims[0], sim->mdims);
 
-	long idims[II][N];
+	bart_dim_t idims[II][N];
 	md_transpose_dims(N, sim->MI_DIM, sim->MO_DIM, idims[0], sim->mdims);
 	md_copy_dims(N, idims[1], sim->pdims);
 
-	unsigned long diag_flags[OO][II];
+	bart_flags_t diag_flags[OO][II];
 	for (int i = 0; i < OO; i++)
 		for (int j = 0; j < II; j++)
-			diag_flags[i][j] = 0UL;
+			diag_flags[i][j] = 0;
 
 	return nlop_zblock_diag_generic_create(CAST_UP(data), N, OO, odims, II, idims, diag_flags, nlop_seq_fun, nlop_seq_free);
 }
 
-static const struct nlop_s* nlop_sig_seq_create(const struct sim_config_s* sim, nlop_seq_data_t* data, nlop_seq_sig_fun_t fun, nlop_seq_free_t free, int S, int N, long sig_dims[S][N])
+static const struct nlop_s* nlop_sig_seq_create(const struct sim_config_s* sim, nlop_seq_data_t* data, nlop_seq_sig_fun_t fun, nlop_seq_free_t free, int S, int N, bart_dim_t sig_dims[S][N])
 {
 	SET_TYPEID(nlop_seq_data_s, data);
 
@@ -267,40 +267,40 @@ static const struct nlop_s* nlop_sig_seq_create(const struct sim_config_s* sim, 
 	int OO = 1 + S;
 	int II = 2;
 
-	long odims[OO][N];
+	bart_dim_t odims[OO][N];
 	md_copy_dims(N, odims[0], sim->mdims);
 
 	for (int i = 0; i < S; i++)
 		md_copy_dims(N, odims[i + 1], sig_dims[i]);
 
-	long idims[II][N];
+	bart_dim_t idims[II][N];
 	md_transpose_dims(N, sim->MI_DIM, sim->MO_DIM, idims[0], sim->mdims);
 	md_copy_dims(N, idims[1], sim->pdims);
 
-	unsigned long diag_flags[OO][II];
+	bart_flags_t diag_flags[OO][II];
 	for (int i = 0; i < OO; i++)
 		for (int j = 0; j < II; j++)
-			diag_flags[i][j] = 0UL;
+			diag_flags[i][j] = 0;
 
 	return nlop_zblock_diag_generic_create(CAST_UP(data), N, OO, odims, II, idims, diag_flags, nlop_seq_fun, nlop_seq_free);
 }
 
 static void nlop_seq_apply(const struct nlop_s* op, int N,
-	const long modims[N], complex float* omag,
-	int S, const long sdims[S][N], complex float* signal[S],
-	const long midims[N], const complex float* imag,
-	const long pdims[N], const complex float* pars,
-	const long dmmdims[N], complex float* dmm,
-	const long dmpdims[N], complex float* dmp,
-	const long dsmdims[S][N], complex float* dsm[S],
-	const long dspdims[S][N], complex float* dsp[S])
+	const bart_dim_t modims[N], complex float* omag,
+	int S, const bart_dim_t sdims[S][N], complex float* signal[S],
+	const bart_dim_t midims[N], const complex float* imag,
+	const bart_dim_t pdims[N], const complex float* pars,
+	const bart_dim_t dmmdims[N], complex float* dmm,
+	const bart_dim_t dmpdims[N], complex float* dmp,
+	const bart_dim_t dsmdims[S][N], complex float* dsm[S],
+	const bart_dim_t dspdims[S][N], complex float* dsp[S])
 {
 	int OO = 1 + S;
 	int II = 2;
 
-	long odims[OO][N];
-	long idims[II][N];
-	long ddims[OO][II][N];
+	bart_dim_t odims[OO][N];
+	bart_dim_t idims[II][N];
+	bart_dim_t ddims[OO][II][N];
 
 	complex float* dst_arr[OO];
 	const complex float* src_arr[II];
@@ -335,11 +335,11 @@ static void nlop_seq_apply(const struct nlop_s* op, int N,
 
 
 
-static void pars_compute_grad(const struct sim_config_s* sim, float grad[3], int N, const long gdims[N], complex float* grad_pars)
+static void pars_compute_grad(const struct sim_config_s* sim, float grad[3], int N, const bart_dim_t gdims[N], complex float* grad_pars)
 {
 	assert(3 == bitcount(sim->spatial_flags));
 
-	unsigned long flags = 0;
+	bart_flags_t flags = 0;
 	complex float grad2[N];
 	float offset = 0;
 
@@ -370,22 +370,22 @@ static void pars_compute_grad(const struct sim_config_s* sim, float grad[3], int
 }
 
 static void pars_add_grad(const struct sim_config_s* sim, float grad[3], int N,
-				const long epdims[N], complex float* epars,
-				const long pdims[N], const complex float* pars)
+				const bart_dim_t epdims[N], complex float* epars,
+				const bart_dim_t pdims[N], const complex float* pars)
 {
 	md_copy2(N, epdims, MD_STRIDES(N, epdims, CFL_SIZE), epars, MD_STRIDES(N, pdims, CFL_SIZE), pars, CFL_SIZE);
 
-	long gdims[N];
+	bart_dim_t gdims[N];
 	md_select_dims(N, sim->spatial_flags, gdims, epdims);
 
 	complex float* grad_pars = md_alloc_sameplace(N, gdims, CFL_SIZE, epars);
 	pars_compute_grad(sim, grad, N, gdims, grad_pars);
 
-	long pstrs[N];
+	bart_stride_t pstrs[N];
 	md_calc_strides(N, pstrs, epdims, CFL_SIZE);
-	complex float* B0map = epars + B0_IDX * (pstrs[sim->PI_DIM] / (long)CFL_SIZE);
+	complex float* B0map = epars + B0_IDX * (pstrs[sim->PI_DIM] / (bart_dim_t)CFL_SIZE);
 
-	long map_dims[N];
+	bart_dim_t map_dims[N];
 	md_select_dims(N, ~MD_BIT(sim->PI_DIM), map_dims, epdims);
 
 	md_zadd2(N, map_dims, pstrs, B0map, pstrs, B0map, MD_STRIDES(N, gdims, CFL_SIZE), grad_pars);
@@ -498,7 +498,7 @@ static void simulate(float h, float tol, float r1, float r2, float B0, float B1,
 		ode_interval(h, -1, tol, 3, state[0], 0, dur, call_fun);
 }
 
-static void seq_check_dims(struct sim_config_s* conf, int N, int OO, const long odims[OO][N], int II, const long idims[II][N], const long /*ddims*/[OO][II][N])
+static void seq_check_dims(struct sim_config_s* conf, int N, int OO, const bart_dim_t odims[OO][N], int II, const bart_dim_t idims[II][N], const bart_dim_t /*ddims*/[OO][II][N])
 {
 	assert(1 == OO);
 	assert(2 == II);
@@ -516,17 +516,17 @@ static void seq_check_dims(struct sim_config_s* conf, int N, int OO, const long 
 	assert(conf->PI_DIM == conf->MI_DIM || 1 == idims[0][conf->PI_DIM]);
 }
 
-static void init_id_matrix2(int a, int b, int N, const long dims[N], const long strs[N], complex float* mat)
+static void init_id_matrix2(int a, int b, int N, const bart_dim_t dims[N], const bart_stride_t strs[N], complex float* mat)
 {
 	assert(dims[a] == dims[b]);
-	long M = dims[a];
+	bart_dim_t M = dims[a];
 
 	complex float diag[M][M];
-	for (long i = 0; i < M; i++)
-		for (long j = 0; j < M; j++)
+	for (bart_dim_t i = 0; i < M; i++)
+		for (bart_dim_t j = 0; j < M; j++)
 			diag[i][j] = (i == j) ? 1. : 0.;
 
-	long strs2[N];
+	bart_stride_t strs2[N];
 	md_singleton_strides(N, strs2);
 	strs2[a] = CFL_SIZE;
 	strs2[b] = M * strs2[a];
@@ -547,10 +547,10 @@ static void init_id_matrix2(int a, int b, int N, const long dims[N], const long 
  * P - Parameter size
 **/
 //
-static void pulse_sim_vec(const long mdims[3], const long mstrs[3], complex float* mag,
-			  const long pdims[3], const long pstrs[3], const complex float* par,
-			  const long dmdims[3], const long dmstrs[3], complex float* dmag,
-			  const long dpdims[3], const long dpstrs[3], complex float* dpar,
+static void pulse_sim_vec(const bart_dim_t mdims[3], const bart_stride_t mstrs[3], complex float* mag,
+			  const bart_dim_t pdims[3], const bart_stride_t pstrs[3], const complex float* par,
+			  const bart_dim_t dmdims[3], const bart_stride_t dmstrs[3], complex float* dmag,
+			  const bart_dim_t dpdims[3], const bart_stride_t dpstrs[3], complex float* dpar,
 			  struct pulse* pulse, struct rf_shape* shape, float phase, float h, float tol)
 {
 	assert(1 == mdims[1]);
@@ -568,13 +568,13 @@ static void pulse_sim_vec(const long mdims[3], const long mstrs[3], complex floa
 	if (NULL != dpar)
 		md_zfill2(3, dpdims, dpstrs, dpar, 0);
 
-	long M = mdims[2];
+	bart_dim_t M = mdims[2];
 
 #ifdef USE_GPU
 	if (cuda_ondevice(mag)) {
 
 		complex float* dpulse = NULL;
-		long Np;
+		bart_dim_t Np;
 		float duration;
 
 		if (NULL != shape) {
@@ -601,10 +601,10 @@ static void pulse_sim_vec(const long mdims[3], const long mstrs[3], complex floa
 		assert(dmstrs[1] == dmstrs[0] * dmdims[0]);
 		assert(dpstrs[1] == dpstrs[0] * dpdims[0]);
 
-		cuda_ode_interval_bloch_sa(M, mstrs[0] / (long)CFL_SIZE, mstrs[2] / (long)CFL_SIZE, mag,
-					   dmstrs[0] / (long)CFL_SIZE, dmstrs[2] / (long)CFL_SIZE, dmag,
-					   dpstrs[0] / (long)CFL_SIZE, dpstrs[2] / (long)CFL_SIZE, dpar,
-					   pstrs[1] / (long)CFL_SIZE, pstrs[2] / (long)CFL_SIZE, par,
+		cuda_ode_interval_bloch_sa(M, mstrs[0] / (bart_dim_t)CFL_SIZE, mstrs[2] / (bart_dim_t)CFL_SIZE, mag,
+					   dmstrs[0] / (bart_dim_t)CFL_SIZE, dmstrs[2] / (bart_dim_t)CFL_SIZE, dmag,
+					   dpstrs[0] / (bart_dim_t)CFL_SIZE, dpstrs[2] / (bart_dim_t)CFL_SIZE, dpar,
+					   pstrs[1] / (bart_dim_t)CFL_SIZE, pstrs[2] / (bart_dim_t)CFL_SIZE, par,
 					   Np, duration, dpulse, h, tol, 0, duration);
 
 		md_free(dpulse);
@@ -621,23 +621,23 @@ static void pulse_sim_vec(const long mdims[3], const long mstrs[3], complex floa
 			P += dpdims[1];
 
 #pragma		omp parallel for
-		for (long i = 0; i < M; i++) {
+		for (bart_dim_t i = 0; i < M; i++) {
 
 			float state[1 + P][3];
 
-			complex float* tmag = mag + i * mstrs[2] / (long)CFL_SIZE;
-			const complex float* tpar = par + i * pstrs[2] / (long)CFL_SIZE;
+			complex float* tmag = mag + i * mstrs[2] / (bart_dim_t)CFL_SIZE;
+			const complex float* tpar = par + i * pstrs[2] / (bart_dim_t)CFL_SIZE;
 
-			complex float* tdpar = (NULL == dpar) ? NULL : dpar + i * dpstrs[2] / (long)CFL_SIZE;
-			complex float* tdmag = (NULL == dmag) ? NULL : dmag + i * dmstrs[2] / (long)CFL_SIZE;
+			complex float* tdpar = (NULL == dpar) ? NULL : dpar + i * dpstrs[2] / (bart_dim_t)CFL_SIZE;
+			complex float* tdmag = (NULL == dmag) ? NULL : dmag + i * dmstrs[2] / (bart_dim_t)CFL_SIZE;
 
-			float r1 = crealf(tpar[R1_IDX * pstrs[1] / (long)CFL_SIZE]);
-			float r2 = crealf(tpar[R2_IDX * pstrs[1] / (long)CFL_SIZE]);
-			float B1 = crealf(tpar[B1_IDX * pstrs[1] / (long)CFL_SIZE]);
-			float B0 = crealf(tpar[B0_IDX * pstrs[1] / (long)CFL_SIZE]);
+			float r1 = crealf(tpar[R1_IDX * pstrs[1] / (bart_dim_t)CFL_SIZE]);
+			float r2 = crealf(tpar[R2_IDX * pstrs[1] / (bart_dim_t)CFL_SIZE]);
+			float B1 = crealf(tpar[B1_IDX * pstrs[1] / (bart_dim_t)CFL_SIZE]);
+			float B0 = crealf(tpar[B0_IDX * pstrs[1] / (bart_dim_t)CFL_SIZE]);
 
 			for (int j = 0; j < mdims[0]; j++)
-				state[0][j] = crealf(tmag[j * mstrs[0] / (long)CFL_SIZE]);
+				state[0][j] = crealf(tmag[j * mstrs[0] / (bart_dim_t)CFL_SIZE]);
 
 			int p = 1;
 
@@ -645,14 +645,14 @@ static void pulse_sim_vec(const long mdims[3], const long mstrs[3], complex floa
 
 				for (int k = 0; k < dmdims[1]; k++, p++)
 					for (int j = 0; j < dmdims[0]; j++)
-						state[p][j] = crealf(tdmag[(j * dmstrs[0] +  k * dmstrs[1]) / (long)CFL_SIZE]);
+						state[p][j] = crealf(tdmag[(j * dmstrs[0] +  k * dmstrs[1]) / (bart_dim_t)CFL_SIZE]);
 			}
 
 			if (NULL != tdpar) {
 
 				for (int k = 0; k < dpdims[1]; k++, p++)
 					for (int j = 0; j < dpdims[0]; j++)
-						state[p][j] = crealf(tdpar[(j * dpstrs[0] +  k * dpstrs[1]) / (long)CFL_SIZE]);
+						state[p][j] = crealf(tdpar[(j * dpstrs[0] +  k * dpstrs[1]) / (bart_dim_t)CFL_SIZE]);
 			}
 
 
@@ -660,7 +660,7 @@ static void pulse_sim_vec(const long mdims[3], const long mstrs[3], complex floa
 
 
 			for (int j = 0; j < mdims[0]; j++)
-				tmag[j * mstrs[0] / (long)CFL_SIZE] = state[0][j];
+				tmag[j * mstrs[0] / (bart_dim_t)CFL_SIZE] = state[0][j];
 
 			p = 1;
 
@@ -668,30 +668,30 @@ static void pulse_sim_vec(const long mdims[3], const long mstrs[3], complex floa
 
 				for (int k = 0; k < dmdims[1]; k++, p++)
 					for (int j = 0; j < dmdims[0]; j++)
-						tdmag[(j * dmstrs[0] +  k * dmstrs[1]) / (long)CFL_SIZE] = state[p][j];
+						tdmag[(j * dmstrs[0] +  k * dmstrs[1]) / (bart_dim_t)CFL_SIZE] = state[p][j];
 			}
 
 			if (NULL != tdpar) {
 
 				for (int k = 0; k < dpdims[1]; k++, p++)
 					for (int j = 0; j < dpdims[0]; j++)
-						tdpar[(j * dpstrs[0] +  k * dpstrs[1]) / (long)CFL_SIZE] = state[p][j];
+						tdpar[(j * dpstrs[0] +  k * dpstrs[1]) / (bart_dim_t)CFL_SIZE] = state[p][j];
 			}
 		}
 	}
 }
 
 static void pulse_fun(const struct nlop_seq_data_s* data, int N,
-	const long modims[N], complex float* omag, 	// output magnetization
-	const long midims[N], const complex float* imag,// input magnetization
-	const long pdims[N], const complex float* pars, // parameters (R1, R2 B1, B0)
-	const long dmmdims[N], complex float* dmm, 	// derivative of omag w.r.t. imag
-	const long dmpdims[N], complex float* dmp) 	// derivative of omag w.r.t. pars
+	const bart_dim_t modims[N], complex float* omag, 	// output magnetization
+	const bart_dim_t midims[N], const complex float* imag,// input magnetization
+	const bart_dim_t pdims[N], const complex float* pars, // parameters (R1, R2 B1, B0)
+	const bart_dim_t dmmdims[N], complex float* dmm, 	// derivative of omag w.r.t. imag
+	const bart_dim_t dmpdims[N], complex float* dmp) 	// derivative of omag w.r.t. pars
 {
 	auto d = CAST_DOWN(pulse_s, data);
 
-	long epdims[N];		// expanded parameter dims
-	long edmpdims[N];	// expanded derivative parameter dims
+	bart_dim_t epdims[N];		// expanded parameter dims
+	bart_dim_t edmpdims[N];	// expanded derivative parameter dims
 
 	md_copy_dims(N, epdims, pdims);
 	md_copy_dims(N, edmpdims, dmpdims);
@@ -710,11 +710,11 @@ static void pulse_fun(const struct nlop_seq_data_s* data, int N,
 		md_clear(N, edmpdims, edmp, CFL_SIZE);
 	}
 
-	long mostrs[N];
-	long mistrs[N];
-	long pstrs[N];
-	long dmmstrs[N];
-	long dmpstrs[N];
+	bart_stride_t mostrs[N];
+	bart_stride_t mistrs[N];
+	bart_stride_t pstrs[N];
+	bart_stride_t dmmstrs[N];
+	bart_stride_t dmpstrs[N];
 
 	md_calc_strides(N, mostrs, modims, CFL_SIZE);
 	md_calc_strides(N, mistrs, midims, CFL_SIZE);
@@ -724,7 +724,7 @@ static void pulse_fun(const struct nlop_seq_data_s* data, int N,
 
 	md_transpose(N, data->sim.MO_DIM, data->sim.MI_DIM, modims, omag, midims, imag, CFL_SIZE); // Copy imag to omag (and transpose M0 and MI)
 
-	unsigned long bflags = md_nontriv_dims(N, modims); // Batch flags
+	bart_flags_t bflags = md_nontriv_dims(N, modims); // Batch flags
 
 	bflags &= ~MD_BIT(data->sim.MO_DIM);
 	bflags &= ~MD_BIT(data->sim.MI_DIM);
@@ -732,14 +732,14 @@ static void pulse_fun(const struct nlop_seq_data_s* data, int N,
 	int bidx = md_min_idx(bflags);
 
 	// reduced dims and strides (prep for simulation)
-	long rmdims[3] = { modims[data->sim.MO_DIM], 1, (-1 == bidx) ? 1 : modims[bidx] };
-	long rmstrs[3] = { mostrs[data->sim.MO_DIM], 0, (-1 == bidx) ? 0 : mostrs[bidx] };
-	long rpdims[3] = { 1, epdims[data->sim.PI_DIM], (-1 == bidx) ? 1 : modims[bidx] };
-	long rpstrs[3] = { 0, pstrs[data->sim.PI_DIM], (-1 == bidx) ? 0 : pstrs[bidx] };
-	long dmdims[3] = { dmmdims[data->sim.MO_DIM], dmmdims[data->sim.MI_DIM], (-1 == bidx) ? 1 : modims[bidx] };
-	long dmstrs[3] = { dmmstrs[data->sim.MO_DIM], dmmstrs[data->sim.MI_DIM], (-1 == bidx) ? 0 : dmmstrs[bidx] };
-	long dpdims[3] = { edmpdims[data->sim.MO_DIM], edmpdims[data->sim.PI_DIM], (-1 == bidx) ? 1 : modims[bidx] };
-	long dpstrs[3] = { dmpstrs[data->sim.MO_DIM], dmpstrs[data->sim.PI_DIM], (-1 == bidx) ? 0 : dmpstrs[bidx] };
+	bart_dim_t rmdims[3] = { modims[data->sim.MO_DIM], 1, (-1 == bidx) ? 1 : modims[bidx] };
+	bart_stride_t rmstrs[3] = { mostrs[data->sim.MO_DIM], 0, (-1 == bidx) ? 0 : mostrs[bidx] };
+	bart_dim_t rpdims[3] = { 1, epdims[data->sim.PI_DIM], (-1 == bidx) ? 1 : modims[bidx] };
+	bart_stride_t rpstrs[3] = { 0, pstrs[data->sim.PI_DIM], (-1 == bidx) ? 0 : pstrs[bidx] };
+	bart_dim_t dmdims[3] = { dmmdims[data->sim.MO_DIM], dmmdims[data->sim.MI_DIM], (-1 == bidx) ? 1 : modims[bidx] };
+	bart_stride_t dmstrs[3] = { dmmstrs[data->sim.MO_DIM], dmmstrs[data->sim.MI_DIM], (-1 == bidx) ? 0 : dmmstrs[bidx] };
+	bart_dim_t dpdims[3] = { edmpdims[data->sim.MO_DIM], edmpdims[data->sim.PI_DIM], (-1 == bidx) ? 1 : modims[bidx] };
+	bart_stride_t dpstrs[3] = { dmpstrs[data->sim.MO_DIM], dmpstrs[data->sim.PI_DIM], (-1 == bidx) ? 0 : dmpstrs[bidx] };
 
 	if (-1 != bidx)
 		bflags = MD_CLEAR(bflags, bidx);
@@ -762,10 +762,10 @@ static void pulse_fun(const struct nlop_seq_data_s* data, int N,
 	}
 
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
-	unsigned long lflags = bflags;
+	bart_flags_t lflags = bflags;
 
 
 	do {
@@ -848,22 +848,22 @@ struct adc_s {
 
 	INTERFACE(nlop_seq_data_t);
 
-	long index;
-	const long* wgh_dims;
+	bart_dim_t index;
+	const bart_dim_t* wgh_dims;
 	struct multiplace_array_s* wgh;
 };
 
 DEF_TYPEID(adc_s);
 
 static void adc_fun(const struct nlop_seq_data_s* data, int N,
-	const long modims[N], complex float* omag,
-	int S, const long sdims[S][N], complex float* signal[S],
-	const long midims[N], const complex float* imag,
-	const long /*pdims*/[N], const complex float* /*pars*/,
-	const long dmmdims[N], complex float* dmm,
-	const long dmpdims[N], complex float* dmp,
-	const long dsmdims[S][N], complex float* dsm[S],
-	const long dspdims[S][N], complex float* dsp[S])
+	const bart_dim_t modims[N], complex float* omag,
+	int S, const bart_dim_t sdims[S][N], complex float* signal[S],
+	const bart_dim_t midims[N], const complex float* imag,
+	const bart_dim_t /*pdims*/[N], const complex float* /*pars*/,
+	const bart_dim_t dmmdims[N], complex float* dmm,
+	const bart_dim_t dmpdims[N], complex float* dmp,
+	const bart_dim_t dsmdims[S][N], complex float* dsm[S],
+	const bart_dim_t dspdims[S][N], complex float* dsp[S])
 {
 	auto d = CAST_DOWN(adc_s, data);
 
@@ -883,9 +883,9 @@ static void adc_fun(const struct nlop_seq_data_s* data, int N,
 
 	md_transpose(N, data->sim.MO_DIM, data->sim.MI_DIM, modims, omag, midims, imag, CFL_SIZE);
 
-	long max_dims[N];
-	assert(md_check_compat(N, ~0UL, d->wgh_dims, midims));
-	md_max_dims(N, ~0UL, max_dims, d->wgh_dims, midims);
+	bart_dim_t max_dims[N];
+	assert(md_check_compat(N, ~UINT64_C(0), d->wgh_dims, midims));
+	md_max_dims(N, ~UINT64_C(0), max_dims, d->wgh_dims, midims);
 	md_ztenmul2(N, max_dims, MD_STRIDES(N, sdims[0], CFL_SIZE), signal[0], MD_STRIDES(N, midims, CFL_SIZE), imag, MD_STRIDES(N, d->wgh_dims, CFL_SIZE), multiplace_read(d->wgh, imag));
 }
 
@@ -899,7 +899,7 @@ static void nlop_adc_free(const struct nlop_seq_data_s* _data)
 	xfree(data);
 }
 
-const struct nlop_s* nlop_adc_create(struct sim_config_s sim, long index, unsigned long sflags, float phase)
+const struct nlop_s* nlop_adc_create(struct sim_config_s sim, bart_dim_t index, bart_flags_t sflags, float phase)
 {
 	PTR_ALLOC(struct adc_s, data);
 	SET_TYPEID(adc_s, data);
@@ -910,17 +910,17 @@ const struct nlop_s* nlop_adc_create(struct sim_config_s sim, long index, unsign
 	complex float id[3][3] = { { 1., 0., 0. }, { 0., 1., 0. }, { 0., 0., 1. } };
 	complex float acc[3] = { cexpf((M_PI_2 - phase) * 1.i), cexpf(-phase * 1.i), 0. };
 
-	long wgh_dims[sim.N];
+	bart_dim_t wgh_dims[sim.N];
 	md_singleton_dims(sim.N, wgh_dims);
 	wgh_dims[sim.MO_DIM] = sim.mdims[sim.MO_DIM];
 	wgh_dims[sim.MI_DIM] = sim.mdims[sim.MO_DIM];
 	md_select_dims(sim.N, ~sflags, wgh_dims, wgh_dims);
 	//assert(3 == md_calc_size(sim.N, wgh_dims));
 	assert(!MD_IS_SET(sflags, sim.MI_DIM));
-	data->wgh_dims = ARR_CLONE(long[sim.N], wgh_dims);
+	data->wgh_dims = ARR_CLONE(bart_dim_t[sim.N], wgh_dims);
 	data->wgh = multiplace_move(sim.N, wgh_dims, CFL_SIZE, MD_IS_SET(sflags, sim.MO_DIM) ? acc : &id[0][0]);
 
-	long signal_dims[1][sim.N];
+	bart_dim_t signal_dims[1][sim.N];
 	md_select_dims(sim.N, ~sflags, signal_dims[0], sim.mdims);
 
 	return nlop_sig_seq_create(&sim, CAST_UP(PTR_PASS(data)), adc_fun, nlop_adc_free, 1, sim.N, signal_dims);
@@ -935,15 +935,15 @@ struct rot_s {
 DEF_TYPEID(rot_s);
 
 static void rot_fun(const struct nlop_seq_data_s* data, int N,
-	const long modims[N], complex float* omag,
-	const long midims[N], const complex float* imag,
-	const long /*pdims*/[N], const complex float* /*pars*/,
-	const long dmmdims[N], complex float* dmm,
-	const long dmpdims[N], complex float* dmp)
+	const bart_dim_t modims[N], complex float* omag,
+	const bart_dim_t midims[N], const complex float* imag,
+	const bart_dim_t /*pdims*/[N], const complex float* /*pars*/,
+	const bart_dim_t dmmdims[N], complex float* dmm,
+	const bart_dim_t dmpdims[N], complex float* dmp)
 {
 	auto d = CAST_DOWN(rot_s, data);
 
-	long mat_dims[N];
+	bart_dim_t mat_dims[N];
 	md_select_dims(N, MD_BIT(data->sim.MO_DIM) | MD_BIT(data->sim.MI_DIM), mat_dims, dmmdims);
 
 	md_ztenmul(N, modims, omag, midims, imag, mat_dims, multiplace_read(d->wgh, omag));
@@ -968,8 +968,8 @@ static const struct nlop_s* nlop_seq_mat_create(struct sim_config_s sim, float m
 	PTR_ALLOC(struct rot_s, data);
 	SET_TYPEID(rot_s, data);
 
-	long wdims[sim.N];
-	long wstrs[sim.N];
+	bart_dim_t wdims[sim.N];
+	bart_stride_t wstrs[sim.N];
 
 	md_singleton_dims(sim.N, wdims);
 	wdims[sim.MO_DIM] = sim.mdims[sim.MO_DIM];
@@ -977,7 +977,7 @@ static const struct nlop_s* nlop_seq_mat_create(struct sim_config_s sim, float m
 	md_calc_strides(sim.N, wstrs, wdims, CFL_SIZE);
 
 	complex float mat2[9];
-	long pos[sim.N];
+	bart_dim_t pos[sim.N];
 	md_set_dims(sim.N, pos, 0);
 
 	for (int o = 0; o < 3; o++) {
@@ -1044,11 +1044,11 @@ const struct nlop_s* nlop_rotz_create(struct sim_config_s sim, float angle)
 }
 
 
-static complex float* extract_map(struct sim_config_s sim, int map_idx, int N, long map_dims[N], const long pdims[N], const complex float* pars)
+static complex float* extract_map(struct sim_config_s sim, int map_idx, int N, bart_dim_t map_dims[N], const bart_dim_t pdims[N], const complex float* pars)
 {
 	md_select_dims(N, ~MD_BIT(sim.PI_DIM), map_dims, pdims);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 	pos[sim.PI_DIM] = map_idx;
 
@@ -1058,7 +1058,7 @@ static complex float* extract_map(struct sim_config_s sim, int map_idx, int N, l
 	return map;
 }
 
-static complex float* affine_map(struct sim_config_s sim, int N, long adims[N], const long pdims[N], const complex float* pars)
+static complex float* affine_map(struct sim_config_s sim, int N, bart_dim_t adims[N], const bart_dim_t pdims[N], const complex float* pars)
 {
 	md_copy_dims(N, adims, pdims);
 
@@ -1070,11 +1070,11 @@ static complex float* affine_map(struct sim_config_s sim, int N, long adims[N], 
 	return aff;
 }
 
-static void affine_set(struct sim_config_s sim, int oidx, int iidx, int N, long aff_dims[N], complex float* aff, long map_dims[N], const complex float* map)
+static void affine_set(struct sim_config_s sim, int oidx, int iidx, int N, bart_dim_t aff_dims[N], complex float* aff, bart_dim_t map_dims[N], const complex float* map)
 {
 	assert(md_check_equal_dims(N, aff_dims, map_dims, ~(MD_BIT(sim.MO_DIM) | MD_BIT(sim.MI_DIM))));
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 	pos[sim.MO_DIM] = oidx;
 	pos[sim.MI_DIM] = iidx;
@@ -1082,21 +1082,21 @@ static void affine_set(struct sim_config_s sim, int oidx, int iidx, int N, long 
 	md_copy_block(N, pos, aff_dims, aff, map_dims, map, CFL_SIZE);
 }
 
-static void affine_mul(struct sim_config_s sim, int i, int N, const long modims[N], complex float* omag, long aff_dims[N], const complex float* aff, const long midims[N], const complex float* imag)
+static void affine_mul(struct sim_config_s sim, int i, int N, const bart_dim_t modims[N], complex float* omag, bart_dim_t aff_dims[N], const complex float* aff, const bart_dim_t midims[N], const complex float* imag)
 {
-	long mostrs[N];
+	bart_stride_t mostrs[N];
 	md_calc_strides(N, mostrs, modims, CFL_SIZE);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 	pos[sim.PI_DIM] = i;
 	assert(i < modims[sim.PI_DIM]);
 	omag = &MD_ACCESS(N, mostrs, pos, omag);
 
-	long tmodims[N];
+	bart_dim_t tmodims[N];
 	md_select_dims(N, ~MD_BIT(sim.MI_DIM), tmodims, modims);
 
-	long aff_strs[N];
+	bart_stride_t aff_strs[N];
 	md_calc_strides(N, aff_strs, aff_dims, CFL_SIZE);
 
 	md_set_dims(N, pos, 0);
@@ -1105,7 +1105,7 @@ static void affine_mul(struct sim_config_s sim, int i, int N, const long modims[
 
 	md_copy2(N, tmodims, mostrs, omag, aff_strs, offset, CFL_SIZE);
 
-	long lin_dims[N];
+	bart_dim_t lin_dims[N];
 	md_copy_dims(N, lin_dims, aff_dims);
 	lin_dims[sim.MI_DIM]--;
 	md_max_dims(N, ~(MD_BIT(sim.MO_DIM) | MD_BIT(sim.MI_DIM)) , lin_dims, modims, lin_dims);
@@ -1130,18 +1130,18 @@ DEF_TYPEID(relax_s);
 
 
 static void relax_fun(const struct nlop_seq_data_s* data, int N,
-	const long modims[N], complex float* omag,
-	const long midims[N], const complex float* imag,
-	const long pdims[N], const complex float* pars,
-	const long dmmdims[N], complex float* dmm,
-	const long dmpdims[N], complex float* dmp)
+	const bart_dim_t modims[N], complex float* omag,
+	const bart_dim_t midims[N], const complex float* imag,
+	const bart_dim_t pdims[N], const complex float* pars,
+	const bart_dim_t dmmdims[N], complex float* dmm,
+	const bart_dim_t dmpdims[N], complex float* dmp)
 {
 	auto d = CAST_DOWN(relax_s, data);
 
-	long aff_dims[N];
+	bart_dim_t aff_dims[N];
 	complex float* affine = affine_map(data->sim, N, aff_dims, pdims, pars);
 
-	long map_dims[N];
+	bart_dim_t map_dims[N];
 	complex float* R2map = extract_map(data->sim, R2_IDX, N, map_dims, pdims, pars);
 	md_zsmul(N, map_dims, R2map, R2map, -d->t);
 	md_zexp(N, map_dims, R2map, R2map);
@@ -1190,31 +1190,31 @@ static void relax_fun(const struct nlop_seq_data_s* data, int N,
 }
 
 static void relax_phase_fun(const struct nlop_seq_data_s* data, int N,
-	const long modims[N], complex float* omag,
-	const long midims[N], const complex float* imag,
-	const long pdims[N], const complex float* pars,
-	const long dmmdims[N], complex float* dmm,
-	const long dmpdims[N], complex float* dmp)
+	const bart_dim_t modims[N], complex float* omag,
+	const bart_dim_t midims[N], const complex float* imag,
+	const bart_dim_t pdims[N], const complex float* pars,
+	const bart_dim_t dmmdims[N], complex float* dmm,
+	const bart_dim_t dmpdims[N], complex float* dmp)
 {
 	auto d = CAST_DOWN(relax_s, data);
 
-	long map_dims[N];
+	bart_dim_t map_dims[N];
 	complex float* tB0map = extract_map(data->sim, B0_IDX, N, map_dims, pdims, pars);
 
-	long gdims[N];
+	bart_dim_t gdims[N];
 	md_select_dims(N, data->sim.spatial_flags, gdims, modims);
 	complex float* grad = md_alloc_sameplace(N, gdims, CFL_SIZE, pars);
 
 	pars_compute_grad(&data->sim, d->grad, N, gdims, grad);
 
-	long emap_dims[N];
-	md_max_dims(N, ~0UL, emap_dims, map_dims, gdims);
+	bart_dim_t emap_dims[N];
+	md_max_dims(N, ~UINT64_C(0), emap_dims, map_dims, gdims);
 	complex float* B0map = md_alloc_sameplace(N, emap_dims, CFL_SIZE, pars);
 	md_zadd2(N, emap_dims, MD_STRIDES(N, emap_dims, CFL_SIZE), B0map, MD_STRIDES(N, map_dims, CFL_SIZE), tB0map, MD_STRIDES(N, gdims, CFL_SIZE), grad);
 	md_free(grad);
 	md_free(tB0map);
 
-	long aff_dims[N];
+	bart_dim_t aff_dims[N];
 	complex float* affine = affine_map(data->sim, N, aff_dims, emap_dims, pars);
 
 	md_zsmul(N, emap_dims, B0map, B0map, d->t);
@@ -1342,18 +1342,18 @@ DEF_TYPEID(hardpulse_s);
 
 
 static void hardpulse_fun(const struct nlop_seq_data_s* data, int N,
-	const long modims[N], complex float* omag,
-	const long midims[N], const complex float* imag,
-	const long pdims[N], const complex float* pars,
-	const long dmmdims[N], complex float* dmm,
-	const long dmpdims[N], complex float* dmp)
+	const bart_dim_t modims[N], complex float* omag,
+	const bart_dim_t midims[N], const complex float* imag,
+	const bart_dim_t pdims[N], const complex float* pars,
+	const bart_dim_t dmmdims[N], complex float* dmm,
+	const bart_dim_t dmpdims[N], complex float* dmp)
 {
 	auto d = CAST_DOWN(hardpulse_s, data);
 
-	long map_dims[N];
+	bart_dim_t map_dims[N];
 	complex float* B1map = extract_map(data->sim, B1_IDX, N, map_dims, pdims, pars);
 
-	long aff_dims[N];
+	bart_dim_t aff_dims[N];
 	complex float* affine = affine_map(data->sim, N, aff_dims, pdims, pars);
 
 	md_zsmul(N, map_dims, B1map, B1map, d->angle);
@@ -1450,7 +1450,7 @@ struct simu_chain_s {
 
 DEF_TYPEID(simu_chain_s);
 
-static void simu_jac_mul(int N, int MO_DIM, int MI_DIM, const long cdims[N], complex float* C, const long adims[N], complex float* A, const long bdims[N], complex float* B, bool add)
+static void simu_jac_mul(int N, int MO_DIM, int MI_DIM, const bart_dim_t cdims[N], complex float* C, const bart_dim_t adims[N], complex float* A, const bart_dim_t bdims[N], complex float* B, bool add)
 {
 	if (C == A) {
 
@@ -1474,13 +1474,13 @@ static void simu_jac_mul(int N, int MO_DIM, int MI_DIM, const long cdims[N], com
 		return;
 	}
 
-	long adims2[N + 1];
-	long bdims2[N + 1];
-	long cdims2[N + 1];
+	bart_dim_t adims2[N + 1];
+	bart_dim_t bdims2[N + 1];
+	bart_dim_t cdims2[N + 1];
 
-	long astrs[N + 1];
-	long bstrs[N + 1];
-	long cstrs[N + 1];
+	bart_stride_t astrs[N + 1];
+	bart_stride_t bstrs[N + 1];
+	bart_stride_t cstrs[N + 1];
 
 	md_copy_dims(N, adims2, adims);
 	md_copy_dims(N, bdims2, bdims);
@@ -1499,26 +1499,26 @@ static void simu_jac_mul(int N, int MO_DIM, int MI_DIM, const long cdims[N], com
 	SWAP(adims2[MI_DIM], adims2[N + 0]);
 	SWAP(bdims2[MO_DIM], bdims2[N + 0]);
 
-	assert(md_check_compat(N, ~0UL, adims2, bdims2));
-	assert(md_check_compat(N, ~0UL, cdims2, bdims2));
+	assert(md_check_compat(N, ~UINT64_C(0), adims2, bdims2));
+	assert(md_check_compat(N, ~UINT64_C(0), cdims2, bdims2));
 
-	long max_dims[N + 1];
-	md_max_dims(N + 1, ~0UL, max_dims, adims2, bdims2);
-	md_max_dims(N + 1, ~0UL, max_dims, max_dims, cdims2);
+	bart_dim_t max_dims[N + 1];
+	md_max_dims(N + 1, ~UINT64_C(0), max_dims, adims2, bdims2);
+	md_max_dims(N + 1, ~UINT64_C(0), max_dims, max_dims, cdims2);
 
 	(add ? md_zfmac2 : md_ztenmul2)(N + 1, max_dims, cstrs, C, astrs, A, bstrs, B);
 }
 
 
 static void simu_chain_jac_fun(const struct nlop_seq_data_s* data, int N,
-	const long modims[N], complex float* omag,
-	int S, const long sdims[S][N], complex float* signal[S],
-	const long midims[N], const complex float* imag,
-	const long pdims[N], const complex float* pars,
-	const long dmmdims[N], complex float* dmm,
-	const long dmpdims[N], complex float* dmp,
-	const long dsmdims[S][N], complex float* dsm[S],
-	const long dspdims[S][N], complex float* dsp[S])
+	const bart_dim_t modims[N], complex float* omag,
+	int S, const bart_dim_t sdims[S][N], complex float* signal[S],
+	const bart_dim_t midims[N], const complex float* imag,
+	const bart_dim_t pdims[N], const complex float* pars,
+	const bart_dim_t dmmdims[N], complex float* dmm,
+	const bart_dim_t dmpdims[N], complex float* dmp,
+	const bart_dim_t dsmdims[S][N], complex float* dsm[S],
+	const bart_dim_t dspdims[S][N], complex float* dsp[S])
 {
 	auto d = CAST_DOWN(simu_chain_s, data);
 
@@ -1623,7 +1623,7 @@ const struct nlop_s* nlop_simu_jacobian_chain_create(struct sim_config_s sim, li
 
 	data->nlops = nlops;
 
-	long sdims[S ?: 1][sim.N];
+	bart_dim_t sdims[S ?: 1][sim.N];
 	int s = 0;
 
 	for (int i = 0; i < list_count(nlops); i++) {
@@ -1649,14 +1649,14 @@ struct simu_stack_signal_s {
 DEF_TYPEID(simu_stack_signal_s);
 
 static void simu_stack_fun(const struct nlop_seq_data_s* data, int N,
-	const long modims[N], complex float* omag,
-	int S, const long sdims[S][N], complex float* signal[S],
-	const long midims[N], const complex float* imag,
-	const long pdims[N], const complex float* pars,
-	const long dmmdims[N], complex float* dmm,
-	const long dmpdims[N], complex float* dmp,
-	const long dsmdims[S][N], complex float* dsm[S],
-	const long dspdims[S][N], complex float* dsp[S])
+	const bart_dim_t modims[N], complex float* omag,
+	int S, const bart_dim_t sdims[S][N], complex float* signal[S],
+	const bart_dim_t midims[N], const complex float* imag,
+	const bart_dim_t pdims[N], const complex float* pars,
+	const bart_dim_t dmmdims[N], complex float* dmm,
+	const bart_dim_t dmpdims[N], complex float* dmp,
+	const bart_dim_t dsmdims[S][N], complex float* dsm[S],
+	const bart_dim_t dspdims[S][N], complex float* dsp[S])
 {
 	(void)modims; (void)midims; (void)pdims; (void)dmmdims; (void)dmpdims;
 
@@ -1668,9 +1668,9 @@ static void simu_stack_fun(const struct nlop_seq_data_s* data, int N,
 	assert(1 < OO);
 	assert(2 == II);
 
-	long odims[OO][N];
-	long idims[II][N];
-	long ddims[OO][II][N];
+	bart_dim_t odims[OO][N];
+	bart_dim_t idims[II][N];
+	bart_dim_t ddims[OO][II][N];
 
 	nlop_zblock_diag_get_dims(d->nlop, N, OO, odims, II, idims, ddims);
 
@@ -1698,7 +1698,7 @@ static void simu_stack_fun(const struct nlop_seq_data_s* data, int N,
 
 	nlop_zblock_diag_apply(d->nlop, N, OO, odims, arr_dst, II, idims, arr_src, ddims, arr_jac);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
 	for(int o = 1; o < OO; o++) {
@@ -1744,7 +1744,7 @@ const struct nlop_s* nlop_simu_stack_create(struct sim_config_s sim, const struc
 
 	assert(1 < OO);
 
-	long sdims[1][N];
+	bart_dim_t sdims[1][N];
 	md_copy_dims(N, sdims[0], nlop_generic_codomain(nlop, 1)->dims);
 	for (int o = 2; o < OO; o++)
 		sdims[0][stack_dim] += nlop_generic_codomain(nlop, o)->dims[stack_dim];
@@ -1788,7 +1788,7 @@ static void stm_clear(struct stm_s* x)
 
 }
 
-static void stm_update(struct stm_s* x, int N, const long pdims[N], const complex float* pars)
+static void stm_update(struct stm_s* x, int N, const bart_dim_t pdims[N], const complex float* pars)
 {
 	if (NULL != x->pars && 0. != md_zrmse(N, pdims, x->pars, pars))
 		stm_clear(x);
@@ -1802,15 +1802,15 @@ static void stm_update(struct stm_s* x, int N, const long pdims[N], const comple
 	assert(NULL == x->mag[x->S]);
 	assert(NULL == x->jac[x->S]);
 
-	long mdims[N];
+	bart_dim_t mdims[N];
 	md_copy_dims(N, mdims, nlop_generic_domain(x->nlop, 0)->dims);
 
 	complex float* mag = md_alloc_sameplace(N, mdims, CFL_SIZE, pars);
 	md_clear(N, mdims, mag, CFL_SIZE);
 
-	long odims[1][N];
-	long idims[2][N];
-	long ddims[1][2][N];
+	bart_dim_t odims[1][N];
+	bart_dim_t idims[2][N];
+	bart_dim_t ddims[1][2][N];
 
 	nlop_zblock_diag_get_dims(x->nlop, N, 1, odims, 2, idims, ddims);
 
@@ -1840,7 +1840,7 @@ static void stm_update(struct stm_s* x, int N, const long pdims[N], const comple
 		for (int j = 0; j < x->S; j++)
 			vec[j] = (i == j) ? 1. : 0.;
 
-		long vdims[N];
+		bart_dim_t vdims[N];
 		md_select_dims(N, MD_BIT(x->sim.MI_DIM), vdims, idims[0]);
 		md_copy2(N, idims[0], MD_STRIDES(N, idims[0], CFL_SIZE), mag, MD_STRIDES(N, vdims, CFL_SIZE), vec, CFL_SIZE);
 
@@ -1905,7 +1905,7 @@ static void stm_nlop_free(const nlop_data_t* x)
 	stm_free(CAST_DOWN(stm_s, x));
 }
 
-static void stm_fun(const nlop_data_t* data, int N, int OO, const long odims[OO][N], complex float* arr_dst[OO], int II, const long idims[II][N], const complex float* arr_src[II], const long ddims[OO][II][N], complex float* jac[OO][II])
+static void stm_fun(const nlop_data_t* data, int N, int OO, const bart_dim_t odims[OO][N], complex float* arr_dst[OO], int II, const bart_dim_t idims[II][N], const complex float* arr_src[II], const bart_dim_t ddims[OO][II][N], complex float* jac[OO][II])
 {
 	auto d = CAST_DOWN(stm_s, data);
 
@@ -1917,14 +1917,14 @@ static void stm_fun(const nlop_data_t* data, int N, int OO, const long odims[OO]
 
 	stm_update(d, N, idims[1], par);
 
-	long pos[N];
+	bart_dim_t pos[N];
 	md_set_dims(N, pos, 0);
 
 	md_copy(N, odims[0], dst, d->mag[d->S], CFL_SIZE);
 	if (NULL != jac[0][1])
 		md_copy(N, ddims[0][1], jac[0][1], d->jac[d->S], CFL_SIZE);
 
-	long sdims[N];
+	bart_dim_t sdims[N];
 	md_select_dims(N, ~MD_BIT(d->sim.MI_DIM), sdims, idims[0]);
 
 	for (pos[d->sim.MI_DIM] = 0; pos[d->sim.MI_DIM] < idims[0][d->sim.MI_DIM]; pos[d->sim.MI_DIM]++) {
@@ -1953,13 +1953,13 @@ struct nlop_s* nlop_stm_create(struct stm_s* x)
 	int OO = 1;
 	int II = 2;
 
-	long odims[OO][N];
-	long idims[II][N];
-	long ddims[OO][II][N];
+	bart_dim_t odims[OO][N];
+	bart_dim_t idims[II][N];
+	bart_dim_t ddims[OO][II][N];
 
 	nlop_zblock_diag_get_dims(x->nlop, N, OO, odims, II, idims, ddims);
 
-	unsigned long diag_flags[OO][II];
+	bart_flags_t diag_flags[OO][II];
 	diag_flags[0][0] = ~md_nontriv_dims(N, ddims[0][0]);
 	diag_flags[0][1] = ~md_nontriv_dims(N, ddims[0][1]);
 
@@ -1992,7 +1992,7 @@ const struct nlop_s* nlop_seq_from_blocks_jac_create_F(struct sim_config_s sim, 
 //out: mag_out, mag_read
 const struct nlop_s* nlop_seq_from_blocks_jac_create_F(struct sim_config_s sim, struct list_s* nlops)
 {
-	long OO = 0;
+	bart_dim_t OO = 0;
 	bool ordered = true;
 
 	for (int i = 0; i < list_count(nlops); i++) {
@@ -2051,8 +2051,8 @@ const struct nlop_s* nlop_seq_from_blocks_create_F(struct sim_config_s sim, stru
 	auto cod = nlop_generic_codomain(ret, 0);
 
 	int N = cod->N;
-	long mdims[N];
-	long midims[N];
+	bart_dim_t mdims[N];
+	bart_dim_t midims[N];
 	md_copy_dims(N, mdims, cod->dims);
 	md_transpose_dims(N, sim.MI_DIM, sim.MO_DIM, midims, mdims);
 
@@ -2093,7 +2093,7 @@ const struct nlop_s* sim_nlop_set_init(struct sim_config_s sim, const struct nlo
 
 	auto dom = nlop_generic_domain(nlop, 0);
 
-	long idims[dom->N];
+	bart_dim_t idims[dom->N];
 	md_select_dims(dom->N, MD_BIT(sim.MO_DIM) | MD_BIT(sim.MI_DIM), idims, dom->dims);
 
 	return nlop_set_input_const_F2(nlop, 0, dom->N, dom->dims, MD_STRIDES(dom->N, idims, CFL_SIZE), true, init);
@@ -2112,11 +2112,11 @@ static void grad_moment(int N, struct seq_event ev[N], float start, float end, f
 	grad[2] = GAMMA_H1 * 1.e-9 * (m0e[2] - m0s[2]) / dt;
 }	
 
-const struct nlop_s* seq_to_nlop(int N, const long pdims[N], long odims[N], struct sim_config_s sim, struct bart_seq* seq)
+const struct nlop_s* seq_to_nlop(int N, const bart_dim_t pdims[N], bart_dim_t odims[N], struct sim_config_s sim, struct bart_seq* seq)
 {
 	sim_config_set_dims(&sim, N, pdims, 1);
 
-	long pos[DIMS];
+	bart_dim_t pos[DIMS];
 	md_set_dims(DIMS, pos, 0);
 
 	seq->conf->enc.order = SEQ_ORDER_AVG_OUTER;
@@ -2130,7 +2130,7 @@ const struct nlop_s* seq_to_nlop(int N, const long pdims[N], long odims[N], stru
 	sim.mdims[0] = seq->conf->geom.baseres;
 	sim.mdims[1] = seq->conf->geom.baseres;
 
-	long idims[N];
+	bart_dim_t idims[N];
 	md_copy_dims(N, idims, pdims);
 	idims[COEFF_DIM] = 5; // Parameter maps (M0, R1, R2, B1, B0)
 
@@ -2258,7 +2258,7 @@ const struct nlop_s* seq_to_nlop(int N, const long pdims[N], long odims[N], stru
 
 				// TODO: simulate T2 relaxation during ADC
 				debug_printf(DP_DEBUG3, "Add ADC event to NLOP sequence (ADC phase = %f) \n", seq->event[i].adc.phase);
-				list_append(ret, (struct nlop_s*)nlop_adc_create(sim, md_ravel_index(DIMS, seq->event[i].adc.pos, ~0UL, seq->conf->loop_dims), MD_BIT(sim.MO_DIM), seq->event[i].adc.phase));
+				list_append(ret, (struct nlop_s*)nlop_adc_create(sim, md_ravel_index(DIMS, seq->event[i].adc.pos, ~UINT64_C(0), seq->conf->loop_dims), MD_BIT(sim.MO_DIM), seq->event[i].adc.phase));
 
 				t = seq->event[i].mid; // Update time to ADC midpoint as the ADC samples the signal at its center (midpoint), not at start or end
 			}
@@ -2343,7 +2343,7 @@ const struct nlop_s* seq_to_nlop(int N, const long pdims[N], long odims[N], stru
 	nlop = nlop_del_out_F(nlop, 0);
 	nlop_debug(DP_DEBUG2, nlop);
 
-	assert(md_check_equal_dims(MAX(DIMS, nlop_codomain(nlop)->N), odims, nlop_codomain(nlop)->dims, ~0UL));
+	assert(md_check_equal_dims(MAX(DIMS, nlop_codomain(nlop)->N), odims, nlop_codomain(nlop)->dims, ~UINT64_C(0)));
 
 	/*
 	Add additional parameter for M0 map
@@ -2377,7 +2377,7 @@ const struct nlop_s* seq_to_nlop(int N, const long pdims[N], long odims[N], stru
 	nlop = nlop_chain_FF(nlop_from_linop_F(linop_transpose_create(N, sim.PI_DIM, COEFF_DIM, idims)), nlop);
 	nlop_debug(DP_DEBUG2, nlop);
 
-	assert(md_check_equal_dims(N, idims, nlop_domain(nlop)->dims, ~0UL));
+	assert(md_check_equal_dims(N, idims, nlop_domain(nlop)->dims, ~UINT64_C(0)));
 
 	return nlop;
 }

@@ -140,10 +140,10 @@ extern "C" void cuda_apply_linphases_3D_v1(int N, const bart_dim_t img_dims[], c
 
 struct linphase_conf {
 
-	long dims[3];
-	long tot;
+	bart_dim_t dims[3];
+	bart_dim_t tot;
 	cuFloatComplex* exp[3];
-	long N;
+	bart_dim_t N;
 	float cn;
 	float scale;
 	bool conj;
@@ -162,12 +162,12 @@ __global__ void kern_apply_linphases_3D(struct linphase_conf c, cuFloatComplex* 
 	int startZ = threadIdx.z + blockDim.z * blockIdx.z;
 	int strideZ = blockDim.z * gridDim.z;
 
-	for (long z = startZ; z < c.dims[2]; z += strideZ)
-		for (long y = startY; y < c.dims[1]; y += strideY)
-			for (long x = startX; x < c.dims[0]; x +=strideX) {
+	for (bart_dim_t z = startZ; z < c.dims[2]; z += strideZ)
+		for (bart_dim_t y = startY; y < c.dims[1]; y += strideY)
+			for (bart_dim_t x = startX; x < c.dims[0]; x +=strideX) {
 
-				long pos[3] = { x, y, z };
-				long idx = x + c.dims[0] * (y + c.dims[1] * z);
+				bart_dim_t pos[3] = { x, y, z };
+				bart_dim_t idx = x + c.dims[0] * (y + c.dims[1] * z);
 
 				cuFloatComplex cval = make_cuFloatComplex(c.scale, 0.);
 
@@ -179,22 +179,22 @@ __global__ void kern_apply_linphases_3D(struct linphase_conf c, cuFloatComplex* 
 
 				if (fmac) {
 
-					for (long i = 0; i < c.N; i++)
+					for (bart_dim_t i = 0; i < c.N; i++)
 						dst[idx + i * c.tot] = cuCaddf(dst[idx + i * c.tot], cuCmulf(src[idx + i * c.tot], cval));
 				} else {
 
-					for (long i = 0; i < c.N; i++)
+					for (bart_dim_t i = 0; i < c.N; i++)
 						dst[idx + i * c.tot] = cuCmulf(src[idx + i * c.tot], cval);
 				}
 			}
 }
 
-__global__ void kern_prep_linphases(float cn, float shift, long N, cuFloatComplex* dst)
+__global__ void kern_prep_linphases(float cn, float shift, bart_dim_t N, cuFloatComplex* dst)
 {
 	int start = threadIdx.x + blockDim.x * blockIdx.x;
 	int stride = blockDim.x * gridDim.x;
 
-	for (long i = start; i < N; i +=stride) {
+	for (bart_dim_t i = start; i < N; i +=stride) {
 
 		float val = cn + i * shift;
 
@@ -206,7 +206,7 @@ __global__ void kern_prep_linphases(float cn, float shift, long N, cuFloatComple
 	}
 }
 
-extern "C" void cuda_apply_linphases_3D(int N, const long img_dims[], const float shifts[3], _Complex float* dst, const _Complex float* src, bool conj, bool fmac, bool fftm, float scale)
+extern "C" void cuda_apply_linphases_3D(int N, const bart_dim_t img_dims[], const float shifts[3], _Complex float* dst, const _Complex float* src, bool conj, bool fmac, bool fftm, float scale)
 {
 	struct linphase_conf c;
 
@@ -303,7 +303,7 @@ __global__ void kern_prep_rolloff(struct rolloff_conf c)
 	int stride = blockDim.x;
 
 	for (int j = 0; j < 3; j++)
-		for (long i = start; i < c.dims[j]; i +=stride)
+		for (bart_dim_t i = start; i < c.dims[j]; i +=stride)
 			c.rolloff[j][i] = ((c.dims[j] > 1) ? rolloff(posf(c.dims[j], i, c.os), c.beta, c.width) * c.bessel_beta : 1);
 }
 

@@ -325,12 +325,12 @@ void md_center_of_mass(int N_labels, int N, float com[N_labels][N], const bart_d
 		md_free(wgh_cpu);
 }
 
-static void extract_neighborhood(bool neighbor[3][3][3], long strs[3], complex float* src)
+static void extract_neighborhood(bool neighbor[3][3][3], bart_stride_t strs[3], complex float* src)
 {
 	for (int p = -1; p < 2; p++)
 		for (int r = -1; r < 2; r++)
 			for (int c = -1; c < 2; c++)
-				neighbor[p + 1][c + 1][r + 1] = (0. != src[(c * strs[0] + r * strs[1] + p * strs[2]) / (long)sizeof(*src)]) ? true : false;
+				neighbor[p + 1][c + 1][r + 1] = (0. != src[(c * strs[0] + r * strs[1] + p * strs[2]) / (bart_dim_t)sizeof(*src)]) ? true : false;
 }
 
 static int euler[256] = {
@@ -449,17 +449,17 @@ static bool is_border(int type, bool neighbors[3][3][3])
 	};
 }
 
-static void thinning_3D(const long dims[3], complex float* dst, const complex float* keep)
+static void thinning_3D(const bart_dim_t dims[3], complex float* dst, const complex float* keep)
 {
-	long count = 0;
-	long size = md_calc_size(3, dims);
-	for (long i = 0; i < size; i++)
+	bart_dim_t count = 0;
+	bart_dim_t size = md_calc_size(3, dims);
+	for (bart_dim_t i = 0; i < size; i++)
 		if (0. != dst[i])
 			count++;
 
-	long pos[6][count?:1][3];
+	bart_dim_t pos[6][count?:1][3];
 
-	long strs[3];
+	bart_stride_t strs[3];
 	md_calc_strides(3, strs, dims, CFL_SIZE);
 
 	bool redo = true;
@@ -468,9 +468,9 @@ static void thinning_3D(const long dims[3], complex float* dst, const complex fl
 
 		redo = false;
 
-		long count_boarders[6] = { 0, 0, 0, 0, 0, 0 };
+		bart_dim_t count_boarders[6] = { 0, 0, 0, 0, 0, 0 };
 
-		for (long i = 0; i < size; i++) {
+		for (bart_dim_t i = 0; i < size; i++) {
 
 			if (0. == dst[i])
 				continue;
@@ -497,7 +497,7 @@ static void thinning_3D(const long dims[3], complex float* dst, const complex fl
 					continue;
 
 				int idx = count_boarders[j]++;
-				md_unravel_index(3, pos[j][idx], 7UL, dims, i);
+				md_unravel_index(3, pos[j][idx], 7, dims, i);
 			}
 		}
 
@@ -505,7 +505,7 @@ static void thinning_3D(const long dims[3], complex float* dst, const complex fl
 
 			bool neighbors[3][3][3];
 
-			for (long i = 0; i < count_boarders[j]; i++) {
+			for (bart_dim_t i = 0; i < count_boarders[j]; i++) {
 
 				extract_neighborhood(neighbors, strs, &MD_ACCESS(3, strs, pos[j][i], dst));
 
@@ -519,12 +519,12 @@ static void thinning_3D(const long dims[3], complex float* dst, const complex fl
 	}
 }
 
-void md_thinning_3D(int N, const long dims[N], complex float* dst, const complex float* src, const complex float* keep)
+void md_thinning_3D(int N, const bart_dim_t dims[N], complex float* dst, const complex float* src, const complex float* keep)
 {
 	assert(3 >= bitcount(md_nontriv_dims(N, dims)));
 
-	long rdims[3] = { 1, 1, 1 };
-	long ndims[3] = { 1, 1, 1 };
+	bart_dim_t rdims[3] = { 1, 1, 1 };
+	bart_dim_t ndims[3] = { 1, 1, 1 };
 
 	for (int i =0, ip = 0; i < N; i++)
 		if (1 < dims[i])

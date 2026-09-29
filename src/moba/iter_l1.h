@@ -23,7 +23,7 @@ struct mdb_irgnm_l1_conf {
 	bool auto_norm;
 	bool no_sens_l2;
 
-	unsigned long wav_trans_flags;
+	bart_flags_t wav_trans_flags;
 	int algo;
 	float rho;
 	struct opt_reg_s* ropts;

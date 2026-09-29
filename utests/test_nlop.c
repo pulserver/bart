@@ -1459,7 +1459,7 @@ UT_REGISTER_TEST(test_mriop_normalinv);
 static bool test_nlop_zacos(void)
 {
 	enum { N = 3 };
-	long dims[N] = { 10, 7, 3 };
+	bart_dim_t dims[N] = { 10, 7, 3 };
 
 	complex float tmp[md_calc_size(N, dims)];
 	md_gaussian_rand(N, dims, tmp);
@@ -1482,7 +1482,7 @@ UT_REGISTER_TEST(test_nlop_zacos);
 static bool test_nlop_zasin(void)
 {
 	enum { N = 3 };
-	long dims[N] = { 10, 7, 3 };
+	bart_dim_t dims[N] = { 10, 7, 3 };
 
 	complex float tmp[md_calc_size(N, dims)];
 	md_gaussian_rand(N, dims, tmp);

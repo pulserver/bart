@@ -83,14 +83,14 @@ static void wavelet_down3(const bart_dim_t dims[3], const bart_stride_t out_str[
 
 			for (int k = 0; k < dims[0]; k++) {
 
-				MD_ACCESS(3, out_str, ((long[3]){ k, j, i }), out) = 0.;
+				MD_ACCESS(3, out_str, ((bart_dim_t[3]){ k, j, i }), out) = 0.;
 
 				for (int l = 0; l < flen; l++) {
 
 					int n = coord(j, dims[1], flen, l);
 
-					MD_ACCESS(3, out_str, ((long[3]){ k, j, i }), out) +=
-						MD_ACCESS(3, in_str, ((long[3]){ k, n, i }), in) * filter[flen - l - 1];
+					MD_ACCESS(3, out_str, ((bart_dim_t[3]){ k, j, i }), out) +=
+						MD_ACCESS(3, in_str, ((bart_dim_t[3]){ k, n, i }), in) * filter[flen - l - 1];
 				}
 			}
 		}
@@ -122,8 +122,8 @@ static void wavelet_up3(const bart_dim_t dims[3], const bart_stride_t out_str[3]
 					if ((j < 0) || (bandsize(dims[1], flen) <= j))
 						continue;
 
-					MD_ACCESS(3, out_str, ((long[3]){ k, n, i }), out) +=
-						MD_ACCESS(3, in_str, ((long[3]){ k, j, i }), in) * filter[flen - l - 1];
+					MD_ACCESS(3, out_str, ((bart_dim_t[3]){ k, n, i }), out) +=
+						MD_ACCESS(3, in_str, ((bart_dim_t[3]){ k, j, i }), in) * filter[flen - l - 1];
 				}
 			}
 		}

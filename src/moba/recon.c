@@ -140,7 +140,7 @@ static void post_process(enum mdb_t mode, struct moba_conf_s* data, const bart_d
 }
 
 
-static unsigned long get_constrained_maps(enum mdb_t mode, enum meco_model mgre_mode)
+static bart_flags_t get_constrained_maps(enum mdb_t mode, enum meco_model mgre_mode)
 {
 	switch (mode) {
 
@@ -152,12 +152,12 @@ static unsigned long get_constrained_maps(enum mdb_t mode, enum meco_model mgre_
 	case MDB_IR_MGRE:
 		switch (mgre_mode) {
 
-		case MECO_WF: return 0UL;
+		case MECO_WF: return 0;
 		case MECO_WFR2S: return MD_BIT(2);			// R2*
 		case MECO_WF2R2S: return MD_BIT(1) | MD_BIT(3);		// R2*W and R2*F
 		case MECO_R2S: return MD_BIT(1);			// R2*
-		case MECO_PHASEDIFF: return 0UL;
-		case MECO_PI: return 0UL;
+		case MECO_PHASEDIFF: return 0;
+		case MECO_PI: return 0;
 		case IR_MECO_T1_R2S: return MD_BIT(2) | MD_BIT(3);	// R1* and R2*
 		case IR_MECO_W_T1_F_T1_R2S: return MD_BIT(2) | MD_BIT(5) | MD_BIT(6);	// R1*W, R1*F and R2*
 		}
@@ -166,7 +166,7 @@ static unsigned long get_constrained_maps(enum mdb_t mode, enum meco_model mgre_
 	assert(0);
 }
 
-static void set_regu_flags(struct mdb_irgnm_l1_conf* conf2, const struct moba_conf* conf, struct moba_conf_s* data, long ncoeffs, const struct linop_s* lop_sobolev[ncoeffs])
+static void set_regu_flags(struct mdb_irgnm_l1_conf* conf2, const struct moba_conf* conf, struct moba_conf_s* data, bart_dim_t ncoeffs, const struct linop_s* lop_sobolev[ncoeffs])
 {
 /*
 	Simple rules for model independent default regularization flags:
@@ -175,27 +175,27 @@ static void set_regu_flags(struct mdb_irgnm_l1_conf* conf2, const struct moba_co
 	3.) Remaining active maps get wavelet / L2 depending on conf.opt_reg
 */
 
-	unsigned long act_flags = 0UL;
-	unsigned long sob_flags = 0UL;
+	bart_flags_t act_flags = 0;
+	bart_flags_t sob_flags = 0;
 
 	for (int i = 0; i < ncoeffs; i++) {
 
-		sob_flags |= (NULL != lop_sobolev[i] && 0. != data->other.scale[i]) ? MD_BIT(i) : 0UL;
-		act_flags |= (0. != data->other.scale[i]) ? MD_BIT(i) : 0UL;
+		sob_flags |= (NULL != lop_sobolev[i] && 0. != data->other.scale[i]) ? MD_BIT(i) : 0;
+		act_flags |= (0. != data->other.scale[i]) ? MD_BIT(i) : 0;
 	}
 
-	unsigned long l2flags = conf->l2para;
-	unsigned long wavflags = ~0UL;
+	bart_flags_t l2flags = conf->l2para;
+	bart_flags_t wavflags = ~UINT64_C(0);
 
 	switch (conf->opt_reg) {
 
 	case 1:
-		l2flags = (~0UL == l2flags) ? sob_flags : l2flags;
+		l2flags = (~UINT64_C(0) == l2flags) ? sob_flags : l2flags;
 		wavflags = act_flags & ~sob_flags;
 		break;
 	case 2:
-		l2flags = (~0UL == l2flags) ? act_flags : l2flags;
-		wavflags = 0UL;
+		l2flags = (~UINT64_C(0) == l2flags) ? act_flags : l2flags;
+		wavflags = 0;
 		break;
 	default:
 		error("Invalid regularization option!\n");
@@ -215,11 +215,11 @@ struct moba_monitor {
 
 	iter_monitor_t super;
 
-	const long* imgs_dims;
-	const long* expo_dims;
+	const bart_dim_t* imgs_dims;
+	const bart_dim_t* expo_dims;
 	complex float* export;
 
-	long steps;
+	bart_dim_t steps;
 	enum mdb_t mode;
 	struct moba_conf_s* data;
 	const struct linop_s** linop_sobolev;
@@ -233,7 +233,7 @@ static void moba_monitor(struct iter_monitor_s* _data, const struct vec_iter_s* 
 
 	assert(1 == data->imgs_dims[ITER_DIM]);
 
-	long pos[DIMS] = { 0L };
+	bart_dim_t pos[DIMS] = { 0 };
 	pos[ITER_DIM] = data->steps++;
 
 	complex float* tmp = md_alloc_sameplace(DIMS, data->imgs_dims, CFL_SIZE, x);
@@ -241,14 +241,14 @@ static void moba_monitor(struct iter_monitor_s* _data, const struct vec_iter_s* 
 
 	post_process(data->mode, data->data, data->imgs_dims, data->linop_sobolev, tmp);
 
-	long spos[DIMS] = { 0L };
+	bart_dim_t spos[DIMS] = { 0 };
 
 	for (spos[COEFF_DIM] = 0; spos[COEFF_DIM] < data->imgs_dims[COEFF_DIM]; spos[COEFF_DIM]++) {
 
-		long map_dims[DIMS];
+		bart_dim_t map_dims[DIMS];
 		md_select_dims(DIMS, ~COEFF_FLAG, map_dims, data->imgs_dims);
 
-		long img_strs[DIMS];
+		bart_stride_t img_strs[DIMS];
 		md_calc_strides(DIMS, img_strs, data->imgs_dims, CFL_SIZE);
 
 		complex float* map = MD_ACCESS_PTR(DIMS, img_strs, spos, tmp);
@@ -412,7 +412,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 		.c2 = &irgnm_conf,
 		.step = conf->step,
 		.lower_bound = conf->lower_bound,
-		.constrained_maps = (~0UL != conf->constrained_maps) ? conf->constrained_maps : get_constrained_maps(conf->mode, conf->mgre_model),
+		.constrained_maps = (~UINT64_C(0) != conf->constrained_maps) ? conf->constrained_maps : get_constrained_maps(conf->mode, conf->mgre_model),
 		.auto_norm = conf->auto_norm,
 		.no_sens_l2 = data->other.no_sens_l2,
 		.wav_trans_flags = FFT_FLAGS | (conf->sos ? SLICE_FLAG : 0),
@@ -466,7 +466,7 @@ static void recon(const struct moba_conf* conf, struct moba_conf_s* data,
 }
 
 
-void moba_recon(const struct moba_conf* conf, struct moba_conf_s* data, const long dims[DIMS], const long imgs_dims[DIMS], complex float* img, const long coil_dims[DIMS], complex float* sens, const long pat_dims[DIMS], const complex float* pattern, const complex float* TI, const complex float* TE, const complex float* b1, const complex float* b0, const long data_dims[DIMS], const complex float* kspace_data, const complex float* init, const long mimgs_dims[DIMS], complex float* mimg)
+void moba_recon(const struct moba_conf* conf, struct moba_conf_s* data, const bart_dim_t dims[DIMS], const bart_dim_t imgs_dims[DIMS], complex float* img, const bart_dim_t coil_dims[DIMS], complex float* sens, const bart_dim_t pat_dims[DIMS], const complex float* pattern, const complex float* TI, const complex float* TE, const complex float* b1, const complex float* b0, const bart_dim_t data_dims[DIMS], const complex float* kspace_data, const complex float* init, const bart_dim_t mimgs_dims[DIMS], complex float* mimg)
 {
 	switch (conf->mode) {
 
