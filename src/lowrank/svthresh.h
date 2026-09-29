@@ -6,13 +6,12 @@
 //#define GWIDTH( M, N, B) sqrtf( ((M > N) ? M : N) )
 
 
-#include "misc/dimtypes.h"
 #include <complex.h>
 
 // Singular value thresholding for matrix
-extern float svthresh(bart_dim_t M, bart_dim_t N, float lambda, complex float* dst, complex float* src);
+extern float svthresh(long M, long N, float lambda, complex float* dst, complex float* src);
 
-extern float svthresh2(bart_dim_t M, bart_dim_t N, float lambda, complex float* dst, const complex float* src, complex float* U, float* S, complex float* VT);
+extern float svthresh2(long M, long N, float lambda, complex float* dst, const complex float* src, complex float* U, float* S, complex float* VT);
 
 extern float svthresh_nomeanu(int M, int N, float lambda, complex float* dst, const complex float* src);
 
@@ -20,12 +19,12 @@ extern float svthresh_nomeanv(int M, int N, float lambda, complex float* dst, co
 
 
 // Singular value analysis (maybe useful to help determining regularization parameter for min nuclear norm)
-extern float nuclearnorm(bart_dim_t M, bart_dim_t N, /* const */ complex float* d);
-extern float maxsingular(bart_dim_t M, bart_dim_t N, /* const */ complex float* d);
+extern float nuclearnorm(long M, long N, /* const */ complex float* d);
+extern float maxsingular(long M, long N, /* const */ complex float* d);
 
 
 
-extern struct svthresh_blockproc_data* svthresh_blockproc_create(bart_flags_t mflags, float lambda, int remove_mean);
-extern float svthresh_blockproc(const void* _data, const bart_dim_t blkdims[DIMS], complex float* dst, const complex float* src);
-extern float nucnorm_blockproc(const void* _data, const bart_dim_t blkdims[DIMS], complex float* dst, const complex float* src);
+extern struct svthresh_blockproc_data* svthresh_blockproc_create(unsigned long mflags, float lambda, int remove_mean);
+extern float svthresh_blockproc(const void* _data, const long blkdims[DIMS], complex float* dst, const complex float* src);
+extern float nucnorm_blockproc(const void* _data, const long blkdims[DIMS], complex float* dst, const complex float* src);
 

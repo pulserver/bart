@@ -1,6 +1,5 @@
 
 #ifdef USE_GPU
-#include "misc/dimtypes.h"
 #include "num/gpu_compat_runtime.h"
 
 #include "misc/cppwrap.h"
@@ -38,13 +37,13 @@ extern bool cuda_is_stream_default(void);
 extern void cuda_sync_device(void);
 extern void cuda_sync_stream(void);
 
-extern void* cuda_malloc(bart_dim_t N);
-extern void* cuda_malloc_host(bart_dim_t N);
+extern void* cuda_malloc(long N);
+extern void* cuda_malloc_host(long N);
 extern void cuda_free(void*);
 extern bool cuda_ondevice(const void* ptr);
-extern void cuda_clear(bart_dim_t size, void* ptr);
-extern void cuda_memcpy(bart_dim_t size, void* dst, const void* src);
-extern void cuda_memcpy_strided(const bart_dim_t dims[2], bart_stride_t ostr, void* dst, bart_stride_t istr, const void* src);
+extern void cuda_clear(long size, void* ptr);
+extern void cuda_memcpy(long size, void* dst, const void* src);
+extern void cuda_memcpy_strided(const long dims[2], long ostr, void* dst, long istr, const void* src);
 
 extern void cuda_memcache_off(void);
 extern void cuda_memcache_clear(void);

@@ -236,15 +236,15 @@ void gaussian_mix_multiply(int M, int N, float coeff[M], complex float m[M][N], 
  *		C = number of Gaussians
  *		B = batchsize (i.e. number of samples)
  **/
-void md_grad_gaussian(int D, const bart_dim_t dims_grad[D],
-	complex float* grad, const bart_dim_t dims_x[D], const complex float* x, const bart_dim_t dims_mu[D],
-	const complex float* mu, const bart_dim_t dims_vars[D], const complex float* vars)
+void md_grad_gaussian(int D, const long dims_grad[D],
+	complex float* grad, const long dims_x[D], const complex float* x, const long dims_mu[D],
+	const complex float* mu, const long dims_vars[D], const complex float* vars)
 {
 	assert(4 <= D);
-	bart_stride_t strs_x[D];
-	bart_stride_t strs_mu[D];
-	bart_stride_t strs_vars[D];
-	bart_stride_t strs_grad[D];
+	long strs_x[D];
+	long strs_mu[D];
+	long strs_vars[D];
+	long strs_grad[D];
 
 	md_calc_strides(D, strs_x, dims_x, CFL_SIZE);
 	md_calc_strides(D, strs_mu, dims_mu, CFL_SIZE);
@@ -274,20 +274,20 @@ void md_grad_gaussian(int D, const bart_dim_t dims_grad[D],
  * log_gauss = - n * m * log(pi) - n * m * log(vars) - (x - mus) / vars @ (x - mus); dims -> {1,1,C,B}
  *
  **/
-void md_log_gaussian(int D, const bart_dim_t dims_log_gauss[D], complex float* log_gauss,
-		const bart_dim_t dims_x[D], const complex float* x,
-		const bart_dim_t dims_mu[D], const complex float* mu,
-		const bart_dim_t dims_vars[D], const complex float* vars)
+void md_log_gaussian(int D, const long dims_log_gauss[D], complex float* log_gauss,
+		const long dims_x[D], const complex float* x,
+		const long dims_mu[D], const complex float* mu,
+		const long dims_vars[D], const complex float* vars)
 {
 	assert(4 <= D);
-	bart_dim_t dims_grad[D];
-	md_max_dims(D, ~UINT64_C(0), dims_grad, dims_mu, dims_x);
+	long dims_grad[D];
+	md_max_dims(D, ~0UL, dims_grad, dims_mu, dims_x);
 
-	bart_stride_t strs_x[D];
-	bart_stride_t strs_mu[D];
-	bart_stride_t strs_vars[D];
-	bart_stride_t strs_log_gauss[D];
-	bart_stride_t strs_grad[D];
+	long strs_x[D];
+	long strs_mu[D];
+	long strs_vars[D];
+	long strs_log_gauss[D];
+	long strs_grad[D];
 
 	md_calc_strides(D, strs_x, dims_x, CFL_SIZE);
 	md_calc_strides(D, strs_mu, dims_mu, CFL_SIZE);
@@ -338,25 +338,25 @@ void md_log_gaussian(int D, const bart_dim_t dims_log_gauss[D], complex float* l
  *		zmax =  max_C (z); dims -> {1,1,1,B}
  *
  **/
-void md_mixture_weights(int D, const bart_dim_t dims_gamma[D], complex float* gamma,
-		const bart_dim_t dims_log_gauss[D], complex float* log_gauss,
-		const bart_dim_t dims_ws[D], const complex float* ws)
+void md_mixture_weights(int D, const long dims_gamma[D], complex float* gamma,
+		const long dims_log_gauss[D], complex float* log_gauss,
+		const long dims_ws[D], const complex float* ws)
 {
 	assert(4 <= D);
-	bart_dim_t dims_zmax[D];
-	bart_flags_t flags = 0; // flags for batchsize and number of gaussians
+	long dims_zmax[D];
+	unsigned long flags = 0UL; // flags for batchsize and number of gaussians
 
 	flags = md_nontriv_dims(D, dims_log_gauss) & ~md_nontriv_dims(D, dims_ws);
 
 	md_select_dims(D, flags, dims_zmax, dims_gamma);
 
-	bart_dim_t dims_nb_gauss[D];
-	md_min_dims(D, ~UINT64_C(0), dims_nb_gauss, dims_ws, dims_gamma); // zmax has batdim
+	long dims_nb_gauss[D];
+	md_min_dims(D, ~0UL, dims_nb_gauss, dims_ws, dims_gamma); // zmax has batdim
 
-	bart_stride_t strs_log_gauss[D];
-	bart_stride_t strs_ws[D];
-	bart_stride_t strs_gamma[D];
-	bart_stride_t strs_zmax[D];
+	long strs_log_gauss[D];
+	long strs_ws[D];
+	long strs_gamma[D];
+	long strs_zmax[D];
 
 	md_calc_strides(D, strs_log_gauss, dims_log_gauss, CFL_SIZE);
 	md_calc_strides(D, strs_ws, dims_ws, CFL_SIZE);
@@ -410,29 +410,29 @@ void md_mixture_weights(int D, const bart_dim_t dims_gamma[D], complex float* ga
  *		mus = mean of the Gaussians; dims -> {n,m,C,1}
  *
  **/
-void md_gaussian_score(int D, const bart_dim_t dims_score[D], complex float* score,
-		const bart_dim_t dims_x[D], const complex float* x,
-		const bart_dim_t dims_mu[D], const complex float* mu,
-		const bart_dim_t dims_vars[D], const complex float* vars,
-		const bart_dim_t dims_ws[D], const complex float* ws)
+void md_gaussian_score(int D, const long dims_score[D], complex float* score,
+		const long dims_x[D], const complex float* x,
+		const long dims_mu[D], const complex float* mu,
+		const long dims_vars[D], const complex float* vars,
+		const long dims_ws[D], const complex float* ws)
 {
 	assert(4 <= D);
-	bart_dim_t grad_dims[D];
-	md_max_dims(D, ~UINT64_C(0), grad_dims, dims_mu, dims_score);
+	long grad_dims[D];
+	md_max_dims(D, ~0UL, grad_dims, dims_mu, dims_score);
 
-	assert(md_check_compat(D, ~UINT64_C(0), grad_dims, dims_x));
-	assert(md_check_compat(D, ~UINT64_C(0), grad_dims, dims_mu));
-	assert(md_check_equal_dims(D, dims_score, dims_x, ~UINT64_C(0)));
+	assert(md_check_compat(D, ~0UL, grad_dims, dims_x));
+	assert(md_check_compat(D, ~0UL, grad_dims, dims_mu));
+	assert(md_check_equal_dims(D, dims_score, dims_x, ~0UL));
 
-	bart_dim_t dims_log_gauss[D];
-	bart_flags_t flags = 0; // flags for batchsize and number of gaussians
+	long dims_log_gauss[D];
+	unsigned long flags = 0UL; // flags for batchsize and number of gaussians
 	flags = md_nontriv_dims(D, dims_mu) & md_nontriv_dims(D, dims_x);
 	md_select_dims(D, ~flags, dims_log_gauss, grad_dims);
 
-	bart_dim_t nb_gauss_dims[D];
-	md_min_dims(D, ~UINT64_C(0), nb_gauss_dims, dims_vars, dims_mu);
+	long nb_gauss_dims[D];
+	md_min_dims(D, ~0UL, nb_gauss_dims, dims_vars, dims_mu);
 
-	bart_stride_t strs_grad[D];
+	long strs_grad[D];
 	md_calc_strides(D, strs_grad, grad_dims, CFL_SIZE);
 
 	complex float* log_gauss = md_alloc_sameplace(D, dims_log_gauss, CFL_SIZE, x);

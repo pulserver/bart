@@ -44,8 +44,8 @@ int main_saxpy(int argc, char* argv[argc])
 	num_init();
 
 	const int N = DIMS;
-	bart_dim_t dims1[N];
-	bart_dim_t dims2[N];
+	long dims1[N];
+	long dims2[N];
 
 	complex float* data1 = load_cfl(in1_file, N, dims1);
 	complex float* data2 = load_cfl(in2_file, N, dims2);
@@ -56,7 +56,7 @@ int main_saxpy(int argc, char* argv[argc])
 	complex float* out = create_cfl(out_file, N, dims2);
 
 #pragma omp parallel for
-	for (bart_dim_t i = 0; i < md_calc_size(N, dims1); i++)
+	for (long i = 0; i < md_calc_size(N, dims1); i++)
 		out[i] = scale * data1[i] + data2[i];
 
 	unmap_cfl(N, dims1, data1);

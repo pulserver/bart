@@ -20,9 +20,9 @@
 #include "utest.h"
 
 
-static bool test_pattern_flags(int D, const bart_dim_t dims[D], bart_flags_t flags, const complex float* in, const complex float* ref)
+static bool test_pattern_flags(int D, const long dims[D], unsigned long flags, const complex float* in, const complex float* ref)
 {
-	bart_dim_t odims[D];
+	long odims[D];
 	md_select_dims(D, ~flags, odims, dims);
 
 	complex float* out = md_alloc(D, odims, CFL_SIZE);
@@ -68,7 +68,7 @@ static bool test_pattern(void)
 		{ 1. },
 	} };
 
-	bart_dim_t idims[3] = { 3, 5, 1 };
+	long idims[3] = { 3, 5, 1 };
 
 
 	return (test_pattern_flags(3, idims, 0, &in[0][0][0], &ref0[0][0][0]) && 

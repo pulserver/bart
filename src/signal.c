@@ -55,7 +55,7 @@ int main_signal(int argc, char* argv[argc])
 		ARG_OUTFILE(true, &out_file, "basis-functions"),
 	};
 
-	bart_dim_t dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	long dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 	dims[TE_DIM] = 100;
 
 	enum seq_type { BSSFP, FLASH, TSE, TSE_GEN, SE, MOLLI, MGRE, IR_MGRE, ASL };
@@ -81,7 +81,7 @@ int main_signal(int argc, char* argv[argc])
         struct signal_model parm;
 
         float time_T1relax = -1.; // second
-        bart_dim_t Hbeats = -1;
+        long Hbeats = -1;
         int averaged_spokes = 1;
 	int freq_samples = -1;
 	int NE = -1;
@@ -196,7 +196,7 @@ int main_signal(int argc, char* argv[argc])
 	dims[COEFF2_DIM] = (1 != Ms[2]) ? truncf(Ms[2]) : truncf(T2[2]);
 	dims[ITER_DIM] = truncf(off_reson[2]);
 	dims[CSHIFT_DIM] = truncf(t1_fat[2]);
-	dims[TIME_DIM] = MAX(1, (bart_dim_t)truncf(FA_range[2]));
+	dims[TIME_DIM] = MAX(1, (long)truncf(FA_range[2]));
 	dims[TIME2_DIM] = truncf(f_range[2]);
 
 	if ((dims[TE_DIM] < 1) || (dims[COEFF_DIM] < 1) || (dims[COEFF2_DIM] < 1) || (dims[TIME_DIM] < 1))
@@ -204,10 +204,10 @@ int main_signal(int argc, char* argv[argc])
 
 	complex float* signals = create_cfl(out_file, DIMS, dims);
 
-	bart_dim_t dims1[DIMS];
+	long dims1[DIMS];
 	md_select_dims(DIMS, TE_FLAG, dims1, dims);
 
-	bart_dim_t pos[DIMS] = { };
+	long pos[DIMS] = { };
 	int N = dims[TE_DIM];
         int N_all = dims[TE_DIM] * parm.averaged_spokes;
 

@@ -44,9 +44,9 @@
 #include "model.h"
 
 
-struct linop_s* linop_sampling_create(const bart_dim_t dims[DIMS], const bart_dim_t pat_dims[DIMS], const complex float* pattern)
+struct linop_s* linop_sampling_create(const long dims[DIMS], const long pat_dims[DIMS], const complex float* pattern)
 {
-	assert(md_check_compat(DIMS, ~UINT64_C(0), dims, pat_dims));
+	assert(md_check_compat(DIMS, ~0UL, dims, pat_dims));
 
 	auto ret = linop_cdiag_create(DIMS, dims, md_nontriv_dims(DIMS, pat_dims), NULL);
 	linop_gdiag_set_diag_ref(ret, DIMS, pat_dims, pattern);
@@ -63,10 +63,10 @@ struct linop_s* linop_sampling_create(const bart_dim_t dims[DIMS], const bart_di
  * @param sens_flags active map dimensions
  * @param sens sensitivities
  */
-struct linop_s* maps_create(bart_flags_t shared_img_flags, const bart_dim_t max_dims[DIMS], 
-			bart_flags_t sens_flags, const complex float* sens)
+struct linop_s* maps_create(unsigned long shared_img_flags, const long max_dims[DIMS], 
+			unsigned long sens_flags, const complex float* sens)
 {
-	bart_dim_t maps_dims[DIMS];
+	long maps_dims[DIMS];
 	md_select_dims(DIMS, sens_flags, maps_dims, max_dims);
 
 	complex float* nsens = md_alloc_sameplace(DIMS, maps_dims, CFL_SIZE, sens);
@@ -74,8 +74,8 @@ struct linop_s* maps_create(bart_flags_t shared_img_flags, const bart_dim_t max_
 	fftscale(DIMS, maps_dims, FFT_FLAGS, nsens, sens);
 	fftmod(DIMS, maps_dims, FFT_FLAGS, nsens, nsens);
 
-	bart_dim_t cim_dims[DIMS];
-	bart_dim_t img_dims[DIMS];
+	long cim_dims[DIMS];
+	long img_dims[DIMS];
 
 	md_select_dims(DIMS, ~MAPS_FLAG, cim_dims, max_dims);
 	md_select_dims(DIMS, ~COIL_FLAG & ~shared_img_flags, img_dims, max_dims);
@@ -89,7 +89,7 @@ struct linop_s* maps_create(bart_flags_t shared_img_flags, const bart_dim_t max_
 
 
 
-struct linop_s* maps2_create(const bart_dim_t coilim_dims[DIMS], const bart_dim_t maps_dims[DIMS], const bart_dim_t img_dims[DIMS], const complex float* maps)
+struct linop_s* maps2_create(const long coilim_dims[DIMS], const long maps_dims[DIMS], const long img_dims[DIMS], const complex float* maps)
 {
 	assert(1 == coilim_dims[MAPS_DIM]);
 	assert(1 == img_dims[COIL_DIM]);
@@ -115,10 +115,10 @@ struct linop_s* maps2_create(const bart_dim_t coilim_dims[DIMS], const bart_dim_
  * @param sens_flags active map dimensions
  * @param sens sensitivities
  */
-struct linop_s* sense_init(bart_flags_t shared_img_flags, const bart_dim_t max_dims[DIMS], 
-			bart_flags_t sens_flags, const complex float* sens)
+struct linop_s* sense_init(unsigned long shared_img_flags, const long max_dims[DIMS], 
+			unsigned long sens_flags, const complex float* sens)
 {
-	bart_dim_t ksp_dims[DIMS];
+	long ksp_dims[DIMS];
 	md_select_dims(DIMS, ~MAPS_FLAG, ksp_dims, max_dims);
 
 	struct linop_s* fft = linop_fft_create(DIMS, ksp_dims, FFT_FLAGS);

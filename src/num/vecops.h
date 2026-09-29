@@ -2,106 +2,104 @@
 #ifndef _VECOPS_H
 #define _VECOPS_H
 
-#include "misc/dimtypes.h"
-
 extern const struct vec_ops cpu_ops;
 
 struct vec_ops {
 
-	void (*float2double)(bart_dim_t N, double* dst, const float* src);
-	void (*double2float)(bart_dim_t N, float* dst, const double* src);
-	double (*dot)(bart_dim_t N, const float* vec1, const float* vec2);
-	double (*asum)(bart_dim_t N, const float* vec);
-	void (*zsum)(bart_dim_t N, _Complex float* vec);
-	double (*zl1norm)(bart_dim_t N, const _Complex float* vec);
+	void (*float2double)(long N, double* dst, const float* src);
+	void (*double2float)(long N, float* dst, const double* src);
+	double (*dot)(long N, const float* vec1, const float* vec2);
+	double (*asum)(long N, const float* vec);
+	void (*zsum)(long N, _Complex float* vec);
+	double (*zl1norm)(long N, const _Complex float* vec);
 
-	_Complex double (*zdot)(bart_dim_t N, const _Complex float* vec1, const _Complex float* vec2);
+	_Complex double (*zdot)(long N, const _Complex float* vec1, const _Complex float* vec2);
 
-	void (*axpy)(bart_dim_t N, float* a, float alpha, const float* x);
-	void (*axpbz)(bart_dim_t N, float* out, const float a, const float* x, const float b, const float* z);
+	void (*axpy)(long N, float* a, float alpha, const float* x);
+	void (*axpbz)(long N, float* out, const float a, const float* x, const float b, const float* z);
 
-	void (*pow)(bart_dim_t N, float* dst, const float* src1, const float* src2);
-	void (*sqrt)(bart_dim_t N, float* dst, const float* src);
-	void (*round)(bart_dim_t N, float* dst, const float* src);
+	void (*pow)(long N, float* dst, const float* src1, const float* src2);
+	void (*sqrt)(long N, float* dst, const float* src);
+	void (*round)(long N, float* dst, const float* src);
 
-	void (*zle)(bart_dim_t N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
-	void (*le)(bart_dim_t N, float* dst, const float* src1, const float* src2);
+	void (*zle)(long N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
+	void (*le)(long N, float* dst, const float* src1, const float* src2);
 
-	void (*add)(bart_dim_t N, float* dst, const float* src1, const float* src2);
-	void (*sub)(bart_dim_t N, float* dst, const float* src1, const float* src2);
-	void (*mul)(bart_dim_t N, float* dst, const float* src1, const float* src2);
-	void (*div)(bart_dim_t N, float* dst, const float* src1, const float* src2);
-	void (*fmac)(bart_dim_t N, float* dst, const float* src1, const float* src2);
-	void (*fmacD)(bart_dim_t N, double* dst, const float* src1, const float* src2);
-	void (*smul)(bart_dim_t N, float alpha, float* dst, const float* src1);
-	void (*sadd)(bart_dim_t N, float alpha, float* dst, const float* src1);
+	void (*add)(long N, float* dst, const float* src1, const float* src2);
+	void (*sub)(long N, float* dst, const float* src1, const float* src2);
+	void (*mul)(long N, float* dst, const float* src1, const float* src2);
+	void (*div)(long N, float* dst, const float* src1, const float* src2);
+	void (*fmac)(long N, float* dst, const float* src1, const float* src2);
+	void (*fmacD)(long N, double* dst, const float* src1, const float* src2);
+	void (*smul)(long N, float alpha, float* dst, const float* src1);
+	void (*sadd)(long N, float alpha, float* dst, const float* src1);
 
-	void (*zmul)(bart_dim_t N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
-	void (*zdiv)(bart_dim_t N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
-	void (*zfmac)(bart_dim_t N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
-	void (*zfmacD)(bart_dim_t N, _Complex double* dst, const _Complex float* src1, const _Complex float* src2);
-	void (*zmulc)(bart_dim_t N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
-	void (*zfmacc)(bart_dim_t N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
-	void (*zfmaccD)(bart_dim_t N, _Complex double* dst, const _Complex float* src1, const _Complex float* src2);
-	void (*zfsq2)(bart_dim_t N, _Complex float* dst, const _Complex float* src1);
+	void (*zmul)(long N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
+	void (*zdiv)(long N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
+	void (*zfmac)(long N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
+	void (*zfmacD)(long N, _Complex double* dst, const _Complex float* src1, const _Complex float* src2);
+	void (*zmulc)(long N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
+	void (*zfmacc)(long N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
+	void (*zfmaccD)(long N, _Complex double* dst, const _Complex float* src1, const _Complex float* src2);
+	void (*zfsq2)(long N, _Complex float* dst, const _Complex float* src1);
 
-	void (*zsmul)(bart_dim_t N, _Complex float val, _Complex float* dst, const _Complex float* src1);
-	void (*zsadd)(bart_dim_t N, _Complex float val, _Complex float* dst, const _Complex float* src1);
+	void (*zsmul)(long N, _Complex float val, _Complex float* dst, const _Complex float* src1);
+	void (*zsadd)(long N, _Complex float val, _Complex float* dst, const _Complex float* src1);
 
-	void (*zpow)(bart_dim_t N,  _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
-	void (*zphsr)(bart_dim_t N, _Complex float* dst, const _Complex float* src);
-	void (*zconj)(bart_dim_t N, _Complex float* dst, const _Complex float* src);
-	void (*zexpj)(bart_dim_t N, _Complex float* dst, const _Complex float* src);
-	void (*zexp)(bart_dim_t N, _Complex float* dst, const _Complex float* src);
-	void (*zlog)(bart_dim_t N, _Complex float* dst, const _Complex float* src);
-	void (*zarg)(bart_dim_t N, _Complex float* dst, const _Complex float* src);
-	void (*zabs)(bart_dim_t N, _Complex float* dst, const _Complex float* src);
-	void (*zatanr)(bart_dim_t N, _Complex float* dst, const _Complex float* src);
-	void (*zatan2r)(bart_dim_t N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
+	void (*zpow)(long N,  _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
+	void (*zphsr)(long N, _Complex float* dst, const _Complex float* src);
+	void (*zconj)(long N, _Complex float* dst, const _Complex float* src);
+	void (*zexpj)(long N, _Complex float* dst, const _Complex float* src);
+	void (*zexp)(long N, _Complex float* dst, const _Complex float* src);
+	void (*zlog)(long N, _Complex float* dst, const _Complex float* src);
+	void (*zarg)(long N, _Complex float* dst, const _Complex float* src);
+	void (*zabs)(long N, _Complex float* dst, const _Complex float* src);
+	void (*zatanr)(long N, _Complex float* dst, const _Complex float* src);
+	void (*zatan2r)(long N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
 
-	void (*exp)(bart_dim_t N, float* dst, const float* src);
-	void (*log)(bart_dim_t N, float* dst, const float* src);
+	void (*exp)(long N, float* dst, const float* src);
+	void (*log)(long N, float* dst, const float* src);
 
-	void (*zsin)(bart_dim_t N, _Complex float* dst, const _Complex float* src);
-	void (*zcos)(bart_dim_t N, _Complex float* dst, const _Complex float* src);
-	void (*zasin)(bart_dim_t N, _Complex float* dst, const _Complex float* src);
-	void (*zacos)(bart_dim_t N, _Complex float* dst, const _Complex float* src);
-	void (*zacosr)(bart_dim_t N, _Complex float* dst, const _Complex float* src);
+	void (*zsin)(long N, _Complex float* dst, const _Complex float* src);
+	void (*zcos)(long N, _Complex float* dst, const _Complex float* src);
+	void (*zasin)(long N, _Complex float* dst, const _Complex float* src);
+	void (*zacos)(long N, _Complex float* dst, const _Complex float* src);
+	void (*zacosr)(long N, _Complex float* dst, const _Complex float* src);
 
-	void (*zsinh)(bart_dim_t N, _Complex float* dst, const _Complex float* src);
-	void (*zcosh)(bart_dim_t N, _Complex float* dst, const _Complex float* src);
+	void (*zsinh)(long N, _Complex float* dst, const _Complex float* src);
+	void (*zcosh)(long N, _Complex float* dst, const _Complex float* src);
 
-	void (*zcmp)(bart_dim_t N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
-	void (*zdiv_reg)(bart_dim_t N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2, _Complex float lambda);
-	void (*zfftmod)(bart_dim_t N, _Complex float* dst, const _Complex float* src, int n, bool inv, double phase);
+	void (*zcmp)(long N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
+	void (*zdiv_reg)(long N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2, _Complex float lambda);
+	void (*zfftmod)(long N, _Complex float* dst, const _Complex float* src, int n, bool inv, double phase);
 
-	void (*zmax)(bart_dim_t N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
-	void (*zsmax)(bart_dim_t N, float alpha, _Complex float* dst, const _Complex float* src);
-	void (*zsmin)(bart_dim_t N, float alpha, _Complex float* dst, const _Complex float* src);
+	void (*zmax)(long N, _Complex float* dst, const _Complex float* src1, const _Complex float* src2);
+	void (*zsmax)(long N, float alpha, _Complex float* dst, const _Complex float* src);
+	void (*zsmin)(long N, float alpha, _Complex float* dst, const _Complex float* src);
 
-	void (*smax)(bart_dim_t N, float val, float* dst, const float* src1);
-	void (*max)(bart_dim_t N, float* dst, const float* src1, const float* src2);
-	void (*min)(bart_dim_t N, float* dst, const float* src1, const float* src2);
+	void (*smax)(long N, float val, float* dst, const float* src1);
+	void (*max)(long N, float* dst, const float* src1, const float* src2);
+	void (*min)(long N, float* dst, const float* src1, const float* src2);
 
-	void (*zsoftthresh_half)(bart_dim_t N, float lambda,  _Complex float* dst, const _Complex float* src);
-	void (*zsoftthresh)(bart_dim_t N, float lambda,  _Complex float* dst, const _Complex float* src);
-	void (*softthresh_half)(bart_dim_t N, float lambda,  float* dst, const float* src);
-	void (*softthresh)(bart_dim_t N, float lambda,  float* dst, const float* src);
+	void (*zsoftthresh_half)(long N, float lambda,  _Complex float* dst, const _Complex float* src);
+	void (*zsoftthresh)(long N, float lambda,  _Complex float* dst, const _Complex float* src);
+	void (*softthresh_half)(long N, float lambda,  float* dst, const float* src);
+	void (*softthresh)(long N, float lambda,  float* dst, const float* src);
 //	void (*swap)(long N, float* a, float* b);
-	void (*zhardthresh)(bart_dim_t N, int k, _Complex float* d, const _Complex float* x);
-	void (*zhardthresh_mask)(bart_dim_t N, int k, _Complex float* d, const _Complex float* x);
+	void (*zhardthresh)(long N, int k, _Complex float* d, const _Complex float* x);
+	void (*zhardthresh_mask)(long N, int k, _Complex float* d, const _Complex float* x);
 
-	void (*pdf_gauss)(bart_dim_t N, float mu, float sig, float* dst, const float* src);
+	void (*pdf_gauss)(long N, float mu, float sig, float* dst, const float* src);
 
-	void (*real)(bart_dim_t N, float* dst, const _Complex float* src);
-	void (*imag)(bart_dim_t N, float* dst, const _Complex float* src);
-	void (*zcmpl_real)(bart_dim_t N, _Complex float* dst, const float* src);
-	void (*zcmpl_imag)(bart_dim_t N, _Complex float* dst, const float* src);
-	void (*zcmpl)(bart_dim_t N, _Complex float* dst, const float* real_src, const float* imag_src);
+	void (*real)(long N, float* dst, const _Complex float* src);
+	void (*imag)(long N, float* dst, const _Complex float* src);
+	void (*zcmpl_real)(long N, _Complex float* dst, const float* src);
+	void (*zcmpl_imag)(long N, _Complex float* dst, const float* src);
+	void (*zcmpl)(long N, _Complex float* dst, const float* real_src, const float* imag_src);
 
-	void (*zfill)(bart_dim_t N, _Complex float val, _Complex float* dst);
+	void (*zfill)(long N, _Complex float val, _Complex float* dst);
 
-	void (*zsetnanzero)(bart_dim_t N, _Complex float* dst, const _Complex float* src);
+	void (*zsetnanzero)(long N, _Complex float* dst, const _Complex float* src);
 };
 
 #endif

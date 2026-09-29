@@ -99,7 +99,7 @@ static void warn_bart_rand_state(void)
 				warned = true;
 
 				if (0 != (~cfl_loop_rand_flags & cfl_loop_get_flags()))
-					debug_printf(DP_WARN, "rand_state_create provides identical random numbers for each cfl loop iteration for dims with bitmask %" PRIu64 "\n", ~cfl_loop_rand_flags & cfl_loop_get_flags());
+					debug_printf(DP_WARN, "rand_state_create provides identical random numbers for each cfl loop iteration for dims with bitmask %lu\n", ~cfl_loop_rand_flags & cfl_loop_get_flags());
 			}
 		}
 	}
@@ -137,13 +137,13 @@ static struct bart_rand_state get_worker_state_cfl_loop(void)
 
 		int D = cfl_loop_get_rank();
 
-		bart_dim_t dims[D ?:1];
-		bart_dim_t pos[D ?:1];
+		long dims[D ?:1];
+		long pos[D ?:1];
 
 		cfl_loop_get_dims(D, dims);
 		cfl_loop_get_pos(D, pos);
 
-		bart_dim_t ind = md_ravel_index(D, pos, cfl_loop_rand_flags, dims);
+		long ind = md_ravel_index(D, pos, cfl_loop_rand_flags, dims);
 
 		assert(0 <= ind);
 		worker_state.ctr2 = (uint64_t) ind;
@@ -189,7 +189,7 @@ static double uniform_rand_state(struct bart_rand_state* state)
 	return ull2double(rand64_state(state));
 }
 
-static double uniform_rand_offset(struct bart_rand_state state, bart_stride_t offset)
+static double uniform_rand_offset(struct bart_rand_state state, long offset)
 {
 	struct bart_rand_state state_loc = state;
 	state_loc.ctr2 = (uint64_t)offset;
@@ -370,7 +370,7 @@ complex double gaussian_rand(void)
 
 
 
-void gaussian_rand_vec(bart_dim_t N, float* dst)
+void gaussian_rand_vec(long N, float* dst)
 {
 	complex float* tmp = md_alloc_sameplace(1, MD_DIMS((N + 1) / 2), sizeof(complex float), dst);
 
@@ -381,7 +381,7 @@ void gaussian_rand_vec(bart_dim_t N, float* dst)
 	//This does not need to be scaled as md_gaussian_rand has (complex) variance 2!
 }
 
-void uniform_rand_vec(bart_dim_t N, float* dst)
+void uniform_rand_vec(long N, float* dst)
 {
 	complex float* tmp = md_alloc_sameplace(1, MD_DIMS(N), sizeof(complex float), dst);
 
@@ -391,7 +391,7 @@ void uniform_rand_vec(bart_dim_t N, float* dst)
 	md_free(tmp);
 }
 
-static void md_gaussian_obsolete_rand(int D, const bart_dim_t dims[D], complex float* dst)
+static void md_gaussian_obsolete_rand(int D, const long dims[D], complex float* dst)
 {
 	bool buf = is_vptr(dst);
 #ifdef USE_GPU
@@ -410,13 +410,13 @@ static void md_gaussian_obsolete_rand(int D, const bart_dim_t dims[D], complex f
 		return;
 	}
 
-	bart_dim_t N = md_calc_size(D, dims);
+	long N = md_calc_size(D, dims);
 
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = (complex float)gaussian_rand_obsolete();
 }
 
-static void vec_gaussian_philox_rand(struct bart_rand_state state, bart_stride_t offset, bart_dim_t N, complex float* dst)
+static void vec_gaussian_philox_rand(struct bart_rand_state state, long offset, long N, complex float* dst)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(dst)) {
@@ -427,7 +427,7 @@ static void vec_gaussian_philox_rand(struct bart_rand_state state, bart_stride_t
 #endif
 	{
 #pragma 	omp parallel for
-		for (bart_dim_t i = 0; i < N; i++) {
+		for (long i = 0; i < N; i++) {
 
 			struct bart_rand_state state_loc = state;
 			state_loc.ctr2 = (uint64_t) (i + offset);
@@ -437,7 +437,7 @@ static void vec_gaussian_philox_rand(struct bart_rand_state state, bart_stride_t
 	}
 }
 
-static bart_stride_t cfl_loop_offset_and_strides(int D, bart_stride_t strs_offset[D], const bart_dim_t dims[D])
+static long cfl_loop_offset_and_strides(int D, long strs_offset[D], const long dims[D])
 {
 	md_calc_strides(D, strs_offset, dims, 1);
 
@@ -445,7 +445,7 @@ static bart_stride_t cfl_loop_offset_and_strides(int D, bart_stride_t strs_offse
 		return 0;
 
 	int C = cfl_loop_get_rank();
-	bart_dim_t cdims[C ?: 1];
+	long cdims[C ?: 1];
 
 	cfl_loop_get_dims(C, cdims);
 	md_select_dims(C, cfl_loop_rand_flags, cdims, cdims);
@@ -458,16 +458,16 @@ static bart_stride_t cfl_loop_offset_and_strides(int D, bart_stride_t strs_offse
 
 	if (mergeable) {
 
-		bart_dim_t mdims[MAX(D, C) ?: 1];
+		long mdims[MAX(D, C) ?: 1];
 		md_singleton_dims(MAX(D, C), mdims);
 		md_copy_dims(D, mdims, dims);
 
-		md_max_dims(C, ~UINT64_C(0), mdims, mdims, cdims);
+		md_max_dims(C, ~0ul, mdims, mdims, cdims);
 
-		bart_stride_t strs_offset_merged[MAX(D, C) ?: 1];
+		long strs_offset_merged[MAX(D, C) ?: 1];
 		md_calc_strides(MAX(D, C), strs_offset_merged, mdims, 1);
 
-		bart_dim_t cpos[C ?: 1];
+		long cpos[C ?: 1];
 		cfl_loop_get_pos(C, cpos);
 
 		md_copy_strides(D, strs_offset, strs_offset_merged);
@@ -491,48 +491,48 @@ static bart_stride_t cfl_loop_offset_and_strides(int D, bart_stride_t strs_offse
 			}
 		}
 
-		bart_dim_t cpos[C ?: 1];
+		long cpos[C ?: 1];
 		cfl_loop_get_pos(C, cpos);
 
-		bart_dim_t ind = md_ravel_index(C, cpos, cfl_loop_rand_flags & cfl_loop_get_flags(), cdims);
+		long ind = md_ravel_index(C, cpos, cfl_loop_rand_flags & cfl_loop_get_flags(), cdims);
 		return ind * md_calc_size(D, dims);
 	}
 }
 
 
-typedef CLOSURE_TYPE(void, (bart_stride_t offset_rand, bart_dim_t N, complex float* dst)) md_sample_fun_t;
+typedef CLOSURE_TYPE(void, (long offset_rand, long N, complex float* dst)) md_sample_fun_t;
 
-static void md_sample_mpi(int D, const bart_dim_t dims[D], complex float* dst, md_sample_fun_t vec_fun)
+static void md_sample_mpi(int D, const long dims[D], complex float* dst, md_sample_fun_t vec_fun)
 {
-	bart_stride_t strs[D];
+	long strs[D];
 	md_calc_strides(D, strs, dims, sizeof(complex float));
 
-	bart_stride_t strs_offset[D]; // one based
-	bart_stride_t offset_cfl = cfl_loop_offset_and_strides(D, strs_offset, dims);
+	long strs_offset[D]; // one based
+	long offset_cfl = cfl_loop_offset_and_strides(D, strs_offset, dims);
 
-	bart_flags_t loop_flags = vptr_block_loop_flags(D, dims, strs, dst, sizeof(complex float), false);
+	unsigned long loop_flags = vptr_block_loop_flags(D, dims, strs, dst, sizeof(complex float), false);
 
 	if (D != md_calc_blockdim(D, dims, strs_offset, 1))
 		loop_flags |= ~(MD_BIT(md_calc_blockdim(D, dims, strs_offset, 1)) - 1);
 
-	bart_dim_t ldims[D];
-	bart_dim_t bdims[D];
+	long ldims[D];
+	long bdims[D];
 
 	md_select_dims(D,  loop_flags, ldims, dims);
 	md_select_dims(D, ~loop_flags, bdims, dims);
 
-	bart_dim_t N = md_calc_size(D, bdims);
-	bart_stride_t* strs_p = strs;
-	bart_stride_t* strs_offset_p = strs_offset;
+	long N = md_calc_size(D, bdims);
+	long* strs_p = strs;
+	long* strs_offset_p = strs_offset;
 
-	NESTED(void, rand_loop, (const bart_dim_t pos[]))
+	NESTED(void, rand_loop, (const long pos[]))
 	{
 		void* dst_offset = &MD_ACCESS(D, strs_p, pos, dst);
 
 		if (!mpi_accessible(dst_offset))
 			return;
 
-		bart_stride_t offset_rand = md_calc_offset(D, strs_offset_p, pos) + offset_cfl;
+		long offset_rand = md_calc_offset(D, strs_offset_p, pos) + offset_cfl;
 
 		NESTED_CALL(vec_fun, (offset_rand, N, vptr_resolve(dst_offset)));
 	};
@@ -545,11 +545,11 @@ static void md_sample_mpi(int D, const bart_dim_t dims[D], complex float* dst, m
 
 
 
-static void md_gaussian_philox_rand(int D, const bart_dim_t dims[D], complex float* dst)
+static void md_gaussian_philox_rand(int D, const long dims[D], complex float* dst)
 {
 	struct bart_rand_state worker_state = get_worker_state();
 
-	NESTED(void, vec_fun, (bart_stride_t offset, bart_dim_t N, complex float* dst))
+	NESTED(void, vec_fun, (long offset, long N, complex float* dst))
 	{
 		 vec_gaussian_philox_rand(worker_state, offset, N, dst);
 	};
@@ -558,7 +558,7 @@ static void md_gaussian_philox_rand(int D, const bart_dim_t dims[D], complex flo
 }
 
 
-void md_gaussian_rand(int D, const bart_dim_t dims[D], complex float* dst)
+void md_gaussian_rand(int D, const long dims[D], complex float* dst)
 {
 	if (use_obsolete_rng())
 		md_gaussian_obsolete_rand(D, dims, dst);
@@ -567,14 +567,14 @@ void md_gaussian_rand(int D, const bart_dim_t dims[D], complex float* dst)
 }
 
 
-void md_zgaussian_rand(int D, const bart_dim_t dims[D], complex float* dst)
+void md_zgaussian_rand(int D, const long dims[D], complex float* dst)
 {
 	md_gaussian_philox_rand(D, dims, dst);
 	md_zsmul(D, dims, dst, dst, 1. / sqrt(2.));
 }
 
 
-static void md_uniform_obsolete_rand(int D, const bart_dim_t dims[D], complex float* dst)
+static void md_uniform_obsolete_rand(int D, const long dims[D], complex float* dst)
 {
 	bool buf = is_vptr(dst);
 #ifdef USE_GPU
@@ -593,13 +593,13 @@ static void md_uniform_obsolete_rand(int D, const bart_dim_t dims[D], complex fl
 		return;
 	}
 
-	bart_dim_t N = md_calc_size(D, dims);
+	long N = md_calc_size(D, dims);
 
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = (complex float)uniform_rand_obsolete();
 }
 
-static void vec_uniform_philox_rand(struct bart_rand_state state, bart_stride_t offset, bart_dim_t N, complex float* dst)
+static void vec_uniform_philox_rand(struct bart_rand_state state, long offset, long N, complex float* dst)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(dst)) {
@@ -610,16 +610,16 @@ static void vec_uniform_philox_rand(struct bart_rand_state state, bart_stride_t 
 #endif
 	{
 #pragma 	omp parallel for
-		for (bart_dim_t i = 0; i < N; i++)
+		for (long i = 0; i < N; i++)
 			dst[i] = uniform_rand_offset(state, i + offset);
 	}
 }
 
-static void md_uniform_philox_rand(int D, const bart_dim_t dims[D], complex float* dst)
+static void md_uniform_philox_rand(int D, const long dims[D], complex float* dst)
 {
 	struct bart_rand_state worker_state = get_worker_state();
 
-	NESTED(void, vec_fun, (bart_stride_t offset, bart_dim_t N, complex float* dst))
+	NESTED(void, vec_fun, (long offset, long N, complex float* dst))
 	{
 		vec_uniform_philox_rand(worker_state, offset, N, dst);
 	};
@@ -627,7 +627,7 @@ static void md_uniform_philox_rand(int D, const bart_dim_t dims[D], complex floa
 	md_sample_mpi(D, dims, dst, CLOSURE(md_sample_fun_t, vec_fun));
 }
 
-void md_uniform_rand(int D, const bart_dim_t dims[D], complex float* dst)
+void md_uniform_rand(int D, const long dims[D], complex float* dst)
 {
 	if (use_obsolete_rng())
 		md_uniform_obsolete_rand(D, dims, dst);
@@ -635,7 +635,7 @@ void md_uniform_rand(int D, const bart_dim_t dims[D], complex float* dst)
 		md_uniform_philox_rand(D, dims, dst);
 }
 
-static void md_obsolete_rand_one(int D, const bart_dim_t dims[D], complex float* dst, double p)
+static void md_obsolete_rand_one(int D, const long dims[D], complex float* dst, double p)
 {
 	bool buf = is_vptr(dst);
 #ifdef USE_GPU
@@ -654,13 +654,13 @@ static void md_obsolete_rand_one(int D, const bart_dim_t dims[D], complex float*
 		return;
 	}
 
-	bart_dim_t N = md_calc_size(D, dims);
+	long N = md_calc_size(D, dims);
 
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = (uniform_rand_obsolete() < p) ? 1. : 0.;
 }
 
-static void vec_philox_rand_one(struct bart_rand_state state, bart_stride_t offset, bart_dim_t N, complex float* dst, double p)
+static void vec_philox_rand_one(struct bart_rand_state state, long offset, long N, complex float* dst, double p)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(dst)) {
@@ -671,16 +671,16 @@ static void vec_philox_rand_one(struct bart_rand_state state, bart_stride_t offs
 #endif
 	{
 #pragma 	omp parallel for
-		for (bart_dim_t i = 0; i < N; i++)
+		for (long i = 0; i < N; i++)
 			dst[i] = (uniform_rand_offset(state, i + offset) < p) ? 1. : 0.;
 	}
 }
 
-static void md_philox_rand_one(int D, const bart_dim_t dims[D], complex float* dst, double p)
+static void md_philox_rand_one(int D, const long dims[D], complex float* dst, double p)
 {
 	struct bart_rand_state worker_state = get_worker_state();
 
-	NESTED(void, vec_fun, (bart_stride_t offset, bart_dim_t N, complex float* dst))
+	NESTED(void, vec_fun, (long offset, long N, complex float* dst))
 	{
 		vec_philox_rand_one(worker_state, offset, N, dst, p);
 	};
@@ -688,7 +688,7 @@ static void md_philox_rand_one(int D, const bart_dim_t dims[D], complex float* d
 	md_sample_mpi(D, dims, dst, CLOSURE(md_sample_fun_t, vec_fun));
 }
 
-void md_rand_one(int D, const bart_dim_t dims[D], complex float* dst, double p)
+void md_rand_one(int D, const long dims[D], complex float* dst, double p)
 {
 	if (use_obsolete_rng())
 		md_obsolete_rand_one(D, dims, dst, p);

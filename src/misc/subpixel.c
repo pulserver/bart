@@ -16,7 +16,7 @@
 
 
 
-void est_subpixel_shift(int N, float shifts[N], const bart_dim_t dims[N], bart_flags_t flags, const complex float* in1, const complex float* in2)
+void est_subpixel_shift(int N, float shifts[N], const long dims[N], unsigned long flags, const complex float* in1, const complex float* in2)
 {
 	complex float* tmp1 = md_alloc(N, dims, CFL_SIZE);
 	complex float* tmp2 = md_alloc(N, dims, CFL_SIZE);
@@ -33,7 +33,7 @@ void est_subpixel_shift(int N, float shifts[N], const bart_dim_t dims[N], bart_f
 		if (!MD_IS_SET(flags, i))
 			continue;
 
-		bart_dim_t shift[N];
+		long shift[N];
 		for (int j = 0; j < N; j++)
 			shift[j] = 0;
 

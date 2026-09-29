@@ -33,13 +33,13 @@ static bool test_md_center_of_mass(void)
 	};
 
 	enum { N = 4 };
-	bart_dim_t dims[N] = { 10, 10, 1, 1 };
+	long dims[N] = { 10, 10, 1, 1 };
 
-	bart_dim_t sdims[N];
-	complex float* structure = md_label_simple_connection(N, sdims, 1., 3);
+	long sdims[N];
+	complex float* structure = md_label_simple_connection(N, sdims, 1., 3UL);
 	complex float* labels = md_alloc(N, dims, CFL_SIZE);
 
-	bart_dim_t n_labels = md_label(N, dims, labels, &(binary[0][0]), sdims, structure);
+	long n_labels = md_label(N, dims, labels, &(binary[0][0]), sdims, structure);
 
 	float com[n_labels][N];
 	md_center_of_mass(n_labels, N, com, dims, labels, NULL);

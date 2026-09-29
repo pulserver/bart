@@ -24,7 +24,7 @@
 #define DIMS 16
 #endif
 
-static void md_zrmax2(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
+static void md_zrmax2(int D, const long dim[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
 {
 	float* tmp1 = md_alloc_sameplace(D, dim, FL_SIZE, iptr1);
 	float* tmp2 = md_alloc_sameplace(D, dim, FL_SIZE, iptr2);
@@ -41,7 +41,7 @@ static void md_zrmax2(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D
 	md_free(tmp2);
 }
 
-static void md_zrmin2(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D], complex float* optr, const bart_stride_t istr1[D], const complex float* iptr1, const bart_stride_t istr2[D], const complex float* iptr2)
+static void md_zrmin2(int D, const long dim[D], const long ostr[D], complex float* optr, const long istr1[D], const complex float* iptr1, const long istr2[D], const complex float* iptr2)
 {
 	float* tmp1 = md_alloc_sameplace(D, dim, FL_SIZE, iptr1);
 	float* tmp2 = md_alloc_sameplace(D, dim, FL_SIZE, iptr2);
@@ -66,8 +66,8 @@ static void md_zrmin2(int D, const bart_dim_t dim[D], const bart_stride_t ostr[D
 static const char help_str[] = "Perform function evaluation on array.";
 
 
-typedef void (*z2op)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs[D], const complex float* iptr);
-typedef void (*z3op)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs1[D], const complex float* iptr1, const bart_stride_t istrs2[D], const complex float* iptr2);
+typedef void (*z2op)(int D, const long dims[D], const long ostrs[D], complex float* optr, const long istrs[D], const complex float* iptr);
+typedef void (*z3op)(int D, const long dims[D], const long ostrs[D], complex float* optr, const long istrs1[D], const complex float* iptr1, const long istrs2[D], const complex float* iptr2);
 
 struct {
 
@@ -172,10 +172,10 @@ int main_calc(int argc, char* argv[argc])
 
 
 	// Execute found function
-	bart_dim_t in1_dims[DIMS];
+	long in1_dims[DIMS];
 	complex float* idata = load_cfl(in_file, DIMS, in1_dims);
 
-	bart_dim_t in2_dims[DIMS];
+	long in2_dims[DIMS];
 	md_singleton_dims(DIMS, in2_dims);
 	complex float* idata2 = NULL;
 
@@ -191,17 +191,17 @@ int main_calc(int argc, char* argv[argc])
 		md_zfill(DIMS, in2_dims, idata2, val);
 	}
 
-	if (!md_check_compat(DIMS, ~UINT64_C(0), in1_dims, in2_dims))
+	if (!md_check_compat(DIMS, ~0UL, in1_dims, in2_dims))
 		error("Input files have incompatible dimensions!\n");
 
-	bart_dim_t max_dims[DIMS];
-	md_max_dims(DIMS, ~UINT64_C(0), max_dims, in1_dims, in2_dims);
+	long max_dims[DIMS];
+	md_max_dims(DIMS, ~0UL, max_dims, in1_dims, in2_dims);
 
 	complex float* odata = create_cfl(out_file, DIMS, max_dims);
 
-	bart_stride_t istrs1[DIMS];
-	bart_stride_t istrs2[DIMS];
-	bart_stride_t ostrs[DIMS];
+	long istrs1[DIMS];
+	long istrs2[DIMS];
+	long ostrs[DIMS];
 
 	md_calc_strides(DIMS, istrs1, in1_dims, CFL_SIZE);
 	md_calc_strides(DIMS, istrs2, in2_dims, CFL_SIZE);

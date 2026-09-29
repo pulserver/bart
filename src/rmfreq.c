@@ -61,43 +61,43 @@ int main_rmfreq(int argc, char* argv[argc])
 	enum { LAST_DIM = DIMS - 1 };
 
 	// Read k-space
-	bart_dim_t k_dims[DIMS];
+	long k_dims[DIMS];
 	complex float* k = load_cfl(k_file, DIMS, k_dims);
 
 	if (md_check_dimensions(DIMS, k_dims, COIL_FLAG|TIME_FLAG|SLICE_FLAG))
 		error("Only COIL_DIM, TIME_DIM and SLICE_DIM may have entries!\n");
 
 	// Read trajectory
-	bart_dim_t t_dims[DIMS];
+	long t_dims[DIMS];
 	complex float* t = load_cfl(traj_file, DIMS, t_dims);
 
 	if (!md_check_equal_dims(DIMS, t_dims, k_dims, ~(READ_FLAG|PHS1_FLAG|COIL_FLAG)))
 		error("k-space and trajectory inconsistent!\n");
 
 	// Modulation file
-	bart_dim_t mod_dims[DIMS] = { };	// analyzer false positive
+	long mod_dims[DIMS] = { };	// analyzer false positive
 	const complex float* mod = NULL;
 
 	if (NULL != mod_file) {
 
 		mod = load_cfl(mod_file, DIMS, mod_dims);
 
-		assert(md_check_equal_dims(DIMS, k_dims, mod_dims, ~UINT64_C(0)));
+		assert(md_check_equal_dims(DIMS, k_dims, mod_dims, ~0u));
 	}
 
 
 	// Calculate angles from trajectory	
-	bart_dim_t angles_dims[DIMS];
+	long angles_dims[DIMS];
 	md_select_dims(DIMS, ~(PHS1_FLAG|COIL_FLAG), angles_dims, k_dims);
 
 	complex float* angles = md_alloc(DIMS, angles_dims, CFL_SIZE);
 
-	bart_dim_t t1_dims[DIMS];
+	long t1_dims[DIMS];
 	md_select_dims(DIMS, ~MD_BIT(1), t1_dims, t_dims);
 
 	complex float* t1 = md_alloc(DIMS, t1_dims, CFL_SIZE);
 
-	md_slice(DIMS, MD_BIT(1), (bart_dim_t[DIMS]){ }, t_dims, t1, t, CFL_SIZE);
+	md_slice(DIMS, MD_BIT(1), (long[DIMS]){ }, t_dims, t1, t, CFL_SIZE);
 
 	int N = 1;
 	for (int i = 0; i < DIMS; i++)
@@ -116,7 +116,7 @@ int main_rmfreq(int argc, char* argv[argc])
 	md_zsmul(DIMS, angles_dims, neg_angles, angles, -1.);
 
 	// Projection matrix
-	bart_dim_t n_dims[DIMS];
+	long n_dims[DIMS];
 	md_select_dims(DIMS, ~COIL_FLAG, n_dims, k_dims);
 	n_dims[LAST_DIM] = 2 * n_harmonics;
 
@@ -124,7 +124,7 @@ int main_rmfreq(int argc, char* argv[argc])
 	complex float* n_singleton = md_alloc(DIMS, angles_dims, CFL_SIZE);
 	complex float* angles1 = md_alloc(DIMS, angles_dims, CFL_SIZE);
 
-	bart_dim_t pos[DIMS] = { };
+	long pos[DIMS] = { };
 
 	int count = 0;
 
@@ -149,12 +149,12 @@ int main_rmfreq(int argc, char* argv[argc])
 	}
 
 	// Projection
-	bart_dim_t k_singleton_dims[DIMS];
+	long k_singleton_dims[DIMS];
 	md_select_dims(DIMS, TIME_FLAG, k_singleton_dims, k_dims);
 
 	complex float* k_singleton = md_alloc(DIMS, k_singleton_dims, CFL_SIZE);
 
-	bart_dim_t n_part_singleton_dims[DIMS];
+	long n_part_singleton_dims[DIMS];
 	md_select_dims(DIMS, ~SLICE_FLAG, n_part_singleton_dims, n_dims);
 
 	complex float* n_part_singleton = md_alloc(DIMS, n_part_singleton_dims, CFL_SIZE);
@@ -163,8 +163,8 @@ int main_rmfreq(int argc, char* argv[argc])
 
 	complex float* n_mod = NULL;
 
-	bart_dim_t n_mod_dims[DIMS];
-	bart_stride_t n_mod_strs[DIMS];
+	long n_mod_dims[DIMS];
+	long n_mod_strs[DIMS];
 
 	if (NULL != mod_file) {
 
@@ -175,10 +175,10 @@ int main_rmfreq(int argc, char* argv[argc])
 
 		assert(md_check_equal_dims(DIMS, n_dims, mod_dims, ~(COIL_FLAG|(1u << LAST_DIM))));
 
-		bart_stride_t n_strs[DIMS];
+		long n_strs[DIMS];
 		md_calc_strides(DIMS, n_strs, n_dims, CFL_SIZE);
 
-		bart_stride_t mod_strs[DIMS];
+		long mod_strs[DIMS];
 		md_calc_strides(DIMS, mod_strs, mod_dims, CFL_SIZE);
 
 		n_mod = md_alloc(DIMS, n_mod_dims, CFL_SIZE);
@@ -188,12 +188,12 @@ int main_rmfreq(int argc, char* argv[argc])
 		unmap_cfl(DIMS, mod_dims, mod);
 	}
 
-	bart_dim_t pinv_dims[DIMS];
+	long pinv_dims[DIMS];
 	md_transpose_dims(DIMS, TIME_DIM, LAST_DIM, pinv_dims, n_part_singleton_dims);
 
 	complex float* pinv = md_alloc(DIMS, pinv_dims, CFL_SIZE);
 
-	bart_dim_t proj_dims[DIMS];
+	long proj_dims[DIMS];
 
 	for (int i = 0; i < DIMS; i++)
 		proj_dims[i] = 1;
@@ -206,7 +206,7 @@ int main_rmfreq(int argc, char* argv[argc])
 
 	complex float* k_cor = create_cfl(kcor_file, DIMS, k_dims);
 
-	bart_dim_t pos1[DIMS] = { };
+	long pos1[DIMS] = { };
 
 	// Coil-by-coil, Partition-by-Partition correction
 	for (int c = 0; c < k_dims[COIL_DIM]; c++) {

@@ -73,8 +73,8 @@ int main_ismrmrd(int argc, char* argv[argc])
 		return 0;
 	}
 
-	bart_dim_t D = DIMS;
-	bart_dim_t dims[D];
+	long D = DIMS;
+	long dims[D];
 	md_set_dims(D, dims, 0);
 
 	if (!stream) {
@@ -95,10 +95,10 @@ int main_ismrmrd(int argc, char* argv[argc])
 		return 0;
 	}
 
-	bart_dim_t pos[D];
+	long pos[D];
 	md_set_dims(D, pos, 0);
 
-	bart_flags_t flags = 0;
+	unsigned long flags = 0;
 
 	complex float* bart_cfl = NULL;
 	stream_t bart_stream = NULL;
@@ -110,7 +110,7 @@ int main_ismrmrd(int argc, char* argv[argc])
 		bart_cfl = load_async_cfl(in_file, D, dims);
 		bart_stream = stream_lookup(bart_cfl);
 
-		bart_dim_t count = 0;
+		long count = 0;
 		flags = ~(MD_BIT(0) | MD_BIT(1));
 
 		assert(1 < dims[0] && 1 < dims[1]);
@@ -131,11 +131,11 @@ int main_ismrmrd(int argc, char* argv[argc])
 
 				unsigned short* buf = md_alloc(2, dims, sizeof(unsigned short));
 
-				bart_dim_t* dimsp = dims;
+				long* dimsp = dims;
 
-				NESTED(void, sample_kernel, (const bart_dim_t ipos[]))
+				NESTED(void, sample_kernel, (const long ipos[]))
 				{
-					bart_dim_t offset = ipos[0] + dimsp[0] * ipos[1];
+					long offset = ipos[0] + dimsp[0] * ipos[1];
 					float re = ((float*)(src + offset))[0] ;
 					buf[offset] = CLAMP(re, 0., ((float)USHRT_MAX));
 				};

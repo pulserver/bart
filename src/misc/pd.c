@@ -40,7 +40,7 @@ static float dist(int D, const float a[D], const float b[D])
 }
 
 #ifdef GRID
-static void grid_pos(int D, bart_dim_t pos[D], float delta, const float fpos[D])
+static void grid_pos(int D, long pos[D], float delta, const float fpos[D])
 {
 	for (int i = 0; i < D; i++)
 		pos[i] = (int)floorf(fpos[i] / delta);
@@ -98,22 +98,22 @@ int poissondisc_mc(int D, int T, int N, int I, float vardens, const float delta[
 	maxdelta *= vard_scale(D, corner, vardens);
 	mindelta /= sqrtf((float)D);
 
-	bart_dim_t patchdims[D];
+	long patchdims[D];
 
 	for (int i = 0; i < D; i++)
 		patchdims[i] = 3 * ceilf(maxdelta / mindelta);
 
-	bart_dim_t patchstrs[D];
+	long patchstrs[D];
 	md_calc_strides(D, patchstrs, patchdims, 1);
 
 	int* patch = md_alloc(D, patchdims, sizeof(int));
 
-	bart_dim_t griddims[D];
+	long griddims[D];
 
 	for (int i = 0; i < D; i++)
 		griddims[i] = ceilf(1. / mindelta);
 
-	bart_stride_t gridstrs[D];
+	long gridstrs[D];
 	md_calc_strides(D, gridstrs, griddims, 1);	// element size 1!
 
 	int* grid = md_alloc(D, griddims, sizeof(int));
@@ -122,7 +122,7 @@ int poissondisc_mc(int D, int T, int N, int I, float vardens, const float delta[
 
 	for (int i = 0; i < I; i++) {
 
-		bart_dim_t pos[D];
+		long pos[D];
 		grid_pos(D, pos, mindelta, points[i]);
 		grid[md_calc_offset(D, gridstrs, pos)] = i;
 	}
@@ -183,9 +183,9 @@ int poissondisc_mc(int D, int T, int N, int I, float vardens, const float delta[
 
 			bool accept = true;
 #ifdef GRID
-			bart_dim_t pos[D];
+			long pos[D];
 			grid_pos(D, pos, mindelta, points[p]);
-			bart_dim_t index = md_calc_offset(D, gridstrs, pos);
+			long index = md_calc_offset(D, gridstrs, pos);
 			assert(index < md_calc_size(D, griddims));
 
 			if (-1 != grid[index]) {
@@ -196,7 +196,7 @@ int poissondisc_mc(int D, int T, int N, int I, float vardens, const float delta[
 
 			if (accept) {
 
-				bart_stride_t off[D];
+				long off[D];
 				for (int ii = 0; ii < D; ii++)
 					off[ii] = MIN(MAX(0, pos[ii] - (patchdims[ii] + 1) / 2), griddims[ii] - patchdims[ii]);
 
@@ -277,7 +277,7 @@ int poissondisc(int D, int N, int I, float vardens, float delta, float points[N]
 
 static void compute_rmatrix(int D, int T, float rmatrix[T][T], const float delta[T], int C, const int nc[T], const int mc[C][T])
 {
-	bart_flags_t processed = 0;
+	unsigned long processed = 0;
 	float density = 0.;
 
 	for (int i = 0; i < T; i++)

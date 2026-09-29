@@ -45,17 +45,17 @@
  * @param istr1
  * @param iptr1
  **/
-void zfmac_gpu_batched_loop(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
+void zfmac_gpu_batched_loop(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
 {
 	assert(4 >= N);
 
-	bart_dim_t todims[N];
-	bart_dim_t tidims1[N];
-	bart_dim_t tidims2[N];
+	long todims[N];
+	long tidims1[N];
+	long tidims2[N];
 
-	bart_stride_t tostrs[N];
-	bart_stride_t tistrs1[N];
-	bart_stride_t tistrs2[N];
+	long tostrs[N];
+	long tistrs1[N];
+	long tistrs2[N];
 
 	md_select_dims(N, MD_BIT(0) | md_nontriv_strides(N, ostr), todims, dims);
 	md_select_dims(N, MD_BIT(0) | md_nontriv_strides(N, istr1), tidims1, dims);
@@ -72,7 +72,7 @@ void zfmac_gpu_batched_loop(int N, const bart_dim_t dims[N], const bart_stride_t
 		assert(tistrs2[i] == istr2[i]);
 	}
 
-	bart_dim_t tdims[3];
+	long tdims[3];
 	md_singleton_dims(3, tdims);
 
 	md_copy_dims(N - 1, tdims, dims + 1);
@@ -97,7 +97,7 @@ void zfmac_gpu_batched_loop(int N, const bart_dim_t dims[N], const bart_stride_t
 }
 
 
-void zfmac_gpu_unfold(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
+void zfmac_gpu_unfold(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
 {
 	assert(3 >= N);
 	assert((optr != iptr1) ||  (md_check_equal_dims(N, ostr, istr1, md_nontriv_dims(N, dims))));
@@ -130,17 +130,17 @@ void zfmac_gpu_unfold(int N, const bart_dim_t dims[N], const bart_stride_t ostr[
  * @param istr1
  * @param iptr1
  **/
-void zfmacc_gpu_batched_loop(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
+void zfmacc_gpu_batched_loop(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
 {
 	assert(4 >= N);
 
-	bart_dim_t todims[N];
-	bart_dim_t tidims1[N];
-	bart_dim_t tidims2[N];
+	long todims[N];
+	long tidims1[N];
+	long tidims2[N];
 
-	bart_stride_t tostrs[N];
-	bart_stride_t tistrs1[N];
-	bart_stride_t tistrs2[N];
+	long tostrs[N];
+	long tistrs1[N];
+	long tistrs2[N];
 
 	md_select_dims(N, MD_BIT(0) | md_nontriv_strides(N, ostr), todims, dims);
 	md_select_dims(N, MD_BIT(0) | md_nontriv_strides(N, istr1), tidims1, dims);
@@ -157,7 +157,7 @@ void zfmacc_gpu_batched_loop(int N, const bart_dim_t dims[N], const bart_stride_
 		assert(tistrs2[i] == istr2[i]);
 	}
 
-	bart_dim_t tdims[3];
+	long tdims[3];
 	md_singleton_dims(3, tdims);
 
 	md_copy_dims(N - 1, tdims, dims + 1);
@@ -180,7 +180,7 @@ void zfmacc_gpu_batched_loop(int N, const bart_dim_t dims[N], const bart_stride_
 #endif
 }
 
-void zfmacc_gpu_unfold(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
+void zfmacc_gpu_unfold(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
 {
 	assert(3 >= N);
 	assert((optr != iptr1) ||  (md_check_equal_dims(N, ostr, istr1, md_nontriv_dims(N, dims))));
@@ -200,7 +200,7 @@ void zfmacc_gpu_unfold(int N, const bart_dim_t dims[N], const bart_stride_t ostr
  ****************************************************************************************************/
 
 
-void fmac_gpu_unfold(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], float* optr, const bart_stride_t istr1[N], const float* iptr1, const bart_stride_t istr2[N], const float* iptr2)
+void fmac_gpu_unfold(int N, const long dims[N], const long ostr[N], float* optr, const long istr1[N], const float* iptr1, const long istr2[N], const float* iptr2)
 {
 	assert(3 >= N);
 	assert((optr != iptr1) ||  (md_check_equal_dims(N, ostr, istr1, md_nontriv_dims(N, dims))));
@@ -233,7 +233,7 @@ void fmac_gpu_unfold(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N
  * @param istr1
  * @param iptr1
  **/
-void add_gpu_unfold(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], float* optr, const bart_stride_t istr1[N], const float* iptr1, const bart_stride_t istr2[N], const float* iptr2)
+void add_gpu_unfold(int N, const long dims[N], const long ostr[N], float* optr, const long istr1[N], const float* iptr1, const long istr2[N], const float* iptr2)
 {
 	assert(3 >= N);
 	assert((optr != iptr1) ||  (md_check_equal_dims(N, ostr, istr1, md_nontriv_dims(N, dims))));
@@ -267,7 +267,7 @@ void add_gpu_unfold(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N]
  * @param istr1
  * @param iptr1
  **/
-void zadd_gpu_unfold(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
+void zadd_gpu_unfold(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
 {
 	assert(3 >= N);
 	assert((optr != iptr1) ||  (md_check_equal_dims(N, ostr, istr1, md_nontriv_dims(N, dims))));
@@ -301,7 +301,7 @@ void zadd_gpu_unfold(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N
  * @param istr1
  * @param iptr1
  **/
-void mul_gpu_unfold(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], float* optr, const bart_stride_t istr1[N], const float* iptr1, const bart_stride_t istr2[N], const float* iptr2)
+void mul_gpu_unfold(int N, const long dims[N], const long ostr[N], float* optr, const long istr1[N], const float* iptr1, const long istr2[N], const float* iptr2)
 {
 	assert(3 >= N);
 	assert((optr != iptr1) ||  (md_check_equal_dims(N, ostr, istr1, md_nontriv_dims(N, dims))));
@@ -335,7 +335,7 @@ void mul_gpu_unfold(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N]
  * @param istr1
  * @param iptr1
  **/
-void zmul_gpu_unfold(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
+void zmul_gpu_unfold(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
 {
 	assert(3 >= N);
 	assert((optr != iptr1) ||  (md_check_equal_dims(N, ostr, istr1, md_nontriv_dims(N, dims))));
@@ -367,7 +367,7 @@ void zmul_gpu_unfold(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N
  * @param istr1
  * @param iptr1
  **/
-void zmulc_gpu_unfold(int N, const bart_dim_t dims[N], const bart_stride_t ostr[N], complex float* optr, const bart_stride_t istr1[N], const complex float* iptr1, const bart_stride_t istr2[N], const complex float* iptr2)
+void zmulc_gpu_unfold(int N, const long dims[N], const long ostr[N], complex float* optr, const long istr1[N], const complex float* iptr1, const long istr2[N], const complex float* iptr2)
 {
 	assert(3 >= N);
 	assert((optr != iptr1) ||  (md_check_equal_dims(N, ostr, istr1, md_nontriv_dims(N, dims))));
@@ -381,7 +381,7 @@ void zmulc_gpu_unfold(int N, const bart_dim_t dims[N], const bart_stride_t ostr[
 }
 
 
-void fmacD_dot(int N, const bart_dim_t dims[__VLA(N)], const bart_stride_t ostr[__VLA(N)], double* optr, const bart_stride_t istr1[__VLA(N)], const float* iptr1, const bart_stride_t istr2[__VLA(N)], const float* iptr2)
+void fmacD_dot(int N, const long dims[__VLA(N)], const long ostr[__VLA(N)], double* optr, const long istr1[__VLA(N)], const float* iptr1, const long istr2[__VLA(N)], const float* iptr2)
 {
 	assert(1 == N);
 	assert(0 == ostr[0]);
@@ -397,14 +397,14 @@ void fmacD_dot(int N, const bart_dim_t dims[__VLA(N)], const bart_stride_t ostr[
 #endif
 
 	double ret = 0.;
-	for (bart_dim_t i = 0; i < dims[0]; i++)
+	for (long i = 0; i < dims[0]; i++)
 		ret += iptr1[i] * iptr2[i];
 
 	optr[0] += ret;
 }
 
 
-void zfmaccD_dot(int N, const bart_dim_t dims[__VLA(N)], const bart_stride_t ostr[__VLA(N)], complex double* optr, const bart_stride_t istr1[__VLA(N)], const complex float* iptr1, const bart_stride_t istr2[__VLA(N)], const complex float* iptr2)
+void zfmaccD_dot(int N, const long dims[__VLA(N)], const long ostr[__VLA(N)], complex double* optr, const long istr1[__VLA(N)], const complex float* iptr1, const long istr2[__VLA(N)], const complex float* iptr2)
 {
 	assert(1 == N);
 	assert(0 == ostr[0]);
@@ -420,7 +420,7 @@ void zfmaccD_dot(int N, const bart_dim_t dims[__VLA(N)], const bart_stride_t ost
 #endif
 
 	complex double ret = 0.;
-	for (bart_dim_t i = 0; i < dims[0]; i++)
+	for (long i = 0; i < dims[0]; i++)
 		ret += iptr1[i] * conjf(iptr2[i]);
 
 	optr[0] += ret;

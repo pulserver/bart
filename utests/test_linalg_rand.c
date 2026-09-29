@@ -89,14 +89,14 @@ static bool test_randomized_eig_diag(void)
 UT_REGISTER_TEST(test_randomized_eig_diag);
 
 
-static void svd_lowrank(bart_dim_t M, bart_dim_t N, bart_dim_t K, complex float approx[N][M], const complex float imat[N][M], bool randomized, bart_dim_t p)
+static void svd_lowrank(long M, long N, long K, complex float approx[N][M], const complex float imat[N][M], bool randomized, long p)
 {
-	bart_dim_t Adims[3] = { M, 1, N };
+	long Adims[3] = { M, 1, N };
 	md_copy(3, Adims, approx, imat, CFL_SIZE);
 
-	bart_dim_t Udims[] = { M, M, 1 };
-	bart_dim_t VHdims[] = { 1, N, N };
-	bart_dim_t Sdims[] = { 1, N, 1 };
+	long Udims[] = { M, M, 1 };
+	long VHdims[] = { 1, N, N };
+	long Sdims[] = { 1, N, 1 };
 
 	if (randomized) {
 
@@ -111,7 +111,7 @@ static void svd_lowrank(bart_dim_t M, bart_dim_t N, bart_dim_t K, complex float 
 
 	if (randomized) {
 
-		bart_dim_t Adims[4] = { M, 1, N, K + p };
+		long Adims[4] = { M, 1, N, K + p };
 		const struct linop_s* lop_fmac = linop_fmac_create(4, Adims, MD_BIT(2), MD_BIT(0), MD_BIT(3), imat[0]);
 
 		randomized_svd_block(lop_fmac->forward, lop_fmac->adjoint, 10, M, N, K + p, 0,
@@ -143,10 +143,10 @@ static void svd_lowrank(bart_dim_t M, bart_dim_t N, bart_dim_t K, complex float 
 
 static bool test_randomized_svd_lowrank1(void)
 {
-	bart_dim_t M = 22;
-	bart_dim_t N = 33;
+	long M = 22;
+	long N = 33;
 
-	bart_dim_t Adims[3] = { M, 1, N };
+	long Adims[3] = { M, 1, N };
 
 	complex float* init = md_alloc(3, Adims, CFL_SIZE);
 	md_gaussian_rand(3, Adims, init);
@@ -170,10 +170,10 @@ UT_REGISTER_TEST(test_randomized_svd_lowrank1);
 
 static bool test_randomized_svd_lowrank2(void)
 {
-	bart_dim_t M = 33;
-	bart_dim_t N = 22;
+	long M = 33;
+	long N = 22;
 
-	bart_dim_t Adims[3] = { M, 1, N };
+	long Adims[3] = { M, 1, N };
 
 	complex float* init = md_alloc(3, Adims, CFL_SIZE);
 	md_gaussian_rand(3, Adims, init);
@@ -195,12 +195,12 @@ static bool test_randomized_svd_lowrank2(void)
 UT_REGISTER_TEST(test_randomized_svd_lowrank2);
 
 
-static void normal_lowrank(bart_dim_t M, bart_dim_t N, bart_dim_t K, complex float approx[N][N], const complex float imat[N][M], bool randomized, bart_dim_t p)
+static void normal_lowrank(long M, long N, long K, complex float approx[N][N], const complex float imat[N][M], bool randomized, long p)
 {
-	bart_dim_t AHAdims[3] = { N, 1, N };
+	long AHAdims[3] = { N, 1, N };
 
-	bart_dim_t Udims[] = { N, N, 1 };
-	bart_dim_t Sdims[] = { 1, N, 1 };
+	long Udims[] = { N, N, 1 };
+	long Sdims[] = { 1, N, 1 };
 
 	if (randomized)
 		Udims[1] = K + p;
@@ -211,7 +211,7 @@ static void normal_lowrank(bart_dim_t M, bart_dim_t N, bart_dim_t K, complex flo
 
 	if (randomized) {
 
-		bart_dim_t Adims[4] = { M, 1, N, K + p };
+		long Adims[4] = { M, 1, N, K + p };
 		const struct linop_s* lop_fmac = linop_fmac_create(4, Adims, MD_BIT(2), MD_BIT(0), MD_BIT(3), imat[0]);
 
 		randomized_eig_block(lop_fmac->normal, 10, N, K + p, 0,
@@ -237,7 +237,7 @@ static void normal_lowrank(bart_dim_t M, bart_dim_t N, bart_dim_t K, complex flo
 	md_zmul2(3, Udims, MD_STRIDES(3, Udims, CFL_SIZE), U, MD_STRIDES(3, Udims, CFL_SIZE), U, MD_STRIDES(3, Sdims, CFL_SIZE), sigma);
 
 
-	bart_dim_t UHdims[3] = { 1, Udims[1], N };
+	long UHdims[3] = { 1, Udims[1], N };
 	complex float* UH = md_alloc(3, UHdims, CFL_SIZE);
 	md_transpose(3, 0, 2, UHdims, UH, Udims, U, CFL_SIZE);
 	md_zconj(3, UHdims, UH, UH);
@@ -255,15 +255,15 @@ static void normal_lowrank(bart_dim_t M, bart_dim_t N, bart_dim_t K, complex flo
 
 static bool test_randomized_eig_lowrank1(void)
 {
-	bart_dim_t M = 22;
-	bart_dim_t N = 33;
+	long M = 22;
+	long N = 33;
 
-	bart_dim_t Adims[3] = { M, 1, N };
+	long Adims[3] = { M, 1, N };
 
 	complex float* init = md_alloc(3, Adims, CFL_SIZE);
 	md_gaussian_rand(3, Adims, init);
 
-	bart_dim_t AHAdims[3] = { N, 1, N };
+	long AHAdims[3] = { N, 1, N };
 
 	complex float* mat1 = md_alloc(3, AHAdims, CFL_SIZE);
 	complex float* mat2 = md_alloc(3, AHAdims, CFL_SIZE);
@@ -284,15 +284,15 @@ UT_REGISTER_TEST(test_randomized_eig_lowrank1);
 
 static bool test_randomized_eig_lowrank2(void)
 {
-	bart_dim_t M = 33;
-	bart_dim_t N = 22;
+	long M = 33;
+	long N = 22;
 
-	bart_dim_t Adims[3] = { M, 1, N };
+	long Adims[3] = { M, 1, N };
 
 	complex float* init = md_alloc(3, Adims, CFL_SIZE);
 	md_gaussian_rand(3, Adims, init);
 
-	bart_dim_t AHAdims[3] = { N, 1, N };
+	long AHAdims[3] = { N, 1, N };
 
 	complex float* mat1 = md_alloc(3, AHAdims, CFL_SIZE);
 	complex float* mat2 = md_alloc(3, AHAdims, CFL_SIZE);
@@ -311,15 +311,15 @@ static bool test_randomized_eig_lowrank2(void)
 UT_REGISTER_TEST(test_randomized_eig_lowrank2);
 
 
-static void normal_lowrank_dense(bart_dim_t M, bart_dim_t N, bart_dim_t K, complex float approx[N][N], const complex float imat[N][M], bool randomized, bart_dim_t P)
+static void normal_lowrank_dense(long M, long N, long K, complex float approx[N][N], const complex float imat[N][M], bool randomized, long P)
 {
 	complex float (*AHA)[N][N] = md_alloc(2, MD_DIMS(N, N), CFL_SIZE);
 	md_ztenmulc(3, MD_DIMS(1, N, N), &(*AHA)[0][0], MD_DIMS(M, 1, N), (complex float*)imat, MD_DIMS(M, N, 1), (complex float*)imat);
 
-	bart_dim_t AHAdims[3] = { N, 1, N };
+	long AHAdims[3] = { N, 1, N };
 
-	bart_dim_t Udims[] = { N, N, 1 };
-	bart_dim_t Sdims[] = { 1, N, 1 };
+	long Udims[] = { N, N, 1 };
+	long Sdims[] = { 1, N, 1 };
 
 	if (randomized)
 		Udims[1] = K;
@@ -346,7 +346,7 @@ static void normal_lowrank_dense(bart_dim_t M, bart_dim_t N, bart_dim_t K, compl
 	md_zmul2(3, Udims, MD_STRIDES(3, Udims, CFL_SIZE), U, MD_STRIDES(3, Udims, CFL_SIZE), U, MD_STRIDES(3, Sdims, CFL_SIZE), sigma);
 
 
-	bart_dim_t UHdims[3] = { 1, Udims[1], N };
+	long UHdims[3] = { 1, Udims[1], N };
 	complex float* UH = md_alloc(3, UHdims, CFL_SIZE);
 	md_transpose(3, 0, 2, UHdims, UH, Udims, U, CFL_SIZE);
 	md_zconj(3, UHdims, UH, UH);
@@ -363,15 +363,15 @@ static void normal_lowrank_dense(bart_dim_t M, bart_dim_t N, bart_dim_t K, compl
 
 static bool test_randomized_eig_lowrank1_dense(void)
 {
-	bart_dim_t M = 22;
-	bart_dim_t N = 33;
+	long M = 22;
+	long N = 33;
 
-	bart_dim_t Adims[3] = { M, 1, N };
+	long Adims[3] = { M, 1, N };
 
 	complex float* init = md_alloc(3, Adims, CFL_SIZE);
 	md_gaussian_rand(3, Adims, init);
 
-	bart_dim_t AHAdims[3] = { N, 1, N };
+	long AHAdims[3] = { N, 1, N };
 
 	complex float* mat1 = md_alloc(3, AHAdims, CFL_SIZE);
 	complex float* mat2 = md_alloc(3, AHAdims, CFL_SIZE);
@@ -407,15 +407,15 @@ static void debug_matrix(int M, int N, const complex float mat[N][M])
 
 static bool test_randomized_eig_lowrank2_dense(void)
 {
-	bart_dim_t M = 14;
-	bart_dim_t N = 14;
+	long M = 14;
+	long N = 14;
 
-	bart_dim_t Adims[3] = { M, 1, N };
+	long Adims[3] = { M, 1, N };
 
 	complex float* init = md_alloc(3, Adims, CFL_SIZE);
 	md_gaussian_rand(3, Adims, init);
 
-	bart_dim_t AHAdims[3] = { N, 1, N };
+	long AHAdims[3] = { N, 1, N };
 
 	complex float* mat1 = md_alloc(3, AHAdims, CFL_SIZE);
 	complex float* mat2 = md_alloc(3, AHAdims, CFL_SIZE);
@@ -435,14 +435,14 @@ static bool test_randomized_eig_lowrank2_dense(void)
 UT_REGISTER_TEST(test_randomized_eig_lowrank2_dense);
 
 
-static void svd_lowrank_dense(bart_dim_t M, bart_dim_t N, bart_dim_t K, complex float approx[N][M], const complex float imat[N][M], bool randomized, bart_dim_t p)
+static void svd_lowrank_dense(long M, long N, long K, complex float approx[N][M], const complex float imat[N][M], bool randomized, long p)
 {
-	bart_dim_t Adims[3] = { M, 1, N };
+	long Adims[3] = { M, 1, N };
 	md_copy(3, Adims, approx, imat, CFL_SIZE);
 
-	bart_dim_t Udims[] = { M, M, 1 };
-	bart_dim_t VHdims[] = { 1, N, N };
-	bart_dim_t Sdims[] = { 1, N, 1 };
+	long Udims[] = { M, M, 1 };
+	long VHdims[] = { 1, N, N };
+	long Sdims[] = { 1, N, 1 };
 
 	if (randomized) {
 
@@ -485,10 +485,10 @@ static void svd_lowrank_dense(bart_dim_t M, bart_dim_t N, bart_dim_t K, complex 
 
 static bool test_randomized_svd_lowrank1_dense(void)
 {
-	bart_dim_t M = 22;
-	bart_dim_t N = 33;
+	long M = 22;
+	long N = 33;
 
-	bart_dim_t Adims[3] = { M, 1, N };
+	long Adims[3] = { M, 1, N };
 
 	complex float* init = md_alloc(3, Adims, CFL_SIZE);
 	md_gaussian_rand(3, Adims, init);
@@ -512,10 +512,10 @@ UT_REGISTER_TEST(test_randomized_svd_lowrank1_dense);
 
 static bool test_randomized_svd_lowrank2_dense(void)
 {
-	bart_dim_t M = 33;
-	bart_dim_t N = 22;
+	long M = 33;
+	long N = 22;
 
-	bart_dim_t Adims[3] = { M, 1, N };
+	long Adims[3] = { M, 1, N };
 
 	complex float* init = md_alloc(3, Adims, CFL_SIZE);
 	md_gaussian_rand(3, Adims, init);

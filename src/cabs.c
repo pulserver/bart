@@ -41,7 +41,7 @@ int main_cabs(int argc, char* argv[argc])
 
 	num_init();
 
-	bart_dim_t dims[DIMS];
+	long dims[DIMS];
 
 	complex float* idata = load_cfl(in_file, DIMS, dims);
 	complex float* odata = create_cfl(out_file, DIMS, dims);

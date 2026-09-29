@@ -46,16 +46,16 @@ struct lrthresh_data_s {
 	bool noise;
 	int remove_mean; 
 
-	bart_stride_t strs_lev[DIMS];
-	bart_stride_t strs[DIMS];
+	long strs_lev[DIMS];
+	long strs[DIMS];
 
-	bart_dim_t dims_decom[DIMS];
-	bart_dim_t dims[DIMS];
+	long dims_decom[DIMS];
+	long dims[DIMS];
 
-	bart_flags_t mflags;
-	bart_flags_t flags;
-	bart_dim_t levels;
-	bart_dim_t blkdims[MAX_LEV][DIMS];
+	unsigned long mflags;
+	unsigned long flags;
+	long levels;
+	long blkdims[MAX_LEV][DIMS];
 
 	bool overlapping_blocks;
 };
@@ -64,7 +64,7 @@ static DEF_TYPEID(lrthresh_data_s);
 
 
 
-static struct lrthresh_data_s* lrthresh_create_data(const bart_dim_t dims_decom[DIMS], bool randshift, bart_flags_t mflags, const bart_dim_t blkdims[MAX_LEV][DIMS], float lambda, bool noise, int remove_mean, bool overlapping_blocks);
+static struct lrthresh_data_s* lrthresh_create_data(const long dims_decom[DIMS], bool randshift, unsigned long mflags, const long blkdims[MAX_LEV][DIMS], float lambda, bool noise, int remove_mean, bool overlapping_blocks);
 static void lrthresh_free_data(const operator_data_t* data);
 static void lrthresh_apply(const operator_data_t* _data, float lambda, complex float* dst, const complex float* src);
 
@@ -79,7 +79,7 @@ static void lrthresh_apply(const operator_data_t* _data, float lambda, complex f
  * @param blkdims - contains block dimensions for all levels
  *
  */
-const struct operator_p_s* lrthresh_create(const bart_dim_t dims_lev[DIMS], bool randshift, bart_flags_t mflags, const bart_dim_t blkdims[MAX_LEV][DIMS], float lambda, bool noise, int remove_mean, bool overlapping_blocks)
+const struct operator_p_s* lrthresh_create(const long dims_lev[DIMS], bool randshift, unsigned long mflags, const long blkdims[MAX_LEV][DIMS], float lambda, bool noise, int remove_mean, bool overlapping_blocks)
 {
 	struct lrthresh_data_s* data = lrthresh_create_data(dims_lev, randshift, mflags, blkdims, lambda, noise, remove_mean, overlapping_blocks);
 
@@ -97,7 +97,7 @@ const struct operator_p_s* lrthresh_create(const bart_dim_t dims_lev[DIMS], bool
  * @param blkdims - contains block dimensions for all levels
  *
  */
-static struct lrthresh_data_s* lrthresh_create_data(const bart_dim_t dims_decom[DIMS], bool randshift, bart_flags_t mflags, const bart_dim_t blkdims[MAX_LEV][DIMS], float lambda, bool noise, int remove_mean, bool overlapping_blocks)
+static struct lrthresh_data_s* lrthresh_create_data(const long dims_decom[DIMS], bool randshift, unsigned long mflags, const long blkdims[MAX_LEV][DIMS], float lambda, bool noise, int remove_mean, bool overlapping_blocks)
 {
 	PTR_ALLOC(struct lrthresh_data_s, data);
 	SET_TYPEID(lrthresh_data_s, data);
@@ -120,7 +120,7 @@ static struct lrthresh_data_s* lrthresh_create_data(const bart_dim_t dims_decom[
 	md_calc_strides(DIMS, data->strs, data->dims, CFL_SIZE);
 
 	// blkdims
-	for(bart_dim_t l = 0; l < data->levels; l++)
+	for(long l = 0; l < data->levels; l++)
 		md_copy_dims(DIMS, data->blkdims[l], blkdims[l]);
 
 	return PTR_PASS(data);
@@ -165,7 +165,7 @@ static void lrthresh_apply(const operator_data_t* _data, float mu, complex float
 
 	float lambda = mu * data->lambda;
 
-	bart_stride_t strs1[DIMS];
+	long strs1[DIMS];
 	md_calc_strides(DIMS, strs1, data->dims_decom, 1);
 
 //#pragma omp parallel for
@@ -174,11 +174,11 @@ static void lrthresh_apply(const operator_data_t* _data, float mu, complex float
 		complex float* dstl = dst + l * strs1[LEVEL_DIM];
 		const complex float* srcl = src + l * strs1[LEVEL_DIM];
 
-		bart_dim_t blkdims[DIMS];
-		bart_dim_t shifts[DIMS];
-		bart_dim_t unshifts[DIMS];
-		bart_dim_t zpad_dims[DIMS];
-		bart_dim_t M = 1;
+		long blkdims[DIMS];
+		long shifts[DIMS];
+		long unshifts[DIMS];
+		long zpad_dims[DIMS];
+		long M = 1;
 
 		for (int i = 0; i < DIMS; i++) {
 
@@ -197,13 +197,13 @@ static void lrthresh_apply(const operator_data_t* _data, float mu, complex float
 			unshifts[i] = -shifts[i];
 		}
 
-		bart_stride_t zpad_strs[DIMS];
+		long zpad_strs[DIMS];
 		md_calc_strides(DIMS, zpad_strs, zpad_dims, CFL_SIZE);
 
-		bart_dim_t blk_size = md_calc_size(DIMS, blkdims);
-		bart_dim_t img_size = md_calc_size(DIMS, zpad_dims);
-		bart_dim_t N = blk_size / M;
-		bart_dim_t B = img_size / blk_size;
+		long blk_size = md_calc_size(DIMS, blkdims);
+		long img_size = md_calc_size(DIMS, zpad_dims);
+		long N = blk_size / M;
+		long B = img_size / blk_size;
 
 		if (data->noise && (l == data->levels - 1)) {
 
@@ -220,7 +220,7 @@ static void lrthresh_apply(const operator_data_t* _data, float mu, complex float
 		md_circ_shift(DIMS, zpad_dims, shifts, tmp, tmp, CFL_SIZE);
 
 
-		bart_dim_t mat_dims[2];
+		long mat_dims[2];
 
 		(data->overlapping_blocks ? casorati_dims : basorati_dims)(DIMS, mat_dims, blkdims, zpad_dims);
 
@@ -230,8 +230,8 @@ static void lrthresh_apply(const operator_data_t* _data, float mu, complex float
 		// Reshape image into a blk_size x number of blocks matrix
 		(data->overlapping_blocks ? casorati_matrix : basorati_matrix)(DIMS, blkdims, mat_dims, tmp_mat, zpad_dims, zpad_strs, tmp);
 
-		bart_dim_t num_blocks = mat_dims[1];
-		bart_dim_t mat2_dims[2] = { mat_dims[0], mat_dims[1] };
+		long num_blocks = mat_dims[1];
+		long mat2_dims[2] = { mat_dims[0], mat_dims[1] };
 
 		// FIXME: casorati and basorati are transposes of each other
 		if (data->overlapping_blocks) {
@@ -249,7 +249,7 @@ static void lrthresh_apply(const operator_data_t* _data, float mu, complex float
 		}
 
 
-		debug_printf(DP_DEBUG4, "M=%" PRId64 ", N=%" PRId64 ", B=%" PRId64 ", num_blocks=%" PRId64 ", img_size=%" PRId64 ", blk_size=%" PRId64 "\n", M, N, B, num_blocks, img_size, blk_size);
+		debug_printf(DP_DEBUG4, "M=%ld, N=%ld, B=%ld, num_blocks=%ld, img_size=%ld, blk_size=%ld\n", M, N, B, num_blocks, img_size, blk_size);
 
 		batch_svthresh(M, N, num_blocks, lambda * GWIDTH(M, N, B), *(complex float (*)[mat2_dims[1]][M][N])tmp_mat2);
 		//	for ( int b = 0; b < mat_dims[1]; b++ )
@@ -284,7 +284,7 @@ float lrnucnorm(const struct operator_p_s* op, const complex float* src)
 {
 	auto data = CAST_DOWN(lrthresh_data_s, operator_p_get_data(op));
 
-	bart_stride_t strs1[DIMS];
+	long strs1[DIMS];
 	md_calc_strides(DIMS, strs1, data->dims_decom, 1);
 	float nnorm = 0.;
 
@@ -293,8 +293,8 @@ float lrnucnorm(const struct operator_p_s* op, const complex float* src)
 
 		const complex float* srcl = src + l * strs1[LEVEL_DIM];
 
-		bart_dim_t blkdims[DIMS];
-		bart_dim_t blksize = 1;
+		long blkdims[DIMS];
+		long blksize = 1;
 
 		for (int i = 0; i < DIMS; i++) {
 
@@ -304,7 +304,7 @@ float lrnucnorm(const struct operator_p_s* op, const complex float* src)
 
 		if (1 == blksize) {
 
-			for (bart_dim_t j = 0; j < md_calc_size(DIMS, data->dims); j++)
+			for (long j = 0; j < md_calc_size(DIMS, data->dims); j++)
 				nnorm += 2 * cabsf(srcl[j]);
 				
 			continue;
@@ -328,7 +328,7 @@ float lrnucnorm(const struct operator_p_s* op, const complex float* src)
 }
 
 
-static void llr_blkdims0(bart_dim_t blkdims[DIMS], bart_flags_t flags, const bart_dim_t idims[DIMS], int llrblk)
+static void llr_blkdims0(long blkdims[DIMS], unsigned long flags, const long idims[DIMS], int llrblk)
 {
 	md_copy_dims(DIMS, blkdims, idims);
 
@@ -359,10 +359,10 @@ static void llr_blkdims0(bart_dim_t blkdims[DIMS], bart_flags_t flags, const bar
  *
  * returns number of levels
  */
-int multilr_blkdims(bart_dim_t blkdims[MAX_LEV][DIMS], bart_flags_t flags, const bart_dim_t idims[DIMS], int blkskip, int initblk)
+int multilr_blkdims(long blkdims[MAX_LEV][DIMS], unsigned long flags, const long idims[DIMS], int blkskip, int initblk)
 {
 	// Multiscale low rank block sizes
-	bart_dim_t tmp_block[DIMS];
+	long tmp_block[DIMS];
 	llr_blkdims0(tmp_block, flags, idims, initblk);
 
 	bool done;
@@ -396,7 +396,7 @@ int multilr_blkdims(bart_dim_t blkdims[MAX_LEV][DIMS], bart_flags_t flags, const
 
 
 
-void add_lrnoiseblk(int* levels, bart_dim_t blkdims[MAX_LEV][DIMS], const bart_dim_t idims[DIMS])
+void add_lrnoiseblk(int* levels, long blkdims[MAX_LEV][DIMS], const long idims[DIMS])
 {
 	levels[0]++;
 
@@ -416,7 +416,7 @@ void add_lrnoiseblk(int* levels, bart_dim_t blkdims[MAX_LEV][DIMS], const bart_d
  *
  * returns number of levels = 1
  */
-int llr_blkdims(bart_dim_t blkdims[MAX_LEV][DIMS], bart_flags_t flags, const bart_dim_t idims[DIMS], int llrblk)
+int llr_blkdims(long blkdims[MAX_LEV][DIMS], unsigned long flags, const long idims[DIMS], int llrblk)
 {
 	llr_blkdims0(blkdims[0], flags, idims, llrblk);
 	return 1;
@@ -432,7 +432,7 @@ int llr_blkdims(bart_dim_t blkdims[MAX_LEV][DIMS], bart_flags_t flags, const bar
  *
  * returns number of levels = 2
  */
-int ls_blkdims(bart_dim_t blkdims[MAX_LEV][DIMS], const bart_dim_t idims[DIMS])
+int ls_blkdims(long blkdims[MAX_LEV][DIMS], const long idims[DIMS])
 {
 	for (int i = 0; i < DIMS; i++) {
 

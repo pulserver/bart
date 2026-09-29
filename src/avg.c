@@ -27,7 +27,7 @@ static const char help_str[] = "Calculates (weighted) average along dimensions s
 
 int main_avg(int argc, char* argv[argc])
 {
-	bart_flags_t flags = 0;
+	unsigned long flags = 0;
 	const char* in_file = NULL;
 	const char* out_file = NULL;
 
@@ -51,10 +51,10 @@ int main_avg(int argc, char* argv[argc])
 
 	int N = DIMS;
 
-	bart_dim_t idims[N];
+	long idims[N];
 	complex float* data = load_cfl(in_file, N, idims);
 
-	bart_dim_t odims[N];
+	long odims[N];
 	md_select_dims(N, ~flags, odims, idims);
 
 	complex float* out = create_cfl(out_file, N, odims);

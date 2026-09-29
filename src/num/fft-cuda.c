@@ -22,7 +22,7 @@
 #include "num/gpuops.h"
 
 #ifndef CFL_SIZE
-#define CFL_SIZE (bart_stride_t)sizeof(complex float)
+#define CFL_SIZE (long)sizeof(complex float)
 #endif
 
 struct fft_cuda_plan_s {
@@ -35,21 +35,21 @@ struct fft_cuda_plan_s {
 
 	bool backwards;
 
-	bart_dim_t batch;
-	bart_dim_t idist;
-	bart_dim_t odist;
+	long batch;
+	long idist;
+	long odist;
 
 	int D;
-	const bart_dim_t* dims;
-	const bart_stride_t* ostrs;
-	const bart_stride_t* istrs;
+	const long* dims;
+	const long* ostrs;
+	const long* istrs;
 };
 
 struct iovec {
 
-	bart_dim_t n;
-	bart_dim_t is;
-	bart_dim_t os;
+	long n;
+	long is;
+	long os;
 };
 
 static const char* cufft_error_string[] = {
@@ -85,7 +85,7 @@ static void cufft_error(const char* file, int line, enum cufftResult_t code)
 
 
 // detect if flags has blocks of 1's separated by 0's
-static bool noncontiguous_flags(int D, bart_flags_t flags)
+static bool noncontiguous_flags(int D, unsigned long flags)
 {
 	bool o = false;
 	bool z = false;
@@ -108,7 +108,7 @@ static bool noncontiguous_flags(int D, bart_flags_t flags)
 }
 
 
-static struct fft_cuda_plan_s* fft_cuda_plan0(int D, const bart_dim_t dimensions[D], bart_flags_t flags, const bart_stride_t ostrides[D], const bart_stride_t istrides[D], bool backwards)
+static struct fft_cuda_plan_s* fft_cuda_plan0(int D, const long dimensions[D], unsigned long flags, const long ostrides[D], const long istrides[D], bool backwards)
 {
 	// TODO: This is not optimal, as it will often create separate fft's where they
 	// are not needed. And since we compute blocks, we could also recurse
@@ -169,20 +169,20 @@ static struct fft_cuda_plan_s* fft_cuda_plan0(int D, const bart_dim_t dimensions
 	int cuiemb[k];
 	int cuoemb[k];
 
-	bart_dim_t batchdims[l];
-	bart_dim_t batchistr[l];
-	bart_dim_t batchostr[l];
+	long batchdims[l];
+	long batchistr[l];
+	long batchostr[l];
 
-	int lis = checked_int(dims[0].is);
-	int los = checked_int(dims[0].os);
+	int lis = dims[0].is;
+	int los = dims[0].os;
 	int idist;
 	int odist;
 	int cubs = 1;
 	int bi;
 	int bo;
 
-	int istride = checked_int(dims[0].is);
-	int ostride = checked_int(dims[0].os);
+	int istride = dims[0].is;
+	int ostride = dims[0].os;
 
 	if (k > 3)
 		goto errout;
@@ -192,12 +192,12 @@ static struct fft_cuda_plan_s* fft_cuda_plan0(int D, const bart_dim_t dimensions
 		// assert(dims[i].is == lis);
 		// assert(dims[i].os == los);
 
-		cudims[k - 1 - i] = checked_int(dims[i].n);
-		cuiemb[k - 1 - i] = checked_int(dims[i].n);
-		cuoemb[k - 1 - i] = checked_int(dims[i].n);
+		cudims[k - 1 - i] = dims[i].n;
+		cuiemb[k - 1 - i] = dims[i].n;
+		cuoemb[k - 1 - i] = dims[i].n;
 
-		lis = checked_int(dims[i].n * dims[i].is);
-		los = checked_int(dims[i].n * dims[i].os);
+		lis = dims[i].n * dims[i].is;
+		los = dims[i].n * dims[i].os;
 	}
 
 	for (int i = 0; i < l; i++) {
@@ -222,9 +222,9 @@ static struct fft_cuda_plan_s* fft_cuda_plan0(int D, const bart_dim_t dimensions
 
 	if (bi > 0) {
 
-		idist = checked_int(hmdims[0].is);
-		odist = checked_int(hmdims[0].os);
-		cubs = checked_int(md_calc_size(bi, batchdims));
+		idist = hmdims[0].is;
+		odist = hmdims[0].os;
+		cubs = md_calc_size(bi, batchdims);
 	}
 
 	if (l != bi) {
@@ -261,7 +261,7 @@ errout:
 }
 
 
-static bart_flags_t find_msb(bart_flags_t flags)
+static unsigned long find_msb(unsigned long flags)
 {
 	for (int i = 1; i < CHAR_BIT * (int)sizeof(flags); i *= 2)
 		flags |= flags >> i;
@@ -270,7 +270,7 @@ static bart_flags_t find_msb(bart_flags_t flags)
 }
 
 
-struct fft_cuda_plan_s* fft_cuda_plan(int D, const bart_dim_t dimensions[D], bart_flags_t flags, const bart_stride_t ostrides[D], const bart_stride_t istrides[D], bool backwards)
+struct fft_cuda_plan_s* fft_cuda_plan(int D, const long dimensions[D], unsigned long flags, const long ostrides[D], const long istrides[D], bool backwards)
 {
 	assert(0u != flags);
 	assert(0u == (flags & ~md_nontriv_dims(D, dimensions)));
@@ -282,9 +282,9 @@ struct fft_cuda_plan_s* fft_cuda_plan(int D, const bart_dim_t dimensions[D], bar
 
 	if (flags != md_nontriv_dims(D, dimensions)) {
 
-		bart_dim_t dims[D];
-		bart_stride_t ostrs[D];
-		bart_stride_t istrs[D];
+		long dims[D];
+		long ostrs[D];
+		long istrs[D];
 
 		md_select_dims(D, flags, dims, dimensions);
 		md_select_strides(D, flags, ostrs, ostrides);
@@ -300,14 +300,14 @@ struct fft_cuda_plan_s* fft_cuda_plan(int D, const bart_dim_t dimensions[D], bar
 		md_select_strides(D, ~flags, istrs, istrides);
 
 		plan->D = D;
-		plan->dims = ARR_CLONE(bart_dim_t[D], dims);
-		plan->ostrs = ARR_CLONE(bart_dim_t[D], ostrs);
-		plan->istrs = ARR_CLONE(bart_dim_t[D], istrs);
+		plan->dims = ARR_CLONE(long[D], dims);
+		plan->ostrs = ARR_CLONE(long[D], ostrs);
+		plan->istrs = ARR_CLONE(long[D], istrs);
 
 		return plan;
 	}
 
-	bart_flags_t msb = find_msb(flags);
+	unsigned long msb = find_msb(flags);
 
 	if (flags & msb) {
 
@@ -363,7 +363,7 @@ static void fft_cuda_exec_int(struct fft_cuda_plan_s* cuplan, complex float* dst
 	size_t workspace_size = cuplan->workspace_size;
 	cufftHandle cufft = cuplan->cufft;
 
-	void* workspace = md_alloc_gpu(1, MD_DIMS(1), workspace_size);
+	void* workspace = md_alloc_gpu(1, MAKE_ARRAY(1l), workspace_size);
 
 	CUDA_ERROR_PTR(dst, src, workspace);
 
@@ -387,13 +387,13 @@ static void fft_cuda_exec_int(struct fft_cuda_plan_s* cuplan, complex float* dst
 
 void fft_cuda_exec(struct fft_cuda_plan_s* cuplan, complex float* dst, const complex float* src)
 {
-	bart_dim_t pos[cuplan->D?:1];
+	long pos[cuplan->D?:1];
 	md_singleton_strides(cuplan->D, pos);
 
 	do {
 		fft_cuda_exec_int(cuplan, &MD_ACCESS(cuplan->D, cuplan->ostrs, pos, dst), &MD_ACCESS(cuplan->D, cuplan->istrs, pos, src));
 
-	} while (md_next(cuplan->D, cuplan->dims, ~UINT64_C(0), pos));
+	} while (md_next(cuplan->D, cuplan->dims, ~0UL, pos));
 }
 
 #endif // USE_CUDA

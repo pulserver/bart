@@ -1,7 +1,6 @@
 #ifndef _NN_WEIGHTS_H
 #define _NN_WEIGHTS_H
 
-#include "misc/dimtypes.h"
 #include "nn/nn.h"
 
 struct iovec_s;
@@ -15,7 +14,7 @@ struct nn_weights_s {
 	_Complex float** tensors;
 };
 
-const struct nn_weights_s* create_multi_md_array(int N, int D[N], const bart_dim_t* dimensions[N], const _Complex float* x[N], size_t sizes[N]);
+const struct nn_weights_s* create_multi_md_array(int N, int D[N], const long* dimensions[N], const _Complex float* x[N], size_t sizes[N]);
 void free_multi_md_array(const struct nn_weights_s* array);
 
 typedef struct nn_weights_s* nn_weights_t;

@@ -37,8 +37,8 @@ int main_estvar(int argc, char* argv[argc])
 		ARG_INFILE(true, &ksp_file, "kspace"),
 	};
 
-	bart_dim_t calsize_dims[3]  = { 24, 24, 24 };
-	bart_dim_t kernel_dims[3]   = {  6,  6,  6 };
+	long calsize_dims[3]  = { 24, 24, 24 };
+	long kernel_dims[3]   = {  6,  6,  6 };
 
 	const struct opt_s opts[] = {
 
@@ -53,7 +53,7 @@ int main_estvar(int argc, char* argv[argc])
 	num_init();
 
 	int N = DIMS;
-	bart_dim_t kspace_dims[N];
+	long kspace_dims[N];
 
 	complex float* kspace = load_cfl(ksp_file, N, kspace_dims);
 

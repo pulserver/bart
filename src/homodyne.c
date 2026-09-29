@@ -35,8 +35,8 @@ struct wdata {
 
 	float frac;
 	int pfdim;
-	bart_dim_t wdims[DIMS];
-	bart_stride_t wstrs[DIMS];
+	long wdims[DIMS];
+	long wstrs[DIMS];
 	complex float* weights;
 };
 
@@ -52,7 +52,7 @@ struct wdata {
  * The ramp portion is given by 2*(alpha - 1) / (end - start) * (p - end) + alpha
  * alpha = 0 is a full ramp, alpha = 1 is a horizontal line
  */
-static float homodyne_filter(int N, float frac, float alpha, bool clear, bart_dim_t p)
+static float homodyne_filter(int N, float frac, float alpha, bool clear, long p)
 {
 	if (frac <= 0.5)
 		return 1.;
@@ -73,10 +73,10 @@ static float homodyne_filter(int N, float frac, float alpha, bool clear, bart_di
 
 
 
-static complex float* estimate_phase(struct wdata wdata, bart_flags_t flags,
-		int N, const bart_dim_t dims[N], const complex float* idata, bool center_fft)
+static complex float* estimate_phase(struct wdata wdata, unsigned long flags,
+		int N, const long dims[N], const complex float* idata, bool center_fft)
 {
-	bart_dim_t cdims[N];
+	long cdims[N];
 	md_copy_dims(N, cdims, dims);
 	// cdims[0] = cdims[1] = cdims[2] = 24;
 	cdims[wdata.pfdim] = (wdata.frac - 0.5) * (double)dims[wdata.pfdim];
@@ -94,9 +94,9 @@ static complex float* estimate_phase(struct wdata wdata, bart_flags_t flags,
 	return phase;
 }
 
-static void homodyne(struct wdata wdata, bart_flags_t flags, int N, const bart_dim_t dims[N],
-		const bart_stride_t strs[N], complex float* data, const complex float* idata,
-		const bart_stride_t pstrs[N], const complex float* phase, bool center_fft)
+static void homodyne(struct wdata wdata, unsigned long flags, int N, const long dims[N],
+		const long strs[N], complex float* data, const complex float* idata,
+		const long pstrs[N], const complex float* phase, bool center_fft)
 {
 	md_zmul2(N, dims, strs, data, strs, idata, wdata.wstrs, wdata.weights);
 	(center_fft ? ifftuc : ifftu)(N, dims, flags, data, data);
@@ -144,7 +144,7 @@ int main_homodyne(int argc, char* argv[argc])
 
 
 	const int N = DIMS;
-	bart_dim_t dims[N];
+	long dims[N];
 	complex float* idata = load_cfl(in_file, N, dims);
 	complex float* data = create_cfl(out_file, N, dims);
 
@@ -157,7 +157,7 @@ int main_homodyne(int argc, char* argv[argc])
 	}
 
 
-	bart_stride_t strs[N];
+	long strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
 	struct wdata wdata;
@@ -167,16 +167,16 @@ int main_homodyne(int argc, char* argv[argc])
 	md_calc_strides(N, wdata.wstrs, wdata.wdims, CFL_SIZE);
 	wdata.weights = md_alloc(N, wdata.wdims, CFL_SIZE);
 
-	NESTED(void, comp_weights, (const bart_dim_t pos[]))
+	NESTED(void, comp_weights, (const long pos[]))
 	{
-		wdata.weights[md_calc_offset(DIMS, wdata.wstrs, pos) / (bart_stride_t)CFL_SIZE]
+		wdata.weights[md_calc_offset(DIMS, wdata.wstrs, pos) / (long)CFL_SIZE]
 			= homodyne_filter((int)wdata.wdims[pfdim], frac, alpha, clear, pos[pfdim]);
 	};
 
 	md_loop(N, wdata.wdims, comp_weights);
 
-	bart_stride_t pstrs[N];
-	bart_dim_t pdims[N];
+	long pstrs[N];
+	long pdims[N];
 	complex float* phase = NULL;
 
 	if (NULL == phase_ref) {

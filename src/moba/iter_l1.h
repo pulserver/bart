@@ -1,5 +1,3 @@
-#include "misc/dimtypes.h"
-
 
 
 struct iter3_irgnm_conf;
@@ -18,12 +16,12 @@ struct mdb_irgnm_l1_conf {
 	float step;
 	float lower_bound;
 	unsigned constrained_maps;
-	bart_flags_t l2flags;
-	bart_flags_t wavflags;
+	unsigned long l2flags;
+	unsigned long wavflags;
 	bool auto_norm;
 	bool no_sens_l2;
 
-	bart_flags_t wav_trans_flags;
+	unsigned long wav_trans_flags;
 	int algo;
 	float rho;
 	struct opt_reg_s* ropts;
@@ -36,8 +34,8 @@ struct mdb_irgnm_l1_conf {
 };
 
 void mdb_irgnm_l1(const struct mdb_irgnm_l1_conf* conf,
-		const bart_dim_t dims[DIMS],
+		const long dims[DIMS],
 		struct nlop_s* nlop,
-		bart_dim_t N, float* dst, float* dst_ref,
-		bart_dim_t M, const float* src);
+		long N, float* dst, float* dst_ref,
+		long M, const float* src);
 

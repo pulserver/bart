@@ -33,10 +33,10 @@ static bool linear_derivative(const struct nlop_s* op)
 	int N_dom = nlop_domain(op)->N;
 	int N_cod = nlop_codomain(op)->N;
 
-	bart_dim_t dims_dom[N_dom];
+	long dims_dom[N_dom];
 	md_copy_dims(N_dom, dims_dom, nlop_domain(op)->dims);
 
-	bart_dim_t dims_cod[N_cod];
+	long dims_cod[N_cod];
 	md_copy_dims(N_cod, dims_cod, nlop_codomain(op)->dims);
 
 	complex float* x0 = md_calloc(N_dom, dims_dom, CFL_SIZE);
@@ -85,10 +85,10 @@ static float nlop_test_derivative_priv(const struct nlop_s* op, const complex fl
 	int N_dom = nlop_domain(op)->N;
 	int N_cod = nlop_codomain(op)->N;
 
-	bart_dim_t dims_dom[N_dom];
+	long dims_dom[N_dom];
 	md_copy_dims(N_dom, dims_dom, nlop_domain(op)->dims);
 
-	bart_dim_t dims_cod[N_cod];
+	long dims_cod[N_cod];
 	md_copy_dims(N_cod, dims_cod, nlop_codomain(op)->dims);
 
 	complex float* x1 = md_alloc(N_dom, dims_dom, CFL_SIZE);
@@ -211,10 +211,10 @@ static bool nlop_test_derivative_priv_reduce(const struct nlop_s* op, bool lin, 
 	int N_dom = nlop_domain(op)->N;
 	int N_cod = nlop_codomain(op)->N;
 
-	bart_dim_t dims_dom[N_dom];
+	long dims_dom[N_dom];
 	md_copy_dims(N_dom, dims_dom, nlop_domain(op)->dims);
 
-	bart_dim_t dims_cod[N_cod];
+	long dims_cod[N_cod];
 	md_copy_dims(N_cod, dims_cod, nlop_codomain(op)->dims);
 
 	complex float* h = md_alloc(N_dom, dims_dom, CFL_SIZE);

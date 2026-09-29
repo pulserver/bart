@@ -45,8 +45,8 @@ int main_repmat(int argc, char* argv[argc])
 
 	num_init();
 
-	bart_dim_t in_dims[DIMS];
-	bart_dim_t out_dims[DIMS];
+	long in_dims[DIMS];
+	long out_dims[DIMS];
 	
 	complex float* in_data = load_cfl(in_file, DIMS, in_dims);
 
@@ -60,8 +60,8 @@ int main_repmat(int argc, char* argv[argc])
 
 	complex float* out_data = create_cfl(out_file, DIMS, out_dims);
 
-	bart_stride_t in_strs[DIMS];
-	bart_stride_t out_strs[DIMS];
+	long in_strs[DIMS];
+	long out_strs[DIMS];
 	md_calc_strides(DIMS, in_strs, in_dims, CFL_SIZE);
 	md_calc_strides(DIMS, out_strs, out_dims, CFL_SIZE);
 

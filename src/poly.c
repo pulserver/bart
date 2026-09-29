@@ -57,7 +57,7 @@ int main_poly(int argc, char* argv[argc])
 	assert(N + 1 <= L);
 	assert(N + 1 == count);
 
-	bart_dim_t p_dims[] = { [0 ... DIMS - 1] = 1 };
+	long p_dims[] = { [0 ... DIMS - 1] = 1 };
 	p_dims[0] = L;
 
 	complex float* p = create_cfl(out_file, DIMS, p_dims);

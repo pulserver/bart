@@ -17,8 +17,6 @@
 #include <setjmp.h>
 
 #include "misc/nested.h"
-#include "misc/dimtypes.h"
-#include "misc/format.h"
 
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
@@ -83,19 +81,15 @@ extern void warn_nonnull_ptr(void*);
 
 extern int parse_cfl(_Complex float res[1], const char* str);
 extern int parse_double(double res[1], const char* str);
-extern int parse_long(bart_dim_t res[1], const char* str);
+extern int parse_long(long res[1], const char* str);
 extern int parse_longlong(long long res[1], const char* str);
 extern int parse_ulonglong(unsigned long long res[1], const char* str);
 extern int parse_int(int res[1], const char* str);
 #ifndef __cplusplus
-extern noreturn void error(const char* str, ...) __attribute__((format(BART_PRINTF,1,2)));
+extern noreturn void error(const char* str, ...);
 #else
-extern __attribute__((noreturn, format(BART_PRINTF,1,2))) void error(const char* str, ...);
+extern __attribute__((noreturn)) void error(const char* str, ...);
 #endif
-
-// A dimension or stride handed to a library that takes an int (BLAS,
-// LAPACK, cuFFT); an error rather than a truncation when it does not fit.
-extern int checked_int(bart_dim_t x);
 
 
 #ifdef USE_DWARF
@@ -113,12 +107,12 @@ extern struct error_jumper_s error_jumper;	// FIXME should not be extern
 
 extern int error_catcher(int fun(int argc, char* argv[__VLA(argc)]), int argc, char* argv[__VLA(argc)]);
 
-extern int bart_printf(const char* fmt, ...) __attribute__((format(BART_PRINTF,1,2)));
+extern int bart_printf(const char* fmt, ...) __attribute__((format(printf,1,2)));
 
-extern void debug_print_bits(int dblevel, int D, bart_flags_t bitmask);
+extern void debug_print_bits(int dblevel, int D, unsigned long bitmask);
 
-extern void print_dims(int D, const bart_dim_t dims[__VLA(D)]);
-extern void debug_print_dims(int dblevel, int D, const bart_dim_t dims[__VLA(D)]);
+extern void print_dims(int D, const long dims[__VLA(D)]);
+extern void debug_print_dims(int dblevel, int D, const long dims[__VLA(D)]);
 
 #ifdef REDEFINE_PRINTF_FOR_TRACE
 #define debug_print_dims(...) \
@@ -130,7 +124,7 @@ extern void debug_print_dims_trace(const char* func_name,
 				   int line,
 				   int dblevel,
 				   int D,
-				   const bart_dim_t dims[__VLA(D)]);
+				   const long dims[__VLA(D)]);
 
 typedef CLOSURE_TYPE(int, (int a, int b)) quicksort_cmp_t;
 
@@ -148,12 +142,12 @@ extern void quicksort(int N, int ord[__VLA(N)], quicksort_cmp_t cmp);
 extern float quickselect(float *arr, int n, int k);
 extern float quickselect_complex(_Complex float *arr, int n, int k);
 
-extern void print_long(int D, const bart_dim_t arr[__VLA(D)]);
+extern void print_long(int D, const long arr[__VLA(D)]);
 extern void print_float(int D, const float arr[__VLA(D)]);
 extern void print_int(int D, const int arr[__VLA(D)]);
 extern void print_complex(int D, const _Complex float arr[__VLA(D)]);
 
-extern int bitcount(bart_flags_t flags);
+extern int bitcount(unsigned long flags);
 
 extern const char* command_line;
 extern char* stdin_command_line;
@@ -163,14 +157,14 @@ extern void save_command_line(int argc, char* argv[__VLA(argc)]);
 extern bool safe_isnanf(float x);
 extern bool safe_isfinite(float x);
 
-extern bart_dim_t io_calc_size(int D, const bart_dim_t dims[__VLA(D?:1)], size_t size);
+extern long io_calc_size(int D, const long dims[__VLA(D?:1)], size_t size);
 
-extern char* ptr_printf(const char* fmt, ...) __attribute__((format(BART_PRINTF,1,2)));
-extern void ptr_append_printf(const char** prefix, const char* fmt, ...) __attribute__((format(BART_PRINTF,2,3)));
+extern char* ptr_printf(const char* fmt, ...) __attribute__((format(printf,1,2)));
+extern void ptr_append_printf(const char** prefix, const char* fmt, ...);
 extern char* ptr_vprintf(const char* fmt, va_list ap);
-extern char* ptr_print_dims(int D, const bart_dim_t dims[__VLA(D)]);
+extern char* ptr_print_dims(int D, const long dims[__VLA(D)]);
 
-extern char* construct_filename(int D, const bart_dim_t loopdims[__VLA(D)], const bart_dim_t pos[__VLA(D)], const char* prefix, const char* ext);
+extern char* construct_filename(int D, const long loopdims[__VLA(D)], const long pos[__VLA(D)], const char* prefix, const char* ext);
 
 
 #define DEG2RAD(d) ((d) * M_PI / 180.)

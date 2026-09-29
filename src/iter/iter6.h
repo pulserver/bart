@@ -2,7 +2,6 @@
 #define _ITER_ITER6_H
 
 
-#include "misc/dimtypes.h"
 #include "iter/italgos.h"
 #include "iter/iter_dump.h"
 #include "iter/batch_gen.h"
@@ -27,8 +26,8 @@ typedef struct iter6_conf_s {
 	const char* history_filename;
 
 	const char* dump_filename;
-	bart_dim_t dump_mod;
-	bart_flags_t dump_flag;
+	long dump_mod;
+	unsigned long dump_flag;
 
 	enum BATCH_GEN_TYPE batchgen_type;
 	unsigned int batch_seed;
@@ -61,7 +60,7 @@ struct iter6_adam_conf {
 
 	iter6_conf super;
 
-	bart_dim_t reset_epoch;
+	long reset_epoch;
 
 	float epsilon;
 	float beta1;
@@ -99,7 +98,7 @@ struct iter3_conf_s;
 struct iter_nlop_s;
 struct nlop_s;
 struct operator_p_s;
-typedef void iter6_f(const iter6_conf* _conf, const struct nlop_s* nlop, bart_dim_t NI, enum IN_TYPE in_type[NI], const struct operator_p_s* prox_ops[NI], float* dst[NI], bart_dim_t NO, enum OUT_TYPE out_type[NO], int batchsize, int numbatches, const struct nlop_s* nlop_batch_gen, struct monitor_iter6_s* monitor);
+typedef void iter6_f(const iter6_conf* _conf, const struct nlop_s* nlop, long NI, enum IN_TYPE in_type[NI], const struct operator_p_s* prox_ops[NI], float* dst[NI], long NO, enum OUT_TYPE out_type[NO], int batchsize, int numbatches, const struct nlop_s* nlop_batch_gen, struct monitor_iter6_s* monitor);
 
 extern iter6_f iter6_adadelta;
 extern iter6_f iter6_adam;

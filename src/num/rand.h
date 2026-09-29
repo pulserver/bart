@@ -1,20 +1,19 @@
 #ifndef _RAND_H
 #define _RAND_H
 
-#include "misc/dimtypes.h"
 #include "misc/dllspec.h"
 #include "misc/cppwrap.h"
 
 
 extern double uniform_rand(void);
 extern _Complex double gaussian_rand(void);
-extern void md_gaussian_rand(int D, const bart_dim_t dims[__VLA(D)], _Complex float* dst);
-extern void md_zgaussian_rand(int D, const bart_dim_t dims[__VLA(D)], _Complex float* dst);
-extern void md_uniform_rand(int D, const bart_dim_t dims[__VLA(D)], _Complex float* dst);
-extern void md_rand_one(int D, const bart_dim_t dims[__VLA(D)], _Complex float* dst, double p);
+extern void md_gaussian_rand(int D, const long dims[__VLA(D)], _Complex float* dst);
+extern void md_zgaussian_rand(int D, const long dims[__VLA(D)], _Complex float* dst);
+extern void md_uniform_rand(int D, const long dims[__VLA(D)], _Complex float* dst);
+extern void md_rand_one(int D, const long dims[__VLA(D)], _Complex float* dst, double p);
 
-extern void gaussian_rand_vec(bart_dim_t N, float* dst);
-extern void uniform_rand_vec(bart_dim_t N, float* dst);
+extern void gaussian_rand_vec(long N, float* dst);
+extern void uniform_rand_vec(long N, float* dst);
 
 BARTLIB_API extern void BARTLIB_CALL num_rand_init(unsigned long long seed);
 

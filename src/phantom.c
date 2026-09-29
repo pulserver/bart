@@ -50,7 +50,7 @@ int main_phantom(int argc, char* argv[argc])
 	const char* traj_file = NULL;
 	bool basis = false;
 
-	bart_dim_t dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	long dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 	dims[0] = 128;
 	dims[1] = 128;
 	dims[2] = 1;
@@ -61,7 +61,7 @@ int main_phantom(int argc, char* argv[argc])
 	float rotation_angle = 0.;
 	int rotation_steps = 1;
 
-	bart_dim_t ellipsoid_center[3] = { -1, -1, -1 };
+	long ellipsoid_center[3] = { -1, -1, -1 };
 	float ellipsoid_axes[3] = { 1, 1, 1 };
 
 	struct coil_opts copts = coil_opts_pha_defaults;
@@ -165,8 +165,8 @@ int main_phantom(int argc, char* argv[argc])
 	enum { D_max = 16 };
 	int D_dim[2];
 
-	bart_dim_t hdims[2][D_max];
-	const bart_dim_t *store_dims[2] = { hdims[0], hdims[1] };
+	long hdims[2][D_max];
+	const long *store_dims[2] = { hdims[0], hdims[1] };
 	complex float* multifile[2];
 
 	if (NULL != file_load) {
@@ -231,8 +231,8 @@ int main_phantom(int argc, char* argv[argc])
 		}
 	}
 
-	bart_dim_t sdims[DIMS];
-	bart_stride_t sstrs[DIMS] = { };
+	long sdims[DIMS];
+	long sstrs[DIMS] = { };
 	complex float* samples = NULL;
 
 	if (NULL != traj_file) {
@@ -354,7 +354,7 @@ int main_phantom(int argc, char* argv[argc])
 
 		if (NULL == samples) {
 
-			bart_dim_t gd = 0 > xdim ? 128 : xdim;
+			long gd = 0 > xdim ? 128 : xdim;
 
 			gopts.dims[0] = gd;
 			gopts.dims[1] = gd;
@@ -366,7 +366,7 @@ int main_phantom(int argc, char* argv[argc])
 			}
 		}
 
-		bart_dim_t gdims[DIMS];
+		long gdims[DIMS];
 		float* grid = compute_grid(DIMS, gdims, &gopts, sdims, samples);
 
 		// prepare sensitivity maps and sensitivity sampling grid
@@ -383,14 +383,14 @@ int main_phantom(int argc, char* argv[argc])
 		cnstr_coils(DIMS, &coptss, false);
 
 		struct grid_opts cgopts = gopts;
-		bart_dim_t stdims[DIMS];
+		long stdims[DIMS];
 		float* straj = create_senstraj(DIMS, stdims, &cgopts, &coptss);
 
 		// prepare phantom
 		struct phantom_opts popts = phantom_opts_defaults;
 		popts.kspace = kspace;
 
-		bart_dim_t stldims[3];
+		long stldims[3];
 		double* model = NULL;
 
 		if (stl_fileextension(stl_file)) {
@@ -416,10 +416,10 @@ int main_phantom(int argc, char* argv[argc])
 		stl_compute_normals(stldims, model);
 		phantom_stl_init(&popts, 3, stldims, model);
 
-		bart_dim_t odims_[DIMS];
+		long odims_[DIMS];
 		complex double* cdout = sample_signal(DIMS, odims_, gdims, grid, stdims, straj, &popts, &coptss);
 
-		bart_dim_t odims[DIMS];
+		long odims[DIMS];
 		md_copy_dims(DIMS, odims, odims_);
 
 		// reshape dims from format [ 1 X Y*Z ... ] to [ X Y Z ... ]
@@ -430,7 +430,7 @@ int main_phantom(int argc, char* argv[argc])
 			odims[2] = gdims[3];
 		}
 
-		assert(md_check_equal_dims(DIMS, odims, dims, ~UINT64_C(0)));
+		assert(md_check_equal_dims(DIMS, odims, dims, ~0UL));
 
 		coptss.dstr(&coptss);
 		popts.dstr(&popts);

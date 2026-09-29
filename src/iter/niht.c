@@ -44,7 +44,7 @@ static void niht_imdom(const struct niht_conf_s* conf,  const struct vec_iter_s*
 	float mu = 1.; // step size
 	int ic = 0; // iteration counter for criterion 3
 	int iter = 0;
-	bart_dim_t N = conf->N;
+	long N = conf->N;
 	
 	float* r = vops->allocate(N);
 	float* g = vops->allocate(N); // negative gradient of ||y - Ax||^2 with non-zero support
@@ -162,8 +162,8 @@ void niht(const struct niht_conf_s* conf, const struct niht_transop* trans,
 	float mu = 1.; // step size
 	int ic = 0; // iteration counter for criterion 3
 	int iter = 0;
-	bart_dim_t N = conf->N;
-	bart_dim_t WN = trans->N;
+	long N = conf->N;
+	long WN = trans->N;
 	
 	float* r = vops->allocate(N);
 	float* g = vops->allocate(N); // negative gradient of ||y - Ax||^2 with non-zero support

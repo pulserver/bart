@@ -37,7 +37,7 @@ int main_pattern(int argc, char* argv[argc])
 		ARG_OUTFILE(true, &pat_file, "pattern"),
 	};
 
-	bart_flags_t flags = COIL_FLAG;
+	unsigned long flags = COIL_FLAG;
 
 	const struct opt_s opts[] = {
 
@@ -49,8 +49,8 @@ int main_pattern(int argc, char* argv[argc])
 	num_init();
 
 	int N = DIMS;
-	bart_dim_t in_dims[N];
-	bart_dim_t out_dims[N];
+	long in_dims[N];
+	long out_dims[N];
 
 	complex float* kspace = load_cfl(ksp_file, N, in_dims);
 

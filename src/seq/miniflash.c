@@ -91,11 +91,11 @@ static int prep_grad_ro_deph(struct grad_trapezoid* grad, const struct seq_confi
 	return 1;
 }
 
-static int prep_grad_phs1_encoding(struct grad_trapezoid* grad, int rew, const bart_dim_t pos[DIMS], const struct seq_config* seq)
+static int prep_grad_phs1_encoding(struct grad_trapezoid* grad, int rew, const long pos[DIMS], const struct seq_config* seq)
 {
 	*grad = (struct grad_trapezoid){ };
 
-	bart_dim_t center = 0.5 * seq->loop_dims[PHS1_DIM];
+	long center = 0.5 * seq->loop_dims[PHS1_DIM];
 
 	double moment = (cartesian_line(pos, seq) - center) / (seq->sys.gamma * seq->geom.fov);
 
@@ -192,7 +192,7 @@ static int prep_grad_sli_reph(struct grad_trapezoid* grad, const struct seq_conf
 
 
 void miniflash_interface_custom(struct seq_config* seq,
-				int nl, const bart_dim_t custom_long[__VLA(nl)],
+				int nl, const long custom_long[__VLA(nl)],
 				int nd, const double custom_double[__VLA(nd)])
 {
 	seq->enc.pe_mode = custom_long[SEQ_UI_IDX_LONG_PE_MODE];
@@ -205,14 +205,14 @@ void miniflash_interface_custom(struct seq_config* seq,
 
 
 void miniflash_interface_custom_back(const struct seq_config* seq,
-				     int nl, bart_dim_t custom_long[__VLA(nl)],
+				     int nl, long custom_long[__VLA(nl)],
 				     int nd, double custom_double[__VLA(nd)])
 {
 	custom_long[SEQ_UI_IDX_LONG_PE_MODE] = seq->enc.pe_mode;;
 	custom_long[SEQ_UI_IDX_LONG_CONTRAST] = seq->phys.contrast;
 	custom_long[SEQ_UI_IDX_LONG_RECO] = CHECKBOX_OFF;
 
-	custom_long[SEQ_UI_IDX_LONG_RF_DURATION_US] = llround(1.E6 * seq->phys.rf_duration);
+	custom_long[SEQ_UI_IDX_LONG_RF_DURATION_US] = lround(1.E6 * seq->phys.rf_duration);
 	custom_double[SEQ_UI_IDX_DOUBLE_BWTP] = seq->phys.bwtp;
 }
 
@@ -255,7 +255,7 @@ void miniflash_minimum_te(const struct seq_config* seq, double* min_te, double* 
 
 	double time = seq->phys.rf_duration / 2. + inter_duration_RF_RO - seq->sys.grad.max_amplitude * seq->sys.grad.inv_slew_rate;
 
-	bart_dim_t echo = 0;
+	long echo = 0;
 
 	time += ro_amp * seq->sys.grad.inv_slew_rate; //FIXME
 	time += ro_time_to_echo(seq);
@@ -270,9 +270,9 @@ void miniflash_minimum_te(const struct seq_config* seq, double* min_te, double* 
 	fill_te[0] = seq->phys.te - min_te[0];
 }
 
-static bart_dim_t miniflash_ex_calls(const struct seq_config* seq)
+static long miniflash_ex_calls(const struct seq_config* seq)
 {
-	bart_dim_t dims[DIMS];
+	long dims[DIMS];
 	md_select_dims(DIMS, SEQ_FLAGS & ~(COEFF_FLAG|COEFF2_FLAG), dims, seq->loop_dims);
 
 	return md_calc_size(DIMS, dims);
@@ -298,7 +298,7 @@ int miniflash_sample_rf_shapes(int N, struct rf_shape pulse[N], const struct seq
 
 		const float alpha = 0.5;
 
-		pulse[idx].samples = llround(1.E6 * seq->phys.rf_duration);
+		pulse[idx].samples = lround(1.E6 * seq->phys.rf_duration);
 
 		if (SEQ_MAX_RF_SAMPLES < pulse[idx].samples)
 			return -1;

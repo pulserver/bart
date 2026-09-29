@@ -75,14 +75,14 @@ __device__ static cuDoubleComplex gaussian_stable_rand(struct philox_state state
 }
 
 
-__global__ void kern_gaussian_rand(bart_dim_t N, cuFloatComplex* dst, struct philox_state state, uint64_t offset)
+__global__ void kern_gaussian_rand(long N, cuFloatComplex* dst, struct philox_state state, uint64_t offset)
 {
 	int start = threadIdx.x + blockDim.x * blockIdx.x;
 	int stride = blockDim.x * gridDim.x;
 
 	uint64_t ctr1 = state.ctr1;
 
-	for (bart_dim_t i = start; i < N; i += stride) {
+	for (long i = start; i < N; i += stride) {
 
 		state.ctr1 = ctr1;
 		state.ctr2 = (uint64_t) i + offset;
@@ -90,7 +90,7 @@ __global__ void kern_gaussian_rand(bart_dim_t N, cuFloatComplex* dst, struct phi
 	}
 }
 
-extern "C" void cuda_gaussian_rand(bart_dim_t N, _Complex float* dst,  uint64_t state, uint64_t ctr1, uint64_t offset)
+extern "C" void cuda_gaussian_rand(long N, _Complex float* dst,  uint64_t state, uint64_t ctr1, uint64_t offset)
 {
 	struct philox_state ph_state = {.state = state, .ctr1 = ctr1, .ctr2 = 0};
 	kern_gaussian_rand<<<getGridSize(N, (const void*) kern_gaussian_rand), getBlockSize(N, (const void*) kern_gaussian_rand), 0, cuda_get_stream()>>>(N, (cuFloatComplex*)dst, ph_state, offset);
@@ -99,14 +99,14 @@ extern "C" void cuda_gaussian_rand(bart_dim_t N, _Complex float* dst,  uint64_t 
 
 
 
-__global__ void kern_uniform_rand(bart_dim_t N, cuFloatComplex* dst, struct philox_state state, uint64_t offset)
+__global__ void kern_uniform_rand(long N, cuFloatComplex* dst, struct philox_state state, uint64_t offset)
 {
 	int start = threadIdx.x + blockDim.x * blockIdx.x;
 	int stride = blockDim.x * gridDim.x;
 
 	uint64_t ctr1 = state.ctr1;
 
-	for (bart_dim_t i = start; i < N; i += stride) {
+	for (long i = start; i < N; i += stride) {
 
 		state.ctr1 = ctr1;
 		state.ctr2 = (uint64_t) i + offset;
@@ -114,7 +114,7 @@ __global__ void kern_uniform_rand(bart_dim_t N, cuFloatComplex* dst, struct phil
 	}
 }
 
-extern "C" void cuda_uniform_rand(bart_dim_t N, _Complex float* dst,  uint64_t state, uint64_t ctr1, uint64_t offset)
+extern "C" void cuda_uniform_rand(long N, _Complex float* dst,  uint64_t state, uint64_t ctr1, uint64_t offset)
 {
 	struct philox_state ph_state = {.state = state, .ctr1 = ctr1, .ctr2 = 0};
 	kern_uniform_rand<<<getGridSize(N, (const void*) kern_uniform_rand), getBlockSize(N, (const void*) kern_uniform_rand), 0, cuda_get_stream()>>>(N, (cuFloatComplex*)dst, ph_state, offset);
@@ -122,14 +122,14 @@ extern "C" void cuda_uniform_rand(bart_dim_t N, _Complex float* dst,  uint64_t s
 }
 
 
-__global__ void kern_rand_one(bart_dim_t N, cuFloatComplex* dst, double p, struct philox_state state, uint64_t offset)
+__global__ void kern_rand_one(long N, cuFloatComplex* dst, double p, struct philox_state state, uint64_t offset)
 {
 	int start = threadIdx.x + blockDim.x * blockIdx.x;
 	int stride = blockDim.x * gridDim.x;
 
 	uint64_t ctr1 = state.ctr1;
 
-	for (bart_dim_t i = start; i < N; i += stride) {
+	for (long i = start; i < N; i += stride) {
 
 		state.ctr1 = ctr1;
 		state.ctr2 = (uint64_t) i + offset;
@@ -138,7 +138,7 @@ __global__ void kern_rand_one(bart_dim_t N, cuFloatComplex* dst, double p, struc
 
 }
 
-extern "C" void cuda_rand_one(bart_dim_t N, _Complex float* dst, double p, uint64_t state, uint64_t ctr1, uint64_t offset)
+extern "C" void cuda_rand_one(long N, _Complex float* dst, double p, uint64_t state, uint64_t ctr1, uint64_t offset)
 {
 	struct philox_state ph_state = {.state = state, .ctr1 = ctr1, .ctr2 = 0};
 	kern_rand_one<<<getGridSize(N, (const void*) kern_rand_one), getBlockSize(N, (const void*) kern_rand_one), 0, cuda_get_stream()>>>(N, (cuFloatComplex*)dst,  p, ph_state, offset);

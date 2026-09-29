@@ -29,7 +29,7 @@
 static bool test_stl_kspace(void)
 {
         bool b = true;
-        bart_dim_t stldims[3];
+        long stldims[3];
 
 	struct phantom_opts popts;
 	popts.kspace = true;
@@ -69,7 +69,7 @@ UT_REGISTER_TEST(test_stl_kspace);
 static bool test_stl_kspace2(void)
 {
         bool b = true;
-        bart_dim_t stldims[3];
+        long stldims[3];
 
 	struct phantom_opts popts;
 	popts.kspace = true;
@@ -166,7 +166,7 @@ static void dstr_none(void* v)
 	UNUSED(v);
 }
 
-static complex double fun_dirac(const void* v, const bart_dim_t C, const float c[])
+static complex double fun_dirac(const void* v, const long C, const float c[])
 {
 	UNUSED(v);
 	UNUSED(C);
@@ -177,7 +177,7 @@ static complex double fun_dirac(const void* v, const bart_dim_t C, const float c
 	return 0.;
 }
 
-static complex double fun_const(const void* v, const bart_dim_t C, const float c[])
+static complex double fun_const(const void* v, const long C, const float c[])
 {
 	UNUSED(v);
 	UNUSED(C);
@@ -192,7 +192,7 @@ static bool test_phantom_sampling_dirac_nocoil_k(void)
 	bool kspace = true;
 
 	// sampling grid for phantom
-	bart_dim_t gdims[DIMS];
+	long gdims[DIMS];
 	struct grid_opts gopts = grid_opts_defaults;
 	gopts.kspace = kspace;
 	gopts.dims[0] = 16;
@@ -207,7 +207,7 @@ static bool test_phantom_sampling_dirac_nocoil_k(void)
 
 	// sampling grid for coils
 	struct grid_opts cgopts = gopts;
-	bart_dim_t stdims[DIMS];
+	long stdims[DIMS];
 	float* straj = create_senstraj(DIMS, stdims, &cgopts, &copts);
 
 	// prepare phantom
@@ -217,17 +217,17 @@ static bool test_phantom_sampling_dirac_nocoil_k(void)
 	popts.dstr = dstr_none;
 	popts.fun = fun_dirac;
 
-	bart_dim_t odims_[DIMS];
+	long odims_[DIMS];
 	complex double* cdout = sample_signal(DIMS, odims_, gdims, grid, stdims, straj, &popts, &copts);
 
-	bart_dim_t odims[DIMS];
+	long odims[DIMS];
 	md_singleton_dims(DIMS, odims);
 	odims[0] = odims_[1];
 	odims[1] = odims_[2];
 
 	complex float* cdoutf = md_alloc(DIMS, odims, CFL_SIZE);
 
-	bart_stride_t strsf[DIMS];
+	long strsf[DIMS];
 	md_calc_strides(DIMS, strsf, odims, CFL_SIZE);
 
 	md_zdouble2float(DIMS, odims, cdoutf, cdout);
@@ -265,7 +265,7 @@ static bool test_phantom_sampling_dirac_nocoil_x(void)
 	bool kspace = false;
 
 	// sampling grid for phantom
-	bart_dim_t gdims[DIMS];
+	long gdims[DIMS];
 	struct grid_opts gopts = grid_opts_defaults;
 	gopts.kspace = kspace;
 	gopts.dims[0] = 16;
@@ -280,7 +280,7 @@ static bool test_phantom_sampling_dirac_nocoil_x(void)
 
 	// sampling grid for coils
 	struct grid_opts cgopts = gopts;
-	bart_dim_t stdims[DIMS];
+	long stdims[DIMS];
 	float* straj = create_senstraj(DIMS, stdims, &cgopts, &copts);
 
 	// prepare phantom
@@ -290,17 +290,17 @@ static bool test_phantom_sampling_dirac_nocoil_x(void)
 	popts.dstr = dstr_none;
 	popts.fun = fun_const;
 
-	bart_dim_t odims_[DIMS];
+	long odims_[DIMS];
 	complex double* cdout = sample_signal(DIMS, odims_, gdims, grid, stdims, straj, &popts, &copts);
 
-	bart_dim_t odims[DIMS];
+	long odims[DIMS];
 	md_singleton_dims(DIMS, odims);
 	odims[0] = odims_[1];
 	odims[1] = odims_[2];
 	complex float* cdoutf = md_alloc(DIMS, odims, CFL_SIZE);
 	md_zdouble2float(DIMS, odims, cdoutf, cdout);
 
-	bart_stride_t strsf[DIMS];
+	long strsf[DIMS];
 	md_calc_strides(DIMS, strsf, odims, CFL_SIZE);
 	complex float* ones = md_alloc(DIMS, odims, CFL_SIZE);
 	md_zfill(DIMS, odims, ones, 1);
@@ -324,7 +324,7 @@ static bool test_phantom_sampling_dirac_nocoil_x(void)
 
 UT_REGISTER_TEST(test_phantom_sampling_dirac_nocoil_x);
 
-static complex float* compute_HEAD_2D_8CH(int D, bart_dim_t dims[D], const bart_dim_t gdims[D], const float* grid, const bart_dim_t N)
+static complex float* compute_HEAD_2D_8CH(int D, long dims[D], const long gdims[D], const float* grid, const long N)
 {
 	md_singleton_dims(D, dims);
 	dims[0] = gdims[1];
@@ -334,7 +334,7 @@ static complex float* compute_HEAD_2D_8CH(int D, bart_dim_t dims[D], const bart_
 
 	complex float* sens = md_alloc(D, dims, CFL_SIZE);
 
-	bart_stride_t gstrs[D], sstrs[D], pos[D], posg[D];
+	long gstrs[D], sstrs[D], pos[D], posg[D];
 	md_calc_strides(D, gstrs, gdims, FL_SIZE);
 	md_calc_strides(D, sstrs, dims, CFL_SIZE);
 	md_set_dims(D, pos, 0);
@@ -356,7 +356,7 @@ static complex float* compute_HEAD_2D_8CH(int D, bart_dim_t dims[D], const bart_
 
 		MD_ACCESS(D, sstrs, pos, sens) = val;
 
-	} while(md_next(D, dims, 15, pos));
+	} while(md_next(D, dims, 15UL, pos));
 
 	return sens;
 }
@@ -367,7 +367,7 @@ static bool test_phantom_sampling_const_8chcoil_x(void)
 	bool kspace = false;
 
 	// sampling grid for phantom
-	bart_dim_t gdims[DIMS];
+	long gdims[DIMS];
 	struct grid_opts gopts = grid_opts_defaults;
 	gopts.kspace = kspace;
 	gopts.dims[0] = 16;
@@ -383,7 +383,7 @@ static bool test_phantom_sampling_const_8chcoil_x(void)
 
 	// sampling grid for coils
 	struct grid_opts cgopts = gopts;
-	bart_dim_t stdims[DIMS];
+	long stdims[DIMS];
 	float* straj = create_senstraj(DIMS, stdims, &cgopts, &copts);
 
 	// prepare phantom
@@ -392,16 +392,16 @@ static bool test_phantom_sampling_const_8chcoil_x(void)
 	popts.Nc = 1;
 	popts.dstr = dstr_none;
 	popts.fun = fun_const;
-	bart_dim_t odims_[DIMS];
+	long odims_[DIMS];
 	complex double* cdout = sample_signal(DIMS, odims_, gdims, grid, stdims, straj, &popts, &copts);
-	bart_dim_t odims[DIMS];
+	long odims[DIMS];
 	md_singleton_dims(DIMS, odims);
 	odims[0] = odims_[1];
 	odims[1] = odims_[2];
 
 	complex float* cdoutf = md_alloc(DIMS, odims, CFL_SIZE);
 	md_zdouble2float(DIMS, odims, cdoutf, cdout);
-	bart_dim_t sdims[DIMS];
+	long sdims[DIMS];
 	complex float* sens = compute_HEAD_2D_8CH(DIMS, sdims, gdims, grid, copts.N);
 	float err = md_znrmse(DIMS, odims, sens, cdoutf);
 
@@ -426,7 +426,7 @@ static bool test_phantom_sampling_dirac_8chcoil_k(void)
 	bool kspace = true;
 
 	// sampling grid for phantom
-	bart_dim_t gdims[DIMS];
+	long gdims[DIMS];
 	struct grid_opts gopts = grid_opts_defaults;
 	gopts.kspace = kspace;
 	// we want to sample the sens coefficients in k-space.
@@ -446,7 +446,7 @@ static bool test_phantom_sampling_dirac_8chcoil_k(void)
 
 	// sampling grid for coils
 	struct grid_opts cgopts = gopts;
-	bart_dim_t stdims[DIMS];
+	long stdims[DIMS];
 	float* straj = create_senstraj(DIMS, stdims, &cgopts, &copts);
 
 	// prepare phantom
@@ -457,10 +457,10 @@ static bool test_phantom_sampling_dirac_8chcoil_k(void)
 	popts.fun = fun_dirac;
 
 	// sample, reconstruct and extract
-	bart_dim_t odims_[DIMS];
+	long odims_[DIMS];
 	complex double* cdout = sample_signal(DIMS, odims_, gdims, grid, stdims, straj, &popts, &copts);
 
-	bart_dim_t odims[DIMS];
+	long odims[DIMS];
 	md_copy_dims(DIMS, odims, odims_);
 	odims[0] = odims_[1];
 	odims[1] = odims_[2];
@@ -472,25 +472,25 @@ static bool test_phantom_sampling_dirac_8chcoil_k(void)
 	md_zdouble2float(DIMS, odims, cdoutf, cdout);
 	ifftc(DIMS, odims, 3, reco, cdoutf);
 
-	bart_dim_t edims[DIMS];
+	long edims[DIMS];
 	md_singleton_dims(DIMS, edims);
 	edims[0] = 32;
 	edims[1] = 32;
 	edims[3] = 2;
 
 	complex float* block = md_alloc(DIMS, edims, CFL_SIZE);
-	bart_dim_t bpos[DIMS] = { 16, 16 };
+	long bpos[DIMS] = { 16, 16 };
 
 	md_copy_block(DIMS, bpos, edims, block, odims, reco, CFL_SIZE);
 
 	// compare against reference
-	bart_dim_t sgdims[DIMS];
+	long sgdims[DIMS];
 	struct grid_opts sgopts = grid_opts_defaults;
 	sgopts.dims[0] = 32;
 	sgopts.dims[1] = 32;
 	sgopts.kspace = false;
 	float* sgrid = compute_grid(DIMS, sgdims, &sgopts, NULL, NULL);
-	bart_dim_t sdims[DIMS];
+	long sdims[DIMS];
 	complex float* sens = compute_HEAD_2D_8CH(DIMS, sdims, sgdims, sgrid, copts.N);
 
 	float err = md_znrmse(DIMS, edims, sens, block);
@@ -513,7 +513,7 @@ static bool test_phantom_sampling_dirac_8chcoil_k(void)
 }
 UT_REGISTER_TEST(test_phantom_sampling_dirac_8chcoil_k);
 
-static complex float* compute_HEAD_3D_64CH(int D, bart_dim_t dims[D], const bart_dim_t gdims[D], const float* grid, bart_dim_t N)
+static complex float* compute_HEAD_3D_64CH(int D, long dims[D], const long gdims[D], const float* grid, long N)
 {
 	md_singleton_dims(D, dims);
 	dims[0] = gdims[1];
@@ -523,7 +523,7 @@ static complex float* compute_HEAD_3D_64CH(int D, bart_dim_t dims[D], const bart
 
 	complex float* sens = md_alloc(D, dims, CFL_SIZE);
 
-	bart_stride_t gstrs[D], sstrs[D], pos[D], posg[D];
+	long gstrs[D], sstrs[D], pos[D], posg[D];
 	md_calc_strides(D, gstrs, gdims, FL_SIZE);
 	md_calc_strides(D, sstrs, dims, CFL_SIZE);
 	md_set_dims(D, pos, 0);
@@ -546,7 +546,7 @@ static complex float* compute_HEAD_3D_64CH(int D, bart_dim_t dims[D], const bart
 
 		MD_ACCESS(D, sstrs, pos, sens) = val;
 
-	} while(md_next(D, dims, 15, pos));
+	} while(md_next(D, dims, 15UL, pos));
 
 	return sens;
 }
@@ -557,7 +557,7 @@ static bool test_phantom_sampling_const_64chcoil_x(void)
 	bool kspace = false;
 
 	// sampling grid for phantom
-	bart_dim_t gdims[DIMS];
+	long gdims[DIMS];
 	struct grid_opts gopts = grid_opts_defaults;
 	gopts.kspace = kspace;
 	gopts.dims[0] = 20;
@@ -575,7 +575,7 @@ static bool test_phantom_sampling_const_64chcoil_x(void)
 
 	// sampling grid for coils
 	struct grid_opts cgopts = gopts;
-	bart_dim_t stdims[DIMS];
+	long stdims[DIMS];
 	float* straj = create_senstraj(DIMS, stdims, &cgopts, &copts);
 
 	// prepare phantom
@@ -585,13 +585,13 @@ static bool test_phantom_sampling_const_64chcoil_x(void)
 	popts.dstr = dstr_none;
 	popts.fun = fun_const;
 
-	bart_dim_t odims[DIMS];
+	long odims[DIMS];
 	complex double* cdout = sample_signal(DIMS, odims, gdims, grid, stdims, straj, &popts, &copts);
 	complex float* cdoutf = md_alloc(DIMS, odims, CFL_SIZE);
 
 	md_zdouble2float(DIMS, odims, cdoutf, cdout);
 
-	bart_dim_t sdims[DIMS];
+	long sdims[DIMS];
 	complex float* sens = compute_HEAD_3D_64CH(DIMS, sdims, gdims, grid, copts.N);
 
 	float err = md_znrmse(DIMS, odims, sens, cdoutf);
@@ -617,7 +617,7 @@ static bool test_phantom_sampling_dirac_64chcoil_k(void)
 	bool kspace = true;
 
 	// sampling grid for phantom
-	bart_dim_t gdims[DIMS];
+	long gdims[DIMS];
 	struct grid_opts gopts = grid_opts_defaults;
 	gopts.kspace = kspace;
 	// we want to sample the sens coefficients in k-space.
@@ -639,7 +639,7 @@ static bool test_phantom_sampling_dirac_64chcoil_k(void)
 
 	// sampling grid for coils
 	struct grid_opts cgopts = gopts;
-	bart_dim_t stdims[DIMS];
+	long stdims[DIMS];
 	float* straj = create_senstraj(DIMS, stdims, &cgopts, &copts);
 
 	// prepare phantom
@@ -650,10 +650,10 @@ static bool test_phantom_sampling_dirac_64chcoil_k(void)
 	popts.fun = fun_dirac;
 
 	// sample, reconstruct and extract
-	bart_dim_t odims_[DIMS];
+	long odims_[DIMS];
 	complex double* cdout = sample_signal(DIMS, odims_, gdims, grid, stdims, straj, &popts, &copts);
 
-	bart_dim_t odims[DIMS];
+	long odims[DIMS];
 	md_copy_dims(DIMS, odims, odims_);
 	odims[0] = gdims[1];
 	odims[1] = gdims[2];
@@ -663,18 +663,18 @@ static bool test_phantom_sampling_dirac_64chcoil_k(void)
 	complex float* reco = md_alloc(DIMS, odims, CFL_SIZE);
 	md_zdouble2float(DIMS, odims, cdoutf, cdout);
 	ifftc(DIMS, odims, 7, reco, cdoutf);
-	bart_dim_t edims[DIMS];
+	long edims[DIMS];
 	md_singleton_dims(DIMS, edims);
 	edims[0] = 32;
 	edims[1] = 32;
 	edims[2] = 32;
 	edims[3] = copts.N;
 	complex float* block = md_alloc(DIMS, edims, CFL_SIZE);
-	bart_dim_t bpos[DIMS] = { 16, 16, 16 };
+	long bpos[DIMS] = { 16, 16, 16 };
 	md_copy_block(DIMS, bpos, edims, block, odims, reco, CFL_SIZE);
 
 	// compare against reference
-	bart_dim_t sgdims[DIMS];
+	long sgdims[DIMS];
 	struct grid_opts sgopts = grid_opts_defaults;
 	sgopts.dims[0] = 32;
 	sgopts.dims[1] = 32;
@@ -684,7 +684,7 @@ static bool test_phantom_sampling_dirac_64chcoil_k(void)
 	sgopts.b2[2] = 0.5;
 	sgopts.kspace = false;
 	float* sgrid = compute_grid(DIMS, sgdims, &sgopts, NULL, NULL);
-	bart_dim_t sdims[DIMS];
+	long sdims[DIMS];
 	complex float* sens = compute_HEAD_3D_64CH(DIMS, sdims, sgdims, sgrid, copts.N);
 
 	float err = md_znrmse(DIMS, edims, sens, block);

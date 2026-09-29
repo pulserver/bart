@@ -1,5 +1,4 @@
 
-#include "misc/dimtypes.h"
 #include <complex.h>
 
 #include "misc/mri.h"
@@ -28,4 +27,4 @@ struct noir_s {
 	const struct linop_s* linop;
 };
 
-extern struct noir_s noir_create(const bart_dim_t dims[DIMS], const bart_dim_t coil_dims[DIMS], complex float* coils, const bart_dim_t pat_dims[DIMS], const complex float* psf, const struct noir_model_conf_s* conf);
+extern struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], complex float* coils, const long pat_dims[DIMS], const complex float* psf, const struct noir_model_conf_s* conf);

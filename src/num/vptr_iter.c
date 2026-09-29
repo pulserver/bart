@@ -22,12 +22,12 @@
 
 
 
-static float* vptr_float_malloc(bart_dim_t N)
+static float* vptr_float_malloc(long N)
 {
 	return vptr_alloc_size((size_t)N * FL_SIZE);
 }
 
-static float* vptr_float_malloc_gpu(bart_dim_t N)
+static float* vptr_float_malloc_gpu(long N)
 {
 	float* ret = vptr_alloc_size((size_t)N * FL_SIZE);
 	vptr_set_gpu(ret);
@@ -35,7 +35,7 @@ static float* vptr_float_malloc_gpu(bart_dim_t N)
 	return ret;
 }
 
-static float* vptr_float_malloc_sameplace(bart_dim_t N, const void* ref)
+static float* vptr_float_malloc_sameplace(long N, const void* ref)
 {
 	return (is_vptr_gpu(ref) ? vptr_float_malloc_gpu : vptr_float_malloc)(N);
 }
@@ -45,7 +45,7 @@ static void vptr_float_free(float* ptr)
 	md_free(ptr);
 }
 
-static void vptr_float_clear(bart_dim_t N, float* x)
+static void vptr_float_clear(long N, float* x)
 {
 	if (!vptr_is_init(x))
 		vptr_clear(x);
@@ -53,7 +53,7 @@ static void vptr_float_clear(bart_dim_t N, float* x)
 		md_clear(1, MD_DIMS(N), x, FL_SIZE);
 }
 
-static void vptr_float_copy(bart_dim_t N, float* a, const float* x)
+static void vptr_float_copy(long N, float* a, const float* x)
 {
 	if (is_vptr(x) && !vptr_is_init(x)) {
 
@@ -67,7 +67,7 @@ static void vptr_float_copy(bart_dim_t N, float* a, const float* x)
 	md_copy(1, MD_DIMS(N), a, x, FL_SIZE);
 }
 
-static void vptr_swap(bart_dim_t N, float* a, float* x)
+static void vptr_swap(long N, float* a, float* x)
 {
 	float* tmp = vptr_float_malloc_sameplace(N, x);
 	vptr_float_copy(N, tmp, a);
@@ -76,7 +76,7 @@ static void vptr_swap(bart_dim_t N, float* a, float* x)
 	vptr_float_free(tmp);
 }
 
-static double vptr_dot(bart_dim_t N, const float* x, const float* y)
+static double vptr_dot(long N, const float* x, const float* y)
 {
 	if (!vptr_is_init(x) || !vptr_is_init(y))
 		return 0.;
@@ -84,14 +84,14 @@ static double vptr_dot(bart_dim_t N, const float* x, const float* y)
 	return md_scalar(1, MD_DIMS(N), x, y);
 }
 
-static double vptr_norm(bart_dim_t N, const float* x)
+static double vptr_norm(long N, const float* x)
 {
 	return sqrt(vptr_dot(N, x, x));
 }
 
 
 
-static void vptr_smul(bart_dim_t N, float alpha, float* a, const float* x)
+static void vptr_smul(long N, float alpha, float* a, const float* x)
 {
 	if (!vptr_is_init(x)) {
 
@@ -104,7 +104,7 @@ static void vptr_smul(bart_dim_t N, float alpha, float* a, const float* x)
 	md_smul(1, MD_DIMS(N), a, x, alpha);
 }
 
-static void vptr_sub(bart_dim_t N, float* a, const float* x, const float* y)
+static void vptr_sub(long N, float* a, const float* x, const float* y)
 {
 	if (!vptr_is_init(x)) {
 
@@ -123,7 +123,7 @@ static void vptr_sub(bart_dim_t N, float* a, const float* x, const float* y)
 	md_sub(1, MD_DIMS(N), a, x, y);
 }
 
-static void vptr_add(bart_dim_t N, float* a, const float* x, const float* y)
+static void vptr_add(long N, float* a, const float* x, const float* y)
 {
 	if (!vptr_is_init(y)) {
 
@@ -140,7 +140,7 @@ static void vptr_add(bart_dim_t N, float* a, const float* x, const float* y)
 	md_add(1, MD_DIMS(N), a, x, y);
 }
 
-static void vptr_xpay(bart_dim_t N, float alpha, float* a, const float* x)
+static void vptr_xpay(long N, float alpha, float* a, const float* x)
 {
 	if (a == x) {
 
@@ -152,7 +152,7 @@ static void vptr_xpay(bart_dim_t N, float alpha, float* a, const float* x)
 	}
 }
 
-static void vptr_saxpy(bart_dim_t N, float* a, float alpha, const float* x)
+static void vptr_saxpy(long N, float* a, float alpha, const float* x)
 {
 	if (!vptr_is_init(x))
 		return;
@@ -163,7 +163,7 @@ static void vptr_saxpy(bart_dim_t N, float* a, float alpha, const float* x)
 }
 
 
-static void vptr_axpbz(bart_dim_t N, float* out, const float a, const float* x, const float b, const float* z)
+static void vptr_axpbz(long N, float* out, const float a, const float* x, const float b, const float* z)
 {
 	vptr_set_dims_sameplace(out, x);
 
@@ -179,7 +179,7 @@ static void vptr_axpbz(bart_dim_t N, float* out, const float a, const float* x, 
 }
 
 
-static void vptr_mul(bart_dim_t N, float* a, const float* x, const float* y)
+static void vptr_mul(long N, float* a, const float* x, const float* y)
 {
 	if (!vptr_is_init(x) || !vptr_is_init(y)) {
 
@@ -191,7 +191,7 @@ static void vptr_mul(bart_dim_t N, float* a, const float* x, const float* y)
 	md_mul(1, MD_DIMS(N), a, x, y);
 }
 
-static void vptr_fmac(bart_dim_t N, float* a, const float* x, const float* y)
+static void vptr_fmac(long N, float* a, const float* x, const float* y)
 {
 	if (!vptr_is_init(x) || !vptr_is_init(y)) {
 
@@ -205,7 +205,7 @@ static void vptr_fmac(bart_dim_t N, float* a, const float* x, const float* y)
 }
 
 
-static void vptr_div(bart_dim_t N, float* a, const float* x, const float* y)
+static void vptr_div(long N, float* a, const float* x, const float* y)
 {
 	if (!vptr_is_init(x) || !vptr_is_init(y)) {
 
@@ -218,7 +218,7 @@ static void vptr_div(bart_dim_t N, float* a, const float* x, const float* y)
 	md_div(1, MD_DIMS(N), a, x, y);
 }
 
-static void vptr_sqrt(bart_dim_t N, float* a, const float* x)
+static void vptr_sqrt(long N, float* a, const float* x)
 {
 	if (!vptr_is_init(x)) {
 
@@ -231,31 +231,31 @@ static void vptr_sqrt(bart_dim_t N, float* a, const float* x)
 	md_sqrt(1, MD_DIMS(N), a, x);
 }
 
-static void vptr_smax(bart_dim_t N, float alpha, float* a, const float* x)
+static void vptr_smax(long N, float alpha, float* a, const float* x)
 {
 	md_smax(1, MD_DIMS(N), a, x, alpha);
 }
 
 
 
-static void vptr_le(bart_dim_t N, float* a, const float* x, const float* y)
+static void vptr_le(long N, float* a, const float* x, const float* y)
 {
 	vptr_set_dims_sameplace(a, x);
 
 	md_lessequal(1, MD_DIMS(N), a, x, y);
 }
 
-static void vptr_zmul(bart_dim_t N, complex float* dst, const complex float* src1, const complex float* src2)
+static void vptr_zmul(long N, complex float* dst, const complex float* src1, const complex float* src2)
 {
 	md_zmul(1, MD_DIMS(N), dst, src1, src2);
 }
 
-static void vptr_zsmax(bart_dim_t N, float val, complex float* dst, const complex float* src)
+static void vptr_zsmax(long N, float val, complex float* dst, const complex float* src)
 {
 	md_zsmax(1, MD_DIMS(N), dst, src, val);
 }
 
-static void vptr_rand(bart_dim_t N, float* dst)
+static void vptr_rand(long N, float* dst)
 {
 	if (0 >= N)
 		return;

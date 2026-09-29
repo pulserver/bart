@@ -41,13 +41,13 @@ struct zaxpbz_s {
 	nlop_data_t super;
 
 	int N;
-	const bart_dim_t* dims;
-	const bart_dim_t* idims1;
-	const bart_dim_t* idims2;
+	const long* dims;
+	const long* idims1;
+	const long* idims2;
 
-	const bart_stride_t* ostrs;
-	const bart_stride_t* istrs1;
-	const bart_stride_t* istrs2;
+	const long* ostrs;
+	const long* istrs1;
+	const long* istrs2;
 
 	bool unfold;
 	complex float scale1;
@@ -69,8 +69,8 @@ static void zaxpbz_fun(const nlop_data_t* _data, int N, complex float* args[N])
 	assert((cuda_ondevice(dst) == cuda_ondevice(src1)) && (cuda_ondevice(src1) == cuda_ondevice(src2)));
 #endif
 
-	const bart_stride_t* istrs1 = data->istrs1;
-	const bart_stride_t* istrs2 = data->istrs2;
+	const long* istrs1 = data->istrs1;
+	const long* istrs2 = data->istrs2;
 
 	if (data->unfold && 1. != data->scale1) {
 
@@ -150,21 +150,21 @@ static void zaxpbz_del(const nlop_data_t* _data)
 	xfree(data);
 }
 
-const struct nlop_s* nlop_zaxpbz2_create(int N, const bart_dim_t dims[N], bart_flags_t flags1, complex float scale1, bart_flags_t flags2, complex float scale2)
+const struct nlop_s* nlop_zaxpbz2_create(int N, const long dims[N], unsigned long flags1, complex float scale1, unsigned long flags2, complex float scale2)
 {
 	PTR_ALLOC(struct zaxpbz_s, data);
 	SET_TYPEID(zaxpbz_s, data);
 
-	PTR_ALLOC(bart_dim_t[N], ndims);
-	PTR_ALLOC(bart_dim_t[N], ostrs);
-	PTR_ALLOC(bart_dim_t[N], istrs1);
-	PTR_ALLOC(bart_dim_t[N], istrs2);
+	PTR_ALLOC(long[N], ndims);
+	PTR_ALLOC(long[N], ostrs);
+	PTR_ALLOC(long[N], istrs1);
+	PTR_ALLOC(long[N], istrs2);
 
 	md_copy_dims(N, *ndims, dims);
 	md_calc_strides(N, *ostrs, dims, CFL_SIZE);
 
-	bart_dim_t idims1[N];
-	bart_dim_t idims2[N];
+	long idims1[N];
+	long idims2[N];
 
 	md_select_dims(N, flags1, idims1, dims);
 	md_select_dims(N, flags2, idims2, dims);
@@ -178,18 +178,18 @@ const struct nlop_s* nlop_zaxpbz2_create(int N, const bart_dim_t dims[N], bart_f
 	data->istrs1 = *PTR_PASS(istrs1);
 	data->istrs2 = *PTR_PASS(istrs2);
 
-	data->idims1 = ARR_CLONE(bart_dim_t[N], idims1);
-	data->idims2 = ARR_CLONE(bart_dim_t[N], idims2);
+	data->idims1 = ARR_CLONE(long[N], idims1);
+	data->idims2 = ARR_CLONE(long[N], idims2);
 
-	data->unfold = !(md_check_equal_dims(N, idims1, dims, ~UINT64_C(0)) && md_check_equal_dims(N, idims2, dims, ~UINT64_C(0)));
+	data->unfold = !(md_check_equal_dims(N, idims1, dims, ~0UL) && md_check_equal_dims(N, idims2, dims, ~0UL));
 	data->scale1 = scale1;
 	data->scale2 = scale2;
 
-	bart_dim_t nl_odims[1][N];
+	long nl_odims[1][N];
 	md_copy_dims(N, nl_odims[0], dims);
 
 
-	bart_dim_t nl_idims[2][N];
+	long nl_idims[2][N];
 	md_select_dims(N, flags1, nl_idims[0], dims);
 	md_select_dims(N, flags2, nl_idims[1], dims);
 
@@ -210,12 +210,12 @@ const struct nlop_s* nlop_zaxpbz2_create(int N, const bart_dim_t dims[N], bart_f
 	return ret;
 }
 
-const struct nlop_s* nlop_zaxpbz_create(int N, const bart_dim_t dims[N], complex float scale1, complex float scale2)
+const struct nlop_s* nlop_zaxpbz_create(int N, const long dims[N], complex float scale1, complex float scale2)
 {
-	return nlop_zaxpbz2_create(N, dims, ~UINT64_C(0), scale1, ~UINT64_C(0), scale2);
+	return nlop_zaxpbz2_create(N, dims, ~0UL, scale1, ~0UL, scale2);
 }
 
-const struct nlop_s* nlop_zsadd_create(int N, const bart_dim_t dims[N], complex float val)
+const struct nlop_s* nlop_zsadd_create(int N, const long dims[N], complex float val)
 {
 	auto result = nlop_zaxpbz_create(N, dims, 1., 1.);
 	return nlop_set_input_const_F2(result, 1, N, dims, MD_SINGLETON_STRS(N), true, &val);
@@ -227,10 +227,10 @@ struct dump_s {
 	nlop_data_t super;
 
 	int N;
-	const bart_dim_t* dims;
+	const long* dims;
 
 	const char* filename;
-	bart_dim_t counter;
+	long counter;
 
 	bool frw;
 	bool der;
@@ -248,7 +248,7 @@ static void dump_fun(const nlop_data_t* _data, complex float* dst, const complex
 	if (data->frw) {
 
 		char filename[strlen(data->filename) + 10];
-		sprintf(filename, "%s_%" PRId64 "_frw", data->filename, data->counter);
+		sprintf(filename, "%s_%ld_frw", data->filename, data->counter);
 		dump_cfl(filename, data->N, data->dims, src);
 		data->counter++;
 	}
@@ -263,7 +263,7 @@ static void dump_der(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 	if (data->der) {
 
 		char filename[strlen(data->filename) + 10];
-		sprintf(filename, "%s_%" PRId64 "_der", data->filename, data->counter);
+		sprintf(filename, "%s_%ld_der", data->filename, data->counter);
 		dump_cfl(filename, data->N, data->dims, src);
 		data->counter++;
 	}
@@ -278,7 +278,7 @@ static void dump_adj(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 	if (data->adj) {
 
 		char filename[strlen(data->filename) + 10];
-		sprintf(filename, "%s_%" PRId64 "_adj", data->filename, data->counter);
+		sprintf(filename, "%s_%ld_adj", data->filename, data->counter);
 		dump_cfl(filename, data->N, data->dims, src);
 		data->counter++;
 	}
@@ -302,14 +302,14 @@ static void dump_del(const nlop_data_t* _data)
  * @param adj - store adj input
  */
 
-const struct nlop_s* nlop_dump_create(int N, const bart_dim_t dims[N], const char* filename, bool frw, bool der, bool adj)
+const struct nlop_s* nlop_dump_create(int N, const long dims[N], const char* filename, bool frw, bool der, bool adj)
 {
 	PTR_ALLOC(struct dump_s, data);
 	SET_TYPEID(dump_s, data);
 
 	data->N = N;
 
-	PTR_ALLOC(bart_dim_t[N], ndims);
+	PTR_ALLOC(long[N], ndims);
 	md_copy_dims(N, *ndims, dims);
 	data->dims = *PTR_PASS(ndims);
 
@@ -336,7 +336,7 @@ struct zinv_reg_s {
 
 DEF_TYPEID(zinv_reg_s);
 
-static void zinv_reg_fun(const nlop_data_t* _data, int N, const bart_dim_t dims[N], complex float* dst, const complex float* src, complex float* der)
+static void zinv_reg_fun(const nlop_data_t* _data, int N, const long dims[N], complex float* dst, const complex float* src, complex float* der)
 {
 	const auto data = CAST_DOWN(zinv_reg_s, _data);
 
@@ -358,7 +358,7 @@ static void zinv_reg_fun(const nlop_data_t* _data, int N, const bart_dim_t dims[
  * Operator computing the inverse
  * f(x) = 1 / (x + eps)
  */
-const struct nlop_s* nlop_zinv_reg_create(int N, const bart_dim_t dims[N], float eps)
+const struct nlop_s* nlop_zinv_reg_create(int N, const long dims[N], float eps)
 {
 	PTR_ALLOC(struct zinv_reg_s, data);
 	SET_TYPEID(zinv_reg_s, data);
@@ -372,7 +372,7 @@ const struct nlop_s* nlop_zinv_reg_create(int N, const bart_dim_t dims[N], float
  * Operator computing the inverse
  * f(x) = 1 / (x)
  */
-const struct nlop_s* nlop_zinv_create(int N, const bart_dim_t dims[N])
+const struct nlop_s* nlop_zinv_create(int N, const long dims[N])
 {
 	return nlop_zinv_reg_create(N, dims, 0);
 }
@@ -381,7 +381,7 @@ const struct nlop_s* nlop_zinv_create(int N, const bart_dim_t dims[N])
  * Operator dividing input one by input 2
  * f(x, y) = x / (y + eps)
  */
-const struct nlop_s* nlop_zdiv_reg_create(int N, const bart_dim_t dims[N], float eps)
+const struct nlop_s* nlop_zdiv_reg_create(int N, const long dims[N], float eps)
 {
 	return nlop_chain2_FF(nlop_zinv_reg_create(N, dims, eps), 0, nlop_tenmul_create(N, dims, dims, dims), 1);
 }
@@ -390,7 +390,7 @@ const struct nlop_s* nlop_zdiv_reg_create(int N, const bart_dim_t dims[N], float
  * Operator dividing input one by input 2
  * f(x, y) = x / y
  */
-const struct nlop_s* nlop_zdiv_create(int N, const bart_dim_t dims[N])
+const struct nlop_s* nlop_zdiv_create(int N, const long dims[N])
 {
 	return nlop_chain2_FF(nlop_zinv_create(N, dims), 0, nlop_tenmul_create(N, dims, dims, dims), 1);
 }
@@ -400,11 +400,11 @@ struct zmax_s {
 	nlop_data_t super;
 
 	int N;
-	bart_flags_t flags;
-	const bart_dim_t* outdims;
-	const bart_dim_t* dims;
-	const bart_stride_t* strides;
-	const bart_stride_t* outstrides;
+	unsigned long flags;
+	const long* outdims;
+	const long* dims;
+	const long* strides;
+	const long* outstrides;
 
 	complex float* max_index;
 };
@@ -466,21 +466,21 @@ static void zmax_del(const struct nlop_data_s* _data)
 /**
  * Returns maximum value of array along specified flags.
  **/
-const struct nlop_s* nlop_zmax_create(int N, const bart_dim_t dims[N], bart_flags_t flags)
+const struct nlop_s* nlop_zmax_create(int N, const long dims[N], unsigned long flags)
 {
 	PTR_ALLOC(struct zmax_s, data);
 	SET_TYPEID(zmax_s, data);
 
-	PTR_ALLOC(bart_dim_t[N], outdims);
+	PTR_ALLOC(long[N], outdims);
 	md_select_dims(N, ~flags, *outdims, dims);
 
-	PTR_ALLOC(bart_dim_t[N], dims_tmp);
+	PTR_ALLOC(long[N], dims_tmp);
 	md_copy_dims(N, *dims_tmp, dims);
 
-	PTR_ALLOC(bart_dim_t[N], strides);
+	PTR_ALLOC(long[N], strides);
 	md_calc_strides(N, *strides, dims, CFL_SIZE);
 
-	PTR_ALLOC(bart_dim_t[N], out_strides);
+	PTR_ALLOC(long[N], out_strides);
 	md_calc_strides(N, *out_strides, *outdims, CFL_SIZE);
 
 	data->N = N;
@@ -492,7 +492,7 @@ const struct nlop_s* nlop_zmax_create(int N, const bart_dim_t dims[N], bart_flag
 
 	data->max_index = NULL;
 
-	bart_dim_t odims[N];
+	long odims[N];
 	md_select_dims(N, ~flags, odims, dims);
 
 	return nlop_create(N, odims, N, dims, CAST_UP(PTR_PASS(data)), zmax_fun, zmax_der, zmax_adj, NULL, NULL, zmax_del);
@@ -512,7 +512,7 @@ static void zsqrt_free(const nlop_data_t* _data)
 	xfree(_data);
 }
 
-static void zsqrt_apply(const nlop_data_t* /* _data*/, int N, const bart_dim_t dims[N], complex float* dst, const complex float* src, complex float* der)
+static void zsqrt_apply(const nlop_data_t* /* _data*/, int N, const long dims[N], complex float* dst, const complex float* src, complex float* der)
 {
 	md_zsqrt(N, dims, dst, src);
 
@@ -523,7 +523,7 @@ static void zsqrt_apply(const nlop_data_t* /* _data*/, int N, const bart_dim_t d
 	}
 }
 
-const struct nlop_s* nlop_zsqrt_create(int N, const bart_dim_t dims[N])
+const struct nlop_s* nlop_zsqrt_create(int N, const long dims[N])
 {
 	PTR_ALLOC(struct zsqrt_s, data);
 	SET_TYPEID(zsqrt_s, data);
@@ -536,9 +536,9 @@ const struct nlop_s* nlop_zsqrt_create(int N, const bart_dim_t dims[N])
 /**
  * Returns zss of array along specified flags.
  **/
-const struct nlop_s* nlop_zss_create(int N, const bart_dim_t dims[N], bart_flags_t flags)
+const struct nlop_s* nlop_zss_create(int N, const long dims[N], unsigned long flags)
 {
-	bart_dim_t odims[N];
+	long odims[N];
 	md_select_dims(N, ~flags, odims, dims);
 
 	auto result = nlop_tenmul_create(N, odims, dims, dims);
@@ -554,9 +554,9 @@ const struct nlop_s* nlop_zss_create(int N, const bart_dim_t dims[N], bart_flags
 /**
  * Returns zrss of array along specified flags.
  **/
-const struct nlop_s* nlop_zrss_reg_create(int N, const bart_dim_t dims[N], bart_flags_t flags, float epsilon)
+const struct nlop_s* nlop_zrss_reg_create(int N, const long dims[N], unsigned long flags, float epsilon)
 {
-	bart_dim_t odims[N];
+	long odims[N];
 	md_select_dims(N, ~flags, odims, dims);
 
 	auto result = nlop_zss_create(N, dims, flags);
@@ -570,7 +570,7 @@ const struct nlop_s* nlop_zrss_reg_create(int N, const bart_dim_t dims[N], bart_
 	return result;
 }
 
-const struct nlop_s* nlop_zrss_create(int N, const bart_dim_t dims[N], bart_flags_t flags)
+const struct nlop_s* nlop_zrss_create(int N, const long dims[N], unsigned long flags)
 {
 	return nlop_zrss_reg_create(N, dims, flags, 0);
 }
@@ -586,7 +586,7 @@ struct zspow_s {
 
 DEF_TYPEID(zspow_s);
 
-static void zspow_fun(const nlop_data_t* _data, int N, const bart_dim_t dims[N], complex float* dst, const complex float* src, complex float* der)
+static void zspow_fun(const nlop_data_t* _data, int N, const long dims[N], complex float* dst, const complex float* src, complex float* der)
 {
 	const auto data = CAST_DOWN(zspow_s, _data);
 
@@ -603,7 +603,7 @@ static void zspow_fun(const nlop_data_t* _data, int N, const bart_dim_t dims[N],
  * Operator computing the inverse
  * f(x) = x^p
  */
-const struct nlop_s* nlop_zspow_create(int N, const bart_dim_t dims[N], complex float exp)
+const struct nlop_s* nlop_zspow_create(int N, const long dims[N], complex float exp)
 {
 	PTR_ALLOC(struct zspow_s, data);
 	SET_TYPEID(zspow_s, data);
@@ -618,12 +618,12 @@ const struct nlop_s* nlop_zspow_create(int N, const bart_dim_t dims[N], complex 
  * Operator computing the smoothed pointwise absolute value
  * f(x) = sqrt(re(x)^2 + im (x)^2 + epsilon)
  */
-const struct nlop_s* nlop_smo_abs_create(int N, const bart_dim_t dims[N], float epsilon)
+const struct nlop_s* nlop_smo_abs_create(int N, const long dims[N], float epsilon)
 {
 	return nlop_zrss_reg_create(N, dims, 0, epsilon);
 }
 
-const struct nlop_s* nlop_zabs_create(int N, const bart_dim_t dims[N])
+const struct nlop_s* nlop_zabs_create(int N, const long dims[N])
 {
 	return nlop_zrss_reg_create(N, dims, 0, 0);
 }
@@ -633,7 +633,7 @@ const struct nlop_s* nlop_zabs_create(int N, const bart_dim_t dims[N])
  * Operator extracting unit-norm complex exponentials from complex arrays
  * f(x) = x / |x|
  */
-const struct nlop_s* nlop_zphsr_create(int N, const bart_dim_t dims[N])
+const struct nlop_s* nlop_zphsr_create(int N, const long dims[N])
 {
 	auto result = nlop_zdiv_create(N, dims);
 	result = nlop_chain2_FF(nlop_zabs_create(N, dims), 0, result, 1);

@@ -39,7 +39,7 @@
 static bool test_nlop_relu_der_adj(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 10, 7, 3 };
+	long dims[N] = { 10, 7, 3 };
 
 	const struct nlop_s* relu = nlop_relu_create(N, dims);
 
@@ -68,7 +68,7 @@ UT_REGISTER_TEST(test_nlop_relu_der_adj);
 static bool test_nlop_softmax_derivative(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 10, 7, 3 };
+	long dims[N] = { 10, 7, 3 };
 
 	const struct nlop_s* softmax = nlop_softmax_create(N, dims, 4);
 
@@ -89,7 +89,7 @@ UT_REGISTER_TEST(test_nlop_softmax_derivative);
 static bool test_nlop_softmax_der_adj(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 10, 7, 3 };
+	long dims[N] = { 10, 7, 3 };
 
 	const struct nlop_s* softmax = nlop_softmax_create(N, dims,4);
 
@@ -117,7 +117,7 @@ UT_REGISTER_TEST(test_nlop_softmax_der_adj);
 static bool test_nlop_sigmoid_derivative(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 10, 7, 3 };
+	long dims[N] = { 10, 7, 3 };
 
 	const struct nlop_s* sigmoid = nlop_sigmoid_create(N, dims);
 
@@ -135,7 +135,7 @@ UT_REGISTER_TEST(test_nlop_sigmoid_derivative);
 static bool test_nlop_sigmoid_der_adj(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 10, 7, 3 };
+	long dims[N] = { 10, 7, 3 };
 
 	const struct nlop_s* sigmoid = nlop_sigmoid_create(N, dims);
 
@@ -162,9 +162,9 @@ UT_REGISTER_TEST(test_nlop_sigmoid_der_adj);
 static bool test_nlop_stats(void)
 {
 	enum { N = 2 };
-	bart_dim_t idims[N] = { 10, 3 };
-	bart_flags_t flags = MD_BIT(0);
-	bart_dim_t odims[N];
+	long idims[N] = { 10, 3 };
+	unsigned long flags = MD_BIT(0);
+	long odims[N];
 	md_select_dims(N, ~flags, odims, idims);
 
 	complex float* src = md_alloc(N, idims, CFL_SIZE);
@@ -212,9 +212,9 @@ UT_REGISTER_TEST(test_nlop_stats);
 static bool test_nlop_normalize(void)
 {
 	enum { N = 2 };
-	bart_dim_t idims[N] = { 10, 3 };
-	bart_flags_t flags = MD_BIT(0);
-	bart_dim_t odims[N];
+	long idims[N] = { 10, 3 };
+	unsigned long flags = MD_BIT(0);
+	long odims[N];
 	md_select_dims(N, ~flags, odims, idims);
 
 	complex float* src = md_alloc(N, idims, CFL_SIZE);
@@ -261,10 +261,10 @@ UT_REGISTER_TEST(test_nlop_normalize);
 static bool test_nlop_bn(void)
 {
 	enum { N = 2 };
-	bart_dim_t idims[N] = { 10, 3 };
+	long idims[N] = { 10, 3 };
 
 	auto nlop = nlop_batchnorm_create(N, idims, MD_BIT(0), 0, STAT_TRAIN);
-	const bart_dim_t* statdims = nlop_generic_codomain(nlop, 1)->dims;
+	const long* statdims = nlop_generic_codomain(nlop, 1)->dims;
 	complex float* tmp = md_alloc(N + 1, statdims, CFL_SIZE);
 
 	nlop = nlop_set_input_const_F(nlop, 1, N + 1, statdims, true, tmp);
@@ -289,10 +289,10 @@ UT_REGISTER_TEST(test_nlop_bn);
 static bool test_nlop_conv_derivative(void)
 {
 	enum { N = 6 };
-	bart_dim_t dims_image[N] = { 6, 1, 2, 5, 1, 2};
-	bart_dim_t dims_kernel[N] = { 3, 4, 2, 2, 1, 2};
-	bart_dim_t dims_output[N] = { 4, 4, 2, 4, 1, 1};
-	bart_flags_t conv_flags = 9; //100100
+	long dims_image[N] = { 6, 1, 2, 5, 1, 2};
+	long dims_kernel[N] = { 3, 4, 2, 2, 1, 2};
+	long dims_output[N] = { 4, 4, 2, 4, 1, 1};
+	unsigned long conv_flags = 9; //100100
 
 	const struct nlop_s* conv_geom = nlop_convcorr_geom_create(N, conv_flags, dims_output, dims_image, dims_kernel, PAD_VALID, true, NULL, NULL, 'N');
 
@@ -312,10 +312,10 @@ UT_REGISTER_TEST(test_nlop_conv_derivative);
 static bool test_padding(void)
 {
 	enum { N = 2 };
-	bart_dim_t dims_in[N] = { 3, 2};
-	bart_dim_t dims_out[N] = {7, 4};
+	long dims_in[N] = { 3, 2};
+	long dims_out[N] = {7, 4};
 
-	bart_dim_t pad[] = {2, 1};
+	long pad[] = {2, 1};
 
 	complex float in[] = {	1, 2, 3,
 				4, 5, 6};
@@ -365,7 +365,7 @@ static bool test_padding(void)
 	linop_free(lin_pad);
 	err += md_zrmse(2, dims_out, exp_cyc, out);
 
-	bart_dim_t pad_down[] = {-2, -1};
+	long pad_down[] = {-2, -1};
 	lin_pad = linop_padding_create(2, dims_out, PAD_VALID, pad_down, pad_down);
 	linop_forward_unchecked(lin_pad, in, out);
 	linop_free(lin_pad);
@@ -382,10 +382,10 @@ UT_REGISTER_TEST(test_padding);
 static bool test_padding_adjoint(void)
 {
 	enum { N = 2 };
-	bart_dim_t dims_in[N] = { 3, 2};
-	bart_dim_t dims_out[N] = {7, 4};
+	long dims_in[N] = { 3, 2};
+	long dims_out[N] = {7, 4};
 
-	bart_dim_t pad[] = {2, 1};
+	long pad[] = {2, 1};
 
 	const struct linop_s* lin_pad;
 	float err = 0;
@@ -405,7 +405,7 @@ static bool test_padding_adjoint(void)
 	err += linop_test_adjoint(lin_pad);
 	linop_free(lin_pad);
 
-	bart_dim_t pad_down[] = {-2, -1};
+	long pad_down[] = {-2, -1};
 	lin_pad = linop_padding_create(2, dims_out, PAD_VALID, pad_down, pad_down);
 	err += linop_test_adjoint(lin_pad);
 	linop_free(lin_pad);
@@ -422,7 +422,7 @@ UT_REGISTER_TEST(test_padding_adjoint);
 static bool test_dense_der(void)
 {
 	int N = 2;
-	bart_dim_t indims[] = {210, 18};
+	long indims[] = {210, 18};
 
 	const struct linop_s* id = linop_identity_create(N, indims);
 	const struct nlop_s* network = nlop_from_linop(id);
@@ -447,14 +447,14 @@ UT_REGISTER_TEST(test_dense_der);
 static bool test_conv_der(void)
 {
 	int N = 5;
-	bart_dim_t indims[] = { 5, 7, 6, 3, 5 };
+	long indims[] = { 5, 7, 6, 3, 5 };
 
 	const struct linop_s* id = linop_identity_create(N, indims);
 	const struct nlop_s* network = nlop_from_linop(id);
 	linop_free(id);
 
-	bart_dim_t kernel_size[] = { 3, 3, 1 };
-	bart_dim_t ones[] = { 1, 1, 1 };
+	long kernel_size[] = { 3, 3, 1 };
+	long ones[] = { 1, 1, 1 };
 
 	network = append_convcorr_layer(network, 0, 4, kernel_size, true, PAD_VALID, true, ones, ones);
 
@@ -475,10 +475,10 @@ UT_REGISTER_TEST(test_conv_der);
 static bool test_conv_transp(void)
 {
 	int N = 5;
-	bart_dim_t indims[] = { 5, 7, 6, 3, 5 };
-	bart_dim_t outdims[] = { 4, 5, 4, 3, 5 };
-	bart_dim_t kernel_size[] = { 3, 3, 1 };
-	bart_dim_t kdims[] = { 4, 5, 3, 3 ,1 };
+	long indims[] = { 5, 7, 6, 3, 5 };
+	long outdims[] = { 4, 5, 4, 3, 5 };
+	long kernel_size[] = { 3, 3, 1 };
+	long kdims[] = { 4, 5, 3, 3 ,1 };
 
 	complex float* kernel = md_alloc(N, kdims, CFL_SIZE);
 	md_gaussian_rand(N, kdims, kernel);
@@ -511,8 +511,8 @@ UT_REGISTER_TEST(test_conv_transp);
 static bool test_mpool_der(void)
 {
 	int N = 5;
-	bart_dim_t indims[] = { 2, 6, 1, 1, 2 }; //channel, x, y, z, batch
-	bart_dim_t outdims[] = { 2, 2, 1, 1, 2 }; //channel, x, y, z, batch
+	long indims[] = { 2, 6, 1, 1, 2 }; //channel, x, y, z, batch
+	long outdims[] = { 2, 2, 1, 1, 2 }; //channel, x, y, z, batch
 
 	//digits reference, e.g. 1204.: batch(1), channel(2), count(04)
 	complex float in[] = {	1101., 1202., 1103., 1204., 1105., 1206., 1107., 1208., 1109., 1210., 1111., 1212.,
@@ -526,7 +526,7 @@ static bool test_mpool_der(void)
 	complex float* out = md_alloc(N, indims, CFL_SIZE);
 
 	const struct nlop_s* network = nlop_from_linop_F(linop_identity_create(N, indims));
-	network = append_maxpool_layer(network, 0, MD_DIMS(3, 1, 1), PAD_VALID, true);
+	network = append_maxpool_layer(network, 0, MAKE_ARRAY(3l, 1l, 1l), PAD_VALID, true);
 	nlop_apply(network, 5, outdims, out, N, indims, in);
 	nlop_adjoint(network, N, indims, in, N, outdims, out);
 
@@ -545,8 +545,8 @@ UT_REGISTER_TEST(test_mpool_der);
 static bool test_bias_der(void)
 {
 	int N = 4;
-	bart_dim_t dims[] = { 4, 1, 3, 4 };
-	bart_dim_t bdims[] = { 1, 1, 3, 4 };
+	long dims[] = { 4, 1, 3, 4 };
+	long bdims[] = { 1, 1, 3, 4 };
 
 	const struct nlop_s* network = nlop_bias_create(N, dims, bdims);
 
@@ -566,13 +566,13 @@ UT_REGISTER_TEST(test_bias_der);
 static bool test_sigmoid_der(void)
 {
 	int N = 4;
-	bart_dim_t dims[] = { 3, 8, 3, 5 };
+	long dims[] = { 3, 8, 3, 5 };
 
 	const struct linop_s* id = linop_identity_create(N, dims);
 	const struct nlop_s* network = nlop_from_linop(id);
 	linop_free(id);
 
-	network = append_activation(network, 0, ACT_SIGMOID, 0);
+	network = append_activation(network, 0, ACT_SIGMOID, 0UL);
 
 	float err_adj = nlop_test_adj_derivatives(network, true);
 	float err_der = nlop_test_derivatives(network);
@@ -592,7 +592,7 @@ UT_REGISTER_TEST(test_sigmoid_der);
 static bool test_nlop_rbf(void)
 {
  	enum { N = 3 };
- 	bart_dim_t dims[N] = { 4, 3, 5};
+ 	long dims[N] = { 4, 3, 5};
 
 	auto op = nlop_activation_rbf_create(dims, 1., -1., false);
 
@@ -610,7 +610,7 @@ UT_REGISTER_TEST(test_nlop_rbf);
 static bool test_nlop_rbf2(void)
 {
  	enum { N = 3 };
- 	bart_dim_t dims[N] = { 4, 3, 5};
+ 	long dims[N] = { 4, 3, 5};
 
 	auto op = nlop_activation_rbf_create(dims, 1., -1., true);
 
@@ -634,20 +634,20 @@ UT_REGISTER_TEST(test_nlop_rbf2);
 static bool test_nlop_conv_strs_dil(void)
 {
 	int N = 5;
-	bart_dim_t idims[] = {3, 7, 5, 1, 1};
-	bart_dim_t odims[] = {3, 7, 5, 1, 1};
+	long idims[] = {3, 7, 5, 1, 1};
+	long odims[] = {3, 7, 5, 1, 1};
 
-	bart_dim_t dilations[] = {2, 2, 1};
-	bart_stride_t strides[] = {2, 2, 1};
-	bart_dim_t kernel_size[] = {3, 3, 1};
-	bart_dim_t kernel_size_no_dil[] = {5, 5, 1};
+	long dilations[] = {2, 2, 1};
+	long strides[] = {2, 2, 1};
+	long kernel_size[] = {3, 3, 1};
+	long kernel_size_no_dil[] = {5, 5, 1};
 
-	bart_dim_t kdims[] = {odims[0], idims[0], kernel_size[0], kernel_size[1], kernel_size[2]};
-	bart_dim_t kdims_no_dil[] = {odims[0], idims[0], kernel_size_no_dil[0], kernel_size_no_dil[1], kernel_size_no_dil[2]};
+	long kdims[] = {odims[0], idims[0], kernel_size[0], kernel_size[1], kernel_size[2]};
+	long kdims_no_dil[] = {odims[0], idims[0], kernel_size_no_dil[0], kernel_size_no_dil[1], kernel_size_no_dil[2]};
 
 	// calculation of outdims for PAD_VALID convolution with strides
-	bart_dim_t odims_pad_valid[N];
-	bart_dim_t odims_strided[N];
+	long odims_pad_valid[N];
+	long odims_strided[N];
 	md_copy_dims(N, odims_pad_valid, odims);
 	md_copy_dims(N, odims_strided, odims);
 
@@ -662,13 +662,13 @@ static bool test_nlop_conv_strs_dil(void)
 
 	// test dilations
 	// calculate strides strs_dil to manually create kernel equivalent to kernel with dilations
-	bart_stride_t strs_kdims[N];
+	long strs_kdims[N];
 	md_calc_strides(N, strs_kdims, kdims, CFL_SIZE);
 
-	bart_stride_t strs_dil[N];
+	long strs_dil[N];
 	md_copy_strides(N, strs_dil, strs_kdims);
-	bart_dim_t prod_dil = 1;
-	bart_dim_t prod_no_dil = 1;
+	long prod_dil = 1;
+	long prod_no_dil = 1;
 
 	for (int i = 0; i < 3; i++){
 
@@ -713,13 +713,13 @@ static bool test_nlop_conv_strs_dil(void)
 	nlop_apply(forward_pad, N, odims_pad_valid, output_pad, N, idims, input);
 
 	// calculate strides strs_strs to manually create equivalent of strided convolution
-	bart_stride_t strs_pad[N];
+	long strs_pad[N];
 	md_calc_strides(N, strs_pad, odims_strided, CFL_SIZE);
 
-	bart_stride_t strs_strs[N];
+	long strs_strs[N];
 	md_copy_strides(N, strs_strs, strs_pad);
-	bart_stride_t prod_strs = 1;
-	bart_stride_t prod_no_strs = 1;
+	long prod_strs = 1;
+	long prod_no_strs = 1;
 	strs_strs[4] = odims[0] * 8;
 
 	for (int i = 0; i < 3; i++) {
@@ -760,7 +760,7 @@ UT_REGISTER_TEST(test_nlop_conv_strs_dil);
 
 static bool test_dice(void)
 {
-	bart_dim_t dims[] = { 4, 12 };
+	long dims[] = { 4, 12 };
 
 	auto nlop = nlop_dice_create(ARRAY_SIZE(dims), dims, MD_BIT(0), 0, -1., false);
 	nlop = nlop_chain2_FF(nlop_softmax_create(ARRAY_SIZE(dims), dims, 1) , 0, nlop, 0);
@@ -779,7 +779,7 @@ UT_REGISTER_TEST(test_dice);
 
 static bool test_dice2(void)
 {
-	bart_dim_t dims[] = {4, 12, 5};
+	long dims[] = {4, 12, 5};
 
 	auto nlop = nlop_dice_create(ARRAY_SIZE(dims), dims, MD_BIT(0), MD_BIT(2), -2., false);
 	nlop = nlop_chain2_FF(nlop_softmax_create(ARRAY_SIZE(dims), dims, 1) , 0, nlop, 0);
@@ -798,7 +798,7 @@ UT_REGISTER_TEST(test_dice2);
 
 static bool test_dice3(void)
 {
-	bart_dim_t dims[] = { 4, 12, 5 };
+	long dims[] = { 4, 12, 5 };
 
 	auto nlop = nlop_dice_create(ARRAY_SIZE(dims), dims, MD_BIT(0), 0, 0, true);
 	nlop = nlop_chain2_FF(nlop_softmax_create(ARRAY_SIZE(dims), dims, 1) , 0, nlop, 0);
@@ -819,7 +819,7 @@ UT_REGISTER_TEST(test_dice3);
 static bool test_nlop_cardioid(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 10, 7, 3 };
+	long dims[N] = { 10, 7, 3 };
 
 	const struct nlop_s* cardioid = nlop_cardioid_create(N, dims);
 	cardioid = nlop_chain_FF(nlop_from_linop_F(linop_zreal_create(N, dims)), cardioid);

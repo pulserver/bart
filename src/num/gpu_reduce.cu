@@ -21,11 +21,11 @@
 #define BLOCKSIZE 1024
 
 
-static bart_dim_t gridsizeX(bart_dim_t N, unsigned int blocksize)
+static long gridsizeX(long N, unsigned int blocksize)
 {
 	return (N + blocksize - 1) / blocksize;
 }
-static unsigned int gridsizeY(bart_dim_t N, unsigned int blocksize)
+static unsigned int gridsizeY(long N, unsigned int blocksize)
 {
 	return MIN(32768, (N + blocksize - 1) / blocksize);
 }
@@ -41,7 +41,7 @@ __device__ static __inline__ void dev_atomic_zadd(cuFloatComplex* arg, cuFloatCo
 	atomicAdd(&(arg->y), val.y);
 }
 
-__global__ static void kern_reduce_zadd_outer(bart_dim_t dim_reduce, bart_dim_t dim_batch, cuFloatComplex* dst, const cuFloatComplex* src)
+__global__ static void kern_reduce_zadd_outer(long dim_reduce, long dim_batch, cuFloatComplex* dst, const cuFloatComplex* src)
 {
 	extern __shared__ cuFloatComplex sdata_c[];
 
@@ -51,11 +51,11 @@ __global__ static void kern_reduce_zadd_outer(bart_dim_t dim_reduce, bart_dim_t 
 	int idxx = blockIdx.x * blockDim.x + threadIdx.x;
 	int idxy = blockIdx.y * blockDim.y + threadIdx.y;
 
-	for (bart_dim_t ix = idxx; ix < dim_batch; ix += gridDim.x * blockDim.x){
+	for (long ix = idxx; ix < dim_batch; ix += gridDim.x * blockDim.x){
 
 		sdata_c[tidy * blockDim.x + tidx] = src[ idxy * dim_batch + ix];
 
-		for (bart_dim_t j = blockDim.y * gridDim.y + idxy; j < dim_reduce; j += blockDim.y * gridDim.y)
+		for (long j = blockDim.y * gridDim.y + idxy; j < dim_reduce; j += blockDim.y * gridDim.y)
 			sdata_c[tidy * blockDim.x + tidx] = dev_zadd(sdata_c[tidy * blockDim.x + tidx], src[j * dim_batch + ix]);
 
 		__syncthreads();
@@ -73,17 +73,17 @@ __global__ static void kern_reduce_zadd_outer(bart_dim_t dim_reduce, bart_dim_t 
 
 #include "misc/debug.h"
 
-extern "C" void cuda_reduce_zadd_outer(bart_dim_t dim_reduce, bart_dim_t dim_batch, _Complex float* dst, const _Complex float* src)
+extern "C" void cuda_reduce_zadd_outer(long dim_reduce, long dim_batch, _Complex float* dst, const _Complex float* src)
 {
-	bart_dim_t maxBlockSizeX_dim = 1;
+	long maxBlockSizeX_dim = 1;
 	while (maxBlockSizeX_dim < dim_batch)
 		maxBlockSizeX_dim *= 2;
 
-	bart_dim_t maxBlockSizeY_dim = 1;
+	long maxBlockSizeY_dim = 1;
 	while (8 * maxBlockSizeY_dim < dim_reduce)
 		maxBlockSizeY_dim *= 2;
 
-	bart_dim_t maxBlockSizeX_gpu = 32;
+	long maxBlockSizeX_gpu = 32;
 	unsigned int blockSizeX = MIN(maxBlockSizeX_gpu, maxBlockSizeX_dim);
 	unsigned int blockSizeY = MIN(maxBlockSizeY_dim, BLOCKSIZE / blockSizeX);
 
@@ -96,7 +96,7 @@ extern "C" void cuda_reduce_zadd_outer(bart_dim_t dim_reduce, bart_dim_t dim_bat
 }
 
 
-__global__ static void kern_reduce_zadd_inner(bart_dim_t dim_reduce, bart_dim_t dim_batch, cuFloatComplex* dst, const cuFloatComplex* src)
+__global__ static void kern_reduce_zadd_inner(long dim_reduce, long dim_batch, cuFloatComplex* dst, const cuFloatComplex* src)
 {
 	extern __shared__ cuFloatComplex sdata_c[];
 
@@ -106,13 +106,13 @@ __global__ static void kern_reduce_zadd_inner(bart_dim_t dim_reduce, bart_dim_t 
 	int idxx = blockIdx.x * blockDim.x + threadIdx.x;
 	int idxy = blockIdx.y * blockDim.y + threadIdx.y;
 
-	for (bart_dim_t iy = idxy; iy < dim_batch; iy += gridDim.y * blockDim.y){
+	for (long iy = idxy; iy < dim_batch; iy += gridDim.y * blockDim.y){
 
 		sdata_c[tidy * blockDim.x + tidx] = src[ idxx + dim_reduce * iy];
 
 		//printf("%d %ld\n", idxx, iy);
 
-		for (bart_dim_t j = blockDim.x * gridDim.x + idxx; j < dim_reduce; j += blockDim.x * gridDim.x)
+		for (long j = blockDim.x * gridDim.x + idxx; j < dim_reduce; j += blockDim.x * gridDim.x)
 			sdata_c[tidy * blockDim.x + tidx] = dev_zadd(sdata_c[tidy * blockDim.x + tidx], src[j + dim_reduce * iy]);
 
 		__syncthreads();
@@ -128,17 +128,17 @@ __global__ static void kern_reduce_zadd_inner(bart_dim_t dim_reduce, bart_dim_t 
 	}
 }
 
-extern "C" void cuda_reduce_zadd_inner(bart_dim_t dim_reduce, bart_dim_t dim_batch, _Complex float* dst, const _Complex float* src)
+extern "C" void cuda_reduce_zadd_inner(long dim_reduce, long dim_batch, _Complex float* dst, const _Complex float* src)
 {
-	bart_dim_t maxBlockSizeX_dim = 1;
+	long maxBlockSizeX_dim = 1;
 	while (8 * maxBlockSizeX_dim < dim_reduce)
 		maxBlockSizeX_dim *= 2;
 
-	bart_dim_t maxBlockSizeY_dim = 1;
+	long maxBlockSizeY_dim = 1;
 	while (maxBlockSizeY_dim < dim_batch)
 		maxBlockSizeY_dim *= 2;
 
-	bart_dim_t maxBlockSizeX_gpu = 32;
+	long maxBlockSizeX_gpu = 32;
 	unsigned int blockSizeX = MIN(maxBlockSizeX_gpu, maxBlockSizeX_dim);
 	unsigned int blockSizeY = MIN(maxBlockSizeY_dim, BLOCKSIZE / blockSizeX);
 
@@ -159,7 +159,7 @@ __device__ static __inline__ void dev_atomic_add(float* arg, float val)
 	atomicAdd(arg, val);
 }
 
-__global__ static void kern_reduce_add_outer(bart_dim_t dim_reduce, bart_dim_t dim_batch, float* dst, const float* src)
+__global__ static void kern_reduce_add_outer(long dim_reduce, long dim_batch, float* dst, const float* src)
 {
 	extern __shared__ float sdata_s[];
 
@@ -169,11 +169,11 @@ __global__ static void kern_reduce_add_outer(bart_dim_t dim_reduce, bart_dim_t d
 	int idxx = blockIdx.x * blockDim.x + threadIdx.x;
 	int idxy = blockIdx.y * blockDim.y + threadIdx.y;
 
-	for (bart_dim_t ix = idxx; ix < dim_batch; ix += gridDim.x * blockDim.x){
+	for (long ix = idxx; ix < dim_batch; ix += gridDim.x * blockDim.x){
 
 		sdata_s[tidy * blockDim.x + tidx] = src[ idxy * dim_batch + ix];
 
-		for (bart_dim_t j = blockDim.y * gridDim.y + idxy; j < dim_reduce; j += blockDim.y * gridDim.y)
+		for (long j = blockDim.y * gridDim.y + idxy; j < dim_reduce; j += blockDim.y * gridDim.y)
 			sdata_s[tidy * blockDim.x + tidx] = dev_add(sdata_s[tidy * blockDim.x + tidx], src[j * dim_batch + ix]);
 
 		__syncthreads();
@@ -189,17 +189,17 @@ __global__ static void kern_reduce_add_outer(bart_dim_t dim_reduce, bart_dim_t d
 	}
 }
 
-extern "C" void cuda_reduce_add_outer(bart_dim_t dim_reduce, bart_dim_t dim_batch, float* dst, const float* src)
+extern "C" void cuda_reduce_add_outer(long dim_reduce, long dim_batch, float* dst, const float* src)
 {
-	bart_dim_t maxBlockSizeX_dim = 1;
+	long maxBlockSizeX_dim = 1;
 	while (maxBlockSizeX_dim < dim_batch)
 		maxBlockSizeX_dim *= 2;
 
-	bart_dim_t maxBlockSizeY_dim = 1;
+	long maxBlockSizeY_dim = 1;
 	while (8 * maxBlockSizeY_dim < dim_reduce)
 		maxBlockSizeY_dim *= 2;
 
-	bart_dim_t maxBlockSizeX_gpu = 32;
+	long maxBlockSizeX_gpu = 32;
 	unsigned int blockSizeX = MIN(maxBlockSizeX_gpu, maxBlockSizeX_dim);
 	unsigned int blockSizeY = MIN(maxBlockSizeY_dim, BLOCKSIZE / blockSizeX);
 
@@ -212,7 +212,7 @@ extern "C" void cuda_reduce_add_outer(bart_dim_t dim_reduce, bart_dim_t dim_batc
 }
 
 
-__global__ static void kern_reduce_add_inner(bart_dim_t dim_reduce, bart_dim_t dim_batch, float* dst, const float* src)
+__global__ static void kern_reduce_add_inner(long dim_reduce, long dim_batch, float* dst, const float* src)
 {
 	extern __shared__ float sdata_s[];
 
@@ -222,13 +222,13 @@ __global__ static void kern_reduce_add_inner(bart_dim_t dim_reduce, bart_dim_t d
 	int idxx = blockIdx.x * blockDim.x + threadIdx.x;
 	int idxy = blockIdx.y * blockDim.y + threadIdx.y;
 
-	for (bart_dim_t iy = idxy; iy < dim_batch; iy += gridDim.y * blockDim.y){
+	for (long iy = idxy; iy < dim_batch; iy += gridDim.y * blockDim.y){
 
 		sdata_s[tidy * blockDim.x + tidx] = src[ idxx + dim_reduce * iy];
 
 		//printf("%d %ld\n", idxx, iy);
 
-		for (bart_dim_t j = blockDim.x * gridDim.x + idxx; j < dim_reduce; j += blockDim.x * gridDim.x)
+		for (long j = blockDim.x * gridDim.x + idxx; j < dim_reduce; j += blockDim.x * gridDim.x)
 			sdata_s[tidy * blockDim.x + tidx] = dev_add(sdata_s[tidy * blockDim.x + tidx], src[j + dim_reduce * iy]);
 
 		__syncthreads();
@@ -244,17 +244,17 @@ __global__ static void kern_reduce_add_inner(bart_dim_t dim_reduce, bart_dim_t d
 	}
 }
 
-extern "C" void cuda_reduce_add_inner(bart_dim_t dim_reduce, bart_dim_t dim_batch, float* dst, const float* src)
+extern "C" void cuda_reduce_add_inner(long dim_reduce, long dim_batch, float* dst, const float* src)
 {
-	bart_dim_t maxBlockSizeX_dim = 1;
+	long maxBlockSizeX_dim = 1;
 	while (8 * maxBlockSizeX_dim < dim_reduce)
 		maxBlockSizeX_dim *= 2;
 
-	bart_dim_t maxBlockSizeY_dim = 1;
+	long maxBlockSizeY_dim = 1;
 	while (maxBlockSizeY_dim < dim_batch)
 		maxBlockSizeY_dim *= 2;
 
-	bart_dim_t maxBlockSizeX_gpu = 32;
+	long maxBlockSizeX_gpu = 32;
 	unsigned int blockSizeX = MIN(maxBlockSizeX_gpu, maxBlockSizeX_dim);
 	unsigned int blockSizeY = MIN(maxBlockSizeY_dim, BLOCKSIZE / blockSizeX);
 
@@ -290,7 +290,7 @@ __device__ static __inline__ void dev_atomic_zmax(cuFloatComplex* arg, cuFloatCo
 	} while (assumed != old_ull);
 }
 
-__global__ static void kern_reduce_zmax_outer(bart_dim_t dim_reduce, bart_dim_t dim_batch, cuFloatComplex* dst, const cuFloatComplex* src)
+__global__ static void kern_reduce_zmax_outer(long dim_reduce, long dim_batch, cuFloatComplex* dst, const cuFloatComplex* src)
 {
 	extern __shared__ cuFloatComplex sdata_c[];
 
@@ -300,11 +300,11 @@ __global__ static void kern_reduce_zmax_outer(bart_dim_t dim_reduce, bart_dim_t 
 	int idxx = blockIdx.x * blockDim.x + threadIdx.x;
 	int idxy = blockIdx.y * blockDim.y + threadIdx.y;
 
-	for (bart_dim_t ix = idxx; ix < dim_batch; ix += gridDim.x * blockDim.x){
+	for (long ix = idxx; ix < dim_batch; ix += gridDim.x * blockDim.x){
 
 		sdata_c[tidy * blockDim.x + tidx] = src[ idxy * dim_batch + ix];
 
-		for (bart_dim_t j = blockDim.y * gridDim.y + idxy; j < dim_reduce; j += blockDim.y * gridDim.y)
+		for (long j = blockDim.y * gridDim.y + idxy; j < dim_reduce; j += blockDim.y * gridDim.y)
 			sdata_c[tidy * blockDim.x + tidx] = dev_zmax(sdata_c[tidy * blockDim.x + tidx], src[j * dim_batch + ix]);
 
 		__syncthreads();
@@ -320,17 +320,17 @@ __global__ static void kern_reduce_zmax_outer(bart_dim_t dim_reduce, bart_dim_t 
 	}
 }
 
-extern "C" void cuda_reduce_zmax_outer(bart_dim_t dim_reduce, bart_dim_t dim_batch, _Complex float* dst, const _Complex float* src)
+extern "C" void cuda_reduce_zmax_outer(long dim_reduce, long dim_batch, _Complex float* dst, const _Complex float* src)
 {
-	bart_dim_t maxBlockSizeX_dim = 1;
+	long maxBlockSizeX_dim = 1;
 	while (maxBlockSizeX_dim < dim_batch)
 		maxBlockSizeX_dim *= 2;
 
-	bart_dim_t maxBlockSizeY_dim = 1;
+	long maxBlockSizeY_dim = 1;
 	while (8 * maxBlockSizeY_dim < dim_reduce)
 		maxBlockSizeY_dim *= 2;
 
-	bart_dim_t maxBlockSizeX_gpu = 32;
+	long maxBlockSizeX_gpu = 32;
 	unsigned int blockSizeX = MIN(maxBlockSizeX_gpu, maxBlockSizeX_dim);
 	unsigned int blockSizeY = MIN(maxBlockSizeY_dim, BLOCKSIZE / blockSizeX);
 
@@ -343,7 +343,7 @@ extern "C" void cuda_reduce_zmax_outer(bart_dim_t dim_reduce, bart_dim_t dim_bat
 }
 
 
-__global__ static void kern_reduce_zmax_inner(bart_dim_t dim_reduce, bart_dim_t dim_batch, cuFloatComplex* dst, const cuFloatComplex* src)
+__global__ static void kern_reduce_zmax_inner(long dim_reduce, long dim_batch, cuFloatComplex* dst, const cuFloatComplex* src)
 {
 	extern __shared__ cuFloatComplex sdata_c[];
 
@@ -353,13 +353,13 @@ __global__ static void kern_reduce_zmax_inner(bart_dim_t dim_reduce, bart_dim_t 
 	int idxx = blockIdx.x * blockDim.x + threadIdx.x;
 	int idxy = blockIdx.y * blockDim.y + threadIdx.y;
 
-	for (bart_dim_t iy = idxy; iy < dim_batch; iy += gridDim.y * blockDim.y){
+	for (long iy = idxy; iy < dim_batch; iy += gridDim.y * blockDim.y){
 
 		sdata_c[tidy * blockDim.x + tidx] = src[ idxx + dim_reduce * iy];
 
 		//printf("%d %ld\n", idxx, iy);
 
-		for (bart_dim_t j = blockDim.x * gridDim.x + idxx; j < dim_reduce; j += blockDim.x * gridDim.x)
+		for (long j = blockDim.x * gridDim.x + idxx; j < dim_reduce; j += blockDim.x * gridDim.x)
 			sdata_c[tidy * blockDim.x + tidx] = dev_zmax(sdata_c[tidy * blockDim.x + tidx], src[j + dim_reduce * iy]);
 
 		__syncthreads();
@@ -375,17 +375,17 @@ __global__ static void kern_reduce_zmax_inner(bart_dim_t dim_reduce, bart_dim_t 
 	}
 }
 
-extern "C" void cuda_reduce_zmax_inner(bart_dim_t dim_reduce, bart_dim_t dim_batch, _Complex float* dst, const _Complex float* src)
+extern "C" void cuda_reduce_zmax_inner(long dim_reduce, long dim_batch, _Complex float* dst, const _Complex float* src)
 {
-	bart_dim_t maxBlockSizeX_dim = 1;
+	long maxBlockSizeX_dim = 1;
 	while (8 * maxBlockSizeX_dim < dim_reduce)
 		maxBlockSizeX_dim *= 2;
 
-	bart_dim_t maxBlockSizeY_dim = 1;
+	long maxBlockSizeY_dim = 1;
 	while (maxBlockSizeY_dim < dim_batch)
 		maxBlockSizeY_dim *= 2;
 
-	bart_dim_t maxBlockSizeX_gpu = 32;
+	long maxBlockSizeX_gpu = 32;
 	unsigned int blockSizeX = MIN(maxBlockSizeX_gpu, maxBlockSizeX_dim);
 	unsigned int blockSizeY = MIN(maxBlockSizeY_dim, BLOCKSIZE / blockSizeX);
 

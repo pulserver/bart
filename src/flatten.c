@@ -42,11 +42,11 @@ int main_flatten(int argc, char* argv[argc])
 
 	num_init();
 
-	bart_dim_t idims[DIMS];
+	long idims[DIMS];
 
 	complex float* idata = load_cfl(in_file, DIMS, idims);
 
-	bart_dim_t odims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	long odims[DIMS] = { [0 ... DIMS - 1] = 1 };
 	odims[0] = md_calc_size(DIMS, idims);
 
 	complex float* odata = create_cfl(out_file, DIMS, odims);

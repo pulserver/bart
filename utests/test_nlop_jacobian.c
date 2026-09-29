@@ -37,16 +37,16 @@
 
 static bool test_nlop_zprecomp_jacobian(void)
 {
-	bart_flags_t oflag  = MD_BIT(0) | MD_BIT(1) | MD_BIT(2);
-	bart_flags_t iflag1 = MD_BIT(0) | MD_BIT(1) | MD_BIT(3);
-	bart_flags_t iflag2 = MD_BIT(0) | MD_BIT(2) | MD_BIT(3);
+	unsigned long oflag  = MD_BIT(0) | MD_BIT(1) | MD_BIT(2);
+	unsigned long iflag1 = MD_BIT(0) | MD_BIT(1) | MD_BIT(3);
+	unsigned long iflag2 = MD_BIT(0) | MD_BIT(2) | MD_BIT(3);
 
 	enum { N = 5 };
-	bart_dim_t dims[N] = { 3, 4, 5, 6, 7 };
+	long dims[N] = { 3, 4, 5, 6, 7 };
 
-	bart_dim_t odims[N];
-	bart_dim_t idims1[N];
-	bart_dim_t idims2[N];
+	long odims[N];
+	long idims1[N];
+	long idims2[N];
 
 	md_select_dims(N, oflag, odims, dims);
 	md_select_dims(N, iflag1, idims1, dims);
@@ -68,16 +68,16 @@ UT_REGISTER_TEST(test_nlop_zprecomp_jacobian);
 
 static bool test_nlop_zprecomp_jacobian2(void)
 {
-	bart_flags_t oflag  = MD_BIT(0) | MD_BIT(1) | MD_BIT(2);
-	bart_flags_t iflag1 = MD_BIT(0) | MD_BIT(1) | MD_BIT(3);
-	bart_flags_t iflag2 = MD_BIT(0) | MD_BIT(2) | MD_BIT(3);
+	unsigned long oflag  = MD_BIT(0) | MD_BIT(1) | MD_BIT(2);
+	unsigned long iflag1 = MD_BIT(0) | MD_BIT(1) | MD_BIT(3);
+	unsigned long iflag2 = MD_BIT(0) | MD_BIT(2) | MD_BIT(3);
 
 	enum { N = 5 };
-	bart_dim_t dims[N] = { 3, 4, 5, 6, 7 };
+	long dims[N] = { 3, 4, 5, 6, 7 };
 
-	bart_dim_t odims[N];
-	bart_dim_t idims1[N];
-	bart_dim_t idims2[N];
+	long odims[N];
+	long idims1[N];
+	long idims2[N];
 
 	md_select_dims(N, oflag, odims, dims);
 	md_select_dims(N, iflag1, idims1, dims);
@@ -99,16 +99,16 @@ UT_REGISTER_TEST(test_nlop_zprecomp_jacobian2);
 
 static bool test_nlop_zprecomp_jacobian3(void)
 {
-	bart_flags_t oflag  = MD_BIT(0) | MD_BIT(1) | MD_BIT(2);
-	bart_flags_t iflag1 = MD_BIT(0) | MD_BIT(1) | MD_BIT(3);
-	bart_flags_t iflag2 = MD_BIT(0) | MD_BIT(2) | MD_BIT(3);
+	unsigned long oflag  = MD_BIT(0) | MD_BIT(1) | MD_BIT(2);
+	unsigned long iflag1 = MD_BIT(0) | MD_BIT(1) | MD_BIT(3);
+	unsigned long iflag2 = MD_BIT(0) | MD_BIT(2) | MD_BIT(3);
 
 	enum { N = 5 };
-	bart_dim_t dims[N] = { 3, 4, 5, 6, 7 };
+	long dims[N] = { 3, 4, 5, 6, 7 };
 
-	bart_dim_t odims[N];
-	bart_dim_t idims1[N];
-	bart_dim_t idims2[N];
+	long odims[N];
+	long idims1[N];
+	long idims2[N];
 
 	md_select_dims(N, oflag, odims, dims);
 	md_select_dims(N, iflag1, idims1, dims);
@@ -132,16 +132,16 @@ UT_UNUSED_TEST(test_nlop_zprecomp_jacobian3);
 
 static bool test_nlop_zrprecomp_jacobian(void)
 {
-	bart_flags_t oflag  = MD_BIT(0) | MD_BIT(1) | MD_BIT(2);
-	bart_flags_t iflag1 = MD_BIT(0) | MD_BIT(1) | MD_BIT(3);
-	bart_flags_t iflag2 = MD_BIT(0) | MD_BIT(2) | MD_BIT(3);
+	unsigned long oflag  = MD_BIT(0) | MD_BIT(1) | MD_BIT(2);
+	unsigned long iflag1 = MD_BIT(0) | MD_BIT(1) | MD_BIT(3);
+	unsigned long iflag2 = MD_BIT(0) | MD_BIT(2) | MD_BIT(3);
 
 	enum { N = 5 };
-	bart_dim_t dims[N] = { 3, 4, 5, 6, 7 };
+	long dims[N] = { 3, 4, 5, 6, 7 };
 
-	bart_dim_t odims[N];
-	bart_dim_t idims1[N];
-	bart_dim_t idims2[N];
+	long odims[N];
+	long idims1[N];
+	long idims2[N];
 
 	md_select_dims(N, oflag, odims, dims);
 	md_select_dims(N, iflag1, idims1, dims);
@@ -163,16 +163,16 @@ UT_REGISTER_TEST(test_nlop_zrprecomp_jacobian);
 
 static bool test_nlop_zrprecomp_jacobian2(void)
 {
-	bart_flags_t oflag  = MD_BIT(0) | MD_BIT(1) | MD_BIT(2);
-	bart_flags_t iflag1 = MD_BIT(0) | MD_BIT(1) | MD_BIT(3);
-	bart_flags_t iflag2 = MD_BIT(0) | MD_BIT(2) | MD_BIT(3);
+	unsigned long oflag  = MD_BIT(0) | MD_BIT(1) | MD_BIT(2);
+	unsigned long iflag1 = MD_BIT(0) | MD_BIT(1) | MD_BIT(3);
+	unsigned long iflag2 = MD_BIT(0) | MD_BIT(2) | MD_BIT(3);
 
 	enum { N = 5 };
-	bart_dim_t dims[N] = { 3, 4, 5, 6, 7 };
+	long dims[N] = { 3, 4, 5, 6, 7 };
 
-	bart_dim_t odims[N];
-	bart_dim_t idims1[N];
-	bart_dim_t idims2[N];
+	long odims[N];
+	long idims1[N];
+	long idims2[N];
 
 	md_select_dims(N, oflag, odims, dims);
 	md_select_dims(N, iflag1, idims1, dims);
@@ -194,16 +194,16 @@ UT_REGISTER_TEST(test_nlop_zrprecomp_jacobian2);
 
 static bool test_nlop_zrprecomp_jacobian3(void)
 {
-	bart_flags_t oflag  = MD_BIT(0) | MD_BIT(1) | MD_BIT(2);
-	bart_flags_t iflag1 = MD_BIT(0) | MD_BIT(1) | MD_BIT(3);
-	bart_flags_t iflag2 = MD_BIT(0) | MD_BIT(2) | MD_BIT(3);
+	unsigned long oflag  = MD_BIT(0) | MD_BIT(1) | MD_BIT(2);
+	unsigned long iflag1 = MD_BIT(0) | MD_BIT(1) | MD_BIT(3);
+	unsigned long iflag2 = MD_BIT(0) | MD_BIT(2) | MD_BIT(3);
 
 	enum { N = 5 };
-	bart_dim_t dims[N] = { 3, 4, 5, 6, 7 };
+	long dims[N] = { 3, 4, 5, 6, 7 };
 
-	bart_dim_t odims[N];
-	bart_dim_t idims1[N];
-	bart_dim_t idims2[N];
+	long odims[N];
+	long idims1[N];
+	long idims2[N];
 
 	md_select_dims(N, oflag, odims, dims);
 	md_select_dims(N, iflag1, idims1, dims);

@@ -31,7 +31,7 @@ static const char help_str[] = "Compute variance along selected dimensions speci
 
 int main_var(int argc, char* argv[argc])
 {
-	bart_flags_t flags = 0;
+	unsigned long flags = 0;
 	const char* in_file = NULL;
 	const char* out_file = NULL;
 
@@ -48,8 +48,8 @@ int main_var(int argc, char* argv[argc])
 
 	num_init();
 
-	bart_dim_t idims[DIMS];
-	bart_dim_t odims[DIMS];
+	long idims[DIMS];
+	long odims[DIMS];
 
 	complex float* in = load_cfl(in_file, DIMS, idims);
 

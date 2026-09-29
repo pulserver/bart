@@ -36,7 +36,7 @@ static bool test_cuda_nlop_pulse(void)
 	struct pulse_sinc ps = pulse_sinc_defaults;
 	pulse_sinc_init(&ps, 0.001, 90., 0., 4., ps.alpha);
 
-	bart_dim_t dims[16] = { [0 ... 15] = 1 };
+	long dims[16] = { [0 ... 15] = 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -65,7 +65,7 @@ static bool test_cuda_nlop_hypsec(void)
 	struct pulse_hypsec ps = pulse_hypsec_defaults;
 	pulse_hypsec_init(GYRO, &ps);
 
-	bart_dim_t dims[16] = { [0 ... 15] = 1 };
+	long dims[16] = { [0 ... 15] = 1 };
 	int N = ARRAY_SIZE(dims);
 
 	struct sim_config_s sim = sim_config_default_cpu;
@@ -94,7 +94,7 @@ static bool test_cuda_flash_ops_create(void)
 	struct flash_config_s config = flash_config_default;
 	config.npixels = 1;
 
-	bart_dim_t sim_dims[] = { [0 ... DIMS - 1] = 1 };
+	long sim_dims[] = { [0 ... DIMS - 1] = 1 };
 	int N = ARRAY_SIZE(sim_dims);
 
 	struct sim_config_s sim_cpu = sim_config_default_cpu;
@@ -111,13 +111,13 @@ static bool test_cuda_flash_ops_create(void)
 	complex float imag[] = { 0., 0., 1. };
 	complex float par[] = { config.r1, config.r2, config.b1, config.b0 };
 
-	bart_dim_t dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	long dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	N = ARRAY_SIZE(dims);
 
-	bart_dim_t mdims[N];
+	long mdims[N];
 	md_select_dims(N, ~TE_FLAG & ~COEFF_FLAG, mdims, dims);
 
-	bart_dim_t sdims[N];
+	long sdims[N];
 	md_select_dims(N, ~COEFF_FLAG, sdims, dims);
 
 	complex float omag_cpu[3];
@@ -144,7 +144,7 @@ static bool test_cuda_ir_flash_ops_create(void)
 	struct flash_config_s config = flash_config_default;
 	config.npixels = 1;
 
-	bart_dim_t sim_dims[] = { [0 ... DIMS - 1] = 1 };
+	long sim_dims[] = { [0 ... DIMS - 1] = 1 };
 	int N = ARRAY_SIZE(sim_dims);
 
 	struct sim_config_s sim_cpu = sim_config_default_cpu;
@@ -161,13 +161,13 @@ static bool test_cuda_ir_flash_ops_create(void)
 	complex float imag[] = { 0., 0., 1. };
 	complex float par[] = { config.r1, config.r2, config.b1, config.b0 };
 
-	bart_dim_t dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	long dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	N = ARRAY_SIZE(dims);
 
-	bart_dim_t mdims[N];
+	long mdims[N];
 	md_select_dims(N, ~TE_FLAG & ~COEFF_FLAG, mdims, dims);
 
-	bart_dim_t sdims[N];
+	long sdims[N];
 	md_select_dims(N, ~COEFF_FLAG, sdims, dims);
 
 	complex float omag_cpu[3];
@@ -199,21 +199,21 @@ static bool test_cuda_nlop_phy_create(void)
 	struct flash_config_s config = flash_config_default;
 	config.npixels = 12;
 
-	bart_dim_t num_tot_pixels = config.npixels * config.npixels;
+	long num_tot_pixels = config.npixels * config.npixels;
 
-	bart_dim_t dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	long dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
-	bart_dim_t mdims[N];
+	long mdims[N];
 	md_select_dims(N, ~TE_FLAG & ~COEFF_FLAG, mdims, dims);
 
-	bart_dim_t odims[N];
+	long odims[N];
 	md_select_dims(N, ~COEFF_FLAG, odims, dims);
 
-	bart_dim_t sdims[N];
+	long sdims[N];
 	md_copy_dims(N, sdims, odims);
 
-	bart_dim_t pdims[N];
+	long pdims[N];
 	md_select_dims(N, ~TE_FLAG, pdims, dims);
 
 	complex float par[num_tot_pixels * config.nparams];
@@ -256,21 +256,21 @@ static bool test_cuda_flash_nlop_phy_create_sim_pulses_der(void)
 	config.npixels = 12;
 	config.inv = false;
 
-	bart_dim_t num_tot_pixels = config.npixels * config.npixels;
+	long num_tot_pixels = config.npixels * config.npixels;
 
-	bart_dim_t dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	long dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
-	bart_dim_t mdims[N];
+	long mdims[N];
 	md_select_dims(N, ~TE_FLAG & ~COEFF_FLAG, mdims, dims);
 
-	bart_dim_t odims[N];
+	long odims[N];
 	md_select_dims(N, ~COEFF_FLAG, odims, dims);
 
-	bart_dim_t sdims[N];
+	long sdims[N];
 	md_copy_dims(N, sdims, odims);
 
-	bart_dim_t pdims[N];
+	long pdims[N];
 	md_select_dims(N, ~TE_FLAG, pdims, dims);
 
 	complex float par[num_tot_pixels * config.nparams];
@@ -317,7 +317,7 @@ static bool test_cuda_flash_nlop_phy_create_sim_pulses_der(void)
 	// Assert
 	UT_RETURN_ON_FAILURE_TOL(md_zrmse(N, sdims, sig_cpu, sig_gpu), 1.e-4 );
 	UT_RETURN_ON_FAILURE_TOL(md_zrmse(N, sdims, dsig_cpu, dsig_gpu), 1.e-3);
-	UT_RETURN_ON_FAILURE_TOL(md_zrmse(1, (bart_dim_t[]) { 5 }, dpar_adj_cpu, dpar_adj_gpu), 1.e-3);
+	UT_RETURN_ON_FAILURE_TOL(md_zrmse(1, (long[]) { 5 }, dpar_adj_cpu, dpar_adj_gpu), 1.e-3);
 
 	return true;
 }
@@ -330,21 +330,21 @@ static bool test_cuda_flash_nlop_phy_create_hp_pulses_der(void)
 	config.npixels = 12;
 	config.inv = false;
 
-	bart_dim_t num_tot_pixels = config.npixels * config.npixels;
+	long num_tot_pixels = config.npixels * config.npixels;
 
-	bart_dim_t dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	long dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
-	bart_dim_t mdims[N];
+	long mdims[N];
 	md_select_dims(N, ~TE_FLAG & ~COEFF_FLAG, mdims, dims);
 
-	bart_dim_t odims[N];
+	long odims[N];
 	md_select_dims(N, ~COEFF_FLAG, odims, dims);
 
-	bart_dim_t sdims[N];
+	long sdims[N];
 	md_copy_dims(N, sdims, odims);
 
-	bart_dim_t pdims[N];
+	long pdims[N];
 	md_select_dims(N, ~TE_FLAG, pdims, dims);
 
 	complex float par[num_tot_pixels * config.nparams];
@@ -391,7 +391,7 @@ static bool test_cuda_flash_nlop_phy_create_hp_pulses_der(void)
 	// Assert
 	UT_RETURN_ON_FAILURE_TOL(md_zrmse(N, sdims, sig_cpu, sig_gpu), 1.e-4 );
 	UT_RETURN_ON_FAILURE_TOL(md_zrmse(N, sdims, dsig_cpu, dsig_gpu), 1.e-3);
-	UT_RETURN_ON_FAILURE_TOL(md_zrmse(1, (bart_dim_t[]) { 5 }, dpar_adj_cpu, dpar_adj_gpu), 1.e-3);
+	UT_RETURN_ON_FAILURE_TOL(md_zrmse(1, (long[]) { 5 }, dpar_adj_cpu, dpar_adj_gpu), 1.e-3);
 
 	return true;
 }
@@ -408,21 +408,21 @@ static bool test_cuda_ir_flash_nlop_phy_create_sim_pulses_der(void)
 	struct flash_config_s config = flash_config_default;
 	config.npixels = 12;
 
-	bart_dim_t num_tot_pixels = config.npixels * config.npixels;
+	long num_tot_pixels = config.npixels * config.npixels;
 
-	bart_dim_t dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	long dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
-	bart_dim_t mdims[N];
+	long mdims[N];
 	md_select_dims(N, ~TE_FLAG & ~COEFF_FLAG, mdims, dims);
 
-	bart_dim_t odims[N];
+	long odims[N];
 	md_select_dims(N, ~COEFF_FLAG, odims, dims);
 
-	bart_dim_t sdims[N];
+	long sdims[N];
 	md_copy_dims(N, sdims, odims);
 
-	bart_dim_t pdims[N];
+	long pdims[N];
 	md_select_dims(N, ~TE_FLAG, pdims, dims);
 
 	complex float par[num_tot_pixels * config.nparams];
@@ -469,7 +469,7 @@ static bool test_cuda_ir_flash_nlop_phy_create_sim_pulses_der(void)
 	// Assert
 	UT_RETURN_ON_FAILURE_TOL(md_zrmse(N, sdims, sig_cpu, sig_gpu), 1.e-4);
 	UT_RETURN_ON_FAILURE_TOL(md_zrmse(N, sdims, dsig_cpu, dsig_gpu), 1.e-3);
-	UT_RETURN_ON_FAILURE_TOL(md_zrmse(1, (bart_dim_t[]) { 5 }, dpar_adj_cpu, dpar_adj_gpu), 1.e-3);
+	UT_RETURN_ON_FAILURE_TOL(md_zrmse(1, (long[]) { 5 }, dpar_adj_cpu, dpar_adj_gpu), 1.e-3);
 
 	return true;
 }
@@ -481,21 +481,21 @@ static bool test_cuda_ir_flash_nlop_phy_create_hard_pulse_der(void)
 	struct flash_config_s config = flash_config_default;
 	config.npixels = 12;
 
-	bart_dim_t num_tot_pixels = config.npixels * config.npixels;
+	long num_tot_pixels = config.npixels * config.npixels;
 
-	bart_dim_t dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	long dims[] = { config.npixels, config.npixels, 1, 1, 1, config.excitations, config.nparams, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	int N = ARRAY_SIZE(dims);
 
-	bart_dim_t mdims[N];
+	long mdims[N];
 	md_select_dims(N, ~TE_FLAG & ~COEFF_FLAG, mdims, dims);
 
-	bart_dim_t odims[N];
+	long odims[N];
 	md_select_dims(N, ~COEFF_FLAG, odims, dims);
 
-	bart_dim_t sdims[N];
+	long sdims[N];
 	md_copy_dims(N, sdims, odims);
 
-	bart_dim_t pdims[N];
+	long pdims[N];
 	md_select_dims(N, ~TE_FLAG, pdims, dims);
 
 	complex float par[num_tot_pixels * config.nparams];
@@ -542,7 +542,7 @@ static bool test_cuda_ir_flash_nlop_phy_create_hard_pulse_der(void)
 	// Assert
 	UT_RETURN_ON_FAILURE_TOL(md_zrmse(N, sdims, sig_cpu, sig_gpu), 1.e-4 );
 	UT_RETURN_ON_FAILURE_TOL(md_zrmse(N, sdims, dsig_cpu, dsig_gpu), 1.e-3);
-	UT_RETURN_ON_FAILURE_TOL(md_zrmse(1, (bart_dim_t[]) { 5 }, dpar_adj_cpu, dpar_adj_gpu), 1.e-3);
+	UT_RETURN_ON_FAILURE_TOL(md_zrmse(1, (long[]) { 5 }, dpar_adj_cpu, dpar_adj_gpu), 1.e-3);
 
 	return true;
 }

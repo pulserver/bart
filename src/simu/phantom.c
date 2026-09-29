@@ -90,7 +90,7 @@ static complex double ktetrahedron(const struct triangle *t, const double k[3])
 }
 
 
-complex double stl_fun_k(const void* v, const bart_dim_t C, const float k1[])
+complex double stl_fun_k(const void* v, const long C, const float k1[])
 {
 	double k[3] = { k1[0], k1[1], k1[2] };
 	(void)C;
@@ -107,7 +107,7 @@ complex double stl_fun_k(const void* v, const bart_dim_t C, const float k1[])
 }
 
 
-void phantom_stl_init(struct phantom_opts* popts, int D, bart_dim_t dims[D], double* model)
+void phantom_stl_init(struct phantom_opts* popts, int D, long dims[D], double* model)
 {
 	if (!popts->kspace)
 		error("only k-space stl sampling is possible.\n");
@@ -140,7 +140,7 @@ static complex float xsens(int c, int s, double mpos[3], void* data, krn_t fun)
 
 	complex float val = 0.;
 
-	bart_dim_t sh = (COIL_COEFF - 1) / 2;
+	long sh = (COIL_COEFF - 1) / 2;
 
 	for (int i = 0; i < COIL_COEFF; i++) {
 		for (int j = 0; j < COIL_COEFF; j++) {
@@ -194,7 +194,7 @@ static complex float ksens(int c, int s, double mpos[3], void* data, krn_t fun)
 	for (int i = 0; i < COIL_COEFF; i++) {
 		for (int j = 0; j < COIL_COEFF; j++) {
 
-			bart_dim_t sh = (COIL_COEFF - 1) / 2;
+			long sh = (COIL_COEFF - 1) / 2;
 
 			switch (krn_data->stype) {
 
@@ -237,14 +237,14 @@ static complex float ksens(int c, int s, double mpos[3], void* data, krn_t fun)
 struct data {
 
 	const complex float* traj;
-	const bart_stride_t* tstrs;
+	const long* tstrs;
 
-	const bart_dim_t dims[3];
+	const long dims[3];
 	void* data;
 	krn_t fun;
 };
 
-static complex float xkernel(void* _data, const bart_dim_t pos[])
+static complex float xkernel(void* _data, const long pos[])
 {
 	struct data* data = _data;
 
@@ -255,7 +255,7 @@ static complex float xkernel(void* _data, const bart_dim_t pos[])
 	return xsens(pos[COIL_DIM], pos[COEFF_DIM], mpos, data->data, data->fun);
 }
 
-static complex float kkernel(void* _data, const bart_dim_t pos[])
+static complex float kkernel(void* _data, const long pos[])
 {
 	struct data* data = _data;
 
@@ -279,9 +279,9 @@ static complex float kkernel(void* _data, const bart_dim_t pos[])
 }
 
 
-static void my_sample(const bart_dim_t dims[DIMS], complex float* out, void* data, complex float (*krn)(void* data, const bart_dim_t pos[]))
+static void my_sample(const long dims[DIMS], complex float* out, void* data, complex float (*krn)(void* data, const long pos[]))
 {
-	NESTED(complex float, kernel, (const bart_dim_t pos[]))
+	NESTED(complex float, kernel, (const long pos[]))
 	{
 		return krn(data, pos);
 	};
@@ -289,7 +289,7 @@ static void my_sample(const bart_dim_t dims[DIMS], complex float* out, void* dat
 	md_parallel_zsample(DIMS, dims, out, kernel);
 }
 
-static void sample(const bart_dim_t dims[DIMS], complex float* out, const bart_stride_t tstrs[DIMS], const complex float* traj, void* krn_data, krn_t krn, bool kspace)
+static void sample(const long dims[DIMS], complex float* out, const long tstrs[DIMS], const complex float* traj, void* krn_data, krn_t krn, bool kspace)
 {
 	struct data data = {
 
@@ -357,8 +357,8 @@ static complex float krn3d(void* _data, int s, const double mpos[3])
 	}
 }
 
-void calc_ellipsoid(int D, bart_dim_t dims[D], complex float* optr, bool d3, bool kspace,
-		bart_dim_t tdims[D], bart_stride_t tstrs[D], complex float* traj, float ax[3], bart_dim_t center[3],
+void calc_ellipsoid(int D, long dims[D], complex float* optr, bool d3, bool kspace,
+		long tdims[D], long tstrs[D], complex float* traj, float ax[3], long center[3],
 		float rot, struct coil_opts* copts)
 {
 	if ((1 > dims[0]) || (1 > dims[1]) || (1 > dims[2]))
@@ -376,14 +376,14 @@ void calc_ellipsoid(int D, bart_dim_t dims[D], complex float* optr, bool d3, boo
 
 	// This correction needs to be done on the image dims,
 	// so if we got a trajectory, we need to estimate them here
-	bart_dim_t imdims[D];
+	long imdims[D];
 
 	if (NULL != traj)
 		estimate_im_dims(D, FFT_FLAGS, imdims, tdims, traj);
 	else
 		md_copy_dims(D, imdims, dims);
 
-	debug_printf(DP_DEBUG2, "Est. ellipsoid image size: %" PRId64 "x%" PRId64 "x%" PRId64 ", from kspace: %s\n", imdims[0], imdims[1], imdims[2], kspace ? "true" : "false");
+	debug_printf(DP_DEBUG2, "Est. ellipsoid image size: %ldx%ldx%ld, from kspace: %s\n", imdims[0], imdims[1], imdims[2], kspace ? "true" : "false");
 
 	for (int i = 0; i < 3; i++) {
 
@@ -439,7 +439,7 @@ void calc_ellipsoid(int D, bart_dim_t dims[D], complex float* optr, bool d3, boo
 }
 
 
-void calc_phantom(const bart_dim_t dims[DIMS], complex float* out, bool d3, bool kspace, const bart_stride_t tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
+void calc_phantom(const long dims[DIMS], complex float* out, bool d3, bool kspace, const long tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
 {
 	bool coeff = (dims[COEFF_DIM] > 1);
 
@@ -450,7 +450,7 @@ void calc_phantom(const bart_dim_t dims[DIMS], complex float* out, bool d3, bool
 }
 
 
-void calc_geo_phantom(const bart_dim_t dims[DIMS], complex float* out, bool kspace, int phtype, const bart_stride_t tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
+void calc_geo_phantom(const long dims[DIMS], complex float* out, bool kspace, int phtype, const long tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
 {
 	bool coeff = (dims[COEFF_DIM] > 1);
 
@@ -488,7 +488,7 @@ static complex float cnst_one(void* /*_data*/, int /*s*/, const double /*mpos*/[
 	return 1.;
 }
 
-void calc_sens(const bart_dim_t dims[DIMS], complex float* sens, struct coil_opts* copts)
+void calc_sens(const long dims[DIMS], complex float* sens, struct coil_opts* copts)
 {
 	struct data data = {
 
@@ -504,7 +504,7 @@ void calc_sens(const bart_dim_t dims[DIMS], complex float* sens, struct coil_opt
 
 
 
-void calc_circ(const bart_dim_t dims[DIMS], complex float* out, bool d3, bool kspace, const bart_stride_t tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
+void calc_circ(const long dims[DIMS], complex float* out, bool d3, bool kspace, const long tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
 {
 	bool coeff = (dims[COEFF_DIM] > 1);
 
@@ -514,7 +514,7 @@ void calc_circ(const bart_dim_t dims[DIMS], complex float* out, bool d3, bool ks
 		sample(dims, out, tstrs, traj, &(struct krn3d_data){ kspace, coeff, copts->ctype, ARRAY_SIZE(phantom_disc3d), phantom_disc3d }, krn3d, kspace);
 }
 
-void calc_ring(const bart_dim_t dims[DIMS], complex float* out, bool kspace, const bart_stride_t tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
+void calc_ring(const long dims[DIMS], complex float* out, bool kspace, const long tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
 {
 	bool coeff = (dims[COEFF_DIM] > 1);
 
@@ -539,15 +539,15 @@ static complex float fourier_series(float t, int N, const complex float coeff[st
 	return val;
 }
 
-static void calc_moving_discs(const bart_dim_t dims[DIMS], complex float* out, bool kspace, const bart_stride_t tstrs[DIMS], const complex float* traj,
+static void calc_moving_discs(const long dims[DIMS], complex float* out, bool kspace, const long tstrs[DIMS], const complex float* traj,
 				int N, const struct moving_ellipsis_s disc[N], struct coil_opts* copts)
 {
 	bool coeff = (dims[COEFF_DIM] > 1);
 
-	bart_stride_t strs[DIMS];
+	long strs[DIMS];
 	md_calc_strides(DIMS, strs, dims, sizeof(complex float));
 
-	bart_dim_t dims1[DIMS];
+	long dims1[DIMS];
 	md_select_dims(DIMS, ~MD_BIT(TIME_DIM), dims1, dims);
 
 	for (int i = 0; i < dims[TIME_DIM]; i++) {
@@ -573,7 +573,7 @@ static void calc_moving_discs(const bart_dim_t dims[DIMS], complex float* out, b
 }
 
 
-void calc_moving_circ(const bart_dim_t dims[DIMS], complex float* out, bool kspace, const bart_stride_t tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
+void calc_moving_circ(const long dims[DIMS], complex float* out, bool kspace, const long tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
 {
 	struct moving_ellipsis_s disc[1] = { {
 		.geom = phantom_disc[0],
@@ -617,7 +617,7 @@ static complex float krn_poly(void* _data, int s, const double mpos[3])
 	return val;
 }
 
-void calc_star(const bart_dim_t dims[DIMS], complex float* out, bool kspace, const bart_stride_t tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
+void calc_star(const long dims[DIMS], complex float* out, bool kspace, const long tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
 {
 	bool coeff = (dims[COEFF_DIM] > 1);
 
@@ -653,7 +653,7 @@ void calc_star(const bart_dim_t dims[DIMS], complex float* out, bool kspace, con
 
 #define ARRAY_SLICE(x, a, b) ({ __auto_type __x = &(x); assert((0 <= a) && (a < b) && (b <= ARRAY_SIZE(*__x))); ((__typeof__((*__x)[0]) (*)[b - a])&((*__x)[a])); })
 
-static void calc_bart2(const bart_dim_t dims[DIMS], complex float* out, bool kspace, const bart_stride_t tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
+static void calc_bart2(const long dims[DIMS], complex float* out, bool kspace, const long tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
 {
 	bool coeff = (dims[COEFF_DIM] > 1);
 
@@ -695,8 +695,8 @@ static void calc_bart2(const bart_dim_t dims[DIMS], complex float* out, bool ksp
 }
 
 
-static void combine_geom_components(const bart_dim_t dims[DIMS], complex float* out, bool kspace, const bart_stride_t tstrs[DIMS], const complex float* traj,
-		void (*fun)(const bart_dim_t dims[DIMS], complex float* out, bool kspace, const bart_stride_t tstrs[DIMS], const complex float* traj, struct coil_opts* copts),
+static void combine_geom_components(const long dims[DIMS], complex float* out, bool kspace, const long tstrs[DIMS], const complex float* traj,
+		void (*fun)(const long dims[DIMS], complex float* out, bool kspace, const long tstrs[DIMS], const complex float* traj, struct coil_opts* copts),
 		const int N_all, const int N_reduc, const int components[N_reduc], struct coil_opts* copts)
 {
 	if (1 < dims[COEFF_DIM]) {
@@ -705,7 +705,7 @@ static void combine_geom_components(const bart_dim_t dims[DIMS], complex float* 
 
 		// Create full length phantom with all components of geometry
 
-		bart_dim_t full_dims[DIMS];
+		long full_dims[DIMS];
 		md_copy_dims(DIMS, full_dims, dims);
 		full_dims[COEFF_DIM] = N_all;
 
@@ -715,15 +715,15 @@ static void combine_geom_components(const bart_dim_t dims[DIMS], complex float* 
 
 		// Sum up individual components of all objects in the phantom
 
-		bart_dim_t tmp_pos[DIMS] = { [0 ... DIMS - 1] = 0 };
-		bart_dim_t out_pos[DIMS] = { [0 ... DIMS - 1] = 0 };
+		long tmp_pos[DIMS] = { [0 ... DIMS - 1] = 0 };
+		long out_pos[DIMS] = { [0 ... DIMS - 1] = 0 };
 
-		bart_dim_t map_dims[DIMS];
+		long map_dims[DIMS];
 		md_select_dims(DIMS, ~COEFF_FLAG, map_dims, dims);
 
 		complex float* tmp_map = md_alloc(DIMS, map_dims, CFL_SIZE);
 
-		bart_dim_t tmp_dims[DIMS];
+		long tmp_dims[DIMS];
 		md_select_dims(DIMS, ~COEFF_FLAG, tmp_dims, dims);
 
 		for (int i = 0; i < dims[COEFF_DIM]; i++) {
@@ -761,7 +761,7 @@ static void combine_geom_components(const bart_dim_t dims[DIMS], complex float* 
 }
 
 
-void calc_bart(const bart_dim_t dims[DIMS], complex float* out, bool kspace, const bart_stride_t tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
+void calc_bart(const long dims[DIMS], complex float* out, bool kspace, const long tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
 {
 	const int N_all = 10;		// There are overall 10 geometric components in the BART logo
 	const int N_reduc = 6;		// But the BART logo consists of only 6 characters: B, A, R, T, _, _
@@ -772,7 +772,7 @@ void calc_bart(const bart_dim_t dims[DIMS], complex float* out, bool kspace, con
 }
 
 
-static void calc_brain2(const bart_dim_t dims[DIMS], complex float* out, bool kspace, const bart_stride_t tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
+static void calc_brain2(const long dims[DIMS], complex float* out, bool kspace, const long tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
 {
 	bool coeff = (dims[COEFF_DIM] > 1);
 
@@ -868,7 +868,7 @@ static void calc_brain2(const bart_dim_t dims[DIMS], complex float* out, bool ks
 	sample(dims, out, tstrs, traj, &poly, krn_poly, kspace);
 }
 
-void calc_brain(const bart_dim_t dims[DIMS], complex float* out, bool kspace, const bart_stride_t tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
+void calc_brain(const long dims[DIMS], complex float* out, bool kspace, const long tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
 {
 	enum { N_all = 64 };		// 64 overall geometric components in the brain geometry
 	enum { N_reduc = 4 };		// Combine them to 4
@@ -881,21 +881,21 @@ void calc_brain(const bart_dim_t dims[DIMS], complex float* out, bool kspace, co
 
 #define ARRAY_SLICE2(x, a, b) ({ __auto_type __x = &(x); ((__typeof__((*__x)[0]) (*)[b - a])&((*__x)[a])); })
 
-void calc_cfl_geom(const bart_dim_t dims[DIMS], complex float* out, bool kspace, const bart_stride_t tstrs[DIMS], const complex float* traj, int D_max, bart_dim_t hdims[2][D_max], complex float* x[2], struct coil_opts* copts)
+void calc_cfl_geom(const long dims[DIMS], complex float* out, bool kspace, const long tstrs[DIMS], const complex float* traj, int D_max, long hdims[2][D_max], complex float* x[2], struct coil_opts* copts)
 {
 	bool coeff = (dims[COEFF_DIM] > 1);
 
-	bart_stride_t cstrs[DIMS] = { };
+	long cstrs[DIMS] = { };
 	md_calc_strides(DIMS, cstrs, hdims[0], sizeof(complex float));
 
-	bart_stride_t mstrs[DIMS] = { };
+	long mstrs[DIMS] = { };
 	md_calc_strides(DIMS, mstrs, hdims[1], sizeof(complex float));
 
 	int N = hdims[0][0];
 
 	double data[N][2][4];
 
-	bart_dim_t pos[DIMS];
+	long pos[DIMS];
 	md_copy_dims(DIMS, pos, hdims[0]);
 
 	for (int s = 0; s < hdims[0][0]; s++) {
@@ -906,7 +906,7 @@ void calc_cfl_geom(const bart_dim_t dims[DIMS], complex float* out, bool kspace,
 				pos[1] = c;
 				pos[2] = p;
 
-				bart_dim_t ind = md_calc_offset(DIMS, cstrs, pos) / (bart_stride_t)CFL_SIZE;
+				long ind = md_calc_offset(DIMS, cstrs, pos) / (long)CFL_SIZE;
 
 				data[s][c][p] = crealf(x[0][ind]);
 			}
@@ -915,7 +915,7 @@ void calc_cfl_geom(const bart_dim_t dims[DIMS], complex float* out, bool kspace,
 
 	double points[N * 11][2];
 
-	bart_dim_t point_index = 0;
+	long point_index = 0;
 
 	struct poly1 paths[hdims[1][0]];
 
@@ -926,10 +926,10 @@ void calc_cfl_geom(const bart_dim_t dims[DIMS], complex float* out, bool kspace,
 		pos[0] = i;
 		pos[1] = 1;
 
-		bart_dim_t ind_cp = md_calc_offset(DIMS, mstrs, pos) / (bart_stride_t)CFL_SIZE;
+		long ind_cp = md_calc_offset(DIMS, mstrs, pos) / (long)CFL_SIZE;
 
 		pos[1] = 2;
-		bart_dim_t ind_color = md_calc_offset(DIMS, mstrs, pos) / (bart_stride_t)CFL_SIZE;
+		long ind_color = md_calc_offset(DIMS, mstrs, pos) / (long)CFL_SIZE;
 
 		int cp = (int) cabsf(x[1][ind_cp]);
 		int color = cabsf(x[1][ind_color]);
@@ -966,17 +966,17 @@ void calc_cfl_geom(const bart_dim_t dims[DIMS], complex float* out, bool kspace,
 }
 
 
-void calc_phantom_arb(int N, const struct ellipsis_s* data /*[N]*/, const bart_dim_t dims[DIMS], complex float* out, bool kspace, const bart_stride_t tstrs[DIMS], const complex float* traj, float rotation_angle, struct coil_opts* copts)
+void calc_phantom_arb(int N, const struct ellipsis_s* data /*[N]*/, const long dims[DIMS], complex float* out, bool kspace, const long tstrs[DIMS], const complex float* traj, float rotation_angle, struct coil_opts* copts)
 {
 	bool coeff = (dims[COEFF_DIM] > 1);
 
 	assert((!coeff) || (0 == tstrs[COEFF_DIM]));
 	assert((!coeff) || (N == dims[COEFF_DIM]));
 
-	bart_stride_t strs[DIMS];
+	long strs[DIMS];
 	md_calc_strides(DIMS, strs, dims, sizeof(complex float));
 
-	bart_dim_t dims1[DIMS];
+	long dims1[DIMS];
 	md_select_dims(DIMS, ~MD_BIT(TIME_DIM), dims1, dims);
 
 	for (int i = 1; i < dims[TIME_DIM] + 1; i++) {
@@ -1039,7 +1039,7 @@ static bool circ_in_background(float s1, float px1, float py1, float s2, float p
 	return false;
 }
 
-static void calc_phantom_tubes2(const bart_dim_t dims[DIMS], complex float* out, bool kspace, bool random, float rotation_angle, int N, const bart_stride_t tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
+static void calc_phantom_tubes2(const long dims[DIMS], complex float* out, bool kspace, bool random, float rotation_angle, int N, const long tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
 {
 	struct ellipsis_bs phantom_tubes_N[2 * N - 1];
 
@@ -1141,15 +1141,15 @@ static void calc_phantom_tubes2(const bart_dim_t dims[DIMS], complex float* out,
 	struct ellipsis_s tubes_bkgrd[N];
 	struct ellipsis_s tubes_frgrd[N - 1];
 
-	assert(dims[COEFF_DIM] == (bart_stride_t)ARRAY_SIZE(tubes_frgrd) + 1); // foreground + 1 background image!
+	assert(dims[COEFF_DIM] == (long)ARRAY_SIZE(tubes_frgrd) + 1); // foreground + 1 background image!
 
 	separate_bckgrd(ARRAY_SIZE(tubes_bkgrd), tubes_bkgrd, ARRAY_SIZE(tubes_frgrd), tubes_frgrd, ARRAY_SIZE(phantom_tubes_N), phantom_tubes_N);
 
 	// Determine basis functions of the background
 
-	bart_dim_t dims2[DIMS];
+	long dims2[DIMS];
 	md_copy_dims(DIMS, dims2, dims);
-	dims2[COEFF_DIM] = (bart_stride_t)ARRAY_SIZE(tubes_bkgrd);
+	dims2[COEFF_DIM] = (long)ARRAY_SIZE(tubes_bkgrd);
 
 	complex float* bkgrd = md_alloc(DIMS, dims2, CFL_SIZE);
 
@@ -1157,7 +1157,7 @@ static void calc_phantom_tubes2(const bart_dim_t dims[DIMS], complex float* out,
 
 	// Sum up all spatial coefficients
 
-	bart_dim_t dims3[DIMS];
+	long dims3[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, dims3, dims);
 
 	complex float* tmp = md_alloc(DIMS, dims3, CFL_SIZE);
@@ -1166,7 +1166,7 @@ static void calc_phantom_tubes2(const bart_dim_t dims[DIMS], complex float* out,
 
 	// Save summed up coefficients to out
 
-	bart_dim_t pos[DIMS] = { [0 ... DIMS - 1] = 0 };
+	long pos[DIMS] = { [0 ... DIMS - 1] = 0 };
 
 	md_copy_block(DIMS, pos, dims2, out, dims3, tmp, CFL_SIZE);
 
@@ -1175,7 +1175,7 @@ static void calc_phantom_tubes2(const bart_dim_t dims[DIMS], complex float* out,
 
 	// Determine basis functions of the foreground
 
-	dims2[COEFF_DIM] = (bart_stride_t)ARRAY_SIZE(tubes_frgrd); // remove background
+	dims2[COEFF_DIM] = (long)ARRAY_SIZE(tubes_frgrd); // remove background
 
 	complex float* frgrd = md_alloc(DIMS, dims2, CFL_SIZE);
 
@@ -1191,14 +1191,14 @@ static void calc_phantom_tubes2(const bart_dim_t dims[DIMS], complex float* out,
 }
 
 
-void calc_phantom_tubes(const bart_dim_t dims[DIMS], complex float* out, bool kspace, bool random, float rotation_angle, int N, const bart_stride_t tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
+void calc_phantom_tubes(const long dims[DIMS], complex float* out, bool kspace, bool random, float rotation_angle, int N, const long tstrs[DIMS], const complex float* traj, struct coil_opts* copts)
 {
 	if (1 < dims[COEFF_DIM])
 		return calc_phantom_tubes2(dims, out, kspace, random, rotation_angle, N, tstrs, traj, copts);
 
 	// sum up all objects
 
-	bart_dim_t tdims[DIMS];
+	long tdims[DIMS];
 	md_copy_dims(DIMS, tdims, dims);
 
 	tdims[COEFF_DIM] = N;	// Number of elements of tubes phantom with rings see src/shepplogan.c
@@ -1211,20 +1211,20 @@ void calc_phantom_tubes(const bart_dim_t dims[DIMS], complex float* out, bool ks
 	md_free(tmp);
 }
 
-complex double* sample_signal(int D, bart_dim_t odims_s[D], const bart_dim_t gdims_s[D], const float* grid, const bart_dim_t sgdims_s[D], const float* sgrid, const struct phantom_opts* popts, const struct coil_opts* copts)
+complex double* sample_signal(int D, long odims_s[D], const long gdims_s[D], const float* grid, const long sgdims_s[D], const float* sgrid, const struct phantom_opts* popts, const struct coil_opts* copts)
 {
 	// We always reshape the grid to dims [ 4 X Y*Z ... ]
-	bart_dim_t gdims_[D], gstrs_[D];
+	long gdims_[D], gstrs_[D];
 	md_singleton_dims(D, gdims_);
 	gdims_[0] = gdims_s[0];
 	gdims_[1] = gdims_s[1];
 	gdims_[2] = gdims_s[2] * gdims_s[3];
-	const bart_dim_t* gdims = gdims_; // clang
+	const long* gdims = gdims_; // clang
 	md_calc_strides(D, gstrs_, gdims_, FL_SIZE);
-	const bart_stride_t* gstrs = gstrs_;
+	const long* gstrs = gstrs_;
 
 	// We always sample on the dims [ 1 X Y*Z ... ]
-	bart_dim_t odims[D];
+	long odims[D];
 	md_singleton_dims(D, odims);
 	odims[1] = gdims[1];
 	odims[2] = gdims[2] * gdims[3];
@@ -1236,14 +1236,14 @@ complex double* sample_signal(int D, bart_dim_t odims_s[D], const bart_dim_t gdi
 	md_clear(D, odims, cdout, CDL_SIZE);
 
 	// sensgrid and sens also need reshape to [ 4 X Y*Z ... ] and [ 1 X Y*Z ... ]
-	bart_dim_t sgdims_[D];
+	long sgdims_[D];
 	md_singleton_dims(D, sgdims_);
 	sgdims_[0] = sgdims_s[0];
 	sgdims_[1] = sgdims_s[1];
 	sgdims_[2] = sgdims_s[2] * sgdims_s[3];
-	const bart_dim_t* sgdims = sgdims_;
+	const long* sgdims = sgdims_;
 
-	bart_dim_t sodims_[D], sodims[D];
+	long sodims_[D], sodims[D];
 	complex double* sens = sample_coils(D, sodims_, sgdims_s, sgrid, copts);
 	md_singleton_dims(D, sodims);
 	sodims[1] = sodims_[0];
@@ -1253,19 +1253,19 @@ complex double* sample_signal(int D, bart_dim_t odims_s[D], const bart_dim_t gdi
 	if (copts->kspace) {
 
 
-		bart_dim_t sstrs_[D], sgstrs_[D];
+		long sstrs_[D], sgstrs_[D];
 		md_calc_strides(D, sstrs_, sodims, CDL_SIZE);
 		md_calc_strides(D, sgstrs_, sgdims, FL_SIZE);
 
-		const bart_stride_t* sstrs = sstrs_;
-		const bart_stride_t* sgstrs = sgstrs_;
+		const long* sstrs = sstrs_;
+		const long* sgstrs = sgstrs_;
 
 		// TODO: reshape convolution to dim D+1 and make computation of phantom independent of number of coils (grid is always the same)
-		NESTED(complex double, funk, (const bart_dim_t pos[]))
+		NESTED(complex double, funk, (const long pos[]))
 		{
 			const float* c = &MD_ACCESS(D, gstrs, pos, grid);
 			complex double p = 0;
-			bart_dim_t ipos[D], iposs[D];
+			long ipos[D], iposs[D];
 			md_set_dims(D, ipos, 0);
 
 			do {
@@ -1278,7 +1278,7 @@ complex double* sample_signal(int D, bart_dim_t odims_s[D], const bart_dim_t gdi
 
 				p += MD_ACCESS(D, sstrs, iposs, sens) * popts->fun(popts, pos[COEFF_DIM], d);
 
-			} while(md_next(D, sgdims, ~UINT64_C(1), ipos));
+			} while(md_next(D, sgdims, ~1UL, ipos));
 
 			return p;
 		};
@@ -1292,11 +1292,11 @@ complex double* sample_signal(int D, bart_dim_t odims_s[D], const bart_dim_t gdi
 		assert(odims[1] == sodims[1]);
 		assert(odims[2] == sodims[2]);
 
-		bart_stride_t sstrs[D];
+		long sstrs[D];
 		md_calc_strides(D, sstrs, sodims, CDL_SIZE);
-		const bart_dim_t* sstrscl = sstrs;
+		const long* sstrscl = sstrs;
 
-		NESTED(complex double, funx, (const bart_dim_t pos[]))
+		NESTED(complex double, funx, (const long pos[]))
 		{
 			return popts->fun(popts, pos[COEFF_DIM], &MD_ACCESS(D, gstrs, pos, grid)) * MD_ACCESS(D, sstrscl, pos, sens);
 		};

@@ -29,8 +29,8 @@
 
 
 static const struct nlop_s* compute_score(const struct nlop_s *nlop, bool real_valued,
-				const bart_dim_t img_dims[DIMS],
-				const bart_dim_t msk_dims[DIMS], const complex float *msk)
+				const long img_dims[DIMS],
+				const long msk_dims[DIMS], const complex float *msk)
 {
 	nlop = nlop_reshape_in_F(nlop, 0, DIMS, img_dims);
 	nlop = nlop_reshape_out_F(nlop, 0, DIMS, img_dims);
@@ -38,7 +38,7 @@ static const struct nlop_s* compute_score(const struct nlop_s *nlop, bool real_v
 	auto par = nlop_generic_domain(nlop, 1);
 
 	if (1 < md_calc_size(par->N, par->dims))
-		nlop = nlop_chain2_FF(nlop_from_linop_F(linop_repmat_create(par->N, par->dims, ~UINT64_C(0))), 0, nlop, 1);
+		nlop = nlop_chain2_FF(nlop_from_linop_F(linop_repmat_create(par->N, par->dims, ~0UL)), 0, nlop, 1);
 
 	if (real_valued)
 		nlop = nlop_prepend_FF(nlop_from_linop_F(linop_scale_create(1, MD_DIMS(1), sqrtf(0.5))), nlop, 1);
@@ -59,8 +59,8 @@ static const struct nlop_s* compute_score(const struct nlop_s *nlop, bool real_v
 
 
 const struct nlop_s* prior_cunet(const char* cunet_weights, struct nn_cunet_conf_s* cunet_conf,
-				bool real_valued, const bart_dim_t msk_dims[DIMS], complex float* mask,
-				bart_dim_t img_dims[DIMS])
+				bool real_valued, const long msk_dims[DIMS], complex float* mask,
+				long img_dims[DIMS])
 {
 	const struct nlop_s* nlop = NULL;
 
@@ -79,32 +79,32 @@ const struct nlop_s* prior_cunet(const char* cunet_weights, struct nn_cunet_conf
 
 
 const struct nlop_s* prior_graph(const char* graph, bool real_valued, bool gpu,
-		const bart_dim_t msk_dims[DIMS], complex float* mask, bart_dim_t img_dims[DIMS])
+		const long msk_dims[DIMS], complex float* mask, long img_dims[DIMS])
 {
 	const struct nlop_s* nlop = NULL;
 
-	bart_dim_t batchsize = img_dims[BATCH_DIM];
+	long batchsize = img_dims[BATCH_DIM];
 
 	// generates nlop from tf or pt graph
 	int DO[1] = { 3 };
 	int DI[2] = { 3, 1 };
-	bart_dim_t idims1[3] = { img_dims[0], img_dims[1], batchsize };
-	bart_dim_t idims2[1] = { batchsize };
+	long idims1[3] = { img_dims[0], img_dims[1], batchsize };
+	long idims2[1] = { batchsize };
 
 	const char* key = NULL;
 
-	nlop = nlop_external_graph_create(graph, 1, DO, (const bart_dim_t*[1]) { idims1 },
-			2, DI, (const bart_dim_t*[2]) {idims1, idims2}, gpu, key);
+	nlop = nlop_external_graph_create(graph, 1, DO, (const long*[1]) { idims1 },
+			2, DI, (const long*[2]) {idims1, idims2}, gpu, key);
 
 	return compute_score(nlop, real_valued, img_dims, msk_dims, mask);
 }
 
 
 
-const struct nlop_s* prior_gmm(const bart_dim_t means_dims[DIMS], const complex float* means,
-				const bart_dim_t weights_dims0[DIMS], const complex float *weights0,
-				const bart_dim_t vars_dims0[DIMS], const complex float *vars0,
-				bart_dim_t img_dims[DIMS], float *min_var)
+const struct nlop_s* prior_gmm(const long means_dims[DIMS], const complex float* means,
+				const long weights_dims0[DIMS], const complex float *weights0,
+				const long vars_dims0[DIMS], const complex float *vars0,
+				long img_dims[DIMS], float *min_var)
 {
 	const struct nlop_s* nlop = NULL;
 
@@ -112,8 +112,8 @@ const struct nlop_s* prior_gmm(const bart_dim_t means_dims[DIMS], const complex 
 	img_dims[1] = means_dims[1];
 	img_dims[2] = means_dims[2];
 
-	bart_dim_t weights_dims[DIMS];
-	bart_dim_t vars_dims[DIMS];
+	long weights_dims[DIMS];
+	long vars_dims[DIMS];
 
 	complex float* weights = NULL;
 
@@ -125,7 +125,7 @@ const struct nlop_s* prior_gmm(const bart_dim_t means_dims[DIMS], const complex 
 
 		weights = md_alloc_sameplace(DIMS, weights_dims, CFL_SIZE, means);
 
-		bart_dim_t num_gaussians = md_calc_size(DIMS, weights_dims);
+		long num_gaussians = md_calc_size(DIMS, weights_dims);
 
 		md_zfill(DIMS, weights_dims, weights, 1. / num_gaussians);
 
@@ -170,11 +170,11 @@ const struct nlop_s* prior_gmm(const bart_dim_t means_dims[DIMS], const complex 
 	assert(md_check_equal_dims(DIMS, means_dims, weights_dims, ~md_nontriv_dims(DIMS, img_dims)));
 
 	// Find minimum element in vars
-	bart_dim_t num_elements = md_calc_size(DIMS, vars_dims);
+	long num_elements = md_calc_size(DIMS, vars_dims);
 
 	*min_var = crealf(vars[0]);
 
-	for (bart_dim_t i = 1; i < num_elements; i++) {
+	for (long i = 1; i < num_elements; i++) {
 
 		float v = crealf(vars[i]);
 

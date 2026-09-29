@@ -39,7 +39,7 @@ struct pytorch_wrapper_s {
 	std::vector<std::vector<int64_t>> odims;
 };
 
-struct pytorch_wrapper_s* pytorch_wrapper_create(const char* path, int II, const int DI[], const bart_dim_t* idims[], int device)
+struct pytorch_wrapper_s* pytorch_wrapper_create(const char* path, int II, const int DI[], const long* idims[], int device)
 {
 	struct pytorch_wrapper_s* ret = new(struct pytorch_wrapper_s);
 
@@ -138,7 +138,7 @@ int pytorch_wrapper_rank_output(const struct pytorch_wrapper_s* data, int o)
 	return data->odims[o].size();
 }
 
-void pytorch_wrapper_dims_output(const struct pytorch_wrapper_s* data, int o, int N, bart_dim_t dims[__VLA(N)])
+void pytorch_wrapper_dims_output(const struct pytorch_wrapper_s* data, int o, int N, long dims[__VLA(N)])
 {
 	assert(N == data->odims[o].size());
 	

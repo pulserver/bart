@@ -51,13 +51,13 @@ static const struct nn_weights_s* get_validation_files(int NO, const char* out_n
 	if (NULL == out_name)
 		return NULL;
 
-	bart_dim_t dims_out[NO];
+	long dims_out[NO];
 	complex float* out = load_cfl(out_name, NO, dims_out);
 
-	bart_dim_t dims_in[NI];
+	long dims_in[NI];
 	complex float* in = load_cfl(in_name, NI, dims_in);
 
-	auto result = create_multi_md_array(2, (int[2]){NI, NO}, (const bart_dim_t*[2]){dims_in, dims_out}, (const complex float*[2]){in, out}, (size_t[2]){CFL_SIZE, CFL_SIZE});
+	auto result = create_multi_md_array(2, (int[2]){NI, NO}, (const long*[2]){dims_in, dims_out}, (const complex float*[2]){in, out}, (size_t[2]){CFL_SIZE, CFL_SIZE});
 
 	unmap_cfl(NI, dims_in, in);
 	unmap_cfl(NO, dims_out, out);
@@ -76,7 +76,7 @@ int main_nnet(int argc, char* argv[argc])
 
 	bool load_mem = false;
 
-	bart_dim_t N_batch = 0;
+	long N_batch = 0;
 
 	const char* graph_filename = NULL;
 	const char* filename_weights_load = NULL;
@@ -84,8 +84,8 @@ int main_nnet(int argc, char* argv[argc])
 	int NI = -1;
 
 	bool mnist_default = false;
-	bart_dim_t N_unet_segm_labels = -1;
-	bart_dim_t N_nnunet_segm_labels = -1;
+	long N_unet_segm_labels = -1;
+	long N_nnunet_segm_labels = -1;
 	int label_index = 0;
 
 	struct nnet_s config = nnet_init;
@@ -208,7 +208,7 @@ int main_nnet(int argc, char* argv[argc])
 	config.graph_file = graph_filename;
 
 
-	bart_dim_t dims_in[DIMS];
+	long dims_in[DIMS];
 	complex float* in = load_cfl(filename_in, (-1 == NI) ? DIMS : NI, dims_in);
 
 	if (-1 == NI) {
@@ -227,7 +227,7 @@ int main_nnet(int argc, char* argv[argc])
 	if (train) {
 
 		int NO = config.get_no_odims(&config, NI, dims_in);
-		bart_dim_t dims_out[NO];
+		long dims_out[NO];
 
 		complex float* out = load_cfl(filename_out, NO, dims_out);
 
@@ -260,7 +260,7 @@ int main_nnet(int argc, char* argv[argc])
 	if (eval) {
 
 		int NO = config.get_no_odims(&config, NI, dims_in);
-		bart_dim_t dims_out[NO];
+		long dims_out[NO];
 		complex float* out = load_cfl(filename_out, NO, dims_out);
 
 		if (NULL == config.weights)
@@ -274,7 +274,7 @@ int main_nnet(int argc, char* argv[argc])
 	if (apply) {
 
 		int NO = config.get_no_odims(&config, NI, dims_in);
-		bart_dim_t dims_out[NO];
+		long dims_out[NO];
 		config.get_odims(&config, NO, dims_out, NO, dims_in);
 
 		complex float* out = create_cfl(filename_out, NO, dims_out);

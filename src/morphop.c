@@ -70,7 +70,7 @@ int main_morphop(int argc, char* argv[argc])
 
 	const int N = DIMS;
 
-	bart_dim_t dims[N];
+	long dims[N];
 
 	complex float* in = load_cfl(in_file, N, dims);
 
@@ -82,7 +82,7 @@ int main_morphop(int argc, char* argv[argc])
 	// FIXME: Check if data is binary else raise
 	// ...
 
-	bart_dim_t mask_dims[N];
+	long mask_dims[N];
 	md_set_dims(N, mask_dims, 1);
 	mask_dims[READ_DIM] = mask_size;
 	mask_dims[PHS1_DIM] = mask_size;

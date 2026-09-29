@@ -33,17 +33,17 @@ struct sense_data {
 
 	operator_data_t super;
 
-	bart_dim_t sens_dims[DIMS];
-	bart_stride_t sens_strs[DIMS];
+	long sens_dims[DIMS];
+	long sens_strs[DIMS];
 
-	bart_dim_t imgs_dims[DIMS];
-	bart_stride_t imgs_strs[DIMS];
+	long imgs_dims[DIMS];
+	long imgs_strs[DIMS];
 
-	bart_dim_t data_dims[DIMS];
-	bart_stride_t data_strs[DIMS];
+	long data_dims[DIMS];
+	long data_strs[DIMS];
 
-	bart_dim_t mask_dims[DIMS];
-	bart_stride_t mask_strs[DIMS];
+	long mask_dims[DIMS];
+	long mask_strs[DIMS];
 
 	const complex float* sens;
 	const complex float* pattern;
@@ -103,7 +103,7 @@ static void sense_reco(struct sense_data* data, complex float* imgs, const compl
 
 	sense_adjoint(data, adj, kspace);
 
-	bart_dim_t size = 2 * md_calc_size(DIMS, data->imgs_dims); // multiply by 2 for float size
+	long size = 2 * md_calc_size(DIMS, data->imgs_dims); // multiply by 2 for float size
 
 	const struct operator_s* op = operator_create(DIMS, data->imgs_dims, DIMS, data->imgs_dims,
 		CAST_UP(data), sense_normal, NULL);

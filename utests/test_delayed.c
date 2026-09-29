@@ -23,7 +23,7 @@ static bool test_unnecessary_copy(void)
 	bart_delayed_computations = true;
 
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 3, 5, 7 };
+	long dims[N] = { 3, 5, 7 };
 
 	complex float* a = vptr_alloc(N, dims, CFL_SIZE, NULL);
 	complex float* b = vptr_alloc(N, dims, CFL_SIZE, NULL);
@@ -60,7 +60,7 @@ static bool test_unnecessary_add(void)
 	bart_delayed_computations = true;
 
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 3, 5, 7 };
+	long dims[N] = { 3, 5, 7 };
 
 	complex float* a = vptr_alloc(N, dims, CFL_SIZE, NULL);
 	complex float* b = vptr_alloc(N, dims, CFL_SIZE, NULL);
@@ -95,12 +95,12 @@ static bool test_unnecessary_add(void)
 
 UT_REGISTER_TEST(test_unnecessary_add);
 
-typedef bool (*chain_fun_t)(int N, int OO, const bart_dim_t odims[OO][N], complex float* dst[OO],
-				   int II, const bart_dim_t idims[II][N], const complex float* src[II]);
+typedef bool (*chain_fun_t)(int N, int OO, const long odims[OO][N], complex float* dst[OO],
+				   int II, const long idims[II][N], const complex float* src[II]);
 
-static bool compute_chain_wrap(float tol, bart_flags_t vflags, chain_fun_t fun, int N,
-	int OO, const bart_dim_t odims[OO][N],
-	int II, const bart_dim_t idims[II][N])
+static bool compute_chain_wrap(float tol, unsigned long vflags, chain_fun_t fun, int N,
+	int OO, const long odims[OO][N],
+	int II, const long idims[II][N])
 {
 	struct vptr_hint_s* hint = hint_delayed_create(vflags);
 
@@ -155,13 +155,13 @@ static bool compute_chain_wrap(float tol, bart_flags_t vflags, chain_fun_t fun, 
 	return true;
 }
 
-static bool chain_redu(int N, int OO, const bart_dim_t odims[OO][N], complex float* dst[OO],
-			      int II, const bart_dim_t idims[II][N], const complex float* src[II])
+static bool chain_redu(int N, int OO, const long odims[OO][N], complex float* dst[OO],
+			      int II, const long idims[II][N], const complex float* src[II])
 {
 	assert(1 == II);
 	assert(1 == OO);
 
-	bart_dim_t rdims[N];
+	long rdims[N];
 	md_select_dims(N, ~MD_BIT(2), rdims, idims[0]);
 
 	complex float* tmp1 = md_alloc_sameplace(N, idims[0], CFL_SIZE, src[0]);
@@ -188,10 +188,10 @@ static bool test_redu(void)
 	bart_delayed_computations = true;
 
 	enum { N = 4 };
-	bart_dim_t idims[1][N] = { { 32, 64, 32, 2 } };
-	bart_dim_t odims[1][N] = { { 32, 64, 32, 2 } };
+	long idims[1][N] = { { 32, 64, 32, 2 } };
+	long odims[1][N] = { { 32, 64, 32, 2 } };
 
-	return compute_chain_wrap(1e-6, ~UINT64_C(0), chain_redu, N,
+	return compute_chain_wrap(1e-6, ~0UL, chain_redu, N,
 		1, odims,
 		1, idims);
 }

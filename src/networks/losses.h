@@ -1,5 +1,3 @@
-#include "misc/dimtypes.h"
-
 struct loss_config_s {
 
 	float epsilon;
@@ -26,11 +24,11 @@ struct loss_config_s {
 	float weighting_dice_labels;
 
 	int label_index;
-	bart_flags_t image_flags;
-	bart_flags_t rss_flags;
-	bart_flags_t mse_mean_flags;
+	unsigned long image_flags;
+	unsigned long rss_flags;
+	unsigned long mse_mean_flags;
 
-	bart_flags_t mask_flags;
+	unsigned long mask_flags;
 };
 
 extern struct loss_config_s val_loss_option;
@@ -39,5 +37,5 @@ extern struct loss_config_s loss_option;
 extern struct loss_config_s loss_image_valid;
 extern struct loss_config_s loss_classification_valid;
 
-extern const struct nn_s* train_loss_create(const struct loss_config_s* config, int N, const bart_dim_t dims[N]);
-extern const struct nn_s* val_measure_create(const struct loss_config_s* config, int N, const bart_dim_t dims[N]);
+extern const struct nn_s* train_loss_create(const struct loss_config_s* config, int N, const long dims[N]);
+extern const struct nn_s* val_measure_create(const struct loss_config_s* config, int N, const long dims[N]);

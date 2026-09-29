@@ -1,5 +1,4 @@
 
-#include "misc/dimtypes.h"
 #include "misc/types.h"
 #include "misc/shrdptr.h"
 
@@ -34,7 +33,7 @@ struct node_s {
 	int N_vertices;
 	list_t* edges;
 
-	bart_dim_t count;
+	long count;
 
 	const char* name;
 	graph_t subgraph;

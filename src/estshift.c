@@ -27,7 +27,7 @@ static const char help_str[] = "Estimate sub-pixel shift.";
 
 int main_estshift(int argc, char* argv[argc])
 {
-	bart_flags_t flags = 0;
+	unsigned long flags = 0;
 	const char* arg1_file = NULL;
 	const char* arg2_file = NULL;
 
@@ -50,18 +50,18 @@ int main_estshift(int argc, char* argv[argc])
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
 
-	bart_dim_t dims1[DIMS];
-	bart_dim_t dims2[DIMS];
+	long dims1[DIMS];
+	long dims2[DIMS];
 
 	const complex float* in1 = load_cfl(arg1_file, DIMS, dims1);
 	const complex float* in2 = load_cfl(arg2_file, DIMS, dims2);
 
-	assert(md_check_compat(DIMS, ~UINT64_C(0), dims1, dims2));
+	assert(md_check_compat(DIMS, ~0u, dims1, dims2));
 
 	float shifts[DIMS];
 	est_subpixel_shift(DIMS, shifts, dims1, flags, in1, in2);
 
-	bart_dim_t odims[DIMS];
+	long odims[DIMS];
 	md_singleton_dims(DIMS, odims);
 	odims[0] = bitcount(flags);
 

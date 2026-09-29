@@ -139,15 +139,6 @@ void error(const char* fmt, ...)
 }
 
 
-int checked_int(bart_dim_t x)
-{
-	if ((x < INT_MIN) || (x > INT_MAX))
-		error("%" PRId64 " does not fit in the int a library call takes.\n", x);
-
-	return (int)x;
-}
-
-
 int error_catcher(int fun(int argc, char* argv[argc]), int argc, char* argv[argc])
 {
 	int ret = -1;
@@ -183,27 +174,27 @@ int bart_printf(const char* fmt, ...)
 }
 
 
-void print_dims(int D, const bart_dim_t dims[D])
+void print_dims(int D, const long dims[D])
 {
 	printf("[");
 
 	for (int i = 0; i < D; i++)
-		printf("%3" PRId64 " ", dims[i]);
+		printf("%3ld ", dims[i]);
 
 	printf("]\n");
 }
 
 
 
-void debug_print_bits(int dblevel, int D, bart_flags_t bitmask)
+void debug_print_bits(int dblevel, int D, unsigned long bitmask)
 {
 	bool dbl = debug_logging;
 	debug_logging = false;
 	debug_printf(dblevel, "[");
 
-	bart_flags_t curr_bit = 1;
+	unsigned long curr_bit = 1;
 
-	while (curr_bit < (UINT64_C(1) << (D - 1))) {
+	while (curr_bit < (1ul << (D - 1))) {
 
 		debug_printf(dblevel, "%u", bitmask & curr_bit ? 1 : 0);
 		curr_bit = curr_bit << 1;
@@ -218,14 +209,14 @@ void debug_print_bits(int dblevel, int D, bart_flags_t bitmask)
 #undef debug_print_dims
 #endif
 
-void debug_print_dims(int dblevel, int D, const bart_dim_t dims[D])
+void debug_print_dims(int dblevel, int D, const long dims[D])
 {
 	bool dbl = debug_logging;
 	debug_logging = false;
 	debug_printf(dblevel, "[");
 
 	for (int i = 0; i < D; i++)
-		debug_printf(dblevel, "%3" PRId64 " ", dims[i]);
+		debug_printf(dblevel, "%3ld ", dims[i]);
 
 	debug_printf(dblevel, "]\n");
 	debug_logging = dbl;
@@ -239,14 +230,14 @@ void debug_print_dims_trace(const char* func_name,
 			    int line,
 			    int dblevel,
 			    int D,
-			    const bart_dim_t dims[D])
+			    const long dims[D])
 {
 	bool dbl = debug_logging;
 	debug_logging = false;
 	debug_printf_trace(func_name, file, line, dblevel, "[");
 
 	for (int i = 0; i < D; i++)
-		debug_printf_trace(func_name, file, line, dblevel, "%3" PRId64 " ", dims[i]);
+		debug_printf_trace(func_name, file, line, dblevel, "%3ld ", dims[i]);
 
 	debug_printf_trace(func_name, file, line, dblevel, "]\n");
 	debug_logging = dbl;
@@ -294,10 +285,10 @@ int parse_double(double res[1], const char* str)
 	return 0;
 }
 
-int parse_long(bart_dim_t res[1], const char* str)
+int parse_long(long res[1], const char* str)
 {
 	char* tail;
-	bart_dim_t l = strtoll(str, &tail, 10);
+	long l = strtol(str, &tail, 10);
 
 	if ('\0' != tail[0])
 		return -1;
@@ -330,12 +321,12 @@ int parse_ulonglong(unsigned long long res[1], const char* str)
 
 int parse_int(int res[1], const char* str)
 {
-	bart_dim_t val;
+	long val;
 	if (0 != parse_long(&val, str))
 		return -1;
 
 	if (val < INT_MIN || val > INT_MAX)
-		error("Value %" PRId64 " too large for int!\n", val);
+		error("Value %ld too large for int!\n", val);
 
 	res[0] = (int) val;
 	return 0;
@@ -397,7 +388,7 @@ void (quicksort)(int N, int ord[N], quicksort_cmp_t cmp)
  */
 float quickselect(float *arr, int n, int k)
 {
-	bart_dim_t i, ir, j, l, mid;
+	long i, ir, j, l, mid;
 	float a;
 
 	l = 0;
@@ -461,7 +452,7 @@ float quickselect(float *arr, int n, int k)
  */
 float quickselect_complex(complex float* arr, int n, int k)
 {
-	bart_dim_t i, ir, j, l, mid;
+	long i, ir, j, l, mid;
 	float a;
 	complex float ca;
 
@@ -627,10 +618,10 @@ void save_command_line(int argc, char* argv[static argc])
 
 
 
-void print_long(int D, const bart_dim_t arr[D])
+void print_long(int D, const long arr[D])
 {
 	for (int i = 0; i < D; i++)
-		printf("arr[%i] = %" PRId64 "\n", i, arr[i]);
+		printf("arr[%i] = %ld\n", i, arr[i]);
 }
 
 void print_float(int D, const float arr[D])
@@ -652,7 +643,7 @@ void print_complex(int D, const complex float arr[D])
 }
 
 
-int bitcount(bart_flags_t flags)
+int bitcount(unsigned long flags)
 {
 	int N = 0;
 
@@ -676,7 +667,7 @@ bool safe_isfinite(float x)
 }
 
 
-static bool long_mul_overflow_p(bart_dim_t a, bart_dim_t b)
+static bool long_mul_overflow_p(long a, long b)
 {
 	bool of = false;
 
@@ -688,13 +679,13 @@ static bool long_mul_overflow_p(bart_dim_t a, bart_dim_t b)
 	return of;
 }
 
-bart_dim_t io_calc_size(int D, const bart_dim_t dims[D?:1], size_t size)
+long io_calc_size(int D, const long dims[D?:1], size_t size)
 {
 	if (0 == D)
-		return (bart_stride_t)size;
+		return (long)size;
 
-	bart_dim_t a = io_calc_size(D - 1, dims + 1, size);
-	bart_dim_t b = dims[0];
+	long a = io_calc_size(D - 1, dims + 1, size);
+	long b = dims[0];
 
 	if ((a < 0) || (b < 0))
 		return -1;
@@ -762,13 +753,13 @@ void ptr_append_printf(const char** prefix, const char* fmt, ...)
 	*prefix = *PTR_PASS(result);
 }
 
-char* ptr_print_dims(int D, const bart_dim_t dims[D])
+char* ptr_print_dims(int D, const long dims[D])
 {
 	char* result = ptr_printf("[");
 
 	for (int i = 0; i < D; i++) {
 
-		char* tmp = ptr_printf("%s%3" PRId64 " ", result, dims[i]);
+		char* tmp = ptr_printf("%s%3ld ", result, dims[i]);
 
 		xfree(result);
 
@@ -785,7 +776,7 @@ char* ptr_print_dims(int D, const bart_dim_t dims[D])
 
 static const char* spec = "xyzcmnopqsfrtuvw";
 
-char* construct_filename(int D, const bart_dim_t loopdims[D], const bart_dim_t pos[D], const char* prefix, const char* ext)
+char* construct_filename(int D, const long loopdims[D], const long pos[D], const char* prefix, const char* ext)
 {
 	// Prepare output filename
 
@@ -795,7 +786,7 @@ char* construct_filename(int D, const bart_dim_t loopdims[D], const bart_dim_t p
 
 	for (int i = 0; i < D; i++)
 		if (1 != loopdims[i])
-			len += snprintf(NULL, 0, "_%c%04" PRId64, spec[i], pos[i]);
+			len += snprintf(NULL, 0, "_%c%04ld", spec[i], pos[i]);
 
 	len += snprintf(NULL, 0, ".%s", ext);
 	len++;
@@ -807,7 +798,7 @@ char* construct_filename(int D, const bart_dim_t loopdims[D], const bart_dim_t p
 
 	for (int i = 0; i < D; i++)
 		if (1 != loopdims[i])
-			off += snprintf(name + off, (size_t)(len - off), "_%c%04" PRId64, spec[i], pos[i]);
+			off += snprintf(name + off, (size_t)(len - off), "_%c%04ld", spec[i], pos[i]);
 
 	off += snprintf(name + off, (size_t)(len - off), ".%s", ext);
 

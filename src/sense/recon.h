@@ -2,7 +2,6 @@
 #ifndef _SENSE_H
 #define _SENSE_H 1
 
-#include "misc/dimtypes.h"
 #include "misc/mri.h"
 #include "iter/iter.h"
 #include "iter/iter2.h"
@@ -36,7 +35,7 @@ struct operator_p_s;
 
 extern const struct operator_p_s* sense_recon_create(const struct sense_conf* conf,
 		  const struct linop_s* sense_op,
-		  const bart_dim_t pat_dims[DIMS],
+		  const long pat_dims[DIMS],
 		  italgo_fun2_t italgo, iter_conf* iconf,
 		  const complex float* init,
 		  int num_funs,

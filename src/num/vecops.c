@@ -40,7 +40,7 @@
  *
  * @param N number of elements
  */
-static float* allocate(bart_dim_t N)
+static float* allocate(long N)
 {
 	assert(N >= 0);
 	return xmalloc(sizeof(float[N]));
@@ -51,21 +51,21 @@ static void del(float* vec)
 	xfree(vec);
 }
 
-static void copy(bart_dim_t N, float* dst, const float* src)
+static void copy(long N, float* dst, const float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = src[i];
 }
 
-static void float2double(bart_dim_t N, double* dst, const float* src)
+static void float2double(long N, double* dst, const float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = src[i];
 }
 
-static void double2float(bart_dim_t N, float* dst, const double* src)
+static void double2float(long N, float* dst, const double* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = src[i];
 }
 
@@ -75,34 +75,34 @@ static void double2float(bart_dim_t N, float* dst, const double* src)
  * @param N vector length
  * @param vec vector
  */
-static void clear(bart_dim_t N, float* vec)
+static void clear(long N, float* vec)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		vec[i] = 0.;
 }
 
-static void sadd(bart_dim_t N, float* vec, float src)
+static void sadd(long N, float* vec, float src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		vec[i] += src;
 }
 
-static double dot(bart_dim_t N, const float* vec1, const float* vec2)
+static double dot(long N, const float* vec1, const float* vec2)
 {
 	double res = 0.;
 
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		res += vec1[i] * vec2[i];
 	//res = fma((double)vec1[i], (double)vec2[i], res);
 
 	return res;
 }
 
-static complex double zdot(bart_dim_t N, const complex float* vec1, const complex float* vec2)
+static complex double zdot(long N, const complex float* vec1, const complex float* vec2)
 {
 	complex double res = 0.;
 
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		res += vec1[i] * conjf(vec2[i]);
 
 	return res;
@@ -114,11 +114,11 @@ static complex double zdot(bart_dim_t N, const complex float* vec1, const comple
  * @param N vector length
  * @param vec vector
  */
-static double norm(bart_dim_t N, const float* vec)
+static double norm(long N, const float* vec)
 {
 	double res = 0.;
 
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		res += vec[i] * vec[i];
 	//res = fma((double)vec[i], (double)vec[i], res);
 
@@ -132,11 +132,11 @@ static double norm(bart_dim_t N, const float* vec)
  * @param N vector length
  * @param vec vector
  */
-static double asum(bart_dim_t N, const float* vec)
+static double asum(long N, const float* vec)
 {
 	double res = 0.;
 
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		res += fabsf(vec[i]);
 
 	return res;
@@ -149,11 +149,11 @@ static double asum(bart_dim_t N, const float* vec)
  * @param N vector length
  * @param vec vector
  */
-static double zl1norm(bart_dim_t N, const complex float* vec)
+static double zl1norm(long N, const complex float* vec)
 {
 	double res = 0.;
 
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		res += cabsf(vec[i]);
 
 	return res;
@@ -162,11 +162,11 @@ static double zl1norm(bart_dim_t N, const complex float* vec)
 
 
 // we should probably replace asum and zl1norm
-static void zsum(bart_dim_t N, complex float* vec)
+static void zsum(long N, complex float* vec)
 {
 	complex float res = 0.;
 
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		res += vec[i];
 
 	vec[0] = res;
@@ -174,176 +174,176 @@ static void zsum(bart_dim_t N, complex float* vec)
 
 
 
-static void axpbz(bart_dim_t N, float* dst, const float a1, const float* src1, const float a2, const float* src2)
+static void axpbz(long N, float* dst, const float a1, const float* src1, const float a2, const float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = a1 * src1[i] + a2 * src2[i];
 }
 
-static void axpy(bart_dim_t N, float* dst, float alpha, const float* src)
+static void axpy(long N, float* dst, float alpha, const float* src)
 {
 	axpbz(N, dst, 1., dst, alpha, src);
 	//dst[i] = fmaf(alpha, src[i], dst[i]);
 }
 
-static void xpay(bart_dim_t N, float beta, float* dst, const float* src)
+static void xpay(long N, float beta, float* dst, const float* src)
 {
 	axpbz(N, dst, beta, dst, 1., src);
 	//dst[i] = fmaf(beta, dst[i], src[i]);
 }
 
 
-static void smul(bart_dim_t N, float alpha, float* dst, const float* src)
+static void smul(long N, float alpha, float* dst, const float* src)
 {
 	axpbz(N, dst, 0., src, alpha, src);
 	//dst[i] = fmaf(alpha, src[i], 0.f);
 }
 
-static void add(bart_dim_t N, float* dst, const float* src1, const float* src2)
+static void add(long N, float* dst, const float* src1, const float* src2)
 {
 #if 1
 	if (dst == src1) {
 
-		for (bart_dim_t i = 0; i < N; i++)
+		for (long i = 0; i < N; i++)
 			dst[i] += src2[i];
 	} else
 #endif
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = src1[i] + src2[i];
 }
 
-static void sadd_update(bart_dim_t N, float val, float* dst, const float* src)
+static void sadd_update(long N, float val, float* dst, const float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = src[i] + val;
 }
 
-static void zsadd(bart_dim_t N, complex float val, complex float* dst, const complex float* src)
+static void zsadd(long N, complex float val, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = src[i] + val;
 }
 
-static void sub(bart_dim_t N, float* dst, const float* src1, const float* src2)
+static void sub(long N, float* dst, const float* src1, const float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = src1[i] - src2[i];
 }
 
-static void mul(bart_dim_t N, float* dst, const float* src1, const float* src2)
+static void mul(long N, float* dst, const float* src1, const float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = src1[i] * src2[i];
 }
 
-static void vec_div(bart_dim_t N, float* dst, const float* src1, const float* src2)
+static void vec_div(long N, float* dst, const float* src1, const float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		//dst[i] = src1[i] / src2[i];
 		dst[i] = (src2[i] == 0) ? 0.f : src1[i] / src2[i];
 }
 
-static void sdiv(bart_dim_t N, float* dst, float src1, const float* src2)
+static void sdiv(long N, float* dst, float src1, const float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = (src2[i] == 0) ? 0.f : src1 / src2[i];
 }
 
-static void fmac(bart_dim_t N, float* dst, const float* src1, const float* src2)
+static void fmac(long N, float* dst, const float* src1, const float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] += src1[i] * src2[i];
 	//dst[i] = fmaf(src1[i], src2[i], dst[i]);
 }
 
-static void fmacD(bart_dim_t N, double* dst, const float* src1, const float* src2)
+static void fmacD(long N, double* dst, const float* src1, const float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] += src1[i] * src2[i];
 }
 
-static void zsmul(bart_dim_t N, complex float val, complex float* dst, const complex float* src1)
+static void zsmul(long N, complex float val, complex float* dst, const complex float* src1)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = src1[i] * val;
 }
 
-static void zmul(bart_dim_t N, complex float* dst, const complex float* src1, const complex float* src2)
+static void zmul(long N, complex float* dst, const complex float* src1, const complex float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = src1[i] * src2[i];
 }
 
-static void zdiv(bart_dim_t N, complex float* dst, const complex float* src1, const complex float* src2)
+static void zdiv(long N, complex float* dst, const complex float* src1, const complex float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = (src2[i] == 0.) ? 0. : (src1[i] / src2[i]);
 }
 
-static void zpow(bart_dim_t N, complex float* dst, const complex float* src1, const complex float* src2)
+static void zpow(long N, complex float* dst, const complex float* src1, const complex float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = cpowf(src1[i], src2[i]);
 }
 
-static void zfmac(bart_dim_t N, complex float* dst, const complex float* src1, const complex float* src2)
+static void zfmac(long N, complex float* dst, const complex float* src1, const complex float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] += src1[i] * src2[i];
 }
 
-static void zfmacD(bart_dim_t N, complex double* dst, const complex float* src1, const complex float* src2)
+static void zfmacD(long N, complex double* dst, const complex float* src1, const complex float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] += src1[i] * src2[i];
 }
 
-static void zmulc(bart_dim_t N, complex float* dst, const complex float* src1, const complex float* src2)
+static void zmulc(long N, complex float* dst, const complex float* src1, const complex float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = src1[i] * conjf(src2[i]);
 }
 
-static void zfmacc(bart_dim_t N, complex float* dst, const complex float* src1, const complex float* src2)
+static void zfmacc(long N, complex float* dst, const complex float* src1, const complex float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] += src1[i] * conjf(src2[i]);
 }
 
-static void zfmaccD(bart_dim_t N, complex double* dst, const complex float* src1, const complex float* src2)
+static void zfmaccD(long N, complex double* dst, const complex float* src1, const complex float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] += src1[i] * conjf(src2[i]);
 }
 
-static void zfsq2(bart_dim_t N, complex float* dst, const complex float* src)
+static void zfsq2(long N, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] += crealf(src[i]) * crealf(src[i]) + cimagf(src[i]) * cimagf(src[i]);
 }
 
 
-static void zconj(bart_dim_t N, complex float* dst, const complex float* src)
+static void zconj(long N, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = conjf(src[i]);
 }
 
-static void zcmp(bart_dim_t N, complex float* dst, const complex float* src1, const complex float* src2)
+static void zcmp(long N, complex float* dst, const complex float* src1, const complex float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = (src1[i] == src2[i]) ? 1. : 0.;
 }
 
-static void zdiv_reg(bart_dim_t N, complex float* dst, const complex float* src1, const complex float* src2, complex float lambda)
+static void zdiv_reg(long N, complex float* dst, const complex float* src1, const complex float* src2, complex float lambda)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = (src2[i] == 0) ? 0.f : src1[i] / (lambda + src2[i]);
 }
 
-static void zphsr(bart_dim_t N, complex float* dst, const complex float* src)
+static void zphsr(long N, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++) {
+	for (long i = 0; i < N; i++) {
 
 		float s = cabsf(src[i]);
 
@@ -359,180 +359,180 @@ static void zphsr(bart_dim_t N, complex float* dst, const complex float* src)
 	}
 }
 
-static void zexp(bart_dim_t N, complex float* dst, const complex float* src)
+static void zexp(long N, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = cexpf(src[i]);
 }
 
-static void zexpj(bart_dim_t N, complex float* dst, const complex float* src)
+static void zexpj(long N, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = cexpf(1.I * src[i]);
 }
 
-static void zlog(bart_dim_t N, complex float* dst, const complex float* src)
+static void zlog(long N, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = (src[i] == (complex float)0.) ? 0. : clogf(src[i]);
 }
 
-static void vec_exp(bart_dim_t N, float* dst, const float* src)
+static void vec_exp(long N, float* dst, const float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = expf(src[i]);
 }
 
-static void vec_log(bart_dim_t N, float* dst, const float* src)
+static void vec_log(long N, float* dst, const float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = (src[i] == 0.) ? 0. : logf(src[i]);
 }
 
-static void zarg(bart_dim_t N, complex float* dst, const complex float* src)
+static void zarg(long N, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = cargf(src[i]);
 }
 
-static void zabs(bart_dim_t N, complex float* dst, const complex float* src)
+static void zabs(long N, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = cabsf(src[i]);
 }
 
-static void zatanr(bart_dim_t N, complex float* dst, const complex float* src)
+static void zatanr(long N, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = atan(crealf(src[i])) + 0.I;
 }
 
-static void zatan2r(bart_dim_t N, complex float* dst, const complex float* src1, const complex float* src2)
+static void zatan2r(long N, complex float* dst, const complex float* src1, const complex float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = atan2f(crealf(src1[i]), crealf(src2[i])) + 0.I;
 }
 
-static void zsin(bart_dim_t N, complex float* dst, const complex float* src)
+static void zsin(long N, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = csinf(src[i]);
 }
 
-static void zcos(bart_dim_t N, complex float* dst, const complex float* src)
+static void zcos(long N, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = ccosf(src[i]);
 }
 
-static void zasin(bart_dim_t N, complex float* dst, const complex float* src)
+static void zasin(long N, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = casinf(src[i]);
 }
 
-static void zacos(bart_dim_t N, complex float* dst, const complex float* src)
+static void zacos(long N, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = cacosf(src[i]);
 }
 
-static void zsinh(bart_dim_t N, complex float* dst, const complex float* src)
+static void zsinh(long N, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = csinhf(src[i]);
 }
 
-static void zcosh(bart_dim_t N, complex float* dst, const complex float* src)
+static void zcosh(long N, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = ccoshf(src[i]);
 }
 
-static void zacosr(bart_dim_t N, complex float* dst, const complex float* src)
+static void zacosr(long N, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = acosf(crealf(src[i])) + 0.I;
 }
 
-static void zmax(bart_dim_t N, complex float* dst, const complex float* src1, const complex float* src2)
+static void zmax(long N, complex float* dst, const complex float* src1, const complex float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = MAX(crealf(src1[i]), crealf(src2[i]));
 }
 
 
-static void max(bart_dim_t N, float* dst, const float* src1, const float* src2)
+static void max(long N, float* dst, const float* src1, const float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = MAX(src1[i], src2[i]);
 }
 
-static void smax(bart_dim_t N, float val, float* dst, const float* src1)
+static void smax(long N, float val, float* dst, const float* src1)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = MAX(src1[i], val);
 }
 
 
-static void min(bart_dim_t N, float* dst, const float* src1, const float* src2)
+static void min(long N, float* dst, const float* src1, const float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = MIN(src1[i], src2[i]);
 }
 
 
-static void smin(bart_dim_t N, float val, float* dst, const float* src1)
+static void smin(long N, float val, float* dst, const float* src1)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = MIN(src1[i], val);
 }
 
 
-static void zsmax(bart_dim_t N, float val, complex float* dst, const complex float* src)
+static void zsmax(long N, float val, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = MAX(crealf(src[i]), val);
 }
 
-static void zsmin(bart_dim_t N, float val, complex float* dst, const complex float* src)
+static void zsmin(long N, float val, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = MIN(crealf(src[i]), val);
 }
 
 
-static void vec_pow(bart_dim_t N, float* dst, const float* src1, const float* src2)
+static void vec_pow(long N, float* dst, const float* src1, const float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = powf(src1[i], src2[i]);
 }
 
 
-static void vec_sqrt(bart_dim_t N, float* dst, const float* src)
+static void vec_sqrt(long N, float* dst, const float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = sqrtf(src[i]);
 }
 
 
-static void vec_round(bart_dim_t N, float* dst, const float* src)
+static void vec_round(long N, float* dst, const float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = roundf(src[i]);
 }
 
 
-static void vec_zle(bart_dim_t N, complex float* dst, const complex float* src1, const complex float* src2)
+static void vec_zle(long N, complex float* dst, const complex float* src1, const complex float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = (crealf(src1[i]) <= crealf(src2[i])) ? 1. : 0.;
 }
 
 
-static void vec_le(bart_dim_t N, float* dst, const float* src1, const float* src2)
+static void vec_le(long N, float* dst, const float* src1, const float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = (src1[i] <= src2[i]) ? 1. : 0.;
 }
 
@@ -545,9 +545,9 @@ static void vec_le(bart_dim_t N, float* dst, const float* src1, const float* src
  * @param d pointer to destination, resid
  * @param x pointer to input
  */
-static void zsoftthresh_half(bart_dim_t N, float lambda, complex float* d, const complex float* x)
+static void zsoftthresh_half(long N, float lambda, complex float* d, const complex float* x)
 {
-	for (bart_dim_t i = 0; i < N; i++) {
+	for (long i = 0; i < N; i++) {
 
 		float norm = cabsf(x[i]);
 		float red = norm - lambda;
@@ -556,9 +556,9 @@ static void zsoftthresh_half(bart_dim_t N, float lambda, complex float* d, const
 }
 
 
-static void zsoftthresh(bart_dim_t N, float lambda, complex float* d, const complex float* x)
+static void zsoftthresh(long N, float lambda, complex float* d, const complex float* x)
 {
-	for (bart_dim_t i = 0; i < N; i++) {
+	for (long i = 0; i < N; i++) {
 
 		float norm = cabsf(x[i]);
 		float red = norm - lambda;
@@ -568,9 +568,9 @@ static void zsoftthresh(bart_dim_t N, float lambda, complex float* d, const comp
 
 
 
-static void softthresh_half(bart_dim_t N, float lambda, float* d, const float* x)
+static void softthresh_half(long N, float lambda, float* d, const float* x)
 {
-	for (bart_dim_t i = 0; i < N; i++) {
+	for (long i = 0; i < N; i++) {
 
 		float norm = fabsf(x[i]);
 		float red = norm - lambda;
@@ -580,9 +580,9 @@ static void softthresh_half(bart_dim_t N, float lambda, float* d, const float* x
 
 
 
-static void softthresh(bart_dim_t N, float lambda, float* d, const float* x)
+static void softthresh(long N, float lambda, float* d, const float* x)
 {
-	for (bart_dim_t i = 0; i < N; i++) {
+	for (long i = 0; i < N; i++) {
 
 		float norm = fabsf(x[i]);
 		float red = norm - lambda;
@@ -626,11 +626,11 @@ static float klargest_complex_partsort(int N, int k, const complex float* ar)
  * @param x pointer to input
  */
 
-static void zhardthresh(bart_dim_t N, int k, complex float* d, const complex float* x)
+static void zhardthresh(long N, int k, complex float* d, const complex float* x)
 {
 	float thr = klargest_complex_partsort(N, k, x);
 
-	for (bart_dim_t i = 0; i < N; i++) {
+	for (long i = 0; i < N; i++) {
 
 		float norm = cabsf(x[i]);
 		d[i] = (norm > thr) ? x[i] : 0.;
@@ -648,20 +648,20 @@ static void zhardthresh(bart_dim_t N, int k, complex float* d, const complex flo
  * @param x pointer to input
  */
 
-static void zhardthresh_mask(bart_dim_t N, int k, complex float* d, const complex float* x)
+static void zhardthresh_mask(long N, int k, complex float* d, const complex float* x)
 {
 	float thr = klargest_complex_partsort(N, k, x);
 
-	for (bart_dim_t i = 0; i < N; i++) {
+	for (long i = 0; i < N; i++) {
 
 		float norm = cabsf(x[i]);
 		d[i] = (norm > thr) ? 1. : 0.;
 	}
 }
 
-static void swap(bart_dim_t N, float* a, float* b)
+static void swap(long N, float* a, float* b)
 {
-	for (bart_dim_t i = 0; i < N; i++) {
+	for (long i = 0; i < N; i++) {
 
 		float tmp = a[i];
 		a[i] = b[i];
@@ -671,14 +671,14 @@ static void swap(bart_dim_t N, float* a, float* b)
 
 
 // identical copy in num/fft.c
-static double fftmod_phase(bart_dim_t length, int j)
+static double fftmod_phase(long length, int j)
 {
-	bart_dim_t center1 = length / 2;
+	long center1 = length / 2;
 	double shift = (double)center1 / (double)length;
 	return ((double)j - (double)center1 / 2.) * shift;
 }
 
-static complex double fftmod_phase2(bart_dim_t n, int j, bool inv, double phase)
+static complex double fftmod_phase2(long n, int j, bool inv, double phase)
 {
 	phase += fftmod_phase(n, j);
 	double rem = phase - floor(phase);
@@ -699,14 +699,14 @@ static complex double fftmod_phase2(bart_dim_t n, int j, bool inv, double phase)
 	return cexp(M_PI * 2.i * sgn * rem);
 }
 
-static void zfftmod(bart_dim_t N, complex float* dst, const complex float* src, int n, bool inv, double phase)
+static void zfftmod(long N, complex float* dst, const complex float* src, int n, bool inv, double phase)
 {
 #if 1
 	if (0 == n % 2) {
 
 		complex float ph = fftmod_phase2(n, 0, inv, phase);
 
-		for (bart_dim_t i = 0; i < N; i++)
+		for (long i = 0; i < N; i++)
 			for (int j = 0; j < n; j++)
 				dst[i * n + j] = src[i * n + j] * ((0 == j % 2) ? ph : -ph);
 
@@ -714,66 +714,66 @@ static void zfftmod(bart_dim_t N, complex float* dst, const complex float* src, 
 	}
 #endif
 
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		for (int j = 0; j < n; j++)
 			dst[i * n + j] = src[i * n + j] * fftmod_phase2(n, j, inv, phase);
 }
 
 
-static void pdf_gauss(bart_dim_t N, float mu, float sig, float* dst, const float* src)
+static void pdf_gauss(long N, float mu, float sig, float* dst, const float* src)
 {
 	for (int i = 0; i < N; i++)
 		dst[i] = expf(-(src[i] - mu) * (src[i] - mu) / (2 * sig * sig)) / (sqrtf(2 * M_PI) * sig);
 }
 
 
-static void vec_real(bart_dim_t N, float* dst, const complex float* src)
+static void vec_real(long N, float* dst, const complex float* src)
 {
 	for (int i = 0; i < N; i++)
 		dst[i] = crealf(src[i]);
 }
 
-static  void vec_imag(bart_dim_t N, float* dst, const complex float* src)
+static  void vec_imag(long N, float* dst, const complex float* src)
 {
 	for (int i = 0; i < N; i++)
 		dst[i] = cimagf(src[i]);
 }
 
-static void vec_zcmpl_real(bart_dim_t N, complex float* dst, const float* src)
+static void vec_zcmpl_real(long N, complex float* dst, const float* src)
 {
 	for (int i = 0; i < N; i++)
 		dst[i] = src[i];
 }
 
-static void vec_zcmpl_imag(bart_dim_t N, complex float* dst, const float* src)
+static void vec_zcmpl_imag(long N, complex float* dst, const float* src)
 {
 	for (int i = 0; i < N; i++)
 		dst[i] = src[i] * 1.i;
 }
 
-static void vec_zcmpl(bart_dim_t N, complex float* dst, const float* real_src, const float* imag_src)
+static void vec_zcmpl(long N, complex float* dst, const float* real_src, const float* imag_src)
 {
 	for (int i = 0; i < N; i++)
 		dst[i] = real_src[i] + imag_src[i] * 1.i;
 }
 
-static void vec_zfill(bart_dim_t N, complex float val, complex float* dst)
+static void vec_zfill(long N, complex float val, complex float* dst)
 {
 	for (int i = 0; i < N; i++)
 		dst[i] = val;
 }
 
 
-static void xpay_bat(bart_dim_t Bi, bart_dim_t N, bart_dim_t Bo, const float* beta, float* a, const float* x)
+static void xpay_bat(long Bi, long N, long Bo, const float* beta, float* a, const float* x)
 {
-	for (bart_dim_t bi = 0; bi < Bi; bi++) {
+	for (long bi = 0; bi < Bi; bi++) {
 
-		for (bart_dim_t bo = 0; bo < Bo; bo++) {
+		for (long bo = 0; bo < Bo; bo++) {
 
-			for (bart_dim_t i = 0; i < N; i++) {
+			for (long i = 0; i < N; i++) {
 
-				bart_dim_t idx = 2 * bi + 2 * Bi * i + 2 * Bi * N * bo;
-				bart_dim_t idx_beta = bi + Bi * bo;
+				long idx = 2 * bi + 2 * Bi * i + 2 * Bi * N * bo;
+				long idx_beta = bi + Bi * bo;
 
 				a[idx] = x[idx] + beta[idx_beta] * a[idx];
 				a[idx + 1] = x[idx + 1] + beta[idx_beta] * a[idx + 1];
@@ -783,17 +783,17 @@ static void xpay_bat(bart_dim_t Bi, bart_dim_t N, bart_dim_t Bo, const float* be
 
 }
 
-static void dot_bat(bart_dim_t Bi, bart_dim_t N, bart_dim_t Bo, float* dst, const float* src1, const float* src2)
+static void dot_bat(long Bi, long N, long Bo, float* dst, const float* src1, const float* src2)
 {
-	for (bart_dim_t bi = 0; bi < Bi; bi++) {
+	for (long bi = 0; bi < Bi; bi++) {
 
-		for (bart_dim_t bo = 0; bo < Bo; bo++) {
+		for (long bo = 0; bo < Bo; bo++) {
 
 			double ret = 0.;
 
-			for (bart_dim_t i = 0; i < N; i++) {
+			for (long i = 0; i < N; i++) {
 
-				bart_dim_t idx = 2 * bi + 2 * Bi * i + 2 * Bi * N * bo;
+				long idx = 2 * bi + 2 * Bi * i + 2 * Bi * N * bo;
 				ret += src1[idx] * src2[idx] + src1[idx + 1] * src2[idx + 1];
 			}
 
@@ -802,16 +802,16 @@ static void dot_bat(bart_dim_t Bi, bart_dim_t N, bart_dim_t Bo, float* dst, cons
 	}
 }
 
-static void axpy_bat(bart_dim_t Bi, bart_dim_t N, bart_dim_t Bo, float* a, const float* alpha, const float* x)
+static void axpy_bat(long Bi, long N, long Bo, float* a, const float* alpha, const float* x)
 {
-	for (bart_dim_t bi = 0; bi < Bi; bi++) {
+	for (long bi = 0; bi < Bi; bi++) {
 
-		for (bart_dim_t bo = 0; bo < Bo; bo++) {
+		for (long bo = 0; bo < Bo; bo++) {
 
-			for (bart_dim_t i = 0; i < N; i++) {
+			for (long i = 0; i < N; i++) {
 
-				bart_dim_t idx = 2 * bi + 2 * Bi * i + + 2 * Bi * N * bo;
-				bart_dim_t idx_alpha = bi + Bi * bo;
+				long idx = 2 * bi + 2 * Bi * i + + 2 * Bi * N * bo;
+				long idx_alpha = bi + Bi * bo;
 
 				a[idx] += alpha[idx_alpha] * x[idx];
 				a[idx + 1] += alpha[idx_alpha] * x[idx + 1];
@@ -821,9 +821,9 @@ static void axpy_bat(bart_dim_t Bi, bart_dim_t N, bart_dim_t Bo, float* a, const
 
 }
 
-static void zsetnanzero(bart_dim_t N, complex float* dst, const complex float* src)
+static void zsetnanzero(long N, complex float* dst, const complex float* src)
 {
-	for (bart_dim_t i = 0; i < N; i++) {
+	for (long i = 0; i < N; i++) {
 
 		if (safe_isnanf(crealf(src[i])) || safe_isnanf(cimagf(src[i])))
 			dst[i] = 0;

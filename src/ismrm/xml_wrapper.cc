@@ -290,7 +290,7 @@ static bool ignore_next_message(struct isrmrm_config_s* config)
 	return false;
 }
 
-extern "C" bart_dim_t ismrm_stream_read_acquisition(struct isrmrm_config_s* config, ISMRMRD::ISMRMRD_Acquisition* c_acq)
+extern "C" long ismrm_stream_read_acquisition(struct isrmrm_config_s* config, ISMRMRD::ISMRMRD_Acquisition* c_acq)
 {
 	struct ismrm_cpp_state* s = config->ismrm_cpp_state;
 
@@ -328,7 +328,7 @@ extern "C" bart_dim_t ismrm_stream_read_acquisition(struct isrmrm_config_s* conf
 		if (LONG_MAX < data_size)
 			error("BART ISMRMRD Wrapper: Too large acquisition.\n");
 
-		return (bart_dim_t)data_size;
+		return (long)data_size;
 
 	} catch(std::runtime_error& e) {
 
@@ -391,7 +391,7 @@ static void ismrm_send_img(const ISMRMRD::Image<T> &img, const struct isrmrm_con
 	}
 }
 
-extern "C" void ismrm_stream_write_cfl_image(struct isrmrm_config_s* config, bart_dim_t size0, bart_dim_t size1, _Complex float* buf)
+extern "C" void ismrm_stream_write_cfl_image(struct isrmrm_config_s* config, long size0, long size1, _Complex float* buf)
 {
 	ISMRMRD::Image<std::complex<float> > img(size0, size1);
 
@@ -404,7 +404,7 @@ extern "C" void ismrm_stream_write_cfl_image(struct isrmrm_config_s* config, bar
 	ismrm_send_img(img, config);
 }
 
-extern "C" void ismrm_stream_write_mag_image(struct isrmrm_config_s* config, bart_dim_t size0, bart_dim_t size1, unsigned short* buf)
+extern "C" void ismrm_stream_write_mag_image(struct isrmrm_config_s* config, long size0, long size1, unsigned short* buf)
 {
 	ISMRMRD::Image<unsigned short> img(size0, size1);
 

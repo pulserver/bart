@@ -55,8 +55,8 @@ int main_pol2mask(int argc, char* argv[argc])
 
 	num_init();
 
-	bart_dim_t pdims[DIMS];
-	bart_dim_t odims[DIMS];
+	long pdims[DIMS];
+	long odims[DIMS];
 
 	complex float* pol = load_cfl(poly_file, DIMS, pdims);
 
@@ -65,10 +65,10 @@ int main_pol2mask(int argc, char* argv[argc])
 	int N = pdims[1];
 	int P = pdims[2];
 
-	bart_stride_t pstrs[DIMS];
+	long pstrs[DIMS];
 	md_calc_strides(DIMS, pstrs, pdims, CFL_SIZE);
 
-	bart_dim_t *pstrs_p = pstrs; // clang workaround
+	long *pstrs_p = pstrs; // clang workaround
 
 	md_copy_dims(DIMS, odims, pdims);
 	odims[0] = X;
@@ -77,12 +77,12 @@ int main_pol2mask(int argc, char* argv[argc])
 
 	complex float* out = create_cfl(out_file, DIMS, odims);
 
-	NESTED(complex float, sample, (const bart_dim_t pos[]))
+	NESTED(complex float, sample, (const long pos[]))
 	{
 		int sum = 0;
 
-		bart_dim_t pos2[DIMS];
-		md_select_dims(DIMS, ~UINT64_C(7), pos2, pos);
+		long pos2[DIMS];
+		md_select_dims(DIMS, ~7UL, pos2, pos);
 
 		for (int i = 0; i < P; i++) {
 

@@ -47,9 +47,9 @@
 #include "syn.h"
 
 
-static void zentral_differences(int D, const bart_dim_t dims[D], int d, bart_flags_t flags, complex float* out, const complex float* in)
+static void zentral_differences(int D, const long dims[D], int d, unsigned long flags, complex float* out, const complex float* in)
 {
-	bart_dim_t idims[D];
+	long idims[D];
 	md_select_dims(D, ~MD_BIT(d), idims, dims);
 
 	const struct linop_s* lop = linop_grad_zentral_create(D, idims, d, flags);
@@ -71,14 +71,14 @@ static void zentral_differences(int D, const bart_dim_t dims[D], int d, bart_fla
 //}
 
 
-static void _iterate(int iter, int d, bart_flags_t flags, int N, const bart_dim_t dims[N],
+static void _iterate(int iter, int d, unsigned long flags, int N, const long dims[N],
 			const struct nlop_s* nlop_metric, const struct linop_s* lop_gaussian,
 			complex float* static_to_ref_fw, complex float* static_to_ref_bw, const complex float* static_img,
 			complex float* moving_to_ref_fw, complex float* moving_to_ref_bw, const complex float* moving_img)
 {
 	float step_length = 0.25;
 
-	bart_dim_t img_dims[N];
+	long img_dims[N];
 	md_select_dims(N, ~MD_BIT(d), img_dims, dims);
 
 	complex float* current_static = md_alloc_sameplace(N, img_dims, CFL_SIZE, static_img);
@@ -126,7 +126,7 @@ static void _iterate(int iter, int d, bart_flags_t flags, int N, const bart_dim_
 	linop_forward(lop_gaussian, N, dims, fw_stp, N, dims, fw_stp);
 	linop_forward(lop_gaussian, N, dims, bw_stp, N, dims, bw_stp);
 
-	bart_dim_t rdims[N];
+	long rdims[N];
 	md_copy_dims(N, rdims, dims);
 
 	for (int i = 0; i < N; i++)
@@ -187,16 +187,16 @@ static void _iterate(int iter, int d, bart_flags_t flags, int N, const bart_dim_
 
 
 void syn(int levels, float sigma[levels], float factors[levels], int nwarps[levels],
-	int d, bart_flags_t flags, int N, const bart_dim_t _dims[N],
+	int d, unsigned long flags, int N, const long _dims[N],
 	complex float* disp, complex float* idisp,
 	const complex float* static_img, const complex float* moving_img)
 {
 	assert(_dims[d] == bitcount(flags));
 
-	bart_dim_t tdims[N];
+	long tdims[N];
 	md_select_dims(N, ~MD_BIT(d), tdims, _dims);
 
-	bart_dim_t dims[levels][N];
+	long dims[levels][N];
 	complex float* img_static[levels];
 	complex float* img_moved[levels];
 
@@ -205,7 +205,7 @@ void syn(int levels, float sigma[levels], float factors[levels], int nwarps[leve
 	gaussian_pyramide(levels, factors, sigma, 3, N, flags, tdims, moving_img, dims, img_moved);
 	gaussian_pyramide(levels, factors, sigma, 3, N, flags, tdims, static_img, dims, img_static);
 
-	bart_dim_t udims[N];
+	long udims[N];
 	md_copy_dims(N, udims, dims[levels - 1]);
 	udims[d] = bitcount(flags);
 
@@ -223,13 +223,13 @@ void syn(int levels, float sigma[levels], float factors[levels], int nwarps[leve
 
 		debug_printf(DP_DEBUG1, "Optimizing level %d\n", i);
 
-		bart_dim_t img_dims[N];
+		long img_dims[N];
 		md_copy_dims(N, img_dims, dims[i]);
 
 		md_copy_dims(N, udims, dims[i]);
 		udims[d] = bitcount(flags);
 
-		bart_dim_t kdims[N];
+		long kdims[N];
 		md_set_dims(N, kdims, 5);
 		md_select_dims(N, flags, kdims, kdims);
 
@@ -256,7 +256,7 @@ void syn(int levels, float sigma[levels], float factors[levels], int nwarps[leve
 		if (0 == i)
 			break;
 
-		bart_dim_t nudims[N];
+		long nudims[N];
 		md_copy_dims(N, nudims, dims[i - 1]);
 		nudims[d] = _dims[d];
 

@@ -40,7 +40,7 @@
 
 static bool use_distributed_computing = false;
 
-static void* bench_alloc(int D, bart_flags_t mpi_flags, const bart_dim_t dimensions[D], size_t size)
+static void* bench_alloc(int D, unsigned long mpi_flags, const long dimensions[D], size_t size)
 {
 	if (use_distributed_computing) {
 #ifdef USE_GPU
@@ -70,9 +70,9 @@ static double bench_timestamp(void)
 	return timestamp();
 }
 
-static double bench_generic_copy(bart_dim_t dims[DIMS])
+static double bench_generic_copy(long dims[DIMS])
 {
-	bart_stride_t strs[DIMS];
+	long strs[DIMS];
 
 	md_calc_strides(DIMS, strs, dims, CFL_SIZE);
 
@@ -93,10 +93,10 @@ static double bench_generic_copy(bart_dim_t dims[DIMS])
 	return toc - tic;
 }
 
-static double bench_generic_circ_shift(bart_dim_t dims[DIMS], bart_flags_t mpi_flags, bart_flags_t shift_dim, bart_dim_t shift)
+static double bench_generic_circ_shift(long dims[DIMS], unsigned long mpi_flags, unsigned long shift_dim, long shift)
 {
-	bart_dim_t center[DIMS] = {};
-	bart_stride_t strs[DIMS];
+	long center[DIMS] = {};
+	long strs[DIMS];
 
 	md_calc_strides(DIMS, strs, dims, CFL_SIZE);
 	center[shift_dim] = shift;
@@ -118,11 +118,11 @@ static double bench_generic_circ_shift(bart_dim_t dims[DIMS], bart_flags_t mpi_f
 	return toc - tic;
 }
 	
-static double bench_generic_matrix_multiply(bart_dim_t dims[DIMS])
+static double bench_generic_matrix_multiply(long dims[DIMS])
 {
-	bart_dim_t dimsX[DIMS];
-	bart_dim_t dimsY[DIMS];
-	bart_dim_t dimsZ[DIMS];
+	long dimsX[DIMS];
+	long dimsY[DIMS];
+	long dimsZ[DIMS];
 #if 1
 	md_select_dims(DIMS, 2 * 3 + 17, dimsX, dims);	// 1 110 1
 	md_select_dims(DIMS, 2 * 6 + 17, dimsY, dims);	// 1 011 1
@@ -154,19 +154,19 @@ static double bench_generic_matrix_multiply(bart_dim_t dims[DIMS])
 }
 
 
-static double bench_generic_add(bart_dim_t dims[DIMS], bart_flags_t flags, bool forloop)
+static double bench_generic_add(long dims[DIMS], unsigned long flags, bool forloop)
 {
-	bart_dim_t dimsX[DIMS];
-	bart_dim_t dimsY[DIMS];
+	long dimsX[DIMS];
+	long dimsY[DIMS];
 
-	bart_dim_t dimsC[DIMS];
+	long dimsC[DIMS];
 
 	md_select_dims(DIMS, flags, dimsX, dims);
 	md_select_dims(DIMS, ~flags, dimsC, dims);
-	md_select_dims(DIMS, ~UINT64_C(0), dimsY, dims);
+	md_select_dims(DIMS, ~0UL, dimsY, dims);
 
-	bart_dim_t strsX[DIMS];
-	bart_dim_t strsY[DIMS];
+	long strsX[DIMS];
+	long strsY[DIMS];
 
 	md_calc_strides(DIMS, strsX, dimsX, CFL_SIZE);
 	md_calc_strides(DIMS, strsY, dimsY, CFL_SIZE);
@@ -177,16 +177,16 @@ static double bench_generic_add(bart_dim_t dims[DIMS], bart_flags_t flags, bool 
 	md_gaussian_rand(DIMS, dimsX, x);
 	md_gaussian_rand(DIMS, dimsY, y);
 
-	bart_dim_t L = md_calc_size(DIMS, dimsC);
-	bart_dim_t T = md_calc_size(DIMS, dimsX);
+	long L = md_calc_size(DIMS, dimsC);
+	long T = md_calc_size(DIMS, dimsX);
 
 	double tic = bench_timestamp();
 
 	if (forloop) {
 
-		for (bart_dim_t i = 0; i < L; i++) {
+		for (long i = 0; i < L; i++) {
 
-			for (bart_dim_t j = 0; j < T; j++)
+			for (long j = 0; j < T; j++)
 				y[i + j * L] += x[j];
 		}
 
@@ -205,18 +205,18 @@ static double bench_generic_add(bart_dim_t dims[DIMS], bart_flags_t flags, bool 
 }
 
 
-static double bench_generic_sum(bart_dim_t dims[DIMS], bart_flags_t flags, bool forloop)
+static double bench_generic_sum(long dims[DIMS], unsigned long flags, bool forloop)
 {
-	bart_dim_t dimsX[DIMS];
-	bart_dim_t dimsY[DIMS];
-	bart_dim_t dimsC[DIMS];
+	long dimsX[DIMS];
+	long dimsY[DIMS];
+	long dimsC[DIMS];
 
-	md_select_dims(DIMS, ~UINT64_C(0), dimsX, dims);
+	md_select_dims(DIMS, ~0UL, dimsX, dims);
 	md_select_dims(DIMS, flags, dimsY, dims);
 	md_select_dims(DIMS, ~flags, dimsC, dims);
 
-	bart_dim_t strsX[DIMS];
-	bart_dim_t strsY[DIMS];
+	long strsX[DIMS];
+	long strsY[DIMS];
 
 	md_calc_strides(DIMS, strsX, dimsX, CFL_SIZE);
 	md_calc_strides(DIMS, strsY, dimsY, CFL_SIZE);
@@ -227,16 +227,16 @@ static double bench_generic_sum(bart_dim_t dims[DIMS], bart_flags_t flags, bool 
 	md_gaussian_rand(DIMS, dimsX, x);
 	md_clear(DIMS, dimsY, y, CFL_SIZE);
 
-	bart_dim_t L = md_calc_size(DIMS, dimsC);
-	bart_dim_t T = md_calc_size(DIMS, dimsY);
+	long L = md_calc_size(DIMS, dimsC);
+	long T = md_calc_size(DIMS, dimsY);
 
 	double tic = bench_timestamp();
 
 	if (forloop) {
 
-		for (bart_dim_t i = 0; i < L; i++) {
+		for (long i = 0; i < L; i++) {
 
-			for (bart_dim_t j = 0; j < T; j++)
+			for (long j = 0; j < T; j++)
 				y[j] = y[j] + x[i + j * L];
 		}
 
@@ -254,64 +254,64 @@ static double bench_generic_sum(bart_dim_t dims[DIMS], bart_flags_t flags, bool 
 	return toc - tic;
 }
 
-static double bench_copy1(bart_dim_t scale)
+static double bench_copy1(long scale)
 {
-	bart_dim_t dims[DIMS] = { 1, 128 * scale, 128 * scale, 1, 1, 16, 1, 16 };
+	long dims[DIMS] = { 1, 128 * scale, 128 * scale, 1, 1, 16, 1, 16 };
 	return bench_generic_copy(dims);
 }
 
-static double bench_copy2(bart_dim_t scale)
+static double bench_copy2(long scale)
 {
-	bart_dim_t dims[DIMS] = { 262144 * scale, 16, 1, 1, 1, 1, 1, 1 };
+	long dims[DIMS] = { 262144 * scale, 16, 1, 1, 1, 1, 1, 1 };
 	return bench_generic_copy(dims);
 }
 
 
-static double bench_circ_shift(bart_dim_t scale)
+static double bench_circ_shift(long scale)
 {
-	bart_dim_t dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 1, 16, 1, 16 };
-	bart_flags_t mpi_flags = MD_BIT(5);
+	long dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 1, 16, 1, 16 };
+	unsigned long mpi_flags = MD_BIT(5);
 	return bench_generic_circ_shift(dims, mpi_flags, 5, 1);
 }
 
 
-static double bench_matrix_mult(bart_dim_t scale)
+static double bench_matrix_mult(long scale)
 {
-	bart_dim_t dims[DIMS] = { 1, 256 * scale, 256 * scale, 256 * scale, 1, 1, 1, 1 };
+	long dims[DIMS] = { 1, 256 * scale, 256 * scale, 256 * scale, 1, 1, 1, 1 };
 	return bench_generic_matrix_multiply(dims);
 }
 
 
 
-static double bench_batch_matmul1(bart_dim_t scale)
+static double bench_batch_matmul1(long scale)
 {
-	bart_dim_t dims[DIMS] = { 30000 * scale, 8, 8, 8, 1, 1, 1, 1 };
+	long dims[DIMS] = { 30000 * scale, 8, 8, 8, 1, 1, 1, 1 };
 	return bench_generic_matrix_multiply(dims);
 }
 
 
 
-static double bench_batch_matmul2(bart_dim_t scale)
+static double bench_batch_matmul2(long scale)
 {
-	bart_dim_t dims[DIMS] = { 1, 8, 8, 8, 30000 * scale, 1, 1, 1 };
+	long dims[DIMS] = { 1, 8, 8, 8, 30000 * scale, 1, 1, 1 };
 	return bench_generic_matrix_multiply(dims);
 }
 
 
-static double bench_tall_matmul1(bart_dim_t scale)
+static double bench_tall_matmul1(long scale)
 {
-	bart_dim_t dims[DIMS] = { 1, 8, 8, 100000 * scale, 1, 1, 1, 1 };
+	long dims[DIMS] = { 1, 8, 8, 100000 * scale, 1, 1, 1, 1 };
 	return bench_generic_matrix_multiply(dims);
 }
 
 
-static double bench_tall_matmul2(bart_dim_t scale)
+static double bench_tall_matmul2(long scale)
 {
-	bart_dim_t dims[DIMS] = { 1, 100000 * scale, 8, 8, 1, 1, 1, 1 };
-	bart_flags_t mpi_flags = MD_BIT(3);
-	bart_dim_t dimsX[DIMS];
-	bart_dim_t dimsY[DIMS];
-	bart_dim_t dimsZ[DIMS];
+	long dims[DIMS] = { 1, 100000 * scale, 8, 8, 1, 1, 1, 1 };
+	unsigned long mpi_flags = MD_BIT(3);
+	long dimsX[DIMS];
+	long dimsY[DIMS];
+	long dimsZ[DIMS];
 
 	md_select_dims(DIMS, 2 * 3 + 17, dimsX, dims);	// 1 110 1
 	md_select_dims(DIMS, 2 * 6 + 17, dimsY, dims);	// 1 011 1
@@ -338,48 +338,48 @@ static double bench_tall_matmul2(bart_dim_t scale)
 }
 
 
-static double bench_add(bart_dim_t scale)
+static double bench_add(long scale)
 {
-	bart_dim_t dims[DIMS] = { 65536 * scale, 1, 50 * scale, 1, 1, 1, 1, 1 };
+	long dims[DIMS] = { 65536 * scale, 1, 50 * scale, 1, 1, 1, 1, 1 };
 	return bench_generic_add(dims, MD_BIT(2), false);
 }
 
-static double bench_addf(bart_dim_t scale)
+static double bench_addf(long scale)
 {
-	bart_dim_t dims[DIMS] = { 65536 * scale, 1, 50 * scale, 1, 1, 1, 1, 1 };
+	long dims[DIMS] = { 65536 * scale, 1, 50 * scale, 1, 1, 1, 1, 1 };
 	return bench_generic_add(dims, MD_BIT(2), true);
 }
 
-static double bench_add2(bart_dim_t scale)
+static double bench_add2(long scale)
 {
-	bart_dim_t dims[DIMS] = { 50 * scale, 1, 65536 * scale, 1, 1, 1, 1, 1 };
+	long dims[DIMS] = { 50 * scale, 1, 65536 * scale, 1, 1, 1, 1, 1 };
 	return bench_generic_add(dims, MD_BIT(0), false);
 }
 
-static double bench_sum2(bart_dim_t scale)
+static double bench_sum2(long scale)
 {
-	bart_dim_t dims[DIMS] = { 50 * scale, 1, 65536 * scale, 1, 1, 1, 1, 1 };
+	long dims[DIMS] = { 50 * scale, 1, 65536 * scale, 1, 1, 1, 1, 1 };
 	return bench_generic_sum(dims, MD_BIT(0), false);
 }
 
-static double bench_sum(bart_dim_t scale)
+static double bench_sum(long scale)
 {
-	bart_dim_t dims[DIMS] = { 65536 * scale, 1, 50 * scale, 1, 1, 1, 1, 1 };
+	long dims[DIMS] = { 65536 * scale, 1, 50 * scale, 1, 1, 1, 1, 1 };
 	return bench_generic_sum(dims, MD_BIT(2), false);
 }
 
-static double bench_sumf(bart_dim_t scale)
+static double bench_sumf(long scale)
 {
-	bart_dim_t dims[DIMS] = { 65536 * scale, 1, 50 * scale, 1, 1, 1, 1, 1 };
+	long dims[DIMS] = { 65536 * scale, 1, 50 * scale, 1, 1, 1, 1, 1 };
 	return bench_generic_sum(dims, MD_BIT(2), true);
 }
 
 
-static double bench_zmul(bart_dim_t scale)
+static double bench_zmul(long scale)
 {
-	bart_dim_t dimsx[DIMS] = { 256, 256, 1, 1, 90 * scale, 1, 1, 1 };
-	bart_dim_t dimsy[DIMS] = { 256, 256, 1, 1,  1, 1, 1, 1 };
-	bart_dim_t dimsz[DIMS] = {   1,   1, 1, 1, 90 * scale, 1, 1, 1 };
+	long dimsx[DIMS] = { 256, 256, 1, 1, 90 * scale, 1, 1, 1 };
+	long dimsy[DIMS] = { 256, 256, 1, 1,  1, 1, 1, 1 };
+	long dimsz[DIMS] = {   1,   1, 1, 1, 90 * scale, 1, 1, 1 };
 
 	complex float* x = md_alloc(DIMS, dimsx, CFL_SIZE);
 	complex float* y = md_alloc(DIMS, dimsy, CFL_SIZE);
@@ -388,9 +388,9 @@ static double bench_zmul(bart_dim_t scale)
 	md_gaussian_rand(DIMS, dimsy, y);
 	md_gaussian_rand(DIMS, dimsz, z);
 
-	bart_dim_t strsx[DIMS];
-	bart_dim_t strsy[DIMS];
-	bart_dim_t strsz[DIMS];
+	long strsx[DIMS];
+	long strsy[DIMS];
+	long strsz[DIMS];
 
 	md_calc_strides(DIMS, strsx, dimsx, CFL_SIZE);
 	md_calc_strides(DIMS, strsy, dimsy, CFL_SIZE);
@@ -410,9 +410,9 @@ static double bench_zmul(bart_dim_t scale)
 }
 
 
-static double bench_transpose(bart_dim_t scale)
+static double bench_transpose(long scale)
 {
-	bart_dim_t dims[DIMS] = { 2000 * scale, 2000 * scale, 1, 1, 1, 1, 1, 1 };
+	long dims[DIMS] = { 2000 * scale, 2000 * scale, 1, 1, 1, 1, 1, 1 };
 
 	complex float* x = md_alloc(DIMS, dims, CFL_SIZE);
 	complex float* y = md_alloc(DIMS, dims, CFL_SIZE);
@@ -433,10 +433,10 @@ static double bench_transpose(bart_dim_t scale)
 }
 
 
-static double bench_transpose2(bart_dim_t scale)
+static double bench_transpose2(long scale)
 {
-	bart_dim_t dims[DIMS] = { 200 * scale, 200 * scale, 1, 1, 1, 16, 1, 1 };
-	bart_flags_t mpi_flags = MD_BIT(1);
+	long dims[DIMS] = { 200 * scale, 200 * scale, 1, 1, 1, 16, 1, 1 };
+	unsigned long mpi_flags = MD_BIT(1);
 
 	complex float* x = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
 	complex float* y = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
@@ -457,10 +457,10 @@ static double bench_transpose2(bart_dim_t scale)
 }
 
 
-static double bench_resize(bart_dim_t scale)
+static double bench_resize(long scale)
 {
-	bart_dim_t dimsX[DIMS] = { 2000 * scale, 1000 * scale, 1, 1, 1, 1, 1, 1 };
-	bart_dim_t dimsY[DIMS] = { 1000 * scale, 2000 * scale, 1, 1, 1, 1, 1, 1 };
+	long dimsX[DIMS] = { 2000 * scale, 1000 * scale, 1, 1, 1, 1, 1, 1 };
+	long dimsY[DIMS] = { 1000 * scale, 2000 * scale, 1, 1, 1, 1, 1, 1 };
 
 	complex float* x = md_alloc(DIMS, dimsX, CFL_SIZE);
 	complex float* y = md_alloc(DIMS, dimsY, CFL_SIZE);
@@ -481,9 +481,9 @@ static double bench_resize(bart_dim_t scale)
 }
 
 
-static double bench_norm(int s, bart_dim_t scale)
+static double bench_norm(int s, long scale)
 {
-	bart_dim_t dims[DIMS] = { 256 * scale, 256 * scale, 1, 16, 1, 1, 1, 1 };
+	long dims[DIMS] = { 256 * scale, 256 * scale, 1, 16, 1, 1, 1, 1 };
 	complex float* x = md_alloc(DIMS, dims, CFL_SIZE);
 	complex float* y = md_alloc(DIMS, dims, CFL_SIZE);
 	
@@ -512,27 +512,27 @@ static double bench_norm(int s, bart_dim_t scale)
 	return toc - tic;
 }
 
-static double bench_zscalar(bart_dim_t scale)
+static double bench_zscalar(long scale)
 {
 	return bench_norm(0, scale);
 }
 
-static double bench_zscalar_real(bart_dim_t scale)
+static double bench_zscalar_real(long scale)
 {
 	return bench_norm(1, scale);
 }
 
-static double bench_zl1norm(bart_dim_t scale)
+static double bench_zl1norm(long scale)
 {
 	return bench_norm(2, scale);
 }
 
-static double bench_znorm(bart_dim_t scale)
+static double bench_znorm(long scale)
 {
 	complex float* x;
 	complex float* y;
-	bart_dim_t dims[DIMS] = { 256 * scale, 256 * scale, 1, 16, 1, 1, 1, 1 };
-	bart_flags_t mpi_flags = MD_BIT(3);
+	long dims[DIMS] = { 256 * scale, 256 * scale, 1, 16, 1, 1, 1, 1 };
+	unsigned long mpi_flags = MD_BIT(3);
 	x = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
 	y = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
 	
@@ -551,11 +551,11 @@ static double bench_znorm(bart_dim_t scale)
 	return toc - tic;
 }
 
-static double bench_wavelet(bart_dim_t scale)
+static double bench_wavelet(long scale)
 {
-	bart_dim_t dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 16, 1, 1, 1 };
-	bart_flags_t mpi_flags = MD_BIT(4);
-	bart_dim_t minsize[DIMS] = { [0 ... DIMS - 1] = 1 };
+	long dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 16, 1, 1, 1 };
+	unsigned long mpi_flags = MD_BIT(4);
+	long minsize[DIMS] = { [0 ... DIMS - 1] = 1 };
 	minsize[0] = MIN(dims[0], 16);
 	minsize[1] = MIN(dims[1], 16);
 	minsize[2] = MIN(dims[2], 16);
@@ -578,7 +578,7 @@ static double bench_wavelet(bart_dim_t scale)
 }
 
 
-static double bench_generic_mdfft(bart_dim_t dims[DIMS], bart_flags_t flags, bart_flags_t mpi_flags)
+static double bench_generic_mdfft(long dims[DIMS], unsigned long flags, unsigned long mpi_flags)
 {
 	complex float* x = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
 	complex float* y = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
@@ -597,16 +597,16 @@ static double bench_generic_mdfft(bart_dim_t dims[DIMS], bart_flags_t flags, bar
 	return toc - tic;
 }
 
-static double bench_mdfft(bart_dim_t scale)
+static double bench_mdfft(long scale)
 {
-	bart_dim_t dims[DIMS] = { 1, 128 * scale, 128 * scale, 1, 1, 4, 1, 4 };
-	bart_flags_t mpi_flags = MD_BIT(5);
-	return bench_generic_mdfft(dims, 6, mpi_flags);
+	long dims[DIMS] = { 1, 128 * scale, 128 * scale, 1, 1, 4, 1, 4 };
+	unsigned long mpi_flags = MD_BIT(5);
+	return bench_generic_mdfft(dims, 6ul, mpi_flags);
 }
 
 
 
-static double bench_generic_fft(bart_dim_t dims[DIMS], bart_flags_t flags, bart_flags_t mpi_flags)
+static double bench_generic_fft(long dims[DIMS], unsigned long flags, unsigned long mpi_flags)
 {
 	complex float* x = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
 	complex float* y = bench_alloc(DIMS, mpi_flags, dims, CFL_SIZE);
@@ -627,17 +627,17 @@ static double bench_generic_fft(bart_dim_t dims[DIMS], bart_flags_t flags, bart_
 
 
 
-static double bench_fft(bart_dim_t scale)
+static double bench_fft(long scale)
 {
-	bart_dim_t dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 1, 16, 1, 8 };
-	bart_flags_t mpi_flags = MD_BIT(5);
-	return bench_generic_fft(dims, 6, mpi_flags);
+	long dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 1, 16, 1, 8 };
+	unsigned long mpi_flags = MD_BIT(5);
+	return bench_generic_fft(dims, 6ul, mpi_flags);
 }
 
 
 
 
-static double bench_generic_fftmod(bart_dim_t dims[DIMS], bart_flags_t flags)
+static double bench_generic_fftmod(long dims[DIMS], unsigned long flags)
 {
 	complex float* x = md_alloc(DIMS, dims, CFL_SIZE);
 	complex float* y = md_alloc(DIMS, dims, CFL_SIZE);
@@ -658,19 +658,19 @@ static double bench_generic_fftmod(bart_dim_t dims[DIMS], bart_flags_t flags)
 
 
 
-static double bench_fftmod(bart_dim_t scale)
+static double bench_fftmod(long scale)
 {
-	bart_dim_t dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 1, 16, 1, 16 };
-	return bench_generic_fftmod(dims, 6);
+	long dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 1, 16, 1, 16 };
+	return bench_generic_fftmod(dims, 6ul);
 }
 
 
 enum bench_typ { BENCH_ZFILL, BENCH_ZSMUL, BENCH_LINPHASE };
 
-static double bench_generic_expand(enum bench_typ typ, bart_dim_t scale)
+static double bench_generic_expand(enum bench_typ typ, long scale)
 {
-	bart_dim_t dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 1, 16, 1, 16 };
-	bart_flags_t mpi_flags = MD_BIT(5);
+	long dims[DIMS] = { 1, 256 * scale, 256 * scale, 1, 1, 16, 1, 16 };
+	unsigned long mpi_flags = MD_BIT(5);
 
 	float linphase_pos[DIMS] = { 0.5, 0.1 };
 
@@ -705,24 +705,24 @@ static double bench_generic_expand(enum bench_typ typ, bart_dim_t scale)
 }
 
 
-static double bench_zfill(bart_dim_t scale)
+static double bench_zfill(long scale)
 {
 	return bench_generic_expand(BENCH_ZFILL, scale);
 }
 
-static double bench_zsmul(bart_dim_t scale)
+static double bench_zsmul(long scale)
 {
 	return bench_generic_expand(BENCH_ZSMUL, scale);
 }
 
-static double bench_linphase(bart_dim_t scale)
+static double bench_linphase(long scale)
 {
 	return bench_generic_expand(BENCH_LINPHASE, scale);
 }
 
 
 
-static double bench_ode(bart_dim_t scale)
+static double bench_ode(long scale)
 {
 	float mat[2][2] = { { 0., +1. }, { -1., 0. } };
 
@@ -746,9 +746,9 @@ static double bench_ode(bart_dim_t scale)
 
 enum bench_indices { REPETITION_IND, SCALE_IND, THREADS_IND, TESTS_IND, BENCH_DIMS };
 
-typedef double (*bench_fun)(bart_dim_t scale);
+typedef double (*bench_fun)(long scale);
 
-static void do_test(const bart_dim_t dims[BENCH_DIMS], complex float* out, bart_dim_t scale, bench_fun fun, const char* str)
+static void do_test(const long dims[BENCH_DIMS], complex float* out, long scale, bench_fun fun, const char* str)
 {
 	if (mpi_is_main_proc())
 		printf("%30.30s |", str);
@@ -836,7 +836,7 @@ int main_bench(int argc, char* argv[argc])
 
 	bool threads = false;
 	bool scaling = false;
-	bart_flags_t flags = ~UINT64_C(0);
+	unsigned long flags = ~0UL;
 
 	const struct opt_s opts[] = {
 		OPT_SET('T', &threads, "varying number of threads"),
@@ -847,9 +847,9 @@ int main_bench(int argc, char* argv[argc])
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
 
-	bart_dim_t dims[BENCH_DIMS] = { [0 ... BENCH_DIMS - 1] = 1 };
-	bart_stride_t strs[BENCH_DIMS];
-	bart_dim_t pos[BENCH_DIMS] = { };
+	long dims[BENCH_DIMS] = { [0 ... BENCH_DIMS - 1] = 1 };
+	long strs[BENCH_DIMS];
+	long pos[BENCH_DIMS] = { };
 
 	dims[REPETITION_IND] = 5;
 	dims[THREADS_IND] = threads ? 8 : 1;
@@ -887,7 +887,7 @@ int main_bench(int argc, char* argv[argc])
 		if (threads) {
 
 			num_set_num_threads((int)pos[THREADS_IND] + 1);
-			debug_printf(DP_INFO, "%02" PRId64 " threads. ", pos[THREADS_IND] + 1);
+			debug_printf(DP_INFO, "%02ld threads. ", pos[THREADS_IND] + 1);
 		}
 
 		do_test(dims, &MD_ACCESS(BENCH_DIMS, strs, pos, out), pos[SCALE_IND] + 1,

@@ -57,7 +57,7 @@ struct grid_opts grid_opts_coilcoeff = {
 };
 
 
-float* compute_grid(int D, bart_dim_t gdims[D], struct grid_opts* go, const bart_dim_t tdims[D], const complex float* traj)
+float* compute_grid(int D, long gdims[D], struct grid_opts* go, const long tdims[D], const complex float* traj)
 {
 	// minimum: 1d coord indices x 3d space x 1d coils x 1x coeff x 1d time
 	assert(D >= 7);
@@ -115,10 +115,10 @@ float* compute_grid(int D, bart_dim_t gdims[D], struct grid_opts* go, const bart
 
 	float* grid = md_alloc(D, gdims, FL_SIZE);
 
-	bart_stride_t gstrs[D];
-	bart_stride_t tstrs[D];
-	bart_dim_t pos[D];
-	bart_dim_t ppos[D];
+	long gstrs[D];
+	long tstrs[D];
+	long pos[D];
+	long ppos[D];
 
 	if (NULL != traj)
 		md_calc_strides(D, tstrs, tdims, CFL_SIZE);

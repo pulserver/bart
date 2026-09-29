@@ -28,9 +28,9 @@ static bool test_im2col_loop_in(void)
 
 	enum { N = 5 };
 
-	bart_dim_t idims[N] = { 1, 16, 4, 4, 1 };
-	bart_dim_t kdims[N] = { 16, 16, 3, 3, 1 };
-	bart_dim_t odims[N] = { 16, 1, 2, 2, 1 };
+	long idims[N] = { 1, 16, 4, 4, 1 };
+	long kdims[N] = { 16, 16, 3, 3, 1 };
+	long odims[N] = { 16, 1, 2, 2, 1 };
 
 	complex float* in_cpu = md_alloc(N, idims, CFL_SIZE);
 
@@ -42,18 +42,18 @@ static bool test_im2col_loop_in(void)
 	md_copy(N, idims, in_gpu, in_cpu, CFL_SIZE);
 
 
-	bart_dim_t dims_mat[N + 3]; // (nr_out_channel | nr_in_channel, kx, ky, kz | outx, outy, outz)
+	long dims_mat[N + 3]; // (nr_out_channel | nr_in_channel, kx, ky, kz | outx, outy, outz)
 
 	md_copy_dims(N, dims_mat, kdims);
 	md_copy_dims(3, dims_mat + N, odims + 2);
 
 
-	bart_dim_t idims_mat[N + 3]; // (1 | nr_in_channel, kx, ky, kz | outx, outy, outz | ... )
+	long idims_mat[N + 3]; // (1 | nr_in_channel, kx, ky, kz | outx, outy, outz | ... )
 
-	md_select_dims(N + 3, ~UINT64_C(1) , idims_mat, dims_mat);
+	md_select_dims(N + 3, ~1ul , idims_mat, dims_mat);
 
 
-	bart_dim_t istrs_mat[N + 3];
+	long istrs_mat[N + 3];
 
 	md_copy_strides(N, istrs_mat, MD_STRIDES(N, idims, CFL_SIZE));
 	md_copy_strides(3, istrs_mat + N, MD_STRIDES(N, idims, CFL_SIZE) + 2);
@@ -92,9 +92,9 @@ static bool test_im2col_loop_out(void)
 {
 	enum { N = 5 };
 
-	bart_dim_t idims[N] = { 1, 4, 4, 4, 1 };
-	bart_dim_t kdims[N] = { 4, 4, 3, 3, 1 };
-	bart_dim_t odims[N] = { 4, 1, 2, 2, 1 };
+	long idims[N] = { 1, 4, 4, 4, 1 };
+	long kdims[N] = { 4, 4, 3, 3, 1 };
+	long odims[N] = { 4, 1, 2, 2, 1 };
 
 	complex float* in_cpu = md_alloc(N, idims, CFL_SIZE);
 
@@ -106,17 +106,17 @@ static bool test_im2col_loop_out(void)
 	md_copy(N, idims, in_gpu, in_cpu, CFL_SIZE);
 
 
-	bart_dim_t dims_mat[N + 3]; // (nr_out_channel | nr_in_channel, kx, ky, kz | outx, outy, outz)
+	long dims_mat[N + 3]; // (nr_out_channel | nr_in_channel, kx, ky, kz | outx, outy, outz)
 
 	md_copy_dims(N, dims_mat, kdims);
 	md_copy_dims(3, dims_mat + N, odims + 2);
 
-	bart_dim_t idims_mat[N + 3]; // (1 | nr_in_channel, kx, ky, kz | outx, outy, outz | ... )
+	long idims_mat[N + 3]; // (1 | nr_in_channel, kx, ky, kz | outx, outy, outz | ... )
 
-	md_select_dims(N + 3, ~UINT64_C(1) , idims_mat, dims_mat);
+	md_select_dims(N + 3, ~1ul , idims_mat, dims_mat);
 
 
-	bart_dim_t istrs_mat[N + 3];
+	long istrs_mat[N + 3];
 
 	md_copy_strides(N, istrs_mat, MD_STRIDES(N, idims, CFL_SIZE));
 	md_copy_strides(3, istrs_mat + N, MD_STRIDES(N, idims, CFL_SIZE) + 2);
@@ -156,9 +156,9 @@ static bool test_im2col_adj(void)
 {
 	enum { N = 5 };
 
-	bart_dim_t idims[N] = { 1, 4, 4, 4, 1 };
-	bart_dim_t kdims[N] = { 4, 4, 3, 3, 1 };
-	bart_dim_t odims[N] = { 4, 1, 2, 2, 1 };
+	long idims[N] = { 1, 4, 4, 4, 1 };
+	long kdims[N] = { 4, 4, 3, 3, 1 };
+	long odims[N] = { 4, 1, 2, 2, 1 };
 
 
 	complex float* in_cpu = md_alloc(N, idims, CFL_SIZE);
@@ -170,18 +170,18 @@ static bool test_im2col_adj(void)
 
 	md_copy(N, idims, in_gpu, in_cpu, CFL_SIZE);
 
-	bart_dim_t dims_mat[N + 3]; // (nr_out_channel | nr_in_channel, kx, ky, kz | outx, outy, outz)
+	long dims_mat[N + 3]; // (nr_out_channel | nr_in_channel, kx, ky, kz | outx, outy, outz)
 
 	md_copy_dims(N, dims_mat, kdims);
 	md_copy_dims(3, dims_mat + N, odims + 2);
 
 
-	bart_dim_t idims_mat[N + 3]; // (1 | nr_in_channel, kx, ky, kz | outx, outy, outz | ... )
+	long idims_mat[N + 3]; // (1 | nr_in_channel, kx, ky, kz | outx, outy, outz | ... )
 
-	md_select_dims(N + 3, ~UINT64_C(1) , idims_mat, dims_mat);
+	md_select_dims(N + 3, ~1ul , idims_mat, dims_mat);
 
 
-	bart_dim_t istrs_mat[N + 3];
+	long istrs_mat[N + 3];
 
 	md_copy_strides(5, istrs_mat, MD_STRIDES(5, idims, CFL_SIZE));
 	md_copy_strides(3, istrs_mat + 5, MD_STRIDES(5, idims, CFL_SIZE) + 2);

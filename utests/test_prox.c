@@ -28,7 +28,7 @@
 static bool test_thresh(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 4, 2, 3 };
+	long dims[N] = { 4, 2, 3 };
 
 	complex float* src = md_alloc(N, dims, CFL_SIZE);
 	complex float* dst = md_alloc(N, dims, CFL_SIZE);
@@ -58,7 +58,7 @@ UT_REGISTER_TEST(test_thresh);
 static bool test_nonneg(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 2, 4, 3 };
+	long dims[N] = { 2, 4, 3 };
 
 	complex float* src = md_alloc(N, dims, CFL_SIZE);
 	complex float* dst = md_alloc(N, dims, CFL_SIZE);
@@ -95,7 +95,7 @@ UT_REGISTER_TEST(test_nonneg);
 static bool test_zsmax(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 2, 4, 3 };
+	long dims[N] = { 2, 4, 3 };
 
 	complex float* src = md_alloc(N, dims, CFL_SIZE);
 	complex float* dst = md_alloc(N, dims, CFL_SIZE);
@@ -134,7 +134,7 @@ UT_REGISTER_TEST(test_zsmax);
 static bool test_op_pre_chain(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 2, 4, 3 };
+	long dims[N] = { 2, 4, 3 };
 
 	complex float* src = md_alloc(N, dims, CFL_SIZE);
 	complex float* dst = md_alloc(N, dims, CFL_SIZE);
@@ -177,11 +177,11 @@ UT_REGISTER_TEST(test_op_pre_chain);
 static bool test_op_stack(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims1[N] = { 2, 4, 3 };
-	bart_dim_t dims2[N] = { 2, 4, 1 };
-	bart_dim_t dims3[N] = { 2, 4, 4 };
+	long dims1[N] = { 2, 4, 3 };
+	long dims2[N] = { 2, 4, 1 };
+	long dims3[N] = { 2, 4, 4 };
 
-	bart_stride_t strs[N];
+	long strs[N];
 	md_calc_strides(N, strs, dims1, CFL_SIZE);
 
 	complex float* src = md_alloc(N, dims3, CFL_SIZE);
@@ -225,12 +225,12 @@ UT_REGISTER_TEST(test_op_stack);
 static bool test_nonneg_stack(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 2, 4, 7 };
-	bart_dim_t dims1[N] = { 2, 4, 2 };
-	bart_dim_t dims2[N] = { 2, 4, 1 };
-	bart_dim_t dims3[N] = { 2, 4, 4 };
+	long dims[N] = { 2, 4, 7 };
+	long dims1[N] = { 2, 4, 2 };
+	long dims2[N] = { 2, 4, 1 };
+	long dims3[N] = { 2, 4, 4 };
 
-	bart_stride_t strs[N];
+	long strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
 	complex float* src = md_alloc(N, dims, CFL_SIZE);
@@ -240,7 +240,7 @@ static bool test_nonneg_stack(void)
 	md_zfill(N, dims, src, 6.);
 	md_clear(N, dims, dst, CFL_SIZE);
 
-	bart_dim_t dims_blk[N];
+	long dims_blk[N];
 	md_copy_dims(N, dims_blk, dims);
 	dims_blk[2] = 1;
 

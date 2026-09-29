@@ -45,8 +45,8 @@ struct mpsnr_s {
 	nlop_data_t super;
 
 	int N;
-	const bart_dim_t* dims;
-	bart_flags_t mean_flag;
+	const long* dims;
+	unsigned long mean_flag;
 };
 
 DEF_TYPEID(mpsnr_s);
@@ -64,7 +64,7 @@ static void mpsnr_fun(const nlop_data_t* _data, int D, complex float* args[D])
 	assert((cuda_ondevice(dst) == cuda_ondevice(src1)) && (cuda_ondevice(src1) == cuda_ondevice(src2)));
 #endif
 	int N = data->N;
-	const bart_dim_t* dims = data->dims;
+	const long* dims = data->dims;
 
 	complex float* tmp = md_alloc_sameplace(N, dims, CFL_SIZE, src1);
 	complex float* tmp3 = md_alloc_sameplace(N, dims, CFL_SIZE, src1);
@@ -74,7 +74,7 @@ static void mpsnr_fun(const nlop_data_t* _data, int D, complex float* args[D])
 	md_zsub(N, dims, tmp, tmp, tmp3);
 	md_free(tmp3);
 
-	bart_dim_t mdims[N];
+	long mdims[N];
 	md_select_dims(N, data->mean_flag, mdims, dims);
 
 	complex float* tmp2 = md_alloc_sameplace(N, mdims, CFL_SIZE, src1);
@@ -108,21 +108,21 @@ static void mpsnr_del(const nlop_data_t* _data)
 	xfree(data);
 }
 
-const struct nlop_s* nlop_mpsnr_create(int N, const bart_dim_t dims[N], bart_flags_t mean_dims)
+const struct nlop_s* nlop_mpsnr_create(int N, const long dims[N], unsigned long mean_dims)
 {
 	PTR_ALLOC(struct mpsnr_s, data);
 	SET_TYPEID(mpsnr_s, data);
 
-	PTR_ALLOC(bart_dim_t[N], ndims);
+	PTR_ALLOC(long[N], ndims);
 	md_copy_dims(N, *ndims, dims);
 
 	data->N = N;
 	data->dims = *PTR_PASS(ndims);
 	data->mean_flag = mean_dims;
 
-	bart_dim_t nl_odims[1][1];
+	long nl_odims[1][1];
 	md_copy_dims(1, nl_odims[0], MD_SINGLETON_DIMS(1));
-	bart_dim_t nl_idims[2][N];
+	long nl_idims[2][N];
 	md_copy_dims(N, nl_idims[0], dims);
 	md_copy_dims(N, nl_idims[1], dims);
 
@@ -130,9 +130,9 @@ const struct nlop_s* nlop_mpsnr_create(int N, const bart_dim_t dims[N], bart_fla
 }
 
 
-static const struct nlop_s* get_mean_op(int N, const bart_dim_t dims[N], bart_dim_t const kdims[N], bart_flags_t flags)
+static const struct nlop_s* get_mean_op(int N, const long dims[N], long const kdims[N], unsigned long flags)
 {
-	bart_dim_t odims[N];
+	long odims[N];
 
 	for (int i = 0; i < N; i++)
 		odims[i] = (MD_IS_SET(flags, i)) ? dims[i] - kdims[i] + 1 : dims[i];
@@ -142,12 +142,12 @@ static const struct nlop_s* get_mean_op(int N, const bart_dim_t dims[N], bart_di
 	return nlop_set_input_const_F2(nlop_convcorr_geom_create(N, flags, odims, dims, kdims, PAD_VALID, false, NULL, NULL, 'N'), 1, N, kdims, MD_SINGLETON_STRS(N), true, &mean);
 }
 
-static const struct nlop_s* get_square_op(int N, const bart_dim_t dims[N])
+static const struct nlop_s* get_square_op(int N, const long dims[N])
 {
 	return nlop_chain_FF(nlop_dup_F(nlop_tenmul_create(N, dims, dims, dims), 0, 1), nlop_from_linop_F(linop_zreal_create(N, dims)));
 }
 
-const struct nlop_s* nlop_mssim_create(int N, const bart_dim_t dims[N], const bart_dim_t wdims[N], bart_flags_t flags)
+const struct nlop_s* nlop_mssim_create(int N, const long dims[N], const long wdims[N], unsigned long flags)
 {
 	bool simple = (5 == N);
 
@@ -156,8 +156,8 @@ const struct nlop_s* nlop_mssim_create(int N, const bart_dim_t dims[N], const ba
 
 	if (simple) {
 
-		bart_dim_t tdims[6] = {1, 1, dims[0], dims[1], dims[2], dims[4]};
-		bart_dim_t twdims[6] = {1, 1, wdims[0], wdims[1], wdims[2], 1};
+		long tdims[6] = {1, 1, dims[0], dims[1], dims[2], dims[4]};
+		long twdims[6] = {1, 1, wdims[0], wdims[1], wdims[2], 1};
 
 		auto result = nlop_mssim_create(6, tdims, twdims, 28);
 		result = nlop_reshape_in_F(result, 0, 5, dims);
@@ -170,10 +170,10 @@ const struct nlop_s* nlop_mssim_create(int N, const bart_dim_t dims[N], const ba
 	float k2 = 0.03;
 	float L = -1;
 
-	bart_dim_t kdims[N];
+	long kdims[N];
 	md_select_dims(N, md_nontriv_dims(N, dims) & flags, kdims, wdims);
 
-	bart_dim_t odims[N];
+	long odims[N];
 	for (int i = 0; i < N; i++)
 		odims[i] = (MD_IS_SET(flags, i)) ? dims[i] - kdims[i] + 1 : dims[i];
 
@@ -241,7 +241,7 @@ const struct nlop_s* nlop_mssim_create(int N, const bart_dim_t dims[N], const ba
 	result = nlop_link_F(result, 1, 0);
 	result = nlop_link_F(result, 1, 0); // in: x, y, c1, c2; out: [(2*Cov(x, y)+c2)(2*E[x]E[y]+c1)] / [(Var[x]+Var[y]+c2)(E[x]^2+E[y]^2+c1)]
 
-	result = nlop_chain2_FF(result, 0, nlop_from_linop_F(linop_avg_create(N, odims, ~UINT64_C(0))), 0);
+	result = nlop_chain2_FF(result, 0, nlop_from_linop_F(linop_avg_create(N, odims, ~0UL)), 0);
 
 	result = nlop_reshape_out_F(result, 0, 1, MD_SINGLETON_DIMS(1));
 
@@ -260,7 +260,7 @@ const struct nlop_s* nlop_mssim_create(int N, const bart_dim_t dims[N], const ba
 
 	} else {
 
-		bart_dim_t mdims[N]; // mean / batch - dims
+		long mdims[N]; // mean / batch - dims
 		md_select_dims(N, ~flags, mdims, dims);
 
 		auto nlop_normalize = nlop_norm_max_abs_create(N, dims, ~flags); //in: y; out: y / max(y), max(y)
@@ -324,7 +324,7 @@ static void cce_fun(const nlop_data_t* _data, int D, complex float* args[D])
 	md_zdiv_reg(data->N, data->dom->dims, data->tmp_div, src_true, src_pred, 1.e-7);
 	md_ztenmul2(data->N, data->dom->dims, MD_SINGLETON_STRS(data->N), dst, data->dom->strs, data->tmp_log, data->dom->strs, src_true);
 
-	bart_dim_t odims[1];
+	long odims[1];
 	md_singleton_dims(1, odims);
 
 	md_zsmul(1, odims, dst, dst, -1. / data->scaling);
@@ -338,7 +338,7 @@ static void cce_der1(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 	assert(NULL != data->tmp_log);
 	assert(NULL != data->tmp_div);
 
-	bart_dim_t odims[1];
+	long odims[1];
 	md_singleton_dims(1, odims);
 
 	md_ztenmul2(data->N, data->dom->dims, MD_SINGLETON_STRS(data->N), dst, data->dom->strs, src, data->dom->strs, data->tmp_div);
@@ -352,7 +352,7 @@ static void cce_der2(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 	assert(NULL != data->tmp_log);
 	assert(NULL != data->tmp_div);
 
-	bart_dim_t odims[1];
+	long odims[1];
 	md_singleton_dims(1, odims);
 
 	md_ztenmul2(data->N, data->dom->dims, MD_SINGLETON_STRS(data->N), dst, data->dom->strs, src, data->dom->strs, data->tmp_log);
@@ -366,7 +366,7 @@ static void cce_adj1(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 	assert(NULL != data->tmp_log);
 	assert(NULL != data->tmp_div);
 
-	bart_dim_t odims[1];
+	long odims[1];
 	md_singleton_dims(1, odims);
 
 	complex float* tmp = md_alloc_sameplace(1, odims, CFL_SIZE, dst);
@@ -384,7 +384,7 @@ static void cce_adj2(const nlop_data_t* _data, int /*o*/, int /*i*/, complex flo
 	assert(NULL != data->tmp_log);
 	assert(NULL != data->tmp_div);
 
-	bart_dim_t odims[1];
+	long odims[1];
 	md_singleton_dims(1, odims);
 
 	complex float* tmp = md_alloc_sameplace(1, odims, CFL_SIZE, dst);
@@ -422,7 +422,7 @@ static void cce_del(const nlop_data_t* _data)
  * @param dims
  * @param batch_flag selects i-dims
  **/
-const struct nlop_s* nlop_cce_create(int N, const bart_dim_t dims[N], bart_flags_t batch_flag)
+const struct nlop_s* nlop_cce_create(int N, const long dims[N], unsigned long batch_flag)
 {
 	PTR_ALLOC(struct cce_s, data);
 	SET_TYPEID(cce_s, data);
@@ -434,21 +434,21 @@ const struct nlop_s* nlop_cce_create(int N, const bart_dim_t dims[N], bart_flags
 	data->tmp_div = NULL;
 	data->tmp_log = NULL;
 
-	bart_dim_t scale_dims[N];
+	long scale_dims[N];
 	md_select_dims(N, batch_flag, scale_dims, dims);
 	data->scaling = md_calc_size(N, scale_dims);
 
-	bart_dim_t nl_odims[1][1];
+	long nl_odims[1][1];
 	md_copy_dims(1, nl_odims[0], MD_SINGLETON_DIMS(1));
 
-	bart_stride_t nl_ostr[1][1];
+	long nl_ostr[1][1];
 	md_copy_strides(1, nl_ostr[0], MD_SINGLETON_STRS(1));
 
-	bart_dim_t nl_idims[2][N];
+	long nl_idims[2][N];
 	md_copy_dims(N, nl_idims[0], dims);
 	md_copy_dims(N, nl_idims[1], dims);
 
-	bart_stride_t nl_istr[2][N];
+	long nl_istr[2][N];
 	md_copy_strides(N, nl_istr[0], MD_STRIDES(N, dims, CFL_SIZE));
 	md_copy_strides(N, nl_istr[1], MD_STRIDES(N, dims, CFL_SIZE));
 
@@ -518,7 +518,7 @@ static void accuracy_del(const nlop_data_t* _data)
  * @param dims
  * @
  **/
-const struct nlop_s* nlop_accuracy_create(int N, const bart_dim_t dims[N], int class_index)
+const struct nlop_s* nlop_accuracy_create(int N, const long dims[N], int class_index)
 {
 	PTR_ALLOC(struct accuracy_s, data);
 	SET_TYPEID(accuracy_s, data);
@@ -527,17 +527,17 @@ const struct nlop_s* nlop_accuracy_create(int N, const bart_dim_t dims[N], int c
  	data->dom = iovec_create(N, dims, CFL_SIZE);
 	data->class_index = class_index;
 
-	bart_dim_t nl_odims[1][1];
+	long nl_odims[1][1];
 	md_copy_dims(1, nl_odims[0], MD_SINGLETON_DIMS(1));
 
-	bart_stride_t nl_ostr[1][1];
+	long nl_ostr[1][1];
 	md_copy_strides(1, nl_ostr[0], MD_SINGLETON_STRS(1));
 
-	bart_dim_t nl_idims[2][N];
+	long nl_idims[2][N];
 	md_copy_dims(N, nl_idims[0], dims);
 	md_copy_dims(N, nl_idims[1], dims);
 
-	bart_stride_t nl_istr[2][N];
+	long nl_istr[2][N];
 	md_copy_strides(N, nl_istr[0], MD_STRIDES(N, dims, CFL_SIZE));
 	md_copy_strides(N, nl_istr[1], MD_STRIDES(N, dims, CFL_SIZE));
 
@@ -553,7 +553,7 @@ struct frequency_compensation_s {
 	nlop_data_t super;
 
 	int N;
-	bart_flags_t batch_flag;
+	unsigned long batch_flag;
 
 	const struct iovec_s* dom;
 	const struct iovec_s* sum_dom;
@@ -605,12 +605,12 @@ static void frequency_compensation_del(const nlop_data_t* _data)
 // dst_ij = src_ij / sum_j src_ij * (N_batch / N__non_empty_labels), where j corresponds to dimensions selected with batch_flag
 // scaling is such that sum_ij dst_ij = sum_ij src_ij = N_batch
 // usually batch_flag = ~MD_BIT(label_dim);
-static const struct nlop_s* nlop_frequency_compensation_create(int N, const bart_dim_t dims[N], bart_flags_t batch_flag)
+static const struct nlop_s* nlop_frequency_compensation_create(int N, const long dims[N], unsigned long batch_flag)
 {
 	PTR_ALLOC(struct frequency_compensation_s, data);
 	SET_TYPEID(frequency_compensation_s, data);
 
-	bart_dim_t sum_dims[N];
+	long sum_dims[N];
 	md_select_dims(N, ~batch_flag, sum_dims, dims);
 
 	data->N = N;
@@ -635,7 +635,7 @@ static const struct nlop_s* nlop_frequency_compensation_create(int N, const bart
  * @param dims
  * @param batch_flag selected dims correspond to i, unselected to j
  **/
-const struct nlop_s* nlop_weighted_cce_create(int N, const bart_dim_t dims[N], bart_flags_t batch_flag)
+const struct nlop_s* nlop_weighted_cce_create(int N, const long dims[N], unsigned long batch_flag)
 {
 	return nlop_chain2_FF(nlop_frequency_compensation_create(N, dims, batch_flag), 0, nlop_cce_create(N, dims, batch_flag), 1);
 }
@@ -651,7 +651,7 @@ struct dice_s {
 	const struct iovec_s* dom;
 	const struct iovec_s* cod;
 
-	bart_flags_t mean_flag;
+	unsigned long mean_flag;
 
 	complex float* weight;
 	float weighting_exponent;
@@ -905,17 +905,17 @@ static void dice_del(const nlop_data_t* _data)
  * @param weighting_exponent w_l = (V_l^wighting_exponent); should be in {0, -1, -2}; -2 corresponds to Sudre et.al.
  * @param square_denominator replace p_li by p_li^2 and t_li by t_li^2 in denominator
  **/
-const struct nlop_s* nlop_dice_generic_create(int N, const bart_dim_t dims[N], bart_flags_t label_flag, bart_flags_t independent_flag, float weighting_exponent, bool square_denominator)
+const struct nlop_s* nlop_dice_generic_create(int N, const long dims[N], unsigned long label_flag, unsigned long independent_flag, float weighting_exponent, bool square_denominator)
 {
 	PTR_ALLOC(struct dice_s, data);
 	SET_TYPEID(dice_s, data);
 
 	data->N = N;
 
-	bart_dim_t weight_dims[N];
+	long weight_dims[N];
 	md_select_dims(N, label_flag, weight_dims, dims);
 
-	bart_dim_t out_dims[N];
+	long out_dims[N];
 	md_select_dims(N, independent_flag, out_dims, dims);
 
 	data->weight_dom = iovec_create(N, weight_dims, CFL_SIZE);
@@ -938,10 +938,10 @@ const struct nlop_s* nlop_dice_generic_create(int N, const bart_dim_t dims[N], b
 	data->numerator_sum = NULL;
 	data->denominator_sum = NULL;
 
-	bart_dim_t nl_odims[1][N];
+	long nl_odims[1][N];
 	md_copy_dims(N, nl_odims[0], out_dims);
 
-	bart_dim_t nl_idims[2][N];
+	long nl_idims[2][N];
 	md_copy_dims(N, nl_idims[0], dims);
 	md_copy_dims(N, nl_idims[1], dims);
 
@@ -977,16 +977,16 @@ const struct nlop_s* nlop_dice_generic_create(int N, const bart_dim_t dims[N], b
  * @param weighting_exponent w_l = (V_l^wighting_exponent); should be in {0, -1, -2}; -2 corresponds to Sudre et.al.
  * @param square_denominator replace p_li by p_li^2 and t_li by t_li^2 in denominator
  **/
-const struct nlop_s* nlop_dice_create(int N, const bart_dim_t dims[N], bart_flags_t label_flag, bart_flags_t mean_flag, float weighting_exponent, bool square_denominator)
+const struct nlop_s* nlop_dice_create(int N, const long dims[N], unsigned long label_flag, unsigned long mean_flag, float weighting_exponent, bool square_denominator)
 {
 	auto dice = nlop_dice_generic_create(N, dims, label_flag, mean_flag, weighting_exponent, square_denominator);
 
-	bart_dim_t out_dims[N];
+	long out_dims[N];
 	md_copy_dims(N, out_dims, nlop_generic_codomain(dice, 0)->dims);
 
 	if (1 != md_calc_size(N, out_dims)) {
 
-		auto linop_avg = linop_avg_create(N, out_dims, ~UINT64_C(0));
+		auto linop_avg = linop_avg_create(N, out_dims, ~0UL);
 
 		dice = nlop_chain2_FF(dice, 0, nlop_from_linop_F(linop_avg), 0);
 	}
@@ -995,9 +995,9 @@ const struct nlop_s* nlop_dice_create(int N, const bart_dim_t dims[N], bart_flag
 }
 
 
-static const struct nlop_s* nlop_avg_window_create(int N, const bart_dim_t dims[N], const bart_dim_t _kdims[N], bart_flags_t flags)
+static const struct nlop_s* nlop_avg_window_create(int N, const long dims[N], const long _kdims[N], unsigned long flags)
 {
-	bart_dim_t kdims[N];
+	long kdims[N];
 	md_select_dims(N, flags, kdims, _kdims);
 
 	complex float one = 1.;
@@ -1007,9 +1007,9 @@ static const struct nlop_s* nlop_avg_window_create(int N, const bart_dim_t dims[
 	return ret;
 }
 
-const struct nlop_s* nlop_patched_cross_correlation_create(int N, const bart_dim_t dims[N], const bart_dim_t kdims[N], bart_flags_t flags, float epsilon)
+const struct nlop_s* nlop_patched_cross_correlation_create(int N, const long dims[N], const long kdims[N], unsigned long flags, float epsilon)
 {
-	bart_dim_t cdims[N];
+	long cdims[N];
 	md_select_dims(N, flags, cdims, dims);
 
 	complex float* one = md_alloc(N, cdims, CFL_SIZE);
@@ -1053,7 +1053,7 @@ const struct nlop_s* nlop_patched_cross_correlation_create(int N, const bart_dim
 	ret = nlop_dup_F(ret, 0, 2);
 	ret = nlop_dup_F(ret, 1, 2);
 
-	ret = nlop_append_FF(ret, 0, nlop_from_linop_F(linop_sum_create(N, dims, ~UINT64_C(0))));
+	ret = nlop_append_FF(ret, 0, nlop_from_linop_F(linop_sum_create(N, dims, ~0ul)));
 	ret = nlop_append_FF(ret, 0, nlop_from_linop_F(linop_scale_create(N, MD_SINGLETON_DIMS(N), -1.)));
 
 	ret = nlop_prepend_FF(nrm_window1, ret , 0);

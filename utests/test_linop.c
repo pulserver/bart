@@ -27,7 +27,7 @@
 static bool test_linop_plus(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 8, 4, 2 };
+	long dims[N] = { 8, 4, 2 };
 
 
 	complex float val1a = 2.;
@@ -72,8 +72,8 @@ UT_REGISTER_TEST(test_linop_plus);
 static bool test_linop_stack(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 8, 4, 1 };
-	bart_dim_t dims2[N] = { 8, 4, 2 };
+	long dims[N] = { 8, 4, 1 };
+	long dims2[N] = { 8, 4, 2 };
 
 	complex float val1a = 2.;
 	complex float val1b = 3.;
@@ -142,7 +142,7 @@ UT_REGISTER_TEST(test_linop_stack);
 
 static bool test_linop_null(void)
 {
-	bart_dim_t dims[1] = { 5 };
+	long dims[1] = { 5 };
 	const struct linop_s* l = linop_null_create(1, dims, 1, dims);
 
 	bool ok = true;
@@ -164,12 +164,12 @@ UT_REGISTER_TEST(test_linop_null);
 static bool test_linop_extract(void)
 {
 	enum { N = 4 };
-	bart_dim_t dims[N] = { 8, 4, 6, 4 };
-	bart_dim_t dims2[N] = { 8, 4, 2, 4 };
+	long dims[N] = { 8, 4, 6, 4 };
+	long dims2[N] = { 8, 4, 2, 4 };
 
 	complex float val1a = 2.;
 
-	bart_dim_t pos[N];
+	long pos[N];
 
 	for (int i = 0; i < N; i++)
 		pos[i] = 0;
@@ -235,9 +235,9 @@ UT_REGISTER_TEST(test_linop_extract);
 static bool test_linop_permute(void)
 {
 	enum { N = 4 };
-	bart_dim_t idims[N] = { 8, 4, 6, 3 };
+	long idims[N] = { 8, 4, 6, 3 };
 	int perm[N] = { 0, 3, 2, 1 };
-	bart_dim_t odims[N];
+	long odims[N];
 	md_permute_dims(N, perm, odims, idims);
 
 	complex float* src = md_alloc(N, idims, CFL_SIZE);
@@ -278,8 +278,8 @@ UT_REGISTER_TEST(test_linop_permute);
 static bool test_linop_transpose(void)
 {
 	enum { N = 5 };
-	bart_dim_t idims[N] = { 8, 4, 6, 3, 7 };
-	bart_dim_t odims[N] = { 8, 3, 6, 4, 7 };
+	long idims[N] = { 8, 4, 6, 3, 7 };
+	long odims[N] = { 8, 3, 6, 4, 7 };
 
 	complex float* src = md_alloc(N, idims, CFL_SIZE);
 	complex float* src2 = md_alloc(N, idims, CFL_SIZE);
@@ -319,7 +319,7 @@ UT_REGISTER_TEST(test_linop_transpose);
 static bool test_linop_hankelization(void)
 {
 	enum { N = 5 };
-	bart_dim_t dims[N] = { 8, 4, 6, 1, 7 };
+	long dims[N] = { 8, 4, 6, 1, 7 };
 
 	struct linop_s* lop = linop_hankelization_create(N, dims, 1, 3, 2);
 
@@ -337,8 +337,8 @@ UT_REGISTER_TEST(test_linop_hankelization);
 static bool test_linop_reshape(void)
 {
 	enum { N = 5 };
-	bart_dim_t idims[N] = { 8, 4, 6, 3, 7 };
-	bart_dim_t odims[N] = { 8, 3, 6, 4, 7 };
+	long idims[N] = { 8, 4, 6, 3, 7 };
+	long odims[N] = { 8, 3, 6, 4, 7 };
 
 	complex float* src = md_alloc(N, idims, CFL_SIZE);
 	complex float* src2 = md_alloc(N, idims, CFL_SIZE);
@@ -377,11 +377,11 @@ UT_REGISTER_TEST(test_linop_reshape);
 static bool test_linop_gradient(void)
 {
 	enum { N = 2 };
-	bart_dim_t idims[N] = { 2, 2 };
-	bart_flags_t flags = MD_BIT(0) | MD_BIT(1);
+	long idims[N] = { 2, 2 };
+	unsigned long flags = MD_BIT(0) | MD_BIT(1);
 
 	auto lop_grad = linop_grad_create(N, idims, N, flags);
-	bart_dim_t odims[N+1] = { 2, 2, 2 };
+	long odims[N+1] = { 2, 2, 2 };
 
 	complex float src[] = { 5.20e+01+7.80e+01i, 1.00e+01+3.00e+00i, 8.20e+01+0.00e+00i, 1.50e+01+0.00e+00i };
 	const complex float ref1[] = { -4.20e+01-7.50e+01i, 4.20e+01+7.50e+01i, -6.70e+01+0.00e+00i, 6.70e+01+0.00e+00i, 3.00e+01-7.80e+01i, 5.00e+00-3.00e+00i, -3.00e+01+7.80e+01i, -5.00e+00+3.00e+00i };
@@ -410,7 +410,7 @@ static bool test_linop_gradient(void)
 UT_REGISTER_TEST(test_linop_gradient);
 
 
-static const struct linop_s* linop_laplace_chain_create(int N, const bart_dim_t dims[N], bart_flags_t flags)
+static const struct linop_s* linop_laplace_chain_create(int N, const long dims[N], unsigned long flags)
 {
 	const struct linop_s* lop_grad = linop_grad_forward_create(N, dims, N, flags);
 	const struct linop_s* lop_div_tmp = linop_grad_forward_create(N, dims, N, flags);
@@ -426,8 +426,8 @@ static const struct linop_s* linop_laplace_chain_create(int N, const bart_dim_t 
 static bool test_linop_laplace_cmp(void)
 {
 	enum { N = 3 };
-	bart_dim_t idims[N] = { 16, 16, 4 };
-	bart_flags_t flags = MD_BIT(0) | MD_BIT(2);
+	long idims[N] = { 16, 16, 4 };
+	unsigned long flags = MD_BIT(0) | MD_BIT(2);
 
 	const struct linop_s* lop_laplace1 = linop_laplace_create(N, idims, flags);
 	const struct linop_s* lop_laplace2 = linop_laplace_chain_create(N, idims, flags);
@@ -460,8 +460,8 @@ UT_REGISTER_TEST(test_linop_laplace_cmp);
 static bool test_linop_laplace_adjoint(void)
 {
 	enum { N = 3 };
-	bart_dim_t idims[N] = { 16, 16, 4 };
-	bart_flags_t flags = MD_BIT(0) | MD_BIT(2);
+	long idims[N] = { 16, 16, 4 };
+	unsigned long flags = MD_BIT(0) | MD_BIT(2);
 
 	const struct linop_s* lop_laplace = linop_laplace_create(N, idims, flags);
 

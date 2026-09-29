@@ -24,7 +24,7 @@ int main_zeros(int argc, char* argv[argc])
 {
 	int count = 0;
 	int N = -1;
-	bart_dim_t* dims = NULL;
+	long* dims = NULL;
 
 	const char* out_file = NULL;
 

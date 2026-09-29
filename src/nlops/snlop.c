@@ -469,7 +469,7 @@ void snlop_chain(int N, arg_t oargs[N], arg_t iargs[N], bool keep)
 
 
 
-arg_t snlop_input(int N, const bart_dim_t dims[N], const char* name)
+arg_t snlop_input(int N, const long dims[N], const char* name)
 {
 	struct snlop_s* snlop = snlop_create();
 	snlop->user = false;
@@ -488,7 +488,7 @@ arg_t snlop_input(int N, const bart_dim_t dims[N], const char* name)
 	return arg;
 }
 
-arg_t snlop_const(int N, const bart_dim_t dims[N], const complex float* data, const char* /*name*/)
+arg_t snlop_const(int N, const long dims[N], const complex float* data, const char* /*name*/)
 {
 	struct snlop_s* snlop = snlop_create();
 	snlop->user = false;
@@ -750,7 +750,7 @@ void snlop_replace_oarg(arg_t narg, arg_t oarg)
 	narg->x = x;
 }
 
-arg_t arg_reshape_out(arg_t arg, int N, const bart_dim_t dims[N])
+arg_t arg_reshape_out(arg_t arg, int N, const long dims[N])
 {
 	arg_t ret = snlop_clone_arg(arg);
 
@@ -760,7 +760,7 @@ arg_t arg_reshape_out(arg_t arg, int N, const bart_dim_t dims[N])
 	return ret;
 }
 
-arg_t arg_reshape_in(arg_t arg, int N, const bart_dim_t dims[N])
+arg_t arg_reshape_in(arg_t arg, int N, const long dims[N])
 {
 	arg_t ret;
 
@@ -777,7 +777,7 @@ arg_t arg_reshape_in(arg_t arg, int N, const bart_dim_t dims[N])
 	return ret;
 }
 
-arg_t arg_reshape(arg_t arg, int N, const bart_dim_t dims[N])
+arg_t arg_reshape(arg_t arg, int N, const long dims[N])
 {
 	if (arg_is_input(arg) && arg_is_output(arg))
 		error("Argument is input and output!\n Use specific function!\n");
@@ -807,9 +807,9 @@ arg_t snlop_stack(arg_t a, arg_t b, int stack_dim)
 	int N = MAX(iova->N, iovb->N);
 	N = MAX(N, stack_dim + 1);
 
-	bart_dim_t adims[N];
-	bart_dim_t bdims[N];
-	bart_dim_t odims[N];
+	long adims[N];
+	long bdims[N];
+	long odims[N];
 
 	md_singleton_dims(N, adims);
 	md_singleton_dims(N, bdims);
@@ -862,9 +862,9 @@ arg_t snlop_stack_F(arg_t a, arg_t b, int stack_dim)
 	int N = MAX(iova->N, iovb->N);
 	N = MAX(N, stack_dim + 1);
 
-	bart_dim_t adims[N];
-	bart_dim_t bdims[N];
-	bart_dim_t odims[N];
+	long adims[N];
+	long bdims[N];
+	long odims[N];
 
 	md_singleton_dims(N, adims);
 	md_singleton_dims(N, bdims);
@@ -915,9 +915,9 @@ arg_t snlop_stack_in(arg_t a, arg_t b, int stack_dim)
 	int N = MAX(iova->N, iovb->N);
 	N = MAX(N, stack_dim + 1);
 
-	bart_dim_t adims[N];
-	bart_dim_t bdims[N];
-	bart_dim_t odims[N];
+	long adims[N];
+	long bdims[N];
+	long odims[N];
 
 	md_singleton_dims(N, adims);
 	md_singleton_dims(N, bdims);

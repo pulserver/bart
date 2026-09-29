@@ -54,13 +54,13 @@ struct mi_metric_s {
 	double* smarginal;
 	double* mmarginal;
 
-	bart_dim_t tot;
+	long tot;
 	float* img_static;
 	float* img_moving;
 	float* msk_static;
 	float* msk_moving;
 
-	bart_dim_t valid_points;
+	long valid_points;
 };
 
 DEF_TYPEID(mi_metric_s);
@@ -127,9 +127,9 @@ static void mim_forward(const nlop_data_t* _data, int N, complex float* args[N])
 		mim->valid_points += 1;
 
 		double rn = bin_normalize(mim->img_static[i], mim->smin, mim->sdelta);
-		bart_dim_t r = bin_index(rn, mim->nbins, mim->padding);
+		long r = bin_index(rn, mim->nbins, mim->padding);
 		double cn = bin_normalize(mim->img_moving[i], mim->mmin, mim->mdelta);
-		bart_dim_t c = bin_index(cn, mim->nbins, mim->padding);
+		long c = bin_index(cn, mim->nbins, mim->padding);
 		double spline_arg = (c - 2) - cn;
 
 		mim->smarginal[r] += 1;
@@ -201,7 +201,7 @@ static void mim_gradient(const nlop_data_t* _data, int /*o*/, int /*i*/, complex
 
 
 #pragma omp parallel for
-	for (bart_dim_t i = 0; i < mim->tot; i++) {
+	for (long i = 0; i < mim->tot; i++) {
 
 		dst[i] = 0.;
 
@@ -242,7 +242,7 @@ static float bin_normalize(float x, float mval, float delta)
 
 static inline int bin_index(float normalized, int nbins, int padding)
 {
-	bart_dim_t bin_id = normalized;
+	long bin_id = normalized;
 
 	if (bin_id < padding)
 		return padding;
@@ -293,7 +293,7 @@ static inline float cubic_spline_derivative(float x)
 }
 
 
-struct nlop_s* nlop_mi_metric_create(int N, const bart_dim_t dims[N], int nbins, float smin, float smax, float mmin, float mmax, bool mask)
+struct nlop_s* nlop_mi_metric_create(int N, const long dims[N], int nbins, float smin, float smax, float mmin, float mmax, bool mask)
 {
 	PTR_ALLOC(struct mi_metric_s, mim);
 	SET_TYPEID(mi_metric_s, mim);
@@ -326,9 +326,9 @@ struct nlop_s* nlop_mi_metric_create(int N, const bart_dim_t dims[N], int nbins,
 	mim->msk_moving = mask ? md_alloc(1, MD_DIMS(mim->tot), FL_SIZE) : NULL;
 	mim->msk_static = mask ? md_alloc(1, MD_DIMS(mim->tot), FL_SIZE) : NULL;
 
-	bart_dim_t nl_odims[1][1] = { { 1 } };
+	long nl_odims[1][1] = { { 1 } };
 
-	bart_dim_t nl_idims[4][N];
+	long nl_idims[4][N];
 	md_copy_dims(N, nl_idims[0], dims);
 	md_copy_dims(N, nl_idims[1], dims);
 	md_copy_dims(N, nl_idims[2], dims);

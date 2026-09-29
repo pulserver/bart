@@ -30,7 +30,7 @@
 
 double iter_power(int maxiter,
 		const struct operator_s* normaleq_op,
-		bart_dim_t size, float* u)
+		long size, float* u)
 {
 	return power(maxiter, size, select_vecops(u), OPERATOR2ITOP(normaleq_op), u, NULL);
 }
@@ -38,7 +38,7 @@ double iter_power(int maxiter,
 double estimate_maxeigenval_sameplace(const struct operator_s* op, int iterations, const void *ref)
 {
 	const struct iovec_s* io = operator_domain(op);
-	bart_dim_t size = md_calc_size(io->N, io->dims);
+	long size = md_calc_size(io->N, io->dims);
 
 	if (NULL == ref)
 		ref = &size; // cpu_ref

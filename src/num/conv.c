@@ -25,19 +25,19 @@ struct conv_plan {
 	enum conv_type ctype;
 
 	int N;
-	bart_flags_t flags;
+	unsigned long flags;
 
-	bart_dim_t* idims;
-	bart_dim_t* odims;
+	long* idims;
+	long* odims;
 
-	bart_dim_t* dims;
-	bart_dim_t* dims1;
-	bart_dim_t* dims2;
-	bart_stride_t* str1;
-	bart_stride_t* str2;
+	long* dims;
+	long* dims1;
+	long* dims2;
+	long* str1;
+	long* str2;
 
-	bart_dim_t* kdims;
-	bart_stride_t* kstr;
+	long* kdims;
+	long* kstr;
 
 	struct multiplace_array_s* kernel;
 };
@@ -46,8 +46,8 @@ struct conv_plan {
 
 
 
-struct conv_plan* conv_plan(int N, bart_flags_t flags, enum conv_type ctype, enum conv_mode cmode, const bart_dim_t odims[N],  
-		const bart_dim_t idims1[N], const bart_dim_t idims2[N], const complex float* src2)
+struct conv_plan* conv_plan(int N, unsigned long flags, enum conv_type ctype, enum conv_mode cmode, const long odims[N],  
+		const long idims1[N], const long idims2[N], const complex float* src2)
 {
 	assert(   (!((CONV_VALID == ctype) || (CONV_EXTENDED == ctype)))
 	       || (CONV_CAUSAL == cmode));
@@ -59,17 +59,17 @@ struct conv_plan* conv_plan(int N, bart_flags_t flags, enum conv_type ctype, enu
 	plan->cmode = cmode;
 	plan->ctype = ctype;
 
-	plan->dims  = *TYPE_ALLOC(bart_dim_t[N]);
-	plan->dims1 = *TYPE_ALLOC(bart_dim_t[N]);
-	plan->dims2 = *TYPE_ALLOC(bart_dim_t[N]);
-	plan->kdims = *TYPE_ALLOC(bart_dim_t[N]);
+	plan->dims  = *TYPE_ALLOC(long[N]);
+	plan->dims1 = *TYPE_ALLOC(long[N]);
+	plan->dims2 = *TYPE_ALLOC(long[N]);
+	plan->kdims = *TYPE_ALLOC(long[N]);
 
-	plan->idims = *TYPE_ALLOC(bart_dim_t[N]);
-	plan->odims = *TYPE_ALLOC(bart_dim_t[N]);
+	plan->idims = *TYPE_ALLOC(long[N]);
+	plan->odims = *TYPE_ALLOC(long[N]);
 
 	complex float U = 1.;
 
-	bart_dim_t shift[N];
+	long shift[N];
 
         for (int i = 0; i < N; i++) {
 
@@ -139,9 +139,9 @@ struct conv_plan* conv_plan(int N, bart_flags_t flags, enum conv_type ctype, enu
 		plan->dims[i] = MAX(plan->dims1[i], plan->dims2[i]);
 	}
 
-	plan->str1 = *TYPE_ALLOC(bart_dim_t[N]);
-	plan->str2 = *TYPE_ALLOC(bart_dim_t[N]);
-	plan->kstr = *TYPE_ALLOC(bart_dim_t[N]);
+	plan->str1 = *TYPE_ALLOC(long[N]);
+	plan->str2 = *TYPE_ALLOC(long[N]);
+	plan->kstr = *TYPE_ALLOC(long[N]);
 
 	md_calc_strides(N, plan->str1, plan->dims1, CFL_SIZE);
 	md_calc_strides(N, plan->str2, plan->dims2, CFL_SIZE);
@@ -269,8 +269,8 @@ void conv_adjoint(struct conv_plan* plan, complex float* dst, const complex floa
 
 
 
-void conv(int N, bart_flags_t flags, enum conv_type ctype, enum conv_mode cmode, const bart_dim_t odims[N], complex float* dst,
-		const bart_dim_t idims1[N], const complex float* src1, const bart_dim_t idims2[N], const complex float* src2)
+void conv(int N, unsigned long flags, enum conv_type ctype, enum conv_mode cmode, const long odims[N], complex float* dst,
+		const long idims1[N], const complex float* src1, const long idims2[N], const complex float* src2)
 {
 	struct conv_plan* plan = conv_plan(N, flags, ctype, cmode, odims, idims1, idims2, src2);
 	conv_exec(plan, dst, src1);
@@ -280,8 +280,8 @@ void conv(int N, bart_flags_t flags, enum conv_type ctype, enum conv_mode cmode,
 
 
 
-void convH(int N, bart_flags_t flags, enum conv_type ctype, enum conv_mode cmode, const bart_dim_t odims[N], complex float* dst,
-		const bart_dim_t idims1[N], const complex float* src1, const bart_dim_t idims2[N], const complex float* src2)
+void convH(int N, unsigned long flags, enum conv_type ctype, enum conv_mode cmode, const long odims[N], complex float* dst,
+		const long idims1[N], const complex float* src1, const long idims2[N], const complex float* src2)
 {
 	struct conv_plan* plan = conv_plan(N, flags, ctype, cmode, idims1, odims, idims2, src2); // idims1 <-> odims
 	conv_adjoint(plan, dst, src1);

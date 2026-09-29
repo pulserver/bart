@@ -145,7 +145,7 @@ int asl(int N, struct seq_event ev[N], const struct seq_state* seq_state, const 
 		break;
 
 	default:
-		error("Invalid ASL BATCH_DIM=%" PRId64 " (valid options: 0=M0, 1=LABEL, 2=CONTROL)\n", seq_state->pos[BATCH_DIM]);
+		error("Invalid ASL BATCH_DIM=%ld (valid options: 0=M0, 1=LABEL, 2=CONTROL)\n", seq_state->pos[BATCH_DIM]);
 	}
 
 	int i = 0;

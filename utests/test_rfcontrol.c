@@ -128,7 +128,7 @@ static bool test_cn_bloch()
 
 	p.Nt = (int)(ps.super.duration / p.dt);
 
-	bart_dim_t dims[1] = { p.Nt };
+	long dims[1] = { p.Nt };
 	p.u = md_alloc(1, dims, sizeof(float));
 	p.v = md_alloc(1, dims, sizeof(float));
 	p.w = md_alloc(1, dims, sizeof(float));
@@ -194,7 +194,7 @@ static bool test_cn_adjoint()
 
 	p.Nt = (int)(ps.super.duration / p.dt);
 
-	bart_dim_t dims[1] = { p.Nt };
+	long dims[1] = { p.Nt };
 
 	p.u = md_alloc(1, dims, sizeof(float));
 	p.v = md_alloc(1, dims, sizeof(float));

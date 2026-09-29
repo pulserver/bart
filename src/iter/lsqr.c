@@ -41,7 +41,7 @@ struct lsqr_data {
 	operator_data_t super;
 
 	float l2_lambda;
-	bart_dim_t size;
+	long size;
 
 	const struct linop_s* model_op;
 };
@@ -177,8 +177,8 @@ void lsqr2(int N, const struct lsqr_conf* conf,
 	   int num_funs,
 	   const struct operator_p_s* prox_funs[num_funs],
 	   const struct linop_s* prox_linops[num_funs],
-	   const bart_dim_t x_dims[static N], complex float* x,
-	   const bart_dim_t y_dims[static N], const complex float* y,
+	   const long x_dims[static N], complex float* x,
+	   const long y_dims[static N], const complex float* y,
 	   const struct operator_s* precond_op,
 	   struct iter_monitor_s* monitor)
 {
@@ -202,9 +202,9 @@ void lsqr(int N,
 	  iter_conf* iconf,
 	  const struct linop_s* model_op,
 	  const struct operator_p_s* thresh_op,
-	  const bart_dim_t x_dims[static N],
+	  const long x_dims[static N],
 	  complex float* x,
-	  const bart_dim_t y_dims[static N],
+	  const long y_dims[static N],
 	  const complex float* y,
 	  const struct operator_s* precond_op)
 {
@@ -249,12 +249,12 @@ void wlsqr2(int N, const struct lsqr_conf* conf,
 	    int num_funs,
 	    const struct operator_p_s* prox_funs[num_funs],
 	    const struct linop_s* prox_linops[num_funs],
-	    const bart_dim_t x_dims[static N], complex float* x,
-	    const bart_dim_t y_dims[static N], const complex float* y,
-	    const bart_dim_t w_dims[static N], const complex float* w,
+	    const long x_dims[static N], complex float* x,
+	    const long y_dims[static N], const complex float* y,
+	    const long w_dims[static N], const complex float* w,
 	    const struct operator_s* precond_op)
 {
-	bart_flags_t flags = 0;
+	unsigned long flags = 0;
 	for (int i = 0; i < N; i++)
 		if (1 < w_dims[i])
 			flags = MD_SET(flags, i);
@@ -286,9 +286,9 @@ void wlsqr(int N, const struct lsqr_conf* conf,
 	   italgo_fun_t italgo, iter_conf* iconf,
 	   const struct linop_s* model_op,
 	   const struct operator_p_s* thresh_op,
-	   const bart_dim_t x_dims[static N], complex float* x,
-	   const bart_dim_t y_dims[static N], const complex float* y,
-	   const bart_dim_t w_dims[static N], const complex float* w,
+	   const long x_dims[static N], complex float* x,
+	   const long y_dims[static N], const complex float* y,
+	   const long w_dims[static N], const complex float* w,
 	   const struct operator_s* precond_op)
 {
 	wlsqr2(N, conf, iter2_call_iter, CAST_UP(&((struct iter_call_s){ { &TYPEID(iter_call_s), 1. }, italgo, iconf })),

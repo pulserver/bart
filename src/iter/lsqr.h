@@ -2,7 +2,6 @@
 #ifndef _ITER_LSQR_H
 #define _ITER_LSQR_H 1
 
-#include "misc/dimtypes.h"
 #include "iter/iter.h"
 #include "iter/iter2.h"
 #include "iter/itop.h"
@@ -52,17 +51,17 @@ extern void lsqr(	int N, const struct lsqr_conf* conf,
 			italgo_fun_t italgo, iter_conf* iconf,
 			const struct linop_s* model_op,
 			const struct operator_p_s* thresh_op,
-			const bart_dim_t x_dims[__VLA(N)], _Complex float* x,
-			const bart_dim_t y_dims[__VLA(N)], const _Complex float* y,
+			const long x_dims[__VLA(N)], _Complex float* x,
+			const long y_dims[__VLA(N)], const _Complex float* y,
 			const struct operator_s* precond_op);
 
 extern void wlsqr(	int N, const struct lsqr_conf* conf,
 			italgo_fun_t italgo, iter_conf* iconf,
 			const struct linop_s* model_op,
 			const struct operator_p_s* thresh_op,
-			const bart_dim_t x_dims[__VLA(N)], _Complex float* x,
-			const bart_dim_t y_dims[__VLA(N)], const _Complex float* y,
-			const bart_dim_t w_dims[__VLA(N)], const _Complex float* w,
+			const long x_dims[__VLA(N)], _Complex float* x,
+			const long y_dims[__VLA(N)], const _Complex float* y,
+			const long w_dims[__VLA(N)], const _Complex float* w,
 			const struct operator_s* precond_op);
 
 extern void lsqr2(	int N, const struct lsqr_conf* conf,
@@ -71,8 +70,8 @@ extern void lsqr2(	int N, const struct lsqr_conf* conf,
 			int num_funs,
 			const struct operator_p_s* prox_funs[__VLA2(num_funs)],
 			const struct linop_s* prox_linops[__VLA2(num_funs)],
-			const bart_dim_t x_dims[__VLA(N)], _Complex float* x,
-			const bart_dim_t y_dims[__VLA(N)], const _Complex float* y,
+			const long x_dims[__VLA(N)], _Complex float* x,
+			const long y_dims[__VLA(N)], const _Complex float* y,
 			const struct operator_s* precond_op,
 			struct iter_monitor_s* monitor);
 
@@ -82,9 +81,9 @@ extern void wlsqr2(	int N, const struct lsqr_conf* conf,
 			int num_funs,
 			const struct operator_p_s* prox_funs[__VLA2(num_funs)],
 			const struct linop_s* prox_linops[__VLA2(num_funs)],
-			const bart_dim_t x_dims[__VLA(N)], complex float* x,
-			const bart_dim_t y_dims[__VLA(N)], const complex float* y,
-			const bart_dim_t w_dims[__VLA(N)], const complex float* w,
+			const long x_dims[__VLA(N)], complex float* x,
+			const long y_dims[__VLA(N)], const complex float* y,
+			const long w_dims[__VLA(N)], const complex float* w,
 			const struct operator_s* precond_op);
 
 

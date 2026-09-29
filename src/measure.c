@@ -62,7 +62,7 @@ int main_measure(int argc, char* argv[argc])
 
 	enum MEASURE meas = MEAS_IMAGE;
 
-	bart_flags_t bat_flags = BATCH_FLAG;
+	unsigned long bat_flags = BATCH_FLAG;
 	
 	const struct opt_s opts[] = {
 
@@ -76,8 +76,8 @@ int main_measure(int argc, char* argv[argc])
 
 	num_init();
 
-	bart_dim_t ref_dims[DIMS];
-	bart_dim_t in_dims[DIMS];
+	long ref_dims[DIMS];
+	long in_dims[DIMS];
 
 	complex float* ref = load_cfl(ref_file, DIMS, ref_dims);
 	complex float* in = load_cfl(in_file, DIMS, in_dims);
@@ -114,8 +114,8 @@ int main_measure(int argc, char* argv[argc])
 		assert(0);
 	}
 
-	bart_dim_t op_dims[DIMS];
-	bart_dim_t out_dims[DIMS];
+	long op_dims[DIMS];
+	long out_dims[DIMS];
 	
 	md_select_dims(DIMS, ~bat_flags, op_dims, ref_dims);
 	md_select_dims(DIMS, bat_flags, out_dims, ref_dims);
@@ -128,7 +128,7 @@ int main_measure(int argc, char* argv[argc])
 	while (1 < nlop_get_nr_out_args(nlop_measure))
 		nlop_measure = nlop_stack_outputs_F(nlop_measure, 0, 1, 0);
 	
-	bart_dim_t nlop_odims[DIMS];
+	long nlop_odims[DIMS];
 	md_select_dims(DIMS, MD_BIT(0), nlop_odims, out_dims);
 	nlop_measure = nlop_reshape_out_F(nlop_measure, 0, DIMS, nlop_odims);
 
@@ -136,8 +136,8 @@ int main_measure(int argc, char* argv[argc])
 
 
 	nlop_generic_apply_loop(nlop_measure, bat_flags,
-				1, (int[1]) { DIMS }, (const bart_dim_t*[1]){ out_dims }, (complex float*[1]){ out },
-				2, (int[2]) { DIMS, DIMS }, (const bart_dim_t*[2]){ in_dims, ref_dims }, (const complex float*[2]){ in, ref });
+				1, (int[1]) { DIMS }, (const long*[1]){ out_dims }, (complex float*[1]){ out },
+				2, (int[2]) { DIMS, DIMS }, (const long*[2]){ in_dims, ref_dims }, (const complex float*[2]){ in, ref });
 
 	complex float res[out_dims[0]];
 

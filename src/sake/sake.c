@@ -59,13 +59,13 @@ static complex float cthresh(float lambda, complex float x)
 
 
 
-static void robust_consistency(float lambda, const bart_dim_t dims[5], complex float* dst, const complex float* pattern, const complex float* kspace)
+static void robust_consistency(float lambda, const long dims[5], complex float* dst, const complex float* pattern, const complex float* kspace)
 {
 	assert(1 == dims[4]);
 
-	bart_dim_t size = md_calc_size(5, dims);
+	long size = md_calc_size(5, dims);
 
-	for (bart_dim_t i = 0; i < size; i++)
+	for (long i = 0; i < size; i++)
 		if (1. == pattern[i % (size / dims[3])])
 			dst[i] = kspace[i] + cthresh(lambda, dst[i] - kspace[i]);
 }
@@ -74,7 +74,7 @@ static void robust_consistency(float lambda, const bart_dim_t dims[5], complex f
 #define RAVINE
 #endif
 #ifdef RAVINE
-static void ravine(int N, const bart_dim_t dims[N], float* ftp, complex float* xa, complex float* xb)
+static void ravine(int N, const long dims[N], float* ftp, complex float* xa, complex float* xb)
 {
         float ft = *ftp;
         float tfo = ft;
@@ -85,11 +85,11 @@ static void ravine(int N, const bart_dim_t dims[N], float* ftp, complex float* x
 	md_swap(N, dims, xa, xb, CFL_SIZE);
 	complex float val = (1.f - tfo) / ft - 1.f;
 
-	bart_dim_t dims1[N];
+	long dims1[N];
 	md_singleton_dims(N, dims1);
 
-	bart_stride_t strs1[N];
-	bart_stride_t strs[N];
+	long strs1[N];
+	long strs[N];
 	md_calc_strides(N, strs1, dims1, CFL_SIZE);
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
@@ -103,23 +103,23 @@ static void ravine(int N, const bart_dim_t dims[N], float* ftp, complex float* x
 
 
 
-static void lowrank(float alpha, int D, const bart_dim_t dims[D], complex float* matrix)
+static void lowrank(float alpha, int D, const long dims[D], complex float* matrix)
 {
 	assert(1 == dims[MAPS_DIM]);
 
 	debug_printf(DP_DEBUG3, "mat_dims = \t");
 	debug_print_dims(DP_DEBUG3, D, dims);
 
-	bart_dim_t kern_min[4] = { 6, 6, 6, dims[COIL_DIM] };
-	bart_dim_t kern_dims[D];
+	long kern_min[4] = { 6, 6, 6, dims[COIL_DIM] };
+	long kern_dims[D];
 
 	md_set_dims(D, kern_dims, 1);
-	md_min_dims(4, ~UINT64_C(0), kern_dims, kern_min, dims);
+	md_min_dims(4, ~0u, kern_dims, kern_min, dims);
 
 	debug_printf(DP_DEBUG3, "kern_dims = \t");
 	debug_print_dims(DP_DEBUG3, D, kern_dims);
 
-	bart_dim_t calmat_dims[2];
+	long calmat_dims[2];
 	casorati_dims(D, calmat_dims, kern_dims, dims);
 
 	debug_printf(DP_DEBUG3, "calmat_dims = \t");
@@ -127,7 +127,7 @@ static void lowrank(float alpha, int D, const bart_dim_t dims[D], complex float*
 
 	complex float* calmat = md_alloc(2, calmat_dims, CFL_SIZE);
 
-	bart_stride_t str[D];
+	long str[D];
 	md_calc_strides(D, str, dims, CFL_SIZE);
 
 	casorati_matrix(D, kern_dims, calmat_dims, calmat, dims, str, matrix);
@@ -140,8 +140,8 @@ static void lowrank(float alpha, int D, const bart_dim_t dims[D], complex float*
 
 	if (-1. != alpha) {
 
-		bart_dim_t dimsU[2] = { N, N };
-		bart_dim_t dimsV[2] = { M, M };
+		long dimsU[2] = { N, N };
+		long dimsV[2] = { M, M };
 
 		complex float* U = md_alloc(2, dimsU, CFL_SIZE);
 		complex float* VT = md_alloc(2, dimsV, CFL_SIZE);
@@ -157,8 +157,8 @@ static void lowrank(float alpha, int D, const bart_dim_t dims[D], complex float*
 		debug_printf(DP_INFO, "done.\n");
 
 		// put it back together
-		bart_dim_t dimU2[2] = { N, MIN(N, M) };
-		bart_dim_t dimV2[2] = { MIN(N, M), M };
+		long dimU2[2] = { N, MIN(N, M) };
+		long dimV2[2] = { MIN(N, M), M };
 		complex float* U2 = md_alloc(2, dimU2, CFL_SIZE);
 		complex float* V2 = md_alloc(2, dimV2, CFL_SIZE);
 		md_resize(2, dimU2, U2, dimsU, U, CFL_SIZE);
@@ -192,9 +192,9 @@ static void lowrank(float alpha, int D, const bart_dim_t dims[D], complex float*
 
 
 
-void lrmc(float alpha, int iter, float lambda, int N, const bart_dim_t dims[N], complex float* out, const complex float* in)
+void lrmc(float alpha, int iter, float lambda, int N, const long dims[N], complex float* out, const complex float* in)
 {
-	bart_dim_t dims1[N];
+	long dims1[N];
 	md_select_dims(N, ~COIL_FLAG, dims1, dims);
 
 	md_copy(N, dims, out, in, CFL_SIZE);
@@ -215,10 +215,10 @@ void lrmc(float alpha, int iter, float lambda, int N, const bart_dim_t dims[N], 
 	float fl = 1.;
 #endif
 
-	bart_stride_t strs1[N];
+	long strs1[N];
 	md_calc_strides(N, strs1, dims1, CFL_SIZE);
 
-	bart_stride_t strs[N];
+	long strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 	
 

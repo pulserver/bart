@@ -10,18 +10,18 @@
 
 #include "utest.h"
 
-typedef void (*md_2op_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], float* optr, const bart_stride_t istrs1[D], const float* iptr1);
-typedef void (*md_z2op_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs1[D], const complex float* iptr1);
-typedef void (*md_2opf_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], float* optr, const bart_stride_t istrs1[D], const double* iptr1);
-typedef void (*md_2opd_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], double* optr, const bart_stride_t istrs1[D], const float* iptr1);
-typedef void (*md_z2opf_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs1[D], const complex double* iptr1);
-typedef void (*md_z2opd_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex double* optr, const bart_stride_t istrs1[D], const complex float* iptr1);
+typedef void (*md_2op_t)(int D, const long dims[D], const long ostrs[D], float* optr, const long istrs1[D], const float* iptr1);
+typedef void (*md_z2op_t)(int D, const long dims[D], const long ostrs[D], complex float* optr, const long istrs1[D], const complex float* iptr1);
+typedef void (*md_2opf_t)(int D, const long dims[D], const long ostrs[D], float* optr, const long istrs1[D], const double* iptr1);
+typedef void (*md_2opd_t)(int D, const long dims[D], const long ostrs[D], double* optr, const long istrs1[D], const float* iptr1);
+typedef void (*md_z2opf_t)(int D, const long dims[D], const long ostrs[D], complex float* optr, const long istrs1[D], const complex double* iptr1);
+typedef void (*md_z2opd_t)(int D, const long dims[D], const long ostrs[D], complex double* optr, const long istrs1[D], const complex float* iptr1);
 
 
-typedef void (*md_3op_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], float* optr, const bart_stride_t istrs1[D], const float* iptr1, const bart_stride_t istrs2[D], const float* iptr2);
-typedef void (*md_z3op_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex float* optr, const bart_stride_t istrs1[D], const complex float* iptr1, const bart_stride_t istrs2[D], const complex float* iptr2);
-typedef void (*md_3opd_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], double* optr, const bart_stride_t istrs1[D], const float* iptr1, const bart_stride_t istrs2[D], const float* iptr2);
-typedef void (*md_z3opd_t)(int D, const bart_dim_t dims[D], const bart_stride_t ostrs[D], complex double* optr, const bart_stride_t istrs1[D], const complex float* iptr1, const bart_stride_t istrs2[D], const complex float* iptr2);
+typedef void (*md_3op_t)(int D, const long dims[D], const long ostrs[D], float* optr, const long istrs1[D], const float* iptr1, const long istrs2[D], const float* iptr2);
+typedef void (*md_z3op_t)(int D, const long dims[D], const long ostrs[D], complex float* optr, const long istrs1[D], const complex float* iptr1, const long istrs2[D], const complex float* iptr2);
+typedef void (*md_3opd_t)(int D, const long dims[D], const long ostrs[D], double* optr, const long istrs1[D], const float* iptr1, const long istrs2[D], const float* iptr2);
+typedef void (*md_z3opd_t)(int D, const long dims[D], const long ostrs[D], complex double* optr, const long istrs1[D], const complex float* iptr1, const long istrs2[D], const complex float* iptr2);
 
 
 
@@ -31,8 +31,8 @@ static bool test_md_z3op(md_z3op_t function)
 
 
 	enum { N = 3 };
-	const bart_dim_t dims[N] = { 2, 5, 3 };
-	bart_stride_t strs[N];
+	const long dims[N] = { 2, 5, 3 };
+	long strs[N];
 
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
@@ -127,8 +127,8 @@ static bool test_md_z2op(md_z2op_t function)
 
 
 	enum { N = 3 };
-	const bart_dim_t dims[N] = { 2, 5, 3 };
-	bart_stride_t strs[N];
+	const long dims[N] = { 2, 5, 3 };
+	long strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
 	complex float* optr_cpu = md_alloc(N, dims, CFL_SIZE);

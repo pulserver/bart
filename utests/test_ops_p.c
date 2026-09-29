@@ -25,7 +25,7 @@
 static bool test_op_p_scale(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 8, 4, 1 };
+	long dims[N] = { 8, 4, 1 };
 
 	complex float* in = md_alloc(N, dims, CFL_SIZE);
 	complex float* out = md_alloc(N, dims, CFL_SIZE);
@@ -54,8 +54,8 @@ UT_REGISTER_TEST(test_op_p_scale);
 static bool test_op_p_stack(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 8, 4, 1 };
-	bart_dim_t dims2[N] = { 8, 4, 2 };
+	long dims[N] = { 8, 4, 1 };
+	long dims2[N] = { 8, 4, 2 };
 
 	auto a = operator_p_scale(N, dims);
 	auto a2 = operator_p_scale(N, dims);
@@ -89,10 +89,10 @@ UT_REGISTER_TEST(test_op_p_stack);
 static bool test_op_p_stack2(void)
 {
 	enum { N = 4 };
-	bart_dim_t dims[N] = { 8, 4, 1, 4 };
-	bart_dim_t dims2[N] = { 8, 4, 2, 4 };
+	long dims[N] = { 8, 4, 1, 4 };
+	long dims2[N] = { 8, 4, 2, 4 };
 
-	bart_dim_t dims_no3[N] = { 8, 4, 1, 1 };
+	long dims_no3[N] = { 8, 4, 1, 1 };
 
 	auto a = operator_p_scale(N, dims_no3);
 	auto a2 = operator_p_scale(N, dims_no3);
@@ -101,7 +101,7 @@ static bool test_op_p_stack2(void)
 
 	auto b = operator_p_stack_FF(2, 2, a, a2); 
 
-	bart_dim_t phases = dims[3];
+	long phases = dims[3];
 
 	for (int k = 0; k < (phases - 1); k++) {
 
@@ -137,10 +137,10 @@ UT_REGISTER_TEST(test_op_p_stack2);
 static bool test_op_p_stack3(void)
 {
 	enum { N = 4 };
-	bart_dim_t dims[N] = { 8, 1, 4, 4 };
-	bart_dim_t dims2[N] = { 8, 2, 4, 4 };
-	bart_dim_t dims3[N] = { 8, 3, 4, 4 };
-	bart_dim_t dims4[N] = { 8, 6, 4, 4 };
+	long dims[N] = { 8, 1, 4, 4 };
+	long dims2[N] = { 8, 2, 4, 4 };
+	long dims3[N] = { 8, 3, 4, 4 };
+	long dims4[N] = { 8, 6, 4, 4 };
 
 	auto a = operator_p_scale(N, dims);
 	auto a2 = operator_p_scale(N, dims2);
@@ -174,8 +174,8 @@ UT_REGISTER_TEST(test_op_p_stack3);
 static bool test_op_p_reshape(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 8, 4, 1 };
-	bart_dim_t dims2[N] = { 1, 1, 32 };
+	long dims[N] = { 8, 4, 1 };
+	long dims2[N] = { 1, 1, 32 };
 
 	auto a = operator_p_scale(N, dims);
 	auto b = operator_p_reshape_in_F(a, N, dims2);
@@ -206,9 +206,9 @@ UT_REGISTER_TEST(test_op_p_reshape);
 static bool test_op_p_reshape_stack(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 8, 4, 4 };
-	bart_dim_t dims2[N] = { 8, 1, 4 };
-	bart_dim_t dims3[1] = { 8*5*4};
+	long dims[N] = { 8, 4, 4 };
+	long dims2[N] = { 8, 1, 4 };
+	long dims3[1] = { 8*5*4};
 
 	const struct operator_p_s* a = operator_p_scale(N, dims);
 	a = operator_p_flatten_F(a);

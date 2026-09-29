@@ -32,9 +32,9 @@ static bool test_linop_matrix(void)
 	int B = 3;
 	int C = 4;
 
-	bart_dim_t odims[N] = { C, 1, A };
-	bart_dim_t idims1[N] = { 1, B, A };
-	bart_dim_t idims2[N] = { C, B, 1 };
+	long odims[N] = { C, 1, A };
+	long idims1[N] = { 1, B, A };
+	long idims2[N] = { C, B, 1 };
 
 	complex float* dst1 = md_alloc(N, odims, CFL_SIZE);
 	complex float* dst2 = md_alloc(N, odims, CFL_SIZE);
@@ -74,9 +74,9 @@ static bool test_linop_matrix_adjoint(void)
 	int B = 3;
 	int C = 4;
 
-	bart_dim_t odims[N] = { C, 1, A };
-	bart_dim_t idims1[N] = { 1, B, A };
-	bart_dim_t idims2[N] = { C, B, 1 };
+	long odims[N] = { C, 1, A };
+	long idims1[N] = { 1, B, A };
+	long idims2[N] = { C, B, 1 };
 
 	complex float* src1 = md_alloc(N, idims1, CFL_SIZE);
 
@@ -105,9 +105,9 @@ static bool test_linop_matrix_normal(void)
 	int B = 3;
 	int C = 4;
 
-	bart_dim_t odims[N] = { C, 1, A };
-	bart_dim_t idims1[N] = { 1, B, A };
-	bart_dim_t idims2[N] = { C, B, 1 };
+	long odims[N] = { C, 1, A };
+	long idims1[N] = { 1, B, A };
+	long idims2[N] = { C, B, 1 };
 
 	complex float* src1 = md_alloc(N, idims1, CFL_SIZE);
 
@@ -137,11 +137,11 @@ static bool test_linop_matrix_chain(void)
 	int E = 5;
 
 	enum { N = 8 };
-	bart_dim_t odims[N] =  { D, C, 1, 1, 1, 1, C, D };
-	bart_dim_t idims0[N] = { D, 1, 1, A, E, 1, A, D };
-	bart_dim_t idims1[N] = { D, 1, B, A, 1, B, A, D };
-	bart_dim_t tdims[N] =  { D, 1, B, 1, E, B, 1, D };
-	bart_dim_t idims2[N] = { D, C, B, 1, E, B, C, D };
+	long odims[N] =  { D, C, 1, 1, 1, 1, C, D };
+	long idims0[N] = { D, 1, 1, A, E, 1, A, D };
+	long idims1[N] = { D, 1, B, A, 1, B, A, D };
+	long tdims[N] =  { D, 1, B, 1, E, B, 1, D };
+	long idims2[N] = { D, C, B, 1, E, B, C, D };
 
 	complex float* dst1 = md_alloc(N, odims, CFL_SIZE);
 	complex float* dst2 = md_alloc(N, odims, CFL_SIZE);

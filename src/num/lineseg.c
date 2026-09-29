@@ -121,16 +121,16 @@ bool dist_of_linesegs_smaller(const float seg1[2][3], const float seg2[2][3], fl
 
 
 
-static void douglas_peucker_rec(int N, vec3_t pos[N], bool active[N], bart_dim_t start, bart_dim_t end, float tol)
+static void douglas_peucker_rec(int N, vec3_t pos[N], bool active[N], long start, long end, float tol)
 {
-	bart_dim_t max_index = start;
+	long max_index = start;
 	float max_dist = 0.;
 
 	vec3_t seg[2];
 	vec3_copy(seg[0], pos[start]);
 	vec3_copy(seg[1], pos[end]);
 
-	for (bart_dim_t i = start + 1; i < end; i++) {
+	for (long i = start + 1; i < end; i++) {
 
 		float dist = dist_to_lineseg(pos[i], seg);
 
@@ -150,18 +150,18 @@ static void douglas_peucker_rec(int N, vec3_t pos[N], bool active[N], bart_dim_t
 	}
 }
 
-bart_dim_t douglas_peucker(bart_dim_t N, vec3_t pos[N], float tol)
+long douglas_peucker(long N, vec3_t pos[N], float tol)
 {
 	bool active[N];
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		active[i] = false;
 
 	active[0] = true;
 	active[N - 1] = true;
 	douglas_peucker_rec(N, pos, active, 0, N - 1, tol);
 
-	bart_dim_t count = 0;
-	for (bart_dim_t i = 0; i < N; i++)
+	long count = 0;
+	for (long i = 0; i < N; i++)
 		if (active[i])
 			vec3_copy(pos[count++], pos[i]);
 
@@ -176,33 +176,33 @@ static bool con26(const vec3_t pos1, const vec3_t pos2)
 }
 
 
-static bart_dim_t md_mask_count(int N, const bart_dim_t dims[N], complex float* mask)
+static long md_mask_count(int N, const long dims[N], complex float* mask)
 {
-	bart_dim_t count = 0;
+	long count = 0;
 
-	bart_dim_t size = md_calc_size(N, dims);
+	long size = md_calc_size(N, dims);
 
-	for (bart_dim_t i = 0; i < size; i++)
+	for (long i = 0; i < size; i++)
 		if (0. != crealf(mask[i]))
 			count++;
 
 	return count;
 }
 
-static bart_dim_t md_mask_to_pos(int N, const bart_dim_t dims[N], bart_flags_t flags, bart_dim_t max, int M, float pos[max][M], const complex float* mask)
+static long md_mask_to_pos(int N, const long dims[N], unsigned long flags, long max, int M, float pos[max][M], const complex float* mask)
 {
 	assert(M == bitcount(flags));
 
-	bart_dim_t count = 0;
+	long count = 0;
 
-	bart_dim_t size = md_calc_size(N, dims);
+	long size = md_calc_size(N, dims);
 
 	for (int i = 0; i < size; i++)  {
 
 		if (0. == lroundf(crealf(mask[i])))
 			continue;
 
-		bart_dim_t lpos[N];
+		long lpos[N];
 		md_unravel_index(N, lpos, flags, dims, i);
 
 		for (int j = 0; j < M; j++)
@@ -217,12 +217,12 @@ static bart_dim_t md_mask_to_pos(int N, const bart_dim_t dims[N], bart_flags_t f
 static egraph_t pos_to_graph(int N, vec3_t pos[N])
 {
 	egraph_t nodes = egraph_create();
-	for (bart_dim_t i = 0; i < N; i++) {
+	for (long i = 0; i < N; i++) {
 
 		enode_t node = enode_create(NULL, pos[i]);
 		egraph_add_node(nodes, node);
 
-		for (bart_dim_t j = 0; j < i; j++) {
+		for (long j = 0; j < i; j++) {
 			if (con26(pos[j], pos[i])) {
 
 				enode_add_dependency(list_get_item(nodes, j), list_get_item(nodes, i));
@@ -245,7 +245,7 @@ static void lspline_to_segments(int N, vec3_t seg[N - 1][2], const vec3_t pos[N]
 	}
 }
 
-static void grid_to_fov(const bart_dim_t dims[3], int N, vec3_t pos[N])
+static void grid_to_fov(const long dims[3], int N, vec3_t pos[N])
 {
 	for (int i = 0; i < N; i++) {
 
@@ -256,15 +256,15 @@ static void grid_to_fov(const bart_dim_t dims[3], int N, vec3_t pos[N])
 }
 
 
-static void md_mark_endpoints(int N, const bart_dim_t dims[N], complex float* mask)
+static void md_mark_endpoints(int N, const long dims[N], complex float* mask)
 {
 	complex float* tmask = md_alloc(N, dims, CFL_SIZE);
 	md_copy(N, dims, tmask, mask, CFL_SIZE);
 
-	bart_dim_t count = md_mask_count(N, dims, tmask);
+	long count = md_mask_count(N, dims, tmask);
 
 	vec3_t (*pos)[count?:1] = xmalloc(sizeof(vec3_t[count?:1]));
-	md_mask_to_pos(N, dims, 7, count, 3, (*pos), tmask);
+	md_mask_to_pos(N, dims, 7UL, count, 3, (*pos), tmask);
 
 	egraph_t nodes = pos_to_graph(count, (*pos));
 	list_t components = egraph_split_connected_components(nodes);
@@ -280,17 +280,17 @@ static void md_mark_endpoints(int N, const bart_dim_t dims[N], complex float* ma
 		enode_t start = egraph_find_most_distant(comp, rand);
 		enode_t end = egraph_find_most_distant(comp, start);
 
-		bart_dim_t pos[3];
+		long pos[3];
 		for (int j = 0; j < 3; j++)
-			pos[j] = llroundf(((float*)enode_get_data(start))[j]);
+			pos[j] = lroundf(((float*)enode_get_data(start))[j]);
 
-		bart_dim_t idx = md_ravel_index(3, pos, ~UINT64_C(0), dims);
+		long idx = md_ravel_index(3, pos, ~0UL, dims);
 		keep[idx] = 1.;
 
 		for (int j = 0; j < 3; j++)
-			pos[j] = llroundf(((float*)enode_get_data(end))[j]);
+			pos[j] = lroundf(((float*)enode_get_data(end))[j]);
 
-		idx = md_ravel_index(3, pos, ~UINT64_C(0), dims);
+		idx = md_ravel_index(3, pos, ~0UL, dims);
 		keep[idx] = 1.;
 
 		egraph_free(comp);
@@ -303,7 +303,7 @@ static void md_mark_endpoints(int N, const bart_dim_t dims[N], complex float* ma
 	md_free(keep);
 }
 
-struct lseg_s md_trace_binary_mask(int N, const bart_dim_t dims[N], complex float* mask, float tol)
+struct lseg_s md_trace_binary_mask(int N, const long dims[N], complex float* mask, float tol)
 {
 	complex float* tmask = md_alloc(N, dims, CFL_SIZE);
 
@@ -314,10 +314,10 @@ struct lseg_s md_trace_binary_mask(int N, const bart_dim_t dims[N], complex floa
 	md_thinning_3D(N, dims, tmask, mask, keep);
 	md_free(keep);
 
-	bart_dim_t count = md_mask_count(N, dims, tmask);
+	long count = md_mask_count(N, dims, tmask);
 
 	vec3_t (*pos)[count?:1] = xmalloc(sizeof(vec3_t[count?:1]));
-	md_mask_to_pos(N, dims, 7, count, 3, (*pos), tmask);
+	md_mask_to_pos(N, dims, 7UL, count, 3, (*pos), tmask);
 
 	md_free(tmask);
 
@@ -330,14 +330,14 @@ struct lseg_s md_trace_binary_mask(int N, const bart_dim_t dims[N], complex floa
 		return ret;
 	}
 
-	debug_printf(DP_DEBUG1, "Found %" PRId64 " points in the mask.\n", count);
+	debug_printf(DP_DEBUG1, "Found %ld points in the mask.\n", count);
 
 	list_t nodes = pos_to_graph(count, (*pos));
 	list_t components = egraph_split_connected_components(nodes);
 
 	vec3_t (*seg)[count?:1][2] = xmalloc(sizeof(vec3_t[count?:1][2]));
 
-	bart_dim_t count2 = 0;
+	long count2 = 0;
 
 	while (0 != list_count(components)) {
 
@@ -353,7 +353,7 @@ struct lseg_s md_trace_binary_mask(int N, const bart_dim_t dims[N], complex floa
 
 		list_t end_nodes = list_create();
 
-		for (bart_dim_t j = 0; j < list_count(nodes); j++)
+		for (long j = 0; j < list_count(nodes); j++)
 			if (   (1 == list_count(enode_get_iedges(list_get_item(nodes, j))))
 			    || (1 == list_count(enode_get_oedges(list_get_item(nodes, j)))))
 				list_append(end_nodes, list_get_item(nodes, j));
@@ -368,7 +368,7 @@ struct lseg_s md_trace_binary_mask(int N, const bart_dim_t dims[N], complex floa
 			enode_t remove = egraph_find_most_distant(nodes, node);
 			enode_free(list_get_first_item(nodes, remove, NULL, true));
 
-			for (bart_dim_t j = 0; j < list_count(nodes); j++)
+			for (long j = 0; j < list_count(nodes); j++)
 				if (   (1 == list_count(enode_get_iedges(list_get_item(nodes, j))))
 				    || (1 == list_count(enode_get_oedges(list_get_item(nodes, j)))))
 					list_append(end_nodes, list_get_item(nodes, j));
@@ -380,7 +380,7 @@ struct lseg_s md_trace_binary_mask(int N, const bart_dim_t dims[N], complex floa
 		egraph_longest_distance(&dst, &src, nodes, end_nodes);
 
 		list_t path = egraph_shortest_path(nodes, dst, src);
-		bart_dim_t pathlen = list_count(path);
+		long pathlen = list_count(path);
 
 		vec3_t (*pos2)[pathlen] = xmalloc(sizeof(vec3_t[pathlen]));
 		for(int i = 0; i < pathlen; i++) {
@@ -394,7 +394,7 @@ struct lseg_s md_trace_binary_mask(int N, const bart_dim_t dims[N], complex floa
 		pathlen = douglas_peucker(pathlen, (*pos2), tol);
 		grid_to_fov(dims, pathlen, (*pos2));
 
-		debug_printf(DP_DEBUG1, "Found path with %" PRId64 " segments\n", pathlen);
+		debug_printf(DP_DEBUG1, "Found path with %ld segments\n", pathlen);
 
 		lspline_to_segments(pathlen, (*seg) + count2, (*pos2));
 

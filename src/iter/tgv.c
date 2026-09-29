@@ -60,19 +60,19 @@
  * @return            A structure containing the TV regularization operator, which contains
  * 					  a linear operator for the gradient and a proximal operator for the thresholding.
  */
-struct reg tv_reg(bart_flags_t flags, bart_flags_t jflags, float lambda, int N, const bart_dim_t img_dims[N], int tvscales_N, const float tvscales[tvscales_N], const struct linop_s* lop_trafo)
+struct reg tv_reg(unsigned long flags, unsigned long jflags, float lambda, int N, const long img_dims[N], int tvscales_N, const float tvscales[tvscales_N], const struct linop_s* lop_trafo)
 {
 	struct reg reg;
 
 	while ((0 < tvscales_N) && (0. == tvscales[tvscales_N - 1]))
 		tvscales_N--;
 
-	bart_dim_t in2_dims[N];
+	long in2_dims[N];
 
 	if (NULL != lop_trafo) {
 
 		assert(N == linop_domain(lop_trafo)->N);
-		assert(md_check_equal_dims(N, img_dims, linop_domain(lop_trafo)->dims, ~UINT64_C(0)));
+		assert(md_check_equal_dims(N, img_dims, linop_domain(lop_trafo)->dims, ~0UL));
 		assert(N == linop_codomain(lop_trafo)->N);
 
 		md_copy_dims(N, in2_dims, linop_codomain(lop_trafo)->dims);
@@ -109,7 +109,7 @@ struct reg tv_reg(bart_flags_t flags, bart_flags_t jflags, float lambda, int N, 
 	return reg;
 }
 
-static struct reg2 tgv_reg_int(bart_flags_t flags, bart_flags_t jflags, float lambda, int N, const bart_dim_t in_dims[N], bart_dim_t isize, bart_dim_t img_shift, bart_dim_t* ext_shift, const float alpha[2],
+static struct reg2 tgv_reg_int(unsigned long flags, unsigned long jflags, float lambda, int N, const long in_dims[N], long isize, long img_shift, long* ext_shift, const float alpha[2],
 		    int tvscales_N, const float tvscales[tvscales_N], const struct linop_s* lop_trafo)
 {
 	assert(1 <= N);
@@ -119,12 +119,12 @@ static struct reg2 tgv_reg_int(bart_flags_t flags, bart_flags_t jflags, float la
 	while ((0 < tvscales_N) && (0. == tvscales[tvscales_N - 1]))
 		tvscales_N--;
 
-	bart_dim_t in2_dims[N];
+	long in2_dims[N];
 
 	if (NULL != lop_trafo) {
 
 		assert(N == linop_domain(lop_trafo)->N);
-		assert(md_check_equal_dims(N, in_dims, linop_domain(lop_trafo)->dims, ~UINT64_C(0)));
+		assert(md_check_equal_dims(N, in_dims, linop_domain(lop_trafo)->dims, ~0UL));
 		assert(N == linop_codomain(lop_trafo)->N);
 
 		md_copy_dims(N, in2_dims, linop_codomain(lop_trafo)->dims);
@@ -136,7 +136,7 @@ static struct reg2 tgv_reg_int(bart_flags_t flags, bart_flags_t jflags, float la
 
 	const struct linop_s* grad1 = linop_grad_create(N, in2_dims, N, flags);
 
-	bart_dim_t grd_dims[N + 2];
+	long grd_dims[N + 2];
 	md_copy_dims(N + 1, grd_dims, linop_codomain(grad1)->dims);
 	grd_dims[N + 1] = 1;
 
@@ -217,7 +217,7 @@ static struct reg2 tgv_reg_int(bart_flags_t flags, bart_flags_t jflags, float la
  * 		      two linear operators for the gradient and the symmetric gradient
  * 		      and two proximal operators for the thresholding.
  */
-struct reg2 tgv_reg(bart_flags_t flags, bart_flags_t jflags, float lambda, int N, const bart_dim_t in_dims[N], bart_dim_t isize, bart_dim_t* ext_shift, const float alpha[2],
+struct reg2 tgv_reg(unsigned long flags, unsigned long jflags, float lambda, int N, const long in_dims[N], long isize, long* ext_shift, const float alpha[2],
 	int tvscales_N, const float tvscales[tvscales_N], const struct linop_s* lop_trafo)
 {
 	return tgv_reg_int(flags, jflags, lambda, N, in_dims, isize, 0, ext_shift, alpha,
@@ -254,7 +254,7 @@ struct reg2 tgv_reg(bart_flags_t flags, bart_flags_t jflags, float lambda, int N
  * 		       two linear operators for the gradients and two proximal operators for the thresholding.
  */
 
-struct reg2 ictv_reg(bart_flags_t flags, bart_flags_t jflags, float lambda, int N, const bart_dim_t in_dims[N], bart_dim_t isize, bart_dim_t* ext_shift, const float gamma[2],
+struct reg2 ictv_reg(unsigned long flags, unsigned long jflags, float lambda, int N, const long in_dims[N], long isize, long* ext_shift, const float gamma[2],
 		     int tvscales_N, const float tvscales[tvscales_N], int tvscales2_N, const float tvscales2[tvscales2_N], const struct linop_s* lop_trafo)
 {
 	struct reg2 reg2;
@@ -265,12 +265,12 @@ struct reg2 ictv_reg(bart_flags_t flags, bart_flags_t jflags, float lambda, int 
 	while ((0 < tvscales2_N) && (0. == tvscales2[tvscales2_N - 1]))
 		tvscales2_N--;
 
-	bart_dim_t in2_dims[N];
+	long in2_dims[N];
 
 	if (NULL != lop_trafo) {
 
 		assert(N == linop_domain(lop_trafo)->N);
-		assert(md_check_equal_dims(N, in_dims, linop_domain(lop_trafo)->dims, ~UINT64_C(0)));
+		assert(md_check_equal_dims(N, in_dims, linop_domain(lop_trafo)->dims, ~0UL));
 		assert(N == linop_codomain(lop_trafo)->N);
 
 		md_copy_dims(N, in2_dims, linop_codomain(lop_trafo)->dims);
@@ -390,7 +390,7 @@ struct reg2 ictv_reg(bart_flags_t flags, bart_flags_t jflags, float lambda, int 
  * 		       and four proximal operators for the thresholding.
  */
 
-struct reg4 ictgv_reg(bart_flags_t flags, bart_flags_t jflags, float lambda, int N, const bart_dim_t in_dims[N], bart_dim_t isize, bart_dim_t* ext_shift, const float alpha[2],
+struct reg4 ictgv_reg(unsigned long flags, unsigned long jflags, float lambda, int N, const long in_dims[N], long isize, long* ext_shift, const float alpha[2],
 		      const float gamma[2], int tvscales_N, const float tvscales[tvscales_N], int tvscales2_N, const float tvscales2[tvscales2_N], const struct linop_s* lop_trafo)
 {
 	struct reg4 reg4;
@@ -404,12 +404,12 @@ struct reg4 ictgv_reg(bart_flags_t flags, bart_flags_t jflags, float lambda, int
 	while ((0 < tvscales2_N) && (0. == tvscales2[tvscales2_N - 1]))
 		tvscales2_N--;
 
-	bart_dim_t in2_dims[N];
+	long in2_dims[N];
 
 	if (NULL != lop_trafo) {
 
 		assert(N == linop_domain(lop_trafo)->N);
-		assert(md_check_equal_dims(N, in_dims, linop_domain(lop_trafo)->dims, ~UINT64_C(0)));
+		assert(md_check_equal_dims(N, in_dims, linop_domain(lop_trafo)->dims, ~0UL));
 
 		assert(N == linop_codomain(lop_trafo)->N);
 
@@ -437,7 +437,7 @@ struct reg4 ictgv_reg(bart_flags_t flags, bart_flags_t jflags, float lambda, int
 				linop_cdiag_create(N + 1, linop_codomain(grad1)->dims, MD_BIT(N), ztvscales));
 	}
 
-	bart_dim_t grd_dims[N + 2];
+	long grd_dims[N + 2];
 	md_copy_dims(N + 1, grd_dims, linop_codomain(grad1)->dims);
 	grd_dims[N + 1] = 1;
 
@@ -448,7 +448,7 @@ struct reg4 ictgv_reg(bart_flags_t flags, bart_flags_t jflags, float lambda, int
 	// \Delta ( z )
 	auto grad1d = linop_chain_FF(grad1c, grad1);
 
-	bart_dim_t shift_conv = *ext_shift;
+	long shift_conv = *ext_shift;
 	*ext_shift += md_calc_size(N, grd_dims);
 
 	// \Delta ( x ) + u

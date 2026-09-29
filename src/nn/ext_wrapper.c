@@ -20,7 +20,7 @@
 
 #include "ext_wrapper.h"
 
-const struct nlop_s* nlop_external_graph_create(const char* path, int OO, const int DO[OO], const bart_dim_t* odims[OO], int II, const int DI[II], const bart_dim_t* idims[II], bool init_gpu, const char* tf_signature_key)
+const struct nlop_s* nlop_external_graph_create(const char* path, int OO, const int DO[OO], const long* odims[OO], int II, const int DI[II], const long* idims[II], bool init_gpu, const char* tf_signature_key)
 {
 	const struct nlop_s* nlop;
 
@@ -35,7 +35,7 @@ const struct nlop_s* nlop_external_graph_create(const char* path, int OO, const 
 
 		assert(II == nlop_get_nr_in_args(nlop));
 
-		bart_dim_t batch_size = 1;
+		long batch_size = 1;
 
 		for (int i = 0; i < II; i++) {
 

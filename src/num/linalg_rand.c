@@ -40,7 +40,7 @@ static void assert_linop(const struct operator_s* A, const struct operator_s* AH
 	assert(iovec_check(operator_domain(AH), cod->N, cod->dims, cod->strs));
 }
 
-static bart_dim_t linop_get_columns(const struct operator_s* A, const struct operator_s* AH, bart_dim_t K)
+static long linop_get_columns(const struct operator_s* A, const struct operator_s* AH, long K)
 {
 	assert_linop(A, AH);
 
@@ -57,7 +57,7 @@ static bart_dim_t linop_get_columns(const struct operator_s* A, const struct ope
 	return md_calc_size(batch_dim, dom->dims);
 }
 
-static bart_dim_t linop_get_rows(const struct operator_s* A, const struct operator_s* AH, bart_dim_t K)
+static long linop_get_rows(const struct operator_s* A, const struct operator_s* AH, long K)
 {
 	assert_linop(A, AH);
 
@@ -74,7 +74,7 @@ static bart_dim_t linop_get_rows(const struct operator_s* A, const struct operat
 	return md_calc_size(batch_dim, cod->dims);
 }
 
-static bart_dim_t linop_get_blocksize(const struct operator_s* A, const struct operator_s* AH)
+static long linop_get_blocksize(const struct operator_s* A, const struct operator_s* AH)
 {
 	assert_linop(A, AH);
 
@@ -89,15 +89,15 @@ static bart_dim_t linop_get_blocksize(const struct operator_s* A, const struct o
 
 
 // algorithm 4.4
-void randomized_subspace_iteration_block(const struct operator_s* A, const struct operator_s* AH, int q, bart_dim_t M, bart_dim_t K, complex float Q[K][M])
+void randomized_subspace_iteration_block(const struct operator_s* A, const struct operator_s* AH, int q, long M, long K, complex float Q[K][M])
 {
 	assert(K == linop_get_blocksize(A, AH));
 	assert(M == linop_get_rows(A, AH, K));
-	bart_dim_t N = linop_get_columns(A, AH, K);
+	long N = linop_get_columns(A, AH, K);
 
 	complex float* Qptr = &Q[0][0];
-	bart_dim_t cdims[2] = { M, K };
-	bart_dim_t ddims[2] = { N, K };
+	long cdims[2] = { M, K };
+	long ddims[2] = { N, K };
 
 	assert(K <= N);
 	assert(K <= M);
@@ -122,12 +122,12 @@ void randomized_subspace_iteration_block(const struct operator_s* A, const struc
 
 
 // algorithm 5.1
-void randomized_svd_block(const struct operator_s* A, const struct operator_s* AH, int q, bart_dim_t M, bart_dim_t N, bart_dim_t K, bart_dim_t P,
+void randomized_svd_block(const struct operator_s* A, const struct operator_s* AH, int q, long M, long N, long K, long P,
 		     complex float U[K][M],
 		     complex float VH[N][K],
 		     float S[K])
 {
-	bart_dim_t KP = K + P;
+	long KP = K + P;
 	assert(KP == linop_get_blocksize(A, AH));
 	assert(M == linop_get_rows(A, AH, KP));
 	assert(N == linop_get_columns(A, AH, KP));
@@ -175,9 +175,9 @@ void randomized_svd_block(const struct operator_s* A, const struct operator_s* A
 }
 
 //FIXME: maybe we should use the cholesky decomposition as in algorithm 5.5
-void randomized_eig_block(const struct operator_s* op, int q, bart_dim_t N, bart_dim_t K, bart_dim_t P, complex float U[K][N], float S[K])
+void randomized_eig_block(const struct operator_s* op, int q, long N, long K, long P, complex float U[K][N], float S[K])
 {
-	bart_dim_t KP = K + P;
+	long KP = K + P;
 	assert(KP == linop_get_blocksize(op, op));
 	assert(N == linop_get_columns(op, op, KP));
 
@@ -211,9 +211,9 @@ struct matmul_s {
 
 	operator_data_t super;
 
-	bart_dim_t M;
-	bart_dim_t N;
-	bart_dim_t KP;
+	long M;
+	long N;
+	long KP;
 
 	const complex float* mat;
 	bool adjoint;
@@ -239,7 +239,7 @@ static void matmul_free(const operator_data_t* data)
 }
 
 // this is a simple wrapper to be independent of the linop implementation in linops/fmac.c
-static const struct operator_s* operator_matmul_create(bart_dim_t M, bart_dim_t N, bart_dim_t KP, const complex float mat[N][M], bool adjoint)
+static const struct operator_s* operator_matmul_create(long M, long N, long KP, const complex float mat[N][M], bool adjoint)
 {
 	PTR_ALLOC(struct matmul_s, data);
 	SET_TYPEID(matmul_s, data);
@@ -256,11 +256,11 @@ static const struct operator_s* operator_matmul_create(bart_dim_t M, bart_dim_t 
 		return operator_create(2, MD_DIMS(M, KP), 2, MD_DIMS(N, KP), CAST_UP(PTR_PASS(data)), matmul_apply, matmul_free);
 }
 
-void randomized_svd_dense(int q, bart_dim_t M, bart_dim_t N, bart_dim_t K, bart_dim_t P,
+void randomized_svd_dense(int q, long M, long N, long K, long P,
 		     complex float U[K][M], complex float VH[N][K], float S[K],
 		     const complex float mat[N][M])
 {
-	bart_dim_t KP = K + P;
+	long KP = K + P;
 
 	const struct operator_s* A = operator_matmul_create(M, N, KP, mat, false);
 	const struct operator_s* AH = operator_matmul_create(M, N, KP, mat, true);
@@ -271,9 +271,9 @@ void randomized_svd_dense(int q, bart_dim_t M, bart_dim_t N, bart_dim_t K, bart_
 	operator_free(AH);
 }
 
-void randomized_eig_dense(int q, bart_dim_t N, bart_dim_t K, bart_dim_t P, complex float U[K][N], float S[K], const complex float mat[N][N])
+void randomized_eig_dense(int q, long N, long K, long P, complex float U[K][N], float S[K], const complex float mat[N][N])
 {
-	bart_dim_t KP = K + P;
+	long KP = K + P;
 	const struct operator_s* A = operator_matmul_create(N, N, KP, mat, false);
 
 	randomized_eig_block(A, q, N, K, P, U, S);

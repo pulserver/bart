@@ -37,19 +37,19 @@ struct checkpoint_s {
 	int II;
 	int OO;
 
-	bart_dim_t loop_size;
+	long loop_size;
 
 	int* DI;
-	const bart_dim_t** idims;
+	const long** idims;
 	complex float** inputs;
-	bart_stride_t* in_offsets;
+	long* in_offsets;
 
 	complex float** der_in;
 	complex float** adj_out;
 
 	int* DO;
-	const bart_dim_t** odims;
-	bart_stride_t* out_offsets;
+	const long** odims;
+	long* out_offsets;
 
 	complex float** der_out;
 	complex float** adj_in;
@@ -151,7 +151,7 @@ static void checkpoint_fun(const nlop_data_t* _data, int N, complex float* args[
 	if ((!data->clear_mem) && (1 == data->loop_size))
 		nlop_set_derivatives(data->nlop, II, OO, (*der_requested));
 
-	for (bart_dim_t i = 0; i < data->loop_size; i++) {
+	for (long i = 0; i < data->loop_size; i++) {
 
 		complex float* targs[N];
 
@@ -167,7 +167,7 @@ static void checkpoint_fun(const nlop_data_t* _data, int N, complex float* args[
 	checkpoint_free_der(data);
 }
 
-static void checkpoint_re_evaluate(struct checkpoint_s* d, bart_dim_t idx)
+static void checkpoint_re_evaluate(struct checkpoint_s* d, long idx)
 {
 	bool (*der_requested)[d->II][d->OO] = (void*)d->der_requested;
 	nlop_set_derivatives(d->nlop, d->II, d->OO, (*der_requested));
@@ -197,7 +197,7 @@ static void checkpoint_eval_der(struct checkpoint_s* d, int i, const complex flo
 	const struct operator_s* der_ops[d->OO];
 
 	complex float* der_out_tmp[d->OO];
-	bart_stride_t offset[d->OO];
+	long offset[d->OO];
 
 	for (int j = 0; j < d->OO; j++) {
 
@@ -271,8 +271,8 @@ static void checkpoint_eval_adj(struct checkpoint_s* d, int o, const complex flo
 
 	complex float* adj_out_tmp[d->II];
 	complex float* adj_out_tmp_loop[d->II];
-	bart_stride_t offset[d->II];
-	bart_flags_t sum_flag = 0;
+	long offset[d->II];
+	unsigned long sum_flag = 0;
 
 	for (int j = 0; j < d->II; j++) {
 
@@ -407,7 +407,7 @@ static const struct graph_s* nlop_graph_checkpointing(const struct operator_s* o
 	return result;
 }
 
-static const struct nlop_s* nlop_checkpoint_loop_create(const struct nlop_s* nlop, bool der_once, bool clear_mem, bart_dim_t loop_size, int II, int iloop_dim[II], int OO, int oloop_dim[OO])
+static const struct nlop_s* nlop_checkpoint_loop_create(const struct nlop_s* nlop, bool der_once, bool clear_mem, long loop_size, int II, int iloop_dim[II], int OO, int oloop_dim[OO])
 {
 	PTR_ALLOC(struct checkpoint_s, d);
 	SET_TYPEID(checkpoint_s, d);
@@ -419,9 +419,9 @@ static const struct nlop_s* nlop_checkpoint_loop_create(const struct nlop_s* nlo
 	int max_DO = 0;
 
 	PTR_ALLOC(int[OO], DO);
-	PTR_ALLOC(const bart_dim_t*[OO], odims);
+	PTR_ALLOC(const long*[OO], odims);
 	PTR_ALLOC(int[II], DI);
-	PTR_ALLOC(const bart_dim_t*[II], idims);
+	PTR_ALLOC(const long*[II], idims);
 
 	for (int i = 0; i < OO; i++) {
 
@@ -429,7 +429,7 @@ static const struct nlop_s* nlop_checkpoint_loop_create(const struct nlop_s* nlo
 		(*DO)[i] = iov->N;
 		max_DO = MAX(max_DO, iov->N);
 
-		PTR_ALLOC(bart_dim_t[iov->N], tdims);
+		PTR_ALLOC(long[iov->N], tdims);
 		md_copy_dims(iov->N, *tdims, iov->dims);
 
 		if (1 < loop_size) {
@@ -447,7 +447,7 @@ static const struct nlop_s* nlop_checkpoint_loop_create(const struct nlop_s* nlo
 		(*DI)[i] = iov->N;
 		max_DI = MAX(max_DI, iov->N);
 
-		PTR_ALLOC(bart_dim_t[iov->N], tdims);
+		PTR_ALLOC(long[iov->N], tdims);
 		md_copy_dims(iov->N, *tdims, iov->dims);
 
 		if ((1 < loop_size) && (0 <= iloop_dim[i])) {
@@ -502,8 +502,8 @@ static const struct nlop_s* nlop_checkpoint_loop_create(const struct nlop_s* nlo
 		d->der_out[i] = NULL;
 	}
 
-	bart_dim_t nl_odims[OO][max_DO];
-	bart_dim_t nl_idims[II][max_DI];
+	long nl_odims[OO][max_DO];
+	long nl_idims[II][max_DI];
 
 	for (int i = 0; i < OO; i++){
 
@@ -518,8 +518,8 @@ static const struct nlop_s* nlop_checkpoint_loop_create(const struct nlop_s* nlo
 	}
 
 	d->loop_size = 1;
-	d->in_offsets = *TYPE_ALLOC(bart_dim_t[II]);
-	d->out_offsets = *TYPE_ALLOC(bart_dim_t[OO]);
+	d->in_offsets = *TYPE_ALLOC(long[II]);
+	d->out_offsets = *TYPE_ALLOC(long[OO]);
 	md_set_dims(II, d->in_offsets, 0);
 	md_set_dims(OO, d->out_offsets, 0);
 
@@ -527,11 +527,11 @@ static const struct nlop_s* nlop_checkpoint_loop_create(const struct nlop_s* nlo
 
 		d->loop_size = loop_size;
 
-		bart_stride_t nl_ostrs[OO][max_DO];
-		bart_stride_t nl_istrs[II][max_DI];
+		long nl_ostrs[OO][max_DO];
+		long nl_istrs[II][max_DI];
 
-		const bart_stride_t* nl_ostrs2[OO];
-		const bart_stride_t* nl_istrs2[II];
+		const long* nl_ostrs2[OO];
+		const long* nl_istrs2[II];
 
 		for (int i = 0; i < II; i++) {
 
@@ -539,14 +539,14 @@ static const struct nlop_s* nlop_checkpoint_loop_create(const struct nlop_s* nlo
 			nl_istrs2[i] = nl_istrs[i];
 
 			if (0 <= iloop_dim[i])
-				d->in_offsets[i] = nl_istrs[i][iloop_dim[i]] / (bart_stride_t)CFL_SIZE;
+				d->in_offsets[i] = nl_istrs[i][iloop_dim[i]] / (long)CFL_SIZE;
 		}
 
 		for (int o = 0; o < OO; o++) {
 
 			md_calc_strides(max_DO, nl_ostrs[o], nl_odims[o], CFL_SIZE);
 			nl_ostrs2[o] = nl_ostrs[o];
-			d->out_offsets[o] = nl_istrs[o][oloop_dim[o]] / (bart_stride_t)CFL_SIZE;
+			d->out_offsets[o] = nl_istrs[o][oloop_dim[o]] / (long)CFL_SIZE;
 		}
 
 		d->nlop = nlop_copy_wrapper_F(OO, nl_ostrs2, II, nl_istrs2, d->nlop);
@@ -659,7 +659,7 @@ const struct nlop_s* nlop_loop_generic_F(int N, const struct nlop_s* nlop, int I
 	return result;
 }
 
-const struct nlop_s* nlop_loop_F(int N, const struct nlop_s* nlop, bart_flags_t dup_flag, int loop_dim)
+const struct nlop_s* nlop_loop_F(int N, const struct nlop_s* nlop, unsigned long dup_flag, int loop_dim)
 {
 	int II = nlop_get_nr_in_args(nlop);
 	int OO = nlop_get_nr_out_args(nlop);

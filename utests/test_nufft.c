@@ -22,9 +22,9 @@
 
 
 enum { N = 8 };
-static const bart_dim_t ksp_dims[N] = { 1, 5, 1, 1, 1, 1, 1, 1 };
-static const bart_dim_t cim_dims[N] = { 8, 8, 1, 1, 1, 1, 1, 1 };
-static const bart_dim_t trj_dims[N] = { 3, 5, 1, 1, 1, 1, 1, 1 };
+static const long ksp_dims[N] = { 1, 5, 1, 1, 1, 1, 1, 1 };
+static const long cim_dims[N] = { 8, 8, 1, 1, 1, 1, 1, 1 };
+static const long trj_dims[N] = { 3, 5, 1, 1, 1, 1, 1, 1 };
 
 static const complex float traj[5][3] = {
 	{ 0., 0. , 0. },
@@ -48,11 +48,11 @@ static struct linop_s* create_nufft(bool toeplitz, bool use_weights)
 }
 
 
-static const bart_dim_t ci2_dims[N] = { 8, 8, 1, 1, 1, 1, 2, 1 };
-static const bart_dim_t ks2_dims[N] = { 1, 5, 1, 1, 1, 1, 2, 1 };
-static const bart_dim_t tr2_dims[N] = { 3, 5, 1, 1, 1, 1, 1, 1 };
-static const bart_dim_t bas_dims[N] = { 1, 1, 1, 1, 1, 3, 2, 1 };
-static const bart_dim_t wg2_dims[N] = { 1, 5, 1, 1, 1, 3, 1, 1 };
+static const long ci2_dims[N] = { 8, 8, 1, 1, 1, 1, 2, 1 };
+static const long ks2_dims[N] = { 1, 5, 1, 1, 1, 1, 2, 1 };
+static const long tr2_dims[N] = { 3, 5, 1, 1, 1, 1, 1, 1 };
+static const long bas_dims[N] = { 1, 1, 1, 1, 1, 3, 2, 1 };
+static const long wg2_dims[N] = { 1, 5, 1, 1, 1, 3, 1, 1 };
 
 
 

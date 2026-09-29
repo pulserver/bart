@@ -56,7 +56,7 @@ int main_ecalib(int argc, char* argv[argc])
 		ARG_OUTFILE(false, &emaps_file, "ev-maps"),
 	};
 
-	bart_dim_t calsize[3] = { 24, 24, 24 };
+	long calsize[3] = { 24, 24, 24 };
 	int maps = 2;
 	bool one = false;
 	bool calcen = false;
@@ -117,7 +117,7 @@ int main_ecalib(int argc, char* argv[argc])
 	}
 
 	int N = DIMS;
-	bart_dim_t ksp_dims[N];
+	long ksp_dims[N];
 
 	complex float* in_data = load_cfl(in_file, N, ksp_dims);
 
@@ -131,7 +131,7 @@ int main_ecalib(int argc, char* argv[argc])
 		error("MAPS dimension is not of size one.\n");
 
 
-	bart_dim_t cal_dims[N];
+	long cal_dims[N];
 	complex float* cal_data = NULL;
 
 	if (!calcen) {
@@ -190,12 +190,12 @@ int main_ecalib(int argc, char* argv[argc])
 	if (one) {
 
 #if 0
-		bart_dim_t maps = out_dims[4];
+		long maps = out_dims[4];
 
 		assert(caldims[3] == out_dims[3]);
 		assert(maps <= channels);
 #endif
-		bart_dim_t cov_dims[4];
+		long cov_dims[4];
 
 		calone_dims(&conf, cov_dims, channels);
 		complex float* imgcov = md_alloc(4, cov_dims, CFL_SIZE);
@@ -213,8 +213,8 @@ int main_ecalib(int argc, char* argv[argc])
 
 	} else {
 
-		bart_dim_t out_dims[N];
-		bart_dim_t map_dims[N];
+		long out_dims[N];
+		long map_dims[N];
 
 		for (int i = 0; i < N; i++) {
 

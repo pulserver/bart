@@ -28,7 +28,7 @@
 
 // typedef complex float (*sample_fun_t)(const long pos[]);
 
-static void md_zsample2(int N, const bart_dim_t dims[N], bart_flags_t flags, complex float* out, zsample_fun_t fun)
+static void md_zsample2(int N, const long dims[N], unsigned long flags, complex float* out, zsample_fun_t fun)
 {
 	bool buf = is_vptr(out);
 #ifdef USE_GPU
@@ -46,12 +46,12 @@ static void md_zsample2(int N, const bart_dim_t dims[N], bart_flags_t flags, com
 		return;
 	}
 
-	bart_stride_t strs[N];
+	long strs[N];
 	md_calc_strides(N, strs, dims, 1);	// we use size = 1 here
 
-	bart_dim_t* strsp = strs;	// because of clang
+	long* strsp = strs;	// because of clang
 
-	NESTED(void, sample_kernel, (const bart_dim_t pos[]))
+	NESTED(void, sample_kernel, (const long pos[]))
 	{
 		out[md_calc_offset(N, strsp, pos)] = NESTED_CALL(fun, (pos));
 	};
@@ -59,17 +59,17 @@ static void md_zsample2(int N, const bart_dim_t dims[N], bart_flags_t flags, com
 	md_parallel_loop(N, dims, flags, sample_kernel);
 }
 
-void (md_zsample)(int N, const bart_dim_t dims[N], complex float* out, zsample_fun_t fun)
+void (md_zsample)(int N, const long dims[N], complex float* out, zsample_fun_t fun)
 {
 	md_zsample2(N, dims, 0U, out, fun);
 }
 
-void (md_parallel_zsample)(int N, const bart_dim_t dims[N], complex float* out, zsample_fun_t fun)
+void (md_parallel_zsample)(int N, const long dims[N], complex float* out, zsample_fun_t fun)
 {
-	md_zsample2(N, dims, ~UINT64_C(0), out, fun);
+	md_zsample2(N, dims, ~0U, out, fun);
 }
 
-static void (md_zzsample2)(int N, const bart_dim_t dims[N], bart_flags_t flags, complex double* out, zzsample_fun_t fun)
+static void (md_zzsample2)(int N, const long dims[N], unsigned long flags, complex double* out, zzsample_fun_t fun)
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(out)) {
@@ -84,12 +84,12 @@ static void (md_zzsample2)(int N, const bart_dim_t dims[N], bart_flags_t flags, 
 	}
 #endif
 
-	bart_stride_t strs[N];
+	long strs[N];
 	md_calc_strides(N, strs, dims, 1);	// we use size = 1 here
 
-	bart_dim_t* strsp = strs;	// because of clang
+	long* strsp = strs;	// because of clang
 
-	NESTED(void, sample_kernel, (const bart_dim_t pos[]))
+	NESTED(void, sample_kernel, (const long pos[]))
 	{
 		out[md_calc_offset(N, strsp, pos)] = NESTED_CALL(fun, (pos));
 	};
@@ -97,24 +97,24 @@ static void (md_zzsample2)(int N, const bart_dim_t dims[N], bart_flags_t flags, 
 	md_parallel_loop(N, dims, flags, sample_kernel);
 }
 
-void (md_zzsample)(int N, const bart_dim_t dims[N], complex double* out, zzsample_fun_t fun)
+void (md_zzsample)(int N, const long dims[N], complex double* out, zzsample_fun_t fun)
 {
 	md_zzsample2(N, dims, 0U, out, fun);
 }
 
-void (md_parallel_zzsample)(int N, const bart_dim_t dims[N], complex double* out, zzsample_fun_t fun)
+void (md_parallel_zzsample)(int N, const long dims[N], complex double* out, zzsample_fun_t fun)
 {
-	md_zzsample2(N, dims, ~UINT64_C(0), out, fun);
+	md_zzsample2(N, dims, ~0U, out, fun);
 }
 
-static void md_sample2(int N, const bart_dim_t dims[N], bart_flags_t flags, float* out, sample_fun_t fun)
+static void md_sample2(int N, const long dims[N], unsigned long flags, float* out, sample_fun_t fun)
 {
-	bart_stride_t strs[N];
+	long strs[N];
 	md_calc_strides(N, strs, dims, 1);	// we use size = 1 here
 
-	bart_dim_t* strsp = strs;	// because of clang
+	long* strsp = strs;	// because of clang
 
-	NESTED(void, sample_kernel, (const bart_dim_t pos[]))
+	NESTED(void, sample_kernel, (const long pos[]))
 	{
 		out[md_calc_offset(N, strsp, pos)] = NESTED_CALL(fun, (pos));
 	};
@@ -122,25 +122,25 @@ static void md_sample2(int N, const bart_dim_t dims[N], bart_flags_t flags, floa
 	md_parallel_loop(N, dims, flags, sample_kernel);
 }
 
-void (md_sample)(int N, const bart_dim_t dims[N], float* out, sample_fun_t fun)
+void (md_sample)(int N, const long dims[N], float* out, sample_fun_t fun)
 {
 	md_sample2(N, dims, 0U, out, fun);
 }
 
-void (md_parallel_sample)(int N, const bart_dim_t dims[N], float* out, sample_fun_t fun)
+void (md_parallel_sample)(int N, const long dims[N], float* out, sample_fun_t fun)
 {
-	md_sample2(N, dims, ~UINT64_C(0), out, fun);
+	md_sample2(N, dims, ~0U, out, fun);
 }
 
 
-void md_zmap(int N, const bart_dim_t dims[N], complex float* out, const complex float* in, map_fun_t fun)
+void md_zmap(int N, const long dims[N], complex float* out, const complex float* in, map_fun_t fun)
 {
-	bart_stride_t strs[N];
+	long strs[N];
 	md_calc_strides(N, strs, dims, 1); // we use size = 1 here
 
-	bart_dim_t* strsp = strs; // because of clang
+	long* strsp = strs; // because of clang
 
-	NESTED(complex float, map_kernel, (const bart_dim_t pos[]))
+	NESTED(complex float, map_kernel, (const long pos[]))
 	{
 		return fun(in[md_calc_offset(N, strsp, pos)]);
 	};
@@ -149,9 +149,9 @@ void md_zmap(int N, const bart_dim_t dims[N], complex float* out, const complex 
 }
 
 
-void md_zgradient(int N, const bart_dim_t dims[N], complex float* out, const complex float grad[N])
+void md_zgradient(int N, const long dims[N], complex float* out, const complex float grad[N])
 {
-	bart_dim_t ndims[N];
+	long ndims[N];
 	complex float ngrad[N];
 	int nN = 0;
 
@@ -168,7 +168,7 @@ void md_zgradient(int N, const bart_dim_t dims[N], complex float* out, const com
 	// clang
 	const complex float* grad2 = ngrad;
 
-	NESTED(complex float, gradient_kernel, (const bart_dim_t pos[]))
+	NESTED(complex float, gradient_kernel, (const long pos[]))
 	{
 		complex float val = 0.;
 

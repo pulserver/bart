@@ -22,7 +22,7 @@ struct rvc_s {
 	linop_data_t super;
 
 	int N;
-	const bart_dim_t* dims;
+	const long* dims;
 };
 
 static DEF_TYPEID(rvc_s);
@@ -43,12 +43,12 @@ static void rvc_free(const linop_data_t* _data)
 	xfree(data);
 }
 
-struct linop_s* linop_realval_create(int N, const bart_dim_t dims[N])
+struct linop_s* linop_realval_create(int N, const long dims[N])
 {
 	PTR_ALLOC(struct rvc_s, data);
 	SET_TYPEID(rvc_s, data);
 
-	PTR_ALLOC(bart_dim_t[N], dims2);
+	PTR_ALLOC(long[N], dims2);
 	md_copy_dims(N, *dims2, dims);
 
 	data->N = N;

@@ -78,7 +78,7 @@ int main_gmm(int argc, char* argv[argc])
 	 * 1: nr of Gaussians
 	 **/
 
-	bart_dim_t dims[D];
+	long dims[D];
 	const complex float* mean = load_cfl(mean_file, D, dims);
 
 	int N = dims[0];
@@ -88,13 +88,13 @@ int main_gmm(int argc, char* argv[argc])
 
 	debug_printf(DP_DEBUG1, "Gaussians: %d Dimension: %d\n", M, N);
 
-	bart_dim_t vdims[D];
+	long vdims[D];
 	const complex float* vars = load_cfl(var_file, D, vdims);
 
 	assert(md_check_compat(D, MD_BIT(0), dims, vdims));
 	assert(!md_check_dimensions(D, vdims, ~MD_BIT(0)));
 
-	bart_dim_t wdims[D];
+	long wdims[D];
 	const complex float* wght = load_cfl(wght_file, D, wdims);
 
 	assert(md_check_compat(D, MD_BIT(0), dims, wdims));
@@ -108,12 +108,12 @@ int main_gmm(int argc, char* argv[argc])
 	unmap_cfl(D, wdims, wght);
 
 
-	bart_dim_t vdims1[3] = { 1, 1, M };
+	long vdims1[3] = { 1, 1, M };
 
-	bart_dim_t vdims2[3] = { N, N, M };
+	long vdims2[3] = { N, N, M };
 	complex float *vars2 = md_alloc(3, vdims2, CFL_SIZE);
 
-	bart_dim_t edims[3] = { N, N, 1 };
+	long edims[3] = { N, N, 1 };
 	complex float *eye = md_alloc(3, edims, CFL_SIZE);
 
 	mat_identity(N, N, (complex float(*)[])eye);
@@ -123,7 +123,7 @@ int main_gmm(int argc, char* argv[argc])
 
 	unmap_cfl(D, vdims, vars);
 
-	bart_dim_t odims[4] = { 1, 1, 1, 1 };
+	long odims[4] = { 1, 1, 1, 1 };
 
 	if (score || sample)
 		odims[0] = N;
@@ -136,7 +136,7 @@ int main_gmm(int argc, char* argv[argc])
 
 	} else {
 
-		bart_dim_t pdims[4];
+		long pdims[4];
 		const complex float* p = load_cfl(pnt_file, 4, pdims);
 
 		assert(md_check_compat(D, MD_BIT(1), dims, pdims));

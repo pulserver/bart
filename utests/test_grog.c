@@ -26,17 +26,17 @@ static bool test_grog(void)
 {
 	enum { N = 16 };
 
-	bart_dim_t X = 15; // Samples
-	bart_dim_t Y = 6; // Spokes
-	bart_dim_t C = 4; // Coils
+	long X = 15; // Samples
+	long Y = 6; // Spokes
+	long C = 4; // Coils
 	int OV = 2;
 
 	// oversampling
 	X *= OV;
 
-	bart_dim_t tdims[DIMS] = { 3, X, Y, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	bart_dim_t ddims[DIMS] = { 1, X, Y, C, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	bart_dim_t lnG_dims[DIMS] = { 3, 1, 1, C, C, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	long tdims[DIMS] = { 3, X, Y, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	long ddims[DIMS] = { 1, X, Y, C, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	long lnG_dims[DIMS] = { 3, 1, 1, C, C, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
 	// 1. Generate test samples on a radial non-Cartesian trajectory
 
@@ -51,7 +51,7 @@ static bool test_grog(void)
 	calc_base_angles(base_angle, 5, 1, conf);
 
 	int p = 0;
-	bart_dim_t pos[DIMS] = { 0 };
+	long pos[DIMS] = { 0 };
 
 	do {
 		int i = pos[PHS1_DIM];
@@ -72,7 +72,7 @@ static bool test_grog(void)
 
 		p++;
 
-	} while (md_next(DIMS, tdims, ~UINT64_C(1), pos));
+	} while (md_next(DIMS, tdims, ~1UL, pos));
 
 	// 2. Generate test data
 
@@ -81,7 +81,7 @@ static bool test_grog(void)
 	struct coil_opts copts = coil_opts_defaults;
 	copts.ctype = HEAD_2D_8CH;
 
-	bart_stride_t tstrs[DIMS] = { 0 };
+	long tstrs[DIMS] = { 0 };
 	md_calc_strides(DIMS, tstrs, tdims, CFL_SIZE);
 
 	calc_phantom(ddims, data, false, true, tstrs, traj, &copts);
@@ -95,20 +95,20 @@ static bool test_grog(void)
 
 	// 4. Test calibration accuracy by shifting sample to its neighbor along spoke and compare both
 
-	bart_dim_t shift_dims[DIMS];
+	long shift_dims[DIMS];
 	md_copy_dims(DIMS, shift_dims, ddims);
 	shift_dims[PHS1_DIM] -= 1;
 
 	complex float* shift = md_alloc(DIMS, shift_dims, CFL_SIZE);
 	complex float* ref = md_alloc(DIMS, shift_dims, CFL_SIZE);
 
-	bart_dim_t pos_shift[DIMS] = { [0 ... DIMS - 1] = 0 };
+	long pos_shift[DIMS] = { [0 ... DIMS - 1] = 0 };
 	md_copy_block(DIMS, pos_shift, shift_dims, shift, ddims, data, CFL_SIZE);
 
 	pos_shift[PHS1_DIM] = 1;
 	md_copy_block(DIMS, pos_shift, shift_dims, ref, ddims, data, CFL_SIZE);
 
-	bart_stride_t lnG_strs[DIMS] = { 0 };
+	long lnG_strs[DIMS] = { 0 };
 	md_calc_strides(DIMS, lnG_strs, lnG_dims, CFL_SIZE);
 
 	complex float* diff = md_alloc(DIMS, tdims, CFL_SIZE);
@@ -119,11 +119,11 @@ static bool test_grog(void)
 
 			// Shift sample at position r to position r+1
 
-			bart_dim_t pos_dataframe[DIMS] = { [0 ... DIMS - 1] = 0 };
+			long pos_dataframe[DIMS] = { [0 ... DIMS - 1] = 0 };
 			pos_dataframe[PHS1_DIM] = r;
 			pos_dataframe[PHS2_DIM] = s;
 
-			bart_dim_t tmp_data_dims[DIMS];
+			long tmp_data_dims[DIMS];
 			md_select_dims(DIMS, ~(PHS1_FLAG|PHS2_FLAG), tmp_data_dims, shift_dims);
 
 			complex float* tmp_data = md_alloc(DIMS, tmp_data_dims, CFL_SIZE);
@@ -132,14 +132,14 @@ static bool test_grog(void)
 			md_copy_block(DIMS, pos_dataframe, tmp_data_dims, tmp_data, shift_dims, shift, CFL_SIZE);
 
 			// Transposed data storage for tenmul operation
-			bart_dim_t tmp_data_dimsT[DIMS];
+			long tmp_data_dimsT[DIMS];
 			md_transpose_dims(DIMS, COIL_DIM, MAPS_DIM, tmp_data_dimsT, tmp_data_dims);
 			complex float* tmp_dataT = md_alloc(DIMS, tmp_data_dimsT, CFL_SIZE);
 
-			bart_dim_t pos[DIMS] = { [0 ... DIMS - 1] = 0 };
+			long pos[DIMS] = { [0 ... DIMS - 1] = 0 };
 			md_copy_dims(DIMS, pos, pos_dataframe);
 
-			bart_dim_t tmp_op_dims[DIMS];
+			long tmp_op_dims[DIMS];
 			md_select_dims(DIMS, ~READ_FLAG, tmp_op_dims, lnG_dims);
 
 			complex float* tmp_op = md_alloc(DIMS, tmp_op_dims, CFL_SIZE);
@@ -153,12 +153,12 @@ static bool test_grog(void)
 
 				pos[READ_DIM] = d;
 				pos[PHS1_DIM] = r;
-				bart_dim_t ind_sample = md_calc_offset(DIMS, tstrs, pos) / (bart_stride_t)CFL_SIZE;
+				long ind_sample = md_calc_offset(DIMS, tstrs, pos) / (long)CFL_SIZE;
 
 				complex float coord = traj[ind_sample];
 
 				pos[PHS1_DIM]++;
-				bart_dim_t ind_sample2 = md_calc_offset(DIMS, tstrs, pos) / (bart_stride_t)CFL_SIZE;
+				long ind_sample2 = md_calc_offset(DIMS, tstrs, pos) / (long)CFL_SIZE;
 
 				complex float coord_r = traj[ind_sample2];
 
@@ -167,7 +167,7 @@ static bool test_grog(void)
 				diff[ind_sample] = nm;
 
 				// Calculate nm operator for sampling point
-				bart_dim_t pos_op[DIMS] = { [0 ... DIMS - 1] = 0 };
+				long pos_op[DIMS] = { [0 ... DIMS - 1] = 0 };
 				pos_op[READ_DIM] = d;
 
 				md_clear(DIMS, tmp_op_dims, tmp_op, CFL_SIZE);

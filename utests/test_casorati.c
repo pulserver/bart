@@ -23,8 +23,8 @@ static bool test_linop_casorati(void)
 {
 	enum { N = 4 };
 
-	const bart_dim_t dims[N] = { 12, 1, 12, 8 };
-	const bart_dim_t kdim[N] = {  5, 5, 12, 1 };
+	const long dims[N] = { 12, 1, 12, 8 };
+	const long kdim[N] = {  5, 5, 12, 1 };
 
 	complex float* data = md_alloc(N, dims, CFL_SIZE);
 	md_gaussian_rand(N, dims, data);
@@ -45,8 +45,8 @@ static bool test_linop_casoratiH(void)
 {
 	enum { N = 4 };
 
-	const bart_dim_t dims[N] = { 12, 1, 12, 8 };
-	const bart_dim_t kdim[N] = {  5, 5, 12, 1 };
+	const long dims[N] = { 12, 1, 12, 8 };
+	const long kdim[N] = {  5, 5, 12, 1 };
 
 	complex float* data = md_alloc(N, dims, CFL_SIZE);
 	md_gaussian_rand(N, dims, data);
@@ -66,10 +66,10 @@ UT_REGISTER_TEST(test_linop_casoratiH);
 
 static bool test_covariance_function(void)
 {
-	bart_dim_t kdims[4] = { 6, 6, 1, 32 };
-	bart_dim_t dims[4] = { 24, 24, 1, 32 };
+	long kdims[4] = { 6, 6, 1, 32 };
+	long dims[4] = { 24, 24, 1, 32 };
 
-	bart_dim_t M = md_calc_size(4, kdims);
+	long M = md_calc_size(4, kdims);
 
 	complex float (*cov2)[M][M] = md_alloc(2, MD_DIMS(M, M), CFL_SIZE);
 	complex float (*cov1)[M][M] = md_alloc(2, MD_DIMS(M, M), CFL_SIZE);

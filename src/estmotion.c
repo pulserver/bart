@@ -42,7 +42,7 @@ static const char help_str[] = "Non-rigid registration with greedy SyN or optica
 
 int main_estmotion(int argc, char* argv[argc])
 {
-	bart_flags_t flags = 0;
+	unsigned long flags = 0;
 	const char* ref_file = NULL;
 	const char* motion_file = NULL;
 	const char* imotion_file = NULL;
@@ -89,8 +89,8 @@ int main_estmotion(int argc, char* argv[argc])
 	md_alloc_fun_t my_alloc = md_alloc;
 #endif
 
-	bart_dim_t rdims[DIMS];
-	bart_dim_t mdims[DIMS];
+	long rdims[DIMS];
+	long mdims[DIMS];
 
 	complex float* ref_ptr = load_cfl(ref_file, DIMS, rdims);
 	complex float* mov_ptr = load_cfl(mov_file, DIMS, mdims);
@@ -107,10 +107,10 @@ int main_estmotion(int argc, char* argv[argc])
 	md_zabs(DIMS, mdims, mov, mov);
 	md_zabs(DIMS, rdims, ref, ref);
 
-	assert(md_check_equal_dims(DIMS, rdims, mdims, ~UINT64_C(0)));
+	assert(md_check_equal_dims(DIMS, rdims, mdims, ~0UL));
 	assert(1 == rdims[MOTION_DIM]);
 
-	bart_dim_t udims[DIMS];
+	long udims[DIMS];
 	md_copy_dims(DIMS, udims, rdims);
 	udims[MOTION_DIM] = bitcount(flags);
 

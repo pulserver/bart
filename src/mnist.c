@@ -65,17 +65,17 @@
  * @param idims input dimensions { X, Y, Batchsize }
  * @param status Network status, i.e. training or inference (different behavior of dropot layer)
  */
-static nn_t network_mnist_create(const bart_dim_t odims[2], const bart_dim_t idims[3], enum NETWORK_STATUS status)
+static nn_t network_mnist_create(const long odims[2], const long idims[3], enum NETWORK_STATUS status)
 {
 	assert(10 == odims[0]);		// 10 classes 
 	assert(idims[2] == odims[1]);	// batch size of input and output equals
 	
-	bart_dim_t dims[5] = { 1, idims[0], idims[1], 1, idims[2] };	// input dimensions in the channel NHWC format, i.e. { Channels, X, Y, Z, Batch }
+	long dims[5] = { 1, idims[0], idims[1], 1, idims[2] };	// input dimensions in the channel NHWC format, i.e. { Channels, X, Y, Z, Batch }
 	bool nhwc = true;					// we use NHWC layout
 
-	bart_dim_t kernel_size[] = { 3, 3, 1 };	// size of 3D convolution kernel
-	bart_stride_t strides[] = { 1, 1, 1 };
-	bart_dim_t dilation[] = { 1, 1, 1 };
+	long kernel_size[] = { 3, 3, 1 };	// size of 3D convolution kernel
+	long strides[] = { 1, 1, 1 };
+	long dilation[] = { 1, 1, 1 };
 	
 	int chan1 = 32;
 	int chan2 = 64;
@@ -84,11 +84,11 @@ static nn_t network_mnist_create(const bart_dim_t odims[2], const bart_dim_t idi
 
 	const struct initializer_s* init = NULL; // fallback to default initializer
 	
-	bart_dim_t pool_size[] = { 2, 2, 1 };
+	long pool_size[] = { 2, 2, 1 };
 
 	bool conv = false;	// we usecross correlation not convolution, i.e. as usual in deep-learning the convolution kernels are not flipped
 
-	bart_flags_t bias_flag = MD_BIT(0); //bitmask to select dimensions of bias (channel dimension)
+	unsigned long bias_flag = MD_BIT(0); //bitmask to select dimensions of bias (channel dimension)
 
 	// we initialize the input with a reshaping operator
 	nn_t network = nn_from_nlop_F(nlop_from_linop(linop_reshape_create(5, dims, 3, idims)));	// reshape input
@@ -153,7 +153,7 @@ int main_mnist(int argc, char* argv[argc])
 	int NI = 3;
 	int NO = 2;
 
-	bart_dim_t dims_in[NI];
+	long dims_in[NI];
 	complex float* in = load_cfl(filename_in, NI, dims_in);
 
 	int Nb = MIN(128, (int)dims_in[NI - 1]);
@@ -161,11 +161,11 @@ int main_mnist(int argc, char* argv[argc])
 
 	if (train) {
 
-		bart_dim_t dims_out[NO];
+		long dims_out[NO];
 		complex float* out = load_cfl(filename_out, NO, dims_out);
 
-		bart_dim_t bdims_in[] = { dims_in[0], dims_in[1], Nb };
-		bart_dim_t bdims_out[] = { dims_out[0], Nb };
+		long bdims_in[] = { dims_in[0], dims_in[1], Nb };
+		long bdims_out[] = { dims_out[0], Nb };
 
 		int Nt = (int)dims_out[1];	 //dataset size
 		assert(Nt == dims_in[2]);
@@ -184,8 +184,8 @@ int main_mnist(int argc, char* argv[argc])
 			move_gpu_nn_weights(weights);
 		
 		const struct nlop_s* batch_generator = batch_gen_create(2, (int [2]){ NO, NI },
-									(const bart_dim_t*[2]){ bdims_out, bdims_in },
-									(const bart_dim_t*[2]){ dims_out, dims_in },
+									(const long*[2]){ bdims_out, bdims_in },
+									(const long*[2]){ dims_out, dims_in },
 									(const complex float*[2]){ out, in },
 									0, BATCH_GEN_SHUFFLE_DATA, 123);
 
@@ -222,7 +222,7 @@ int main_mnist(int argc, char* argv[argc])
 
 	if (apply) {
 
-		bart_dim_t dims_out[] = { 10, dims_in[2] };
+		long dims_out[] = { 10, dims_in[2] };
 		complex float* out = create_cfl(filename_out, NO, dims_out);
 
 		nn_t net = network_mnist_create(dims_out, dims_in, STAT_TEST);
@@ -235,8 +235,8 @@ int main_mnist(int argc, char* argv[argc])
 		net = nn_get_wo_weights_F(net, weights, false);	//set inputs corresponding to weights to the loaded weights
 
 		nlop_generic_apply_sameplace(nn_get_nlop(net),
-			1, (int[1]){ 2 }, (const bart_dim_t*[1]){ dims_out }, (complex float* [1]){ out },
-			1, (int[1]){ 3 }, (const bart_dim_t*[1]){ dims_in }, (const complex float*[1]){ in },
+			1, (int[1]){ 2 }, (const long*[1]){ dims_out }, (complex float* [1]){ out },
+			1, (int[1]){ 3 }, (const long*[1]){ dims_in }, (const complex float*[1]){ in },
 			weights->tensors[0]);
 
 		unmap_cfl(NO, dims_out, out);

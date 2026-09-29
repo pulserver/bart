@@ -51,22 +51,22 @@ int main_looklocker(int argc, char* argv[argc])
 
 	num_init();
 
-	bart_dim_t idims[DIMS];
+	long idims[DIMS];
 	
 	complex float* in_data = load_cfl(in_file, DIMS, idims);
 
-	bart_dim_t odims[DIMS];
+	long odims[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, odims, idims);
 
 	complex float* out_data = create_cfl(out_file, DIMS, odims);
 
-	bart_stride_t istrs[DIMS];
+	long istrs[DIMS];
 	md_calc_strides(DIMS, istrs, idims, CFL_SIZE);
 
-	bart_stride_t ostrs[DIMS];
+	long ostrs[DIMS];
 	md_calc_strides(DIMS, ostrs, odims, CFL_SIZE);
 
-	bart_dim_t pos[DIMS] = { };
+	long pos[DIMS] = { };
 
 	do {
 		complex float Ms = MD_ACCESS(DIMS, istrs, (pos[COEFF_DIM] = 0, pos), in_data);

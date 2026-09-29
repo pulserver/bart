@@ -44,14 +44,14 @@ int main_sort(int argc, char* argv[argc])
 
 	num_init();
 
-	bart_dim_t dims[DIMS];
+	long dims[DIMS];
 
 	complex float* in_data = load_cfl(in_file, DIMS, dims);
 
 	if (1 != bitcount(md_nontriv_dims(DIMS, dims)))
 		error("Only 1D arrays can be sorted!\n");
 
-	bart_dim_t N = md_calc_size(DIMS,  dims);
+	long N = md_calc_size(DIMS,  dims);
 	int (*ord)[N] = xmalloc(sizeof(*ord));
 
 	for (int i = 0; i < N; i++)

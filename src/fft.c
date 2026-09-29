@@ -28,7 +28,7 @@ static const char help_str[] = "Performs a fast Fourier transform (FFT) along se
 
 int main_fft(int argc, char* argv[argc])
 {
-	bart_flags_t flags = 0;
+	unsigned long flags = 0;
 	const char* in_file = NULL;
 	const char* out_file = NULL;
 
@@ -54,7 +54,7 @@ int main_fft(int argc, char* argv[argc])
 
 	num_init();
 
-	bart_dim_t dims[DIMS];
+	long dims[DIMS];
 	complex float* idata = load_cfl(in_file, DIMS, dims);
 	complex float* data = create_cfl(out_file, DIMS, dims);
 

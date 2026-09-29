@@ -66,9 +66,9 @@ struct opt_subopt_s {
 	const char* calling_desc;
 };
 
-typedef bart_dim_t opt_vec2_t[2];
+typedef long opt_vec2_t[2];
 typedef float opt_fvec2_t[2];
-typedef bart_dim_t opt_vec3_t[3];
+typedef long opt_vec3_t[3];
 typedef float opt_fvec3_t[3];
 typedef float opt_fvec4_t[4];
 typedef float opt_fvec7_t[7];
@@ -89,9 +89,9 @@ typedef double opt_dvec3_t[3];
 #define OPT_PINT(c, ptr, argname, descr)	OPT_ARG(c, OPT_PINT, int, ptr, argname, descr)
 #define OPT_UINT(c, ptr, argname, descr)	OPT_ARG(c, OPT_UINT, unsigned int, ptr, argname, descr)
 #define OPT_INT(c, ptr, argname, descr)		OPT_ARG(c, OPT_INT, int, ptr, argname, descr)
-#define OPT_ULONG(c, ptr, argname, descr)	OPT_ARG(c, OPT_ULONG, bart_flags_t, ptr, argname, descr)
+#define OPT_ULONG(c, ptr, argname, descr)	OPT_ARG(c, OPT_ULONG, unsigned long, ptr, argname, descr)
 #define OPT_ULLONG(c, ptr, argname, descr)	OPT_ARG(c, OPT_ULLONG, unsigned long long, ptr, argname, descr)
-#define OPT_LONG(c, ptr, argname, descr)	OPT_ARG(c, OPT_LONG, bart_dim_t, ptr, argname, descr)
+#define OPT_LONG(c, ptr, argname, descr)	OPT_ARG(c, OPT_LONG, long, ptr, argname, descr)
 #define OPT_FLOAT(c, ptr, argname, descr)	OPT_ARG(c, OPT_FLOAT, float, ptr, argname, descr)
 #define OPT_CFL(c, ptr, argname, descr)		OPT_ARG(c, OPT_CFL, complex float, ptr, argname, descr)
 #define OPT_DOUBLE(c, ptr, argname, descr)	OPT_ARG(c, OPT_DOUBLE, double, ptr, argname, descr)
@@ -121,9 +121,9 @@ typedef double opt_dvec3_t[3];
 #define OPTL_UINT(c, s, ptr, argname, descr)	OPTL_ARG(c, s, OPT_UINT, unsigned int, ptr, argname, descr)
 #define OPTL_PINT(c, s, ptr, argname, descr)	OPTL_ARG(c, s, OPT_INT, int, ptr, argname, descr)
 #define OPTL_INT(c, s, ptr, argname, descr)	OPTL_ARG(c, s, OPT_INT, int, ptr, argname, descr)
-#define OPTL_ULONG(c, s, ptr, argname, descr)	OPTL_ARG(c, s, OPT_ULONG, bart_flags_t, ptr, argname, descr)
+#define OPTL_ULONG(c, s, ptr, argname, descr)	OPTL_ARG(c, s, OPT_ULONG, unsigned long, ptr, argname, descr)
 #define OPTL_ULLONG(c, s, ptr, argname, descr)	OPTL_ARG(c, s, OPT_ULLONG, unsigned long long, ptr, argname, descr)
-#define OPTL_LONG(c, s, ptr, argname, descr)	OPTL_ARG(c, s, OPT_LONG, bart_dim_t, ptr, argname, descr)
+#define OPTL_LONG(c, s, ptr, argname, descr)	OPTL_ARG(c, s, OPT_LONG, long, ptr, argname, descr)
 #define OPTL_FLOAT(c, s, ptr, argname, descr)	OPTL_ARG(c, s, OPT_FLOAT, float, ptr, argname, descr)
 #define OPTL_CFL(c, s, ptr, argname, descr)	OPTL_ARG(c, s, OPT_CFL, complex float, ptr, argname, descr)
 #define OPTL_DOUBLE(c, s, ptr, argname, descr)	OPTL_ARG(c, s, OPT_DOUBLE, double, ptr, argname, descr)
@@ -175,8 +175,8 @@ struct arg_s {
 
 #define ARG_UINT(required, ptr, argname) 		ARG_CHECKED(required, OPT_UINT,  unsigned int, ptr, argname)
 #define ARG_INT(required, ptr, argname) 		ARG_CHECKED(required, OPT_INT,  int, ptr, argname)
-#define ARG_ULONG(required, ptr, argname) 		ARG_CHECKED(required, OPT_ULONG, bart_flags_t, ptr, argname)
-#define ARG_LONG(required, ptr, argname) 		ARG_CHECKED(required, OPT_LONG,  bart_dim_t, ptr, argname)
+#define ARG_ULONG(required, ptr, argname) 		ARG_CHECKED(required, OPT_ULONG, unsigned long, ptr, argname)
+#define ARG_LONG(required, ptr, argname) 		ARG_CHECKED(required, OPT_LONG,  long, ptr, argname)
 #define ARG_CFL(required, ptr, argname) 		ARG_CHECKED(required, OPT_CFL,  _Complex float, ptr, argname)
 #define ARG_INFILE(required, ptr, argname) 		ARG_CHECKED(required, OPT_INFILE, const char*, ptr, argname)
 #define ARG_OUTFILE(required, ptr, argname) 		ARG_CHECKED(required, OPT_OUTFILE,  const char*, ptr, argname)
@@ -191,8 +191,8 @@ struct arg_s {
 #define ARG_DOVEC3(required, ptr, argname)		ARG_CHECKED(required, OPT_DOUBLE_VEC3,  opt_dvec3_t, ptr, argname)
 
 #define ARG_TUPLE(required, count, n, ...)		{ (required), ARG_TUPLE, (count), (n), (struct arg_single_s[(n)]){ __VA_ARGS__ } }
-#define TUPLE_LONG(ptr, argname)			(struct arg_single_s){ OPT_LONG, sizeof(bart_dim_t), TYPE_CHECK(bart_dim_t**, ptr), argname }
-#define TUPLE_ULONG(ptr, argname)			(struct arg_single_s){ OPT_ULONG, sizeof(bart_flags_t), TYPE_CHECK(bart_flags_t**, ptr), argname }
+#define TUPLE_LONG(ptr, argname)			(struct arg_single_s){ OPT_LONG, sizeof(long), TYPE_CHECK(long**, ptr), argname }
+#define TUPLE_ULONG(ptr, argname)			(struct arg_single_s){ OPT_ULONG, sizeof(unsigned long), TYPE_CHECK(unsigned long**, ptr), argname }
 
 
 

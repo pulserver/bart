@@ -30,14 +30,14 @@ struct bat_gen_conf_s bat_gen_conf_default = {
 	.bat_flags = 0,
 };
 
-static void rand_draw_data(struct bart_rand_state* rand_state, bart_dim_t N, bart_dim_t perm[N], bart_dim_t /*Nb*/)
+static void rand_draw_data(struct bart_rand_state* rand_state, long N, long perm[N], long /*Nb*/)
 {
-	for (bart_dim_t i = 0; i < N; i++) {
+	for (long i = 0; i < N; i++) {
 
 		if (use_compat_to_version("v0.9.00")) {
 
 #pragma 		omp critical
-			perm[i] = (bart_dim_t) rand_ull_state(rand_state) % N;
+			perm[i] = (long) rand_ull_state(rand_state) % N;
 
 		} else {
 
@@ -47,7 +47,7 @@ static void rand_draw_data(struct bart_rand_state* rand_state, bart_dim_t N, bar
 	}
 }
 
-static void rand_perm_data(struct bart_rand_state* rand_state, bart_dim_t N, bart_dim_t perm[N], bart_dim_t /*Nb*/)
+static void rand_perm_data(struct bart_rand_state* rand_state, long N, long perm[N], long /*Nb*/)
 {
 	bool drawn[N];
 
@@ -59,7 +59,7 @@ static void rand_perm_data(struct bart_rand_state* rand_state, bart_dim_t N, bar
 		if (use_compat_to_version("v0.9.00")) {
 
 #pragma 		omp critical
-			perm[i] = (bart_dim_t) rand_ull_state(rand_state) % (N - i);
+			perm[i] = (long) rand_ull_state(rand_state) % (N - i);
 
 		} else {
 
@@ -75,9 +75,9 @@ static void rand_perm_data(struct bart_rand_state* rand_state, bart_dim_t N, bar
 	}
 }
 
-static void rand_perm_batches(struct bart_rand_state* rand_state, bart_dim_t N, bart_dim_t perm[N], bart_dim_t Nb)
+static void rand_perm_batches(struct bart_rand_state* rand_state, long N, long perm[N], long Nb)
 {
-	bart_dim_t perm_batch[N / Nb];
+	long perm_batch[N / Nb];
 
 	for (int i = 0; i < N / Nb; i++) // analyzer workaround
 		perm_batch[N / Nb] = 0;
@@ -96,23 +96,23 @@ struct batch_gen_data_s {
 
 	nlop_data_t super;
 
-	bart_dim_t D; //number of arrays
-	bart_dim_t N;	//rank of arrays
+	long D; //number of arrays
+	long N;	//rank of arrays
 
-	const bart_dim_t* bat_dims_bat;	// used to unravel pos of current batch
-	const bart_dim_t* bat_dims_tot;	// used to unravel pos of current batch
+	const long* bat_dims_bat;	// used to unravel pos of current batch
+	const long* bat_dims_tot;	// used to unravel pos of current batch
 
-	bart_dim_t Nb;
-	bart_dim_t Nt;
+	long Nb;
+	long Nt;
 
-	const bart_dim_t** dims;		// dims to copy batch (not containing the batch dimensions)
-	const bart_stride_t** bat_strs;		// strides
-	const bart_stride_t** tot_strs;		// strides
+	const long** dims;		// dims to copy batch (not containing the batch dimensions)
+	const long** bat_strs;		// strides
+	const long** tot_strs;		// strides
 
 	const complex float** data;
 
-	bart_dim_t start;
-	bart_dim_t* perm;
+	long start;
+	long* perm;
 
 	enum BATCH_GEN_TYPE type;
 	struct bart_rand_state* rand_state;
@@ -129,7 +129,7 @@ static void get_indices(struct batch_gen_data_s* data)
 
 	case BATCH_GEN_SAME:
 
-		for (bart_dim_t i = 0; i < data->Nt; i++)
+		for (long i = 0; i < data->Nt; i++)
 			data->perm[i] = i;
 		break;
 
@@ -159,7 +159,7 @@ static void get_indices(struct batch_gen_data_s* data)
  * Convert flat index to pos
  *
  */
-static void unravel_index(int N, bart_dim_t pos[N], const bart_dim_t dims[N], bart_dim_t index)
+static void unravel_index(int N, long pos[N], const long dims[N], long index)
 {
 	for (int d = 0; d < N; ++d) {
 
@@ -188,8 +188,8 @@ static void batch_gen_fun(const struct nlop_data_s* _data, int N_args, complex f
 
 	for (int j = 0; j < data->D; j++) {
 
-		bart_dim_t ipos[N];
-		bart_dim_t opos[N];
+		long ipos[N];
+		long opos[N];
 
 		for (int i = 0; i < data->Nb; i++) {
 
@@ -243,12 +243,12 @@ static void batch_gen_del(const nlop_data_t* _data)
  * @param type method to compose new batches
  * @param seed seed for random reshuffeling of batches
  */
-const struct nlop_s* batch_gen_create(int D, const int Ns[D], const bart_dim_t* bat_dims[D], const bart_dim_t* tot_dims[D], const complex float* data[D], bart_dim_t Nc, enum BATCH_GEN_TYPE type, unsigned long long seed)
+const struct nlop_s* batch_gen_create(int D, const int Ns[D], const long* bat_dims[D], const long* tot_dims[D], const complex float* data[D], long Nc, enum BATCH_GEN_TYPE type, unsigned long long seed)
 {
 	int N = 0;
 
-	bart_dim_t Nt = 1;
-	bart_dim_t Nb = 1;
+	long Nt = 1;
+	long Nb = 1;
 
 	int bat_idx[D];
 
@@ -276,8 +276,8 @@ const struct nlop_s* batch_gen_create(int D, const int Ns[D], const bart_dim_t* 
 
 	N += 1;
 
-	bart_dim_t nbat_dims[D][N];
-	bart_dim_t ntot_dims[D][N];
+	long nbat_dims[D][N];
+	long ntot_dims[D][N];
 
 	for (int i = 0; i < D; i++) {
 
@@ -316,18 +316,18 @@ const struct nlop_s* batch_gen_create(int D, const int Ns[D], const bart_dim_t* 
 
 }
 
-const struct nlop_s* batch_gen_create_from_iter(struct iter6_conf_s* iter_conf, int D, const int Ns[D], const bart_dim_t* bat_dims[D], const bart_dim_t* tot_dims[D], const complex float* data[D], bart_dim_t Nc)
+const struct nlop_s* batch_gen_create_from_iter(struct iter6_conf_s* iter_conf, int D, const int Ns[D], const long* bat_dims[D], const long* tot_dims[D], const complex float* data[D], long Nc)
 {
 	return batch_gen_create(D, Ns, bat_dims, tot_dims, data, Nc, iter_conf->batchgen_type, iter_conf->batch_seed);
 }
 
 
-const struct nlop_s* batch_generator_create2(struct bat_gen_conf_s* config, int D, int N, const bart_dim_t bat_dims[D][N], const bart_dim_t tot_dims[D][N], const bart_stride_t tot_strs[D][N], const complex float* data[D])
+const struct nlop_s* batch_generator_create2(struct bat_gen_conf_s* config, int D, int N, const long bat_dims[D][N], const long tot_dims[D][N], const long tot_strs[D][N], const complex float* data[D])
 {
 	PTR_ALLOC(struct batch_gen_data_s, d);
 	SET_TYPEID(batch_gen_data_s, d);
 
-	bart_flags_t bat_flags = config->bat_flags;
+	unsigned long bat_flags = config->bat_flags;
 
 	if (0 == bat_flags) {
 
@@ -346,25 +346,25 @@ const struct nlop_s* batch_generator_create2(struct bat_gen_conf_s* config, int 
 	d->D = D;
 	d->N = N;
 
-	PTR_ALLOC(const bart_dim_t*[D], sdims);
-	PTR_ALLOC(const bart_dim_t*[D], ostrs);
-	PTR_ALLOC(const bart_dim_t*[D], istrs);
+	PTR_ALLOC(const long*[D], sdims);
+	PTR_ALLOC(const long*[D], ostrs);
+	PTR_ALLOC(const long*[D], istrs);
 
-	bart_dim_t bat_dims_bat[N];
-	bart_dim_t bat_dims_tot[N];
+	long bat_dims_bat[N];
+	long bat_dims_tot[N];
 
 	md_singleton_dims(N, bat_dims_bat);
 	md_singleton_dims(N, bat_dims_tot);
 
 	for (int i = 0; i < D; i++) {
 
-		(*istrs)[i] = ARR_CLONE(bart_dim_t[N], tot_strs[i]);
+		(*istrs)[i] = ARR_CLONE(long[N], tot_strs[i]);
 
-		bart_dim_t tmp1[N];
-		bart_dim_t tmp2[N];
+		long tmp1[N];
+		long tmp2[N];
 
 		md_calc_strides(N, tmp1, bat_dims[i], CFL_SIZE);
-		(*ostrs)[i] = ARR_CLONE(bart_dim_t[N], tmp1);
+		(*ostrs)[i] = ARR_CLONE(long[N], tmp1);
 
 		md_select_dims(N, bat_flags, tmp1, bat_dims[i]);
 		assert(md_check_compat(N, bat_flags, tmp1, bat_dims_bat));
@@ -379,11 +379,11 @@ const struct nlop_s* batch_generator_create2(struct bat_gen_conf_s* config, int 
 
 		assert(md_check_compat(N, md_nontriv_dims(N, tmp1), tmp1, tmp2));
 
-		(*sdims)[i] = ARR_CLONE(bart_dim_t[N], tmp1);
+		(*sdims)[i] = ARR_CLONE(long[N], tmp1);
 	}
 
-	d->bat_dims_bat = ARR_CLONE(bart_dim_t[N], bat_dims_bat);
-	d->bat_dims_tot = ARR_CLONE(bart_dim_t[N], bat_dims_tot);
+	d->bat_dims_bat = ARR_CLONE(long[N], bat_dims_bat);
+	d->bat_dims_tot = ARR_CLONE(long[N], bat_dims_tot);
 	
 	d->Nb = md_calc_size(N, bat_dims_bat);
 	d->Nt = md_calc_size(N, bat_dims_tot);
@@ -397,7 +397,7 @@ const struct nlop_s* batch_generator_create2(struct bat_gen_conf_s* config, int 
 	d->rand_state = rand_state_create(config->seed);
 	d->type = config->type;
 
-	d->perm = *TYPE_ALLOC(bart_dim_t[d->Nt]);
+	d->perm = *TYPE_ALLOC(long[d->Nt]);
 
 	d->start = d->Nt + 1; //enforce drawing new permutation
 	get_indices(d);
@@ -415,9 +415,9 @@ const struct nlop_s* batch_generator_create2(struct bat_gen_conf_s* config, int 
 	return result;
 }
 
-const struct nlop_s* batch_generator_create(struct bat_gen_conf_s* config, int D, int N, const bart_dim_t bat_dims[D][N], const bart_dim_t tot_dims[D][N], const complex float* data[D])
+const struct nlop_s* batch_generator_create(struct bat_gen_conf_s* config, int D, int N, const long bat_dims[D][N], const long tot_dims[D][N], const complex float* data[D])
 {
-	bart_stride_t tot_strs[D][N];
+	long tot_strs[D][N];
 
 	for (int i = 0; i < D; i++)
 		md_calc_strides(N, tot_strs[i], tot_dims[i], CFL_SIZE);

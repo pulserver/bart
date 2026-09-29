@@ -78,7 +78,7 @@ int main_traj(int argc, char* argv[argc])
 		{ 0., 0., 0. }
 	};
 
-	bart_dim_t z_usamp[2] = { 0, 1 }; // { reference Lines, acceleration }
+	long z_usamp[2] = { 0, 1 }; // { reference Lines, acceleration }
 
 	const char* custom_angle_file = NULL;
 	const char* gdelays_file = NULL;
@@ -123,7 +123,7 @@ int main_traj(int argc, char* argv[argc])
 
 
 	// Load custom_angle
-	bart_dim_t sdims[DIMS];
+	long sdims[DIMS];
 	complex float* custom_angle_vals = NULL;
 
 	if (NULL != custom_angle_file) {
@@ -136,7 +136,7 @@ int main_traj(int argc, char* argv[argc])
 		custom_angle_vals = load_cfl(custom_angle_file, DIMS, sdims);
 
 		if (Y != sdims[0])
-			debug_printf(DP_INFO, "According to the custom angle file : number of projection (y) = %" PRId64 "\n", sdims[0]);
+			debug_printf(DP_INFO, "According to the custom angle file : number of projection (y) = %ld\n", sdims[0]);
 
 		Y = sdims[0];
 	}
@@ -185,7 +185,7 @@ int main_traj(int argc, char* argv[argc])
 	int N = X * tot_sp / conf.accel * Z;
 
 
-	bart_dim_t dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	long dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 	dims[0] = 3;
 	dims[1] = X;
 	dims[2] = (conf.radial ? Y : (Y / conf.accel)) * Z;
@@ -199,10 +199,10 @@ int main_traj(int argc, char* argv[argc])
 		error("actual readout samples must be less than full samples\n");
 
 	// Variables for z-undersampling
-	bart_dim_t z_reflines = z_usamp[0];
-	bart_dim_t z_acc = z_usamp[1];
+	long z_reflines = z_usamp[0];
+	long z_acc = z_usamp[1];
 
-	bart_dim_t mb2 = conf.mb;
+	long mb2 = conf.mb;
 
 	if (z_acc > 1) {
 
@@ -263,8 +263,8 @@ int main_traj(int argc, char* argv[argc])
 		debug_printf(DP_WARN, "The golden partition option is deprecated!\n");
 
 
-	bart_dim_t gdims[DIMS];
-	bart_stride_t gstrs[DIMS];
+	long gdims[DIMS];
+	long gstrs[DIMS];
 
 	complex float* gdelays2 = NULL;
 
@@ -275,7 +275,7 @@ int main_traj(int argc, char* argv[argc])
 		gdelays2 = load_cfl(gdelays_file, DIMS, gdims);
 
 		assert((3 == gdims[0] || (6 == gdims[0])));
-		assert(md_check_compat(DIMS - 1, ~UINT64_C(0), dims + 1, gdims + 1));
+		assert(md_check_compat(DIMS - 1, ~0UL, dims + 1, gdims + 1));
 
 		md_calc_strides(DIMS, gstrs, gdims, sizeof(complex float));
 	}
@@ -290,7 +290,7 @@ int main_traj(int argc, char* argv[argc])
 		calc_base_angles(base_angle, Y, E, conf);
 
 	int p = 0;
-	bart_dim_t pos[DIMS] = { };
+	long pos[DIMS] = { };
 	double phin1 = 0;
 
 	do {
@@ -331,7 +331,7 @@ int main_traj(int argc, char* argv[argc])
 				if (!use_compat_to_version("v0.9.00")) {
 
 					double atom = calc_angle_atom(&conf);
-					bart_dim_t inc = raga_increment_from_pos(traj_loop_order, pos, ~UINT64_C(3), dims, &conf);
+					long inc = raga_increment_from_pos(traj_loop_order, pos, ~3UL, dims, &conf);
 
 					angle = atom * inc + M_PI * pos[TE_DIM];
 
@@ -352,7 +352,7 @@ int main_traj(int argc, char* argv[argc])
 					base_angle[SLICE_DIM] = (m > 0) ? (fmod(angle_atom * m / golden_ratio, angle_atom) / m) : 0;
 				}
 
-				bart_dim_t ind[DIMS] = { 0 };
+				long ind[DIMS] = { 0L };
 				indices_from_position(ind, pos, conf);
 
 				for (int d = 1; d < DIMS; d++)
@@ -452,7 +452,7 @@ int main_traj(int argc, char* argv[argc])
 
 		p++;
 
-	} while (md_next(DIMS, dims, ~UINT64_C(1), pos));
+	} while (md_next(DIMS, dims, ~1UL, pos));
 
 	assert(p == N - 0);
 

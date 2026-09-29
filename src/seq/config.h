@@ -2,7 +2,6 @@
 #ifndef _SEQ_CONFIG_H
 #define _SEQ_CONFIG_H
 
-#include "misc/dimtypes.h"
 #include "misc/cppwrap.h"
 
 #include "misc/mri.h"
@@ -99,7 +98,7 @@ struct seq_enc {
 
 	enum pe_mode pe_mode;
 	int tiny;
-	bart_flags_t aligned_flags;
+	unsigned long aligned_flags;
 	enum seq_order order;
 	int is3D;
 };
@@ -108,7 +107,7 @@ struct seq_magn {
 
 	enum mag_prep mag_prep;
 	double ti;
-	bart_dim_t prep_scans;
+	long prep_scans;
 	double init_delay;
 	double inv_delay_time;
 };
@@ -157,7 +156,7 @@ struct seq_asl {
 struct seq_cest {
 
 	enum cest_saturation_type sat_type;
-	bart_dim_t sat_pulses;
+	long sat_pulses;
 	double sat_pulse_pause;
 	double gauss_pulse_duration;
 	double gauss_pulse_fa;
@@ -184,7 +183,7 @@ struct seq_config {
 	struct seq_sys sys; 
 
 	int order[DIMS];
-	bart_dim_t loop_dims[DIMS];
+	long loop_dims[DIMS];
 };
 
 extern const struct seq_config seq_config_defaults_flash;

@@ -26,7 +26,7 @@ static const char help_str[] =	"Apply fftshift along dimensions selected by the 
 
 int main_fftshift(int argc, char* argv[argc])
 {
-	bart_flags_t flags = 0;
+	unsigned long flags = 0;
 	const char* in_file = NULL;
 	const char* out_file = NULL;
 
@@ -49,7 +49,7 @@ int main_fftshift(int argc, char* argv[argc])
 	num_init();
 
 	int N = DIMS;
-	bart_dim_t dims[N];
+	long dims[N];
 
 	complex float* idata = load_cfl(in_file, N, dims);
 	complex float* odata = create_cfl(out_file, N, dims);

@@ -5,7 +5,6 @@
 struct operator_s;
 struct operator_p_s;
 
-#include "misc/dimtypes.h"
 #include "misc/types.h"
 
 #ifndef ITER_CONF_S
@@ -18,7 +17,7 @@ struct iter_monitor_s;
 typedef void italgo_fun_f(iter_conf* conf,
 		const struct operator_s* normaleq_op,
 		const struct operator_p_s* thresh_prox,
-		bart_dim_t size, float* image, const float* image_adj,
+		long size, float* image, const float* image_adj,
 		struct iter_monitor_s* monitor);
 
 typedef italgo_fun_f* italgo_fun_t;
@@ -33,8 +32,8 @@ struct iter_conjgrad_conf {
 	float l2lambda;
 	float tol;
 
-	bart_dim_t Bo;
-	bart_dim_t Bi;
+	long Bo;
+	long Bi;
 };
 
 
@@ -74,7 +73,7 @@ struct iter_eulermaruyama_conf {
 	float precond_diag;
 	float precond_tol;
 	int precond_max_iter;
-	bart_dim_t batchsize;
+	long batchsize;
 
 	int maxeigen_iter;
 };

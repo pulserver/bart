@@ -12,9 +12,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-char* win_basename(char *path);
+char* win_basename(const char *path);
 
-char* win_basename(char *path) {
+char* win_basename(const char *path) {
     char* substr = strrchr(path, '\\');
     if (NULL == substr)
         substr = strrchr(path, '/');

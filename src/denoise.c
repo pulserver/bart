@@ -110,7 +110,7 @@ int main_denoise(int argc, char* argv[argc])
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
 
-	bart_dim_t img_dims[DIMS];
+	long img_dims[DIMS];
 
 	// load image data and get dimensions
 
@@ -192,7 +192,7 @@ int main_denoise(int argc, char* argv[argc])
 
 	int nr_penalties = ropts.r + ropts.sr;
 
-	debug_printf(DP_INFO, "Regularization terms: %d, Supporting variables: %" PRId64 "\n", nr_penalties, ropts.svars);
+	debug_printf(DP_INFO, "Regularization terms: %d, Supporting variables: %ld\n", nr_penalties, ropts.svars);
 
 	// choose algorithm
 

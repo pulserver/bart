@@ -69,7 +69,7 @@ void traj_conf_from_seq(struct traj_conf *conf, const struct seq_config* seq)
 	}
 }
 
-double get_rot_angle(const bart_dim_t pos[DIMS], const struct seq_config* seq)
+double get_rot_angle(const long pos[DIMS], const struct seq_config* seq)
 {
 	if (   (SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode)
 	    || (SEQ_PEMODE_CARTESIAN_LINEAR == seq->enc.pe_mode))
@@ -82,7 +82,7 @@ double get_rot_angle(const bart_dim_t pos[DIMS], const struct seq_config* seq)
 	if (conf.rational) {
 
 		double atom = calc_angle_atom(&conf);
-		bart_dim_t inc = raga_increment_from_pos(seq->order, pos, ((SEQ_FLAGS | TE_FLAG) & ~(COEFF_FLAG|COEFF2_FLAG)), seq->loop_dims, &conf);
+		long inc = raga_increment_from_pos(seq->order, pos, ((SEQ_FLAGS | TE_FLAG) & ~(COEFF_FLAG|COEFF2_FLAG)), seq->loop_dims, &conf);
 
 		return atom * inc + M_PI * pos[TE_DIM];
 	}
@@ -90,14 +90,14 @@ double get_rot_angle(const bart_dim_t pos[DIMS], const struct seq_config* seq)
 	double base_angle[DIMS] = { 0. };
 	calc_base_angles(base_angle, seq->loop_dims[PHS1_DIM], seq->loop_dims[TE_DIM], conf);
 
-	bart_dim_t pos2[DIMS] = { 0 };
+	long pos2[DIMS] = { 0L };
 
 	pos2[PHS2_DIM] = pos[PHS1_DIM];
 	pos2[SLICE_DIM] = (seq->enc.is3D) ? pos[PHS2_DIM] : pos[SLICE_DIM];
 	pos2[TE_DIM] = pos[TE_DIM];
 	pos2[TIME_DIM] = pos[TIME_DIM];
 
-	bart_dim_t ind[DIMS] = { 0 };
+	long ind[DIMS] = { 0L };
 	indices_from_position(ind, pos2, conf);
 
 	double angle = 0.;
@@ -130,7 +130,7 @@ int check_gen_fib(int spokes, int tiny_ga)
 /*
  * center-out, zig-zag
  */
-bart_dim_t cartesian_line(const bart_dim_t pos[DIMS], const struct seq_config* seq)
+long cartesian_line(const long pos[DIMS], const struct seq_config* seq)
 {
 	assert(   (SEQ_PEMODE_CARTESIAN == seq->enc.pe_mode)
 	       || (SEQ_PEMODE_CARTESIAN_LINEAR == seq->enc.pe_mode));
@@ -138,8 +138,8 @@ bart_dim_t cartesian_line(const bart_dim_t pos[DIMS], const struct seq_config* s
 	if (SEQ_PEMODE_CARTESIAN_LINEAR == seq->enc.pe_mode)
 		return pos[PHS1_DIM];
 
-	bart_dim_t center = seq->loop_dims[PHS1_DIM] / 2;
-	bart_stride_t off = (pos[PHS1_DIM] + 1) / 2;
+	long center = seq->loop_dims[PHS1_DIM] / 2;
+	long off = (pos[PHS1_DIM] + 1) / 2;
 
 	if (pos[PHS1_DIM] % 2)
 		off *= -1;

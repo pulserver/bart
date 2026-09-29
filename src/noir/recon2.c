@@ -61,10 +61,10 @@ struct nlop_wrapper2_s {
 
 	struct iter_op_data_s super;
 
-	bart_dim_t split;
+	long split;
 
 	int N;
-	const bart_dim_t* col_dims;
+	const long* col_dims;
 
 	int iter;
 	int pole_correction;
@@ -74,12 +74,12 @@ struct nlop_wrapper2_s {
 
 DEF_TYPEID(nlop_wrapper2_s);
 
-static void mult_phase_pole(struct iter_conjgrad_conf conf, const struct linop_s* lop, int N, const bart_dim_t pdims[N], bool conj, const complex float* phase, complex float* dst)
+static void mult_phase_pole(struct iter_conjgrad_conf conf, const struct linop_s* lop, int N, const long pdims[N], bool conj, const complex float* phase, complex float* dst)
 {
 	assert(N == linop_domain(lop)->N);
 	assert(N == linop_codomain(lop)->N);
 
-	bart_dim_t tdims[N];
+	long tdims[N];
 	md_copy_dims(N, tdims, linop_codomain(lop)->dims);
 	assert(md_check_compat(N, ~md_nontriv_dims(N, pdims), pdims, tdims));
 
@@ -109,26 +109,26 @@ static void phasepole_correction(struct pole_config_s conf, const struct noir2_s
 	int N = d->N;
 
 	const struct linop_s* lop_col = d->lop_coil;
-	bart_dim_t col_dims[N];
+	long col_dims[N];
 
 	md_copy_dims(N, col_dims, linop_codomain(lop_col)->dims);
 
 	complex float* col = md_alloc_sameplace(d->N, col_dims, CFL_SIZE, dst);
 	linop_forward_unchecked(lop_col, col, dst + md_calc_size(N, linop_domain(d->lop_im)->dims));
 
-	bart_dim_t pdims[N];
+	long pdims[N];
 	md_select_dims(d->N, ~COIL_FLAG, pdims, col_dims);
 
 	complex float* phase = md_alloc_sameplace(d->N, pdims, CFL_SIZE, col);
 	md_zfill(d->N, pdims, phase, 1.);
 
-	bool correct = phase_pole_correction_loop(conf, d->N, (~UINT64_C(15)) & md_nontriv_dims(N, pdims), pdims, phase, col_dims, col);
+	bool correct = phase_pole_correction_loop(conf, d->N, (~15UL) & md_nontriv_dims(N, pdims), pdims, phase, col_dims, col);
 
 	md_free(col);
 
 	if (correct) {
 
-		bart_dim_t img_dims[N];
+		long img_dims[N];
 
 		const struct linop_s* lop_img = d->lop_im;
 		md_copy_dims(N, img_dims, linop_codomain(lop_img)->dims);
@@ -214,8 +214,8 @@ struct noir_irgnm_conf {
 
 static void noir_irgnm2(const struct noir_irgnm_conf* conf,
 			const struct nlop_s* nlop,
-			int NO, const bart_dim_t odims[NO], complex float* x, const complex float* ref,
-			int NI, const bart_dim_t idims[NI], const complex float* data,
+			int NO, const long odims[NO], complex float* x, const complex float* ref,
+			int NI, const long idims[NI], const complex float* data,
 			int num_regs, const struct operator_p_s* thresh_ops[num_regs], const struct linop_s* trafos[num_regs],
 			struct iter_op_s cb)
 {
@@ -226,8 +226,8 @@ static void noir_irgnm2(const struct noir_irgnm_conf* conf,
 	auto cod = nlop_codomain(nlop);
 	auto dom = nlop_domain(nlop);
 
-	bart_dim_t M = 2 * md_calc_size(cod->N, cod->dims);
-	bart_dim_t N = 2 * md_calc_size(dom->N, dom->dims);
+	long M = 2 * md_calc_size(cod->N, cod->dims);
+	long N = 2 * md_calc_size(dom->N, dom->dims);
 
 	assert(N == 2 * md_calc_size(NO, odims));
 	assert(M == 2 * md_calc_size(NI, idims));
@@ -283,7 +283,7 @@ static void noir_irgnm2(const struct noir_irgnm_conf* conf,
 }
 
 
-static int opt_reg_noir_join_prox(int NI, const bart_dim_t img_dims[NI], int NC, const bart_dim_t col_dims[NC], int num_regs, const struct operator_p_s* prox_ops[num_regs + 1], const struct linop_s* trafos[num_regs + 1])
+static int opt_reg_noir_join_prox(int NI, const long img_dims[NI], int NC, const long col_dims[NC], int num_regs, const struct operator_p_s* prox_ops[num_regs + 1], const struct linop_s* trafos[num_regs + 1])
 {
 	assert(0 < num_regs);
 
@@ -324,21 +324,21 @@ static int opt_reg_noir_join_prox(int NI, const bart_dim_t img_dims[NI], int NC,
 
 void noir2_recon(const struct noir2_conf_s* conf, struct noir2_s* noir_ops,
 			int N,
-			const bart_dim_t img_dims[N], complex float* img, const complex float* img_ref,
-			const bart_dim_t col_dims[N], complex float* sens,
-			const bart_dim_t kco_dims[N], complex float* ksens, const complex float* sens_ref,
-			const bart_dim_t ksp_dims[N], const complex float* kspace)
+			const long img_dims[N], complex float* img, const complex float* img_ref,
+			const long col_dims[N], complex float* sens,
+			const long kco_dims[N], complex float* ksens, const complex float* sens_ref,
+			const long ksp_dims[N], const complex float* kspace)
 {
 
 	assert(N == noir_ops->N);
-	bart_dim_t dat_dims[N];
+	long dat_dims[N];
 	md_copy_dims(N, dat_dims, linop_domain(noir_ops->lop_asym)->dims);
 
 	if (1 < nlop_get_nr_in_args(noir_ops->model)) {
 
-		assert(md_check_equal_dims(N, img_dims, nlop_generic_domain(noir_ops->model, 0)->dims, ~UINT64_C(0)));
-		assert(md_check_equal_dims(N, kco_dims, nlop_generic_domain(noir_ops->model, 1)->dims, ~UINT64_C(0)));
-		assert(md_check_equal_dims(N, ksp_dims, linop_codomain(noir_ops->lop_asym)->dims, ~UINT64_C(0)));
+		assert(md_check_equal_dims(N, img_dims, nlop_generic_domain(noir_ops->model, 0)->dims, ~0UL));
+		assert(md_check_equal_dims(N, kco_dims, nlop_generic_domain(noir_ops->model, 1)->dims, ~0UL));
+		assert(md_check_equal_dims(N, ksp_dims, linop_codomain(noir_ops->lop_asym)->dims, ~0UL));
 
 	}
 
@@ -371,12 +371,12 @@ void noir2_recon(const struct noir2_conf_s* conf, struct noir2_s* noir_ops,
 
 	const struct operator_p_s* prox_ops[NUM_REGS];
 	const struct linop_s* trafos[NUM_REGS];
-	const bart_dim_t (*sdims[NUM_REGS])[N + 1] = { NULL };
+	const long (*sdims[NUM_REGS])[N + 1] = { NULL };
 
 	if (!((NULL == conf->regs) || (0 == conf->regs->r)))
 		opt_reg_configure(N, img_dims, conf->regs, prox_ops, trafos, sdims, 8, 1, "dau2", conf->gpu, DIMS-1);
 
-	bart_dim_t skip = md_calc_size(N, img_dims);
+	long skip = md_calc_size(N, img_dims);
 
 	const struct nlop_s* nlop = nlop_clone(noir_ops->model);
 
@@ -391,9 +391,9 @@ void noir2_recon(const struct noir2_conf_s* conf, struct noir2_s* noir_ops,
 		}
 	}
 
-	bart_dim_t size = skip + md_calc_size(N, kco_dims);
+	long size = skip + md_calc_size(N, kco_dims);
 
-	bart_dim_t d1[1] = { size };
+	long d1[1] = { size };
 	// variable which is optimized by the IRGNM
 	complex float* x = NULL;
 	complex float* ref = NULL;
@@ -551,7 +551,7 @@ void noir2_recon(const struct noir2_conf_s* conf, struct noir2_s* noir_ops,
 
 	if (conf->normalize_lowres) {
 
-		bart_dim_t nrm_col_dims[N];
+		long nrm_col_dims[N];
 		md_copy_dims(N, nrm_col_dims, linop_codomain(noir_ops->lop_coil)->dims);
 
 		complex float* tmp = md_alloc_sameplace(N, nrm_col_dims, CFL_SIZE, data);
@@ -561,7 +561,7 @@ void noir2_recon(const struct noir2_conf_s* conf, struct noir2_s* noir_ops,
 		linop_forward_unchecked(noir_ops->lop_coil, tmp, tmp_kcol);
 		md_free(tmp_kcol);
 
-		bart_dim_t nrm_dims[N];
+		long nrm_dims[N];
 		md_select_dims(N, md_nontriv_dims(N, img_dims), nrm_dims, nrm_col_dims);
 		complex float* nrm = md_alloc_sameplace(N, nrm_dims, CFL_SIZE, data);
 		md_zrss(N, nrm_col_dims, ~md_nontriv_dims(N, nrm_dims), nrm, tmp);
@@ -586,17 +586,17 @@ void noir2_recon(const struct noir2_conf_s* conf, struct noir2_s* noir_ops,
 
 void noir2_recon_noncart(
 	const struct noir2_conf_s* conf, int N,
-	const bart_dim_t img_dims[N], complex float* img,
-	const bart_dim_t col_dims[N], complex float* sens,
-	const bart_dim_t kco_dims[N], complex float* ksens,
-	const bart_dim_t ksp_dims[N], const complex float* kspace,
-	const bart_dim_t trj_dims[N], const complex float* traj,
-	const bart_dim_t wgh_dims[N], const complex float* weights,
-	const bart_dim_t bas_dims[N], const complex float* basis,
-	const bart_dim_t msk_dims[N], const complex float* mask,
-	const bart_dim_t cim_dims[N])
+	const long img_dims[N], complex float* img,
+	const long col_dims[N], complex float* sens,
+	const long kco_dims[N], complex float* ksens,
+	const long ksp_dims[N], const complex float* kspace,
+	const long trj_dims[N], const complex float* traj,
+	const long wgh_dims[N], const complex float* weights,
+	const long bas_dims[N], const complex float* basis,
+	const long msk_dims[N], const complex float* mask,
+	const long cim_dims[N])
 {
-	bart_flags_t loop_flags = (conf->realtime ? TIME_FLAG : 0);
+	unsigned long loop_flags = (conf->realtime ? TIME_FLAG : 0);
 
 	assert(0 == (loop_flags & md_nontriv_dims(N, bas_dims)));
 	assert(0 == (loop_flags & md_nontriv_dims(N, msk_dims)));
@@ -627,13 +627,13 @@ void noir2_recon_noncart(
 	mconf.nufft_conf = conf->nufft_conf;
 	mconf.ret_os_coils = conf->ret_os_coils;
 
-	bart_dim_t limg_dims[N];
-	bart_dim_t lcol_dims[N];
-	bart_dim_t lksp_dims[N];
-	bart_dim_t ltrj_dims[N];
-	bart_dim_t lwgh_dims[N];
-	bart_dim_t lkco_dims[N];
-	bart_dim_t lcim_dims[N];
+	long limg_dims[N];
+	long lcol_dims[N];
+	long lksp_dims[N];
+	long ltrj_dims[N];
+	long lwgh_dims[N];
+	long lkco_dims[N];
+	long lcim_dims[N];
 
 	md_select_dims(N, ~loop_flags, limg_dims, img_dims);
 	md_select_dims(N, ~loop_flags, lcol_dims, col_dims);
@@ -672,11 +672,11 @@ void noir2_recon_noncart(
 		md_clear(N, lkco_dims, l_sens_ref, CFL_SIZE);
 	}
 
-	bart_dim_t pos[N];
+	long pos[N];
 	md_set_dims(N, pos, 0);
 
-	bart_dim_t pos_trj[N];
-	bart_dim_t pos_wgh[N];
+	long pos_trj[N];
+	long pos_wgh[N];
 
 	stream_t strm_ksp = stream_lookup(kspace);
 	stream_t strm_img = stream_lookup(img);
@@ -751,14 +751,14 @@ void noir2_recon_noncart(
 
 void noir2_recon_cart(
 	const struct noir2_conf_s* conf, int N,
-	const bart_dim_t img_dims[N], complex float* img,
-	const bart_dim_t col_dims[N], complex float* sens,
-	const bart_dim_t kco_dims[N], complex float* ksens,
-	const bart_dim_t ksp_dims[N], const complex float* kspace,
-	const bart_dim_t pat_dims[N], const complex float* pattern,
-	const bart_dim_t bas_dims[N], const complex float* basis,
-	const bart_dim_t msk_dims[N], const complex float* mask,
-	const bart_dim_t cim_dims[N])
+	const long img_dims[N], complex float* img,
+	const long col_dims[N], complex float* sens,
+	const long kco_dims[N], complex float* ksens,
+	const long ksp_dims[N], const complex float* kspace,
+	const long pat_dims[N], const complex float* pattern,
+	const long bas_dims[N], const complex float* basis,
+	const long msk_dims[N], const complex float* mask,
+	const long cim_dims[N])
 {
 	struct noir2_model_conf_s mconf = noir2_model_conf_defaults;
 

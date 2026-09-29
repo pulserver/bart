@@ -1,11 +1,9 @@
-#include "misc/dimtypes.h"
-
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern void cuda_zrfmac_upper_triagmat(bart_dim_t N, bart_dim_t NC, bart_dim_t NM, bart_stride_t ostr, bart_stride_t istr, bart_stride_t mstr, float* dst, const float* src, const float* mat);
+extern void cuda_zrfmac_upper_triagmat(long N, long NC, long NM, long ostr, long istr, long mstr, float* dst, const float* src, const float* mat);
 
 #ifdef __cplusplus
 }

@@ -30,36 +30,36 @@ struct sum_data {
 	linop_data_t super;
 
 	int N;
-	bart_dim_t *imgd_dims;
-	bart_dim_t *img_dims;
-	bart_dim_t levels;
+	long *imgd_dims;
+	long *img_dims;
+	long levels;
 
-	bart_stride_t *imgd_strs;
-	bart_stride_t *img_strs;
+	long *imgd_strs;
+	long *img_strs;
 
-	bart_flags_t flags;
+	unsigned long flags;
 };
 
 static DEF_TYPEID(sum_data);
 
 
 
-static struct sum_data* sum_create_data(int N, const bart_dim_t imgd_dims[N], bart_flags_t flags)
+static struct sum_data* sum_create_data(int N, const long imgd_dims[N], unsigned long flags)
 {
 	PTR_ALLOC(struct sum_data, data);
 	SET_TYPEID(sum_data, data);
 
 	data->N = N;
-	data->imgd_dims = *TYPE_ALLOC(bart_dim_t[N]);
-	data->imgd_strs = *TYPE_ALLOC(bart_dim_t[N]);
-	data->img_dims = *TYPE_ALLOC(bart_dim_t[N]);
-	data->img_strs = *TYPE_ALLOC(bart_dim_t[N]);
+	data->imgd_dims = *TYPE_ALLOC(long[N]);
+	data->imgd_strs = *TYPE_ALLOC(long[N]);
+	data->img_dims = *TYPE_ALLOC(long[N]);
+	data->img_strs = *TYPE_ALLOC(long[N]);
 
 	// decom dimensions
 	md_copy_dims(N, data->imgd_dims, imgd_dims);
 	md_calc_strides(N, data->imgd_strs, imgd_dims, CFL_SIZE);
 
-	bart_dim_t level_dims[N];
+	long level_dims[N];
 	md_select_dims(N, flags, level_dims, imgd_dims);
 
 	data->flags = flags;
@@ -156,7 +156,7 @@ static void sum_apply_pinverse(const linop_data_t* _data, float rho, complex flo
 }
 
 
-const struct linop_s* linop_sum_create(int N, const bart_dim_t imgd_dims[N], bart_flags_t flags)
+const struct linop_s* linop_sum_create(int N, const long imgd_dims[N], unsigned long flags)
 {
 	struct sum_data* data = sum_create_data(N, imgd_dims, flags);
 	data->levels = 1;
@@ -166,7 +166,7 @@ const struct linop_s* linop_sum_create(int N, const bart_dim_t imgd_dims[N], bar
 			sum_apply_pinverse, sum_free_data);
 }
 
-const struct linop_s* linop_scaled_sum_create(int N, const bart_dim_t imgd_dims[N], bart_flags_t flags)
+const struct linop_s* linop_scaled_sum_create(int N, const long imgd_dims[N], unsigned long flags)
 {
 	struct sum_data* data = sum_create_data(N, imgd_dims, flags);
 
@@ -175,9 +175,9 @@ const struct linop_s* linop_scaled_sum_create(int N, const bart_dim_t imgd_dims[
 			sum_apply_pinverse, sum_free_data);
 }
 
-const struct linop_s* linop_avg_create(int N, const bart_dim_t imgd_dims[N], bart_flags_t flags)
+const struct linop_s* linop_avg_create(int N, const long imgd_dims[N], unsigned long flags)
 {
-	if (0 == (flags & md_nontriv_dims(N, imgd_dims)))
+	if (0UL == (flags & md_nontriv_dims(N, imgd_dims)))
 		return linop_identity_create(N, imgd_dims);
 
 	struct sum_data* data = sum_create_data(N, imgd_dims, flags);
@@ -194,26 +194,26 @@ struct repmat_data {
 	linop_data_t super;
 
 	int N;
-	bart_dim_t *odims;
-	bart_dim_t *idims;
-	bart_stride_t *ostrs;
-	bart_stride_t *istrs;
+	long *odims;
+	long *idims;
+	long *ostrs;
+	long *istrs;
 };
 
 static DEF_TYPEID(repmat_data);
 
 
 
-static struct repmat_data* repmat_create_data(int N, const bart_dim_t odims[N], bart_flags_t flags)
+static struct repmat_data* repmat_create_data(int N, const long odims[N], unsigned long flags)
 {
 	PTR_ALLOC(struct repmat_data, data);
 	SET_TYPEID(repmat_data, data);
 
 	data->N = N;
-	data->odims = *TYPE_ALLOC(bart_dim_t[N]);
-	data->ostrs = *TYPE_ALLOC(bart_dim_t[N]);
-	data->idims = *TYPE_ALLOC(bart_dim_t[N]);
-	data->istrs = *TYPE_ALLOC(bart_dim_t[N]);
+	data->odims = *TYPE_ALLOC(long[N]);
+	data->ostrs = *TYPE_ALLOC(long[N]);
+	data->idims = *TYPE_ALLOC(long[N]);
+	data->istrs = *TYPE_ALLOC(long[N]);
 
 	// decom dimensions
 	md_copy_dims(N, data->odims, odims);
@@ -254,9 +254,9 @@ static void repmat_apply_adjoint(const linop_data_t* _data, complex float* dst, 
 	md_zadd2(data->N, data->odims, data->istrs, dst, data->istrs, dst, data->ostrs, src);
 }
 
-const struct linop_s* linop_repmat_create(int N, const bart_dim_t odims[N], bart_flags_t flags)
+const struct linop_s* linop_repmat_create(int N, const long odims[N], unsigned long flags)
 {
-	if (0 == (flags & md_nontriv_dims(N, odims)))
+	if (0UL == (flags & md_nontriv_dims(N, odims)))
 		return linop_identity_create(N, odims);
 
 	struct repmat_data* data = repmat_create_data(N, odims, flags);

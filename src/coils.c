@@ -33,7 +33,7 @@ int main_coils(int argc, char* argv[argc])
 	struct grid_opts gopts = grid_opts_defaults;
 	struct coil_opts copts = coil_opts_defaults;
 
-	bart_dim_t ncoils = 0;
+	long ncoils = 0;
 
 	bool legacy_fov = false;
 
@@ -67,7 +67,7 @@ int main_coils(int argc, char* argv[argc])
 	if (0 < ncoils && 64 > ncoils)
 		copts.flags = MD_BIT(ncoils) - 1;
 
-	bart_dim_t gdims[DIMS];
+	long gdims[DIMS];
 	float* grid = NULL;
 
 	cnstr_coils(DIMS, &copts, legacy_fov);
@@ -87,7 +87,7 @@ int main_coils(int argc, char* argv[argc])
 		grid = create_senstraj(DIMS, gdims, &gopts, &copts);
 	}
 
-	bart_dim_t odims[DIMS];
+	long odims[DIMS];
 	complex double* sens = sample_coils(DIMS, odims, gdims, grid, &copts);
 	complex float* optr = create_cfl(out_file, DIMS, odims);
 

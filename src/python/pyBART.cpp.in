@@ -56,8 +56,8 @@ extern "C" struct error_jumper_s error_jumper;
 
 struct disk_cfl_data_s
 {
-     bart_dim_t D;
-     bart_dim_t dims[DIMS];
+     long D;
+     long dims[DIMS];
      const std::complex<float>* data;
 };
 
@@ -271,12 +271,12 @@ void register_python_memory(const std::string& name,
 /* ========================================================================== */
 
 static void register_disk_cfl(unsigned int D,
-			      const bart_dim_t dims[__VLA(D)],
+			      const long dims[__VLA(D)],
 			      void* data)
 {
      auto new_data = disk_cfl_ptr(new disk_cfl_data_s);
      new_data->D = D;
-     memcpy(new_data->dims, dims, D * sizeof(bart_dim_t));
+     memcpy(new_data->dims, dims, D * sizeof(long));
      new_data->data = reinterpret_cast<const std::complex<float>*>(data);
      disk_cfl_data.push_back(std::move(new_data));
 }
@@ -294,7 +294,7 @@ numpy_farray_t load_cfl_python(const std::string& name)
      
      error_jumper.initialized = 1;
      if (setjmp(error_jumper.buf) == 0) {
-	  bart_dim_t dims[DIMS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	  long dims[DIMS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 	  void* data = load_cfl(name.c_str(), DIMS, dims);
 
 	  if (data == nullptr) {

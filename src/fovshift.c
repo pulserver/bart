@@ -18,10 +18,10 @@
 
 
 
-static complex float* noncart_shift(bart_dim_t odims[DIMS], const bart_dim_t sdims[DIMS], const complex float* shift, const bart_dim_t tdims[DIMS], const complex float* tdata)
+static complex float* noncart_shift(long odims[DIMS], const long sdims[DIMS], const complex float* shift, const long tdims[DIMS], const complex float* tdata)
 {
-	md_max_dims(DIMS, ~UINT64_C(0), odims, tdims, sdims);
-	md_select_dims(DIMS, ~MD_BIT(0), odims, odims);
+	md_max_dims(DIMS, ~0ul, odims, tdims, sdims);
+	md_select_dims(DIMS, ~1u, odims, odims);
 
 
 	complex float* odata = md_alloc(DIMS, odims, CFL_SIZE);
@@ -66,7 +66,7 @@ int main_fovshift(int argc, char* argv[argc])
 
 	num_init();
 
-	bart_dim_t sdims[DIMS] = { 3, [ 1 ... DIMS - 1 ] = 1 };
+	long sdims[DIMS] = { 3, [ 1 ... DIMS - 1 ] = 1 };
 
 	complex float* cshift;
 
@@ -82,7 +82,7 @@ int main_fovshift(int argc, char* argv[argc])
 		cshift = load_cfl(shift_file, DIMS, sdims);
 	}
 
-	bart_dim_t idims[DIMS];
+	long idims[DIMS];
 	complex float* idata = load_cfl(in_file, DIMS, idims);
 
 	if (pixel) {
@@ -95,19 +95,19 @@ int main_fovshift(int argc, char* argv[argc])
 		for (int i = 0; i < 3; i++)
 			scale[i] = 1. / idims[i];
 
-		bart_stride_t scl_strs[DIMS] = { CFL_SIZE, [ 1 ... DIMS - 1 ] = 0 };
+		long scl_strs[DIMS] = { CFL_SIZE, [ 1 ... DIMS - 1 ] = 0 };
 
 		md_zmul2(DIMS, sdims, MD_STRIDES(DIMS, sdims, CFL_SIZE), cshift,
 				MD_STRIDES(DIMS, sdims, CFL_SIZE), cshift,
 				scl_strs, scale);
 	}
 
-	bart_dim_t pdims[DIMS];
+	long pdims[DIMS];
 	complex float* phase;
 
 	if (NULL != traj_file) {
 
-		bart_dim_t tdims[DIMS];
+		long tdims[DIMS];
 		complex float* tdata = load_cfl(traj_file, DIMS, tdims);
 
 		phase = noncart_shift(pdims, sdims, cshift, tdims, tdata);

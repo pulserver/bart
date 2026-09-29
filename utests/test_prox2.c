@@ -32,7 +32,7 @@
 static bool test_nlgrad(void)
 {
 	enum { N = 1 };
-	bart_dim_t dims[N] = { 1 };
+	long dims[N] = { 1 };
 
 	auto nlop = nlop_tenmul_create(N, dims, dims, dims);
 	auto sq = nlop_dup(nlop, 0, 1);
@@ -70,7 +70,7 @@ UT_REGISTER_TEST(test_nlgrad);
 static bool test_auto_norm(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 2, 4, 3 };
+	long dims[N] = { 2, 4, 3 };
 
 	complex float* src = md_alloc(N, dims, CFL_SIZE);
 	complex float* dst = md_alloc(N, dims, CFL_SIZE);

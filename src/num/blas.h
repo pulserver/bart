@@ -7,54 +7,54 @@
 void cublas_init(void);
 void cublas_deinit(void);
 
-extern double cuda_asum(bart_dim_t size, const float* src);
-extern void cuda_saxpy(bart_dim_t size, float* y, float alpha, const float* src);
-extern void cuda_swap(bart_dim_t size, float* a, float* b);
+extern double cuda_asum(long size, const float* src);
+extern void cuda_saxpy(long size, float* y, float alpha, const float* src);
+extern void cuda_swap(long size, float* a, float* b);
 #endif
 
 
 
-extern void blas_cgemm(char transa, char transb, bart_dim_t M, bart_dim_t N, bart_dim_t K, const _Complex float alpha, bart_dim_t lda, const _Complex float* A, bart_dim_t ldb, const _Complex float* B, const _Complex float beta, bart_dim_t ldc, _Complex float* C);
-extern void blas2_cgemm(char transa, char transb, bart_dim_t M, bart_dim_t N, bart_dim_t K, const _Complex float* alpha, bart_dim_t lda, const _Complex float* A, bart_dim_t ldb, const _Complex float* B, const _Complex float* beta, bart_dim_t ldc, _Complex float* C);
-extern void blas_sgemm(char transa, char transb, bart_dim_t M, bart_dim_t N, bart_dim_t K, const float alpha, bart_dim_t lda, const  float* A, bart_dim_t ldb, const  float* B, const  float beta, bart_dim_t ldc,  float* C);
-extern void blas2_sgemm(char transa, char transb, bart_dim_t M, bart_dim_t N, bart_dim_t K, const float* alpha, bart_dim_t lda, const  float* A, bart_dim_t ldb, const  float* B, const  float* beta, bart_dim_t ldc,  float* C);
+extern void blas_cgemm(char transa, char transb, long M, long N, long K, const _Complex float alpha, long lda, const _Complex float* A, long ldb, const _Complex float* B, const _Complex float beta, long ldc, _Complex float* C);
+extern void blas2_cgemm(char transa, char transb, long M, long N, long K, const _Complex float* alpha, long lda, const _Complex float* A, long ldb, const _Complex float* B, const _Complex float* beta, long ldc, _Complex float* C);
+extern void blas_sgemm(char transa, char transb, long M, long N, long K, const float alpha, long lda, const  float* A, long ldb, const  float* B, const  float beta, long ldc,  float* C);
+extern void blas2_sgemm(char transa, char transb, long M, long N, long K, const float* alpha, long lda, const  float* A, long ldb, const  float* B, const  float* beta, long ldc,  float* C);
 
-extern void blas_cgemv(char trans, bart_dim_t M, bart_dim_t N, _Complex float alpha, bart_dim_t lda, const _Complex float* A, bart_dim_t incx, const _Complex float* x, _Complex float beta, bart_dim_t incy, _Complex float* y);
-extern void blas2_cgemv(char trans, bart_dim_t M, bart_dim_t N, const _Complex float* alpha, bart_dim_t lda, const _Complex float* A, bart_dim_t incx, const _Complex float* x, _Complex float* beta, bart_dim_t incy, _Complex float* y);
-extern void blas_sgemv(char trans, bart_dim_t M, bart_dim_t N, float alpha, bart_dim_t lda, const float* A, bart_dim_t incx, const float* x, float beta, bart_dim_t incy, float* y);
-extern void blas2_sgemv(char trans, bart_dim_t M, bart_dim_t N, const float* alpha, bart_dim_t lda, const float* A, bart_dim_t incx, const float* x, float* beta, bart_dim_t incy, float* y);
+extern void blas_cgemv(char trans, long M, long N, _Complex float alpha, long lda, const _Complex float* A, long incx, const _Complex float* x, _Complex float beta, long incy, _Complex float* y);
+extern void blas2_cgemv(char trans, long M, long N, const _Complex float* alpha, long lda, const _Complex float* A, long incx, const _Complex float* x, _Complex float* beta, long incy, _Complex float* y);
+extern void blas_sgemv(char trans, long M, long N, float alpha, long lda, const float* A, long incx, const float* x, float beta, long incy, float* y);
+extern void blas2_sgemv(char trans, long M, long N, const float* alpha, long lda, const float* A, long incx, const float* x, float* beta, long incy, float* y);
 
-extern void blas_sger(bart_dim_t M, bart_dim_t N, float alpha, bart_dim_t incx, const float* x, bart_dim_t incy, const float* y, bart_dim_t lda, float* A);
-extern void blas2_sger(bart_dim_t M, bart_dim_t N, const float* alpha, bart_dim_t incx, const float* x, bart_dim_t incy, const float* y, bart_dim_t lda, float* A);
-extern void blas_cgeru(bart_dim_t M, bart_dim_t N, _Complex float alpha, bart_dim_t incx, const _Complex float* x, bart_dim_t incy, const _Complex float* y, bart_dim_t lda, _Complex float* A);
-extern void blas2_cgeru(bart_dim_t M, bart_dim_t N, const _Complex float* alpha, bart_dim_t incx, const _Complex float* x, bart_dim_t incy, const _Complex float* y, bart_dim_t lda, _Complex float* A);
+extern void blas_sger(long M, long N, float alpha, long incx, const float* x, long incy, const float* y, long lda, float* A);
+extern void blas2_sger(long M, long N, const float* alpha, long incx, const float* x, long incy, const float* y, long lda, float* A);
+extern void blas_cgeru(long M, long N, _Complex float alpha, long incx, const _Complex float* x, long incy, const _Complex float* y, long lda, _Complex float* A);
+extern void blas2_cgeru(long M, long N, const _Complex float* alpha, long incx, const _Complex float* x, long incy, const _Complex float* y, long lda, _Complex float* A);
 
-extern void blas2_caxpy(bart_dim_t N, const _Complex float* alpha, bart_dim_t incx, const _Complex float* x, bart_dim_t incy, _Complex float* y);
-extern void blas_caxpy(bart_dim_t N, _Complex float alpha, bart_dim_t incx, const _Complex float* x, bart_dim_t incy, _Complex float* y);
-extern void blas2_saxpy(bart_dim_t N, const float* alpha, bart_dim_t incx, const float* x, bart_dim_t incy, float* y);
-extern void blas_saxpy(bart_dim_t N, float alpha, bart_dim_t incx, const float* x, bart_dim_t incy, float* y);
+extern void blas2_caxpy(long N, const _Complex float* alpha, long incx, const _Complex float* x, long incy, _Complex float* y);
+extern void blas_caxpy(long N, _Complex float alpha, long incx, const _Complex float* x, long incy, _Complex float* y);
+extern void blas2_saxpy(long N, const float* alpha, long incx, const float* x, long incy, float* y);
+extern void blas_saxpy(long N, float alpha, long incx, const float* x, long incy, float* y);
 
-extern void blas2_cscal(bart_dim_t N, const _Complex float* alpha, bart_dim_t incx, _Complex float* x);
-extern void blas_cscal(bart_dim_t N, _Complex float alpha, bart_dim_t incx, _Complex float* x);
-extern void blas2_sscal(bart_dim_t N, const float* alpha, bart_dim_t incx, float* x);
-extern void blas_sscal(bart_dim_t N, float alpha, bart_dim_t incx, float* x);
+extern void blas2_cscal(long N, const _Complex float* alpha, long incx, _Complex float* x);
+extern void blas_cscal(long N, _Complex float alpha, long incx, _Complex float* x);
+extern void blas2_sscal(long N, const float* alpha, long incx, float* x);
+extern void blas_sscal(long N, float alpha, long incx, float* x);
 
-extern void blas_cdgmm(bart_dim_t M, bart_dim_t N, bool left_mul, const _Complex float* A, bart_dim_t lda, const _Complex float* x, bart_dim_t incx, _Complex float* C, bart_dim_t ldc);
-extern void blas_sdgmm(bart_dim_t M, bart_dim_t N, bool left_mul, const float* A, bart_dim_t lda, const float* x, bart_dim_t incx, float* C, bart_dim_t ldc);
+extern void blas_cdgmm(long M, long N, bool left_mul, const _Complex float* A, long lda, const _Complex float* x, long incx, _Complex float* C, long ldc);
+extern void blas_sdgmm(long M, long N, bool left_mul, const float* A, long lda, const float* x, long incx, float* C, long ldc);
 
-extern void blas2_cdotu(_Complex float* result, bart_dim_t N, bart_dim_t incx, const _Complex float* x, bart_dim_t incy, const _Complex float* y);
-extern void blas2_sdot(float* result, bart_dim_t N, bart_dim_t incx, const float* x, bart_dim_t incy, const float* y);
+extern void blas2_cdotu(_Complex float* result, long N, long incx, const _Complex float* x, long incy, const _Complex float* y);
+extern void blas2_sdot(float* result, long N, long incx, const float* x, long incy, const float* y);
 
-extern void blas_cmatcopy(char trans, bart_dim_t M, bart_dim_t N, _Complex float alpha, const _Complex float* A, bart_dim_t lda, _Complex float* B, bart_dim_t ldb);
-extern void blas2_cmatcopy(char trans, bart_dim_t M, bart_dim_t N, const _Complex float* alpha, const _Complex float* A, bart_dim_t lda, _Complex float* B, bart_dim_t ldb);
-extern void blas_smatcopy(char trans, bart_dim_t M, bart_dim_t N, float alpha, const float* A, bart_dim_t lda, float* B, bart_dim_t ldb);
-extern void blas2_smatcopy(char trans, bart_dim_t M, bart_dim_t N, const float* alpha, const float* A, bart_dim_t lda, float* B, bart_dim_t ldb);
+extern void blas_cmatcopy(char trans, long M, long N, _Complex float alpha, const _Complex float* A, long lda, _Complex float* B, long ldb);
+extern void blas2_cmatcopy(char trans, long M, long N, const _Complex float* alpha, const _Complex float* A, long lda, _Complex float* B, long ldb);
+extern void blas_smatcopy(char trans, long M, long N, float alpha, const float* A, long lda, float* B, long ldb);
+extern void blas2_smatcopy(char trans, long M, long N, const float* alpha, const float* A, long lda, float* B, long ldb);
 
-extern void blas_csyrk(char uplow, char trans, bart_dim_t N, bart_dim_t K, _Complex float alpha, bart_dim_t lda, const _Complex float A[][lda], _Complex float beta, bart_dim_t ldc, _Complex float C[][ldc]);
+extern void blas_csyrk(char uplow, char trans, long N, long K, _Complex float alpha, long lda, const _Complex float A[][lda], _Complex float beta, long ldc, _Complex float C[][ldc]);
 
-extern void blas_matrix_multiply(bart_dim_t M, bart_dim_t N, bart_dim_t K, _Complex float C[N][M], const _Complex float A[K][M], const _Complex float B[N][K]);
+extern void blas_matrix_multiply(long M, long N, long K, _Complex float C[N][M], const _Complex float A[K][M], const _Complex float B[N][K]);
 
-extern void blas_matrix_zfmac(bart_dim_t M, bart_dim_t N, bart_dim_t K, _Complex float* C, const _Complex float* A, char transa, const _Complex float* B, char transb);
-extern void blas_gemv_zfmac(bart_dim_t M, bart_dim_t N, _Complex float* y, const _Complex float* A, char trans, const _Complex float* x);
-extern void blas_gemv_fmac(bart_dim_t M, bart_dim_t N, float* y, const float* A, char trans, const float* x);
-extern void blas_sger_fmac(bart_dim_t M, bart_dim_t N, float* A, const float* x, const float* y);
+extern void blas_matrix_zfmac(long M, long N, long K, _Complex float* C, const _Complex float* A, char transa, const _Complex float* B, char transb);
+extern void blas_gemv_zfmac(long M, long N, _Complex float* y, const _Complex float* A, char trans, const _Complex float* x);
+extern void blas_gemv_fmac(long M, long N, float* y, const float* A, char trans, const float* x);
+extern void blas_sger_fmac(long M, long N, float* A, const float* x, const float* y);

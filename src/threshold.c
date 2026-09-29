@@ -38,21 +38,21 @@
 
 
 // FIXME: consider moving this to a more accessible location?
-static void wthresh(int D, const bart_dim_t dims[D], float lambda, bart_flags_t flags, complex float* out, const complex float* in)
+static void wthresh(int D, const long dims[D], float lambda, unsigned long flags, complex float* out, const complex float* in)
 {
-	bart_dim_t minsize[D];
+	long minsize[D];
 	md_singleton_dims(D, minsize);
 
-	bart_dim_t course_scale[3] = { 16, 16, 16 };
+	long course_scale[3] = { 16, 16, 16 };
 	md_copy_dims(3, minsize, course_scale);
 
-	bart_flags_t wflags = 7; // FIXME
+	unsigned long wflags = 7; // FIXME
 
 	for (int i = 0; i < 3; i++)
 		if (dims[i] < minsize[i])
 			wflags = MD_CLEAR(wflags, i);
 
-	bart_stride_t strs[D];
+	long strs[D];
 	md_calc_strides(D, strs, dims, CFL_SIZE);
 
 	const struct linop_s* w = linop_wavelet_create(D, wflags, dims, strs, WAVELET_DAU2, minsize, false);
@@ -64,14 +64,14 @@ static void wthresh(int D, const bart_dim_t dims[D], float lambda, bart_flags_t 
 }
 
 
-static void lrthresh(int D, const bart_dim_t dims[D], int llrblk, float lambda, bart_flags_t flags, complex float* out, const complex float* in)
+static void lrthresh(int D, const long dims[D], int llrblk, float lambda, unsigned long flags, complex float* out, const complex float* in)
 {
-	bart_dim_t blkdims[MAX_LEV][D];
+	long blkdims[MAX_LEV][D];
 
 	int levels = llr_blkdims(blkdims, ~flags, dims, llrblk);
 	(void)levels;
 
-	const struct operator_p_s* p = lrthresh_create(dims, false, ~flags, (const bart_dim_t (*)[])blkdims, lambda, false, false, false);
+	const struct operator_p_s* p = lrthresh_create(dims, false, ~flags, (const long (*)[])blkdims, lambda, false, false, false);
 
 	operator_p_apply(p, 1., D, dims, out, D, dims, in);
 
@@ -79,16 +79,16 @@ static void lrthresh(int D, const bart_dim_t dims[D], int llrblk, float lambda, 
 }
 
 
-static void dfthresh(int D, const bart_dim_t /*dims*/[D], float /*lambda*/, complex float* /*out*/, const complex float* /*in*/)
+static void dfthresh(int D, const long /*dims*/[D], float /*lambda*/, complex float* /*out*/, const complex float* /*in*/)
 {
 #if 1
 	error("divergence free wavelet not supported anymore.\n");
 #else
-	bart_dim_t minsize[D];
+	long minsize[D];
 	md_singleton_dims(D, minsize);
 
-	bart_dim_t coarse_scale[3] = { 16, 16, 16 };
-	md_min_dims(3, ~UINT64_C(0), minsize, dims, coarse_scale);
+	long coarse_scale[3] = { 16, 16, 16 };
+	md_min_dims(3, ~0u, minsize, dims, coarse_scale);
 
         complex float res[3];
         res[0] = 1.;
@@ -105,48 +105,48 @@ static void dfthresh(int D, const bart_dim_t /*dims*/[D], float /*lambda*/, comp
 #endif
 }
 
-static void hard_thresh(int D, const bart_dim_t dims[D], float lambda, complex float* out, const complex float* in)
+static void hard_thresh(int D, const long dims[D], float lambda, complex float* out, const complex float* in)
 {
-	bart_dim_t size = md_calc_size(DIMS, dims);
+	long size = md_calc_size(DIMS, dims);
 
 #pragma omp parallel for
-	for (bart_dim_t i = 0; i < size; i++)
+	for (long i = 0; i < size; i++)
 		out[i] = (cabsf(in[i]) > lambda) ? in[i] : 0.;
 }
 
-static void hard_thresh_max(int D, const bart_dim_t dims[D], float lambda, complex float* out, const complex float* in)
+static void hard_thresh_max(int D, const long dims[D], float lambda, complex float* out, const complex float* in)
 {
-	bart_dim_t size = md_calc_size(DIMS, dims);
+	long size = md_calc_size(DIMS, dims);
 
 #pragma omp parallel for
-	for (bart_dim_t i = 0; i < size; i++)
+	for (long i = 0; i < size; i++)
 		out[i] = (cabsf(in[i]) < lambda) ? in[i] : 0.;
 }
 
-static void binary_thresh(int D, const bart_dim_t dims[D], float lambda, complex float* out, const complex float* in)
+static void binary_thresh(int D, const long dims[D], float lambda, complex float* out, const complex float* in)
 {
-	bart_dim_t size = md_calc_size(DIMS, dims);
+	long size = md_calc_size(DIMS, dims);
 
 #pragma omp parallel for
-	for (bart_dim_t i = 0; i < size; i++)
+	for (long i = 0; i < size; i++)
 		out[i] = (cabsf(in[i]) > lambda) ? 1. : 0.;
 }
 
-static void binary_thresh_max(int D, const bart_dim_t dims[D], float lambda, complex float* out, const complex float* in)
+static void binary_thresh_max(int D, const long dims[D], float lambda, complex float* out, const complex float* in)
 {
-	bart_dim_t size = md_calc_size(DIMS, dims);
+	long size = md_calc_size(DIMS, dims);
 
 #pragma omp parallel for
-	for (bart_dim_t i = 0; i < size; i++)
+	for (long i = 0; i < size; i++)
 		out[i] = (cabsf(in[i]) < lambda) ? 1. : 0.;
 }
 
-static void binary_thresh_equal(int D, const bart_dim_t dims[D], float lambda, complex float* out, const complex float* in)
+static void binary_thresh_equal(int D, const long dims[D], float lambda, complex float* out, const complex float* in)
 {
-	bart_dim_t size = md_calc_size(DIMS, dims);
+	long size = md_calc_size(DIMS, dims);
 
 #pragma omp parallel for
-	for (bart_dim_t i = 0; i < size; i++)
+	for (long i = 0; i < size; i++)
 		out[i] = (cabsf(in[i]) == lambda) ? 1. : 0.;
 }
 
@@ -169,7 +169,7 @@ int main_threshold(int argc, char* argv[argc])
 		ARG_OUTFILE(true, &out_file, "output"),
 	};
 
-	bart_flags_t flags = 0;
+	unsigned long flags = 0;
 
 	enum th_type { NONE, WAV, LLR, DFW, MPDFW, HARD, HARD_MAX, BINARY, BINARY_MAX, BINARY_EQUAL } th_type = NONE;
 	int llrblk = 8;
@@ -194,7 +194,7 @@ int main_threshold(int argc, char* argv[argc])
 	num_init();
 
 	const int N = DIMS;
-	bart_dim_t dims[N];
+	long dims[N];
 	complex float* idata = load_cfl(in_file, N, dims);
 	complex float* odata = create_cfl(out_file, N, dims);
 

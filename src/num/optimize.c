@@ -41,19 +41,19 @@
 
 
 #if 0
-static bool regular(bart_dim_t dim, bart_stride_t str)
+static bool regular(long dim, long str)
 {
 	return (dim > 0) && (str > 0);
 }
 
-static bool singular(bart_dim_t dim, bart_stride_t str)
+static bool singular(long dim, long str)
 {
 	assert(dim > 0);
 
 	return (1 == dim) || (0 == str);
 }
 
-static bool enclosed(const bart_dim_t dims[2], const bart_stride_t strs[2])
+static bool enclosed(const long dims[2], const long strs[2])
 {
 	assert(regular(dims[0], strs[0]));
 	assert(regular(dims[1], strs[1]));
@@ -65,14 +65,14 @@ static bool enclosed(const bart_dim_t dims[2], const bart_stride_t strs[2])
 
 
 // assumes no overlap
-static bart_dim_t memory_footprint(int N, const bart_dim_t dims[N], const bart_stride_t strs[N])
+static long memory_footprint(int N, const long dims[N], const long strs[N])
 {
-	bart_flags_t flags = 0;
+	unsigned long flags = 0;
 
 	for (int i = 0; i < N; i++)
 		flags |= (0 == strs[i]);
 
-	bart_dim_t dims2[N];
+	long dims2[N];
 	md_select_dims(N, ~flags, dims2, dims);
 	return md_calc_size(N, dims2);
 }
@@ -111,7 +111,7 @@ static bart_dim_t memory_footprint(int N, const bart_dim_t dims[N], const bart_s
 
 
 
-void merge_dims(int D, int N, bart_dim_t dims[N], bart_stride_t (*ostrs[D])[N])
+void merge_dims(int D, int N, long dims[N], long (*ostrs[D])[N])
 {
 	for (int i = N - 2; i >= 0; i--) {
 
@@ -144,7 +144,7 @@ void merge_dims(int D, int N, bart_dim_t dims[N], bart_stride_t (*ostrs[D])[N])
 }
 
 
-int remove_empty_dims(int D, int N, bart_dim_t dims[N], bart_stride_t (*ostrs[D])[N])
+int remove_empty_dims(int D, int N, long dims[N], long (*ostrs[D])[N])
 {
 	int o = 0;
 
@@ -174,17 +174,17 @@ int remove_empty_dims(int D, int N, bart_dim_t dims[N], bart_stride_t (*ostrs[D]
 
 
 
-static void compute_permutation(int N, int ord[N], const bart_stride_t strs[N])
+static void compute_permutation(int N, int ord[N], const long strs[N])
 {
-	__block const bart_dim_t* strsp = strs; // clang workaround
+	__block const long* strsp = strs; // clang workaround
 
 	for (int i = 0; i < N; i++)
 		ord[i] = i;
 
 	NESTED(int, cmp_strides, (int a, int b))
 	{
-		bart_dim_t da = strsp[a];
-		bart_dim_t db = strsp[b];
+		long da = strsp[a];
+		long db = strsp[b];
 
 		return (da > db) - (da < db);
 	};
@@ -192,10 +192,10 @@ static void compute_permutation(int N, int ord[N], const bart_stride_t strs[N])
 	quicksort(N, ord, cmp_strides);
 }
 
-static void reorder_long(int N, int ord[N], bart_dim_t x[N])
+static void reorder_long(int N, int ord[N], long x[N])
 {
-	bart_dim_t tmp[N];	// = { };
-	memcpy(tmp, x, sizeof(bart_dim_t[N]));
+	long tmp[N];	// = { };
+	memcpy(tmp, x, sizeof(long[N]));
 
 	for (int i = 0; i < N; i++)
 		x[i] = tmp[ord[i]];
@@ -205,7 +205,7 @@ static void reorder_long(int N, int ord[N], bart_dim_t x[N])
 /*
  * Jim Demmel's generic blocking theorem
  */
-static void demmel_factors(int D, int N, float blocking[N], bart_stride_t (*strs[D])[N])
+static void demmel_factors(int D, int N, float blocking[N], long (*strs[D])[N])
 {
 	float delta[D][N];
 
@@ -225,12 +225,12 @@ static void demmel_factors(int D, int N, float blocking[N], bart_stride_t (*strs
 }
 
 
-static bart_dim_t find_factor(bart_dim_t x, float blocking)
+static long find_factor(long x, float blocking)
 {
 	//long m = (long)(1. + sqrt((double)x));
-	bart_dim_t m = (bart_dim_t)(1. + pow((double)x, blocking));
+	long m = (long)(1. + pow((double)x, blocking));
 
-	for (bart_dim_t i = m; i > 1; i--)
+	for (long i = m; i > 1; i--)
 		if (0 == x % i)
 			return (x / i);
 
@@ -238,12 +238,12 @@ static bart_dim_t find_factor(bart_dim_t x, float blocking)
 }
 
 
-static bool split_dims(int D, int N, bart_dim_t dims[N + 1], bart_stride_t (*ostrs[D])[N + 1], float blocking[N + 1])
+static bool split_dims(int D, int N, long dims[N + 1], long (*ostrs[D])[N + 1], float blocking[N + 1])
 {
 	if (0 == N)
 		return false;
 
-	bart_dim_t f;
+	long f;
 	if ((dims[N - 1] > 1024) && (1 < (f = find_factor(dims[N - 1], blocking[N - 1])))) {
 #if 1
 		dims[N - 1] = dims[N - 1] / f;
@@ -285,7 +285,7 @@ static bool split_dims(int D, int N, bart_dim_t dims[N + 1], bart_stride_t (*ost
 
 
 
-int simplify_dims(int D, int N, bart_dim_t dims[N], bart_stride_t (*strs[D])[N])
+int simplify_dims(int D, int N, long dims[N], long (*strs[D])[N])
 {
 	merge_dims(D, N, dims, strs);
 
@@ -305,7 +305,7 @@ int simplify_dims(int D, int N, bart_dim_t dims[N], bart_stride_t (*strs[D])[N])
 }
 
 
-int optimize_dims(int D, int N, bart_dim_t dims[N], bart_stride_t (*strs[D])[N])
+int optimize_dims(int D, int N, long dims[N], long (*strs[D])[N])
 {
 	int ND = simplify_dims(D, N, dims, strs);
 
@@ -347,7 +347,7 @@ int optimize_dims(int D, int N, bart_dim_t dims[N], bart_stride_t (*strs[D])[N])
 //	printf("Split %c :", split ? 'y' : 'n');
 //	print_dims(ND, dims);
 
-	bart_stride_t max_strides[ND];
+	long max_strides[ND];
 
 	for (int i = 0; i < ND; i++) {
 
@@ -383,13 +383,13 @@ int optimize_dims(int D, int N, bart_dim_t dims[N], bart_stride_t (*strs[D])[N])
 	return ND;
 }
 
-int optimize_dims_gpu(int D, int N, bart_dim_t dims[N], bart_stride_t (*strs[D])[N])
+int optimize_dims_gpu(int D, int N, long dims[N], long (*strs[D])[N])
 {
 	int ND = simplify_dims(D, N, dims, strs);
 
 	debug_print_dims(DP_DEBUG4, ND, dims);
 
-	bart_stride_t max_strides[ND];
+	long max_strides[ND];
 
 	for (int i = 0; i < ND; i++) {
 
@@ -421,7 +421,7 @@ int optimize_dims_gpu(int D, int N, bart_dim_t dims[N], bart_stride_t (*strs[D])
  * compute minimal dimension of largest contiguous block(s)
  *
  */
-int min_blockdim(int D, int N, const bart_dim_t dims[N], bart_stride_t (*strs[D])[N], size_t size[D])
+int min_blockdim(int D, int N, const long dims[N], long (*strs[D])[N], size_t size[D])
 {
 	int mbd = N;
 
@@ -433,16 +433,16 @@ int min_blockdim(int D, int N, const bart_dim_t dims[N], bart_stride_t (*strs[D]
 
 
 
-static void compute_enclosures(int N, bool matrix[N][N], const bart_dim_t dims[N], const bart_stride_t strides[N])
+static void compute_enclosures(int N, bool matrix[N][N], const long dims[N], const long strides[N])
 {
-	bart_dim_t ext[N];
+	long ext[N];
 
 	for (int i = 0; i < N; i++)
-		ext[i] = dims[i] * llabs(strides[i]);
+		ext[i] = dims[i] * labs(strides[i]);
 
 	for (int i = 0; i < N; i++)
 		for (int j = 0; j < N; j++)
-			matrix[i][j] = (ext[i] <= llabs(strides[j]));
+			matrix[i][j] = (ext[i] <= labs(strides[j]));
 }
 
 
@@ -450,7 +450,7 @@ static void compute_enclosures(int N, bool matrix[N][N], const bart_dim_t dims[N
  * compute set of parallelizable dimensions
  *
  */
-bart_flags_t parallelizable(int D, bart_flags_t io, int N, const bart_dim_t dims[N], const bart_stride_t (*strs[D])[N], size_t size[D])
+unsigned long parallelizable(int D, unsigned int io, int N, const long dims[N], const long (*strs[D])[N], size_t size[D])
 {
 	// we assume no input / output overlap
 	// (i.e. inputs which are also outputs have to be marked as output)
@@ -470,7 +470,7 @@ bart_flags_t parallelizable(int D, bart_flags_t io, int N, const bart_dim_t dims
 	//		     [1111111111111111]
 	//                                [333333333]
 
-	bart_flags_t flags = (UINT64_C(1) << N) - 1;
+	unsigned long flags = (1UL << N) - 1;
 
 	for (int d = 0; d < D; d++) {
 
@@ -492,7 +492,7 @@ bart_flags_t parallelizable(int D, bart_flags_t io, int N, const bart_dim_t dims
 
 	//			printf("%d %d %d\n", d, i, a);
 
-				if ((a != N - 1) || ((size_t)llabs((*strs[d])[i]) < size[d]))
+				if ((a != N - 1) || ((size_t)labs((*strs[d])[i]) < size[d]))
 					flags = MD_CLEAR(flags, i);
 			}
 		}
@@ -502,27 +502,27 @@ bart_flags_t parallelizable(int D, bart_flags_t io, int N, const bart_dim_t dims
 }
 
 
-extern bart_dim_t num_chunk_size;
-bart_dim_t num_chunk_size = 32 * 256;
+extern long num_chunk_size;
+long num_chunk_size = 32 * 256;
 
 
 /**
  * compute set of dimensions to parallelize
  *
  */
-bart_flags_t dims_parallel(int D, bart_flags_t io, int N, const bart_dim_t dims[N], bart_stride_t (*strs[D])[N], size_t size[D])
+unsigned long dims_parallel(int D, unsigned long io, int N, const long dims[N], long (*strs[D])[N], size_t size[D])
 {
-	bart_flags_t flags = parallelizable(D, io, N, dims, (const bart_stride_t (**)[])strs, size);
+	unsigned long flags = parallelizable(D, io, N, dims, (const long (**)[])strs, size);
 
 	int i = N;
 
-	bart_dim_t max_size = 0;
+	long max_size = 0;
 	for (int i = 0; i < D; i++)
-		max_size = MAX(max_size, (bart_stride_t)size[i]);
+		max_size = MAX(max_size, (long)size[i]);
 
-	bart_dim_t reps = md_calc_size(N, dims) * max_size;
+	long reps = md_calc_size(N, dims) * max_size;
 
-	bart_flags_t oflags = 0;
+	unsigned long oflags = 0;
 
 	while (i-- > 0) {
 
@@ -599,15 +599,15 @@ bool num_auto_parallelize = true;
  * @param too n-op function
  * @param data_ptr pointer to additional data used by too
  */
-void (optimized_nop)(int N, bart_flags_t io, int D, const bart_dim_t dim[D], const bart_stride_t (*nstr[N])[D?:1], void* const nptr[N], size_t sizes[N], md_nary_opt_fun_t too)
+void (optimized_nop)(int N, unsigned long io, int D, const long dim[D], const long (*nstr[N])[D?:1], void* const nptr[N], size_t sizes[N], md_nary_opt_fun_t too)
 {
 	assert(N > 0);
 
 	if (0 == D) {
 
-		bart_dim_t dim1[1] = { 1 };
-		bart_stride_t tstrs[N][1];
-		bart_stride_t (*nstr1[N])[1];
+		long dim1[1] = { 1 };
+		long tstrs[N][1];
+		long (*nstr1[N])[1];
 
 		for (int i = 0; i < N; i++) {
 
@@ -631,24 +631,24 @@ void (optimized_nop)(int N, bart_flags_t io, int D, const bart_dim_t dim[D], con
 
 		size_t* sizesp = sizes; // because of clang
 
-		NESTED(void, nary_loop, (int N, void* ptr[], int D, const bart_dim_t dims[], const bart_stride_t* strs[]))
+		NESTED(void, nary_loop, (int N, void* ptr[], int D, const long dims[], const long* strs[]))
 		{
-			const bart_stride_t (*nstr[N])[D];
+			const long (*nstr[N])[D];
 			for (int i = 0; i < N; i++)
-				nstr[i] = (typeof(const bart_dim_t[D])*)strs[i];
+				nstr[i] = (typeof(const long[D])*)strs[i];
 
 			(optimized_nop)(N, io, D, dims, nstr, ptr, sizesp, too);
 		};
 
-		md_nary_resolve(N, D, dim, (const bart_stride_t **)nstr, (void**)nptr, nary_loop);
+		md_nary_resolve(N, D, dim, (const long **)nstr, (void**)nptr, nary_loop);
 		return;
 	}
 
-	bart_dim_t tdims[D];
+	long tdims[D];
 	md_copy_dims(D, tdims, dim);
 
-	bart_stride_t tstrs[N][D];
-	bart_stride_t (*nstr1[N])[D];
+	long tstrs[N][D];
+	long (*nstr1[N])[D];
 	void* nptr1[N];
 
 	for (int i = 0; i < N; i++) {
@@ -677,7 +677,7 @@ void (optimized_nop)(int N, bart_flags_t io, int D, const bart_dim_t dim[D], con
 	for (int i = 0; i < N; i++)
 		NB = MIN(NB, md_calc_blockdim(ND, tdims, tstrs[i], sizes[i]));
 
-	bart_flags_t cnst_flags = 0;
+	unsigned long cnst_flags = 0;
 	bool cnst_ok = NB < ND;
 
 	for (int i = 0; i < N; i++)
@@ -700,12 +700,12 @@ void (optimized_nop)(int N, bart_flags_t io, int D, const bart_dim_t dim[D], con
 		}
 	}
 
-	bart_dim_t cnst_size = 1;
+	long cnst_size = 1;
 	int cnst_dims = NB;
 
-	bart_dim_t tsizes[N];
+	long tsizes[N];
 	for (int i = 0; i < N; i++)
-		tsizes[i] = (bart_dim_t)sizes[i] * md_calc_size(NB, tdims);
+		tsizes[i] = (long)sizes[i] * md_calc_size(NB, tdims);
 
 	for (; cnst_dims < ND; cnst_dims++) {
 
@@ -728,14 +728,14 @@ out:
 
 	if (cnst_ok) {
 
-		debug_printf(DP_DEBUG4, "MD constant buffer Io: %" PRIu64 " Cnst: %" PRIu64 " Size %" PRId64 ".\n", io, cnst_flags, cnst_size);
+		debug_printf(DP_DEBUG4, "MD constant buffer Io: %lu Cnst: %lu Size %ld.\n", io, cnst_flags, cnst_size);
 
 		for (int i = 0; i < N; i++) {
 
 			if (MD_IS_SET(cnst_flags, i)) {
 
 				for (int d = NB; d < cnst_dims; d++)
-					tstrs[i][d] = (0 < d) ? tdims[d - 1] * tstrs[i][d - 1] : (bart_dim_t)sizes[i];
+					tstrs[i][d] = (0 < d) ? tdims[d - 1] * tstrs[i][d - 1] : (long)sizes[i];
 
 				cnst_buf[i] = md_alloc_sameplace(1, MD_DIMS(cnst_size), (size_t)tsizes[i], nptr1[i]);
 
@@ -744,7 +744,7 @@ out:
 					cuda_copy_ND(1, MD_DIMS(cnst_size), MD_DIMS(tsizes[i]), cnst_buf[i], MD_DIMS(0), nptr1[i], (size_t)tsizes[i]);
 				} else
 #endif
-					for (bart_dim_t n = 0; n < cnst_size; n++)
+					for (long n = 0; n < cnst_size; n++)
 						memcpy(cnst_buf[i]  + n * tsizes[i], nptr1[i], (size_t)tsizes[i]);
 
 				nptr1[i] = cnst_buf[i];
@@ -754,9 +754,9 @@ out:
 #endif
 
 	int skip = min_blockdim(N, ND, tdims, nstr1, sizes);
-	bart_flags_t flags = 0;
+	unsigned long flags = 0;
 
-	debug_printf(DP_DEBUG4, "MD-Fun. Io: %" PRIu64 " Input: ", io);
+	debug_printf(DP_DEBUG4, "MD-Fun. Io: %lu Input: ", io);
 	debug_print_dims(DP_DEBUG4, D, dim);
 
 #ifdef USE_GPU
@@ -766,13 +766,13 @@ out:
 #endif
 		flags = dims_parallel(N, io, ND, tdims, nstr1, sizes);
 
-		while ((0 != flags) && (md_min_idx(flags) < skip))
+		while ((0 != flags) && (ffs(flags) <= skip))
 			skip--;
 
 		flags = flags >> skip;
 	}
 
-	const bart_stride_t* nstr2[N];
+	const long* nstr2[N];
 
 	for (int i = 0; i < N; i++)
 		nstr2[i] = *nstr1[i] + skip;
@@ -785,7 +785,7 @@ out:
 	__block struct nary_opt_data_s data = { md_calc_size(skip, tdims), &cpu_ops };
 #endif
 
-	debug_printf(DP_DEBUG4, "Vec: %d (%" PRId64 ") Opt.: ", skip, data.size);
+	debug_printf(DP_DEBUG4, "Vec: %d (%ld) Opt.: ", skip, data.size);
 	debug_print_dims(DP_DEBUG4, ND, tdims);
 
 	NESTED(void, nary_opt, (void* ptr[]))

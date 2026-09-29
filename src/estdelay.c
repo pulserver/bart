@@ -81,10 +81,10 @@ int main_estdelay(int argc, char* argv[argc])
 		error("Pad_factor -p should be even\n");
 
 
-	bart_dim_t tdims[DIMS];
+	long tdims[DIMS];
 	const complex float* traj = load_cfl(traj_file, DIMS, tdims);
 
-	bart_dim_t adims[DIMS];
+	long adims[DIMS];
 	md_select_dims(DIMS, MD_BIT(2), adims, tdims);
 
 	int N = tdims[2];
@@ -110,16 +110,16 @@ int main_estdelay(int argc, char* argv[argc])
 	}
 
 
-	bart_dim_t full_dims[DIMS];
+	long full_dims[DIMS];
 	const complex float* full_in = load_cfl(data_file, DIMS, full_dims);
 
 	// Remove not needed dimensions
-	bart_dim_t dims[DIMS];
+	long dims[DIMS];
 	md_select_dims(DIMS, READ_FLAG|PHS1_FLAG|PHS2_FLAG|COIL_FLAG, dims, full_dims);
 
 	complex float* in = md_alloc(DIMS, dims, CFL_SIZE);
 
-	bart_dim_t pos[DIMS] = { };
+	long pos[DIMS] = { };
 	md_copy_block(DIMS, pos, dims, in, full_dims, full_in, CFL_SIZE);
 
 	// FIXME: more checks
@@ -164,7 +164,7 @@ int main_estdelay(int argc, char* argv[argc])
 
 	if (NULL != qf_file) {
 
-		bart_dim_t qf_dims[DIMS];
+		long qf_dims[DIMS];
 		md_singleton_dims(DIMS, qf_dims);
 		qf_dims[0] = 3;
 

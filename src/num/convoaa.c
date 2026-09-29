@@ -17,12 +17,12 @@
 
 
 
-void overlapandadd(int N, const bart_dim_t dims[N], const bart_dim_t blk[N], complex float* dst, complex float* src1, const bart_dim_t dim2[N], complex float* src2)
+void overlapandadd(int N, const long dims[N], const long blk[N], complex float* dst, complex float* src1, const long dim2[N], complex float* src2)
 {
-	bart_dim_t ndims[2 * N];
-	bart_dim_t L[2 * N];
-	bart_dim_t ndim2[2 * N];
-	bart_dim_t ndim3[2 * N];
+	long ndims[2 * N];
+	long L[2 * N];
+	long ndim2[2 * N];
+	long ndim3[2 * N];
 
 	for (int i = 0; i < N; i++) {
 
@@ -45,12 +45,12 @@ void overlapandadd(int N, const bart_dim_t dims[N], const bart_dim_t blk[N], com
 	complex float* tmp = md_alloc(2 * N, L, CFL_SIZE);
 
 //	conv_causal_extend(2 * N, L, tmp, ndims, src1, ndim2, src2);
-	conv(2 * N, ~UINT64_C(0), CONV_EXTENDED, CONV_CAUSAL, L, tmp, ndims, src1, ndim2, src2);
+	conv(2 * N, ~0UL, CONV_EXTENDED, CONV_CAUSAL, L, tmp, ndims, src1, ndim2, src2);
 	// [------++++||||||||
 
 	//long str1[2 * N];
-	bart_stride_t str2[2 * N];
-	bart_stride_t str3[2 * N];
+	long str2[2 * N];
+	long str3[2 * N];
 
 	//md_calc_strides(2 * N, str1, ndims, 8);
 	md_calc_strides(2 * N, str2, L, 8);
@@ -64,15 +64,15 @@ void overlapandadd(int N, const bart_dim_t dims[N], const bart_dim_t blk[N], com
 
 
 
-void overlapandsave(int N, const bart_dim_t dims[N], const bart_dim_t blk[N], complex float* dst, complex float* src1, const bart_dim_t dim2[N], complex float* src2)
+void overlapandsave(int N, const long dims[N], const long blk[N], complex float* dst, complex float* src1, const long dim2[N], complex float* src2)
 {
 	// [------++++
 	// [------
 
-	bart_dim_t ndims[2 * N];
-	bart_dim_t L[2 * N];
-	bart_dim_t ndim2[2 * N];
-	bart_dim_t ndim3[2 * N];
+	long ndims[2 * N];
+	long L[2 * N];
+	long ndim2[2 * N];
+	long ndim3[2 * N];
 
 	for (int i = 0; i < N; i++) {
 
@@ -94,9 +94,9 @@ void overlapandsave(int N, const bart_dim_t dims[N], const bart_dim_t blk[N], co
 
 	complex float* tmp = md_alloc(2 * N, L, CFL_SIZE);
 
-	bart_stride_t str1[2 * N];
-	bart_stride_t str2[2 * N];
-	bart_stride_t str3[2 * N];
+	long str1[2 * N];
+	long str2[2 * N];
+	long str3[2 * N];
 
 	md_calc_strides(2 * N, str1, ndims, 8);
 	md_calc_strides(2 * N, str2, L, 8);
@@ -104,20 +104,20 @@ void overlapandsave(int N, const bart_dim_t dims[N], const bart_dim_t blk[N], co
 
 	md_clear(2 * N, L, tmp, 8);
 	md_copy2(2 * N, ndim3, str2, tmp, str1, src1, 8);
-	conv(2 * N, ~UINT64_C(0), CONV_VALID, CONV_CAUSAL, ndims, dst, L, tmp, ndim2, src2);
+	conv(2 * N, ~0UL, CONV_VALID, CONV_CAUSAL, ndims, dst, L, tmp, ndim2, src2);
 
 	md_free(tmp);
 }
 
 
 #if 0
-struct conv_plan* overlapandsave_plan(int N, const bart_dim_t dims[N], const bart_dim_t blk[N], const bart_dim_t dim2[N], complex float* src2)
+struct conv_plan* overlapandsave_plan(int N, const long dims[N], const long blk[N], const long dim2[N], complex float* src2)
 {
 	return conv_plan(2 * N, ~0, CONV_VALID, CONV_CAUSAL, ndims, L, ndim2, src2);
 }
 
 
-void overlapandsave_exec(struct conv_plan* plan, int N, const bart_dim_t dims[N], const bart_dim_t blk[N], complex float* dst, complex float* src1, const bart_dim_t dim2[N])
+void overlapandsave_exec(struct conv_plan* plan, int N, const long dims[N], const long blk[N], complex float* dst, complex float* src1, const long dim2[N])
 {
 	md_clear(2 * N, L, tmp, 8);
 	md_copy2(2 * N, ndim3, str2, tmp, str1, src1, 8);
@@ -128,18 +128,18 @@ void overlapandsave_exec(struct conv_plan* plan, int N, const bart_dim_t dims[N]
 #endif
 
 
-void overlapandsave2(int N, bart_flags_t flags, const bart_dim_t blk[N], const bart_dim_t odims[N], complex float* dst, const bart_dim_t dims1[N], const complex float* src1, const bart_dim_t dims2[N], const complex float* src2)
+void overlapandsave2(int N, unsigned long flags, const long blk[N], const long odims[N], complex float* dst, const long dims1[N], const complex float* src1, const long dims2[N], const complex float* src2)
 {
-	bart_dim_t dims1B[N];
+	long dims1B[N];
 
-	bart_dim_t tdims[2 * N];
-	bart_dim_t nodims[2 * N];
-	bart_dim_t ndims1[2 * N];
-	bart_dim_t ndims2[2 * N];
+	long tdims[2 * N];
+	long nodims[2 * N];
+	long ndims1[2 * N];
+	long ndims2[2 * N];
 
-	bart_dim_t shift[2 * N];
+	long shift[2 * N];
 
-	bart_flags_t nflags = 0;
+	unsigned long nflags = 0UL;
 
 	for (int i = 0; i < N; i++) {
 
@@ -216,13 +216,13 @@ void overlapandsave2(int N, bart_flags_t flags, const bart_dim_t blk[N], const b
 
 	complex float* tmp = md_alloc(2 * N, tdims, CFL_SIZE);
 
-	bart_stride_t str1[2 * N];
-	bart_stride_t str2[2 * N];
+	long str1[2 * N];
+	long str2[2 * N];
 
 	md_calc_strides(2 * N, str1, ndims1, CFL_SIZE);
 	md_calc_strides(2 * N, str2, tdims, CFL_SIZE);
 
-	bart_stride_t off = md_calc_offset(2 * N, str1, shift);
+	long off = md_calc_offset(2 * N, str1, shift);
 	md_copy2(2 * N, tdims, str2, tmp, str1, ((void*)src1B) + off, CFL_SIZE);
 
 	md_free(src1B);
@@ -233,18 +233,18 @@ void overlapandsave2(int N, bart_flags_t flags, const bart_dim_t blk[N], const b
 }
 
 
-void overlapandsave2H(int N, bart_flags_t flags, const bart_dim_t blk[N], const bart_dim_t dims1[N], complex float* dst, const bart_dim_t odims[N], const complex float* src1, const bart_dim_t dims2[N], const complex float* src2)
+void overlapandsave2H(int N, unsigned long flags, const long blk[N], const long dims1[N], complex float* dst, const long odims[N], const complex float* src1, const long dims2[N], const complex float* src2)
 {
-	bart_dim_t dims1B[N];
+	long dims1B[N];
 
-	bart_dim_t tdims[2 * N];
-	bart_dim_t nodims[2 * N];
-	bart_dim_t ndims1[2 * N];
-	bart_dim_t ndims2[2 * N];
+	long tdims[2 * N];
+	long nodims[2 * N];
+	long ndims1[2 * N];
+	long ndims2[2 * N];
 
-	bart_dim_t shift[2 * N];
+	long shift[2 * N];
 	
-	bart_flags_t nflags = 0;
+	unsigned long nflags = 0UL;
 
 	for (int i = 0; i < N; i++) {
 
@@ -325,15 +325,15 @@ void overlapandsave2H(int N, bart_flags_t flags, const bart_dim_t blk[N], const 
 	complex float* src1B = md_alloc(N, dims1B, CFL_SIZE);
 
 
-	bart_stride_t str1[2 * N];
-	bart_stride_t str2[2 * N];
+	long str1[2 * N];
+	long str2[2 * N];
 
 	md_calc_strides(2 * N, str1, ndims1, CFL_SIZE);
 	md_calc_strides(2 * N, str2, tdims, CFL_SIZE);
 
 
 
-	bart_stride_t off = md_calc_offset(2 * N, str1, shift);
+	long off = md_calc_offset(2 * N, str1, shift);
 	md_clear(N, dims1B, src1B, CFL_SIZE);
 
 	//md_copy2(2 * N, tdims, str1, ((void*)src1B) + off, str2, tmp, sizeof(complex float));// FIXME:
@@ -352,18 +352,18 @@ void overlapandsave2H(int N, bart_flags_t flags, const bart_dim_t blk[N], const 
 
 
 
-void overlapandsave2NE(int N, bart_flags_t flags, const bart_dim_t blk[N], const bart_dim_t odims[N], complex float* dst, const bart_dim_t dims1[N], complex float* src1, const bart_dim_t dims2[N], complex float* src2, const bart_dim_t mdims[N], complex float* msk)
+void overlapandsave2NE(int N, unsigned long flags, const long blk[N], const long odims[N], complex float* dst, const long dims1[N], complex float* src1, const long dims2[N], complex float* src2, const long mdims[N], complex float* msk)
 {
-	bart_dim_t dims1B[N];
+	long dims1B[N];
 
-	bart_dim_t tdims[2 * N];
-	bart_dim_t nodims[2 * N];
-	bart_dim_t ndims1[2 * N];
-	bart_dim_t ndims2[2 * N];
+	long tdims[2 * N];
+	long nodims[2 * N];
+	long ndims1[2 * N];
+	long ndims2[2 * N];
 
-	bart_dim_t shift[2 * N];
+	long shift[2 * N];
 
-	bart_flags_t nflags = 0;
+	unsigned long nflags = 0UL;
 
 	for (int i = 0; i < N; i++) {
 
@@ -437,13 +437,13 @@ void overlapandsave2NE(int N, bart_flags_t flags, const bart_dim_t blk[N], const
 	complex float* tmp = md_alloc(2 * N, tdims, CFL_SIZE);
 	complex float* tmpX = md_alloc(N, odims, CFL_SIZE);
 
-	bart_stride_t str1[2 * N];
-	bart_stride_t str2[2 * N];
+	long str1[2 * N];
+	long str2[2 * N];
 
 	md_calc_strides(2 * N, str1, ndims1, sizeof(complex float));
 	md_calc_strides(2 * N, str2, tdims, sizeof(complex float));
 
-	bart_stride_t off = md_calc_offset(2 * N, str1, shift);
+	long off = md_calc_offset(2 * N, str1, shift);
 
 	md_resize_center(N, dims1B, src1B, dims1, src1, sizeof(complex float));
 
@@ -453,8 +453,8 @@ void overlapandsave2NE(int N, bart_flags_t flags, const bart_dim_t blk[N], const
 
 	conv(2 * N, nflags, CONV_VALID, CONV_SYMMETRIC, nodims, tmpX, tdims, tmp, ndims2, src2);
 
-	bart_stride_t ostr[N];
-	bart_stride_t mstr[N];
+	long ostr[N];
+	long mstr[N];
 
 	md_calc_strides(N, ostr, odims, sizeof(complex float));
 	md_calc_strides(N, mstr, mdims, sizeof(complex float));
@@ -479,14 +479,14 @@ void overlapandsave2NE(int N, bart_flags_t flags, const bart_dim_t blk[N], const
 
 
 
-void overlapandsave2NEB(int N, bart_flags_t flags, const bart_dim_t blk[N], const bart_dim_t odims[N], complex float* dst, const bart_dim_t dims1[N], const complex float* src1, const bart_dim_t dims2[N], const complex float* src2, const bart_dim_t mdims[N], const complex float* msk)
+void overlapandsave2NEB(int N, unsigned long flags, const long blk[N], const long odims[N], complex float* dst, const long dims1[N], const complex float* src1, const long dims2[N], const complex float* src2, const long mdims[N], const complex float* msk)
 {
-	bart_dim_t dims1B[N] = { };	// maybe-uninitialized
+	long dims1B[N] = { };	// maybe-uninitialized
 
-	bart_dim_t tdims[2 * N] = { };	// GCC ANALYZER
-	bart_dim_t nodims[2 * N] = { };	// GCC ANALYZER
-	bart_dim_t ndims2[2 * N] = { };	// GCC ANALYZER
-	bart_dim_t nmdims[2 * N];
+	long tdims[2 * N] = { };	// GCC ANALYZER
+	long nodims[2 * N] = { };	// GCC ANALYZER
+	long ndims2[2 * N] = { };	// GCC ANALYZER
+	long nmdims[2 * N];
 
 	int e = N;
 
@@ -560,9 +560,9 @@ void overlapandsave2NEB(int N, bart_flags_t flags, const bart_dim_t blk[N], cons
 
 	//long S = md_calc_size(N, dims1B, 1);
 
-	bart_stride_t str1[NE];
+	long str1[NE];
 
-	bart_dim_t str1B[N];
+	long str1B[N];
 	md_calc_strides(N, str1B, dims1B, sizeof(complex float));
 
 	e = N;
@@ -576,13 +576,13 @@ void overlapandsave2NEB(int N, bart_flags_t flags, const bart_dim_t blk[N], cons
 	assert(NE == e);
 
 
-	bart_stride_t str2[NE];
+	long str2[NE];
 	md_calc_strides(NE, str2, tdims, sizeof(complex float));
 
 
-	bart_stride_t ostr[NE];
-	bart_stride_t mstr[NE];
-	bart_dim_t mstrB[2 * N];
+	long ostr[NE];
+	long mstr[NE];
+	long mstrB[2 * N];
 
 	md_calc_strides(NE, ostr, nodims, sizeof(complex float));
 	md_calc_strides(2 * N, mstrB, nmdims, sizeof(complex float));
@@ -624,8 +624,8 @@ void overlapandsave2NEB(int N, bart_flags_t flags, const bart_dim_t blk[N], cons
 		complex float* tmp = md_alloc_sameplace(N, tdims, CFL_SIZE, dst);
 		complex float* tmpX = md_alloc_sameplace(N, nodims, CFL_SIZE, dst);
 
-		bart_stride_t off1 = str1[N + 0] * i + str1[N + 1] * j + str1[N + 2] * k;
-		bart_stride_t off2 = mstr[N + 0] * i + mstr[N + 1] * j + mstr[N + 2] * k;
+		long off1 = str1[N + 0] * i + str1[N + 1] * j + str1[N + 2] * k;
+		long off2 = mstr[N + 0] * i + mstr[N + 1] * j + mstr[N + 2] * k;
 
 		md_copy2(N, tdims, str2, tmp, str1, ((const void*)src1B) + off1, sizeof(complex float));
 		conv(N, flags, CONV_VALID, CONV_SYMMETRIC, nodims, tmpX, tdims, tmp, ndims2, src2);
@@ -648,14 +648,14 @@ void overlapandsave2NEB(int N, bart_flags_t flags, const bart_dim_t blk[N], cons
 
 
 
-void overlapandsave2HB(int N, bart_flags_t flags, const bart_dim_t blk[N], const bart_dim_t dims1[N], complex float* dst, const bart_dim_t odims[N], const complex float* src1, const bart_dim_t dims2[N], const complex float* src2, const bart_dim_t mdims[N], const complex float* msk)
+void overlapandsave2HB(int N, unsigned long flags, const long blk[N], const long dims1[N], complex float* dst, const long odims[N], const complex float* src1, const long dims2[N], const complex float* src2, const long mdims[N], const complex float* msk)
 {
-	bart_dim_t dims1B[N] = { };	// maybe-uninitialized
+	long dims1B[N] = { };	// maybe-uninitialized
 
-	bart_dim_t tdims[2 * N] = { };	// GCC ANALYZER
-	bart_dim_t nodims[2 * N] = { };	// GCC ANALYZER
-	bart_dim_t ndims2[2 * N] = { };	// GCC ANALYZER
-	bart_dim_t nmdims[2 * N];
+	long tdims[2 * N] = { };	// GCC ANALYZER
+	long nodims[2 * N] = { };	// GCC ANALYZER
+	long ndims2[2 * N] = { };	// GCC ANALYZER
+	long nmdims[2 * N];
 
 	int e = N;
 
@@ -727,9 +727,9 @@ void overlapandsave2HB(int N, bart_flags_t flags, const bart_dim_t blk[N], const
 
 	// long S = md_calc_size(N, dims1B, 1);
 
-	bart_stride_t str1[NE];
+	long str1[NE];
 
-	bart_dim_t str1B[N];
+	long str1B[N];
 	md_calc_strides(N, str1B, dims1B, sizeof(complex float));
 
 	e = N;
@@ -744,13 +744,13 @@ void overlapandsave2HB(int N, bart_flags_t flags, const bart_dim_t blk[N], const
 
 
 
-	bart_stride_t str2[NE];
+	long str2[NE];
 	md_calc_strides(NE, str2, tdims, sizeof(complex float));
 
 
-	bart_stride_t ostr[NE];
-	bart_stride_t mstr[NE];
-	bart_dim_t mstrB[2 * N];
+	long ostr[NE];
+	long mstr[NE];
+	long mstrB[2 * N];
 
 	md_calc_strides(NE, ostr, nodims, sizeof(complex float));
 	md_calc_strides(2 * N, mstrB, nmdims, sizeof(complex float));
@@ -788,9 +788,9 @@ void overlapandsave2HB(int N, bart_flags_t flags, const bart_dim_t blk[N], const
 		    complex float* tmp = md_alloc_sameplace(N, tdims, CFL_SIZE, dst);
 		    complex float* tmpX = md_alloc_sameplace(N, nodims, CFL_SIZE, dst);
 
-		    bart_stride_t off1 = str1[N + 0] * i + str1[N + 1] * j + str1[N + 2] * k;
-		    bart_stride_t off2 = mstr[N + 0] * i + mstr[N + 1] * j + mstr[N + 2] * k;
-		    bart_stride_t off3 = ostr[N + 0] * i + ostr[N + 1] * j + ostr[N + 2] * k;
+		    long off1 = str1[N + 0] * i + str1[N + 1] * j + str1[N + 2] * k;
+		    long off2 = mstr[N + 0] * i + mstr[N + 1] * j + mstr[N + 2] * k;
+		    long off3 = ostr[N + 0] * i + ostr[N + 1] * j + ostr[N + 2] * k;
 
 		    md_zmul2(N, nodims, ostr, tmpX, ostr, ((const void*)src1) + off3, mstr, ((const void*)msk) + off2);
 		    convH(N, flags, CONV_VALID, CONV_SYMMETRIC, tdims, tmp, nodims, tmpX, ndims2, src2);

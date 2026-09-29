@@ -41,12 +41,12 @@ static arg_t lorentzian(arg_t amplitude, arg_t width, arg_t omegai, arg_t omega)
 }
 
 // Function to reconstruct the signal with given pool parameters
-const struct nlop_s* nlop_lorentzian_multi_pool_create(int N, const bart_dim_t signal_dims[N],
-                const bart_dim_t param_dims[N], const bart_dim_t omega_dims[N], const complex float* omega)
+const struct nlop_s* nlop_lorentzian_multi_pool_create(int N, const long signal_dims[N],
+                const long param_dims[N], const long omega_dims[N], const complex float* omega)
 {
 	arg_t omega_arg = snlop_const(N, omega_dims, omega, "omega");
 
-	bart_dim_t map_dims[DIMS];
+	long map_dims[DIMS];
 	md_select_dims(DIMS, FFT_FLAGS, map_dims, signal_dims);
 
 	int n_params = param_dims[COEFF_DIM];

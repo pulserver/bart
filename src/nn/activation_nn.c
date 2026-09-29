@@ -17,7 +17,7 @@
 #include "activation_nn.h"
 
 
-nn_t nn_append_activation(nn_t network, int o, const char* oname, enum ACTIVATION activation, bart_flags_t bflags)
+nn_t nn_append_activation(nn_t network, int o, const char* oname, enum ACTIVATION activation, unsigned long bflags)
 {
 	o = nn_get_out_arg_index(network, o, oname);
 
@@ -31,7 +31,7 @@ nn_t nn_append_activation(nn_t network, int o, const char* oname, enum ACTIVATIO
 	return result;
 }
 
-nn_t nn_append_activation_bias(nn_t network, int o, const char* oname, const char* bname, enum ACTIVATION activation, bart_flags_t bflag)
+nn_t nn_append_activation_bias(nn_t network, int o, const char* oname, const char* bname, enum ACTIVATION activation, unsigned long bflag)
 {
 	o = nn_get_out_arg_index(network, o, oname);
 

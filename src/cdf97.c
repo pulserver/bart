@@ -29,7 +29,7 @@ static const char help_str[] = "Perform a wavelet (cdf97) transform.";
 
 int main_cdf97(int argc, char* argv[argc])
 {
-	bart_flags_t flags = 0;
+	unsigned long flags = 0;
 	const char* in_file = NULL;
 	const char* out_file = NULL;
 
@@ -51,7 +51,7 @@ int main_cdf97(int argc, char* argv[argc])
 
 	num_init();
 
-	bart_dim_t dims[DIMS];
+	long dims[DIMS];
 	complex float* idata = load_cfl(in_file, DIMS, dims);
 	complex float* odata = create_cfl(out_file, DIMS, dims);
 

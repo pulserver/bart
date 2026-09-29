@@ -117,9 +117,9 @@ void vecd_saxpy(int N, double dst[N], double alpha, const double b[N])
 		dst[i] += alpha * b[i];
 }
 
-void vecf_axpbz(bart_dim_t N, float* dst, const float alpha, const float* src1, const float beta, const float* src2)
+void vecf_axpbz(long N, float* dst, const float alpha, const float* src1, const float beta, const float* src2)
 {
-	for (bart_dim_t i = 0; i < N; i++)
+	for (long i = 0; i < N; i++)
 		dst[i] = alpha * src1[i] + beta * src2[i];
 }
 
@@ -176,18 +176,18 @@ void mat_gaussian(int A, int B, complex float x[A][B])
 }
 
 // add constant to vector
-void vec_sadd(bart_dim_t D, complex float alpha, complex float dst[D], const complex float src[D])
+void vec_sadd(long D, complex float alpha, complex float dst[D], const complex float src[D])
 {
 //	#pragma omp parallel for
-	for (bart_dim_t i = 0; i < D; i++)
+	for (long i = 0; i < D; i++)
 		dst[i] = alpha + src[i];
 }
 
-complex float vec_mean(bart_dim_t D, const complex float src[D])
+complex float vec_mean(long D, const complex float src[D])
 {
 	cfl_acu_t val = 0;
 
-	for (bart_dim_t i = 0; i < D; i++)
+	for (long i = 0; i < D; i++)
 		val += src[i];
 
 	return val / (float)D;
@@ -622,10 +622,10 @@ complex float vec_dot(int N, const complex float x[N], const complex float y[N])
 
 
 // FIXME: this is not axpy
-void vec_axpy(bart_dim_t N, complex float x[N], complex float alpha, const complex float y[N])
+void vec_axpy(long N, complex float x[N], complex float alpha, const complex float y[N])
 {
 //	#pragma omp parallel for
-	for (bart_dim_t k = 0; k < N; k++)
+	for (long k = 0; k < N; k++)
 		x[k] = alpha * y[k];
 }
 

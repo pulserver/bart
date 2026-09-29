@@ -19,21 +19,21 @@
  * Buades, A, Coll B, Morel J-M. A non-local algorithm for image denoising.
  * IEEE Computer Society Conference on Computer Vision and Pattern Recognition (CVPR'05); 2005.
  */
-void md_znlmeans2(int D, const bart_dim_t dims[D], bart_flags_t flags,
-		const bart_stride_t ostrs[D], complex float* optr,
-		const bart_stride_t istrs[D], const complex float* iptr,
-		bart_dim_t patch_length, bart_dim_t patch_dist, float h, float a)
+void md_znlmeans2(int D, const long dims[D], unsigned long flags,
+		const long ostrs[D], complex float* optr,
+		const long istrs[D], const complex float* iptr,
+		long patch_length, long patch_dist, float h, float a)
 {
 	assert(1 == patch_length % 2);
 
 	int flag_count = bitcount(flags);
 	int xD = D + flag_count;
-	bart_dim_t dist_size = 2 * patch_dist + 1; // number of pixels along one dim that will be used for the mean
-	bart_dim_t padding_img = 2 * (patch_dist + patch_length / 2); // size difference input img vs input for sliding differences, along flagged dims
-	bart_dim_t padding_diff = 2 * (patch_length / 2); // size difference input img vs result of sliding differences
+	long dist_size = 2 * patch_dist + 1; // number of pixels along one dim that will be used for the mean
+	long padding_img = 2 * (patch_dist + patch_length / 2); // size difference input img vs input for sliding differences, along flagged dims
+	long padding_diff = 2 * (patch_length / 2); // size difference input img vs result of sliding differences
 
 
-	bart_dim_t weight_dims[xD + flag_count]; // size of weight-space: values with which pixels will be weighted.
+	long weight_dims[xD + flag_count]; // size of weight-space: values with which pixels will be weighted.
 					   // [0..D] pixel for which mean is calculated (output pixel)
 					   // [D..D+flag_count] pixel to which this weight applies. Relative offset to output pixel in flagged dims. (input pixel)
 					   // [D+flag_count..D+2*flag_count] neighborhood / patch around input pixel, in flagged dims. Used with patch_strides, not allocated
@@ -41,22 +41,22 @@ void md_znlmeans2(int D, const bart_dim_t dims[D], bart_flags_t flags,
 	md_set_dims(flag_count, weight_dims + D, dist_size);
 	md_set_dims(flag_count, weight_dims + xD, patch_length);
 
-	bart_stride_t weight_strs[xD + flag_count];
+	long weight_strs[xD + flag_count];
 	md_calc_strides(xD, weight_strs, weight_dims, CFL_SIZE);
 	md_set_dims(flag_count, weight_strs + xD, 0); // weights = accumulated patches, thus stride = 0 in the last dims
 
 
-	bart_dim_t* kernel_dims = weight_dims + xD; // size of gaussian pdf for weighted euclidean norm of patches
-	bart_stride_t kernel_strs[xD + flag_count];
+	long* kernel_dims = weight_dims + xD; // size of gaussian pdf for weighted euclidean norm of patches
+	long kernel_strs[xD + flag_count];
 	md_set_dims(xD, kernel_strs, 0);
 	md_calc_strides(flag_count, kernel_strs + xD, kernel_dims, CFL_SIZE);
 
 
-	bart_dim_t pad_dims[D]; // size of padded image
+	long pad_dims[D]; // size of padded image
 	for (int i = 0; i < D; i++)
 		pad_dims[i] = MD_IS_SET(flags, i) ? dims[i] + padding_img : dims[i];
 
-	bart_stride_t pad_strs[xD];
+	long pad_strs[xD];
 	md_set_dims(xD, pad_strs, 0);
 	md_calc_strides(D, pad_strs, pad_dims, CFL_SIZE);
 
@@ -65,29 +65,29 @@ void md_znlmeans2(int D, const bart_dim_t dims[D], bart_flags_t flags,
 			pad_strs[D + (j++)] = pad_strs[i];
 
 
-	bart_dim_t diff_dims[xD]; // size of difference images
+	long diff_dims[xD]; // size of difference images
 	for (int i = 0; i < D; i++)
 		diff_dims[i] = MD_IS_SET(flags, i) ? dims[i] + padding_diff : dims[i] ;
 
 	md_set_dims(flag_count, diff_dims + D, dist_size);
 
-	bart_stride_t diff_strs[xD];
+	long diff_strs[xD];
 	md_calc_strides(xD, diff_strs, diff_dims, CFL_SIZE);
 
 
-	bart_stride_t patch_strs[xD + flag_count]; // another view on difference images: difference of patches of own and neighbouring pixels
+	long patch_strs[xD + flag_count]; // another view on difference images: difference of patches of own and neighbouring pixels
 	md_copy_strides(xD, patch_strs, diff_strs);
 	for (int i = 0, j = 0; i < D; i++)
 		if (MD_IS_SET(flags, i))
 			patch_strs[xD + (j++)] = diff_strs[i];
 
 
-	bart_stride_t r_patchcenter_offset[D]; // index to center of first patch
+	long r_patchcenter_offset[D]; // index to center of first patch
 	for (int i = 0; i < D; i++)
 		r_patchcenter_offset[i] = MD_IS_SET(flags, i) ?  patch_length / 2 : 0;
 
 
-	bart_stride_t ostr2[xD]; // extended output strides for accumulation into output
+	long ostr2[xD]; // extended output strides for accumulation into output
 	md_set_dims(xD, ostr2, 0);
 	md_copy_strides(D, ostr2, ostrs);
 
@@ -133,9 +133,9 @@ void md_znlmeans2(int D, const bart_dim_t dims[D], bart_flags_t flags,
 	md_free(kernel);
 }
 
-void md_znlmeans(int D, const bart_dim_t dim[D], bart_flags_t flags,
+void md_znlmeans(int D, const long dim[D], unsigned long flags,
 		complex float* optr, const complex float* iptr,
-		bart_dim_t patch_length, bart_dim_t patch_dist, float h, float a)
+		long patch_length, long patch_dist, float h, float a)
 {
 	md_znlmeans2(D, dim, flags,
 			MD_STRIDES(D, dim, CFL_SIZE), optr,
@@ -146,10 +146,10 @@ void md_znlmeans(int D, const bart_dim_t dim[D], bart_flags_t flags,
 /*
  * optr[i,...,2d-1] = iptr[i] - iptr[i-d]
  */
-void md_znlmeans_distance2(int D, const bart_dim_t idim[D], int xD,
-		const bart_dim_t odim[xD], bart_flags_t flags,
-		const bart_stride_t ostrs[xD], complex float* optr,
-		const bart_stride_t istrs[D], const complex float* iptr)
+void md_znlmeans_distance2(int D, const long idim[D], int xD,
+		const long odim[xD], unsigned long flags,
+		const long ostrs[xD], complex float* optr,
+		const long istrs[D], const complex float* iptr)
 {
 	int flag_count = bitcount(flags);
 
@@ -157,13 +157,13 @@ void md_znlmeans_distance2(int D, const bart_dim_t idim[D], int xD,
 	assert(xD - D == flag_count);
 	assert(flags < MD_BIT(D));
 
-	bart_stride_t ioffset[D];
+	long ioffset[D];
 	md_set_dims(D, ioffset, 0);
 
-	bart_dim_t istrs_moving[xD];
+	long istrs_moving[xD];
 	md_copy_strides(D, istrs_moving, istrs);
 
-	bart_dim_t istrs_fix[xD];
+	long istrs_fix[xD];
 	md_copy_strides(D, istrs_fix, istrs);
 
 	for (int i = 0, j = 0; i < D; i++) {
@@ -185,8 +185,8 @@ void md_znlmeans_distance2(int D, const bart_dim_t idim[D], int xD,
 	md_zsub2(xD, odim, ostrs, optr, istrs_fix, &MD_ACCESS(D, istrs, ioffset, iptr), istrs_moving, iptr);
 }
 
-void md_znlmeans_distance(int D, const bart_dim_t idim[D], int xD,
-		const bart_dim_t odim[xD], bart_flags_t flags,
+void md_znlmeans_distance(int D, const long idim[D], int xD,
+		const long odim[xD], unsigned long flags,
 		complex float* optr, const complex float* iptr)
 {
 	md_znlmeans_distance2(D, idim, xD, odim, flags,

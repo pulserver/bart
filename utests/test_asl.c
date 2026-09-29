@@ -20,13 +20,13 @@
 static bool test_asl(void)
 {
 	enum { N = 16 };
-	bart_dim_t dims[N] = { [0 ... DIMS - 1] = 1 };
+	long dims[N] = { [0 ... DIMS - 1] = 1 };
 	dims[0] = 128;
 	dims[1] = 128;	
 
 	int asl_dim = ITER_DIM;
 	
-	bart_dim_t asl_dims[DIMS];
+	long asl_dims[DIMS];
 	md_copy_dims(DIMS, asl_dims, dims);
 	asl_dims[asl_dim] = 2;
 
@@ -39,7 +39,7 @@ static bool test_asl(void)
 	complex float* src = md_alloc(DIMS, asl_dims, CFL_SIZE);
 	md_zfill(DIMS, asl_dims, src, 0);
 
-	bart_dim_t pos[DIMS] = { 0 };
+	long pos[DIMS] = { 0 };
 	md_copy_block(DIMS, pos, asl_dims, src, dims, src1, CFL_SIZE);
 	pos[asl_dim] = 1;
 	md_copy_block(DIMS, pos, asl_dims, src, dims, src2, CFL_SIZE);
@@ -71,7 +71,7 @@ UT_REGISTER_TEST(test_asl);
 static bool test_hadamard_encoding(void)
 {
 	enum { N = 4 };
-	bart_dim_t idims[N] = { 2, 2, 4, 1 };
+	long idims[N] = { 2, 2, 4, 1 };
 
 	int had_dim = 2;
 	

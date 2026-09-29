@@ -46,7 +46,7 @@ int main_phasepole(int argc, char* argv[argc])
 	const char* wmap_file = NULL;
 
 	float center[3] = { -1., -1., -1. };
-	bart_dim_t mydims[3] = { 0, 0, 0 };
+	long mydims[3] = { 0, 0, 0 };
 
 	enum mode_t mode = POLE_MODE_CORRECT;
 
@@ -69,7 +69,7 @@ int main_phasepole(int argc, char* argv[argc])
 
 	cmdline(&argc, argv, ARRAY_SIZE(args), args, help_str, ARRAY_SIZE(opts), opts);
 
-	bart_dim_t dims[DIMS];
+	long dims[DIMS];
 	md_singleton_dims(DIMS, dims);
 	dims[0] = 0;
 
@@ -83,7 +83,7 @@ int main_phasepole(int argc, char* argv[argc])
 
 		if (NULL != src_file) {
 
-			bart_dim_t pos_dims[DIMS] = { };
+			long pos_dims[DIMS] = { };
 			md_singleton_dims(DIMS - 3, pos_dims + 3);
 
 			complex float* src = load_cfl(src_file, 3, pos_dims);
@@ -116,10 +116,10 @@ int main_phasepole(int argc, char* argv[argc])
 		if (NULL == src_file)
 			error("Input file must be specified for pole estimation (-e) or correction (default).\n");
 
-		bart_dim_t sens_dims[DIMS];
+		long sens_dims[DIMS];
 		complex float* sens = load_cfl(src_file, DIMS, sens_dims);
 
-		bart_dim_t curl_dims[DIMS];
+		long curl_dims[DIMS];
 		md_copy_dims(DIMS, curl_dims, sens_dims);
 		curl_dims[ITER_DIM] = ((-1 == conf.normal) && (3 == bitcount(md_nontriv_dims(3, sens_dims)))) ? 3 : 1;
 
@@ -131,7 +131,7 @@ int main_phasepole(int argc, char* argv[argc])
 
 		compute_curl_weighting(conf, DIMS, curl_dims, ITER_DIM, wgh, sens_dims, sens);
 
-		bart_dim_t pmap_dims[DIMS];
+		long pmap_dims[DIMS];
 		md_select_dims(DIMS, ~(conf.avg_flag | ITER_FLAG), pmap_dims, curl_dims);
 
 		complex float* acurl_map = ((NULL != apmap_file) ? create_cfl : anon_cfl)(apmap_file, DIMS, pmap_dims);

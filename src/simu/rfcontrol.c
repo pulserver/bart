@@ -180,8 +180,8 @@ float objfun(int Nu, float G[Nu], struct Xk_struct* Xk, const struct puls_opt_pa
 
 			vecf_copy(p.Nt - 1, Xk->u, *u);
 
-			md_copy(3, (bart_dim_t[3]) { p.Nx, p.Nt - 1, 3 }, Xk->N, *N, sizeof(float));
-			md_copy(3, (bart_dim_t[3]) { p.Nx, p.Nt - 1, 3 }, Xk->P, *P, sizeof(float));
+			md_copy(3, (long[3]) { p.Nx, p.Nt - 1, 3 }, Xk->N, *N, sizeof(float));
+			md_copy(3, (long[3]) { p.Nx, p.Nt - 1, 3 }, Xk->P, *P, sizeof(float));
 		}
 
 		xfree(P);
@@ -419,9 +419,9 @@ void tr_newton(int Nu, float u[Nu], const struct puls_opt_pars p, const struct t
 	float (*G)[Nu] = xmalloc(sizeof *G);
 
 	struct Xk_struct Xk;
-	Xk.N = md_alloc(3, (bart_dim_t[3]) { 3, p.Nx, p.Nt - 1 }, sizeof(float));
-	Xk.P = md_alloc(3, (bart_dim_t[3]) { p.Nx, p.Nt - 1, 3 }, sizeof(float));
-	Xk.u = md_alloc(1, (bart_dim_t[1]) { p.Nt - 1 }, sizeof(float));
+	Xk.N = md_alloc(3, (long[3]) { 3, p.Nx, p.Nt - 1 }, sizeof(float));
+	Xk.P = md_alloc(3, (long[3]) { p.Nx, p.Nt - 1, 3 }, sizeof(float));
+	Xk.u = md_alloc(1, (long[1]) { p.Nt - 1 }, sizeof(float));
 
 	float J = objfun(p.Nu, *G, &Xk, p, u0);
 	float nrG0 = sqrtf(p.dt) * vecf_norm(p.Nu, *G);

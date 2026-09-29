@@ -103,14 +103,14 @@ complex double kpolygon(int N, const double pg0[N][2], const double q0[3])
 }
 
 // compute trigonometric polynomial defined in tri_poly and evaluate at p in x-space
-complex double xtripoly(const struct tri_poly* t, const bart_dim_t C, const double p[4])
+complex double xtripoly(const struct tri_poly* t, const long C, const double p[4])
 {
-	bart_dim_t D = t->D;
+	long D = t->D;
 
 	for (int i = 0; i < 3; i++)
 		assert(t->cdims[i] == t->cpdims[i + 1]);
 
-	bart_stride_t cstrs[D], cpstrs[D], cpos[D], pos[D], ccpos[D];
+	long cstrs[D], cpstrs[D], cpos[D], pos[D], ccpos[D];
 
 	md_calc_strides(D, cstrs, t->cdims, CFL_SIZE);
 	md_calc_strides(D, cpstrs, t->cpdims, FL_SIZE);
@@ -140,13 +140,13 @@ complex double xtripoly(const struct tri_poly* t, const bart_dim_t C, const doub
 }
 
 // evaluate representation of trigonometric polynomial in k-space at position p
-complex double ktripoly(const struct tri_poly* t, const bart_dim_t C, const double p[4])
+complex double ktripoly(const struct tri_poly* t, const long C, const double p[4])
 {
-	bart_dim_t D = t->D;
+	long D = t->D;
 	float* ccpos = t->cpos;
 	complex float* ccoeff = t->coeff;
 
-	bart_dim_t pos[D], cpos[D], pstrs[D], cstrs[D];
+	long pos[D], cpos[D], pstrs[D], cstrs[D];
 
 	md_calc_strides(D, pstrs, t->cpdims, FL_SIZE);
 	md_calc_strides(D, cstrs, t->cdims, CFL_SIZE);

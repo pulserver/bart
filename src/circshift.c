@@ -44,12 +44,12 @@ int main_circshift(int argc, char* argv[argc])
 	num_init();
 
 	const int N = DIMS;
-	bart_dim_t dims[N];
+	long dims[N];
 
 	if ((0 > dim) || (dim >= N))
 		error("Dimension out of range");
 
-	bart_dim_t center[N] = { };
+	long center[N] = { };
 	center[dim] = shift;
 
 	complex float* idata = load_cfl(in_file, N, dims);

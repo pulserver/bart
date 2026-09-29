@@ -20,7 +20,7 @@ struct memcfl {
 	const char* name;
 
 	int D;
-	const bart_dim_t* dims;
+	const long* dims;
 	complex float* data;
 
 	int refcount;
@@ -31,7 +31,7 @@ struct memcfl {
 
 static struct memcfl* memcfl_list = NULL;
 
-void memcfl_register(const char* name, int D, const bart_dim_t dims[D], complex float* data, bool managed)
+void memcfl_register(const char* name, int D, const long dims[D], complex float* data, bool managed)
 {
 	PTR_ALLOC(struct memcfl, mem);
 
@@ -39,7 +39,7 @@ void memcfl_register(const char* name, int D, const bart_dim_t dims[D], complex 
 	mem->D = D;
 	mem->next = memcfl_list;
 
-	bart_dim_t* ndims = *TYPE_ALLOC(bart_dim_t[D]);
+	long* ndims = *TYPE_ALLOC(long[D]);
 
 	for (int i = 0; i < D; i++)
 		ndims[i] = dims[i];
@@ -52,7 +52,7 @@ void memcfl_register(const char* name, int D, const bart_dim_t dims[D], complex 
 	memcfl_list = PTR_PASS(mem);
 }
 
-complex float* memcfl_create(const char* name, int D, const bart_dim_t dims[D])
+complex float* memcfl_create(const char* name, int D, const long dims[D])
 {
 	complex float* data = xmalloc((size_t)io_calc_size(D, dims, sizeof(complex float)));
 	memcfl_register(name, D, dims, data, true);
@@ -106,7 +106,7 @@ const char** memcfl_list_all(void)
 }
 
 
-complex float* memcfl_load(const char* name, int D, bart_dim_t dims[D])
+complex float* memcfl_load(const char* name, int D, long dims[D])
 {
 	struct memcfl* mem = memcfl_list;
 

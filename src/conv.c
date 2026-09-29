@@ -25,7 +25,7 @@ static const char help_str[] = "Performs a convolution along selected dimensions
 
 int main_conv(int argc, char* argv[argc])
 {
-	bart_flags_t flags = 0;
+	unsigned long flags = 0;
 	const char* in_file = NULL;
 	const char* kern_file = NULL;
 	const char* out_file = NULL;
@@ -45,10 +45,10 @@ int main_conv(int argc, char* argv[argc])
 	num_init();
 
 	int N = DIMS;
-	bart_dim_t dims[N];
+	long dims[N];
 	const complex float* in = load_cfl(in_file, N, dims);
 
-	bart_dim_t krn_dims[N];
+	long krn_dims[N];
 	const complex float* krn = load_cfl(kern_file, N, krn_dims);
 	complex float* out = create_cfl(out_file, N, dims);
 

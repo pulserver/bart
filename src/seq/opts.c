@@ -299,14 +299,14 @@ static void seq_process_options(struct seq_config* conf, struct seq_opts* seq_op
 
 		if (1 == conf->loop_dims[TIME_DIM]) {
 
-			debug_printf(DP_INFO, "Set total number of spokes to %" PRId64 " (full frame for RAGA encoding)\n", conf->loop_dims[PHS1_DIM]);
+			debug_printf(DP_INFO, "Set total number of spokes to %ld (full frame for RAGA encoding)\n", conf->loop_dims[PHS1_DIM]);
 			conf->loop_dims[TIME_DIM] = conf->loop_dims[PHS1_DIM];
 		}
 	}
 
 	seq_ui_interface_loop_dims(0, conf, DIMS, conf->loop_dims);
 
-	const bart_dim_t total_slices = get_slices(conf);
+	const long total_slices = get_slices(conf);
 
 	if ((0. < fabs(seq_opts->rel_shift[0])) || (0. < fabs(seq_opts->rel_shift[1])) || (0. < fabs(seq_opts->rel_shift[2]))) {
 

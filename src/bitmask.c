@@ -19,7 +19,7 @@ static const char help_str[] = "Convert between a bitmask and set of dimensions.
 int main_bitmask(int argc, char* argv[argc])
 {
 	int count = 0;
-	bart_flags_t* dims = NULL;
+	unsigned long* dims = NULL;
 
 	struct arg_s args[] = {
 
@@ -38,7 +38,7 @@ int main_bitmask(int argc, char* argv[argc])
 	if ((1 != count) && inverse)
 		error("exactly one argument needed.\n");
 
-	bart_flags_t flags = 0;
+	unsigned long flags = 0;
 
 	if (!inverse) {
 
@@ -49,7 +49,7 @@ int main_bitmask(int argc, char* argv[argc])
 			flags = MD_SET(flags, d);
 		}
 
-		bart_printf("%" PRIu64 "\n", flags);
+		bart_printf("%ld\n", flags);
 
 	} else {
 

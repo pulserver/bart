@@ -16,7 +16,7 @@
 #include "casorati.h"
 
 
-static void calc_casorati_geom(int N, bart_dim_t dimc[2 * N], bart_stride_t str2[2 * N], const bart_dim_t dimk[N], const bart_dim_t dim[N], const bart_stride_t str[N])
+static void calc_casorati_geom(int N, long dimc[2 * N], long str2[2 * N], const long dimk[N], const long dim[N], const long str[N])
 {
 	for (int i = 0; i < N; i++) {
 
@@ -31,9 +31,9 @@ static void calc_casorati_geom(int N, bart_dim_t dimc[2 * N], bart_stride_t str2
 }
 
 
-void casorati_dims(int N, bart_dim_t odim[2], const bart_dim_t dimk[N], const bart_dim_t dim[N])
+void casorati_dims(int N, long odim[2], const long dimk[N], const long dim[N])
 {
-	bart_dim_t dimc[2 * N];
+	long dimc[2 * N];
 
 	for (int i = 0; i < N; i++) {
 
@@ -48,11 +48,11 @@ void casorati_dims(int N, bart_dim_t odim[2], const bart_dim_t dimk[N], const ba
 }
 
 
-void casorati_matrix(int N, const bart_dim_t dimk[N], const bart_dim_t odim[2], complex float* optr, const bart_dim_t dim[N], const bart_stride_t str[N], const complex float* iptr)
+void casorati_matrix(int N, const long dimk[N], const long odim[2], complex float* optr, const long dim[N], const long str[N], const complex float* iptr)
 {
-	bart_stride_t str2[2 * N];
-	bart_dim_t strc[2 * N];
-	bart_dim_t dimc[2 * N];
+	long str2[2 * N];
+	long strc[2 * N];
+	long dimc[2 * N];
 
 	calc_casorati_geom(N, dimc, str2, dimk, dim, str);
 
@@ -65,11 +65,11 @@ void casorati_matrix(int N, const bart_dim_t dimk[N], const bart_dim_t odim[2], 
 
 
 
-void casorati_matrixH(int N, const bart_dim_t dimk[N], const bart_dim_t dim[N], const bart_stride_t str[N], complex float* optr, const bart_dim_t odim[2], const complex float* iptr)
+void casorati_matrixH(int N, const long dimk[N], const long dim[N], const long str[N], complex float* optr, const long odim[2], const complex float* iptr)
 {
-	bart_stride_t str2[2 * N];
-	bart_dim_t strc[2 * N];
-	bart_dim_t dimc[2 * N];
+	long str2[2 * N];
+	long strc[2 * N];
+	long dimc[2 * N];
 
 	calc_casorati_geom(N, dimc, str2, dimk, dim, str);
 
@@ -87,7 +87,7 @@ void casorati_matrixH(int N, const bart_dim_t dimk[N], const bart_dim_t dim[N], 
 
 
 
-static void calc_basorati_geom(int N, bart_dim_t dimc[2 * N], bart_stride_t str2[2 * N], const bart_dim_t dimk[N], const bart_dim_t dim[N], const bart_stride_t str[N])
+static void calc_basorati_geom(int N, long dimc[2 * N], long str2[2 * N], const long dimk[N], const long dim[N], const long str[N])
 {
 	for (int i = 0; i < N; i++) {
 
@@ -100,9 +100,9 @@ static void calc_basorati_geom(int N, bart_dim_t dimc[2 * N], bart_stride_t str2
 }
 
 
-void basorati_dims(int N, bart_dim_t odim[2], const bart_dim_t dimk[N], const bart_dim_t dim[N])
+void basorati_dims(int N, long odim[2], const long dimk[N], const long dim[N])
 {
-	bart_dim_t dimc[2 * N];
+	long dimc[2 * N];
 
 	for (int i = 0; i < N; i++) {
 
@@ -117,11 +117,11 @@ void basorati_dims(int N, bart_dim_t odim[2], const bart_dim_t dimk[N], const ba
 }
 
 
-void basorati_matrix(int N, const bart_dim_t dimk[N], const bart_dim_t odim[2], complex float* optr, const bart_dim_t dim[N], const bart_stride_t str[N], const complex float* iptr)
+void basorati_matrix(int N, const long dimk[N], const long odim[2], complex float* optr, const long dim[N], const long str[N], const complex float* iptr)
 {
-	bart_stride_t str2[2 * N];
-	bart_dim_t strc[2 * N];
-	bart_dim_t dimc[2 * N];
+	long str2[2 * N];
+	long strc[2 * N];
+	long dimc[2 * N];
 
 	calc_basorati_geom(N, dimc, str2, dimk, dim, str);
 
@@ -134,11 +134,11 @@ void basorati_matrix(int N, const bart_dim_t dimk[N], const bart_dim_t odim[2], 
 
 
 
-void basorati_matrixH(int N, const bart_dim_t dimk[N], const bart_dim_t dim[N], const bart_stride_t str[N], complex float* optr, const bart_dim_t odim[2], const complex float* iptr)
+void basorati_matrixH(int N, const long dimk[N], const long dim[N], const long str[N], complex float* optr, const long odim[2], const complex float* iptr)
 {
-	bart_stride_t str2[2 * N];
-	bart_dim_t strc[2 * N];
-	bart_dim_t dimc[2 * N];
+	long str2[2 * N];
+	long strc[2 * N];
+	long dimc[2 * N];
 
 	calc_basorati_geom(N, dimc, str2, dimk, dim, str);
 

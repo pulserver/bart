@@ -93,10 +93,10 @@ int main_bet(int argc, char* argv[argc])
 	if ((erode < 0) || (erode > 10))
 		error("erode must be in range [0, 10].\n");
 
-	bart_dim_t in_dims[DIMS];
+	long in_dims[DIMS];
 	complex float* in_data = load_cfl(in_file, DIMS, in_dims);
 
-	bart_dim_t out_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	long out_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 	out_dims[0] = in_dims[0];
 	out_dims[1] = in_dims[1];
 	out_dims[2] = in_dims[2];
@@ -124,8 +124,8 @@ int main_bet(int argc, char* argv[argc])
 
 	float tm = compute_tm(DIMS, in_dims, out, resolution, COG, R);
 
-	bart_dim_t dims[3];
-	bart_dim_t o_dims[3];
+	long dims[3];
+	long o_dims[3];
 
         double* model = stl_internal_icosahedron(dims);
 	double* out_model = stl_multiple_subdivide_model(sub,
@@ -167,8 +167,8 @@ int main_bet(int argc, char* argv[argc])
 
 		md_zcmpl_real(DIMS, in_dims, mask_cmplx, mask);
 
-		bart_dim_t er_mask_dims[DIMS];
-		bart_flags_t flags = 0;
+		long er_mask_dims[DIMS];
+		unsigned long flags = 0;
 
 		flags = MD_SET(flags, 0);
 		flags = MD_SET(flags, 1);

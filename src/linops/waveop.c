@@ -33,13 +33,13 @@ struct wavelet_s {
 	linop_data_t super;
 
 	int N;
-	bart_flags_t flags;
-	const bart_dim_t* idims;
-	const bart_stride_t* istr;
-	const bart_dim_t* odims;
-	const bart_stride_t* ostr;
-	const bart_dim_t* minsize;
-	bart_dim_t* shifts;
+	unsigned long flags;
+	const long* idims;
+	const long* istr;
+	const long* odims;
+	const long* ostr;
+	const long* minsize;
+	long* shifts;
 	bool randshift;
 	struct bart_rand_state *rand_state;
 	int flen;
@@ -60,8 +60,8 @@ static void wavelet_forward(const linop_data_t* _data, complex float* dst, const
 
 				int levels = wavelet_num_levels(data->N, MD_BIT(i), data->idims, data->minsize, data->flen);
 
-				assert((size_t)levels < sizeof(bart_dim_t) * CHAR_BIT - 1);
-				data->shifts[i] = (bart_dim_t)rand_range_state(data->rand_state, (1 << levels) + 1u); // +1, as we want to include the limit
+				assert((size_t)levels < sizeof(long) * CHAR_BIT - 1);
+				data->shifts[i] = (long)rand_range_state(data->rand_state, (1 << levels) + 1u); // +1, as we want to include the limit
 
 				assert(data->shifts[i] < data->idims[i]);
 			}
@@ -93,7 +93,7 @@ static void wavelet_del(const linop_data_t* _data)
 	xfree(data);
 }
 
-struct linop_s* linop_wavelet_create(int N, bart_flags_t flags, const bart_dim_t dims[N], const bart_stride_t istr[N], enum wtype wtype, const bart_dim_t minsize[N], bool randshift)
+struct linop_s* linop_wavelet_create(int N, unsigned long flags, const long dims[N], const long istr[N], enum wtype wtype, const long minsize[N], bool randshift)
 {
 	PTR_ALLOC(struct wavelet_s, data);
 	SET_TYPEID(wavelet_s, data);
@@ -123,27 +123,27 @@ struct linop_s* linop_wavelet_create(int N, bart_flags_t flags, const bart_dim_t
 		break;
 	}
 
-	bart_dim_t (*idims)[N] = TYPE_ALLOC(bart_dim_t[N]);
+	long (*idims)[N] = TYPE_ALLOC(long[N]);
 	md_copy_dims(N, *idims, dims);
 	data->idims = *idims;
 
-	bart_stride_t (*nistr)[N] = TYPE_ALLOC(bart_dim_t[N]);
+	long (*nistr)[N] = TYPE_ALLOC(long[N]);
 	md_copy_strides(N, *nistr, istr);
 	data->istr = *nistr;
 
-	bart_dim_t (*nminsize)[N] = TYPE_ALLOC(bart_dim_t[N]);
+	long (*nminsize)[N] = TYPE_ALLOC(long[N]);
 	md_copy_dims(N, *nminsize, minsize);
 	data->minsize = *nminsize;
 
-	bart_dim_t (*odims)[N] = TYPE_ALLOC(bart_dim_t[N]);
+	long (*odims)[N] = TYPE_ALLOC(long[N]);
 	wavelet_coeffs2(N, flags, *odims, dims, minsize, data->flen);
 	data->odims = *odims;
 
-	bart_stride_t (*ostr)[N] = TYPE_ALLOC(bart_dim_t[N]);
+	long (*ostr)[N] = TYPE_ALLOC(long[N]);
 	md_calc_strides(N, *ostr, *odims, CFL_SIZE);
 	data->ostr = *ostr;
 
-	bart_dim_t (*shifts)[N] = TYPE_ALLOC(bart_dim_t[N]);
+	long (*shifts)[N] = TYPE_ALLOC(long[N]);
 	for (int i = 0; i < data->N; i++)
 		(*shifts)[i] = 0;
 

@@ -102,11 +102,11 @@ int main_join(int argc, char* argv[argc])
 		}
 	}
 
-	bart_dim_t in_dims[count][N];
+	long in_dims[count][N];
 	const complex float* in_data[count];
 
-	bart_stride_t offsets[count];
-	bart_dim_t sum = 0;
+	long offsets[count];
+	long sum = 0;
 
 	// figure out size of output
 	for (int l = 0, i = 0; i < count; i++) {
@@ -130,7 +130,7 @@ int main_join(int argc, char* argv[argc])
 			stream_t strm = stream_lookup(in_data[i]);
 
 			if ((NULL != strm) && (0 != (stream_get_flags(strm) & (~MD_BIT(dim)))))
-				error("Input %s is streamed along dims(flags: %" PRIu64 ") other than the one joined!\n", name, stream_get_flags(strm));
+				error("Input %s is streamed along dims(flags: %lu) other than the one joined!\n", name, stream_get_flags(strm));
 
 		} else {
 
@@ -148,7 +148,7 @@ int main_join(int argc, char* argv[argc])
 			unmap_cfl(N, in_dims[i], in_data[i]);
 	}
 
-	bart_dim_t out_dims[N];
+	long out_dims[N];
 
 	for (int i = 0; i < N; i++)
 		out_dims[i] = in_dims[0][i];
@@ -157,7 +157,7 @@ int main_join(int argc, char* argv[argc])
 
 	if (append) {
 
-		if (md_check_dimensions(N - dim - 1, out_dims + dim + 1, 0)) {
+		if (md_check_dimensions(N - dim - 1, out_dims + dim + 1, 0UL)) {
 
 			debug_printf(DP_INFO, "dim: %d; out_dims + dim + 1:\n", dim);
 			debug_print_dims(DP_INFO, N - dim - 1, out_dims + dim + 1);
@@ -178,12 +178,12 @@ int main_join(int argc, char* argv[argc])
 	complex float* out_data = NULL;
 
 	if (stream)
-		out_data = create_async_cfl(out_file, stream ? MD_BIT(dim) : 0, N, out_dims);
+		out_data = create_async_cfl(out_file, stream ? MD_BIT(dim) : 0UL, N, out_dims);
 	else
 		out_data = create_cfl(out_file, N, out_dims);
 
 
-	if (append && md_check_dimensions(N - dim - 1, out_dims + dim + 1, 0)) {
+	if (append && md_check_dimensions(N - dim - 1, out_dims + dim + 1, 0UL)) {
 
 		// fake append: rewriting the contents of the output
 		md_copy2(N, in_dims[0], MD_STRIDES(N, out_dims, CFL_SIZE), out_data,
@@ -199,7 +199,7 @@ int main_join(int argc, char* argv[argc])
 			if (append && (0 == i))
 				continue;
 
-			bart_dim_t pos[N];
+			long pos[N];
 			md_singleton_strides(N, pos);
 			pos[dim] = offsets[i];
 
@@ -212,8 +212,8 @@ int main_join(int argc, char* argv[argc])
 
 	} else {
 
-		bart_dim_t opos[N];
-		bart_dim_t ipos[N];
+		long opos[N];
+		long ipos[N];
 
 		md_singleton_strides(N, opos);
 		md_singleton_strides(N, ipos);
@@ -226,7 +226,7 @@ int main_join(int argc, char* argv[argc])
 
 			for (ipos[dim] = 0; ipos[dim] < in_dims[i][dim]; ipos[dim]++) {
 
-				bart_dim_t slc_dims[DIMS];
+				long slc_dims[DIMS];
 				md_select_dims(DIMS, ~MD_BIT(dim), slc_dims, out_dims);
 
 				if (NULL != istrm)

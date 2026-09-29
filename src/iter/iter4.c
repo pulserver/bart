@@ -77,7 +77,7 @@ struct irgnm_s {
 	struct iter_op_s adj;
 	struct iter_op_s nrm;
 
-	bart_dim_t size;
+	long size;
 
 	int cgiter;
 	float cgtol;
@@ -117,8 +117,8 @@ static void inverse(iter_op_data* _data, float alpha, float* dst, const float* s
 
 void iter4_irgnm(const iter3_conf* _conf,
 		const struct nlop_s* _nlop,
-		bart_dim_t N, float* dst, const float* ref,
-		bart_dim_t M, const float* src,
+		long N, float* dst, const float* ref,
+		long M, const float* src,
 		const struct operator_p_s* pinv,
 		struct iter_op_s cb)
 {
@@ -131,8 +131,8 @@ void iter4_irgnm(const iter3_conf* _conf,
 
 	assert(NULL == pinv); // better we allow this only with irgnm2
 
-	assert((bart_stride_t)sizeof(float[M]) == md_calc_size(cd->N, cd->dims) * (bart_dim_t)cd->size);
-	assert((bart_stride_t)sizeof(float[N]) == md_calc_size(dm->N, dm->dims) * (bart_dim_t)dm->size);
+	assert((long)sizeof(float[M]) == md_calc_size(cd->N, cd->dims) * (long)cd->size);
+	assert((long)sizeof(float[N]) == md_calc_size(dm->N, dm->dims) * (long)dm->size);
 
 	auto conf = CAST_DOWN(iter3_irgnm_conf, _conf);
 
@@ -156,8 +156,8 @@ void iter4_irgnm(const iter3_conf* _conf,
 
 void iter4_landweber(const iter3_conf* _conf,
 		const struct nlop_s* nlop,
-		bart_dim_t N, float* dst, const float* ref,
-		bart_dim_t M, const float* src,
+		long N, float* dst, const float* ref,
+		long M, const float* src,
 		const struct operator_p_s* inv,
 		struct iter_op_s cb)
 {
@@ -187,8 +187,8 @@ void iter4_landweber(const iter3_conf* _conf,
 
 void iter4_irgnm2(const iter3_conf* _conf,
 		const struct nlop_s* _nlop,
-		bart_dim_t N, float* dst, const float* ref,
-		bart_dim_t M, const float* src,
+		long N, float* dst, const float* ref,
+		long M, const float* src,
 		const struct operator_p_s* lsqr,
 		struct iter_op_s cb)
 {
@@ -199,8 +199,8 @@ void iter4_irgnm2(const iter3_conf* _conf,
 	auto cd = nlop_codomain(nlop);
 	auto dm = nlop_domain(nlop);
 
-	assert((bart_stride_t)sizeof(float[M]) == md_calc_size(cd->N, cd->dims) * (bart_dim_t)cd->size);
-	assert((bart_stride_t)sizeof(float[N]) == md_calc_size(dm->N, dm->dims) * (bart_dim_t)dm->size);
+	assert((long)sizeof(float[M]) == md_calc_size(cd->N, cd->dims) * (long)cd->size);
+	assert((long)sizeof(float[N]) == md_calc_size(dm->N, dm->dims) * (long)dm->size);
 
 	auto conf = CAST_DOWN(iter3_irgnm_conf, _conf);
 
@@ -227,8 +227,8 @@ void iter4_irgnm2(const iter3_conf* _conf,
 
 void iter4_lbfgs(const iter3_conf* _conf,
 		const struct nlop_s* nlop,
-		bart_dim_t N, float* dst, const float* ref,
-		bart_dim_t M, const float* src,
+		long N, float* dst, const float* ref,
+		long M, const float* src,
 		const struct operator_p_s* lsqr,
 		struct iter_op_s cb)
 {
@@ -237,8 +237,8 @@ void iter4_lbfgs(const iter3_conf* _conf,
 	auto cd = nlop_codomain(nlop);
 	auto dm = nlop_domain(nlop);
 
-	assert((bart_stride_t)sizeof(float[M]) == md_calc_size(cd->N, cd->dims) * (bart_dim_t)cd->size);
-	assert((bart_stride_t)sizeof(float[N]) == md_calc_size(dm->N, dm->dims) * (bart_dim_t)dm->size);
+	assert((long)sizeof(float[M]) == md_calc_size(cd->N, cd->dims) * (long)cd->size);
+	assert((long)sizeof(float[N]) == md_calc_size(dm->N, dm->dims) * (long)dm->size);
 	assert(2 == M);
 	assert(NULL == src);
 	assert(NULL == ref);
@@ -256,8 +256,8 @@ void iter4_lbfgs(const iter3_conf* _conf,
 
 void iter4_levenberg_marquardt(const iter3_conf* _conf,
 		const struct nlop_s* nlop,
-		bart_dim_t N, float* dst, const float* ref,
-		bart_dim_t M, const float* src,
+		long N, float* dst, const float* ref,
+		long M, const float* src,
 		const struct operator_p_s* lsqr,
 		struct iter_op_s cb)
 {
@@ -269,8 +269,8 @@ void iter4_levenberg_marquardt(const iter3_conf* _conf,
 	auto cd = nlop_codomain(nlop);
 	auto dm = nlop_domain(nlop);
 
-	assert((bart_stride_t)sizeof(float[M]) == md_calc_size(cd->N, cd->dims) * (bart_dim_t)cd->size);
-	assert((bart_stride_t)sizeof(float[N]) == md_calc_size(dm->N, dm->dims) * (bart_dim_t)dm->size);
+	assert((long)sizeof(float[M]) == md_calc_size(cd->N, cd->dims) * (long)cd->size);
+	assert((long)sizeof(float[N]) == md_calc_size(dm->N, dm->dims) * (long)dm->size);
 
 	auto conf = CAST_DOWN(iter3_levenberg_marquardt_conf, _conf);
 

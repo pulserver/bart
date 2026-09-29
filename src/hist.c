@@ -26,7 +26,7 @@ int main_hist(int argc, char* argv[argc])
 	const char* in_file;
 	const char* out_file;
 
-	bart_flags_t flags;
+	unsigned long flags;
 
 	struct arg_s args[] = {
 
@@ -50,10 +50,10 @@ int main_hist(int argc, char* argv[argc])
 
 	enum { D = 16 };
 
-	bart_dim_t idims[D];
+	long idims[D];
 	const complex float *in = load_cfl(in_file, D, idims);
 
-	bart_dim_t bdims[D];
+	long bdims[D];
 	md_select_dims(D, flags, bdims, idims);
 
 	int N = md_calc_size(D, bdims);
@@ -63,7 +63,7 @@ int main_hist(int argc, char* argv[argc])
 
 	complex float *tmp = md_alloc(D, bdims, sizeof *tmp);
 
-	bart_dim_t odims[D];
+	long odims[D];
 	md_singleton_dims(D, odims);
 
 	for (int i = 0; i < N2; i++)
@@ -73,15 +73,15 @@ int main_hist(int argc, char* argv[argc])
 
 	md_zfill(D, odims, out, 0.);
 
-	bart_stride_t ostrs[D];
+	long ostrs[D];
 	md_calc_strides(D, ostrs, odims, sizeof *out);
 
-	bart_dim_t pos[D] = { };
+	long pos[D] = { };
 
 	do {
 		md_copy_block(D, pos, bdims, tmp, idims, in, sizeof *in);
 
-		bart_dim_t opos[D];
+		long opos[D];
 
 		for (int i = 0; i < N; i++) {
 

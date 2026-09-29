@@ -24,8 +24,8 @@
 static bool test_op_stack(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 8, 4, 1 };
-	bart_dim_t dims2[N] = { 8, 4, 2 };
+	long dims[N] = { 8, 4, 1 };
+	long dims2[N] = { 8, 4, 2 };
 
 	const auto a = operator_identity_create(N, dims);
 	const auto b = operator_zero_create(N, dims);
@@ -58,17 +58,17 @@ UT_REGISTER_TEST(test_op_stack);
 static bool test_op_extract(void)
 {
 	enum { N = 3 };
-	bart_dim_t dims[N] = { 8, 4, 1 };
-	bart_dim_t dims2[N] = { 8, 4, 2 };
+	long dims[N] = { 8, 4, 1 };
+	long dims2[N] = { 8, 4, 2 };
 
 	const auto a = operator_identity_create(N, dims);
 	const auto b = operator_zero_create(N, dims);
 	const auto c = operator_null_create(N, dims);
 	const auto d = operator_combi_create(2, MAKE_ARRAY(OP_PASS(b), OP_PASS(c)));
-	const auto e = operator_extract_create(OP_PASS(a), 0, N, dims2, (bart_dim_t[]){ 0, 0, 0 });
-	const auto f = operator_extract_create(OP_PASS(e), 1, N, dims2, (bart_dim_t[]){ 0, 0, 0 });
-	const auto g = operator_extract_create(OP_PASS(d), 0, N, dims2, (bart_dim_t[]){ 0, 0, 1 });
-	const auto h = operator_extract_create(OP_PASS(g), 1, N, dims2, (bart_dim_t[]){ 0, 0, 1 });
+	const auto e = operator_extract_create(OP_PASS(a), 0, N, dims2, (long[]){ 0, 0, 0 });
+	const auto f = operator_extract_create(OP_PASS(e), 1, N, dims2, (long[]){ 0, 0, 0 });
+	const auto g = operator_extract_create(OP_PASS(d), 0, N, dims2, (long[]){ 0, 0, 1 });
+	const auto h = operator_extract_create(OP_PASS(g), 1, N, dims2, (long[]){ 0, 0, 1 });
 	const auto i = operator_combi_create(2, MAKE_ARRAY(OP_PASS(f), OP_PASS(h)));
 	const auto j = operator_dup_create(OP_PASS(i), 0, 2);
 	const auto k = operator_dup_create(OP_PASS(j), 1, 2);
@@ -97,10 +97,10 @@ UT_REGISTER_TEST(test_op_extract);
 static bool test_op_combi_inout(void)
 {
 	enum { N = 1 };
-	bart_dim_t dimsi1[N] = { 2 };
-	bart_dim_t dimso1[N] = { 3 };
-	bart_dim_t dimsi2[N] = { 4 };
-	bart_dim_t dimso2[N] = { 5 };
+	long dimsi1[N] = { 2 };
+	long dimso1[N] = { 3 };
+	long dimsi2[N] = { 4 };
+	long dimso2[N] = { 5 };
 
 	const auto ai = operator_null_create(N, dimsi1);
 	const auto ao = operator_zero_create(N, dimso1);

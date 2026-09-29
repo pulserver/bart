@@ -52,7 +52,7 @@ int main_fftrot(int argc, char* argv[argc])
 	num_init();
 
 	int N = DIMS;
-	bart_dim_t dims[N];
+	long dims[N];
 
 	complex float* idata = load_cfl(in_file, N, dims);
 	complex float* odata = create_cfl(out_file, N, dims);
@@ -70,9 +70,9 @@ int main_fftrot(int argc, char* argv[argc])
 	float alpha = -tanf(theta / 2.);
 	float beta = sinf(theta);
 
-	bart_flags_t flags = MD_BIT(dim1) | MD_BIT(dim2);
+	unsigned long flags = MD_BIT(dim1) | MD_BIT(dim2);
 
-	bart_dim_t phdims[N];
+	long phdims[N];
 	md_select_dims(N, flags, phdims, dims);
 
 	complex float* phx = md_alloc(N, phdims, CFL_SIZE);
@@ -89,10 +89,10 @@ int main_fftrot(int argc, char* argv[argc])
 		}
 	}
 
-	bart_stride_t strs[N];
+	long strs[N];
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 
-	bart_stride_t phstrs[N];
+	long phstrs[N];
 	md_calc_strides(N, phstrs, phdims, CFL_SIZE);
 
 	fftuc(N, dims, (1u << dim1), odata, idata);

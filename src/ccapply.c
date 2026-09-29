@@ -47,7 +47,7 @@ int main_ccapply(int argc, char* argv[argc])
 
 	bool forward = true;
 	bool do_fft = true;
-	bart_dim_t P = -1;
+	long P = -1;
 	enum cc_type { SCC, GCC, ECC } cc_type = SCC;
 	int aligned = -1;
 	const char* white_file = NULL;
@@ -68,16 +68,16 @@ int main_ccapply(int argc, char* argv[argc])
 
 	num_init();
 
-	bart_dim_t in_dims[DIMS];
-	bart_dim_t cc_dims[DIMS];
+	long in_dims[DIMS];
+	long cc_dims[DIMS];
 
 	complex float* in_data = NULL;
 	complex float* cc_data = NULL;
 
-	bart_dim_t in_dims_t[DIMS];
+	long in_dims_t[DIMS];
 	md_set_dims(DIMS, in_dims_t, 0);
 
-	bart_dim_t cc_dims_t[DIMS];
+	long cc_dims_t[DIMS];
 
 	complex float* in_data_t = NULL;
 	complex float* cc_data_t = NULL;
@@ -109,14 +109,14 @@ int main_ccapply(int argc, char* argv[argc])
 
 
 	assert(1 == in_dims[MAPS_DIM]);
-	const bart_dim_t channels = cc_dims[COIL_DIM];
+	const long channels = cc_dims[COIL_DIM];
 
 	if (-1 == P)
 		P = in_dims[COIL_DIM];
 
 	assert(cc_dims[MAPS_DIM] >= P && in_dims[COIL_DIM] >= P);
 
-	bart_dim_t out_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	long out_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 
 	md_select_dims(DIMS, ~COIL_FLAG, out_dims, in_dims);
 	out_dims[COIL_DIM] = forward ? P : channels;
@@ -124,7 +124,7 @@ int main_ccapply(int argc, char* argv[argc])
 	complex float* out_data = NULL;
 
 
-	bart_dim_t out_dims_t[DIMS];
+	long out_dims_t[DIMS];
 	md_copy_dims(DIMS, out_dims_t, out_dims);
 
 	if (-1 != aligned)
@@ -147,7 +147,7 @@ int main_ccapply(int argc, char* argv[argc])
 		out_data = create_cfl(out_file, DIMS, out_dims);
 	}
 
-	bart_dim_t opt_dims[DIMS];
+	long opt_dims[DIMS];
 	complex float* opt_mat = NULL;
 
 	if (NULL != white_file)
@@ -155,11 +155,11 @@ int main_ccapply(int argc, char* argv[argc])
 
 
 	// transpose for the matrix multiplication
-	bart_dim_t trp_dims[DIMS];
+	long trp_dims[DIMS];
 
 	if (forward) {
 
-		debug_printf(DP_DEBUG1, "Compressing to %" PRId64 " virtual coils...\n", P);
+		debug_printf(DP_DEBUG1, "Compressing to %ld virtual coils...\n", P);
 
 		md_transpose_dims(DIMS, COIL_DIM, MAPS_DIM, trp_dims, out_dims);
 		trp_dims[MAPS_DIM] = out_dims[COIL_DIM];
@@ -171,17 +171,17 @@ int main_ccapply(int argc, char* argv[argc])
 		md_transpose_dims(DIMS, COIL_DIM, MAPS_DIM, trp_dims, in_dims);
 	}
 
-	bart_dim_t cc2_dims[DIMS];
+	long cc2_dims[DIMS];
 	md_select_dims(DIMS, ~MAPS_FLAG, cc2_dims, cc_dims);
 	cc2_dims[MAPS_DIM] = P;
 
 
-	bart_dim_t pos[DIMS];
-	bart_dim_t cc2_dims_t[DIMS];
-	bart_stride_t in_str_t[DIMS];
-	bart_stride_t cc_str_t[DIMS];
-	bart_stride_t cc2_str_t[DIMS];
-	bart_stride_t out_str_t[DIMS];
+	long pos[DIMS];
+	long cc2_dims_t[DIMS];
+	long in_str_t[DIMS];
+	long cc_str_t[DIMS];
+	long cc2_str_t[DIMS];
+	long out_str_t[DIMS];
 
 	complex float* rt_cc2_data = NULL;
 	complex float* rt_tmp = NULL;
@@ -203,7 +203,7 @@ int main_ccapply(int argc, char* argv[argc])
 		if (strm_cc)
 			stream_sync_slice(strm_cc, DIMS, cc_dims_t, TIME_FLAG, pos);
 
-		md_copy_block(DIMS, (bart_dim_t [DIMS]){ }, cc2_dims, rt_tmp, cc_dims, cc_data_t, CFL_SIZE);
+		md_copy_block(DIMS, (long [DIMS]){ }, cc2_dims, rt_tmp, cc_dims, cc_data_t, CFL_SIZE);
 	}
 
 	if (SCC != cc_type) {
@@ -244,7 +244,7 @@ rt_loop:
 
 		cc_align_mat(cc2_dims, cc_data, cc_data_unaligned, rt_tmp);
 
-		md_copy_block(DIMS, (bart_dim_t [DIMS]){ }, cc2_dims, rt_tmp, cc_dims, cc_data, CFL_SIZE);
+		md_copy_block(DIMS, (long [DIMS]){ }, cc2_dims, rt_tmp, cc_dims, cc_data, CFL_SIZE);
 	}
 
 	complex float* cc_mat = md_alloc(DIMS, cc2_dims, CFL_SIZE);
@@ -255,13 +255,13 @@ rt_loop:
 		assert(1 == cc2_dims[6]);
 		assert(1 == opt_dims[6]);
 
-		bart_dim_t in1_dims[DIMS];
+		long in1_dims[DIMS];
 		md_transpose_dims(DIMS, COIL_DIM, 6, in1_dims, cc2_dims);
 
 		complex float* tmp = md_alloc_sameplace(DIMS, in1_dims, CFL_SIZE, cc_data);
 		md_transpose(DIMS, COIL_DIM, 6, in1_dims, tmp, cc2_dims, cc_mat, CFL_SIZE);
 
-		bart_dim_t topt_dims[DIMS];
+		long topt_dims[DIMS];
 		md_singleton_dims(DIMS, topt_dims);
 		md_max_dims(DIMS, MD_BIT(6) | MD_BIT(COIL_DIM), topt_dims, in1_dims, opt_dims);
 

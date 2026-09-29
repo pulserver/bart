@@ -43,7 +43,7 @@ int main_fmac(int argc, char* argv[argc])
 
 	bool clear = true;
 	bool conj = false;
-	bart_flags_t squash = 0;
+	unsigned long squash = 0;
 
 	const struct opt_s opts[] = {
 
@@ -59,8 +59,8 @@ int main_fmac(int argc, char* argv[argc])
 
 	int N = DIMS;
 
-	bart_dim_t dims1[N];
-	bart_dim_t dims2[N];
+	long dims1[N];
+	long dims2[N];
 
 	complex float* data1 = load_cfl(in1_file, N, dims1);
 
@@ -77,10 +77,10 @@ int main_fmac(int argc, char* argv[argc])
 		md_zfill(N, dims2, data2, 1.);
 	}
 
-	bart_dim_t dims[N];
+	long dims[N];
 	md_merge_dims(N, dims, dims1, dims2);
 
-	bart_dim_t dimso[N];
+	long dimso[N];
 	md_select_dims(N, ~squash, dimso, dims);
 
 	complex float* out = create_cfl(out_file, N, dimso);
@@ -90,9 +90,9 @@ int main_fmac(int argc, char* argv[argc])
 		md_clear(N, dimso, out, CFL_SIZE);
 	}
 
-	bart_stride_t str1[N];
-	bart_stride_t str2[N];
-	bart_dim_t stro[N];
+	long str1[N];
+	long str2[N];
+	long stro[N];
 
 	md_calc_strides(N, str1, dims1, CFL_SIZE);
 	md_calc_strides(N, str2, dims2, CFL_SIZE);

@@ -66,7 +66,7 @@ int main_sake(int argc, char* argv[argc])
 	assert(iter >= 0);
 	assert((0. <= lambda) && (lambda <= 1.));
 
-	bart_dim_t dims[DIMS];
+	long dims[DIMS];
 
 	num_init();
 	

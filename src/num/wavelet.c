@@ -89,12 +89,12 @@ static void icdf97(int n, int str, float* x)
 
 
 
-static bart_dim_t num_coeff(bart_dim_t n)
+static long num_coeff(long n)
 {
 	return n / 2;
 }
 
-static bart_dim_t num_scale(bart_dim_t n)
+static long num_scale(long n)
 {
 	return n - num_coeff(n);
 }
@@ -132,19 +132,19 @@ static void iresort(int n, int str, float* src)
 
 
 
-static NESTED(void, cdf97_line, (bart_dim_t n, bart_stride_t str, void* ptr))
+static NESTED(void, cdf97_line, (long n, long str, void* ptr))
 {
 	cdf97(n, str / 4, ptr);
 	resort(n, str / 4, ptr);
 };
 
-static NESTED(void, icdf97_line, (bart_dim_t n, bart_stride_t str, void* ptr))
+static NESTED(void, icdf97_line, (long n, long str, void* ptr))
 {
 	iresort(n, str / 4, ptr);
 	icdf97(n, str / 4, ptr);
 };
 
-static NESTED(void, cdf97_line_nosort, (bart_dim_t n, bart_stride_t str, void* ptr))
+static NESTED(void, cdf97_line_nosort, (long n, long str, void* ptr))
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(ptr))
@@ -158,7 +158,7 @@ static NESTED(void, cdf97_line_nosort, (bart_dim_t n, bart_stride_t str, void* p
 	cdf97(n, str / 4, ptr);
 };
 
-static NESTED(void, icdf97_line_nosort, (bart_dim_t n, bart_stride_t str, void* ptr))
+static NESTED(void, icdf97_line_nosort, (long n, long str, void* ptr))
 {
 #ifdef USE_GPU
 	if (cuda_ondevice(ptr))
@@ -176,7 +176,7 @@ static NESTED(void, icdf97_line_nosort, (bart_dim_t n, bart_stride_t str, void* 
 
 
 
-void md_wavtrafo2(int D, const bart_dim_t dims[D], bart_flags_t flags, const bart_stride_t strs[D], void* ptr, md_trafo_fun_t fun, bool inv, bool nosort)
+void md_wavtrafo2(int D, const long dims[D], unsigned long flags, const long strs[D], void* ptr, md_trafo_fun_t fun, bool inv, bool nosort)
 {
 	if (0 == flags)
 		return;
@@ -197,14 +197,14 @@ void md_wavtrafo2(int D, const bart_dim_t dims[D], bart_flags_t flags, const bar
 
 	if (rec) {
 
-		bart_dim_t dims2[D];
-		md_select_dims(D, ~UINT64_C(0), dims2, dims);
+		long dims2[D];
+		md_select_dims(D, ~0UL, dims2, dims);
 		
 		for (int i = 0; i < D; i++)
 			if (MD_IS_SET(flags, i))
 				dims2[i] = num_scale(dims[i]);	
 
-		bart_stride_t strs2[D];
+		long strs2[D];
 		md_copy_strides(D, strs2, strs);
 
 		for (int i = 0; i < D; i++)
@@ -220,64 +220,64 @@ void md_wavtrafo2(int D, const bart_dim_t dims[D], bart_flags_t flags, const bar
 }
 
 
-void md_wavtrafo(int D, const bart_dim_t dims[D], bart_flags_t flags, void* ptr, size_t size, md_trafo_fun_t fun, bool inv, bool nosort)
+void md_wavtrafo(int D, const long dims[D], unsigned long flags, void* ptr, size_t size, md_trafo_fun_t fun, bool inv, bool nosort)
 {
-	bart_stride_t strs[D];
+	long strs[D];
 	md_calc_strides(D, strs, dims, size);
 	md_wavtrafo2(D, dims, flags, strs, ptr, fun, inv, nosort);
 }
 
 
-void md_wavtrafoz2(int D, const bart_dim_t dims[D], bart_flags_t flags, const bart_stride_t strs[D], complex float* x, md_trafo_fun_t fun, bool inv, bool nosort)
+void md_wavtrafoz2(int D, const long dims[D], unsigned long flags, const long strs[D], complex float* x, md_trafo_fun_t fun, bool inv, bool nosort)
 {
-	bart_dim_t dims2[D + 1];
+	long dims2[D + 1];
 	dims2[0] = 2; // complex float
 	md_copy_dims(D, dims2 + 1, dims);
 
-	bart_stride_t strs2[D + 1];
+	long strs2[D + 1];
 	strs2[0] = sizeof(float);
 	md_copy_strides(D, strs2 + 1, strs);
 
 	md_wavtrafo2(D + 1, dims2, flags << 1, strs2, (void*)x, fun, inv, nosort);
 }
 
-void md_wavtrafoz(int D, const bart_dim_t dims[D], bart_flags_t flags, complex float* ptr, md_trafo_fun_t fun, bool inv, bool nosort)
+void md_wavtrafoz(int D, const long dims[D], unsigned long flags, complex float* ptr, md_trafo_fun_t fun, bool inv, bool nosort)
 {
-	bart_stride_t strs[D];
+	long strs[D];
 	md_calc_strides(D, strs, dims, sizeof(complex float));
 	md_wavtrafoz2(D, dims, flags, strs, ptr, fun, inv, nosort);
 }
 
 
-void md_cdf97z(int D, const bart_dim_t dims[D], bart_flags_t flags, complex float* data)
+void md_cdf97z(int D, const long dims[D], unsigned long flags, complex float* data)
 {
 	md_wavtrafoz(D, dims, flags, data, CLOSURE(md_trafo_fun_t, cdf97_line_nosort), false, true);
 }
 
-void md_icdf97z(int D, const bart_dim_t dims[D], bart_flags_t flags, complex float* data)
+void md_icdf97z(int D, const long dims[D], unsigned long flags, complex float* data)
 {
 	md_wavtrafoz(D, dims, flags, data, CLOSURE(md_trafo_fun_t, icdf97_line_nosort), true, true);
 }
 
-void md_cdf97z2(int D, const bart_dim_t dims[D], bart_flags_t flags, const bart_stride_t strs[D], complex float* data)
+void md_cdf97z2(int D, const long dims[D], unsigned long flags, const long strs[D], complex float* data)
 {
 	md_wavtrafoz2(D, dims, flags, strs, data, CLOSURE(md_trafo_fun_t, cdf97_line_nosort), false, true);
 }
 
-void md_icdf97z2(int D, const bart_dim_t dims[D], bart_flags_t flags, const bart_stride_t strs[D], complex float* data)
+void md_icdf97z2(int D, const long dims[D], unsigned long flags, const long strs[D], complex float* data)
 {
 	md_wavtrafoz2(D, dims, flags, strs, data, CLOSURE(md_trafo_fun_t, icdf97_line_nosort), true, true);
 }
 
 
 // FIXME: slow
-void md_resortz(int D, const bart_dim_t dims[D], bart_flags_t flags, complex float* data)
+void md_resortz(int D, const long dims[D], unsigned long flags, complex float* data)
 {
 	md_wavtrafoz(D, dims, flags, data, CLOSURE(md_trafo_fun_t, icdf97_line_nosort), true, true);
 	md_wavtrafoz(D, dims, flags, data, CLOSURE(md_trafo_fun_t, cdf97_line), false, false);
 }
 
-void md_iresortz(int D, const bart_dim_t dims[D], bart_flags_t flags, complex float* data)
+void md_iresortz(int D, const long dims[D], unsigned long flags, complex float* data)
 {
 	md_wavtrafoz(D, dims, flags, data, CLOSURE(md_trafo_fun_t, icdf97_line), true, false);
 	md_wavtrafoz(D, dims, flags, data, CLOSURE(md_trafo_fun_t, cdf97_line_nosort), false, true);

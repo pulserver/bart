@@ -131,7 +131,7 @@ static void load_network_data_precomputed(struct network_data_s* nd)
 
 	nd->ND = (1 != nd->psf_dims[DIMS]) ? DIMS + 1 : DIMS;
 
-	md_max_dims(nd->N, ~UINT64_C(0), nd->max_dims, nd->img_dims, nd->col_dims);
+	md_max_dims(nd->N, ~0UL, nd->max_dims, nd->img_dims, nd->col_dims);
 	md_select_dims(nd->N, ~MAPS_FLAG, nd->cim_dims, nd->max_dims);
 
 	if (NULL != nd->filename_basis) {
@@ -149,8 +149,8 @@ static void load_network_data_precomputed(struct network_data_s* nd)
 	} else {
 
 		nd->out = load_cfl(nd->filename_out, DIMS, nd->out_dims);
-		assert(    md_check_equal_dims(DIMS, nd->img_dims, nd->out_dims, ~UINT64_C(0))
-			|| md_check_equal_dims(DIMS, nd->cim_dims, nd->out_dims, ~UINT64_C(0)));
+		assert(    md_check_equal_dims(DIMS, nd->img_dims, nd->out_dims, ~0UL)
+			|| md_check_equal_dims(DIMS, nd->cim_dims, nd->out_dims, ~0UL));
 	}
 }
 
@@ -159,10 +159,10 @@ static void compute_adjoint_cart(struct network_data_s* nd)
 	md_singleton_dims(DIMS, nd->psf_dims);
 	nd->psf  = NULL;
 
-	bart_dim_t ksp_dims_s[DIMS];
-	bart_dim_t img_dims_s[DIMS];
-	bart_dim_t col_dims_s[DIMS];
-	bart_dim_t pat_dims_s[DIMS];
+	long ksp_dims_s[DIMS];
+	long img_dims_s[DIMS];
+	long col_dims_s[DIMS];
+	long pat_dims_s[DIMS];
 
 	md_select_dims(DIMS, ~nd->batch_flags, ksp_dims_s, nd->ksp_dims);
 	md_select_dims(DIMS, ~nd->batch_flags, img_dims_s, nd->img_dims);
@@ -180,8 +180,8 @@ static void compute_adjoint_cart(struct network_data_s* nd)
 	int DO[1] = { DIMS };
 	int DI[3] = { DIMS, DIMS, DIMS };
 
-	const bart_dim_t* odims[1] = { nd->img_dims };
-	const bart_dim_t* idims[3] = { nd->ksp_dims, nd->col_dims, nd->pat_dims };
+	const long* odims[1] = { nd->img_dims };
+	const long* idims[3] = { nd->ksp_dims, nd->col_dims, nd->pat_dims };
 
 	assert(NULL == nd->filename_basis);
 	nd->adjoint = nd->export ? create_cfl(nd->filename_adjoint, DIMS, nd->img_dims) : anon_cfl("", DIMS, nd->img_dims);
@@ -211,7 +211,7 @@ static void compute_adjoint_noncart(struct network_data_s* nd)
 
 		md_copy_dims(DIMS, nd->max_dims, nd->ksp_dims);
 		md_copy_dims(5, nd->max_dims, nd->col_dims);
-		md_max_dims(DIMS, ~UINT64_C(0), nd->max_dims, nd->max_dims, nd->bas_dims);
+		md_max_dims(DIMS, ~0UL, nd->max_dims, nd->max_dims, nd->bas_dims);
 		nd->max_dims[TE_DIM] = 1;
 
 		md_select_dims(DIMS, ~MAPS_FLAG, nd->cim_dims, nd->max_dims);
@@ -222,13 +222,13 @@ static void compute_adjoint_noncart(struct network_data_s* nd)
 		md_singleton_dims(DIMS, nd->bas_dims);
 	}
 
-	bart_dim_t max_dims_s[DIMS];
-	bart_dim_t ksp_dims_s[DIMS];
-	bart_dim_t img_dims_s[DIMS];
-	bart_dim_t cim_dims_s[DIMS];
-	bart_dim_t trj_dims_s[DIMS];
-	bart_dim_t pat_dims_s[DIMS];
-	bart_dim_t col_dims_s[DIMS];
+	long max_dims_s[DIMS];
+	long ksp_dims_s[DIMS];
+	long img_dims_s[DIMS];
+	long cim_dims_s[DIMS];
+	long trj_dims_s[DIMS];
+	long pat_dims_s[DIMS];
+	long col_dims_s[DIMS];
 
 	md_select_dims(DIMS, ~nd->batch_flags, max_dims_s, nd->max_dims);
 	md_select_dims(DIMS, ~nd->batch_flags, ksp_dims_s, nd->ksp_dims);
@@ -266,8 +266,8 @@ static void compute_adjoint_noncart(struct network_data_s* nd)
 	int DO[2] = { DIMS, DIMS + 1 };
 	int DI[4] = { DIMS, DIMS, DIMS, DIMS };
 
-	const bart_dim_t* odims[2] = { nd->img_dims, nd->psf_dims };
-	const bart_dim_t* idims[4] = { nd->ksp_dims, nd->col_dims, nd->pat_dims, nd->trj_dims };
+	const long* odims[2] = { nd->img_dims, nd->psf_dims };
+	const long* idims[4] = { nd->ksp_dims, nd->col_dims, nd->pat_dims, nd->trj_dims };
 
 	complex float* dst[2] = { nd->adjoint, nd->psf };
 	const complex float* src[4] = { nd->kspace, nd->coil, nd->pattern, nd->trajectory };
@@ -319,14 +319,14 @@ void load_network_data(struct network_data_s* nd)
 
 
 	//remove const dims in pattern
-	bart_dim_t pat_dims[DIMS];
-	bart_stride_t pat_strs[DIMS];
+	long pat_dims[DIMS];
+	long pat_strs[DIMS];
 	md_copy_dims(DIMS, pat_dims, nd->pat_dims);
 	md_calc_strides(DIMS, pat_strs, nd->pat_dims, CFL_SIZE);
 
 	for (int i = 0; i < DIMS && (NULL == nd->filename_pattern); i++) {
 
-		bart_stride_t pat_strs2[DIMS];
+		long pat_strs2[DIMS];
 		md_copy_dims(DIMS, pat_strs2, pat_strs);
 		pat_strs2[i] = 0;
 
@@ -335,7 +335,7 @@ void load_network_data(struct network_data_s* nd)
 			pat_dims[i] = 1;
 	}
 
-	if (!md_check_equal_dims(DIMS, pat_dims, nd->pat_dims, ~UINT64_C(0))) {
+	if (!md_check_equal_dims(DIMS, pat_dims, nd->pat_dims, ~0UL)) {
 
 		complex float* tmp = anon_cfl("", DIMS, pat_dims);
 
@@ -352,7 +352,7 @@ void load_network_data(struct network_data_s* nd)
 	//remove frequency oversampling
 	if (!md_check_equal_dims(DIMS, nd->ksp_dims, nd->col_dims, FFT_FLAGS & (~md_nontriv_dims(DIMS, nd->pat_dims))) && (NULL == nd->filename_trajectory)) {
 
-		bart_dim_t ksp_dims[DIMS];
+		long ksp_dims[DIMS];
 		md_copy_dims(DIMS, ksp_dims, nd->ksp_dims);
 
 		for (int i = 0; i < DIMS; i++)
@@ -392,8 +392,8 @@ void load_network_data(struct network_data_s* nd)
 		nd->out = load_cfl(nd->filename_out, DIMS, nd->out_dims);
 
 		if (! sense_model_get_noncart(nd->conf))
-		assert(    md_check_equal_dims(DIMS, nd->img_dims, nd->out_dims, ~UINT64_C(0))
-			|| md_check_equal_dims(DIMS, nd->cim_dims, nd->out_dims, ~UINT64_C(0)) );
+		assert(    md_check_equal_dims(DIMS, nd->img_dims, nd->out_dims, ~0UL)
+			|| md_check_equal_dims(DIMS, nd->cim_dims, nd->out_dims, ~0UL) );
 	}
 
 	load_mem(nd);
@@ -408,10 +408,10 @@ static void network_data_compute_init_precomp(struct network_data_s* nd, complex
 	int N = nd->N;
 	int ND = nd->ND;
 
-	bart_dim_t max_dims2[N];
-	bart_dim_t psf_dims2[ND];
+	long max_dims2[N];
+	long psf_dims2[ND];
 
-	bart_flags_t loop_flags = nd->batch_flags;
+	unsigned long loop_flags = nd->batch_flags;
 
 	md_select_dims(N, ~loop_flags, max_dims2, nd->max_dims);
 	md_select_dims(ND, ~loop_flags, psf_dims2, nd->psf_dims);
@@ -426,8 +426,8 @@ static void network_data_compute_init_precomp(struct network_data_s* nd, complex
 	int DO[1] = { nd->N };
 	int DI[3] = { nd->N, nd->N, nd->ND };
 
-	const bart_dim_t* odims[1] = { nd->img_dims };
-	const bart_dim_t* idims[3] = { nd->img_dims, nd->col_dims, nd->psf_dims };
+	const long* odims[1] = { nd->img_dims };
+	const long* idims[3] = { nd->img_dims, nd->col_dims, nd->psf_dims };
 
 	complex float* dst[1] = { nd->initialization };
 	const complex float* src[3] = { nd->adjoint, nd->coil, nd->psf };
@@ -459,8 +459,8 @@ void network_data_normalize(struct network_data_s* nd)
 
 	int N = nd->N;
 
-	bart_stride_t sstrs[N];
-	bart_stride_t istrs[N];
+	long sstrs[N];
+	long istrs[N];
 
 	md_select_dims(N, nd->batch_flags & ~SLICE_FLAG, nd->scl_dims, nd->img_dims);
 	md_calc_strides(N, sstrs, nd->scl_dims, CFL_SIZE);
@@ -505,19 +505,19 @@ void free_network_data(struct network_data_s* nd)
 }
 
 //move all batch dimensions to the last one, unfold dimensions if necessary
-static void merge_slice_to_batch_dim(int N, const bart_dim_t bat_dims[N], bart_dim_t dims[N], complex float** data)
+static void merge_slice_to_batch_dim(int N, const long bat_dims[N], long dims[N], complex float** data)
 {
-	bart_flags_t bat_flags = md_nontriv_dims(N, bat_dims);
+	unsigned long bat_flags = md_nontriv_dims(N, bat_dims);
 
-	bart_dim_t tbat_dims[N];
-	bart_dim_t tdims[N];
+	long tbat_dims[N];
+	long tdims[N];
 
 	md_select_dims(N, bat_flags, tbat_dims, dims);
 	md_copy_dims(N, tdims, dims);
 
 	if ((NULL != data) && (NULL != *data)
 	    && (0 != md_nontriv_dims(N, tbat_dims))
-	    && !md_check_equal_dims(N, tbat_dims, bat_dims, ~UINT64_C(0))) {
+	    && !md_check_equal_dims(N, tbat_dims, bat_dims, ~0UL)) {
 
 		for (int i = 0; i < N; i++)
 			if (MD_IS_SET(bat_flags, i))
@@ -540,11 +540,11 @@ static void merge_slice_to_batch_dim(int N, const bart_dim_t bat_dims[N], bart_d
 
 void network_data_slice_dim_to_batch_dim(struct network_data_s* nd)
 {
-	bart_dim_t bat_dims[nd->ND];
+	long bat_dims[nd->ND];
 	md_singleton_dims(nd->ND, bat_dims);
 	md_select_dims(nd->N, nd->batch_flags, bat_dims, nd->img_dims);
 
-	bart_dim_t img_dims[nd->N];
+	long img_dims[nd->N];
 	md_copy_dims(nd->N, img_dims, nd->img_dims);
 
 	merge_slice_to_batch_dim(nd->N, bat_dims, nd->scl_dims, &nd->scale);
@@ -597,9 +597,9 @@ struct named_data_list_s* network_data_get_named_list(struct network_data_s* nd)
 	return train_data_list;
 }
 
-bart_dim_t network_data_get_tot(struct network_data_s* nd)
+long network_data_get_tot(struct network_data_s* nd)
 {
-	bart_dim_t bat_dims[nd->N];
+	long bat_dims[nd->N];
 	md_select_dims(nd->N, nd->batch_flags, bat_dims, nd->img_dims);
 
 	return md_calc_size(nd->N, bat_dims);

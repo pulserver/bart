@@ -78,7 +78,7 @@ static void pytorch_del(const nlop_data_t* _data)
 
 #endif
 
-const struct nlop_s* nlop_pytorch_create(const char* path, int II, const int DI[II], const bart_dim_t* idims[II], bool init_gpu)
+const struct nlop_s* nlop_pytorch_create(const char* path, int II, const int DI[II], const long* idims[II], bool init_gpu)
 {
 #ifdef PYTORCH
 	int D = 0;
@@ -106,8 +106,8 @@ const struct nlop_s* nlop_pytorch_create(const char* path, int II, const int DI[
 	for (int i = 0; i < OO; i++)
 		D = MAX(D, pytorch_wrapper_rank_output(data->data, i));
 
-	bart_dim_t nl_odims[OO][D];
-	bart_dim_t nl_idims[II][D];
+	long nl_odims[OO][D];
+	long nl_idims[II][D];
 
 	for (int i = 0; i < II; i++) {
 

@@ -1,5 +1,3 @@
-#include "misc/dimtypes.h"
-
 
 struct traj_conf {
 
@@ -16,7 +14,7 @@ struct traj_conf {
 	bool mems_legacy;
 	bool rational;
 	bool double_base;
-	bart_flags_t aligned_flags;
+	unsigned long aligned_flags;
 	int accel;
 	int tiny_gold;
 	int Y;
@@ -36,9 +34,9 @@ extern void traj_read_dir(float dir[3], float phi, float psi);
 extern void gradient_delay(float d[3], float coeff[2][3], float phi, float psi);
 extern double calc_angle_atom(const struct traj_conf* conf);
 extern void calc_base_angles(double base_angle[DIMS], int Y, int E, struct traj_conf conf);
-extern bart_dim_t raga_increment_from_pos(const int order[DIMS], const bart_dim_t pos[DIMS], bart_flags_t flags, const bart_dim_t dims[DIMS], const struct traj_conf* conf);
-extern void indices_from_position(bart_dim_t ind[DIMS], const bart_dim_t pos[DIMS], struct traj_conf conf);
-extern bool zpartition_skip(bart_dim_t partitions, bart_dim_t z_usamp[2], bart_dim_t partition, bart_dim_t frame);
+extern long raga_increment_from_pos(const int order[DIMS], const long pos[DIMS], unsigned long flags, const long dims[DIMS], const struct traj_conf* conf);
+extern void indices_from_position(long ind[DIMS], const long pos[DIMS], struct traj_conf conf);
+extern bool zpartition_skip(long partitions, long z_usamp[2], long partition, long frame);
 extern int gen_fibonacci(int n, int ind);
 extern int recover_gen_fib_ind(int Y, int inc);
 extern int raga_find_index(int Y, int n);

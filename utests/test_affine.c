@@ -19,7 +19,7 @@
 
 static bool test_affine_to_grid(void)
 {
-	bart_dim_t dims[4] =  { 3, 3, 1 };
+	long dims[4] =  { 3, 3, 1 };
 
 	complex float pars[1] = { 0. };
 	complex float trafo[12];
@@ -46,8 +46,8 @@ static bool test_affine_rot_transpose(void)
 	complex float trafo[12];
 	nlop_apply(nlop_rot, 2, MD_DIMS(3, 4), trafo, 1, MD_DIMS(1), pars);
 
-	bart_dim_t dims[4] =  { 3, 3, 1, 1 };
-	bart_dim_t cdims[4] = { 3, 3, 1, 3 };
+	long dims[4] =  { 3, 3, 1, 1 };
+	long cdims[4] = { 3, 3, 1, 3 };
 
 	const struct nlop_s* nlop_interp = nlop_interpolate_create(3, 7, 1, false, 4, dims, cdims, dims);
 	nlop_interp = nlop_prepend_FF(nlop_affine_compute_pos(3, 4, dims, dims, nlop_rot), nlop_interp, 1);
@@ -100,8 +100,8 @@ UT_REGISTER_TEST(test_affine_nlop_rot2D);
 
 static bool test_affine_nlop_interpolate(void)
 {
-	bart_dim_t dims[4] = { 8, 8, 1, 1 };
-	bart_dim_t cdims[4] = { 8, 8, 1, 3 };
+	long dims[4] = { 8, 8, 1, 1 };
+	long cdims[4] = { 8, 8, 1, 3 };
 
 	auto nlop_rot = nlop_affine_rotation_2D();
 	const struct nlop_s* nlop_interp = nlop_interpolate_create(3, 7, 1, false, 4, dims, cdims, dims);
@@ -125,8 +125,8 @@ static bool test_affine_nlop_interpolate_coord(void)
 {
 	num_rand_init(123);
 
-	bart_dim_t dims[4] = { 8, 8, 1, 1 };
-	bart_dim_t cdims[4] = { 8, 8, 1, 3 };
+	long dims[4] = { 8, 8, 1, 1 };
+	long cdims[4] = { 8, 8, 1, 3 };
 
 	auto nlop_rot = nlop_affine_rotation_2D();
 
@@ -155,9 +155,9 @@ UT_REGISTER_TEST(test_affine_nlop_interpolate_coord);
 
 static bool test_affine_nlop_interpolate_cood_points(void)
 {
-	bart_dim_t idims[4] = { 5, 5, 5, 1 };
-	bart_dim_t odims[4] = { 2, 1, 1, 1 };
-	bart_dim_t cdims[4] = { 2, 1, 1, 3 };
+	long idims[4] = { 5, 5, 5, 1 };
+	long odims[4] = { 2, 1, 1, 1 };
+	long cdims[4] = { 2, 1, 1, 3 };
 
 	//derivative is not defined on grid points
 	complex float coor[6] = { 0.2, 0.9, 0.1, 1.2, 4.9, 0.1 };
@@ -184,9 +184,9 @@ UT_REGISTER_TEST(test_affine_nlop_interpolate_cood_points);
 
 static bool test_affine_nlop_interpolate_cood_points_keys(void)
 {
-	bart_dim_t idims[4] = { 5, 5, 5, 1 };
-	bart_dim_t odims[4] = { 2, 1, 1, 1 };
-	bart_dim_t cdims[4] = { 2, 1, 1, 3 };
+	long idims[4] = { 5, 5, 5, 1 };
+	long odims[4] = { 2, 1, 1, 1 };
+	long cdims[4] = { 2, 1, 1, 3 };
 
 	//derivative is not defined on grid points
 	complex float coor[6] = { 0.2, 0.9, 0.0, 1.2, 4.9, 0.1 };

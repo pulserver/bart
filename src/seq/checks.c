@@ -16,7 +16,7 @@
 #include "checks.h"
 
 
-void seq_rf_count(int N, bart_dim_t calls[N], int E, const struct seq_event ev[E])
+void seq_rf_count(int N, long calls[N], int E, const struct seq_event ev[E])
 {
 	int rfs = events_counter(SEQ_EVENT_PULSE, E, ev);
 

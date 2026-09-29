@@ -26,16 +26,16 @@ struct fmac_data {
 	linop_data_t super;
 
 	int N;
-	bart_dim_t *dims;
+	long *dims;
 
-	bart_dim_t *idims;
-	bart_stride_t *istrs;
+	long *idims;
+	long *istrs;
 
-	bart_dim_t *odims;
-	bart_stride_t *ostrs;
+	long *odims;
+	long *ostrs;
 
-	bart_dim_t *tdims;
-	bart_stride_t *tstrs;
+	long *tdims;
+	long *tstrs;
 
 	struct multiplace_array_s* tensor;
 };
@@ -86,41 +86,41 @@ static void fmac_normal(const linop_data_t* _data, complex float* dst, const com
 	md_free(tmp);
 }
 
-struct linop_s* linop_fmac_create(int N, const bart_dim_t dims[N],
-		bart_flags_t oflags, bart_flags_t iflags, bart_flags_t tflags, const complex float* tensor)
+struct linop_s* linop_fmac_create(int N, const long dims[N],
+		unsigned long oflags, unsigned long iflags, unsigned long tflags, const complex float* tensor)
 {
 	PTR_ALLOC(struct fmac_data, data);
 	SET_TYPEID(fmac_data, data);
 
 	data->N = N;
 
-	data->dims = *TYPE_ALLOC(bart_dim_t[N]);
+	data->dims = *TYPE_ALLOC(long[N]);
 	md_copy_dims(N, data->dims, dims);
 
-	data->idims = *TYPE_ALLOC(bart_dim_t[N]);
-	data->istrs = *TYPE_ALLOC(bart_dim_t[N]);
+	data->idims = *TYPE_ALLOC(long[N]);
+	data->istrs = *TYPE_ALLOC(long[N]);
 
 	md_select_dims(N, ~iflags, data->idims, dims);
 	md_calc_strides(N, data->istrs, data->idims, CFL_SIZE);
 
-	data->odims = *TYPE_ALLOC(bart_dim_t[N]);
-	data->ostrs = *TYPE_ALLOC(bart_dim_t[N]);
+	data->odims = *TYPE_ALLOC(long[N]);
+	data->ostrs = *TYPE_ALLOC(long[N]);
 
 	md_select_dims(N, ~oflags, data->odims, dims);
 	md_calc_strides(N, data->ostrs, data->odims, CFL_SIZE);
 
-	data->tstrs = *TYPE_ALLOC(bart_dim_t[N]);
-	data->tdims = *TYPE_ALLOC(bart_dim_t[N]);
+	data->tstrs = *TYPE_ALLOC(long[N]);
+	data->tdims = *TYPE_ALLOC(long[N]);
 
 	md_select_dims(N, ~tflags, data->tdims, dims);
 	md_calc_strides(N, data->tstrs, data->tdims, CFL_SIZE);
 
 	data->tensor = (NULL == tensor) ? NULL : multiplace_move(N, data->tdims, CFL_SIZE, tensor);
 
-	bart_dim_t odims[N];
+	long odims[N];
 	md_copy_dims(N, odims, data->odims);
 
-	bart_dim_t idims[N];
+	long idims[N];
 	md_copy_dims(N, idims, data->idims);
 
 	return linop_create(N, odims, N, idims,
@@ -128,44 +128,44 @@ struct linop_s* linop_fmac_create(int N, const bart_dim_t dims[N],
 			NULL, fmac_free_data);
 }
 
-struct linop_s* linop_fmac_dims_create(int N, const bart_dim_t odims[N], const bart_dim_t idims[N], const bart_dim_t tdims[N], const complex float* tensor)
+struct linop_s* linop_fmac_dims_create(int N, const long odims[N], const long idims[N], const long tdims[N], const complex float* tensor)
 {
-	bart_dim_t max_dims[N];
+	long max_dims[N];
 	md_tenmul_dims(N, max_dims, odims, idims, tdims);
 
 	return linop_fmac_create(N, max_dims, ~md_nontriv_dims(N, odims), ~md_nontriv_dims(N, idims), ~md_nontriv_dims(N, tdims), tensor);
 }
 
-void linop_fmac_set_tensor(const struct linop_s* lop, int N, const bart_dim_t tdims[N], const complex float* tensor)
+void linop_fmac_set_tensor(const struct linop_s* lop, int N, const long tdims[N], const complex float* tensor)
 {
 	auto data = CAST_DOWN(fmac_data, linop_get_data(lop));
 
 	assert(data->N == N);
-	assert(md_check_equal_dims(N, tdims, data->tdims, ~UINT64_C(0)));
+	assert(md_check_equal_dims(N, tdims, data->tdims, ~0UL));
 
 	multiplace_free(data->tensor);
 
 	data->tensor = multiplace_move(N, data->tdims, CFL_SIZE, tensor);
 }
 
-void linop_fmac_set_tensor_F(const struct linop_s* lop, int N, const bart_dim_t tdims[N], const complex float* tensor)
+void linop_fmac_set_tensor_F(const struct linop_s* lop, int N, const long tdims[N], const complex float* tensor)
 {
 	auto data = CAST_DOWN(fmac_data, linop_get_data(lop));
 
 	assert(data->N == N);
-	assert(md_check_equal_dims(N, tdims, data->tdims, ~UINT64_C(0)));
+	assert(md_check_equal_dims(N, tdims, data->tdims, ~0UL));
 
 	multiplace_free(data->tensor);
 
 	data->tensor = multiplace_move_F(N, data->tdims, CFL_SIZE, tensor);
 }
 
-void linop_fmac_set_tensor_ref(const struct linop_s* lop, int N, const bart_dim_t tdims[N], const complex float* tensor)
+void linop_fmac_set_tensor_ref(const struct linop_s* lop, int N, const long tdims[N], const complex float* tensor)
 {
 	auto data = CAST_DOWN(fmac_data, linop_get_data(lop));
 
 	assert(data->N == N);
-	assert(md_check_equal_dims(N, tdims, data->tdims, ~UINT64_C(0)));
+	assert(md_check_equal_dims(N, tdims, data->tdims, ~0UL));
 
 	multiplace_free(data->tensor);
 

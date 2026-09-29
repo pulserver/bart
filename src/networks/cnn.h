@@ -2,7 +2,6 @@
 #ifndef _NN_CNN_H
 #define _NN_CNN_H
 
-#include "misc/dimtypes.h"
 #include "misc/mri.h"
 #include "misc/types.h"
 
@@ -14,7 +13,7 @@
 
 struct network_s;
 
-typedef nn_t (*network_create_t)(const struct network_s* config, int NO, const bart_dim_t odims[NO], int NI, const bart_dim_t idims[NI], enum NETWORK_STATUS status);
+typedef nn_t (*network_create_t)(const struct network_s* config, int NO, const long odims[NO], int NI, const long idims[NI], enum NETWORK_STATUS status);
 
 typedef struct network_s {
 
@@ -24,7 +23,7 @@ typedef struct network_s {
 	bool low_mem;
 
 	enum norm norm;
-	bart_flags_t norm_batch_flag;
+	unsigned long norm_batch_flag;
 
 	bool debug;
 	bool residual;
@@ -36,7 +35,7 @@ typedef struct network_s {
 
 } network_t;
 
-extern nn_t network_create(const struct network_s* config, int NO, const bart_dim_t odims[NO], int NI, const bart_dim_t idims[NI], enum NETWORK_STATUS status);
+extern nn_t network_create(const struct network_s* config, int NO, const long odims[NO], int NI, const long idims[NI], enum NETWORK_STATUS status);
 
 extern bool network_is_diagonal(const struct network_s* config);
 
@@ -47,21 +46,21 @@ struct network_resnet_s {
 
 	int N;
 
-	bart_dim_t kdims[DIMS];
-	bart_dim_t dilations[DIMS];
+	long kdims[DIMS];
+	long dilations[DIMS];
 
-	bart_dim_t Nl; // number of blocks
+	long Nl; // number of blocks
 
-	bart_dim_t Nf; // number of filters
-	bart_dim_t Kx; // filter size
-	bart_dim_t Ky; // filter size
-	bart_dim_t Kz; // filter size
-	bart_dim_t Ng; // number groups
+	long Nf; // number of filters
+	long Kx; // filter size
+	long Ky; // filter size
+	long Kz; // filter size
+	long Ng; // number groups
 
-	bart_flags_t conv_flag;
-	bart_flags_t channel_flag;
-	bart_flags_t group_flag;
-	bart_flags_t batch_flag;
+	unsigned long conv_flag;
+	unsigned long channel_flag;
+	unsigned long group_flag;
+	unsigned long batch_flag;
 
 	bool batch_norm;
 	bool batch_norm_lf;
@@ -78,12 +77,12 @@ struct network_varnet_s {
 
 	network_t super;
 
-	bart_dim_t Kx;
-	bart_dim_t Ky;
-	bart_dim_t Kz;
+	long Kx;
+	long Ky;
+	long Kz;
 
-	bart_dim_t Nf;
-	bart_dim_t Nw;
+	long Nf;
+	long Nw;
 
 	float Imax;
 	float Imin;

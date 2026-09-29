@@ -55,7 +55,7 @@ static double windowing(double g, double a, double b, double x)
 	return pow(clamp(0., 1., (x - a) / (b - a)), g);
 }
 
-static void toimg(bool dicom, bool use_windowing, const char* name, bart_dim_t inum, float gamma, float contrast, float window, float scale, bart_dim_t h, bart_dim_t w, const complex float* data)
+static void toimg(bool dicom, bool use_windowing, const char* name, long inum, float gamma, float contrast, float window, float scale, long h, long w, const complex float* data)
 {
 	int len = strlen(name);
 	assert(len >= 1);
@@ -96,14 +96,14 @@ static void toimg(bool dicom, bool use_windowing, const char* name, bart_dim_t i
 }
 
 
-static void toimg_stack(const char* name, bool dicom, bool dim_names, bool single_scale, bool use_windowing, float gamma, float contrast, float window, const bart_dim_t dims[DIMS], const complex float* data)
+static void toimg_stack(const char* name, bool dicom, bool dim_names, bool single_scale, bool use_windowing, float gamma, float contrast, float window, const long dims[DIMS], const complex float* data)
 {
-	bart_dim_t data_size = md_calc_size(DIMS, dims);
+	long data_size = md_calc_size(DIMS, dims);
 
-	bart_dim_t sq_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
+	long sq_dims[DIMS] = { [0 ... DIMS - 1] = 1 };
 
 	int l = 0;
-	bart_flags_t im_flags = 0;
+	unsigned long im_flags = 0UL;
 
 	for (int i = 0; i < DIMS; i++) {
 
@@ -117,24 +117,24 @@ static void toimg_stack(const char* name, bool dicom, bool dim_names, bool singl
 	}
 
 	float max = 0.;
-	for (bart_dim_t i = 0; i < data_size; i++)
+	for (long i = 0; i < data_size; i++)
 		max = MAX(cabsf(data[i]), max);
 
 	int len = strlen(name);
 	assert(len >= 1);
 
-	bart_dim_t num_imgs = md_calc_size(DIMS - 2, sq_dims + 2);
-	bart_dim_t img_size = md_calc_size(2, sq_dims);
+	long num_imgs = md_calc_size(DIMS - 2, sq_dims + 2);
+	long img_size = md_calc_size(2, sq_dims);
 
-	bart_dim_t loop_dims[DIMS];
+	long loop_dims[DIMS];
 	md_select_dims(DIMS, ~im_flags, loop_dims, dims);
 
 	assert(md_calc_size(DIMS, loop_dims) == num_imgs);
 
-	debug_printf(DP_INFO, "Writing %" PRId64 " image(s)...", num_imgs);
+	debug_printf(DP_INFO, "Writing %ld image(s)...", num_imgs);
 
 #pragma omp parallel for
-	for (bart_dim_t i = 0; i < num_imgs; i++) {
+	for (long i = 0; i < num_imgs; i++) {
 
 		float scale = 0.;
 
@@ -143,7 +143,7 @@ static void toimg_stack(const char* name, bool dicom, bool dim_names, bool singl
 		else if (single_scale)
 			scale = max;
 		else
-			for (bart_dim_t j = 0; j < md_calc_size(2, sq_dims); j++)
+			for (long j = 0; j < md_calc_size(2, sq_dims); j++)
 				scale = MAX(cabsf(data[i * img_size + j]), scale);
 
 		if (0. == scale)
@@ -159,12 +159,12 @@ static void toimg_stack(const char* name, bool dicom, bool dim_names, bool singl
 			if (num_imgs == 1)
 				sprintf(name_i, "%s.%s", name, dicom ? "dcm" : "png");
 			else
-				sprintf(name_i, "%s-%04" PRId64 ".%s", name, i, dicom ? "dcm" : "png");
+				sprintf(name_i, "%s-%04ld.%s", name, i, dicom ? "dcm" : "png");
 
 		} else {
 
-			bart_dim_t pos[DIMS] = { [0 ... DIMS - 1] = 0  };
-			md_unravel_index(DIMS, pos, ~UINT64_C(0), loop_dims, i);
+			long pos[DIMS] = { [0 ... DIMS - 1] = 0  };
+			md_unravel_index(DIMS, pos, ~0UL, loop_dims, i);
 
 			name_i = construct_filename(DIMS, loop_dims, pos, name, dicom ? "dcm" : "png");
 		}
@@ -227,7 +227,7 @@ int main_toimg(int argc, char* argv[argc])
 		*ext = '\0';
 	}
 
-	bart_dim_t dims[DIMS];
+	long dims[DIMS];
 	complex float* data = load_cfl(in_file, DIMS, dims);
 
 	toimg_stack(prefix, dicom, dim_names, single_scale, use_windowing, gamma, contrast, window, dims, data);

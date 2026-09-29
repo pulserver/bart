@@ -51,10 +51,10 @@ int main_toraw(int argc, char* argv[argc])
 
 	num_init();
 
-	bart_dim_t dims[DIMS];
+	long dims[DIMS];
 	complex float* data = load_cfl(in_file, DIMS, dims);
 
-	bart_stride_t strs[DIMS];
+	long strs[DIMS];
 	md_calc_strides(DIMS, strs, dims, CFL_SIZE);
 
 	complex float* data_n = md_alloc(DIMS, dims, CFL_SIZE);
@@ -62,9 +62,9 @@ int main_toraw(int argc, char* argv[argc])
 	md_copy(DIMS, dims, data_n, data, CFL_SIZE);
 
 	if (norm)
-		normalize(DIMS, ~UINT64_C(0), dims, data_n);
+		normalize(DIMS, ~0UL, dims, data_n);
 		
-	bart_dim_t pos[DIMS] = { };
+	long pos[DIMS] = { };
 
 	union {
 
@@ -103,7 +103,7 @@ int main_toraw(int argc, char* argv[argc])
 		if (complex_out && (1 != fwrite(&(sample[1]), (bitwidth / 8), 1, stdout)))
 			error("Error writing complex to stdout!\n");
 
-	} while (md_next(DIMS, dims, ~UINT64_C(0), pos));
+	} while (md_next(DIMS, dims, ~0UL, pos));
 
 	unmap_cfl(DIMS, dims, data);
 	md_free(data_n);

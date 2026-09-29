@@ -47,8 +47,8 @@
  struct proj_pos_real_s {
 
 	operator_data_t super;
-	bart_dim_t N;
-	const bart_dim_t* dims;
+	long N;
+	const long* dims;
 
 	float min;
 };
@@ -75,13 +75,13 @@ static void proj_pos_real_del(const operator_data_t* _data)
  * @param N
  * @param dims
  */
-const struct operator_p_s* operator_project_pos_real_create(bart_dim_t N, const bart_dim_t dims[N])
+const struct operator_p_s* operator_project_pos_real_create(long N, const long dims[N])
 {
 	PTR_ALLOC(struct proj_pos_real_s, data);
 	SET_TYPEID(proj_pos_real_s, data);
 
 	data->N = N;
-	PTR_ALLOC(bart_dim_t[N], ndims);
+	PTR_ALLOC(long[N], ndims);
 	md_copy_dims(N, *ndims, dims);
 	data->dims = *PTR_PASS(ndims);
 	data->min = 0;
@@ -96,13 +96,13 @@ const struct operator_p_s* operator_project_pos_real_create(bart_dim_t N, const 
  * @param dims
  * @param min
  */
-const struct operator_p_s* operator_project_min_real_create(bart_dim_t N, const bart_dim_t dims[N], float min)
+const struct operator_p_s* operator_project_min_real_create(long N, const long dims[N], float min)
 {
 	PTR_ALLOC(struct proj_pos_real_s, data);
 	SET_TYPEID(proj_pos_real_s, data);
 
 	data->N = N;
-	PTR_ALLOC(bart_dim_t[N], ndims);
+	PTR_ALLOC(long[N], ndims);
 	md_copy_dims(N, *ndims, dims);
 	data->dims = *PTR_PASS(ndims);
 	data->min = min;
@@ -122,9 +122,9 @@ const struct operator_p_s* operator_project_min_real_create(bart_dim_t N, const 
 struct proj_mean_free_s {
 
 	operator_data_t super;
-	bart_dim_t N;
-	const bart_dim_t* dims;
-	bart_flags_t bflag;
+	long N;
+	const long* dims;
+	unsigned long bflag;
 };
 
 DEF_TYPEID(proj_mean_free_s);
@@ -134,8 +134,8 @@ static void proj_mean_free_apply(const operator_data_t* _data, float /*mu*/, com
 {
 	const auto data = CAST_DOWN(proj_mean_free_s, _data);
 
-	bart_dim_t batch_dims[data->N];
-	bart_dim_t mf_dims[data->N];
+	long batch_dims[data->N];
+	long mf_dims[data->N];
 	md_select_dims(data->N, data->bflag, batch_dims, data->dims);
 	md_select_dims(data->N, ~data->bflag, mf_dims, data->dims);
 
@@ -164,13 +164,13 @@ static void proj_mean_free_del(const operator_data_t* _data)
  * @param dims
  * @param bflag batch dims -> dimensions which stay independent
  */
-const struct operator_p_s* operator_project_mean_free_create(bart_dim_t N, const bart_dim_t dims[N], bart_flags_t bflag)
+const struct operator_p_s* operator_project_mean_free_create(long N, const long dims[N], unsigned long bflag)
 {
 	PTR_ALLOC(struct proj_mean_free_s, data);
 	SET_TYPEID(proj_mean_free_s, data);
 
 	data->N = N;
-	PTR_ALLOC(bart_dim_t[N], ndims);
+	PTR_ALLOC(long[N], ndims);
 	md_copy_dims(N, *ndims, dims);
 	data->dims = *PTR_PASS(ndims);
 	data->bflag = bflag;
@@ -190,9 +190,9 @@ const struct operator_p_s* operator_project_mean_free_create(bart_dim_t N, const
 struct proj_sphere_s {
 
 	operator_data_t super;
-	bart_dim_t N;
-	const bart_dim_t* dims;
-	bart_flags_t bflag;
+	long N;
+	const long* dims;
+	unsigned long bflag;
 };
 
 DEF_TYPEID(proj_sphere_s);
@@ -201,15 +201,15 @@ static void proj_sphere_real_apply(const operator_data_t* _data, float /*mu*/, c
 {
 	const auto data = CAST_DOWN(proj_sphere_s, _data);
 
-	bart_dim_t bdims[data->N];
+	long bdims[data->N];
 	md_select_dims(data->N, data->bflag, bdims, data->dims);
 	complex float* tmp = md_alloc_sameplace(data->N, bdims, CFL_SIZE, dst);
 
 	md_zrmul(data->N, data->dims, dst, src, src);
 	md_zsum(data->N, data->dims, ~data->bflag, tmp, dst);
 
-	bart_dim_t rdims[data->N + 1];
-	bart_dim_t brdims[data->N + 1];
+	long rdims[data->N + 1];
+	long brdims[data->N + 1];
 	rdims[0] = 2;
 	brdims[0] = 2;
 	md_copy_dims(data->N, rdims + 1, data->dims);
@@ -225,7 +225,7 @@ static void proj_sphere_complex_apply(const operator_data_t* _data, float /*mu*/
 {
 	const auto data = CAST_DOWN(proj_sphere_s, _data);
 
-	bart_dim_t bdims[data->N];
+	long bdims[data->N];
 	md_select_dims(data->N, data->bflag, bdims, data->dims);
 
 	complex float* tmp = md_alloc_sameplace(data->N, bdims, CFL_SIZE, dst);
@@ -257,13 +257,13 @@ static void proj_sphere_del(const operator_data_t* _data)
  * @param bflag
  * @param real if true, real and imaginary part are handled independently (as bflag is set for dimension real/imag)
  */
-const struct operator_p_s* operator_project_sphere_create(bart_dim_t N, const bart_dim_t dims[N], bart_flags_t bflag, bool real)
+const struct operator_p_s* operator_project_sphere_create(long N, const long dims[N], unsigned long bflag, bool real)
 {
 	PTR_ALLOC(struct proj_sphere_s, data);
 	SET_TYPEID(proj_sphere_s, data);
 
 	data->N = N;
-	PTR_ALLOC(bart_dim_t[N], ndims);
+	PTR_ALLOC(long[N], ndims);
 	md_copy_dims(N, *ndims, dims);
 	data->dims = *PTR_PASS(ndims);
 	data->bflag = bflag;
@@ -281,7 +281,7 @@ const struct operator_p_s* operator_project_sphere_create(bart_dim_t N, const ba
  * @param real if real, real and imaginary part are handled independently (as bflag is set for dimension real/imag)
  */
 
-const struct operator_p_s* operator_project_mean_free_sphere_create(bart_dim_t N, const bart_dim_t dims[N], bart_flags_t bflag, bool real)
+const struct operator_p_s* operator_project_mean_free_sphere_create(long N, const long dims[N], unsigned long bflag, bool real)
 {
 	auto op_p_mean_free = operator_project_mean_free_create(N, dims, bflag);
 	auto op_p_sphere = operator_project_sphere_create(N, dims, bflag, real);

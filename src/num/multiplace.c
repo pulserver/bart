@@ -19,7 +19,7 @@
 struct multiplace_array_s {
 
 	int N;
-	const bart_dim_t* dims;
+	const long* dims;
 	size_t size;
 
 	void* ptr_ref;
@@ -33,14 +33,14 @@ struct multiplace_array_s {
 };
 
 
-static struct multiplace_array_s* multiplace_alloc(int D, const bart_dim_t dimensions[D], size_t size)
+static struct multiplace_array_s* multiplace_alloc(int D, const long dimensions[D], size_t size)
 {
 	PTR_ALLOC(struct multiplace_array_s, result);
 
 	result->N = D;
 	result->size = size;
 
-	PTR_ALLOC(bart_dim_t[D], dims);
+	PTR_ALLOC(long[D], dims);
 
 	md_copy_dims(D, *dims, dimensions);
 
@@ -171,7 +171,7 @@ const void* multiplace_read(struct multiplace_array_s* ptr, const void* ref)
 }
 
 
-struct multiplace_array_s* multiplace_move2(int D, const bart_dim_t dimensions[D], const bart_stride_t strides[D], size_t size, const void* ptr)
+struct multiplace_array_s* multiplace_move2(int D, const long dimensions[D], const long strides[D], size_t size, const void* ptr)
 {
 	auto result = multiplace_alloc(D, dimensions, size);
 
@@ -203,12 +203,12 @@ struct multiplace_array_s* multiplace_move2(int D, const bart_dim_t dimensions[D
 }
 
 
-struct multiplace_array_s* multiplace_move(int D, const bart_dim_t dimensions[D], size_t size, const void* ptr)
+struct multiplace_array_s* multiplace_move(int D, const long dimensions[D], size_t size, const void* ptr)
 {
 	return multiplace_move2(D, dimensions, MD_STRIDES(D, dimensions, size), size, ptr);
 }
 
-struct multiplace_array_s* multiplace_move_F(int D, const bart_dim_t dimensions[D], size_t size, const void* ptr)
+struct multiplace_array_s* multiplace_move_F(int D, const long dimensions[D], size_t size, const void* ptr)
 {
 	auto result = multiplace_alloc(D, dimensions, size);
 	result->ptr_ref = (void*)ptr;
@@ -234,7 +234,7 @@ struct multiplace_array_s* multiplace_move_F(int D, const bart_dim_t dimensions[
 	return result;
 }
 
-struct multiplace_array_s* multiplace_move_wrapper(int D, const bart_dim_t dimensions[D], size_t size, const void* ptr)
+struct multiplace_array_s* multiplace_move_wrapper(int D, const long dimensions[D], size_t size, const void* ptr)
 {
 	auto result = multiplace_move_F(D, dimensions, size, ptr);
 	result->free = false;

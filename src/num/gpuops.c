@@ -380,7 +380,7 @@ void cuda_free(void* ptr)
 	mem_device_free(ptr, cuda_free_wrapper);
 }
 
-void* cuda_malloc(bart_dim_t size)
+void* cuda_malloc(long size)
 {
 	if (0 == size)
 		return NULL;
@@ -388,7 +388,7 @@ void* cuda_malloc(bart_dim_t size)
 	return mem_device_malloc((size_t)size, cuda_malloc_wrapper, false);
 }
 
-void* cuda_malloc_host(bart_dim_t size)
+void* cuda_malloc_host(long size)
 {
 	if (0 == size)
 		return NULL;
@@ -460,36 +460,36 @@ bool cuda_ondevice(const void* ptr)
 }
 
 
-void cuda_clear(bart_dim_t size, void* dst)
+void cuda_clear(long size, void* dst)
 {
 	CUDA_ERROR_PTR(dst);
 	CUDA_ERROR(cudaMemsetAsync(dst, 0, (size_t)size, cuda_get_stream()));
 }
 
-static void cuda_float_clear(bart_dim_t size, float* dst)
+static void cuda_float_clear(long size, float* dst)
 {
-	cuda_clear(size * (bart_stride_t)sizeof(float), (void*)dst);
+	cuda_clear(size * (long)sizeof(float), (void*)dst);
 }
 
-void cuda_memcpy(bart_dim_t size, void* dst, const void* src)
+void cuda_memcpy(long size, void* dst, const void* src)
 {
 	CUDA_ERROR(cudaMemcpyAsync(dst, src, (size_t)size, cudaMemcpyDefault, cuda_get_stream()));
 }
 
-void cuda_memcpy_strided(const bart_dim_t dims[2], bart_stride_t ostr, void* dst, bart_stride_t istr, const void* src)
+void cuda_memcpy_strided(const long dims[2], long ostr, void* dst, long istr, const void* src)
 {
 	CUDA_ERROR(cudaMemcpy2DAsync(dst, (size_t)ostr, src, (size_t)istr, (size_t)dims[0], (size_t)dims[1], cudaMemcpyDefault, cuda_get_stream()));
 }
 
-static void cuda_float_copy(bart_dim_t size, float* dst, const float* src)
+static void cuda_float_copy(long size, float* dst, const float* src)
 {
-	cuda_memcpy(size * (bart_stride_t)sizeof(float), (void*)dst, (const void*)src);
+	cuda_memcpy(size * (long)sizeof(float), (void*)dst, (const void*)src);
 }
 
 
-static float* cuda_float_malloc(bart_dim_t size)
+static float* cuda_float_malloc(long size)
 {
-	return (float*)cuda_malloc(size * (bart_stride_t)sizeof(float));
+	return (float*)cuda_malloc(size * (long)sizeof(float));
 }
 
 static void cuda_float_free(float* x)
@@ -594,7 +594,7 @@ const struct vec_ops gpu_ops = {
 
 
 
-static void cuda_sadd_inpl(bart_dim_t N, float* dst, float val)
+static void cuda_sadd_inpl(long N, float* dst, float val)
 {
 	cuda_sadd(N, val, dst, dst);
 }

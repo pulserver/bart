@@ -45,10 +45,10 @@
  * Strang's reconditioner is simply the cropped psf in the image domain
  *
  */
-static struct multiplace_array_s* compute_precond(int N, const bart_dim_t* pre_dims, const bart_stride_t* pre_strs, const bart_dim_t* psf_dims, const bart_stride_t* psf_strs, const complex float* psf, const complex float* linphase)
+static struct multiplace_array_s* compute_precond(int N, const long* pre_dims, const long* pre_strs, const long* psf_dims, const long* psf_strs, const complex float* psf, const complex float* linphase)
 {
 	int ND = N + 1;
-	bart_flags_t flags = FFT_FLAGS;
+	unsigned long flags = FFT_FLAGS;
 
 	complex float* pre = md_alloc(ND, pre_dims, CFL_SIZE);
 	complex float* psft = md_alloc(ND, psf_dims, CFL_SIZE);
@@ -83,11 +83,11 @@ struct nufft_precond_data {
 	int N;
 	struct multiplace_array_s* pre; ///< Preconditioner
 
-	bart_dim_t* cim_dims; ///< Coil image dimension
-	bart_dim_t* pre_dims; ///< Preconditioner dimension
+	long* cim_dims; ///< Coil image dimension
+	long* pre_dims; ///< Preconditioner dimension
 
-	bart_stride_t* cim_strs;
-	bart_stride_t* pre_strs;
+	long* cim_strs;
+	long* pre_strs;
 
 	const struct linop_s* fft_op; ///< FFT linear operator
 };
@@ -137,10 +137,10 @@ const struct operator_s* nufft_precond_create(const struct linop_s* nufft_op)
 	int ND = N + 1;
 
 	pdata->N = N;
-	pdata->cim_dims = *TYPE_ALLOC(bart_dim_t[ND]);
-	pdata->pre_dims = *TYPE_ALLOC(bart_dim_t[ND]);
-	pdata->cim_strs = *TYPE_ALLOC(bart_dim_t[ND]);
-	pdata->pre_strs = *TYPE_ALLOC(bart_dim_t[ND]);
+	pdata->cim_dims = *TYPE_ALLOC(long[ND]);
+	pdata->pre_dims = *TYPE_ALLOC(long[ND]);
+	pdata->cim_strs = *TYPE_ALLOC(long[ND]);
+	pdata->pre_strs = *TYPE_ALLOC(long[ND]);
 
 	md_copy_dims(ND, pdata->cim_dims, data->cim_dims);
 	md_select_dims(ND, data->flags, pdata->pre_dims, pdata->cim_dims);
@@ -155,7 +155,7 @@ const struct operator_s* nufft_precond_create(const struct linop_s* nufft_op)
 
 	pdata->fft_op = linop_fft_create(pdata->N, pdata->cim_dims, data->flags);
 
-	const bart_dim_t* cim_dims = pdata->cim_dims;	// need to dereference pdata before PTR_PASS
+	const long* cim_dims = pdata->cim_dims;	// need to dereference pdata before PTR_PASS
 
 	return operator_create(N, cim_dims, N, cim_dims, CAST_UP(PTR_PASS(pdata)), nufft_precond_apply, nufft_precond_del);
 }

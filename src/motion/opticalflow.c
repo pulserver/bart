@@ -33,9 +33,9 @@
 
 
 
-static void zentral_differences(int D, const bart_dim_t dims[D], int d, bart_flags_t flags, complex float* out, const complex float* in)
+static void zentral_differences(int D, const long dims[D], int d, unsigned long flags, complex float* out, const complex float* in)
 {
-	bart_dim_t idims[D];
+	long idims[D];
 	md_select_dims(D, ~MD_BIT(d), idims, dims);
 
 	const struct linop_s* lop = linop_grad_zentral_create(D, idims, d, flags);
@@ -68,7 +68,7 @@ struct prox_img_data {
 
 	int N;
 	int d;
-	const bart_dim_t* dims;
+	const long* dims;
 
 	struct multiplace_array_s* rho0;
 	struct multiplace_array_s* dimg_moved;
@@ -85,12 +85,12 @@ static void prox_img_l2_apply(const operator_data_t* _data, float mu, complex fl
 	mu *= d->lambda;
 
 	int N = d->N;
-	const bart_dim_t* dims = d->dims;
-	bart_dim_t img_dims[N];
+	const long* dims = d->dims;
+	long img_dims[N];
 	md_select_dims(N, ~MD_BIT(d->d), img_dims, dims);
 
-	bart_stride_t strs[N];
-	bart_stride_t img_strs[N];
+	long strs[N];
+	long img_strs[N];
 
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 	md_calc_strides(N, img_strs, img_dims, CFL_SIZE);
@@ -127,12 +127,12 @@ static void prox_img_l1_apply(const operator_data_t* _data, float mu, complex fl
 	mu *= d->lambda;
 
 	int N = d->N;
-	const bart_dim_t* dims = d->dims;
-	bart_dim_t img_dims[N];
+	const long* dims = d->dims;
+	long img_dims[N];
 	md_select_dims(N, ~MD_BIT(d->d), img_dims, dims);
 
-	bart_stride_t strs[N];
-	bart_stride_t img_strs[N];
+	long strs[N];
+	long img_strs[N];
 
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 	md_calc_strides(N, img_strs, img_dims, CFL_SIZE);
@@ -195,17 +195,17 @@ static void prox_img_del(const operator_data_t* _data)
 	xfree(d);
 }
 
-static const struct operator_p_s* prox_img_create(bool l1, float lambda, int d, int N, const bart_dim_t dims[N], const complex float* rho0, const complex float* dimg_moved)
+static const struct operator_p_s* prox_img_create(bool l1, float lambda, int d, int N, const long dims[N], const complex float* rho0, const complex float* dimg_moved)
 {
 	PTR_ALLOC(struct prox_img_data, data);
 	SET_TYPEID(prox_img_data, data);
 
 	data->N = N;
 	data->d = d;
-	data->dims = ARR_CLONE(bart_dim_t[N], dims);
+	data->dims = ARR_CLONE(long[N], dims);
 	data->lambda = lambda;
 
-	bart_dim_t img_dims[N];
+	long img_dims[N];
 	md_select_dims(N, ~MD_BIT(d), img_dims, dims);
 
 	data->rho0 = multiplace_move(N, img_dims, CFL_SIZE, rho0);
@@ -218,9 +218,9 @@ static const struct operator_p_s* prox_img_create(bool l1, float lambda, int d, 
 
 
 
-void optical_flow(bool l1_reg, bart_flags_t reg_flags, float lambda, float maxnorm, bool l1_dc, int d, bart_flags_t flags, int N, const bart_dim_t dims[N], const complex float* img_static, const complex float* _img_moved, complex float* u)
+void optical_flow(bool l1_reg, unsigned long reg_flags, float lambda, float maxnorm, bool l1_dc, int d, unsigned long flags, int N, const long dims[N], const complex float* img_static, const complex float* _img_moved, complex float* u)
 {
-	bart_dim_t img_dims[N];
+	long img_dims[N];
 	md_select_dims(N, ~MD_BIT(d), img_dims, dims);
 
 	complex float* rho0 = md_alloc_sameplace(N, img_dims, CFL_SIZE, _img_moved);
@@ -232,8 +232,8 @@ void optical_flow(bool l1_reg, bart_flags_t reg_flags, float lambda, float maxno
 	complex float* dimg_moved = md_alloc_sameplace(N, dims, CFL_SIZE, _img_moved);
 	zentral_differences(N, dims, d, flags, dimg_moved, rho0);
 
-	bart_stride_t strs[N];
-	bart_stride_t img_strs[N];
+	long strs[N];
+	long img_strs[N];
 
 	md_calc_strides(N, strs, dims, CFL_SIZE);
 	md_calc_strides(N, img_strs, img_dims, CFL_SIZE);
@@ -287,30 +287,30 @@ void optical_flow(bool l1_reg, bart_flags_t reg_flags, float lambda, float maxno
 
 
 
-void optical_flow_multiscale(bool l1_reg, bart_flags_t reg_flags, float lambda, float maxnorm, bool l1_dc,
+void optical_flow_multiscale(bool l1_reg, unsigned long reg_flags, float lambda, float maxnorm, bool l1_dc,
 			     int levels, float sigma[levels], float factors[levels], int nwarps[levels],
-			     int d, bart_flags_t flags, int N, const bart_dim_t _dims[N], const complex float* _img_static, const complex float* _img_moved, complex float* _u)
+			     int d, unsigned long flags, int N, const long _dims[N], const complex float* _img_static, const complex float* _img_moved, complex float* _u)
 {
 	assert(_dims[d] == bitcount(flags));
 
-	bart_dim_t tdims[N];
+	long tdims[N];
 	md_select_dims(N, ~MD_BIT(d), tdims, _dims);
 
-	bart_dim_t dims[levels][N];
+	long dims[levels][N];
 	complex float* img_static[levels];
 	complex float* img_moved[levels];
 
 	gaussian_pyramide(levels, factors, sigma, 3, N, flags, tdims, _img_moved, dims, img_moved);
 	gaussian_pyramide(levels, factors, sigma, 3, N, flags, tdims, _img_static, dims, img_static);
 
-	bart_dim_t udims[N];
+	long udims[N];
 	md_copy_dims(N, udims, dims[levels - 1]);
 	udims[d] = _dims[d];
 
 	complex float* u = md_alloc_sameplace(N, udims, CFL_SIZE, _u);
 	md_clear(N, udims, u, CFL_SIZE);
 
-	bart_dim_t fdims[N];
+	long fdims[N];
 	md_select_dims(N, MD_BIT(d), fdims, _dims);
 
 	complex float factors_cpu[fdims[d]];
@@ -327,7 +327,7 @@ void optical_flow_multiscale(bool l1_reg, bart_flags_t reg_flags, float lambda, 
 		if (0 == i)
 			break;
 
-		bart_dim_t nudims[N];
+		long nudims[N];
 		md_copy_dims(N, nudims, dims[i - 1]);
 		nudims[d] = _dims[d];
 

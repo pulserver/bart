@@ -48,11 +48,11 @@ struct optreg_conf optreg_defaults = {
 };
 
 
-static const struct operator_p_s* create_wav_prox(const bart_dim_t img_dims[DIMS], bart_flags_t x_flags, bart_flags_t jt_flag, float lambda)
+static const struct operator_p_s* create_wav_prox(const long img_dims[DIMS], unsigned long x_flags, unsigned long jt_flag, float lambda)
 {
 	bool randshift = true;
-	bart_dim_t minsize[DIMS] = { [0 ... DIMS - 1] = 1 };
-	bart_flags_t wflags = 0;
+	long minsize[DIMS] = { [0 ... DIMS - 1] = 1 };
+	unsigned long wflags = 0;
 
 	for (int i = 0; i < DIMS; i++) {
 
@@ -67,7 +67,7 @@ static const struct operator_p_s* create_wav_prox(const bart_dim_t img_dims[DIMS
 }
 
 
-static const struct operator_p_s* ops_p_stack_higher_dims(int N, const bart_dim_t maps_dims[N], int coeff_dim, bart_flags_t higher_flag, const struct operator_p_s* src)
+static const struct operator_p_s* ops_p_stack_higher_dims(int N, const long maps_dims[N], int coeff_dim, unsigned long higher_flag, const struct operator_p_s* src)
 {
 	const struct operator_p_s* tmp = operator_p_ref(src);
 	const struct operator_p_s* dst = operator_p_ref(src);
@@ -76,7 +76,7 @@ static const struct operator_p_s* ops_p_stack_higher_dims(int N, const bart_dim_
 
 		if (MD_IS_SET(higher_flag, d)) {
 
-			for (bart_dim_t p = 1; p < maps_dims[d]; p++)
+			for (long p = 1; p < maps_dims[d]; p++)
 				dst = operator_p_stack_FF(d, d, dst, operator_p_ref(tmp));
 
 			operator_p_free(tmp);
@@ -90,16 +90,16 @@ static const struct operator_p_s* ops_p_stack_higher_dims(int N, const bart_dim_
 	return dst;
 }
 
-static const struct operator_p_s* moba_joint_wavthresh_prox_create(int N, const bart_dim_t maps_dims[N], int coeff_dim, bart_flags_t x_flags, bart_flags_t jflag, float lambda, bart_dim_t nr_joint_maps)
+static const struct operator_p_s* moba_joint_wavthresh_prox_create(int N, const long maps_dims[N], int coeff_dim, unsigned long x_flags, unsigned long jflag, float lambda, long nr_joint_maps)
 {
 	// higher dimensions
-	bart_flags_t higher_flag = 0;
+	unsigned long higher_flag = 0;
 
 	for (int d = coeff_dim + 1; d < N; d++)
 		if (1 < maps_dims[d])
 			higher_flag = MD_SET(higher_flag, d);
 
-	bart_dim_t maps_j_dims[N];
+	long maps_j_dims[N];
 	md_select_dims(N, ~(MD_BIT(coeff_dim) | higher_flag), maps_j_dims, maps_dims);
 	maps_j_dims[coeff_dim] = nr_joint_maps;
 
@@ -107,7 +107,7 @@ static const struct operator_p_s* moba_joint_wavthresh_prox_create(int N, const 
 
 	if (nr_joint_maps < maps_dims[coeff_dim]) {
 
-		bart_dim_t maps_z_dims[N];
+		long maps_z_dims[N];
 		md_select_dims(N, ~(MD_BIT(coeff_dim)|higher_flag), maps_z_dims, maps_dims);
 		maps_z_dims[coeff_dim] = maps_dims[coeff_dim] - nr_joint_maps;
 
@@ -125,17 +125,17 @@ static const struct operator_p_s* moba_joint_wavthresh_prox_create(int N, const 
 }
 
 
-const struct operator_p_s* moba_nonneg_prox_create(int N, const bart_dim_t maps_dims[N], int coeff_dim, bart_flags_t nonneg_flag, float lambda)
+const struct operator_p_s* moba_nonneg_prox_create(int N, const long maps_dims[N], int coeff_dim, unsigned long nonneg_flag, float lambda)
 {
 	// higher dimensions
-	bart_flags_t higher_flag = 0;
+	unsigned long higher_flag = 0;
 
 	for (int d = coeff_dim + 1; d < N; d++)
 		if (1 < maps_dims[d])
 			higher_flag = MD_SET(higher_flag, d);
 
 	// single map dimensions
-	bart_dim_t map_dims[N];
+	long map_dims[N];
 	md_select_dims(N, ~(MD_BIT(coeff_dim) | higher_flag), map_dims, maps_dims);
 
 	const struct operator_p_s* p1 = prox_zsmax_create(N, map_dims, lambda);
@@ -144,7 +144,7 @@ const struct operator_p_s* moba_nonneg_prox_create(int N, const bart_dim_t maps_
 
 	const struct operator_p_s* prox_j = NULL;
 
-	for (bart_dim_t m = 0; m < maps_dims[coeff_dim]; m++) {
+	for (long m = 0; m < maps_dims[coeff_dim]; m++) {
 
 		p3 = MD_IS_SET(nonneg_flag, m) ? p1 : p2;
 
@@ -173,7 +173,7 @@ const struct operator_p_s* moba_nonneg_prox_create(int N, const bart_dim_t maps_
 }
 
 
-static const struct operator_p_s* moba_sens_prox_create(int N, const bart_dim_t sens_dims[N])
+static const struct operator_p_s* moba_sens_prox_create(int N, const long sens_dims[N])
 {
 	const struct operator_p_s* p = prox_zero_create(N, sens_dims);
 	return p;
@@ -240,7 +240,7 @@ bool opt_reg_moba(void* ptr, char c, const char* optarg)
 		if (strcmp(rt, "W") == 0) {
 
 			regs[r].xform = L1WAV;
-			int ret = sscanf(optarg, "%*[^:]:%" SCNu64 ":%" SCNu64 ":%f", &regs[r].xflags, &regs[r].jflags, &regs[r].lambda);
+			int ret = sscanf(optarg, "%*[^:]:%lu:%lu:%f", &regs[r].xflags, &regs[r].jflags, &regs[r].lambda);
 			assert(3 == ret);
 
 		} else
@@ -265,7 +265,7 @@ bool opt_reg_moba(void* ptr, char c, const char* optarg)
 		if (strcmp(rt, "T") == 0) {
 
 			regs[r].xform = TV;
-			int ret = sscanf(optarg, "%*[^:]:%" SCNu64 ":%" SCNu64 ":%f", &regs[r].xflags, &regs[r].jflags, &regs[r].lambda);
+			int ret = sscanf(optarg, "%*[^:]:%lu:%lu:%f", &regs[r].xflags, &regs[r].jflags, &regs[r].lambda);
 			assert(3 == ret);
 
 		} else
@@ -287,31 +287,31 @@ bool opt_reg_moba(void* ptr, char c, const char* optarg)
 }
 
 
-static void opt_reg_meco_configure(int N, const bart_dim_t dims[N], const struct opt_reg_s* ropts,
+static void opt_reg_meco_configure(int N, const long dims[N], const struct opt_reg_s* ropts,
 		const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], struct optreg_conf* optreg_conf)
 {
-	bart_dim_t maps_dims[N];
+	long maps_dims[N];
 	md_select_dims(N, ~COIL_FLAG, maps_dims, dims);
 
-	bart_dim_t maps_size = md_calc_size(N, maps_dims);
+	long maps_size = md_calc_size(N, maps_dims);
 
-	bart_dim_t sens_dims[N];
+	long sens_dims[N];
 	md_select_dims(N, ~COEFF_FLAG, sens_dims, dims);
 
-	bart_dim_t sens_size = md_calc_size(N, sens_dims);
+	long sens_size = md_calc_size(N, sens_dims);
 
-	bart_dim_t x_size = maps_size + sens_size;
+	long x_size = maps_size + sens_size;
 
 
 	// set number of coefficients for joint regularization
-	bart_dim_t nr_joint_coeff = get_num_of_coeff(optreg_conf->moba_model);
+	long nr_joint_coeff = get_num_of_coeff(optreg_conf->moba_model);
 
 	if (optreg_conf->use_sobolev_fB0)
 		nr_joint_coeff -= 1;
 
 	// set the flag for the position of the coefficient
 	// which needs non-negativity constraint
-	bart_flags_t nonneg_flag = get_R2S_flag(optreg_conf->moba_model);
+	unsigned long nonneg_flag = get_R2S_flag(optreg_conf->moba_model);
 
 
 	const struct reg_s* regs = ropts->regs;
@@ -324,7 +324,7 @@ static void opt_reg_meco_configure(int N, const bart_dim_t dims[N], const struct
 
 		case L1WAV:
 
-			debug_printf(DP_INFO, "  > l1-wavelet regularization with parameters %" PRIu64 ":%" PRIu64 ":%.3f\n", regs[nr].xflags, regs[nr].jflags, regs[nr].lambda);
+			debug_printf(DP_INFO, "  > l1-wavelet regularization with parameters %lu:%lu:%.3f\n", regs[nr].xflags, regs[nr].jflags, regs[nr].lambda);
 
 			auto prox_maps = moba_joint_wavthresh_prox_create(N, maps_dims, COEFF_DIM, regs[nr].xflags, regs[nr].jflags, regs[nr].lambda, nr_joint_coeff);
 			auto prox_sens = moba_sens_prox_create(N, sens_dims);
@@ -357,7 +357,7 @@ static void opt_reg_meco_configure(int N, const bart_dim_t dims[N], const struct
 
 		case TV: // temporal dimension
 
-			debug_printf(DP_INFO, "  > TV regularization with parameters %" PRIu64 ":%" PRIu64 ":%.3f\n", regs[nr].xflags, regs[nr].jflags, regs[nr].lambda);
+			debug_printf(DP_INFO, "  > TV regularization with parameters %lu:%lu:%.3f\n", regs[nr].xflags, regs[nr].jflags, regs[nr].lambda);
 
 			auto lo_extract_maps = linop_extract_create(1, MD_DIMS(0), MD_DIMS(maps_size), MD_DIMS(x_size));
 			lo_extract_maps = linop_reshape_out_F(lo_extract_maps, N, maps_dims);
@@ -382,7 +382,7 @@ static void opt_reg_meco_configure(int N, const bart_dim_t dims[N], const struct
 	}
 }
 
-static void opt_reg_IRLL_configure(int N, const bart_dim_t dims[N], struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], struct optreg_conf* optreg_conf)
+static void opt_reg_IRLL_configure(int N, const long dims[N], struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], struct optreg_conf* optreg_conf)
 {
 	float lambda = ropts->lambda;
 #if 0
@@ -392,21 +392,21 @@ static void opt_reg_IRLL_configure(int N, const bart_dim_t dims[N], struct opt_r
 	if (-1. == lambda)
 		lambda = 0.;
 
-	bart_dim_t img_dims[DIMS];
+	long img_dims[DIMS];
 	md_select_dims(DIMS, ~COIL_FLAG, img_dims, dims);
 
-	bart_dim_t coil_dims[DIMS];
+	long coil_dims[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, coil_dims, dims);
 
-	bart_dim_t x_dims[1] = { md_calc_size(DIMS, img_dims) + md_calc_size(DIMS, coil_dims) };
+	long x_dims[1] = { md_calc_size(DIMS, img_dims) + md_calc_size(DIMS, coil_dims) };
 
-	bart_dim_t map_dims[DIMS];
+	long map_dims[DIMS];
 	md_copy_dims(DIMS, map_dims, img_dims);
-	map_dims[COEFF_DIM] = 1;
+	map_dims[COEFF_DIM] = 1L;
 
-	bart_dim_t map2_dims[DIMS];
+	long map2_dims[DIMS];
 	md_copy_dims(DIMS, map2_dims, img_dims);
-	map2_dims[COEFF_DIM] = map2_dims[COEFF_DIM] - 1;
+	map2_dims[COEFF_DIM] = map2_dims[COEFF_DIM] - 1L;
 
 	debug_print_dims(DP_INFO, DIMS, img_dims);
 	debug_print_dims(DP_INFO, DIMS, coil_dims);
@@ -516,7 +516,7 @@ static void opt_reg_IRLL_configure(int N, const bart_dim_t dims[N], struct opt_r
 
 
 
-void opt_reg_moba_configure(int N, const bart_dim_t dims[N], struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], struct optreg_conf* optreg_conf)
+void opt_reg_moba_configure(int N, const long dims[N], struct opt_reg_s* ropts, const struct operator_p_s* prox_ops[NUM_REGS], const struct linop_s* trafos[NUM_REGS], struct optreg_conf* optreg_conf)
 {
 	switch (optreg_conf->moba_model) {
 

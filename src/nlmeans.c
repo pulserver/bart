@@ -29,7 +29,7 @@ static const char help_str[] = "Non-local means filter";
 
 int main_nlmeans(int argc, char* argv[argc])
 {
-	bart_flags_t flags = 0;
+	unsigned long flags = 0;
 	int patch_length = 5;
 	int patch_dist = 5;
 	float h_factor = 0.04;
@@ -59,7 +59,7 @@ int main_nlmeans(int argc, char* argv[argc])
 
 	a_factor = (0 > a_factor) ? ((patch_length > 1) ? ((double)patch_length - 1.) / 4. : 1.) : a_factor;
 
-	bart_dim_t dims[DIMS];
+	long dims[DIMS];
 
 	complex float* in = load_cfl(in_file, DIMS, dims);
 	complex float* out = create_cfl(out_file, DIMS, dims);

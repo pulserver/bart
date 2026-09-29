@@ -120,7 +120,7 @@ UT_REGISTER_TEST(test_rect_integral);
 //      2. Compare final magnetization to nominal angle set for the pulse
 static bool test_rf_pulse_ode(void)
 {
-	bart_dim_t dim[DIMS] = { [0 ... DIMS - 1] = 1 };
+	long dim[DIMS] = { [0 ... DIMS - 1] = 1 };
 
         enum { N = 3 };              // Number of dimensions (x, y, z)
 	enum { P = 4 };              // Number of parameters with estimated derivative (Mxy, R1, R2, B1)

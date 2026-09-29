@@ -16,12 +16,12 @@
 #define MIN(x, y) ({ __typeof(x) __x = (x); __typeof(y) __y = (y); (__x < __y) ? __x : __y; })
 #define MAX(x, y) ({ __typeof(x) __x = (x); __typeof(y) __y = (y); (__x > __y) ? __x : __y; })
 
-static bart_dim_t gridsize_int(bart_dim_t N, int blocksize)
+static long gridsize_int(long N, int blocksize)
 {
 	return MIN(65535, (N + blocksize - 1) / blocksize); // 65535 is maximum for y and z dim
 }
 
-static void getBlockSize3_internal(int block[3], const bart_dim_t dims[3], int threads)
+static void getBlockSize3_internal(int block[3], const long dims[3], int threads)
 {
 	block[0] = 1;
 	block[1] = 1;
@@ -50,7 +50,7 @@ static void getBlockSize3_internal(int block[3], const bart_dim_t dims[3], int t
 	block[2] = MIN(block[2], 64);
 }
 
-dim3 getBlockSize3(const bart_dim_t dims[3], int threads)
+dim3 getBlockSize3(const long dims[3], int threads)
 {
 	int block[3];
 
@@ -60,7 +60,7 @@ dim3 getBlockSize3(const bart_dim_t dims[3], int threads)
 }
 
 
-dim3 getGridSize3(const bart_dim_t dims[3], int threads)
+dim3 getGridSize3(const long dims[3], int threads)
 {
 	int block[3];
 
@@ -69,41 +69,41 @@ dim3 getGridSize3(const bart_dim_t dims[3], int threads)
 	return dim3(gridsize_int(dims[0], block[0]), gridsize_int(dims[1], block[1]), gridsize_int(dims[2], block[2]));
 }
 
-dim3 getBlockSize3(const bart_dim_t dims[3], const void* func)
+dim3 getBlockSize3(const long dims[3], const void* func)
 {
 	return getBlockSize3(dims, cuda_get_max_threads(func));
 }
 
 
-dim3 getGridSize3(const bart_dim_t dims[3], const void* func)
+dim3 getGridSize3(const long dims[3], const void* func)
 {
 	return getGridSize3(dims, cuda_get_max_threads(func));
 }
 
 
-dim3 getBlockSize(bart_dim_t N, int threads)
+dim3 getBlockSize(long N, int threads)
 {
-	bart_dim_t dims[3] = { N, 1, 1 };
+	long dims[3] = { N, 1, 1 };
 	return getBlockSize3(dims, threads);
 }
 
 
-dim3 getGridSize(bart_dim_t N, int threads)
+dim3 getGridSize(long N, int threads)
 {
-	bart_dim_t dims[3] = { N, 1, 1 };
+	long dims[3] = { N, 1, 1 };
 	return getGridSize3(dims, threads);
 }
 
-dim3 getBlockSize(bart_dim_t N, const void* func)
+dim3 getBlockSize(long N, const void* func)
 {
-	bart_dim_t dims[3] = { N, 1, 1 };
+	long dims[3] = { N, 1, 1 };
 	return getBlockSize3(dims, cuda_get_max_threads(func));
 }
 
 
-dim3 getGridSize(bart_dim_t N, const void* func)
+dim3 getGridSize(long N, const void* func)
 {
-	bart_dim_t dims[3] = { N, 1, 1 };
+	long dims[3] = { N, 1, 1 };
 	return getGridSize3(dims, cuda_get_max_threads(func));
 }
 

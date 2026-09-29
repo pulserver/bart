@@ -49,10 +49,10 @@ static int cmp_float(const void* a, const void* b)
 }
 
 
-void bet_threshold(int N, bart_dim_t dims[N], float* img,
+void bet_threshold(int N, long dims[N], float* img,
 	float* new_img, float* t, float* t98, float* t2)
 {
-	bart_dim_t n = md_calc_size(3, dims);
+	long n = md_calc_size(3, dims);
 
 	assert(n > 0);
 
@@ -67,7 +67,7 @@ void bet_threshold(int N, bart_dim_t dims[N], float* img,
 
 	*t = *t2 + 0.1f * (*t98 - *t2);
 
-	for (bart_dim_t i = 0; i < n; i++) {
+	for (long i = 0; i < n; i++) {
 
 		if (*t > img[i])
 			new_img[i] = 0.0f;
@@ -79,28 +79,28 @@ void bet_threshold(int N, bart_dim_t dims[N], float* img,
 }
 
 
-void compute_cog(int N, bart_dim_t dims[N], const float* img, const float res[3], float* t,
+void compute_cog(int N, long dims[N], const float* img, const float res[3], float* t,
 	float* t98, float COG[3], float* R_out)
 {
 	assert(N > 3);
 	assert(1 < md_calc_size(3, dims));
 
-	bart_dim_t nx = dims[0];
-	bart_dim_t ny = dims[1];
-	bart_dim_t nz = dims[2];
+	long nx = dims[0];
+	long ny = dims[1];
+	long nz = dims[2];
 
 	float sum_w = 0.;
 	float sum_x = 0.;
 	float sum_y = 0.;
 	float sum_z = 0.;
-	bart_dim_t number = 0;
+	long number = 0;
 	float w = 0.;
 
 	for (int i = 0; i < nx; i++) {
 		for (int j = 0; j < ny; j++) {
 			for (int k = 0; k < nz; k++) {
 
-				bart_dim_t index = k * ny * nx + j * nx + i;
+				long index = k * ny * nx + j * nx + i;
 
 				assert(index >= 0);
 
@@ -135,20 +135,20 @@ void compute_cog(int N, bart_dim_t dims[N], const float* img, const float res[3]
 	*R_out = (float)R;
 }
 
-float compute_tm(int N, bart_dim_t dims[N], const float* image, const float voxel_size[3],
+float compute_tm(int N, long dims[N], const float* image, const float voxel_size[3],
 	const float COG[3], float R)
 {
-	bart_dim_t nx = dims[0];
-	bart_dim_t ny = dims[1];
-	bart_dim_t nz = dims[2];
+	long nx = dims[0];
+	long ny = dims[1];
+	long nz = dims[2];
 
-	bart_dim_t max_vals = nx * ny * nz;
+	long max_vals = nx * ny * nz;
 
 	assert(max_vals > 0);
 
 	float* vals = xmalloc(sizeof(float[max_vals]));
 
-	bart_dim_t n = 0;
+	unsigned long n = 0;
 
 	for (int ix = 0; ix < nx; ix++) {
 		for (int iy = 0; iy < ny; iy++) {
@@ -167,7 +167,7 @@ float compute_tm(int N, bart_dim_t dims[N], const float* image, const float voxe
 		}
 	}
 
-	qsort(vals, (size_t)n, sizeof(float), cmp_float);
+	qsort(vals, n, sizeof(float), cmp_float);
 
 	float tm = vals[n / 2];
 
@@ -245,7 +245,7 @@ static float mean_edge_length(const double* verts, int nv, const struct neighbor
 	return (float)(sum / count);
 }
 
-static float sample_image_nn(int N, bart_dim_t dims[N], const float* image,
+static float sample_image_nn(int N, long dims[N], const float* image,
 	const float voxel_size[3], const float x[3])
 {
 	int nx = dims[0];
@@ -262,7 +262,7 @@ static float sample_image_nn(int N, bart_dim_t dims[N], const float* image,
 	return image[(iz) * ny * nx + (iy) * nx + (ix)];
 }
 
-static void sample_ray(int N, bart_dim_t dims[N], const float v[3], const float n_hat[3],
+static void sample_ray(int N, long dims[N], const float v[3], const float n_hat[3],
 	const float* image, const float voxel_size[3], float* Imin, float* Imax)
 {
 	const float d1 = 20.f;
@@ -291,7 +291,7 @@ static void sample_ray(int N, bart_dim_t dims[N], const float v[3], const float 
 }
 
 
-static void update_vertex(int N, bart_dim_t dims[N], int i, double* verts, const struct neighbors* neigh,
+static void update_vertex(int N, long dims[N], int i, double* verts, const struct neighbors* neigh,
 	const float* image, const float voxel_size[3], const float COG[3], float t2, float t,
 	float tm, float bt, float l, float du[3])
 {
@@ -372,7 +372,7 @@ static void update_vertex(int N, bart_dim_t dims[N], int i, double* verts, const
 
 }
 
-static void bet_iteration(int N, bart_dim_t dims[N], double* verts, int nv, const struct neighbors* neigh,
+static void bet_iteration(int N, long dims[N], double* verts, int nv, const struct neighbors* neigh,
 	const float* image, const float voxel_size[3], const float COG[3],
 	float t2, float t, float tm, float bt, float l)
 {
@@ -387,7 +387,7 @@ static void bet_iteration(int N, bart_dim_t dims[N], double* verts, int nv, cons
 	}
 }
 
-void run_bet(int N, bart_dim_t dims[N], double* verts, int nv, const struct neighbors* neigh,
+void run_bet(int N, long dims[N], double* verts, int nv, const struct neighbors* neigh,
 	const float* image, const float voxel_size[3], const float COG[3],
 	float t2, float t, float tm, float bt, int n_iter)
 {
@@ -491,7 +491,7 @@ static int ray_intersects_segment_2d(float px, float py, const float n[2], const
 	return 0;
 }
 
-void mesh_to_mask_slicewise(int N, bart_dim_t dims[N], float* mask, float resolution[3], const double (*verts)[3], const int (*tris)[3], int ntris)
+void mesh_to_mask_slicewise(int N, long dims[N], float* mask, float resolution[3], const double (*verts)[3], const int (*tris)[3], int ntris)
 {
 	int nx = dims[0];
 	int ny = dims[1];
@@ -503,7 +503,7 @@ void mesh_to_mask_slicewise(int N, bart_dim_t dims[N], float* mask, float resolu
 
 	struct Segment2 (*segments)[ntris] = xmalloc(sizeof(*segments));
 
-	bart_dim_t count_inconsistent_pixel = 0;
+	long count_inconsistent_pixel = 0;
 
 	for (int k = 0; k < nz; k++) {
 
@@ -559,7 +559,7 @@ void mesh_to_mask_slicewise(int N, bart_dim_t dims[N], float* mask, float resolu
 	}
 
 	if (0 < count_inconsistent_pixel)
-		debug_printf(DP_WARN, "Warning: %" PRId64 " of %" PRId64 " pixels have inconsistent ray crossings.\n", count_inconsistent_pixel, (bart_dim_t)(nx * ny * nz));
+		debug_printf(DP_WARN, "Warning: %ld of %ld pixels have inconsistent ray crossings.\n", count_inconsistent_pixel, (long)(nx * ny * nz));
 
 	xfree(segments);
 }
@@ -593,7 +593,7 @@ static double compute_solid_angle(const double p[3], const double v0[3], const d
 }
 
 
-void mesh_to_mask_winding_number(int N, bart_dim_t dims[N], float* mask, float resolution[3],
+void mesh_to_mask_winding_number(int N, long dims[N], float* mask, float resolution[3],
 	const double (*verts)[3], const int (*tris)[3], int ntris)
 {
 	for (int d = 3; d < N; d++)
@@ -601,7 +601,7 @@ void mesh_to_mask_winding_number(int N, bart_dim_t dims[N], float* mask, float r
 
 	const float factor = 1.0 / (4.0 * M_PI);
 
-	bart_stride_t strs[N];
+	long strs[N];
 	md_calc_strides(N, strs, dims, sizeof(float));
 
 #ifdef _OPENMP
@@ -624,7 +624,7 @@ void mesh_to_mask_winding_number(int N, bart_dim_t dims[N], float* mask, float r
 			solid_angle_sum += compute_solid_angle(center, v0, v1, v2);
 		}
 
-		bart_dim_t pos[N] = { };
+		long pos[N] = { };
 
 		pos[0] = i;
 		pos[1] = j;

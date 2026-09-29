@@ -39,7 +39,7 @@ static double kaiser(double beta, int M, int n)
 		/ bessel_i0(beta);
 }	
 
-void direct_calib(const bart_dim_t dims[5], complex float* sens, const bart_dim_t caldims[5], const complex float* data)
+void direct_calib(const long dims[5], complex float* sens, const long caldims[5], const complex float* data)
 {
 	complex float* tmp = md_alloc(5, caldims, CFL_SIZE);
 
@@ -62,14 +62,14 @@ void direct_calib(const bart_dim_t dims[5], complex float* sens, const bart_dim_
 
 	ifftc(5, dims, 7, sens, sens);
 
-	bart_dim_t dims1[5];
+	long dims1[5];
 	md_select_dims(5, ~MD_BIT(COIL_DIM), dims1, dims);
 
 	complex float* img = md_alloc(5, dims1, CFL_SIZE);
 
 	md_zrss(5, dims, COIL_FLAG, img, sens);
 #if 1
-	bart_dim_t T = md_calc_size(5, dims1);
+	long T = md_calc_size(5, dims1);
 	for (int i = 0; i < T; i++)
 		for (int j = 0; j < dims[COIL_DIM]; j++)
 			sens[j * T + i] *= (cabs(img[i]) == 0.) ? 0. : (1. / cabs(img[i]));
