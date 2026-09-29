@@ -123,8 +123,12 @@ int main_estdelay(int argc, char* argv[argc])
 	md_copy_block(DIMS, pos, dims, in, full_dims, full_in, CFL_SIZE);
 
 	// FIXME: more checks
-	assert(dims[1] == tdims[1]);
-	assert(dims[2] == tdims[2]);
+	if (   !md_check_compat(DIMS, READ_FLAG | md_nontriv_dims(DIMS, dims), dims, tdims)
+	    || !md_check_equal_dims(DIMS, dims, tdims, PHS1_FLAG | PHS2_FLAG))
+		error("Incompatible dimensions of k-space and trajectory!\n");
+
+	if (1 != md_calc_size(DIMS - 4, dims + 4))
+		debug_printf(DP_WARN, "estdelay only uses data from first echo/slice/...\n");
 
 	float qf[3];	// S in RING
 
