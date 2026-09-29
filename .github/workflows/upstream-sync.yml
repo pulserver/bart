@@ -1,0 +1,36 @@
+name: Upstream sync
+
+# Fast-forwards master to Codeberg's master, carries over Codeberg's new tags,
+# and keeps one issue open while downstream needs rebasing onto master.
+# downstream itself is rebased by hand; see .github/sync/README.md.
+
+on:
+  schedule:
+    - cron: '17 4 * * 1'   # Mondays, 04:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'pulserver/bart'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        sparse-checkout: .github/sync
+        persist-credentials: false
+    - name: sync master and tags, check downstream
+      env:
+        UPSTREAM_URL: https://codeberg.org/mrirecon/bart.git
+        ORIGIN_URL: https://github.com/${{ github.repository }}.git
+        GH_REPO: ${{ github.repository }}
+        GH_TOKEN: ${{ github.token }}
+      run: .github/sync/upstream-sync.sh
