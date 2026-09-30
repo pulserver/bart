@@ -86,6 +86,11 @@ static void mpi_error(const char* file, int line, int error_code)
 #define MPI_ERROR(x)	({ int errval = (x); if (MPI_SUCCESS != errval) mpi_error(__FILE__, __LINE__, errval); })
 #endif
 
+#ifndef USE_GPU
+static bool cuda_ondevice(const void* /*ptr*/) { return false; }
+static void cuda_sync_stream(void) { }
+static void cuda_memcpy(long /*size*/, void* /*dst*/, const void* /*src*/) { }
+#endif
 
 void mpi_init(int* argc, char*** argv)
 {
@@ -197,9 +202,9 @@ void mpi_signoff_proc(bool signoff)
 }
 
 #ifdef USE_MPI
-#ifdef USE_GPU
 static void print_cuda_aware_warning(void)
 {
+#ifdef USE_GPU
 	static bool printed = false;
 
 	if (!printed && !cuda_aware_mpi)
@@ -209,8 +214,8 @@ static void print_cuda_aware_warning(void)
 		debug_printf(DP_WARN, "Global GPU memory is active. This may decrease performance for MPI-assisted multi-GPU operations significantly!.\n");
 
 	printed = true;
-}
 #endif
+}
 #endif
 
 void mpi_sync(void)
@@ -222,7 +227,6 @@ void mpi_sync(void)
 }
 
 #ifdef USE_MPI
-#ifdef USE_GPU
 static void mpi_bcast_selected_gpu(bool tag, void* ptr, long size, int root)
 {
 	if (1 == mpi_get_num_procs())
@@ -243,7 +247,6 @@ static void mpi_bcast_selected_gpu(bool tag, void* ptr, long size, int root)
 	xfree(tmp);
 }
 #endif
-#endif
 
 void mpi_bcast_selected(bool tag, void* ptr, long size, int root)
 {
@@ -251,7 +254,6 @@ void mpi_bcast_selected(bool tag, void* ptr, long size, int root)
 	if (1 == mpi_get_num_procs())
 		return;
 
-#ifdef USE_GPU
 	if (!cuda_aware_mpi && cuda_ondevice(ptr)) {
 
 		mpi_bcast_selected_gpu(tag, ptr, size, root);
@@ -260,7 +262,6 @@ void mpi_bcast_selected(bool tag, void* ptr, long size, int root)
 
 	if (cuda_ondevice(ptr))
 		cuda_sync_stream();
-#endif
 
 	MPI_Comm comm_sub;
 	MPI_ERROR(MPI_Comm_split(mpi_get_comm(), tag, (mpi_get_rank() != root), &comm_sub));
@@ -345,11 +346,9 @@ static void mpi_copy_kernel(void* dst, long size, const void* src, int sender_ra
 
 		if ((mpi_get_rank() == sender_rank) && (dst != src)) {
 
-#ifdef USE_GPU
 			if (cuda_ondevice(dst) || cuda_ondevice(src))
 				cuda_memcpy(size, dst, src);
 			else
-#endif
 				memcpy(dst, src, (size_t)size);
 		}
 
@@ -361,7 +360,6 @@ static void mpi_copy_kernel(void* dst, long size, const void* src, int sender_ra
 
 		void* src2 = (void*)src;
 
-#ifdef USE_GPU
 		if (cuda_ondevice(src) && !cuda_aware_mpi) {
 
 			print_cuda_aware_warning();
@@ -369,40 +367,33 @@ static void mpi_copy_kernel(void* dst, long size, const void* src, int sender_ra
 			src2 = xmalloc((size_t)size);
 			cuda_memcpy(size, src2, src);
 		}
-#endif
 
 		for (long n = 0; n < size; n += INT_MAX / 2)
 			mpi_send(src2 + n, MIN(size - n, INT_MAX / 2), recv_rank, blocking);
 
-#ifdef USE_GPU
 		if (cuda_ondevice(src) && !cuda_aware_mpi)
 			xfree(src2);
-#endif
 	}
 
 	if (mpi_get_rank() == recv_rank) {
 
 		void* dst2 = dst;
 
-#ifdef USE_GPU
 		if (cuda_ondevice(dst) && !cuda_aware_mpi) {
 
 			print_cuda_aware_warning();
 			blocking = true;
 			dst2 = xmalloc((size_t)size);
 		}
-#endif
 
 		for (long n = 0; n < size; n += INT_MAX / 2)
 			mpi_recv(dst2 + n, MIN(size - n, INT_MAX / 2), sender_rank, blocking);
 
-#ifdef USE_GPU
 		if (cuda_ondevice(dst) && !cuda_aware_mpi) {
 
 			cuda_memcpy(size, dst, dst2);
 			xfree(dst2);
 		}
-#endif
 	}
 #else
 	UNUSED(dst);
@@ -431,9 +422,7 @@ void mpi_copy2(int N, const long dim[N], const long ostr[N], void* optr, const l
 	bool ap_save = num_auto_parallelize;
 	num_auto_parallelize = false;
 
-#ifdef USE_GPU
 	cuda_sync_stream();
-#endif
 
 	NESTED(void, nary_copy_mpi, (struct nary_opt_data_s* opt_data, void* ptr[]))
 	{
@@ -455,9 +444,7 @@ void mpi_copy2_nonblocking(int N, const long dim[N], const long ostr[N], void* o
 	bool ap_save = num_auto_parallelize;
 	num_auto_parallelize = false;
 
-#ifdef USE_GPU
 	cuda_sync_stream();
-#endif
 
 	NESTED(void, nary_copy_mpi, (struct nary_opt_data_s* opt_data, void* ptr[]))
 	{
@@ -585,7 +572,6 @@ void mpi_gather_batch(void* dst, long count, const void* src, size_t size)
 */
 
 #ifdef USE_MPI
-#ifdef USE_GPU
 static void mpi_reduce_land_gpu(long N, bool vec[N])
 {
 	print_cuda_aware_warning();
@@ -601,7 +587,6 @@ static void mpi_reduce_land_gpu(long N, bool vec[N])
 	xfree(tmp);
 }
 #endif
-#endif
 
 void mpi_reduce_land(long N, bool vec[__VLA(N)])
 {
@@ -609,7 +594,6 @@ void mpi_reduce_land(long N, bool vec[__VLA(N)])
 		error("MPI reduction requested but only run by one process!\n");
 
 #ifdef USE_MPI
-#ifdef USE_GPU
 	if (!cuda_aware_mpi && cuda_ondevice(vec)) {
 
 		mpi_reduce_land_gpu(N, vec);
@@ -618,7 +602,6 @@ void mpi_reduce_land(long N, bool vec[__VLA(N)])
 
 	if (cuda_ondevice(vec))
 		cuda_sync_stream();
-#endif
 
 	for (long n = 0; n < N; n += INT_MAX / 2)
 		MPI_ERROR(MPI_Allreduce(MPI_IN_PLACE, vec + n, MIN(N - n, INT_MAX / 2), MPI_C_BOOL, MPI_LAND, mpi_get_comm()));
@@ -631,8 +614,7 @@ void mpi_reduce_land(long N, bool vec[__VLA(N)])
 #ifdef USE_MPI
 static void mpi_allreduce_sum_gpu(int N, float vec[N], MPI_Comm comm)
 {
-#ifdef USE_GPU
-if (!cuda_aware_mpi && cuda_ondevice(vec)) {
+	if (!cuda_aware_mpi && cuda_ondevice(vec)) {
 
 		print_cuda_aware_warning();
 
@@ -651,7 +633,6 @@ if (!cuda_aware_mpi && cuda_ondevice(vec)) {
 
 	if (cuda_ondevice(vec))
 		cuda_sync_stream();
-#endif
 
 	MPI_ERROR(MPI_Allreduce(MPI_IN_PLACE, vec, N, MPI_FLOAT, MPI_SUM, comm));
 }
@@ -695,8 +676,7 @@ void mpi_reduce_sum_vector(long N, float vec[N])
 #ifdef USE_MPI
 static void mpi_allreduce_sumD_gpu(int N, double vec[N], MPI_Comm comm)
 {
-#ifdef USE_GPU
-if (!cuda_aware_mpi && cuda_ondevice(vec)) {
+	if (!cuda_aware_mpi && cuda_ondevice(vec)) {
 
 		print_cuda_aware_warning();
 
@@ -715,7 +695,7 @@ if (!cuda_aware_mpi && cuda_ondevice(vec)) {
 
 	if (cuda_ondevice(vec))
 		cuda_sync_stream();
-#endif
+
 	MPI_ERROR(MPI_Allreduce(MPI_IN_PLACE, vec, N, MPI_DOUBLE, MPI_SUM, comm));
 }
 #endif
