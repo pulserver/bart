@@ -9,21 +9,57 @@
 #ifndef _VDPRINTF_WINDOWS
 #define _VDPRINTF_WINDOWS
 
+#include <stdarg.h>
 #include <stdio.h>
-#include "misc/misc.h"
+#include <stdlib.h>
+#include <io.h>
 
 int vdprintf(int, const char*, va_list);
 
+// Formats into memory and writes the bytes to the descriptor, as POSIX
+// vdprintf does.  A stdio stream opened over the descriptor for each call
+// could not be closed without closing the descriptor, and the C runtime
+// holds a fixed number of streams per process.
 int vdprintf(int fd, const char *format, va_list ap)
 {
-	FILE* stream = _fdopen(fd, "a");
-	if (stream == NULL)
-		error("Unable to open file.\n");
-	int err = vfprintf(stream, format, ap);
-	if (err == -1)
-		error("Unable to write to file.\n");
-	fflush(stream);
-	return err;
+	char small[256];
+	char* buf = small;
+
+	va_list aq;
+	va_copy(aq, ap);
+	int len = vsnprintf(small, sizeof small, format, aq);
+	va_end(aq);
+
+	if (len < 0)
+		return -1;
+
+	if ((size_t)len >= sizeof small) {
+
+		if (NULL == (buf = malloc((size_t)len + 1)))
+			return -1;
+
+		vsnprintf(buf, (size_t)len + 1, format, ap);
+	}
+
+	int done = 0;
+
+	while (done < len) {
+
+		int n = _write(fd, buf + done, (unsigned int)(len - done));
+
+		if (n <= 0) {
+
+			done = -1;
+			break;
+		}
+
+		done += n;
+	}
+
+	if (small != buf)
+		free(buf);
+
+	return done;
 }
 
 #endif /* _VDPRINTF_WINDOWS */
