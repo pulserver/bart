@@ -973,9 +973,7 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 
 	do {
 		double proj_angle = get_rot_angle(seq_state->pos, seq);
-
-		double projX[3] = { 0., cos(proj_angle), 0. };
-		double projY[3] = { sin(proj_angle), 0., 0. };
+		double projXY[3] = { sin(proj_angle), cos(proj_angle), 0. };
 
 		struct grad_trapezoid readout_dephaser;
 		struct grad_trapezoid phs1_encoding;
@@ -994,8 +992,8 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 								     + powf(phs1_encoding.ampl, 2.)))
 				return ERROR_MAX_GRAD_RO_SLI;
 
-			i += seq_grad_to_event(ev + i, timing.readout_dephaser, &readout_dephaser, projX);
-			i += seq_grad_to_event(ev + i, timing.readout_dephaser, &readout_dephaser, projY);
+			i += seq_grad_to_event(ev + i, timing.readout_dephaser, &readout_dephaser, projXY);
+
 			i += seq_grad_to_event(ev + i, timing.readout_dephaser, &phs1_encoding, projPHASE);
 		}
 
@@ -1024,8 +1022,7 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 		if ((seq_state->pos[TE_DIM] == 0) && (timing.readout_dephaser + grad_total_time(&phs1_encoding) > timing.readout[seq_state->pos[TE_DIM]]))
 			return ERROR_RO_TIMING;
 
-		i += seq_grad_to_event(ev + i, timing.readout[seq_state->pos[TE_DIM]], &readout, projX);
-		i += seq_grad_to_event(ev + i, timing.readout[seq_state->pos[TE_DIM]], &readout, projY);
+		i += seq_grad_to_event(ev + i, timing.readout[seq_state->pos[TE_DIM]], &readout, projXY);
 
 		seq_event_merge_degenerated_triangles(blip_events + 4, ev + i - (blip_events + 4));
 
@@ -1036,8 +1033,7 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 			if (!prep_grad_ro_reph(&ro_reph, seq))
 				return ERROR_PREP_GRAD_RO_REPH;
 
-			i += seq_grad_to_event(ev + i, timing.readout_rephaser, &ro_reph, projX);
-			i += seq_grad_to_event(ev + i, timing.readout_rephaser, &ro_reph, projY);
+			i += seq_grad_to_event(ev + i, timing.readout_rephaser, &ro_reph, projXY);
 		}
 
 	} while (md_next(DIMS, seq->loop_dims, TE_FLAG, seq_state->pos));

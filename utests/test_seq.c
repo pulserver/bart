@@ -19,7 +19,7 @@
 
 #include "utest.h"
 
-#define FLASH_EVENTS 14
+#define FLASH_EVENTS 10
 
 #define CHECK_ID(size, arr, id) { for (int i = 0; i < size; i++) { if (arr[i].id == id) { return 1; } } return 0; }
 

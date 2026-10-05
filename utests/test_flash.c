@@ -14,10 +14,10 @@
 
 #include "utest.h"
 
-#define FLASH_EVENTS 14
-#define FLASH_EVENTS_MECO 79
-#define FLASH_EVENTS_MECO_64 706
-#define FLASH_EVENTS_SPOILED 22
+#define FLASH_EVENTS 10
+#define FLASH_EVENTS_MECO 63
+#define FLASH_EVENTS_MECO_64 576
+#define FLASH_EVENTS_SPOILED 16
 
 
 static bool test_command(void)
