@@ -944,10 +944,12 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 	int i = 0;
 
 	double rf_spoil_phase = rf_spoiling(DIMS, seq_state->pos, seq);
+	double proj_angle = get_rot_angle(seq_state->pos, seq);
 
 	double projPHASE[3] = { 0. , 1. , 0 };
 	double projREAD[3] = { 1. , 0. , 0. };
 	double projSLICE[3] = { 0. , 0. , 1. };
+	double projXY[3] = { sin(proj_angle), cos(proj_angle), 0. };
 
 
 	struct grad_trapezoid slice;
@@ -968,35 +970,34 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 
 	i += seq_grad_to_event(ev + i, timing.slice_rephaser, &slice_rephaser, projSLICE);
 
-	struct grad_trapezoid ro_reph;
+	struct grad_trapezoid readout_dephaser;
+
+	if (!prep_grad_ro_deph(&readout_dephaser, seq))
+		return ERROR_PREP_GRAD_RO_DEPH;
+
+	i += seq_grad_to_event(ev + i, timing.readout_dephaser, &readout_dephaser, projXY);
+
+	struct grad_trapezoid phs1_encoding;
+
+	if (!prep_grad_phs1_encoding(&phs1_encoding, 0, seq_state->pos, seq))
+		return ERROR_PREP_GRAD_RO_DEPH;
+
+	//check for overlapping gradients!
+	if (powf(seq->sys.grad.max_amplitude, 2.) < (  powf(slice_rephaser.ampl, 2.)
+							+ powf(readout_dephaser.ampl, 2.)
+							+ powf(phs1_encoding.ampl, 2.)))
+		return ERROR_MAX_GRAD_RO_SLI;
+
+
+	i += seq_grad_to_event(ev + i, timing.readout_dephaser, &phs1_encoding, projPHASE);
+
 	struct grad_trapezoid readout;
 
 	do {
-		double proj_angle = get_rot_angle(seq_state->pos, seq);
-		double projXY[3] = { sin(proj_angle), cos(proj_angle), 0. };
 
-		struct grad_trapezoid readout_dephaser;
-		struct grad_trapezoid phs1_encoding;
-
-		if (seq_state->pos[TE_DIM] == 0) {
-
-			if (!prep_grad_ro_deph(&readout_dephaser, seq))
-				return ERROR_PREP_GRAD_RO_DEPH;
-
-			if (!prep_grad_phs1_encoding(&phs1_encoding, 0, seq_state->pos, seq))
-				return ERROR_PREP_GRAD_RO_DEPH;
-
-			//check for overlapping gradients!
-			if (powf(seq->sys.grad.max_amplitude, 2.) < (  powf(slice_rephaser.ampl, 2.)
-								     + powf(readout_dephaser.ampl, 2.)
-								     + powf(phs1_encoding.ampl, 2.)))
-				return ERROR_MAX_GRAD_RO_SLI;
-
-			i += seq_grad_to_event(ev + i, timing.readout_dephaser, &readout_dephaser, projXY);
-
-			i += seq_grad_to_event(ev + i, timing.readout_dephaser, &phs1_encoding, projPHASE);
-		}
-
+		proj_angle = get_rot_angle(seq_state->pos, seq);
+		projXY[0] = sin(proj_angle);
+		projXY[1] = cos(proj_angle);
 
 		if (0 < seq_state->pos[TE_DIM])
 			timing.readout_blip = timing.readout[seq_state->pos[TE_DIM] - 1] + grad_total_time(&readout) + 1E-15;
@@ -1028,15 +1029,15 @@ int flash(int N, struct seq_event ev[N], struct seq_state* seq_state, const stru
 
 		i += prep_adc(ev + i, timing.adc[seq_state->pos[TE_DIM]], rf_spoil_phase, seq_state, seq);
 
-		if (seq_state->pos[TE_DIM] == seq->loop_dims[TE_DIM] - 1) {
-
-			if (!prep_grad_ro_reph(&ro_reph, seq))
-				return ERROR_PREP_GRAD_RO_REPH;
-
-			i += seq_grad_to_event(ev + i, timing.readout_rephaser, &ro_reph, projXY);
-		}
-
 	} while (md_next(DIMS, seq->loop_dims, TE_FLAG, seq_state->pos));
+
+
+	struct grad_trapezoid ro_reph;
+
+	if (!prep_grad_ro_reph(&ro_reph, seq))
+		return ERROR_PREP_GRAD_RO_REPH;
+
+	i += seq_grad_to_event(ev + i, timing.readout_rephaser, &ro_reph, projXY);
 
 	struct grad_trapezoid phase_rewinder;
 
