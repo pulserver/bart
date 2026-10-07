@@ -350,6 +350,20 @@ static void skip_to_next(const char* hdr, int fd, off_t offset)
 }
 
 
+
+// Fix for weird behavior in VD/VE files:
+// Sometimes reading the last block (ACQEND) fails, because the block is not padded
+// If we check before reading, skip the block and avoid the error.
+
+static bool is_acqend(const char* scan_hdr)
+{
+	struct mdh2 mdh;
+	memcpy(&mdh, scan_hdr + 40, sizeof(mdh));
+
+	return MD_IS_SET(mdh.evalinfo, ACQEND);
+}
+
+
 // Skip VOP (RF monitoring) blocks
 // VOP block size is calculated from header
 
@@ -407,6 +421,9 @@ static enum adc_return siemens_bounds(bool vd, bool noise, bool dummy, bool refs
 
 	if (size != (size_t)read(fd, scan_hdr, size))
 		return ADC_ERROR;
+
+	if (vd && is_acqend(scan_hdr))
+		return ADC_END;
 
 	if (vd && ignore_vop && skip_vop(scan_hdr, fd))
 		return ADC_SKIP;
@@ -483,6 +500,9 @@ static enum adc_return siemens_adc_read(bool vd, int fd, bool noise, bool dummy,
 {
 	char scan_hdr[vd ? 192 : 0];
 	xread(fd, scan_hdr, sizeof(scan_hdr));
+
+	if (vd && is_acqend(scan_hdr))
+		return ADC_END;
 
 	if (vd && ignore_vop && skip_vop(scan_hdr, fd))
 		return ADC_SKIP;
