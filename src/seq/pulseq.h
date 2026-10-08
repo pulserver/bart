@@ -74,6 +74,8 @@ struct shape {
 
 	int id;
 	int num;
+	// pulseq only stores single precission floats, but double is useful to
+	// increase the range of repetition counts which can be exactly represented
 	VEC(double) *values;
 };
 

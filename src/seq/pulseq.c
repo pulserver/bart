@@ -60,30 +60,6 @@ do {												\
 #define RF_ACCESS(X) X(id) X(mag) X(mag_id) X(ph_id) X(time_id) X(delay) X(freq) X(phase)
 
 
-static struct shape make_shape(int id, int num, int len, const double val[len])
-{
-	struct shape shape = { id, num, NULL };
-
-	bool compression = (num != len);
-	double value = 0.;
-
-	for (int i = 0; i < len; i++) {
-
-		int count = 1;
-
-		double update = val[i];
-
-		if (compression && (0 < i) && (i < len - 1) && (val[i - 1] == val[i]))
-			count += val[++i];
-
-		while (count--)
-			VEC_ADD(shape.values, (compression) ? value += update : update);
-	}
-
-	assert(VEC_LEN(shape.values) == num);
-	return shape;
-}
-
 static struct shape make_compressed_shape(int id, int len, const double val[len])
 {
 	struct shape shape = { id, len, NULL };
@@ -127,8 +103,11 @@ static struct shape make_compressed_shape(int id, int len, const double val[len]
 					VEC_LEN(shape.values), len);
 
 		xfree(shape.values);
+		shape.values = NULL;
 
-		return make_shape(id, len, len, val); // uncompressed shape because num == len
+		// truncating val to float as pulseq only uses floats
+		for (int i = 0; i < len; i++)
+			VEC_ADD(shape.values, (float)val[i]);
 	}
 
 	return shape;
