@@ -24,7 +24,7 @@ static bool test_shape(void)
 	struct shape out = make_compressed_shape(0, (int)ARRAY_SIZE(in), in);
 
 	for (int i = 0; i < (int)ARRAY_SIZE(in); i++)
-		if (out.values->data[i] != in[i])
+		if ((float)out.values->data[i] != (float)in[i])
 			return false;
 
 	xfree(out.values);
@@ -43,7 +43,7 @@ static bool test_shape_compression1(void)
 	struct shape out = make_compressed_shape(0, 10, in);
 
 	for (int i = 0; i < (int)ARRAY_SIZE(good) ; i++)
-		if (out.values->data[i] != good[i])
+		if ((float)out.values->data[i] != (float)good[i])
 			return false;
 
 	xfree(out.values);
@@ -63,7 +63,7 @@ static bool test_shape_compression2(void)
 	struct shape out = make_compressed_shape(0, 10, in);
 
 	for (int i = 0; i < (int)ARRAY_SIZE(good); i++)
-		if (out.values->data[i] != good[i])
+		if ((float)out.values->data[i] != (float)good[i])
 			return false;
 
 	xfree(out.values);
@@ -82,7 +82,7 @@ static bool test_shape_compression3(void)
 	struct shape out = make_compressed_shape(0, (int)ARRAY_SIZE(in), in);
 
 	for (int i = 0; i < (int)ARRAY_SIZE(good); i++)
-		if (out.values->data[i] != good[i])
+		if ((float)out.values->data[i] != (float)good[i])
 			return false;
 
 	xfree(out.values);

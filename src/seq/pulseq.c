@@ -88,15 +88,18 @@ static struct shape make_compressed_shape(int id, int len, const double val[len]
 {
 	struct shape shape = { id, len, NULL };
 
-	double der = 0.;
+	// pulseq stores shapes as single precission float
+	// we cast the derivatives to float for comparison which ensures
+	// injectivity of the compression scheme, i.e. two different floats remain
+	// different after printing with "%.9g\n" format as done below.
+	float der = 0.;
 	int count = 0;
 
 	for (int i = 0; i < len; i++) {
 
-		double der_i = val[i] - ((0 == i) ? 0. : val[i - 1]);
-		der_i = (1.e-8 > fabs(der_i)) ? 0. : der_i;
+		float der_i = val[i] - ((0 == i) ? 0. : val[i - 1]);
 
-		if (1.e-12 > fabs(der - der_i)) {
+		if (der == der_i) {
 
 			if (count < 2)
 				VEC_ADD(shape.values, der_i);
@@ -120,7 +123,7 @@ static struct shape make_compressed_shape(int id, int len, const double val[len]
 
 	if ((int)(0.75 * len) < VEC_LEN(shape.values)) {
 
-		debug_printf(DP_DEBUG3, "insufficient forced compression (%d/%d), return uncompressed shape\n", 
+		debug_printf(DP_DEBUG3, "insufficient forced compression (%d/%d), return uncompressed shape\n",
 					VEC_LEN(shape.values), len);
 
 		xfree(shape.values);
@@ -529,13 +532,13 @@ static bool empty_block(struct ps_block* b)
 		&& (0 == b->adc)
 		&& (0 == b->ext));
 }
-	
+
 void events_to_pulseq(struct pulseq *ps, enum seq_block mode, double tr, int M, const struct rf_shape rf_shapes[M], int N, const struct seq_event ev[N])
 {
 	int ext_id = 0;
 
 	if (0 < events_counter(SEQ_EVENT_TRIGGER, N, ev)) {
-		
+
 		if (0 < ps->trigger_count)
 			error("Multiple triggers not supported\n");
 
@@ -718,10 +721,16 @@ void pulseq_writef(FILE *fp, struct pulseq *ps)
 
 		for (int j = 0; j < VEC_LEN(sh.values); j++) {
 
-			if (1 < sh.values->data[j])
-				fprintf(fp, "%d\n", (int)sh.values->data[j]);
+			// If the shape value is larger than 2, it must be a compressed integer
+			// as the maximum derivative of a shape in [-1,1] is 2.
+			// We increase the space of exactly printed integers by the rounding, but
+			// for val in {0., 1., 2.}, the integer representation is exact
+			// and "%.9g" prints it correctly, too.
+
+			if (2 < sh.values->data[j])
+				fprintf(fp, "%ld\n", lround(sh.values->data[j]));
 			else
-				fprintf(fp, "%.10f\n", sh.values->data[j]);
+				fprintf(fp, "%.9g\n", sh.values->data[j]);
 		}
 	}
 
