@@ -93,13 +93,16 @@ int main_cc(int argc, char* argv[argc])
 	long caldims[DIMS];
 	complex float* cal_data = NULL;
 
+	if (1 != md_calc_size(DIMS - 4, in_dims + 4))
+		debug_printf(DP_WARN, "CC matrix only uses data from first echo/slice/...\n");
+
 	if (all) {
 
 		md_copy_dims(DIMS, caldims, in_dims);
 		cal_data = in_data;
 
 	} else {
-		
+
 		cal_data = extract_calib(caldims, calsize, in_dims, in_data, false);
 	}
 
