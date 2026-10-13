@@ -127,6 +127,8 @@ static void seq_init_standard_conf(struct seq_standard_conf* init_std)
 {
 	init_std->tr = 100E-3;
 	init_std->te[0] = 5E-3;
+	for (int i = 1; i < SEQ_MAX_NO_ECHOES; i++)
+		init_std->te[i] = 0.;
 	init_std->dwell = 10.6E-6;
 	init_std->flip_angle = 8;
 	init_std->fov = 256E-3;
