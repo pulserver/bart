@@ -240,15 +240,6 @@ endif
 endif
 endif
 
-ifeq ($(BUILDTYPE), Linux)
-ifneq ($(OPENBLAS), 1)
-ifneq (,$(findstring Red Hat,$(shell gcc --version)))
-	CPPFLAGS+=-I/usr/include/lapacke/
-	LDFLAGS+=-L/usr/lib64/atlas -ltatlas
-endif
-endif
-endif
-
 ifeq ($(MINIFLASH), 1)
 CFLAGS+=-DSEQ_MINIFLASH
 endif
@@ -710,6 +701,15 @@ BLAS_H := -I$(MKL_BASE)/include
 BLAS_L := -L$(MKL_BASE)/lib/intel64 -lmkl_intel_lp64 -lmkl_gnu_thread -lmkl_core
 CPPFLAGS += -DUSE_MKL -DMKL_Complex8="complex float" -DMKL_Complex16="complex double"
 CFLAGS += -DUSE_MKL -DMKL_Complex8="complex float" -DMKL_Complex16="complex double"
+endif
+
+ifeq ($(BUILDTYPE), Linux)
+ifneq ($(OPENBLAS), 1)
+ifneq (,$(findstring Red Hat,$(shell gcc --version)))
+	BLAS_H += -I/usr/include/lapacke/
+	BLAS_L += -L/usr/lib64/atlas -ltatlas
+endif
+endif
 endif
 
 ifeq ($(BLAS_THREADSAFE),1)
