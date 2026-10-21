@@ -960,9 +960,9 @@ void md_copy2(int D, const long dim[D], const long ostr[D], void* optr, const lo
 					const void* _src = (mpi_get_rank() == sender) ? vptr_resolve(src) : NULL;
 					void* _dst = (mpi_get_rank() == receiver) ? vptr_resolve(dst) : NULL;
 
-					if ((sender == receiver) && (mpi_get_rank() == sender))
+					if (NULL != _dst && NULL != _src)
 						md_copy2(ND, bdims, ocstr, _dst, icstr, _src, size);
-					else
+					else if (NULL != _dst || NULL != _src)
 						mpi_copy2_nonblocking(ND, bdims, ocstr, _dst, icstr, _src, (long)size, sender, receiver);
 				}
 
