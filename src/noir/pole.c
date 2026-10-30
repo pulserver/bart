@@ -15,6 +15,7 @@
 #include "misc/debug.h"
 
 #include "num/lineseg.h"
+#include "num/vptr.h"
 #include "num/multind.h"
 #include "num/morph.h"
 #include "num/flpmath.h"
@@ -838,7 +839,7 @@ static void fov_to_grid(const long dims[3], vec3_t pos)
 
 void sample_phase_pole_3D(int N, const long dims[N], complex float* dst, int D, const float r_fov[D][2][3], float tol)
 {
-	if (md_ondevice(dst)) {
+	if (md_ondevice(dst) || is_vptr(dst)) {
 
 		complex float* tmp = md_alloc(N, dims, CFL_SIZE);
 		sample_phase_pole_3D(N, dims, tmp, D, r_fov, tol);
