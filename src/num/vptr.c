@@ -144,7 +144,7 @@ struct vptr_hint_s* vptr_hint_create(unsigned long mpi_flags, int N, const long 
 	for (long i = 0; i < tot; i++)
 		if (i < split)
     			rank1[i] = i / (base + 1);
-		else 
+		else
 			rank1[i] = rem + (i - split) / base;
 
 	int order[N];
@@ -792,6 +792,7 @@ void vptr_set_dims_sameplace(const void* x, const void* ref)
 
 	assert(NULL != mem);
 	assert(NULL != rmem);
+	assert(mem->len == rmem->len);
 
 	if (0 < mem->range.D || 0 < mem->shape.N)
 		return;
