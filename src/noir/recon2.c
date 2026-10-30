@@ -96,7 +96,7 @@ static void mult_phase_pole(struct iter_conjgrad_conf conf, const struct linop_s
 	linop_adjoint_unchecked(lop, adj, tmp);
 	md_free(tmp);
 
-	iter_conjgrad(CAST_UP(&conf), lop->normal, NULL, 2 * md_calc_size(N, linop_domain(lop)->dims), (float*)(dst), (const float*)adj, NULL);
+	iter_conjgrad(CAST_UP(&conf), lop->normal, NULL, 2 * md_calc_size(N, linop_domain(lop)->dims), (float*)(vptr_resolve_range(dst)), (const float*)adj, NULL);
 	md_free(adj);
 }
 
