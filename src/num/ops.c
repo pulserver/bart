@@ -2827,6 +2827,7 @@ const struct operator_s* operator_vptr_set_dims_wrapper(const struct operator_s*
 		D[i] = op->domain[i]->N;
 		dims[i] = op->domain[i]->dims;
 		strs[i] = op->domain[i]->strs;
+		assert(NULL == ref[i] || vptr_get_len(ref[i]) == (size_t)md_calc_size(D[i], dims[i]) * op->domain[i]->size);
 	}
 
 	return operator_generic_create2(N, op->io_flags, D, dims, strs, CAST_UP(PTR_PASS(data)), vptr_set_dims_fun, vptr_set_dims_del, NULL);
