@@ -167,6 +167,7 @@ int main_ismrmrd(int argc, char* argv[argc])
 			if (ISMRM_WRITE_CFL_IMG == write_ismrm) {
 
 				ismrm_stream_write_cfl_image(&config, dims[0], dims[1], src, &meta, pos);
+
 			} else if (ISMRM_WRITE_USHORT_IMG) {
 
 				unsigned short* buf = md_alloc(2, dims, sizeof(unsigned short));
@@ -185,11 +186,14 @@ int main_ismrmrd(int argc, char* argv[argc])
 				ismrm_stream_write_mag_image(&config, dims[0], dims[1], buf, &meta, pos);
 
 				md_free(buf);
+
 			} else {
 
 				error("Not implemented.\n");
 			}
+
 		} while (bart_stream || md_next(D, dims, flags, pos));
+
 	} else {
 
 		ismrm_stream_read_dims(&config, D, dims);

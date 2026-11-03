@@ -87,8 +87,7 @@ static void mobafit_bound(iter_op_data* _data, float* dst, const float* src)
 	md_select_dims(N, ~COEFF_FLAG, map_dims, data->dims);
 	md_calc_strides(N, strs, data->dims, CFL_SIZE);
 
-	long pos[N];
-	md_set_dims(N, pos, 0);
+	long pos[N] = { };
 
 	complex float* tmp_map = md_alloc_sameplace(N, map_dims, CFL_SIZE, dst);
 
@@ -117,13 +116,16 @@ static void mobafit_bound(iter_op_data* _data, float* dst, const float* src)
 static void mobafit_compute_covariance(struct iter_conjgrad_conf conjgrad_conf, const struct nlop_s* nlop, const long cov_dims[DIMS], complex float* cov, const long ydims[DIMS], const complex float* y, const long xdims[DIMS], const complex float* x)
 {
 	complex float* res = md_alloc_sameplace(DIMS, ydims, CFL_SIZE, y);
+
 	nlop_apply(nlop, DIMS, ydims, res, DIMS, xdims, x);
+
 	md_zsub(DIMS, ydims, res, res, y);
 
 	long bdims[DIMS];
 	md_select_dims(DIMS, ~COEFF_FLAG, bdims, xdims);
 
 	complex float* sig = md_alloc_sameplace(DIMS, bdims, CFL_SIZE, x);
+
 	md_zss(DIMS, ydims, TE_FLAG, sig, res);
 
 	//FIXME: for a proper treatment, we need the number of real/complex degrees of freedom
@@ -136,11 +138,12 @@ static void mobafit_compute_covariance(struct iter_conjgrad_conf conjgrad_conf, 
 
 	md_clear(DIMS, cov_dims, cov, CFL_SIZE);
 
-	long pos[DIMS] = { 0 };
+	long pos[DIMS] = { };
 
 	for (pos[COEFF_DIM] = 0; pos[COEFF_DIM] < cov_dims[COEFF_DIM]; pos[COEFF_DIM]++) {
 
 		complex float* id = md_alloc_sameplace(DIMS, xdims, CFL_SIZE, x);
+
 		md_clear(DIMS, xdims, id, CFL_SIZE);
 		md_copy_block(DIMS, pos, xdims, id, bdims, sig, CFL_SIZE);
 

@@ -52,9 +52,7 @@ static void grog_calib2(int calib_spokes, int D, const long lnG_dims[D], complex
 
 	complex float *data1 = md_alloc(D, ddims1, CFL_SIZE);
 
-	long pos[D];
-	for (int i = 0; i < D; i++)
-		pos[i] = 0;
+	long pos[D] = { };
 
 	md_copy_block(D, pos, ddims1, data1, ddims, data, CFL_SIZE);
 
@@ -114,9 +112,7 @@ static void grog_grid2(int D, const long tdims[D], const complex float* traj_shi
 	complex float* data1 = md_alloc(D, ddims1, CFL_SIZE);
 	complex float* data_grid1 = md_alloc(D, ddims1, CFL_SIZE);
 
-	long pos[D];
-	for (int i = 0; i < D; i++)
-		pos[i] = 0;
+	long pos[D] = { };
 
 	do {
 		md_copy_block(D, pos, ddims1, data1, ddims, data, CFL_SIZE);

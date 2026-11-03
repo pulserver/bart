@@ -38,9 +38,7 @@ static void estimate_vtheta(int D, const long vtheta_dims[D], complex float* vth
 	md_copy_dims(D, ddims_shift, ddims);
 	ddims_shift[PHS1_DIM] -= 1;
 
-	long pos_shift[D];
-	for (int i = 0; i < D; i++)
-		pos_shift[i] = 0;
+	long pos_shift[D] = { };
 
 	complex float* shift1 = md_alloc(D, ddims_shift, CFL_SIZE);
 	complex float* shift2 = md_alloc(D, ddims_shift, CFL_SIZE);
@@ -57,10 +55,7 @@ static void estimate_vtheta(int D, const long vtheta_dims[D], complex float* vth
 #pragma omp parallel for
 	for (int spoke = 0; spoke < ddims[PHS2_DIM]; spoke++) {
 
-		long pos[D];
-		for (int i = 0; i < D; i++)
-			pos[i] = 0;
-
+		long pos[D] = { };
 		pos[PHS2_DIM] = spoke;
 
 		long tmp_dims[D];
@@ -120,9 +115,7 @@ static void get_pseudo_dist(int D, const long pinv_dims[D], complex float* pinv,
 	long nmdims[D];
 	md_select_dims(D, READ_FLAG|PHS2_FLAG, nmdims, tdims);
 
-	long pos_sample[D];
-	for (int i = 0; i < D; i++)
-		pos_sample[i] = 0;
+	long pos_sample[D] = { };
 
 	complex float* sample = md_alloc(D, nmdims, CFL_SIZE);
 
@@ -161,9 +154,7 @@ static void estimate_lnG(int D, const long lnG_dims[D], complex float* lnG, cons
 	for (int i = 0; i < lnG_dims[COIL_DIM]; i++) {
 		for (int j = 0; j < lnG_dims[MAPS_DIM]; j++) {
 
-			long pos[D];
-			for (int i = 0; i < D; i++)
-				pos[i] = 0;
+			long pos[D] = { };
 
 			pos[COIL_DIM] = i;
 			pos[MAPS_DIM] = j;
@@ -261,11 +252,7 @@ static void apply_Gshift(int D, const long dims[D], complex float* data,
 
 	complex float* tmp = md_alloc(D, dims, CFL_SIZE); //for tenmul operation
 
-	complex float lnG[C][C];
-
-	for (int i = 0; i < C; i++)
-		for (int j = 0; j < C; j++)
-			lnG[i][j] = 0.;
+	complex float lnG[C][C] = { };
 
 	// Find shift operator for the specific sampling point (d, r, s)
 
@@ -323,9 +310,7 @@ void grog_grid(int D, const long tdims[D], const complex float* traj_shift,
 	for (int s = 0; s < ddims[PHS2_DIM]; s++) {		// Spoke
 		for (int r = 0; r < ddims[PHS1_DIM]; r++) {	// Readout sample
 
-			long pos[D];
-			for (int i = 0; i < D; i++)
-				pos[i] = 0;
+			long pos[D] = { };
 
 			pos[PHS1_DIM] = r;
 			pos[PHS2_DIM] = s;

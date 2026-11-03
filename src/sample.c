@@ -516,6 +516,7 @@ int main_sample(int argc, char* argv[argc])
 					md_select_dims(DIMS, BATCH_FLAG, bdims, img_dims);
 
 					complex float* nrm = md_alloc_sameplace(DIMS, bdims, CFL_SIZE, tmp1);
+
 					md_ztenmulc(DIMS, bdims, nrm, img_dims, tmp2, img_dims, AHy_iter); 	//   (AHy)^H * x
 					md_zfmacc2(DIMS, img_dims, MD_STRIDES(DIMS, bdims, CFL_SIZE), nrm,
 						   MD_STRIDES(DIMS, img_dims, CFL_SIZE), tmp1,

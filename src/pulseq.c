@@ -111,6 +111,7 @@ int main_pulseq(int argc, char *argv[argc])
 		struct seq_event seq_events[event_dims[PHS1_DIM]];
 
 		double tr = seq_events_cfl_find_tr(DIMS, event_dims, events);
+
 		if (0 > tr)
 			debug_printf(DP_WARN, "Could not find TR in seq events! SEQ_BLOCK_KERNEL_IMAGE not possible.\n");
 
@@ -133,6 +134,7 @@ int main_pulseq(int argc, char *argv[argc])
 
 		error("Pulseq read not implemented - use \"-w\"");
 	}
+
 	return 0;
 }
 

@@ -76,9 +76,7 @@ int main_index(int argc, char* argv[argc])
 	assert(s >= 0);
 
 	long dims[N + 1];
-
-	for (int i = 0; i < N; i++)
-		dims[i] = 1;
+	md_singleton_dims(N + 1, dims);
 
 	dims[N] = s;
 

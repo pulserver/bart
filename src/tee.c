@@ -98,6 +98,7 @@ int main_tee(int argc, char* argv[argc])
 	} else {
 
 		io_reserve_input(in_file);
+
 		if (!no_stdout)
 			io_reserve_output("-");
 	}
@@ -111,6 +112,7 @@ int main_tee(int argc, char* argv[argc])
 	if (NULL != out0) {
 
 		complex float* out0_addr = create_async_cfl(out0, stream_flags, DIMS, dims);
+
 		stream_t strm = stream_lookup(out0_addr);
 
 		if (strm) {

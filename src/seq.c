@@ -42,7 +42,6 @@ static long count_blocks(int* max_E, struct bart_seq* seq)
 		seq->state->pos[i] = 0;
 
 	do {
-
 		int E = seq_block(seq->N, seq->event, seq->state, seq->conf);
 
 		if (   (0 < E)

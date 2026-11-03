@@ -178,9 +178,7 @@ int main_join(int argc, char* argv[argc])
 	}
 
 	long out_dims[N];
-
-	for (int i = 0; i < N; i++)
-		out_dims[i] = in_dims[0][i];
+	md_copy_dims(N, out_dims, in_dims[0]);
 
 	out_dims[dim] = sum;
 
@@ -195,6 +193,7 @@ int main_join(int argc, char* argv[argc])
 
 			// keep a reference to original input data
 			in_data[0] = load_cfl(out_file, N, in_dims[0]);
+
 		} else {
 
 			// here, io_close will prevent the subsequent create_cfl-call
@@ -244,6 +243,7 @@ int main_join(int argc, char* argv[argc])
 		// join input slices in order of arrival:
 
 		bool input_loop = stream && stream_in;
+
 		do {
 
 			if (input_loop && !stream_receive_serial(stream_in, DIMS, ipos, counter))

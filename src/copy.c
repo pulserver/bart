@@ -70,7 +70,10 @@ int main_copy(int argc, char* argv[argc])
 	num_init();
 
 
-	bool is_stream = 0 == stream_flags ? false : true;
+	bool is_stream = false;
+
+	if (0 != stream_flags)
+		is_stream = true;
 
 	int N = DIMS;
 
@@ -106,10 +109,8 @@ int main_copy(int argc, char* argv[argc])
 	else
 		out_data = create_async_cfl(out_file, stream_flags, N, out_dims);
 
-	long position[N];
+	long position[N] = { };
 
-	for (int i = 0; i < N; i++)
-		position[i] = 0;
 
 	for (int i = 0; i < count; i++) {
 

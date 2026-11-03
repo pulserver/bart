@@ -316,10 +316,7 @@ int main_bin(int argc, char* argv[argc])
 
 
 		// Determine all cluster sizes
-		int cluster_size[n_clusters];
-
-		for (int i = 0; i < n_clusters; i++)
-			cluster_size[i] = 0;
+		int cluster_size[n_clusters] = { };
 
 		for (int i = 0; i < N; i++)
 			cluster_size[(int)crealf(labels[i])]++;
@@ -383,10 +380,7 @@ int main_bin(int argc, char* argv[argc])
 
 		complex float* singleton = md_alloc(DIMS, singleton_dims, CFL_SIZE);
 
-		int idx[n_clusters];
-
-		for (int i = 0; i < n_clusters; i++)
-			idx[i] = 0;
+		int idx[n_clusters] = { };
 
 		long pos_src[DIMS] = { };
 		long pos_dst[DIMS] = { };
