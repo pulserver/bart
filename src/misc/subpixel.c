@@ -33,9 +33,7 @@ void est_subpixel_shift(int N, float shifts[N], const long dims[N], unsigned lon
 		if (!MD_IS_SET(flags, i))
 			continue;
 
-		long shift[N];
-		for (int j = 0; j < N; j++)
-			shift[j] = 0;
+		long shift[N] = { };
 
 		shift[i] = 1;
 

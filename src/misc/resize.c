@@ -42,9 +42,7 @@ static void fft_xzeropad2(int N, const long dims[N], int d, int x, const long os
 
 	complex float* shift = md_alloc_sameplace(N + 1, pdims, CFL_SIZE, src);
 
-	float pos[N];
-	for (int i = 0; i < N; i++)
-		pos[i] = 0.;
+	float pos[N] = { };
 
 	for (int i = 0; i < x; i++) {
 
@@ -286,9 +284,7 @@ void sinc_zeropad(int D, const long out_dims[D], complex float* out, const long 
 	assert(out_dims[i] > in_dims[i]);
 
 	long tmp_dims[D];
-	for (int l = 0; l < D; l++)
-		tmp_dims[l] = in_dims[l];
-
+	md_copy_dims(D, tmp_dims, in_dims);
 	tmp_dims[i] = out_dims[i];
 
 	//printf("Resizing...%d: %ld->%ld\n", i, in_dims[i], tmp_dims[i]);

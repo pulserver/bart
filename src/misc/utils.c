@@ -139,9 +139,7 @@ void fixphase(int N, const long dims[N], int dim, complex float* out, const comp
 
 	complex float* tmp = md_alloc_sameplace(N, dims2, CFL_SIZE, in);
 
-	long pos[N];
-	for (int i = 0; i < N; i++)
-		pos[i] = 0;
+	long pos[N] = { };
 
 	md_slice(N, MD_BIT(dim), pos, dims, tmp, in, CFL_SIZE);
 

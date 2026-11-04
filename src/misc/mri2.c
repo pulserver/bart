@@ -200,7 +200,7 @@ complex float* extract_calib2(long caldims[DIMS], const long calsize[3], const l
 
 			caldims[i] = MIN(calsize[i], tmp_dims[i]);
 
-				calpos[i] = (tmp_dims[i] - caldims[i]) / 2;
+			calpos[i] = (tmp_dims[i] - caldims[i]) / 2;
 		}
 	}
 
@@ -210,6 +210,7 @@ complex float* extract_calib2(long caldims[DIMS], const long calsize[3], const l
 	complex float* cal_data = md_alloc_sameplace(DIMS, caldims, CFL_SIZE, tmp_data);
 
 	md_copy_block(DIMS, calpos, caldims, cal_data, tmp_dims, tmp_data, CFL_SIZE);
+
 	md_free(tmp_data);
 
 	return cal_data;
@@ -242,9 +243,7 @@ void estimate_im_dims(int N, unsigned long flags, long dims[N], const long tdims
 
 	assert(T == bitcount(flags));
 
-	float max_dims[T];
-	for (int i = 0; i < T; i++)
-		max_dims[i] = 0.;
+	float max_dims[T] = { };
 
 	for (long i = 0; i < md_calc_size(N - 1, tdims + 1); i++)
 		for(int j = 0; j < tdims[0]; j++)
