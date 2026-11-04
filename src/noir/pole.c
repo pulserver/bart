@@ -855,7 +855,10 @@ void sample_phase_pole_3D(int N, const long dims[N], complex float* dst, int D, 
 		complex float* tmp = md_alloc(N, dims, CFL_SIZE);
 
 		sample_phase_pole_3D(N, dims, tmp, D, r_fov, tol);
+
 		md_copy(N, dims, dst, tmp, CFL_SIZE);
+
+		md_free(tmp);
 		return;
 	}
 
