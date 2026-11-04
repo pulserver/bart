@@ -58,7 +58,6 @@ static void noir_linop_del(const void* _data)
 
 struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], complex float* coil, const long pat_dims[DIMS], const complex float* psf, const struct noir_model_conf_s* conf)
 {
-
 	long data_dims[DIMS];
 	long data_red_dims[DIMS];
 	long imgs_dims[DIMS];
@@ -88,6 +87,7 @@ struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], com
 	md_select_dims(DIMS, fftuc_flags, fft_dims, data_dims);
 
 	complex float* fft_mod = md_alloc(DIMS, fft_dims, CFL_SIZE);
+
 	md_zfill(DIMS, fft_dims, fft_mod, 1.);
 	fftscale(DIMS, fft_dims, fftuc_flags, fft_mod, fft_mod);
 	fftmod(DIMS, fft_dims, fftuc_flags, fft_mod, fft_mod);
@@ -96,6 +96,7 @@ struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], com
 	md_select_dims(DIMS, fftuc_flags, fft_red_dims, data_red_dims);
 
 	complex float* fft_red_mod = md_alloc_sameplace(DIMS, fft_red_dims, CFL_SIZE, coil);
+
 	md_resize_center(DIMS, fft_red_dims, fft_red_mod, fft_dims, fft_mod, CFL_SIZE);
 	md_free(fft_mod);
 
@@ -109,6 +110,7 @@ struct noir_s noir_create(const long dims[DIMS], const long coil_dims[DIMS], com
 
 		assert(md_check_compat(DIMS, md_nontriv_dims(DIMS, coil_dims), coil_dims, fft_red_dims));
 		md_zmul2(DIMS, coil_dims, MD_STRIDES(DIMS, coil_dims, CFL_SIZE), coil, MD_STRIDES(DIMS, coil_dims, CFL_SIZE), coil, MD_STRIDES(DIMS, fft_red_dims, CFL_SIZE), fft_red_mod);
+
 		md_free(fft_red_mod);
 
 		lop_fft = linop_chain_FF(linop_fmac_dims_create(DIMS, data_red_dims, imgs_dims, coil_dims, coil), lop_fft);

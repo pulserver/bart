@@ -134,7 +134,7 @@ static void ssa_backprojection( const long N,
 	// Reorder & Anti-diagonal summation
 	long kern_dims[4];
 	md_set_dims(4, kern_dims, 1);
-	md_min_dims(4, ~0u, kern_dims, kernelCoil_dims, cal_dims);
+	md_min_dims(4, ~0U, kern_dims, kernelCoil_dims, cal_dims);
 
 	long cal_strs[DIMS];
 	md_calc_strides(DIMS, cal_strs, cal_dims, CFL_SIZE);

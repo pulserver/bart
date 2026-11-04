@@ -562,17 +562,26 @@ void caltwo(const struct ecalib_conf* conf, const long out_dims[DIMS], complex f
 		md_select_dims(4, ~MD_BIT(conf->econdim), sin_dims, cov_int_dims);
 		md_select_dims(DIMS, ~MD_BIT(conf->econdim), sedims, edims);
 		md_select_dims(4, ~MD_BIT(conf->econdim), scov_dims, covbig_dims);
+
 		if (NULL != msk_dims)
 			md_select_dims(3, ~MD_BIT(conf->econdim), smsk_dims, msk_dims);
 
 		complex float* imgcov_int = md_alloc_sameplace(4, cov_int_dims, CFL_SIZE, in_data);
+
 		sinc_zeropad(4, cov_int_dims, imgcov_int, cov_dims, in_data);
 
 		complex float* slc_in = md_alloc_sameplace(4, sin_dims, CFL_SIZE, in_data);
 		complex float* slc_out = md_alloc_sameplace(DIMS, sout_dims, CFL_SIZE, in_data);
 		complex float* slc_cov = md_alloc_sameplace(4, scov_dims, CFL_SIZE, in_data);
-		complex float* slc_emaps = (emaps == NULL) ? NULL : md_alloc_sameplace(DIMS, sedims, CFL_SIZE, in_data);
-		bool* slc_msk = (NULL == msk) ? NULL : md_alloc_sameplace(3, smsk_dims, sizeof(bool), in_data);
+		complex float* slc_emaps = NULL;
+
+		if (emaps != NULL)
+			slc_emaps = md_alloc_sameplace(DIMS, sedims, CFL_SIZE, in_data);
+
+		bool* slc_msk = NULL;
+
+		if (NULL != msk)
+			slc_msk = md_alloc_sameplace(3, smsk_dims, sizeof(bool), in_data);
 
 		complex float* slc_out_cpu = slc_out;
 		complex float* slc_emaps_cpu = slc_emaps;
@@ -583,7 +592,7 @@ void caltwo(const struct ecalib_conf* conf, const long out_dims[DIMS], complex f
 			slc_emaps_cpu = (NULL != slc_emaps) ? md_alloc(DIMS, sedims, CFL_SIZE) : NULL;
 		}
 
-		long pos[DIMS] = { 0 };
+		long pos[DIMS] = { };
 
 		double time = -timestamp();
 		debug_printf(DP_DEBUG1, "Point-wise eigen-decomposition (loop along %d) ... ", conf->econdim);
@@ -591,6 +600,7 @@ void caltwo(const struct ecalib_conf* conf, const long out_dims[DIMS], complex f
 		for (pos[conf->econdim] = 0; pos[conf->econdim] < covbig_dims[conf->econdim]; pos[conf->econdim]++) {
 
 			md_slice(4, MD_BIT(conf->econdim), pos, cov_int_dims, slc_in, imgcov_int, CFL_SIZE);
+
 			if (NULL != msk)
 				md_slice(3, MD_BIT(conf->econdim), pos, msk_dims, slc_msk, msk, sizeof(bool));
 
@@ -600,6 +610,7 @@ void caltwo(const struct ecalib_conf* conf, const long out_dims[DIMS], complex f
 				fftc(4, sin_dims, FFT_FLAGS, slc_in, slc_in);
 				md_resize_center(4, scov_dims, slc_cov, sin_dims, slc_in, CFL_SIZE);
 				ifftc(4, scov_dims, FFT_FLAGS, slc_cov, slc_cov);
+
 			} else {
 
 				sinc_zeropad(4, scov_dims, slc_cov, sin_dims, slc_in);
@@ -636,6 +647,7 @@ void caltwo(const struct ecalib_conf* conf, const long out_dims[DIMS], complex f
 			md_free(slc_out_cpu);
 
 		time += timestamp();
+
 		debug_printf(DP_DEBUG1, "done (%.3fs).\n", time);
 
 	} else {

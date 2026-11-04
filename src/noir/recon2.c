@@ -94,9 +94,12 @@ static void mult_phase_pole(struct iter_conjgrad_conf conf, const struct linop_s
 	complex float* adj = md_alloc_sameplace(N, linop_domain(lop)->dims, CFL_SIZE, phase);
 
 	linop_adjoint_unchecked(lop, adj, tmp);
+
 	md_free(tmp);
 
+
 	iter_conjgrad(CAST_UP(&conf), lop->normal, NULL, 2 * md_calc_size(N, linop_domain(lop)->dims), (float*)(vptr_resolve_range(dst)), (const float*)adj, NULL);
+
 	md_free(adj);
 }
 
@@ -342,17 +345,21 @@ void noir2_recon(const struct noir2_conf_s* conf, struct noir2_s* noir_ops,
 	complex float* data = md_alloc_sameplace(N, dat_dims, CFL_SIZE, kspace);
 	linop_adjoint(noir_ops->lop_asym, N, dat_dims, data, N, ksp_dims, kspace);
 
-	if((conf->gpu) && !md_ondevice(data)) {
+	if ((conf->gpu) && !md_ondevice(data)) {
 
 		complex float* tmp_data = md_gpu_move(N, dat_dims, data, CFL_SIZE);
+
 		md_free(data);
+
 		data = tmp_data;
 	}
 
 	float scaling = conf->scaling;
+
 	if (0. > scaling) {
 
 		scaling = -scaling / md_znorm(N, dat_dims, data);
+
 		if (conf->sms)
 			scaling *= sqrt(dat_dims[SLICE_DIM]);
 	}
@@ -409,6 +416,7 @@ void noir2_recon(const struct noir2_conf_s* conf, struct noir2_s* noir_ops,
 			ref = vptr_alloc_same(x);
 			md_clear(1, d1, ref, CFL_SIZE);
 		}
+
 	} else {
 
 		x = md_alloc_sameplace(1, d1, CFL_SIZE, data);

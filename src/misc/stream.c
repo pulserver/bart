@@ -349,6 +349,7 @@ stream_t stream_create(int N, const long dims[N], int pipefd, bool input, bool b
 	PTR_ALLOC(struct stream, ret);
 
 	*ret = (struct stream) {
+
 		.lock = bart_lock_create(),
 		.pipefd = pipefd,
 		.input = input,
@@ -562,6 +563,7 @@ stream_t stream_create_file(const char* name, int D, long dims[D], unsigned long
 	if (!is_stdout) {
 
 		stream_ensure_fifo(name);
+
 		fd = open(name, O_WRONLY);
 	}
 

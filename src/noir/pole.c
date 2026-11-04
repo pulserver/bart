@@ -70,8 +70,7 @@ static int get_diameter(struct pole_config_s conf, int normal, const long dims[3
 	}
 
 	long tdims[3];
-	for (int i = 0; i < 3; i++)
-		tdims[i] = dims[i];
+	md_copy_dims(3, tdims, dims);
 
 	tdims[0] = lroundf(tdims[0] / conf.osx);
 
@@ -122,9 +121,12 @@ static void compute_curl_map_normal(struct pole_config_s conf, int N, const long
 
 	complex float* tmp_angle = md_alloc_sameplace(N, odims, CFL_SIZE, sens);
 	complex float* angle = md_alloc_sameplace(N, odims, CFL_SIZE, sens);
+
 	md_clear(N, odims, angle, CFL_SIZE);
 
+
 	complex float* prod = md_alloc_sameplace(N, odims, CFL_SIZE, sens);
+
 	md_zfill(N, odims, prod, 1.);
 
 	complex float* sens1 = md_alloc_sameplace(N, odims, CFL_SIZE, sens);
@@ -283,9 +285,11 @@ static struct lseg_s extract_phase_poles_2d_sign(struct pole_config_s conf, int 
 
 		int dmin = lroundf(ceilf(((-1 == conf.closing) ? conf.diameter / 2. : conf.closing) * MAX(dims[(normal + 1) % 3], dims[(normal + 2) % 3])));
 		long mdims[3];
+
 		complex float* mask = md_structuring_element_cube(3, mdims, dmin, md_nontriv_dims(3, dims), curl_map);
 
 		md_closing(3, mdims, mask, dims, binary, binary, CONV_TRUNCATED);
+
 		md_free(mask);
 	}
 
@@ -300,7 +304,9 @@ static struct lseg_s extract_phase_poles_2d_sign(struct pole_config_s conf, int 
 	md_free(strc);
 
 	float com[nlabel][3];
+
 	md_center_of_mass(nlabel, 3, com, dims, labels, NULL);
+
 	md_free(labels);
 
 	ret.N = 0;
@@ -431,6 +437,7 @@ void sample_phase_pole_2D(int N, const long dims[N], complex float* dst, int D, 
 	}
 
 	const long* dimsp = dims;
+
 	float* centerp0 = &center[0][0];
 	float* evecp0 = &evec[0][0][0];
 	float* Lp = L;
@@ -498,6 +505,7 @@ bool phase_pole_correction(struct pole_config_s conf, int N, const long pmap_dim
 	average_curl_map(N, rcurl_map_dims, red_curl_map, curl_dims, ITER_DIM, curl_map, curl_wgh);
 
 	struct lseg_s pos;
+
 	if (3 == curl_dims[ITER_DIM])
 		pos = extract_phase_poles_3D(conf, N, rcurl_map_dims, red_curl_map, sens_dims, sens);
 	else
@@ -590,10 +598,10 @@ static float get_min_dist(const vec3_t pos, int N, const vec3_t r[N][2])
 }
 
 /**
-*	(1 / sqrt(1 + r2 / d2) - 1) / r2
-*	define y = r2 / d2
-*	1 / d2 * (1 / sqrt(1 + y) - 1) / y
-**/
+ *	(1 / sqrt(1 + r2 / d2) - 1) / r2
+ *	define y = r2 / d2
+ *	1 / d2 * (1 / sqrt(1 + y) - 1) / y
+ **/
 static float taylor(float r2, float d2)
 {
 	float y = r2 / d2;
@@ -605,9 +613,10 @@ static float taylor(float r2, float d2)
 }
 
 
-//https://books.physics.oregonstate.edu/GSF/wire.html
-//compute phase due to a line segment from (0, 0, -L) to (0, 0, L)
-// computes -1 / (2r^2) * ((z-L)/sqrt(r^2 + (z-L)^2) - (z+L)/sqrt(r^2 + (z+L)^2))
+/* https://books.physics.oregonstate.edu/GSF/wire.html
+ * compute phase due to a line segment from (0, 0, -L) to (0, 0, L)
+ * computes -1 / (2r^2) * ((z-L)/sqrt(r^2 + (z-L)^2) - (z+L)/sqrt(r^2 + (z+L)^2))
+ */
 static float get_grad_wire_zaxis(float r, float z, float L)
 {
 	float r2 = powf(r, 2);
@@ -620,6 +629,7 @@ static float get_grad_wire_zaxis(float r, float z, float L)
 		float t2 = (z - L) / sqrtf(r2 + dm) / (2. * r2);
 
 		return t1 - t2;
+
 	} else {
 
 		float sgn =  z > L ? 1 : -1;
@@ -710,7 +720,7 @@ static void search_start(long pos[3], const long dims[3], int D, const float r[D
 	for (int i = 0; i < 3; i++)
 		pos[i] = dims[i] / 2;
 
-	float fpos[3];
+	vec3_t fpos;
 	for (int i = 0; i < 3; i++)
 		fpos[i] = pos[i];
 
@@ -719,6 +729,7 @@ static void search_start(long pos[3], const long dims[3], int D, const float r[D
 	while (2. > get_min_dist(fpos, D, r)) {
 
 		md_unravel_index(3, pos, 7ul, dims, rand_range_state(rstate, md_calc_size(3, dims)));
+
 		for (int i = 0; i < 3; i++)
 			fpos[i] = pos[i];
 	}
@@ -757,7 +768,7 @@ static long get_integration_order(const long dims[3], long* sint, long* eint, co
 				continue;
 
 			vec3_t path[2];
-			for(int i = 0; i < 3; i++) {
+			for (int i = 0; i < 3; i++) {
 
 				path[0][i] = pos[i];
 				path[1][i] = pos2[i];
@@ -766,7 +777,7 @@ static long get_integration_order(const long dims[3], long* sint, long* eint, co
 			bool stop = false;
 
 			for (int i = 0; i < D; i++)
-				stop = stop || (dist_of_linesegs_smaller(path, r[i], 0.3));
+				stop = stop || dist_of_linesegs_smaller(path, r[i], 0.3);
 
 			if (stop)
 				continue;
@@ -842,6 +853,7 @@ void sample_phase_pole_3D(int N, const long dims[N], complex float* dst, int D, 
 	if (md_ondevice(dst) || is_vptr(dst)) {
 
 		complex float* tmp = md_alloc(N, dims, CFL_SIZE);
+
 		sample_phase_pole_3D(N, dims, tmp, D, r_fov, tol);
 		md_copy(N, dims, dst, tmp, CFL_SIZE);
 		return;
@@ -1019,6 +1031,7 @@ static void phase_pole_3D_fix_polarity(int N, const long dims[N], const complex 
 
 			debug_printf(DP_DEBUG1, "Phase pole polarity (%e) is negative, flipping ...\n", sum / D);
 			line_segments_revert(D, seg->pos + i);
+
 		} else {
 
 			debug_printf(DP_DEBUG1, "Phase pole polarity (%e) is positive, nothing to do ...\n", sum / D);

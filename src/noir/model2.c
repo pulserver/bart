@@ -233,15 +233,19 @@ struct noir2_s noir2_noncart_create(int N,
 
 		long ufft_dims[N];
 		md_select_dims(N, (conf->ufft_flags & ~FFT_FLAGS), ufft_dims, ksp_dims);
+
 		float scale = 1. / sqrtf(sqrtf((float)md_calc_size(N, ufft_dims)));
 
 		md_select_dims(N, (conf->cfft_flags & ~FFT_FLAGS), fftmod_dims, ksp_dims);
+
 		fftmod_diag = md_alloc_sameplace(N, fftmod_dims, CFL_SIZE, weights ?: traj);
+
 		md_zfill(N, fftmod_dims, fftmod_diag, scale);
 		fftmod(N, fftmod_dims, conf->cfft_flags & ~FFT_FLAGS, fftmod_diag, fftmod_diag);
 
 		long mod_wgh_dims2[N];
 		md_max_dims(N, ~0UL, mod_wgh_dims2, mod_wgh_dims, fftmod_dims);
+
 		mod_wgh = md_alloc_sameplace(N, mod_wgh_dims2, CFL_SIZE, weights ?: traj);
 
 		if (NULL != weights)
@@ -274,13 +278,13 @@ struct noir2_s noir2_noncart_create(int N,
 	debug_printf(DP_DEBUG1, "pattern:    ");
 	debug_print_dims(DP_DEBUG1, N, ret.pat_dims);
 
-	if(NULL != basis) {
+	if (NULL != basis) {
 
 		debug_printf(DP_DEBUG1, "basis:      ");
 		debug_print_dims(DP_DEBUG1, N, ret.bas_dims);
 	}
 
-	if(NULL != mask) {
+	if (NULL != mask) {
 
 		debug_printf(DP_DEBUG1, "mask:       ");
 		debug_print_dims(DP_DEBUG1, N, ret.msk_dims);
@@ -342,10 +346,12 @@ struct noir2_s noir2_cart_create(int N,
 		ret.lop_fft = linop_fft_create(N, ret.cim_dims, conf->fft_flags);
 
 		unsigned long fftm_flags = conf->fft_flags & FFT_FLAGS;
+
 		long fftm_dims[N];
 		md_select_dims(N, fftm_flags, fftm_dims, ret.cim_dims);
 
 		complex float* fftmod_a = md_alloc(N, fftm_dims, CFL_SIZE);
+
 		md_zfill(N, fftm_dims, fftmod_a, 1.);
 		fftmod(N, fftm_dims, fftm_flags, fftmod_a, fftmod_a);
 
@@ -354,6 +360,7 @@ struct noir2_s noir2_cart_create(int N,
 		md_zsmul(N, fftm_dims, fftmod_a, fftmod_a, 1. / sqrtf(md_calc_size(N, fftm_dims)));
 
 		ret.lop_fft = linop_chain_FF(linop_cdiag_create(N, ret.cim_dims, fftm_flags, fftmod_a), ret.lop_fft);
+
 		md_free(fftmod_a);
 	}
 
@@ -926,6 +933,7 @@ void noir2_noncart_update(struct noir2_s* model, int N,
 
 			md_ztenmul(N, mod_wgh_dims, mod_wgh, wgh_dims, weights, fftmod_dims, fftmod_diag);
 			md_free(fftmod_diag);
+
 		} else {
 
 			md_copy_dims(N, mod_wgh_dims, fftmod_dims);

@@ -174,6 +174,7 @@ static void l_rotate(node_t node)
 			root->leafb = leafb;
 		else
 			root->leafa = leafb;
+
 	} else {
 
 		leafb->tree->root = leafb;

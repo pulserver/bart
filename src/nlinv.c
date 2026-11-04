@@ -510,7 +510,7 @@ int main_nlinv(int argc, char* argv[argc])
 		long img_output_dims[DIMS];
 		md_copy_dims(DIMS, img_output_dims, img_dims);
 
-		if ((conf.noncart) && (NULL == traj)) {
+		if (conf.noncart && (NULL == traj)) {
 
 			for (int i = 0; i < 3; i++)
 				if (1 != img_output_dims[i])

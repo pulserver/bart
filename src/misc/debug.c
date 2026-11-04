@@ -170,7 +170,9 @@ void debug_vprintf(int level, const char* fmt, va_list ap)
 						for (int i = 0; i < l - 1; i++)
 							if (fcontent[i] == '\0')
 								fcontent[i] = ' ';
+
 						cmd = ptr_printf(" [%s]", fcontent);
+
 					} else {
 
 						cmd = ptr_printf(" (%s)", command_line ?: "bart wrapper");

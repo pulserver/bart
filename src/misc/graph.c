@@ -128,7 +128,7 @@ graph_t graph_clone(graph_t graph)
 
 		for (int i = 0; i < node_new->N_vertices; i++) {
 
-			if (!(node_io_flag(node_new, i)))
+			if (!node_io_flag(node_new, i))
 				continue;
 
 			for (int j = 0; j < list_count(node_old->edges[i]); j++) {
@@ -291,8 +291,8 @@ graph_t link_graphs_F(graph_t graph, int oo, int ii)
 	assert( node_io_flag(inode, 0));
 	assert(!node_io_flag(onode, 0));
 
-	struct vertex_s ov = {.node = onode, .idx = 0};
-	struct vertex_s iv = {.node = inode, .idx = 0};
+	struct vertex_s ov = { .node = onode, .idx = 0 };
+	struct vertex_s iv = { .node = inode, .idx = 0 };
 
 	assert(1 == list_count(onode->edges[0]));
 
@@ -304,13 +304,13 @@ graph_t link_graphs_F(graph_t graph, int oo, int ii)
 
 	for (int i = 0; i < I; i++) {
 
-		ivs[i] = *(vertices_get(inode->edges[0], 0));
+		ivs[i] = *vertices_get(inode->edges[0], 0);
 		graph_remove_edge(iv, ivs[i]);
 	}
 
 	for (int o = 0; o < O; o++) {
 
-		ovs[o] = *(vertices_get(onode->edges[0], 0));
+		ovs[o] = *vertices_get(onode->edges[0], 0);
 		graph_remove_edge(ovs[o], ov);
 	}
 
@@ -359,7 +359,7 @@ graph_t dup_graphs_F(graph_t graph, int a, int b)
 		struct vertex_s tmpa = { .node = anode, .idx = 0 };
 		struct vertex_s tmpb = { .node = bnode, .idx = 0 };
 
-		struct vertex_s n = *(vertices_get(bnode->edges[0], 0));
+		struct vertex_s n = *vertices_get(bnode->edges[0], 0);
 
 		graph_remove_edge(tmpb, n);
 		graph_add_edge(tmpa, n);
@@ -690,18 +690,19 @@ graph_t graph_topological_sort_F(graph_t graph)
 	return graph;
 }
 
-//tries to remove a one-in-one-out (identity) node from a graph
-//and connects in edges with oout edges
-//returns new graph if successful, NULL else
-//nodes cannot be removed if they map to output
+/* tries to remove a one-in-one-out (identity) node from a graph
+ * and connects in edges with oout edges
+ * returns new graph if successful, NULL else
+ * nodes cannot be removed if they map to output
+ */
 graph_t graph_bridge_node(graph_t graph, node_t node)
 {
 	int N = node->N_vertices;
-	if ((2 != N) || (!node_io_flag(node, 0)) || (node_io_flag(node, 1)))
+	if ((2 != N) || (!node_io_flag(node, 0)) || node_io_flag(node, 1))
 		return NULL;
 
 	for (int i = 0; i < list_count(node->edges[0]); i++)
-		if ((vertices_get(node->edges[0], i))->node->external)
+		if (vertices_get(node->edges[0], i)->node->external)
 			return NULL;
 
 	list_t in = node->edges[1];
@@ -718,13 +719,13 @@ graph_t graph_bridge_node(graph_t graph, node_t node)
 
 	for (int i = 0; i < I; i++) {
 
-		ivs[i] = *(vertices_get(in, 0));
+		ivs[i] = *vertices_get(in, 0);
 		graph_remove_edge(ivs[i], ivt);
 	}
 
 	for (int o = 0; o < O; o++) {
 
-		ovs[o] = *(vertices_get(out, 0));
+		ovs[o] = *vertices_get(out, 0);
 		graph_remove_edge(ovt, ovs[o]);
 	}
 
@@ -737,9 +738,10 @@ graph_t graph_bridge_node(graph_t graph, node_t node)
 	return graph;
 }
 
-//tries to remove a end-node (only inputs) from a graph
-//returns new graph if successful, NULL else
-//nodes cannot be removed if they map to output
+/* tries to remove a end-node (only inputs) from a graph
+ * returns new graph if successful, NULL else
+ * nodes cannot be removed if they map to output
+ */
 graph_t graph_remove_end_node(graph_t graph, node_t node)
 {
 	int N = node->N_vertices;
@@ -769,8 +771,8 @@ static void identify_node_internal(graph_t graph, node_t a, node_t b)
 		if (!node_io_flag(a, i))
 			continue;
 
-		struct vertex_s vb = {.node = b, .idx = i};
-		struct vertex_s va = {.node = a, .idx = i};
+		struct vertex_s vb = { .node = b, .idx = i };
+		struct vertex_s va = { .node = a, .idx = i };
 
 		graph_redirect_edge(va, vb);
 	}
@@ -787,10 +789,11 @@ static bool node_cmp_wrap(node_t a, node_t b, node_cmp_t cmp)
 	return test != NODE_NOT_IDENTICAL;
 }
 
-//nodes can be identified when
-// 1.) they represent the same node (operator)
-// 2.) they do not map to an external node
-// 3.) they have the same inputs
+/* nodes can be identified when
+ * 1.) they represent the same node (operator)
+ * 2.) they do not map to an external node
+ * 3.) they have the same inputs
+ */
 static bool nodes_identifyable_internal(node_t a, node_t b, node_cmp_t cmp)
 {
 	if ((a->N_vertices != b->N_vertices) || (!node_cmp_wrap(a, b, cmp)))
@@ -871,9 +874,9 @@ static void vertex_list_identify_nodes(graph_t graph, list_t vertices, node_cmp_
 	// get nodes from vertices which are "visited" once from each in edge
 	for (int i = 0; i < list_count(vertices); i++) {
 
-		node_t node = (vertices_get(vertices, i))->node;
+		node_t node = vertices_get(vertices, i)->node;
 
-		if (!(node->external) && (++(node->count) == count_in_edges(node)))
+		if (!node->external && (++node->count == count_in_edges(node)))
 			list_append(nodes, node);
 	}
 
@@ -899,8 +902,9 @@ static bool cmp_node_count(const void* _data, const void* /*_ref*/)
 }
 
 
-// tries to identify node with each other
-// i.e. nodes representing the same node are replaced by one node
+/* tries to identify node with each other
+ * i.e. nodes representing the same node are replaced by one node
+ */
 graph_t graph_identify_nodes_F(graph_t graph, node_cmp_t cmp)
 {
 	graph_reset_count(graph);
@@ -957,16 +961,17 @@ graph_t graph_cluster_nodes_F(graph_t graph, list_t nodes, edge_separator_node_f
 	graph_reset_count(graph);
 
 	for (int i = 0; i < list_count(nodes); i++)
-		(nodes_get(nodes, i))->count = -1;
+		nodes_get(nodes, i)->count = -1;
 
 	list_free(list_pop_sublist(graph->nodes, NULL, cmp_node_count));
 
 	for (int i = 0; i < list_count(nodes); i++)
-		(nodes_get(nodes, i))->count = 0;
+		nodes_get(nodes, i)->count = 0;
 
 	for (int i = 0; i < list_count(nodes); i++){
 
 		node_t node = nodes_get(nodes, i);
+
 		for (int j = 0; j < node->N_vertices; j++) {
 
 			if (0 == list_count(node->edges[j]))
@@ -980,7 +985,7 @@ graph_t graph_cluster_nodes_F(graph_t graph, list_t nodes, edge_separator_node_f
 			if (internal)
 				continue;
 
-			struct vertex_s vertex = {.node = node, .idx = j};
+			struct vertex_s vertex = { .node = node, .idx = j };
 
 			node_t node_pair[2];
 			get_separator_nodes(node_pair, vertex);
@@ -999,7 +1004,7 @@ graph_t graph_cluster_nodes_F(graph_t graph, list_t nodes, edge_separator_node_f
 			} else {
 
 				assert(1 == list_count(node->edges[j]));
-				struct vertex_s parent = *(vertices_get(node->edges[j], 0));
+				struct vertex_s parent = *vertices_get(node->edges[j], 0);
 
 				graph_remove_edge(parent, vertex);
 
@@ -1015,7 +1020,7 @@ graph_t graph_cluster_nodes_F(graph_t graph, list_t nodes, edge_separator_node_f
 
 						int idx_subgraph = idx - list_count(graph->ext_nodes) + list_count(result->ext_nodes);
 						node_t new_ext_node = nodes_get(result->ext_nodes, idx_subgraph);
-						graph_add_edge((struct vertex_s){.node = new_ext_node, .idx = 0}, vertex);
+						graph_add_edge((struct vertex_s){ .node = new_ext_node, .idx = 0 }, vertex);
 					}
 				}
 
@@ -1248,6 +1253,7 @@ list_t graph_get_linop_sum(graph_t graph, node_cmp_t linop_identify, node_is_t n
 					if (sum_graph_type == SUM_OPS_AND_OPS) {
 
 						list_merge(nodes_sum, nodes_linops, false);
+
 					} else {
 
 						list_append(nodes_sum, node_linop_1);

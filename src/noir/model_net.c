@@ -178,6 +178,7 @@ struct noir2_net_s* noir2_net_create(struct noir2_net_config_s* config, int NB)
 	
 	long img_col_dims[N];
 	md_copy_dims(N, img_col_dims, col_dims);
+
 	for (int i = 0; i < N; i++)
 		if (1 != img_dims[i] && 1 != col_dims[i])
 			img_col_dims[i] = img_dims[i];
@@ -510,7 +511,6 @@ static const struct nlop_s* noir_rtnlinv_iter_s_create(int T, struct noir2_s* mo
 
 		if (1 < i)
 			ret = nlop_stack_outputs_F(ret, 2, 1, 1);
-
 	}
 
 	ret = nlop_append_singleton_dim_out_F(ret, 0);
@@ -913,7 +913,9 @@ static void noir_nufft_der(const nlop_data_t* _data, int o, int i, complex float
 {
 	assert(0 == o);
 	assert(0 == i);
+
 	const auto data = CAST_DOWN(noir_nufft_s, _data);
+
 	linop_forward_unchecked(data->nufft, dst, src);
 }
 
@@ -1265,7 +1267,5 @@ const struct nlop_s* noir_nlop_dump_create(struct noir2_net_s* model, const char
 
 	return nlop_create(N, dims, N, dims, CAST_UP(PTR_PASS(data)), noir_nlop_debug_fun, noir_nlop_debug_der, noir_nlop_debug_adj, NULL, NULL, dump_del);
 }
-
-
 
 
