@@ -33,7 +33,7 @@ jobs:
     env:
       CC: gcc-mp-14
     steps:
-    - uses: melusina-org/setup-macports@v1.1.4
+    - uses: melusina-org/setup-macports@v1.1.6
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
