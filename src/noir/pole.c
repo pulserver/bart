@@ -865,10 +865,8 @@ void sample_phase_pole_3D(int N, const long dims[N], complex float* dst, int D, 
 	assert(3 <= N);
 	assert(1 == md_calc_size(N - 3, dims + 3));
 
-	long* eint = md_alloc(1, MD_DIMS(md_calc_size(3, dims)), sizeof(long));
-	long* sint = md_alloc(1, MD_DIMS(md_calc_size(3, dims)), sizeof(long));
-	md_clear(N, dims, eint, sizeof(long));
-	md_clear(N, dims, sint, sizeof(long));
+	long* eint = md_calloc(N, dims, sizeof(long));
+	long* sint = md_calloc(N, dims, sizeof(long));
 
 	float r[D][2][3];
 
