@@ -51,6 +51,9 @@ void batch_svthresh(int M, int N, int num_blocks, float lambda, complex float ds
 #pragma omp for
 	for (int b = 0; b < num_blocks; b++) {
 
+#if 0
+		// FIXME: this should be cherk
+
 		// Compute upper bound | A^T A |_inf
 
 		// FIXME: this is based on gratuitous guess-work about the obscure
@@ -81,7 +84,7 @@ void batch_svthresh(int M, int N, int num_blocks, float lambda, complex float ds
 			mat_zero(N, M, dst[b]);
 			continue;
 		}
-
+#endif
 		lapack_svd_econ(M, N, *U, *VT, *S, dst[b]);
 
 		// soft threshold
